@@ -6,6 +6,16 @@ import { store } from './store';
 import MainLayout from './components/layouts/MainLayout';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import PartnersPage from './pages/partners/PartnersPage';
+import PartnerFormPage from './pages/partners/PartnerFormPage';
+import ServicePointsPage from './pages/service-points/ServicePointsPage';
+import ServicePointFormPage from './pages/service-points/ServicePointFormPage';
+import ServicePointDetailPage from './pages/service-points/ServicePointDetailPage';
+import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
+import ClientsPage from './pages/clients/ClientsPage';
+import BookingsPage from './pages/bookings/BookingsPage';
+import SettingsPage from './pages/settings/SettingsPage';
+import ProfilePage from './pages/profile/ProfilePage';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -54,13 +64,28 @@ function App() {
             }>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<DashboardPage />} />
-              {/* Здесь будут другие маршруты */}
-              <Route path="partners" element={<div>Партнеры (в разработке)</div>} />
-              <Route path="service-points" element={<div>Точки обслуживания (в разработке)</div>} />
-              <Route path="clients" element={<div>Клиенты (в разработке)</div>} />
-              <Route path="bookings" element={<div>Бронирования (в разработке)</div>} />
-              <Route path="settings" element={<div>Настройки (в разработке)</div>} />
-              <Route path="profile" element={<div>Профиль (в разработке)</div>} />
+              {/* Маршруты для партнеров */}
+              <Route path="partners" element={<PartnersPage />} />
+              <Route path="partners/create" element={<PartnerFormPage />} />
+              <Route path="partners/:id/edit" element={<PartnerFormPage />} />
+              <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
+              <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
+              {/* Маршруты для сервисных точек */}
+              <Route path="service-points" element={<ServicePointsPage />} />
+              <Route path="service-points/create" element={<ServicePointFormPage />} />
+              <Route path="service-points/:id" element={<ServicePointDetailPage />} />
+              <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
+              {/* Маршруты для клиентов */}
+              <Route path="clients" element={<ClientsPage />} />
+              <Route path="clients/:id" element={<div>Информация о клиенте (в разработке)</div>} />
+              <Route path="clients/create" element={<div>Создание клиента (в разработке)</div>} />
+              {/* Маршруты для бронирований */}
+              <Route path="bookings" element={<BookingsPage />} />
+              <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
+              <Route path="bookings/create" element={<div>Создание бронирования (в разработке)</div>} />
+              {/* Другие маршруты */}
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
             
             {/* Маршрут по умолчанию */}

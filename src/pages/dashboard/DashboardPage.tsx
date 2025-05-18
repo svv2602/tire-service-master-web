@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   Box,
   Grid,
-  Paper,
   Typography,
   CircularProgress,
   Card,
@@ -16,7 +15,6 @@ import {
   EventNote as EventNoteIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  Timeline as TimelineIcon,
 } from '@mui/icons-material';
 
 // В реальном приложении это будут данные от API
@@ -101,7 +99,7 @@ const DashboardPage: React.FC = () => {
       <Divider sx={{ my: 2 }} />
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoCard
             title="Партнеры"
             value={data.partnersCount}
@@ -109,7 +107,7 @@ const DashboardPage: React.FC = () => {
             color="#1976d2"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoCard
             title="Точки обслуживания"
             value={data.servicePointsCount}
@@ -117,7 +115,7 @@ const DashboardPage: React.FC = () => {
             color="#2e7d32"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoCard
             title="Клиенты"
             value={data.clientsCount}
@@ -125,7 +123,7 @@ const DashboardPage: React.FC = () => {
             color="#ed6c02"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <InfoCard
             title="Бронирования"
             value={data.bookingsCount}
@@ -136,7 +134,7 @@ const DashboardPage: React.FC = () => {
       </Grid>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           <Card elevation={3}>
             <CardHeader title="Ежемесячные бронирования" />
             <CardContent>
@@ -146,7 +144,7 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Card elevation={3}>
             <CardHeader title="Статистика бронирований" />
             <CardContent>

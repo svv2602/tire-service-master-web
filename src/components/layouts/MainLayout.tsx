@@ -15,7 +15,6 @@ import {
   Toolbar,
   Typography,
   Button,
-  Avatar,
   Menu,
   MenuItem,
 } from '@mui/material';
