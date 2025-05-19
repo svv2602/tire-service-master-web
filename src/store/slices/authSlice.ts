@@ -17,12 +17,21 @@ const initialState: AuthState = {
 // Асинхронные экшены
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async (loginData: any, { rejectWithValue }) => {
     try {
+      console.log('Login thunk - received data:', loginData);
+      // Если используются прямой API вызов, то loginData уже содержит данные ответа
+      if (loginData.auth_token) {
+        return loginData;
+      }
+      
+      // Если используется обычный вызов через Redux, вызываем API
+      const { email, password } = loginData;
       const response = await usersApi.login({ email, password });
       localStorage.setItem(STORAGE_KEY, response.data.auth_token);
       return response.data;
     } catch (error: any) {
+      console.error('Login thunk - error:', error);
       return rejectWithValue(error.response?.data?.error || 'Неверный email или пароль');
     }
   }
@@ -32,9 +41,20 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('getCurrentUser - token from localStorage:', localStorage.getItem(STORAGE_KEY));
+      console.log('getCurrentUser - making API request to /users/me');
       const response = await authApi.getCurrentUser();
+      console.log('getCurrentUser - success response:', response.data);
       return response.data;
     } catch (error: any) {
+      console.error('getCurrentUser - error details:', error);
+      if (error.response) {
+        console.error('getCurrentUser - error response:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('getCurrentUser - no response received:', error.request);
+      } else {
+        console.error('getCurrentUser - error message:', error.message);
+      }
       return rejectWithValue(error.response?.data?.error || 'Ошибка получения пользователя');
     }
   }

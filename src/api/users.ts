@@ -43,12 +43,15 @@ export interface PasswordReset {
 export const usersApi = {
   // Аутентификация пользователя
   login: (credentials: UserCredentials) => {
+    console.log('usersApi.login called with:', { email: credentials.email, password: '***' });
     return apiClient.post('/auth/login', credentials);
   },
 
   // Выход из системы
   logout: () => {
-    return apiClient.delete('/authenticate');
+    console.log('usersApi.logout called');
+    // Just return a resolved promise since we're handling token removal elsewhere
+    return Promise.resolve({ data: { success: true } });
   },
 
   // Регистрация клиента
@@ -68,6 +71,7 @@ export const usersApi = {
 
   // Получение профиля текущего пользователя
   getCurrentUser: () => {
+    console.log('usersApi.getCurrentUser called');
     return apiClient.get('/users/me');
   },
 

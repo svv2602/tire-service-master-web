@@ -16,12 +16,19 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem(STORAGE_KEY);
+    console.log('Request interceptor - URL:', config.url);
+    console.log('Request interceptor - Token:', token ? 'Present (not showing full token)' : 'Not found');
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request interceptor - Added Authorization header');
+    } else {
+      console.log('Request interceptor - No token available or headers missing');
     }
     return config;
   },
   (error) => {
+    console.error('Request interceptor - Error:', error);
     return Promise.reject(error);
   }
 );
@@ -29,11 +36,14 @@ apiClient.interceptors.request.use(
 // Интерцептор для обработки ответов
 apiClient.interceptors.response.use(
   (response) => {
+    console.log('Response interceptor - Status:', response.status);
     return response;
   },
   (error) => {
+    console.error('Response interceptor - Error:', error);
     if (error.response && error.response.status === 401) {
       // Если сервер вернул 401, значит токен неверный или просрочен
+      console.log('Response interceptor - Unauthorized (401), clearing token');
       localStorage.removeItem(STORAGE_KEY);
       window.location.href = '/login';
     }
