@@ -110,6 +110,13 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
             description: 'Общая статистика и показатели',
           },
+          {
+            text: 'Главная страница',
+            icon: <DashboardIcon />,
+            path: '/dashboard',
+            roles: [UserRole.CLIENT],
+            description: 'Ваша персональная панель',
+          },
         ],
       },
       {
@@ -139,7 +146,7 @@ const MainLayout: React.FC = () => {
         ],
       },
       {
-        title: 'Бронирования',
+        title: 'Шиномонтаж',
         items: [
           {
             text: 'Все бронирования',
@@ -162,6 +169,51 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.MANAGER, UserRole.CLIENT],
             description: 'Создание нового бронирования',
           },
+          {
+            text: 'Записаться на шиномонтаж',
+            icon: <EventNoteIcon />,
+            path: '/bookings/new',
+            roles: [UserRole.CLIENT],
+            description: 'Запись на сервис',
+          },
+        ],
+      },
+      {
+        title: 'Мое авто',
+        items: [
+          {
+            text: 'Мои автомобили',
+            icon: <CarIcon />,
+            path: '/my-cars',
+            roles: [UserRole.CLIENT],
+            description: 'Управление списком ваших автомобилей',
+          },
+          {
+            text: 'Добавить автомобиль',
+            icon: <CarIcon />,
+            path: '/my-cars/new',
+            roles: [UserRole.CLIENT],
+            description: 'Добавить новый автомобиль',
+          },
+        ],
+      },
+      {
+        title: 'Сервисные центры',
+        items: [
+          {
+            text: 'Найти центр',
+            icon: <LocationOnIcon />,
+            path: '/service-points/search',
+            roles: [UserRole.CLIENT],
+            description: 'Поиск ближайших сервисных центров',
+          },
+          {
+            text: 'Избранные центры',
+            icon: <LocationOnIcon />,
+            path: '/service-points/favorites',
+            roles: [UserRole.CLIENT],
+            description: 'Ваши избранные сервисные центры',
+          },
         ],
       },
       {
@@ -171,7 +223,7 @@ const MainLayout: React.FC = () => {
             text: 'Автомобили',
             icon: <CarIcon />,
             path: '/cars',
-            roles: [UserRole.ADMIN, UserRole.CLIENT],
+            roles: [UserRole.ADMIN],
             description: 'Управление списком автомобилей',
           },
           {
@@ -192,6 +244,13 @@ const MainLayout: React.FC = () => {
             path: '/analytics',
             roles: [UserRole.ADMIN, UserRole.PARTNER],
             description: 'Отчеты и аналитика',
+          },
+          {
+            text: 'История поездок',
+            icon: <ReportIcon />,
+            path: '/trip-history',
+            roles: [UserRole.CLIENT],
+            description: 'История ваших поездок и обслуживания',
           },
         ],
       },
@@ -306,8 +365,17 @@ const MainLayout: React.FC = () => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
+      <Toolbar
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 2,
+          background: 'linear-gradient(to right, #1976d2, #2196f3)',
+          color: 'white'
+        }}
+      >
+        <Typography variant="h6" noWrap component="div" fontWeight="bold">
           Твоя шина
         </Typography>
       </Toolbar>
@@ -315,28 +383,79 @@ const MainLayout: React.FC = () => {
       
       {user && getRoleCapabilities()}
       
-      <List>
+      <List sx={{ padding: 1 }}>
         {getFilteredMenuSections().map((section) => (
           <React.Fragment key={section.title}>
             <ListSubheader 
               onClick={() => toggleSection(section.title)} 
-              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              sx={{ 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: 'rgba(25, 118, 210, 0.08)',
+                color: 'primary.main',
+                borderRadius: 1,
+                margin: '4px 0',
+                fontWeight: 'bold'
+              }}
             >
-              {section.title}
+              <Box component="span">{section.title}</Box>
               {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
             </ListSubheader>
             
             <Collapse in={openSections[section.title] !== false} timeout="auto" unmountOnExit>
-              {section.items.map((item) => (
-                <ListItem key={item.text} disablePadding>
-                  <ListItemButton onClick={() => handleNavigate(item.path)}>
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} secondary={item.description} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
+              <List component="div" disablePadding>
+                {section.items.map((item) => {
+                  // Получаем текущий путь для подсветки активного элемента
+                  const location = window.location.pathname;
+                  const isActive = location === item.path || location.startsWith(`${item.path}/`);
+                  
+                  return (
+                    <ListItem 
+                      key={item.text} 
+                      disablePadding
+                      sx={{ 
+                        backgroundColor: isActive ? 'rgba(25, 118, 210, 0.12)' : 'transparent',
+                        borderRadius: 1,
+                        mb: 0.5,
+                        '&:hover': {
+                          backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                        }
+                      }}
+                    >
+                      <ListItemButton 
+                        onClick={() => handleNavigate(item.path)}
+                        sx={{ 
+                          borderRadius: 1,
+                          pl: 2
+                        }}
+                      >
+                        <ListItemIcon sx={{ 
+                          color: isActive ? 'primary.main' : 'inherit',
+                          minWidth: '40px'
+                        }}>
+                          {item.icon}
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={item.text} 
+                          secondary={item.description} 
+                          primaryTypographyProps={{
+                            fontWeight: isActive ? 'bold' : 'normal',
+                            fontSize: '0.95rem',
+                            color: isActive ? 'primary.main' : 'inherit'
+                          }}
+                          secondaryTypographyProps={{
+                            fontSize: '0.75rem'
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </List>
             </Collapse>
-            <Divider />
+            <Divider sx={{ my: 1 }} />
           </React.Fragment>
         ))}
       </List>
