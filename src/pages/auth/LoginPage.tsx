@@ -20,7 +20,7 @@ import { login, getCurrentUser } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { authApi } from '../../api';
 
 const validationSchema = yup.object({
   email: yup
@@ -55,15 +55,8 @@ const LoginPage: React.FC = () => {
     try {
       console.log('Attempting to login with credentials:', { email, password: '***' });
       
-      const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
-        email,
-        password
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        timeout: 10000
-      });
+      // Используем authApi вместо прямого вызова axios
+      const response = await authApi.login(email, password);
       
       console.log('Login response:', response.data);
       
@@ -82,7 +75,6 @@ const LoginPage: React.FC = () => {
       // Force navigation to dashboard
       console.log('Attempting to navigate to dashboard...');
       navigate('/dashboard', { replace: true });
-      
     } catch (err: any) {
       console.error('Login error details:', err);
       

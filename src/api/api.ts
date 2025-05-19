@@ -9,7 +9,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000 // 15 seconds timeout
+  timeout: 15000, // 15 seconds timeout
+  withCredentials: false // Важно для работы CORS
 });
 
 // Интерцептор для добавления токена к каждому запросу
@@ -18,6 +19,7 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem(STORAGE_KEY);
     console.log('Request interceptor - URL:', config.url);
     console.log('Request interceptor - Token:', token ? 'Present (not showing full token)' : 'Not found');
+    console.log('Request interceptor - Headers:', config.headers);
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -54,6 +56,8 @@ apiClient.interceptors.response.use(
 // API для работы с пользователями и аутентификацией
 export const authApi = {
   login: (email: string, password: string) => {
+    console.log('authApi.login - Sending login request with:', { email, password: '***' });
+    // Отправляем параметры напрямую в корень, без вложенности
     return apiClient.post('/auth/login', { email, password });
   },
   register: (userData: any) => {

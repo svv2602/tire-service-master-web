@@ -14,6 +14,7 @@ import ServicePointDetailPage from './pages/service-points/ServicePointDetailPag
 import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
 import ClientsPage from './pages/clients/ClientsPage';
 import BookingsPage from './pages/bookings/BookingsPage';
+import BookingFormPage from './pages/bookings/BookingFormPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 
@@ -81,8 +82,9 @@ function App() {
               <Route path="clients/create" element={<div>Создание клиента (в разработке)</div>} />
               {/* Маршруты для бронирований */}
               <Route path="bookings" element={<BookingsPage />} />
+              <Route path="bookings/new" element={<BookingFormPage />} />
+              <Route path="bookings/:id/edit" element={<BookingFormPage />} />
               <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
-              <Route path="bookings/create" element={<div>Создание бронирования (в разработке)</div>} />
               {/* Другие маршруты */}
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />

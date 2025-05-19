@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -17,6 +17,8 @@ import {
   Button,
   Menu,
   MenuItem,
+  ListSubheader,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -27,6 +29,13 @@ import {
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as AccountIcon,
+  DirectionsCar as CarIcon,
+  Build as ServiceIcon,
+  Business as CompanyIcon,
+  ExpandLess,
+  ExpandMore,
+  Assessment as ReportIcon,
+  Person as UserIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -37,9 +46,23 @@ import { UserRole } from '../../types';
 
 const drawerWidth = 240;
 
+interface MenuSection {
+  title: string;
+  items: MenuItemType[];
+}
+
+interface MenuItemType {
+  text: string;
+  icon: React.ReactNode;
+  path: string;
+  roles: UserRole[];
+  description?: string;
+}
+
 const MainLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -67,52 +90,218 @@ const MainLayout: React.FC = () => {
     setMobileOpen(false);
   };
 
-  // Генерируем пункты меню в зависимости от роли пользователя
-  const getMenuItems = () => {
-    const menuItems = [
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // Определяем структуру меню по разделам
+  const getMenuSections = (): MenuSection[] => {
+    return [
       {
-        text: 'Дашборд',
-        icon: <DashboardIcon />,
-        path: '/dashboard',
-        roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+        title: 'Обзор',
+        items: [
+          {
+            text: 'Дашборд',
+            icon: <DashboardIcon />,
+            path: '/dashboard',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Общая статистика и показатели',
+          },
+        ],
       },
       {
-        text: 'Партнеры',
-        icon: <PeopleIcon />,
-        path: '/partners',
-        roles: [UserRole.ADMIN],
+        title: 'Управление',
+        items: [
+          {
+            text: 'Партнеры',
+            icon: <CompanyIcon />,
+            path: '/partners',
+            roles: [UserRole.ADMIN],
+            description: 'Управление партнерами сервиса',
+          },
+          {
+            text: 'Точки обслуживания',
+            icon: <LocationOnIcon />,
+            path: '/service-points',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: 'Управление шиномонтажными мастерскими',
+          },
+          {
+            text: 'Клиенты',
+            icon: <PeopleIcon />,
+            path: '/clients',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Управление клиентской базой',
+          },
+        ],
       },
       {
-        text: 'Точки обслуживания',
-        icon: <LocationOnIcon />,
-        path: '/service-points',
-        roles: [UserRole.ADMIN, UserRole.PARTNER],
+        title: 'Бронирования',
+        items: [
+          {
+            text: 'Все бронирования',
+            icon: <EventNoteIcon />,
+            path: '/bookings',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Просмотр и управление бронированиями',
+          },
+          {
+            text: 'Мои записи',
+            icon: <EventNoteIcon />,
+            path: '/my-bookings',
+            roles: [UserRole.CLIENT],
+            description: 'Ваши текущие и прошлые записи',
+          },
+          {
+            text: 'Создать бронирование',
+            icon: <EventNoteIcon />,
+            path: '/bookings/new',
+            roles: [UserRole.MANAGER, UserRole.CLIENT],
+            description: 'Создание нового бронирования',
+          },
+        ],
       },
       {
-        text: 'Клиенты',
-        icon: <PeopleIcon />,
-        path: '/clients',
-        roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+        title: 'Справочники',
+        items: [
+          {
+            text: 'Автомобили',
+            icon: <CarIcon />,
+            path: '/cars',
+            roles: [UserRole.ADMIN, UserRole.CLIENT],
+            description: 'Управление списком автомобилей',
+          },
+          {
+            text: 'Услуги',
+            icon: <ServiceIcon />,
+            path: '/services',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: 'Управление каталогом услуг',
+          },
+        ],
       },
       {
-        text: 'Бронирования',
-        icon: <EventNoteIcon />,
-        path: '/bookings',
-        roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+        title: 'Отчеты',
+        items: [
+          {
+            text: 'Аналитика',
+            icon: <ReportIcon />,
+            path: '/analytics',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: 'Отчеты и аналитика',
+          },
+        ],
       },
       {
-        text: 'Настройки',
-        icon: <SettingsIcon />,
-        path: '/settings',
-        roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER, UserRole.CLIENT],
+        title: 'Администрирование',
+        items: [
+          {
+            text: 'Пользователи',
+            icon: <UserIcon />,
+            path: '/users',
+            roles: [UserRole.ADMIN],
+            description: 'Управление пользователями системы',
+          },
+          {
+            text: 'Настройки',
+            icon: <SettingsIcon />,
+            path: '/settings',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER, UserRole.CLIENT],
+            description: 'Настройки системы и профиля',
+          },
+          {
+            text: 'Профиль',
+            icon: <AccountIcon />,
+            path: '/profile',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER, UserRole.CLIENT],
+            description: 'Управление личным профилем',
+          },
+        ],
       },
     ];
+  };
 
-    if (!user) {
+  // Фильтруем разделы и пункты меню в зависимости от роли пользователя
+  const getFilteredMenuSections = () => {
+    if (!user || !user.role) {
       return [];
     }
 
-    return menuItems.filter((item) => item.roles.includes(user.role as UserRole));
+    const allSections = getMenuSections();
+    
+    return allSections
+      .map(section => ({
+        ...section,
+        items: section.items.filter(item => item.roles.includes(user.role as UserRole))
+      }))
+      .filter(section => section.items.length > 0);
+  };
+
+  // Разрешенные действия для каждой роли (информационный блок)
+  const getRoleCapabilities = () => {
+    if (!user || !user.role) return null;
+
+    const capabilities: { [key in UserRole]: string[] } = {
+      [UserRole.ADMIN]: [
+        'Полный доступ ко всем функциям',
+        'Управление партнерами',
+        'Управление пользователями',
+        'Просмотр всех данных'
+      ],
+      [UserRole.PARTNER]: [
+        'Управление своими точками обслуживания',
+        'Управление сотрудниками',
+        'Просмотр статистики',
+        'Настройка услуг'
+      ],
+      [UserRole.MANAGER]: [
+        'Управление бронированиями',
+        'Работа с клиентами',
+        'Просмотр расписания'
+      ],
+      [UserRole.CLIENT]: [
+        'Запись на шиномонтаж',
+        'Управление своими автомобилями',
+        'Просмотр истории записей'
+      ]
+    };
+
+    // Проверяем, что user.role валидный и существует в списке возможностей
+    const userRole = user.role as UserRole;
+    if (!capabilities[userRole]) {
+      return null;
+    }
+
+    return (
+      <Box sx={{ p: 2, bgcolor: 'action.selected', borderRadius: 1, mb: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+          Ваша роль: {getRoleName(userRole)}
+        </Typography>
+        <List dense disablePadding>
+          {capabilities[userRole].map((capability, index) => (
+            <ListItem dense disablePadding key={index}>
+              <Typography variant="caption">• {capability}</Typography>
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    );
+  };
+
+  // Перевод названия роли на русский
+  const getRoleName = (role?: UserRole): string => {
+    if (!role) return 'Пользователь';
+    
+    const roleNames = {
+      [UserRole.ADMIN]: 'Администратор',
+      [UserRole.PARTNER]: 'Партнер',
+      [UserRole.MANAGER]: 'Менеджер',
+      [UserRole.CLIENT]: 'Клиент'
+    };
+    return roleNames[role] || 'Пользователь';
   };
 
   const drawer = (
@@ -123,14 +312,32 @@ const MainLayout: React.FC = () => {
         </Typography>
       </Toolbar>
       <Divider />
+      
+      {user && getRoleCapabilities()}
+      
       <List>
-        {getMenuItems().map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton onClick={() => handleNavigate(item.path)}>
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
+        {getFilteredMenuSections().map((section) => (
+          <React.Fragment key={section.title}>
+            <ListSubheader 
+              onClick={() => toggleSection(section.title)} 
+              sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              {section.title}
+              {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
+            </ListSubheader>
+            
+            <Collapse in={openSections[section.title] !== false} timeout="auto" unmountOnExit>
+              {section.items.map((item) => (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton onClick={() => handleNavigate(item.path)}>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} secondary={item.description} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </Collapse>
+            <Divider />
+          </React.Fragment>
         ))}
       </List>
     </div>
@@ -157,7 +364,7 @@ const MainLayout: React.FC = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Твоя шина - Админ панель
+            Твоя шина - {user ? getRoleName(user.role as UserRole) : 'Авторизация'}
           </Typography>
           {user ? (
             <>
@@ -194,7 +401,11 @@ const MainLayout: React.FC = () => {
               </Menu>
             </>
           ) : (
-            <Button color="inherit" onClick={() => navigate('/login')}>
+            <Button 
+              color="inherit"
+              component={RouterLink}
+              to="/login"
+            >
               Войти
             </Button>
           )}
