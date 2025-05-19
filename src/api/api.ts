@@ -1,19 +1,23 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
+// Константа для ключа хранилища
+const STORAGE_KEY = 'tvoya_shina_token';
+
 // Создаем экземпляр axios с базовыми настройками
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1',
+  baseURL: 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 15000 // 15 seconds timeout
 });
 
 // Интерцептор для добавления токена к каждому запросу
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(STORAGE_KEY);
     if (token && config.headers) {
-      config.headers.Authorization = token;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -30,7 +34,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Если сервер вернул 401, значит токен неверный или просрочен
-      localStorage.removeItem('token');
+      localStorage.removeItem(STORAGE_KEY);
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -40,7 +44,7 @@ apiClient.interceptors.response.use(
 // API для работы с пользователями и аутентификацией
 export const authApi = {
   login: (email: string, password: string) => {
-    return apiClient.post('/authenticate', { email, password });
+    return apiClient.post('/auth/login', { email, password });
   },
   register: (userData: any) => {
     return apiClient.post('/clients/register', userData);
@@ -211,4 +215,5 @@ export const referencesApi = {
   },
 };
 
+// По умолчанию экспортируем apiClient
 export default apiClient; 

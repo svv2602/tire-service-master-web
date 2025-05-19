@@ -11,24 +11,25 @@ import {
   Link,
   Alert,
   CircularProgress,
+  Divider,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, clearError } from '../../store/slices/authSlice';
+import { login, getCurrentUser } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const validationSchema = yup.object({
   email: yup
     .string()
-    .email('Введите корректный email')
-    .required('Email обязателен для заполнения'),
+    .email('Введіть коректний email')
+    .required('Email обов\'язковий для заповнення'),
   password: yup
     .string()
-    .min(6, 'Пароль должен содержать минимум 6 символов')
-    .required('Пароль обязателен для заполнения'),
+    .required('Пароль обов\'язковий для заповнення'),
 });
 
 const LoginPage: React.FC = () => {
@@ -36,13 +37,66 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [rememberMe, setRememberMe] = useState(false);
+  const [directLoginError, setDirectLoginError] = useState<string | null>(null);
+  const [directLoading, setDirectLoading] = useState(false);
 
   useEffect(() => {
-    // Если пользователь уже авторизован, перенаправляем на дашборд
+    // Redirect to dashboard if already authenticated
     if (isAuthenticated) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+
+  // Direct API call for login
+  const directLogin = async (email: string, password: string) => {
+    setDirectLoading(true);
+    setDirectLoginError(null);
+    
+    try {
+      console.log('Attempting to login with credentials:', { email, password: '***' });
+      
+      const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
+        email,
+        password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      });
+      
+      console.log('Login response:', response.data);
+      
+      // Store token in localStorage
+      localStorage.setItem('tvoya_shina_token', response.data.auth_token);
+      console.log('Token saved to localStorage');
+      
+      // Dispatch login action to update Redux state
+      await dispatch(login(response.data));
+      console.log('Redux state updated');
+      
+      // Получить пользователя и обновить Redux
+      await dispatch(getCurrentUser());
+      console.log('User loaded into Redux');
+      
+      // Force navigation to dashboard
+      console.log('Attempting to navigate to dashboard...');
+      navigate('/dashboard', { replace: true });
+      
+    } catch (err: any) {
+      console.error('Login error details:', err);
+      
+      if (err.code === 'ERR_NETWORK') {
+        setDirectLoginError('API сервер недоступен. Убедитесь, что сервер запущен на порту 8000.');
+      } else if (err.response?.status === 401) {
+        setDirectLoginError('Неверный email или пароль');
+      } else {
+        setDirectLoginError(err.response?.data?.message || 'Произошла ошибка при входе');
+      }
+    } finally {
+      setDirectLoading(false);
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -51,13 +105,18 @@ const LoginPage: React.FC = () => {
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
-      dispatch(clearError());
-      dispatch(login({ email: values.email, password: values.password }));
+      // Use direct login instead of Redux
+      directLogin(values.email, values.password);
     },
   });
 
   const handleRememberMeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRememberMe(event.target.checked);
+  };
+
+  const setTestCredentials = (email: string, password: string) => {
+    formik.setFieldValue('email', email);
+    formik.setFieldValue('password', password);
   };
 
   return (
@@ -81,11 +140,11 @@ const LoginPage: React.FC = () => {
           }}
         >
           <Typography component="h1" variant="h5">
-            Вход в систему
+            Вхід в систему
           </Typography>
-          {error && (
+          {(error || directLoginError) && (
             <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-              {error}
+              {directLoginError || error}
             </Alert>
           )}
           <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
@@ -126,23 +185,54 @@ const LoginPage: React.FC = () => {
                   onChange={handleRememberMeChange}
                 />
               }
-              label="Запомнить меня"
+              label="Запам'ятати мене"
             />
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
+              disabled={directLoading || loading}
             >
-              {loading ? <CircularProgress size={24} /> : 'Войти'}
+              {(directLoading || loading) ? <CircularProgress size={24} /> : 'Увійти'}
             </Button>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 1 }}>
+            
+            <Divider sx={{ my: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Тестові дані для входу
+              </Typography>
+            </Divider>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+              <Button 
+                size="small" 
+                variant="outlined"
+                onClick={() => setTestCredentials('admin@example.com', 'admin123')}
+              >
+                Адмін
+              </Button>
+              <Button 
+                size="small" 
+                variant="outlined"
+                onClick={() => setTestCredentials('admin@test.com', 'admin')}
+              >
+                Простий адмін
+              </Button>
+              <Button 
+                size="small" 
+                variant="outlined"
+                onClick={() => setTestCredentials('test@test.com', 'test')}
+              >
+                Тест
+              </Button>
+            </Box>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 3 }}>
               <Link href="#" variant="body2" onClick={() => navigate('/reset-password')}>
-                Забыли пароль?
+                Забули пароль?
               </Link>
               <Link href="#" variant="body2" onClick={() => navigate('/register')}>
-                {"Нет аккаунта? Зарегистрироваться"}
+                {"Немає облікового запису? Зареєструватись"}
               </Link>
             </Box>
           </Box>

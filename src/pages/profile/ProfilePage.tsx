@@ -6,7 +6,6 @@ import {
   Avatar,
   Button,
   TextField,
-  Grid,
   Divider,
   Snackbar,
   Alert,
@@ -21,11 +20,9 @@ import {
 } from '@mui/material';
 import {
   Save as SaveIcon,
-  Person as PersonIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
   Lock as LockIcon,
-  Badge as BadgeIcon,
   CalendarMonth as CalendarIcon,
   AdminPanelSettings as RoleIcon,
   Business as BusinessIcon,
@@ -34,11 +31,11 @@ import {
 // Демо-данные для профиля пользователя
 const mockUserData = {
   id: 1,
-  firstName: 'Александр',
-  lastName: 'Иванов',
-  email: 'a.ivanov@example.com',
-  phone: '+7 (900) 123-45-67',
-  position: 'Администратор',
+  firstName: 'Олександр',
+  lastName: 'Петренко',
+  email: 'o.petrenko@tireservice.ua',
+  phone: '+380 67 123 45 67',
+  position: 'Адміністратор',
   company: 'Твоя шина',
   role: 'admin',
   dateRegistered: '10.05.2022',
@@ -112,12 +109,12 @@ const ProfilePage: React.FC = () => {
     // Проверка паролей при изменении
     if (changePassword) {
       if (formData.newPassword !== formData.confirmPassword) {
-        setError('Новый пароль и подтверждение не совпадают');
+        setError('Новий пароль та підтвердження не співпадають');
         setLoading(false);
         return;
       }
       if (formData.newPassword.length < 8) {
-        setError('Новый пароль должен содержать минимум 8 символов');
+        setError('Новий пароль повинен містити мінімум 8 символів');
         setLoading(false);
         return;
       }
@@ -160,13 +157,13 @@ const ProfilePage: React.FC = () => {
   const getRoleLabel = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'Администратор';
+        return 'Адміністратор';
       case 'manager':
         return 'Менеджер';
       case 'operator':
         return 'Оператор';
       default:
-        return 'Пользователь';
+        return 'Користувач';
     }
   };
 
@@ -187,12 +184,12 @@ const ProfilePage: React.FC = () => {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Профиль пользователя
+        Профіль користувача
       </Typography>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 3fr' }, gap: 3 }}>
         {/* Карточка с информацией о профиле */}
-        <Grid item xs={12} md={4}>
+        <Box>
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 3 }}>
               {userData.avatar ? (
@@ -252,7 +249,7 @@ const ProfilePage: React.FC = () => {
                     <BusinessIcon />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Компания" 
+                    primary="Компанія" 
                     secondary={userData.company} 
                   />
                 </ListItem>
@@ -262,7 +259,7 @@ const ProfilePage: React.FC = () => {
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Дата регистрации" 
+                    primary="Дата реєстрації" 
                     secondary={userData.dateRegistered} 
                   />
                 </ListItem>
@@ -272,161 +269,129 @@ const ProfilePage: React.FC = () => {
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Последний вход" 
+                    primary="Останній вхід" 
                     secondary={userData.lastLogin} 
                   />
                 </ListItem>
               </List>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Форма редактирования профиля */}
-        <Grid item xs={12} md={8}>
+        <Box>
           <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Редактирование профиля
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-            
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+              <Alert severity="error" sx={{ mb: 3 }}>
                 {error}
               </Alert>
             )}
             
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+            <Typography variant="h6" gutterBottom>
+              Редагування профілю
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Box component="form" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+              <Box>
                 <TextField
                   fullWidth
-                  label="Имя"
+                  label="Ім'я"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  InputProps={{
-                    startAdornment: (
-                      <PersonIcon color="action" sx={{ mr: 1 }} />
-                    )
-                  }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <TextField
                   fullWidth
-                  label="Фамилия"
+                  label="Прізвище"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  InputProps={{
-                    startAdornment: (
-                      <BadgeIcon color="action" sx={{ mr: 1 }} />
-                    )
-                  }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <TextField
                   fullWidth
                   label="Email"
                   name="email"
-                  type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  InputProps={{
-                    startAdornment: (
-                      <EmailIcon color="action" sx={{ mr: 1 }} />
-                    )
-                  }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12} md={6}>
+              <Box>
                 <TextField
                   fullWidth
                   label="Телефон"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  InputProps={{
-                    startAdornment: (
-                      <PhoneIcon color="action" sx={{ mr: 1 }} />
-                    )
-                  }}
                 />
-              </Grid>
+              </Box>
               
-              <Grid item xs={12}>
+              <Box sx={{ gridColumn: '1 / -1' }}>
                 <TextField
                   fullWidth
-                  label="Должность"
+                  label="Посада"
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
-                  InputProps={{
-                    startAdornment: (
-                      <BusinessIcon color="action" sx={{ mr: 1 }} />
-                    )
-                  }}
                 />
-              </Grid>
-
-              <Grid item xs={12}>
+              </Box>
+              
+              <Box sx={{ gridColumn: '1 / -1' }}>
                 <Divider sx={{ my: 1 }} />
                 <Button 
                   startIcon={<LockIcon />} 
                   onClick={toggleChangePassword}
-                  sx={{ mb: 2 }}
+                  color="primary"
                 >
-                  {changePassword ? 'Отменить изменение пароля' : 'Изменить пароль'}
+                  {changePassword ? 'Скасувати зміну пароля' : 'Змінити пароль'}
                 </Button>
-              </Grid>
-
+              </Box>
+              
               {changePassword && (
                 <>
-                  <Grid item xs={12}>
+                  <Box sx={{ gridColumn: '1 / -1' }}>
                     <TextField
                       fullWidth
-                      label="Текущий пароль"
+                      label="Поточний пароль"
                       name="oldPassword"
                       type="password"
                       value={formData.oldPassword}
                       onChange={handleInputChange}
-                      required
                     />
-                  </Grid>
+                  </Box>
                   
-                  <Grid item xs={12} md={6}>
+                  <Box>
                     <TextField
                       fullWidth
-                      label="Новый пароль"
+                      label="Новий пароль"
                       name="newPassword"
                       type="password"
                       value={formData.newPassword}
                       onChange={handleInputChange}
-                      required
-                      helperText="Минимум 8 символов"
                     />
-                  </Grid>
+                  </Box>
                   
-                  <Grid item xs={12} md={6}>
+                  <Box>
                     <TextField
                       fullWidth
-                      label="Подтвердите пароль"
+                      label="Підтвердіть пароль"
                       name="confirmPassword"
                       type="password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      required
-                      error={formData.newPassword !== formData.confirmPassword}
-                      helperText={formData.newPassword !== formData.confirmPassword ? 'Пароли не совпадают' : ''}
                     />
-                  </Grid>
+                  </Box>
                 </>
               )}
-
-              <Grid item xs={12}>
+              
+              <Box sx={{ gridColumn: '1 / -1' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
                   <Button
                     variant="contained"
@@ -435,15 +400,15 @@ const ProfilePage: React.FC = () => {
                     onClick={handleSaveProfile}
                     disabled={loading}
                   >
-                    Сохранить изменения
+                    Зберегти зміни
                   </Button>
                 </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Paper>
-        </Grid>
-      </Grid>
-      
+        </Box>
+      </Box>
+
       {/* Уведомление об успешном сохранении */}
       <Snackbar
         open={saveSuccess}
@@ -452,7 +417,7 @@ const ProfilePage: React.FC = () => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          Данные профиля успешно обновлены!
+          Дані профілю успішно оновлено!
         </Alert>
       </Snackbar>
     </Box>

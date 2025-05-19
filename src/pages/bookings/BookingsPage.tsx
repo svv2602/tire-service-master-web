@@ -33,63 +33,63 @@ import { useNavigate } from 'react-router-dom';
 const mockBookings = [
   { 
     id: 1, 
-    client_name: 'Иван Иванов',
-    service_point_name: 'Шиномонтаж на Ленина',
+    client_name: 'Іван Петренко',
+    service_point_name: 'ШиноСервіс Експрес - Київ',
     date: '2023-07-15',
     time: '14:30',
     duration: 60,
-    services: ['Смена резины', 'Балансировка'],
+    services: ['Заміна шин', 'Балансування'],
     status: 'completed',
-    car: 'Toyota Camry (А123ВС77)',
-    phone: '+7 (900) 123-45-67'
+    car: 'Toyota Camry (АА1234КК)',
+    phone: '+380 67 123 45 67'
   },
   { 
     id: 2, 
-    client_name: 'Мария Петрова',
-    service_point_name: 'Шиномонтаж на Гагарина',
+    client_name: 'Марія Коваленко',
+    service_point_name: 'АвтоШина Плюс - Львів',
     date: '2023-07-16',
     time: '12:00',
     duration: 45,
-    services: ['Смена резины'],
+    services: ['Заміна шин'],
     status: 'confirmed',
-    car: 'Honda Civic (Е567КЛ77)',
-    phone: '+7 (900) 222-33-44'
+    car: 'Honda Civic (ВН5678ІК)',
+    phone: '+380 50 222 33 44'
   },
   { 
     id: 3, 
-    client_name: 'Алексей Смирнов',
-    service_point_name: 'Шиномонтаж на Ленина',
+    client_name: 'Олексій Шевченко',
+    service_point_name: 'ШиноСервіс Експрес - Київ',
     date: '2023-07-16',
     time: '16:15',
     duration: 90,
-    services: ['Смена резины', 'Балансировка', 'Ремонт диска'],
+    services: ['Заміна шин', 'Балансування', 'Ремонт диска'],
     status: 'cancelled',
-    car: 'BMW X5 (О999МН77)',
-    phone: '+7 (900) 555-66-77'
+    car: 'BMW X5 (КА9999ХХ)',
+    phone: '+380 63 555 66 77'
   },
   { 
     id: 4, 
-    client_name: 'Дмитрий Козлов',
-    service_point_name: 'Шиномонтаж на Пушкина',
+    client_name: 'Дмитро Коваль',
+    service_point_name: 'ШинМайстер - Одеса',
     date: '2023-07-17',
     time: '10:00',
     duration: 60,
-    services: ['Смена резины', 'Балансировка'],
+    services: ['Заміна шин', 'Балансування'],
     status: 'pending',
-    car: 'Kia Rio (К321ТВ77)',
-    phone: '+7 (900) 777-88-99'
+    car: 'Kia Rio (ОД3210ВВ)',
+    phone: '+380 67 777 88 99'
   },
   { 
     id: 5, 
-    client_name: 'Елена Соколова',
-    service_point_name: 'Шиномонтаж на Гагарина',
+    client_name: 'Олена Мельник',
+    service_point_name: 'АвтоШина Плюс - Львів',
     date: '2023-07-18',
     time: '11:30',
     duration: 30,
-    services: ['Подкачка шин'],
+    services: ['Підкачування шин'],
     status: 'confirmed',
-    car: 'Hyundai Solaris (Р654ОП77)',
-    phone: '+7 (900) 111-22-33'
+    car: 'Hyundai Solaris (BC6543OO)',
+    phone: '+380 50 111 22 33'
   },
 ];
 
@@ -144,13 +144,11 @@ const BookingsPage: React.FC = () => {
   };
 
   const handleViewBooking = (id: number) => {
-    // Будущая реализация детального просмотра
-    console.log(`Просмотр бронирования ${id}`);
+    navigate(`/bookings/${id}`);
   };
 
   const handleAddBooking = () => {
-    // Будущая реализация создания бронирования
-    console.log('Создание нового бронирования');
+    navigate('/bookings/new');
   };
 
   const getStatusColor = (status: string) => {
@@ -171,15 +169,15 @@ const BookingsPage: React.FC = () => {
   const getStatusName = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Выполнено';
+        return 'Виконано';
       case 'confirmed':
-        return 'Подтверждено';
+        return 'Підтверджено';
       case 'pending':
-        return 'Ожидает';
+        return 'Очікує';
       case 'cancelled':
-        return 'Отменено';
+        return 'Скасовано';
       default:
-        return 'Неизвестно';
+        return 'Невідомо';
     }
   };
 

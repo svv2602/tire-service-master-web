@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
   Paper,
-  Grid,
   TextField,
   Button,
   Divider,
@@ -17,15 +16,16 @@ import {
   Tab,
   Alert,
   Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   Save as SaveIcon,
   Settings as SettingsIcon,
-  Person as PersonIcon,
   Notifications as NotificationsIcon,
   Security as SecurityIcon,
   Devices as DevicesIcon,
 } from '@mui/icons-material';
+import { settingsApi, SystemSettings } from '../../api/settings';
 
 // Интерфейс для панелей настроек
 interface TabPanelProps {
@@ -70,11 +70,20 @@ const SettingsPage: React.FC = () => {
   // Состояние для сообщения об успешном сохранении
   const [saveSuccess, setSaveSuccess] = useState(false);
   
+  // Состояние для загрузки данных
+  const [loading, setLoading] = useState(false);
+  
+  // Состояние для ошибок
+  const [error, setError] = useState<string | null>(null);
+  
+  // Состояние для списка городов
+  const [cities, setCities] = useState<{id: number; name: string}[]>([]);
+  
   // Состояние для настроек системы
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SystemSettings>({
     systemName: 'Твоя шина',
-    contactEmail: 'admin@tvoya-shina.ru',
-    supportPhone: '+7 (800) 123-45-67',
+    contactEmail: 'admin@tvoya-shina.ua',
+    supportPhone: '+380 67 000 00 00',
     defaultCityId: 1,
     dateFormat: 'DD.MM.YYYY',
     timeFormat: '24h',
@@ -86,6 +95,31 @@ const SettingsPage: React.FC = () => {
     workdayEnd: '18:00',
     workDays: [1, 2, 3, 4, 5], // Пн-Пт
   });
+
+  // Загрузка настроек при первом рендере компонента
+  useEffect(() => {
+    const loadSettings = async () => {
+      setLoading(true);
+      try {
+        // Загрузка списка городов
+        const citiesResponse = await settingsApi.getCities();
+        setCities(citiesResponse.data);
+        
+        // Загрузка системных настроек
+        const settingsResponse = await settingsApi.getSystemSettings();
+        setSettings(settingsResponse.data);
+        
+        setError(null);
+      } catch (err) {
+        console.error('Ошибка при загрузке настроек:', err);
+        setError('Не удалось загрузить настройки. Пожалуйста, попробуйте позже.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSettings();
+  }, []);
 
   // Обработчик изменения вкладки
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -121,12 +155,22 @@ const SettingsPage: React.FC = () => {
   };
 
   // Обработчик сохранения настроек
-  const handleSaveSettings = () => {
-    // Здесь будет логика сохранения настроек на сервере
-    console.log('Сохраняем настройки:', settings);
+  const handleSaveSettings = async () => {
+    setLoading(true);
+    setError(null);
     
-    // Показываем сообщение об успешном сохранении
-    setSaveSuccess(true);
+    try {
+      // Отправка данных на сервер
+      await settingsApi.updateSystemSettings(settings);
+      
+      // Показываем сообщение об успешном сохранении
+      setSaveSuccess(true);
+    } catch (err) {
+      console.error('Ошибка при сохранении настроек:', err);
+      setError('Не удалось сохранить настройки. Пожалуйста, попробуйте позже.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Обработчик закрытия сообщения
@@ -134,11 +178,22 @@ const SettingsPage: React.FC = () => {
     setSaveSuccess(false);
   };
 
+  // Обработчик закрытия сообщения об ошибке
+  const handleCloseError = () => {
+    setError(null);
+  };
+
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
         Настройки системы
       </Typography>
+
+      {error && (
+        <Alert severity="error" onClose={handleCloseError} sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Paper sx={{ mb: 3 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -156,221 +211,215 @@ const SettingsPage: React.FC = () => {
           </Tabs>
         </Box>
 
-        {/* Вкладка общих настроек */}
-        <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Основные настройки
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            {/* Вкладка общих настроек */}
+            <TabPanel value={tabValue} index={0}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    Основные настройки
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Box>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Название системы"
-                name="systemName"
-                value={settings.systemName}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Контактный Email"
-                name="contactEmail"
-                value={settings.contactEmail}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Телефон поддержки"
-                name="supportPhone"
-                value={settings.supportPhone}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Город по умолчанию</InputLabel>
-                <Select
-                  name="defaultCityId"
-                  value={settings.defaultCityId}
-                  label="Город по умолчанию"
-                  onChange={handleSelectChange as any}
-                >
-                  <MenuItem value={1}>Москва</MenuItem>
-                  <MenuItem value={2}>Санкт-Петербург</MenuItem>
-                  <MenuItem value={3}>Екатеринбург</MenuItem>
-                  <MenuItem value={4}>Новосибирск</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Параметры бронирования
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Длительность слота (мин.)"
-                name="slotDuration"
-                type="number"
-                value={settings.slotDuration}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Максимум бронирований в день"
-                name="maxBookingsPerDay"
-                type="number"
-                value={settings.maxBookingsPerDay}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Начало рабочего дня"
-                name="workdayStart"
-                type="time"
-                value={settings.workdayStart}
-                onChange={handleTextChange}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Конец рабочего дня"
-                name="workdayEnd"
-                type="time"
-                value={settings.workdayEnd}
-                onChange={handleTextChange}
-              />
-            </Grid>
-          </Grid>
-        </TabPanel>
-
-        {/* Вкладка уведомлений */}
-        <TabPanel value={tabValue} index={1}>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Настройки уведомлений
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.enableNotifications}
-                    onChange={handleSwitchChange}
-                    name="enableNotifications"
-                    color="primary"
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Название системы"
+                    name="systemName"
+                    value={settings.systemName}
+                    onChange={handleTextChange}
                   />
-                }
-                label="Включить уведомления по email"
-              />
-            </Grid>
 
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.enableSmsNotifications}
-                    onChange={handleSwitchChange}
-                    name="enableSmsNotifications"
-                    color="primary"
+                  <TextField
+                    fullWidth
+                    label="Контактный Email"
+                    name="contactEmail"
+                    value={settings.contactEmail}
+                    onChange={handleTextChange}
                   />
-                }
-                label="Включить SMS-уведомления"
-              />
-            </Grid>
 
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Формат даты</InputLabel>
-                <Select
-                  name="dateFormat"
-                  value={settings.dateFormat}
-                  label="Формат даты"
-                  onChange={handleSelectChange as any}
-                >
-                  <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
-                  <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
-                  <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+                  <TextField
+                    fullWidth
+                    label="Телефон поддержки"
+                    name="supportPhone"
+                    value={settings.supportPhone}
+                    onChange={handleTextChange}
+                  />
 
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Формат времени</InputLabel>
-                <Select
-                  name="timeFormat"
-                  value={settings.timeFormat}
-                  label="Формат времени"
-                  onChange={handleSelectChange as any}
-                >
-                  <MenuItem value="24h">24-часовой (14:30)</MenuItem>
-                  <MenuItem value="12h">12-часовой (2:30 PM)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </TabPanel>
+                  <FormControl fullWidth>
+                    <InputLabel>Город по умолчанию</InputLabel>
+                    <Select
+                      name="defaultCityId"
+                      value={settings.defaultCityId}
+                      label="Город по умолчанию"
+                      onChange={handleSelectChange as any}
+                    >
+                      {cities.map(city => (
+                        <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Box>
 
-        {/* Вкладка безопасности */}
-        <TabPanel value={tabValue} index={2}>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            Настройки безопасности доступны только администраторам с полными правами.
-          </Alert>
-          
-          <Typography>
-            В разделе безопасности вы можете настроить политики паролей, доступа и другие параметры безопасности системы.
-            В данный момент эта функциональность находится в разработке.
-          </Typography>
-        </TabPanel>
+                <Box>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Параметры бронирования
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Box>
 
-        {/* Вкладка интеграций */}
-        <TabPanel value={tabValue} index={3}>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
-          </Alert>
-          
-          <Typography>
-            В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
-            платежные сервисы и мессенджеры.
-          </Typography>
-        </TabPanel>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Длительность слота (мин.)"
+                    name="slotDuration"
+                    type="number"
+                    value={settings.slotDuration}
+                    onChange={handleTextChange}
+                  />
 
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveSettings}
-          >
-            Сохранить настройки
-          </Button>
-        </Box>
+                  <TextField
+                    fullWidth
+                    label="Максимум бронирований в день"
+                    name="maxBookingsPerDay"
+                    type="number"
+                    value={settings.maxBookingsPerDay}
+                    onChange={handleTextChange}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Начало рабочего дня"
+                    name="workdayStart"
+                    type="time"
+                    value={settings.workdayStart}
+                    onChange={handleTextChange}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Конец рабочего дня"
+                    name="workdayEnd"
+                    type="time"
+                    value={settings.workdayEnd}
+                    onChange={handleTextChange}
+                  />
+                </Box>
+              </Box>
+            </TabPanel>
+
+            {/* Вкладка уведомлений */}
+            <TabPanel value={tabValue} index={1}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    Настройки уведомлений
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Box>
+
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={settings.enableNotifications}
+                        onChange={handleSwitchChange}
+                        name="enableNotifications"
+                        color="primary"
+                      />
+                    }
+                    label="Включить уведомления по email"
+                  />
+                </Box>
+
+                <Box>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={settings.enableSmsNotifications}
+                        onChange={handleSwitchChange}
+                        name="enableSmsNotifications"
+                        color="primary"
+                      />
+                    }
+                    label="Включить SMS-уведомления"
+                  />
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Формат даты</InputLabel>
+                    <Select
+                      name="dateFormat"
+                      value={settings.dateFormat}
+                      label="Формат даты"
+                      onChange={handleSelectChange as any}
+                    >
+                      <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
+                      <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
+                      <MenuItem value="YYYY-MM-DD">YYYY-MM-DD</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <FormControl fullWidth>
+                    <InputLabel>Формат времени</InputLabel>
+                    <Select
+                      name="timeFormat"
+                      value={settings.timeFormat}
+                      label="Формат времени"
+                      onChange={handleSelectChange as any}
+                    >
+                      <MenuItem value="24h">24-часовой (14:30)</MenuItem>
+                      <MenuItem value="12h">12-часовой (2:30 PM)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+            </TabPanel>
+
+            {/* Вкладка безопасности */}
+            <TabPanel value={tabValue} index={2}>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Настройки безопасности доступны только администраторам с полными правами.
+              </Alert>
+              
+              <Typography>
+                В разделе безопасности вы можете настроить политики паролей, доступа и другие параметры безопасности системы.
+                В данный момент эта функциональность находится в разработке.
+              </Typography>
+            </TabPanel>
+
+            {/* Вкладка интеграций */}
+            <TabPanel value={tabValue} index={3}>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
+              </Alert>
+              
+              <Typography>
+                В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
+                платежные сервисы и мессенджеры.
+              </Typography>
+            </TabPanel>
+
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                onClick={handleSaveSettings}
+                disabled={loading}
+              >
+                Сохранить настройки
+              </Button>
+            </Box>
+          </>
+        )}
       </Paper>
 
       {/* Уведомление об успешном сохранении */}

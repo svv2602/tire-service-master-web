@@ -21,7 +21,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('token');
+  const isAuthenticated = !!localStorage.getItem('tvoya_shina_token');
   
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
