@@ -320,37 +320,10 @@ const MainLayout: React.FC = () => {
     const userRole = user.role;
     console.log('Роль пользователя:', userRole);
 
-    // Функция для проверки соответствия ролей
-    const isRoleMatching = (requiredRole: UserRole): boolean => {
-      // Если роль пользователя - объект UserRole, просто сравниваем
-      if (typeof userRole === 'object') {
-        return userRole === requiredRole;
-      }
-      
-      // Если роль - строка, нужно сопоставить строки с API и фронтенда
-      if (typeof userRole === 'string') {
-        const apiToFrontendMapping: Record<string, UserRole> = {
-          'admin': UserRole.ADMIN,
-          'manager': UserRole.MANAGER,
-          'operator': UserRole.PARTNER, // оператор соответствует партнеру
-          'client': UserRole.CLIENT
-        };
-        
-        // Если есть прямое соответствие
-        if (apiToFrontendMapping[userRole] === requiredRole) {
-          return true;
-        }
-        
-        // Если нет прямого соответствия, проверяем совпадение строк
-        return userRole.toLowerCase() === String(requiredRole).toLowerCase();
-      }
-      
-      return false;
-    };
-    
+    // Теперь нам не нужно преобразовывать роли, так как enum UserRole
+    // соответствует значениям из API
     console.log('UserRole.ADMIN:', UserRole.ADMIN);
-    console.log('Пользователь - админ:', isRoleMatching(UserRole.ADMIN));
-
+    
     // Получаем все секции меню
     const allSections = getMenuSections();
     
@@ -358,7 +331,7 @@ const MainLayout: React.FC = () => {
     const filteredSections = allSections.map(section => {
       // Фильтруем пункты меню в секции, оставляя только те, для которых у пользователя есть доступ
       const filteredItems = section.items.filter(item => 
-        item.roles.some(role => isRoleMatching(role))
+        item.roles.some(role => role === userRole)
       );
       
       // Возвращаем секцию только если в ней остались пункты меню

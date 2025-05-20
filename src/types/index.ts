@@ -1,7 +1,7 @@
 // Типы пользователей
 export enum UserRole {
-  ADMIN = 'administrator',
-  PARTNER = 'partner',
+  ADMIN = 'admin',
+  PARTNER = 'operator',
   MANAGER = 'manager',
   CLIENT = 'client'
 }

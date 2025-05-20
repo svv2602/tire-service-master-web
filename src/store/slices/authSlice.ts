@@ -109,31 +109,14 @@ const authSlice = createSlice({
         // Получаем данные пользователя
         const userData = action.payload;
         
-        if (userData) {
-          // Добавляем временное заполнение для тестового админа
-          if (userData.email === 'admin@example.com') {
-            userData.first_name = userData.first_name || 'Тест';
-            userData.last_name = userData.last_name || 'Адмін';
-            userData.phone = userData.phone || '+380 67 111 00 00';
-          }
+        // Если email admin@example.com, устанавливаем недостающие данные
+        if (userData && userData.email === 'admin@example.com') {
+          userData.first_name = userData.first_name || 'Тест';
+          userData.last_name = userData.last_name || 'Адмін';
+          userData.phone = userData.phone || '+380 67 111 00 00';
           
-          // Преобразование роли из API формата в формат фронтенда для всех пользователей
-          if (typeof userData.role === 'string') {
-            switch (userData.role) {
-              case 'admin': 
-                userData.role = UserRole.ADMIN; 
-                break;
-              case 'manager': 
-                userData.role = UserRole.MANAGER; 
-                break;
-              case 'operator': 
-                userData.role = UserRole.PARTNER; 
-                break;
-              case 'client': 
-                userData.role = UserRole.CLIENT; 
-                break;
-            }
-          }
+          // Преобразование ролей больше не требуется, так как 
+          // значения в enum UserRole теперь соответствуют API
         }
         
         state.user = userData;
