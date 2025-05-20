@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { Provider } from 'react-redux';
@@ -17,14 +17,41 @@ import BookingsPage from './pages/bookings/BookingsPage';
 import BookingFormPage from './pages/bookings/BookingFormPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import UsersPage from './pages/users/UsersPage';
+import UserForm from './pages/users/UserForm';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from './store';
+import { getCurrentUser } from './store/slices/authSlice';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('tvoya_shina_token');
+  const { isAuthenticated, token, user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch<AppDispatch>();
   
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  // Проверяем сначала Redux состояние, затем localStorage
+  const hasToken = !!localStorage.getItem('tvoya_shina_token');
+  const isAuth = isAuthenticated || hasToken;
+  
+  console.log('ProtectedRoute check:', { 
+    isAuthenticated, 
+    hasToken, 
+    hasUser: !!user,
+    localStorageToken: localStorage.getItem('tvoya_shina_token'), 
+    reduxToken: token,
+    isAuth 
+  });
+  
+  // Если есть токен, но нет данных пользователя, загружаем их
+  useEffect(() => {
+    if (hasToken && !user) {
+      console.log('ProtectedRoute: есть токен, но нет данных пользователя. Загружаем данные...');
+      dispatch(getCurrentUser());
+    }
+  }, [hasToken, user, dispatch]);
+  
+  return isAuth ? <>{children}</> : <Navigate to="/login" />;
 };
 
 // Создание темы Material UI
@@ -85,6 +112,23 @@ function App() {
               <Route path="bookings/new" element={<BookingFormPage />} />
               <Route path="bookings/:id/edit" element={<BookingFormPage />} />
               <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
+              {/* Маршруты для клиентских автомобилей */}
+              <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
+              <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
+              <Route path="my-bookings" element={<div>Мои записи на шиномонтаж (в разработке)</div>} />
+              {/* Маршруты для сервисных центров клиента */}
+              <Route path="service-points/search" element={<div>Поиск центров (в разработке)</div>} />
+              <Route path="service-points/favorites" element={<div>Избранные центры (в разработке)</div>} />
+              {/* Маршруты для справочников */}
+              <Route path="cars" element={<div>Управление автомобилями (в разработке)</div>} />
+              <Route path="services" element={<div>Управление услугами (в разработке)</div>} />
+              {/* Маршруты для отчетов */}
+              <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
+              <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
+              {/* Маршрут для пользователей */}
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/create" element={<UserForm />} />
+              <Route path="users/:id/edit" element={<UserForm />} />
               {/* Другие маршруты */}
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />

@@ -40,9 +40,9 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { logout, getCurrentUser } from '../../store/slices/authSlice';
+import { logoutUser, getCurrentUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../../types';
+import { UserRole, User } from '../../types';
 
 const drawerWidth = 240;
 
@@ -65,18 +65,33 @@ const MainLayout: React.FC = () => {
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   // Добавляем useEffect для проверки токена и загрузки данных пользователя при монтировании компонента
   useEffect(() => {
     const token = localStorage.getItem('tvoya_shina_token');
     
+    console.log('MainLayout: Checking auth state:', { 
+      hasToken: !!token, 
+      hasUserData: !!user,
+      isAuthenticated 
+    });
+    
     // Если токен существует, но данных пользователя нет, загружаем их
     if (token && !user) {
       console.log('Token exists but user data is missing. Loading user data...');
-      dispatch(getCurrentUser());
+      dispatch(getCurrentUser())
+        .unwrap()
+        .then(userData => {
+          console.log('User data loaded successfully:', userData);
+        })
+        .catch(error => {
+          console.error('Failed to load user data:', error);
+          // Если произошла ошибка при загрузке данных, перенаправляем на страницу входа
+          navigate('/login');
+        });
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, navigate, isAuthenticated]);
 
   // Инициализация состояния открытия секций меню
   useEffect(() => {
@@ -106,7 +121,7 @@ const MainLayout: React.FC = () => {
 
   const handleLogout = async () => {
     handleUserMenuClose();
-    await dispatch(logout());
+    await dispatch(logoutUser());
     navigate('/login');
   };
 
@@ -317,12 +332,8 @@ const MainLayout: React.FC = () => {
     }
 
     // Получаем роль пользователя
-    const userRole = user.role;
+    const userRole = (user as User).role;
     console.log('Роль пользователя:', userRole);
-
-    // Теперь нам не нужно преобразовывать роли, так как enum UserRole
-    // соответствует значениям из API
-    console.log('UserRole.ADMIN:', UserRole.ADMIN);
     
     // Получаем все секции меню
     const allSections = getMenuSections();
@@ -331,7 +342,7 @@ const MainLayout: React.FC = () => {
     const filteredSections = allSections.map(section => {
       // Фильтруем пункты меню в секции, оставляя только те, для которых у пользователя есть доступ
       const filteredItems = section.items.filter(item => 
-        item.roles.some(role => role === userRole)
+        item.roles.some(role => role === userRole as unknown as UserRole)
       );
       
       // Возвращаем секцию только если в ней остались пункты меню
@@ -347,7 +358,7 @@ const MainLayout: React.FC = () => {
 
   // Разрешенные действия для каждой роли (информационный блок)
   const getRoleCapabilities = () => {
-    if (!user || !user.role) return null;
+    if (!user || !(user as User).role) return null;
 
     const capabilities: { [key in UserRole]: string[] } = {
       [UserRole.ADMIN]: [
@@ -375,7 +386,7 @@ const MainLayout: React.FC = () => {
     };
 
     // Проверяем, что user.role валидный и существует в списке возможностей
-    const userRole = user.role as UserRole;
+    const userRole = (user as User).role as UserRole;
     if (!capabilities[userRole]) {
       return null;
     }
@@ -529,14 +540,14 @@ const MainLayout: React.FC = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Твоя шина - {user ? getRoleName(user.role as UserRole) : 'Авторизация'}
+            Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
           </Typography>
           {user ? (
             <>
               <Button color="inherit" onClick={handleUserMenuOpen} endIcon={<AccountIcon />}>
-                {user.first_name
-                  ? `${user.first_name} ${user.last_name || ''}`
-                  : user.email}
+                {(user as User).first_name
+                  ? `${(user as User).first_name} ${(user as User).last_name || ''}`
+                  : (user as User).email}
               </Button>
               <Menu
                 anchorEl={userMenuAnchorEl}
