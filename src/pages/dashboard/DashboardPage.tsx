@@ -82,27 +82,6 @@ const DashboardPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const activateAllMenuItems = () => {
-    // Включаем режим отладки
-    localStorage.setItem('tvoya_shina_dev_mode', 'true');
-    // Отправляем пользовательское событие, чтобы уведомить MainLayout
-    window.dispatchEvent(new CustomEvent('tvoya_shina_dev_mode_change', { detail: true }));
-    // Заставляем компонент перерисоваться
-    setData({...data});
-  };
-
-  const deactivateAllMenuItems = () => {
-    // Выключаем режим отладки
-    localStorage.removeItem('tvoya_shina_dev_mode');
-    // Отправляем пользовательское событие, чтобы уведомить MainLayout
-    window.dispatchEvent(new CustomEvent('tvoya_shina_dev_mode_change', { detail: false }));
-    // Заставляем компонент перерисоваться
-    setData({...data});
-  };
-
-  // Проверяем, включен ли режим отладки
-  const isDevMode = localStorage.getItem('tvoya_shina_dev_mode') === 'true';
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
@@ -126,27 +105,6 @@ const DashboardPage: React.FC = () => {
             <Typography paragraph>
               Выберите раздел в меню слева для начала работы.
             </Typography>
-            
-            {/* Кнопки для отладки меню */}
-            {isDevMode ? (
-              <Button 
-                variant="outlined" 
-                color="error" 
-                onClick={deactivateAllMenuItems}
-                sx={{ mt: 2 }}
-              >
-                Выключить режим отладки меню
-              </Button>
-            ) : (
-              <Button 
-                variant="outlined" 
-                color="secondary" 
-                onClick={activateAllMenuItems}
-                sx={{ mt: 2 }}
-              >
-                Показать все пункты меню (режим отладки)
-              </Button>
-            )}
           </Paper>
         </Grid>
       </Grid>
