@@ -41,27 +41,21 @@ const LoginPage: React.FC = () => {
   const [directLoginError, setDirectLoginError] = useState<string | null>(null);
   const [directLoading, setDirectLoading] = useState(false);
   
-  // Flag to track if we're logging in manually (vs redirecting due to isAuthenticated)
-  const [isManualLogin, setIsManualLogin] = useState(false);
+  // Новый подход: используем локальное состояние для отслеживания успешного логина
+  const [successfulLogin, setSuccessfulLogin] = useState(false);
 
-  // Only check authentication status if not in the middle of a manual login
+  // Перенаправляем на дашборд только после успешного логина
   useEffect(() => {
-    // If we're not doing a manual login and the user is authenticated
-    if (!isManualLogin && isAuthenticated) {
-      // Add a delay before redirecting to prevent flash of login screen
-      const redirectTimer = setTimeout(() => {
-        navigate('/dashboard');
-      }, 1000);
-      
-      return () => clearTimeout(redirectTimer);
+    if (successfulLogin && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, navigate, isManualLogin]);
+  }, [successfulLogin, isAuthenticated, navigate]);
 
   // Direct API call for login
   const directLogin = async (email: string, password: string) => {
     setDirectLoading(true);
     setDirectLoginError(null);
-    setIsManualLogin(true); // Set flag to prevent automatic redirect
+    setSuccessfulLogin(false); // Сбрасываем флаг успешного логина при начале новой попытки
     
     try {
       console.log('Attempting to login with credentials:', { email, password: '***' });
@@ -83,12 +77,9 @@ const LoginPage: React.FC = () => {
       await dispatch(getCurrentUser());
       console.log('User loaded into Redux');
       
-      // Only navigate after everything is complete
-      console.log('Attempting to navigate to dashboard...');
-      navigate('/dashboard', { replace: true });
+      // Устанавливаем флаг успешного логина, который активирует эффект с редиректом
+      setSuccessfulLogin(true);
       
-      // Reset manual login flag after successful login and navigation
-      setIsManualLogin(false);
     } catch (err: any) {
       console.error('Login error details:', err);
       
@@ -99,9 +90,6 @@ const LoginPage: React.FC = () => {
       } else {
         setDirectLoginError(err.response?.data?.message || 'Произошла ошибка при входе');
       }
-      
-      // Reset manual login flag on error
-      setIsManualLogin(false);
     } finally {
       setDirectLoading(false);
     }
@@ -251,4 +239,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

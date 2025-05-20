@@ -85,15 +85,19 @@ const DashboardPage: React.FC = () => {
   const activateAllMenuItems = () => {
     // Включаем режим отладки
     localStorage.setItem('tvoya_shina_dev_mode', 'true');
-    // Перезагружаем страницу
-    window.location.reload();
+    // Отправляем пользовательское событие, чтобы уведомить MainLayout
+    window.dispatchEvent(new CustomEvent('tvoya_shina_dev_mode_change', { detail: true }));
+    // Заставляем компонент перерисоваться
+    setData({...data});
   };
 
   const deactivateAllMenuItems = () => {
     // Выключаем режим отладки
     localStorage.removeItem('tvoya_shina_dev_mode');
-    // Перезагружаем страницу
-    window.location.reload();
+    // Отправляем пользовательское событие, чтобы уведомить MainLayout
+    window.dispatchEvent(new CustomEvent('tvoya_shina_dev_mode_change', { detail: false }));
+    // Заставляем компонент перерисоваться
+    setData({...data});
   };
 
   // Проверяем, включен ли режим отладки

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link as RouterLink } from 'react-router-dom';
 import {
   AppBar,
@@ -40,7 +40,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { logout } from '../../store/slices/authSlice';
+import { logout, getCurrentUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 
@@ -63,9 +63,53 @@ const MainLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
+  // Добавляем состояние для отслеживания режима отладки меню
+  const [isDevMode, setIsDevMode] = useState(localStorage.getItem('tvoya_shina_dev_mode') === 'true');
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+
+  // Добавляем useEffect для проверки токена и загрузки данных пользователя при монтировании компонента
+  useEffect(() => {
+    const token = localStorage.getItem('tvoya_shina_token');
+    
+    // Если токен существует, но данных пользователя нет, загружаем их
+    if (token && !user) {
+      console.log('Token exists but user data is missing. Loading user data...');
+      dispatch(getCurrentUser());
+    }
+  }, [dispatch, user]);
+
+  // Добавляем useEffect для отслеживания изменений в localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsDevMode(localStorage.getItem('tvoya_shina_dev_mode') === 'true');
+    };
+
+    // Обработчик пользовательского события от DashboardPage
+    const handleDevModeChange = (event: any) => {
+      setIsDevMode(event.detail);
+    };
+
+    // Слушаем событие изменения localStorage
+    window.addEventListener('storage', handleStorageChange);
+    // Слушаем пользовательское событие от DashboardPage
+    window.addEventListener('tvoya_shina_dev_mode_change', handleDevModeChange);
+    
+    // Периодически проверяем localStorage на изменения
+    const interval = setInterval(() => {
+      const currentDevMode = localStorage.getItem('tvoya_shina_dev_mode') === 'true';
+      if (currentDevMode !== isDevMode) {
+        setIsDevMode(currentDevMode);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('tvoya_shina_dev_mode_change', handleDevModeChange);
+      clearInterval(interval);
+    };
+  }, [isDevMode]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -285,10 +329,7 @@ const MainLayout: React.FC = () => {
 
   // Фильтруем разделы и пункты меню в зависимости от роли пользователя
   const getFilteredMenuSections = () => {
-    // Для отладки - проверяем специальный флаг
-    const isDevMode = localStorage.getItem('tvoya_shina_dev_mode') === 'true';
-    
-    // В режиме отладки показываем все пункты меню независимо от роли
+    // Для отладки используем состояние isDevMode вместо прямого доступа к localStorage
     if (isDevMode) {
       console.log("Включен режим отладки! Показаны все пункты меню.");
       return getMenuSections();
@@ -579,4 +620,4 @@ const MainLayout: React.FC = () => {
   );
 };
 
-export default MainLayout; 
+export default MainLayout;
