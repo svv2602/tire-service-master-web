@@ -27,6 +27,8 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  Switch,
+  IconButton,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,11 +40,13 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   Business as BusinessIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { fetchPartners, deletePartner } from '../../store/slices/partnersSlice';
+import { fetchPartners, deletePartner, togglePartnerActive } from '../../store/slices/partnersSlice';
 import { useNavigate } from 'react-router-dom';
 
 const PartnersPage: React.FC = () => {
@@ -56,6 +60,9 @@ const PartnersPage: React.FC = () => {
   const [partnerToDelete, setPartnerToDelete] = useState<number | null>(null);
   const [partnerToDeleteName, setPartnerToDeleteName] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [toggleActiveDialogOpen, setToggleActiveDialogOpen] = useState(false);
+  const [partnerToToggle, setPartnerToToggle] = useState<{ id: number, is_active: boolean, name: string } | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>('company_name');
 
   const loadPartners = useCallback(() => {
@@ -143,6 +150,29 @@ const PartnersPage: React.FC = () => {
     setDeleteError(null);
   };
 
+  const handleToggleActive = (id: number, currentStatus: boolean, name: string) => {
+    setPartnerToToggle({ id, is_active: currentStatus, name });
+    setToggleError(null);
+    setToggleActiveDialogOpen(true);
+  };
+
+  const handleConfirmToggleActive = () => {
+    if (partnerToToggle) {
+      dispatch(togglePartnerActive({ 
+        id: partnerToToggle.id, 
+        active: !partnerToToggle.is_active 
+      }))
+        .unwrap()
+        .then(() => {
+          setToggleActiveDialogOpen(false);
+          setPartnerToToggle(null);
+        })
+        .catch((error) => {
+          setToggleError(typeof error === 'string' ? error : 'Произошла ошибка при изменении статуса партнера');
+        });
+    }
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -214,6 +244,7 @@ const PartnersPage: React.FC = () => {
                     <TableCell>Контактное лицо</TableCell>
                     <TableCell>Контактная информация</TableCell>
                     <TableCell>Реквизиты</TableCell>
+                    <TableCell>Активность</TableCell>
                     <TableCell>Действия</TableCell>
                   </TableRow>
                 </TableHead>
@@ -304,6 +335,24 @@ const PartnersPage: React.FC = () => {
                           </Box>
                         </TableCell>
                         <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip 
+                              label={partner.is_active ? "Активен" : "Неактивен"} 
+                              color={partner.is_active ? "success" : "default"}
+                              size="small"
+                            />
+                            <Tooltip title={partner.is_active ? "Деактивировать партнера" : "Активировать партнера"}>
+                              <IconButton
+                                onClick={() => handleToggleActive(partner.id, partner.is_active, partner.company_name)}
+                                color={partner.is_active ? "success" : "error"}
+                                size="small"
+                              >
+                                {partner.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                               size="small"
@@ -381,6 +430,88 @@ const PartnersPage: React.FC = () => {
             disabled={loading}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Удалить'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог подтверждения изменения статуса */}
+      <Dialog open={toggleActiveDialogOpen} onClose={() => {
+        setToggleActiveDialogOpen(false);
+        setPartnerToToggle(null);
+      }}>
+        <DialogTitle>Подтверждение изменения статуса</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы действительно хотите {partnerToToggle?.is_active ? "деактивировать" : "активировать"} партнера "{partnerToToggle?.name}"?
+          </Typography>
+          <Box sx={{ mt: 1 }}>
+            {partnerToToggle?.is_active ? (
+              <>
+                <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                  При деактивации партнера:
+                </Typography>
+                <ul>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Все сервисные точки партнера будут переведены в статус "Временно закрыты"
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Пользователь партнера и все его менеджеры будут переведены в роль "Клиент"
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Они сохранят доступ к системе, но только с правами клиента
+                    </Typography>
+                  </li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                  При активации партнера:
+                </Typography>
+                <ul>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Сервисные точки вернутся в активный статус
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Пользователь партнера вернет роль "Партнер"
+                    </Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2" color="text.secondary">
+                      Менеджеры останутся с ролью "Клиент" и потребуют ручного восстановления их ролей
+                    </Typography>
+                  </li>
+                </ul>
+              </>
+            )}
+          </Box>
+          
+          {toggleError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {toggleError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => {
+            setToggleActiveDialogOpen(false);
+            setPartnerToToggle(null);
+          }}>Отмена</Button>
+          <Button 
+            onClick={handleConfirmToggleActive} 
+            color="primary" 
+            variant="contained"
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Изменить'}
           </Button>
         </DialogActions>
       </Dialog>
