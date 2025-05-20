@@ -1,30 +1,38 @@
-// Типы пользователей
-export enum UserRole {
-  ADMIN = 'admin',
-  PARTNER = 'operator',
-  MANAGER = 'manager',
-  CLIENT = 'client'
-}
-
+// Типы для User и AuthState
 export interface User {
   id: number;
   email: string;
-  phone?: string;
-  first_name?: string;
-  last_name?: string;
+  first_name: string;
+  last_name: string;
   middle_name?: string;
-  role: UserRole;
-  is_active: boolean;
-  email_verified: boolean;
-  phone_verified: boolean;
+  phone?: string;
+  role: string;
+  client_id?: number;
+  partner_id?: number;
+  manager_id?: number;
+  is_active?: boolean;
+  last_login?: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  profile?: any;
 }
 
 export interface AuthState {
   user: User | null;
   token: string | null;
-  isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
+}
+
+// Перечисление ролей пользователей
+export enum UserRole {
+  CLIENT = 'client',
+  PARTNER = 'partner',
+  MANAGER = 'manager',
+  ADMIN = 'admin'
 }
 
 // Типы для партнеров
@@ -251,6 +259,15 @@ export interface BookingsState {
   totalItems: number;
 }
 
+// Состояние для пользователей
+export interface UsersState {
+  users: User[];
+  selectedUser: User | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
 // Типы для локаций
 export interface Region {
   id: number;
@@ -274,4 +291,5 @@ export interface RootState {
   servicePoints: ServicePointsState;
   clients: ClientsState;
   bookings: BookingsState;
+  users: UsersState;
 } 
