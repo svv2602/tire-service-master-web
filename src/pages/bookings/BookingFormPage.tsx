@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
 import {
   Box,
   Paper,
@@ -30,7 +30,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { bookingsApi, Booking, BookingService } from '../../api/bookings';
-import { UserRole } from '../../types';
+import { User, UserRole } from '../../types';
 
 // Типы для формы бронирования
 interface ServiceSelection {
@@ -383,7 +383,7 @@ const BookingFormPage: React.FC = () => {
                   value={clientId || ''}
                   onChange={(e) => setClientId(e.target.value as number)}
                   label="Клиент"
-                  disabled={user?.role === UserRole.CLIENT}
+                  disabled={(user as User | null)?.role === UserRole.CLIENT}
                 >
                   {clients.map((client) => (
                     <MenuItem key={client.id} value={client.id}>

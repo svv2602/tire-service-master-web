@@ -1,240 +1,151 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { login } from '../../store/slices/authSlice';
 import {
   Container,
-  Box,
+  Paper,
   Typography,
   TextField,
   Button,
-  Checkbox,
-  FormControlLabel,
-  Paper,
-  Link,
+  Box,
   Alert,
   CircularProgress,
-  Divider,
+  Link
 } from '@mui/material';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
-import { useDispatch, useSelector } from 'react-redux';
-import { login, getCurrentUser } from '../../store/slices/authSlice';
-import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { authApi } from '../../api';
-
-const validationSchema = yup.object({
-  email: yup
-    .string()
-    .email('Введіть коректний email')
-    .required('Email обов\'язковий для заповнення'),
-  password: yup
-    .string()
-    .required('Пароль обов\'язковий для заповнення'),
-});
+import { Lock as LockIcon } from '@mui/icons-material';
 
 const LoginPage: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [directLoginError, setDirectLoginError] = useState<string | null>(null);
-  const [directLoading, setDirectLoading] = useState(false);
-  
-  // Новый подход: используем локальное состояние для отслеживания успешного логина
-  const [successfulLogin, setSuccessfulLogin] = useState(false);
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
-  // Перенаправляем на дашборд только после успешного логина
-  useEffect(() => {
-    if (successfulLogin && isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    if (!email) {
+      errors.email = 'Email обязателен';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = 'Некорректный формат email';
     }
-  }, [successfulLogin, isAuthenticated, navigate]);
 
-  // Direct API call for login
-  const directLogin = async (email: string, password: string) => {
-    setDirectLoading(true);
-    setDirectLoginError(null);
-    setSuccessfulLogin(false); // Сбрасываем флаг успешного логина при начале новой попытки
-    
+    if (!password) {
+      errors.password = 'Пароль обязателен';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
     try {
-      console.log('Attempting to login with credentials:', { email, password: '***' });
+      console.log('Отправка данных для входа:', { email, password: '***' });
+      const actionResult = await dispatch(login({ email, password })).unwrap();
+      console.log('Результат входа:', actionResult);
       
-      // Используем authApi вместо прямого вызова axios
-      const response = await authApi.login(email, password);
-      
-      console.log('Login response:', response.data);
-      
-      // Store token in localStorage
-      localStorage.setItem('tvoya_shina_token', response.data.auth_token);
-      console.log('Token saved to localStorage');
-      
-      // Dispatch login action to update Redux state
-      await dispatch(login(response.data));
-      console.log('Redux state updated');
-      
-      // Получить пользователя и обновить Redux
-      const userResult = await dispatch(getCurrentUser()).unwrap();
-      console.log('User loaded into Redux:', userResult);
-      
-      // Устанавливаем флаг успешного логина, который активирует эффект с редиректом
-      setSuccessfulLogin(true);
-      
-    } catch (err: any) {
-      console.error('Login error details:', err);
-      
-      if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED') {
-        setDirectLoginError('API сервер недоступен. Убедитесь, что сервер запущен на порту 8000.');
-      } else if (err.response?.status === 401) {
-        setDirectLoginError('Неверный email или пароль');
-      } else {
-        setDirectLoginError(err.response?.data?.message || 'Произошла ошибка при входе');
+      if (actionResult && actionResult.auth_token) {
+        console.log('Успешный вход, перенаправление на /dashboard');
+        // После успешного входа загружаем данные пользователя
+        navigate('/dashboard');
       }
-    } finally {
-      setDirectLoading(false);
+    } catch (err) {
+      console.error('Ошибка при входе:', err);
+      // Ошибка уже обрабатывается в slice
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    validationSchema: validationSchema,
-    onSubmit: (values) => {
-      // Use direct login instead of Redux
-      directLogin(values.email, values.password);
-    },
-  });
-
-  const handleRememberMeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRememberMe(event.target.checked);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (formErrors.email) {
+      setFormErrors(prev => ({ ...prev, email: '' }));
+    }
   };
 
-  const setTestCredentials = (email: string, password: string) => {
-    formik.setFieldValue('email', email);
-    formik.setFieldValue('password', password);
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (formErrors.password) {
+      setFormErrors(prev => ({ ...prev, password: '' }));
+    }
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Box
-        sx={{
-          marginTop: 8,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        <Paper
-          elevation={3}
-          sx={{
-            padding: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-          }}
-        >
-          <Typography component="h1" variant="h5">
-            Вхід в систему
+    <Container maxWidth="sm" sx={{ display: 'flex', height: '100vh', alignItems: 'center' }}>
+      <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+          <LockIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+          <Typography variant="h4" component="h1" gutterBottom>
+            Вход в систему
           </Typography>
-          {(error || directLoginError) && (
-            <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
-              {directLoginError || error}
-            </Alert>
-          )}
-          <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ mt: 1, width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={formik.values.email}
-              onChange={formik.handleChange}
-              error={formik.touched.email && Boolean(formik.errors.email)}
-              helperText={formik.touched.email && formik.errors.email}
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Пароль"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              error={formik.touched.password && Boolean(formik.errors.password)}
-              helperText={formik.touched.password && formik.errors.password}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox 
-                  value="remember" 
-                  color="primary" 
-                  checked={rememberMe}
-                  onChange={handleRememberMeChange}
-                />
-              }
-              label="Запам'ятати мене"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={directLoading || loading}
-            >
-              {(directLoading || loading) ? <CircularProgress size={24} /> : 'Увійти'}
-            </Button>
-            
-            <Divider sx={{ my: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Тестові дані для входу
-              </Typography>
-            </Divider>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-              <Button 
-                size="small" 
-                variant="outlined"
-                onClick={() => setTestCredentials('admin@example.com', 'admin123')}
-              >
-                Адмін
-              </Button>
-              <Button 
-                size="small" 
-                variant="outlined"
-                onClick={() => setTestCredentials('admin@test.com', 'admin')}
-              >
-                Простий адмін
-              </Button>
-              <Button 
-                size="small" 
-                variant="outlined"
-                onClick={() => setTestCredentials('test@test.com', 'test')}
-              >
-                Тест
-              </Button>
-            </Box>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mt: 3 }}>
-              <Link href="#" variant="body2" onClick={() => navigate('/reset-password')}>
-                Забули пароль?
-              </Link>
-              <Link href="#" variant="body2" onClick={() => navigate('/register')}>
-                {"Немає облікового запису? Зареєструватись"}
-              </Link>
-            </Box>
-          </Box>
-        </Paper>
-      </Box>
+          <Typography variant="body2" color="textSecondary" align="center">
+            Введите email и пароль, чтобы войти в систему Твоя Шина
+          </Typography>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Email"
+            variant="outlined"
+            margin="normal"
+            type="email"
+            value={email}
+            onChange={handleEmailChange}
+            error={!!formErrors.email}
+            helperText={formErrors.email}
+            disabled={loading}
+            autoFocus
+          />
+
+          <TextField
+            fullWidth
+            label="Пароль"
+            variant="outlined"
+            margin="normal"
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            error={!!formErrors.password}
+            helperText={formErrors.password}
+            disabled={loading}
+          />
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled={loading}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            {loading ? <CircularProgress size={24} /> : 'Войти'}
+          </Button>
+        </form>
+
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="textSecondary">
+            Тестовые данные для входа в систему:
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Email: admin@example.com, Пароль: password
+          </Typography>
+        </Box>
+      </Paper>
     </Container>
   );
 };

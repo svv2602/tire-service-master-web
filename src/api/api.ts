@@ -16,14 +16,18 @@ const apiClient = axios.create({
 // Функция для проверки доступности API
 const checkApiAvailability = async (url: string): Promise<boolean> => {
   try {
-    const result = await fetch(`${url}/api/v1/health`, { 
-      method: 'GET',
-      mode: 'no-cors',
-      cache: 'no-cache',
-      headers: { 'Content-Type': 'application/json' },
-      referrerPolicy: 'no-referrer',
+    // Используем axios напрямую вместо fetch с no-cors
+    const testClient = axios.create({
+      baseURL: url,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 3000, // Сокращаем таймаут
     });
-    return true;
+    
+    const response = await testClient.get('/api/v1/health');
+    console.log(`API endpoint ${url} available, status: ${response.status}`);
+    return response.status === 200;
   } catch (error) {
     console.log(`API endpoint ${url} not available`);
     return false;
@@ -39,10 +43,20 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
   ];
   
   for (const url of possibleUrls) {
-    if (await checkApiAvailability(url)) {
-      console.log(`Using API endpoint: ${url}`);
-      apiClient.defaults.baseURL = url;
-      break;
+    try {
+      // Используем GET запрос напрямую вместо axios объекта
+      const response = await fetch(`${url}/api/v1/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (response.ok) {
+        console.log(`Using API endpoint: ${url}`);
+        apiClient.defaults.baseURL = url;
+        break;
+      }
+    } catch (error) {
+      console.log(`API endpoint ${url} not available`);
     }
   }
 })();
@@ -250,17 +264,50 @@ export const referencesApi = {
     return apiClient.get('/api/v1/booking_statuses');
   },
   getPaymentStatuses: () => {
-    return apiClient.get('/payment_statuses');
+    return apiClient.get('/api/v1/payment_statuses');
   },
   getCancellationReasons: () => {
-    return apiClient.get('/cancellation_reasons');
+    return apiClient.get('/api/v1/cancellation_reasons');
   },
   getAmenities: () => {
-    return apiClient.get('/amenities');
+    return apiClient.get('/api/v1/amenities');
   },
   getCarTypes: () => {
-    return apiClient.get('/car_types');
+    return apiClient.get('/api/v1/car_types');
   },
+};
+
+// API для работы с пользователями
+export const usersApi = {
+  login: (credentials: { email: string, password: string }) => {
+    console.log('usersApi.login - Sending login request with:', { email: credentials.email, password: '***' });
+    return apiClient.post('/api/v1/auth/login', credentials);
+  },
+  getCurrentUser: () => {
+    console.log('usersApi.getCurrentUser - Fetching current user data');
+    return apiClient.get('/api/v1/users/me');
+  },
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/users', { params });
+  },
+  getById: (id: number) => {
+    return apiClient.get(`/api/v1/users/${id}`);
+  },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/users', data);
+  },
+  update: (id: number, data: any) => {
+    return apiClient.put(`/api/v1/users/${id}`, data);
+  },
+  delete: (id: number) => {
+    return apiClient.delete(`/api/v1/users/${id}`);
+  },
+  changeRole: (id: number, role: string) => {
+    return apiClient.put(`/api/v1/users/${id}/change_role`, { role });
+  },
+  changeStatus: (id: number, isActive: boolean) => {
+    return apiClient.put(`/api/v1/users/${id}/change_status`, { is_active: isActive });
+  }
 };
 
 // По умолчанию экспортируем apiClient
