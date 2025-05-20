@@ -5,11 +5,16 @@ import {
   Button,
   TextField,
   Paper,
-  Grid,
   CircularProgress,
   Divider,
   Alert,
   Snackbar,
+  InputAdornment,
+  Stack,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -18,22 +23,43 @@ import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
 import { fetchPartnerById, createPartner, updatePartner, clearError } from '../../store/slices/partnersSlice';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Language as LanguageIcon, Phone as PhoneIcon } from '@mui/icons-material';
 
-// Схема валидации
+// Расширенная схема валидации с более четкими правилами
 const validationSchema = yup.object({
-  company_name: yup.string().required('Название компании обязательно'),
-  contact_person: yup.string().required('Контактное лицо обязательно'),
-  email: yup.string().email('Введите корректный email').required('Email обязателен'),
-  phone: yup.string().required('Телефон обязателен'),
-  company_description: yup.string(),
-  website: yup.string().url('Введите корректный URL'),
-  tax_number: yup.string(),
-  legal_address: yup.string(),
-  logo_url: yup.string().url('Введите корректный URL логотипа'),
-  first_name: yup.string().required('Имя обязательно'),
-  last_name: yup.string().required('Фамилия обязательна'),
-  middle_name: yup.string(),
+  company_name: yup.string()
+    .required('Название компании обязательно')
+    .min(2, 'Название должно быть не менее 2 символов')
+    .max(100, 'Название должно быть не более 100 символов'),
+  contact_person: yup.string()
+    .required('Контактное лицо обязательно')
+    .min(2, 'ФИО должно быть не менее 2 символов'),
+  email: yup.string()
+    .email('Введите корректный email')
+    .required('Email обязателен'),
+  phone: yup.string()
+    .required('Телефон обязателен')
+    .matches(/^\+?[0-9\s\-\(\)]{10,15}$/, 'Введите корректный номер телефона в международном формате (от 10 до 15 символов)'),
+  company_description: yup.string()
+    .max(2000, 'Описание должно быть не более 2000 символов'),
+  website: yup.string()
+    .url('Введите корректный URL (например, https://example.com)')
+    .nullable(),
+  tax_number: yup.string()
+    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов')
+    .nullable()
+    .optional(),
+  legal_address: yup.string()
+    .max(200, 'Адрес должен быть не более 200 символов'),
+  logo_url: yup.string()
+    .url('Введите корректный URL логотипа')
+    .nullable(),
+  first_name: yup.string()
+    .required('Имя обязательно')
+    .min(2, 'Имя должно быть не менее 2 символов'),
+  last_name: yup.string()
+    .required('Фамилия обязательна')
+    .min(2, 'Фамилия должна быть не менее 2 символов'),
 });
 
 interface PartnerFormData {
@@ -48,7 +74,6 @@ interface PartnerFormData {
   logo_url: string;
   first_name: string;
   last_name: string;
-  middle_name: string;
 }
 
 const PartnerFormPage: React.FC = () => {
@@ -58,6 +83,8 @@ const PartnerFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { selectedPartner, loading, error } = useSelector((state: RootState) => state.partners);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [apiErrors, setApiErrors] = useState<Record<string, string[]>>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -77,7 +104,6 @@ const PartnerFormPage: React.FC = () => {
     logo_url: selectedPartner?.logo_url || '',
     first_name: selectedPartner?.user?.first_name || '',
     last_name: selectedPartner?.user?.last_name || '',
-    middle_name: selectedPartner?.user?.middle_name || '',
   };
 
   const formik = useFormik({
@@ -86,23 +112,26 @@ const PartnerFormPage: React.FC = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        // Сбрасываем ошибки перед отправкой
+        setApiErrors({});
+        setGeneralError(null);
+        
         // Подготовка данных для API
         const userData = {
           email: values.email,
           phone: values.phone,
           first_name: values.first_name,
           last_name: values.last_name,
-          middle_name: values.middle_name,
         };
         
         const partnerData = {
           company_name: values.company_name,
           contact_person: values.contact_person,
-          company_description: values.company_description,
-          website: values.website,
-          tax_number: values.tax_number,
-          legal_address: values.legal_address,
-          logo_url: values.logo_url,
+          company_description: values.company_description || undefined,
+          website: values.website || undefined,
+          tax_number: values.tax_number || undefined,
+          legal_address: values.legal_address || undefined,
+          logo_url: values.logo_url || undefined,
         };
         
         const apiData = {
@@ -114,14 +143,51 @@ const PartnerFormPage: React.FC = () => {
           await dispatch(updatePartner({ id: Number(id), data: apiData })).unwrap();
           setSuccessMessage('Партнер успешно обновлен');
         } else {
+          // Создание нового партнера
           await dispatch(createPartner(apiData)).unwrap();
-          setSuccessMessage('Партнер успешно создан');
+          setSuccessMessage('Партнер успешно создан. Пароль был сгенерирован автоматически и отправлен на указанный email.');
           setTimeout(() => {
             navigate('/partners');
-          }, 1500);
+          }, 2000);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Ошибка при сохранении:', error);
+        
+        // Если есть детализация ошибок по полям
+        if (error.errors && typeof error.errors === 'object') {
+          setApiErrors(error.errors);
+          
+          // Устанавливаем ошибки в формик
+          const formikErrors: any = {};
+          
+          // Обработка ошибок пользователя
+          if (error.errors.user) {
+            error.errors.user.forEach((message: string) => {
+              if (message.toLowerCase().includes('email')) formikErrors.email = message;
+              if (message.toLowerCase().includes('phone')) formikErrors.phone = message;
+              if (message.toLowerCase().includes('first name')) formikErrors.first_name = message;
+              if (message.toLowerCase().includes('last name')) formikErrors.last_name = message;
+            });
+          }
+          
+          // Обработка ошибок партнера
+          if (error.errors.partner) {
+            error.errors.partner.forEach((message: string) => {
+              if (message.toLowerCase().includes('company name')) formikErrors.company_name = message;
+              if (message.toLowerCase().includes('contact person')) formikErrors.contact_person = message;
+              if (message.toLowerCase().includes('tax number')) formikErrors.tax_number = message;
+              if (message.toLowerCase().includes('website')) formikErrors.website = message;
+              if (message.toLowerCase().includes('logo')) formikErrors.logo_url = message;
+              if (message.toLowerCase().includes('address')) formikErrors.legal_address = message;
+              if (message.toLowerCase().includes('description')) formikErrors.company_description = message;
+            });
+          }
+          
+          formik.setErrors(formikErrors);
+        } else if (error.message) {
+          // Общая ошибка
+          setGeneralError(error.message || 'Произошла ошибка при сохранении партнера');
+        }
       }
     },
   });
@@ -132,6 +198,30 @@ const PartnerFormPage: React.FC = () => {
 
   const handleBack = () => {
     navigate('/partners');
+  };
+
+  // Отображение подробных ошибок API
+  const renderApiErrors = () => {
+    if (Object.keys(apiErrors).length === 0 && !generalError) return null;
+    
+    return (
+      <Alert severity="error" sx={{ mb: 2 }} onClose={() => { setApiErrors({}); setGeneralError(null); }}>
+        <Typography variant="subtitle1" fontWeight="bold">
+          {generalError || (isEditMode ? 'Не удалось обновить партнера' : 'Не удалось создать партнера')}
+        </Typography>
+        {Object.keys(apiErrors).length > 0 && (
+          <List dense disablePadding>
+            {Object.entries(apiErrors).map(([category, errors]) => (
+              errors.map((error, index) => (
+                <ListItem key={`${category}-${index}`} disablePadding>
+                  <ListItemText primary={`• ${error}`} />
+                </ListItem>
+              ))
+            ))}
+          </List>
+        )}
+      </Alert>
+    );
   };
 
   return (
@@ -150,6 +240,8 @@ const PartnerFormPage: React.FC = () => {
           {error}
         </Alert>
       )}
+      
+      {renderApiErrors()}
 
       <Paper sx={{ p: 3 }}>
         {loading ? (
@@ -159,7 +251,8 @@ const PartnerFormPage: React.FC = () => {
         ) : (
           <form onSubmit={formik.handleSubmit}>
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
+              {/* Основная информация */}
+              <Grid size={12}>
                 <Typography variant="h6" gutterBottom>
                   Основная информация
                 </Typography>
@@ -176,6 +269,7 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.company_name && Boolean(formik.errors.company_name)}
                   helperText={formik.touched.company_name && formik.errors.company_name}
+                  required
                 />
               </Grid>
 
@@ -190,6 +284,7 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
                   helperText={formik.touched.contact_person && formik.errors.contact_person}
+                  required
                 />
               </Grid>
 
@@ -204,7 +299,11 @@ const PartnerFormPage: React.FC = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
+                  helperText={
+                    (formik.touched.email && formik.errors.email) || 
+                    (!isEditMode && "На этот email будет отправлен пароль для доступа к системе")
+                  }
+                  required
                 />
               </Grid>
 
@@ -219,10 +318,19 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.phone && Boolean(formik.errors.phone)}
                   helperText={formik.touched.phone && formik.errors.phone}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="+380XXXXXXXXX"
+                  required
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   id="first_name"
@@ -233,10 +341,11 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.first_name && Boolean(formik.errors.first_name)}
                   helperText={formik.touched.first_name && formik.errors.first_name}
+                  required
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   id="last_name"
@@ -247,44 +356,16 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.last_name && Boolean(formik.errors.last_name)}
                   helperText={formik.touched.last_name && formik.errors.last_name}
+                  required
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
-                <TextField
-                  fullWidth
-                  id="middle_name"
-                  name="middle_name"
-                  label="Отчество"
-                  value={formik.values.middle_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
-                  helperText={formik.touched.middle_name && formik.errors.middle_name}
-                />
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
+              {/* Разделитель и дополнительная информация */}
+              <Grid size={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Дополнительная информация
                 </Typography>
-              </Grid>
-
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  id="company_description"
-                  name="company_description"
-                  label="Описание компании"
-                  multiline
-                  rows={4}
-                  value={formik.values.company_description}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.company_description && Boolean(formik.errors.company_description)}
-                  helperText={formik.touched.company_description && formik.errors.company_description}
-                />
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
@@ -297,7 +378,15 @@ const PartnerFormPage: React.FC = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.website && Boolean(formik.errors.website)}
-                  helperText={formik.touched.website && formik.errors.website}
+                  helperText={formik.touched.website && formik.errors.website || "Укажите полный URL, включая https://"}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LanguageIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder="https://example.com"
                 />
               </Grid>
 
@@ -306,12 +395,13 @@ const PartnerFormPage: React.FC = () => {
                   fullWidth
                   id="tax_number"
                   name="tax_number"
-                  label="ИНН"
+                  label="ИНН (не обязательно)"
                   value={formik.values.tax_number}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
                   helperText={formik.touched.tax_number && formik.errors.tax_number}
+                  placeholder="12345678"
                 />
               </Grid>
 
@@ -325,11 +415,12 @@ const PartnerFormPage: React.FC = () => {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
-                  helperText={formik.touched.logo_url && formik.errors.logo_url}
+                  helperText={formik.touched.logo_url && formik.errors.logo_url || "Укажите прямую ссылку на изображение"}
+                  placeholder="https://example.com/logo.png"
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: 6 }}>
                 <TextField
                   fullWidth
                   id="legal_address"
@@ -342,8 +433,27 @@ const PartnerFormPage: React.FC = () => {
                   helperText={formik.touched.legal_address && formik.errors.legal_address}
                 />
               </Grid>
+              
+              {/* Описание компании (перемещено вниз) */}
+              <Grid size={12}>
+                <TextField
+                  fullWidth
+                  id="company_description"
+                  name="company_description"
+                  label="Описание компании"
+                  multiline
+                  rows={6}
+                  value={formik.values.company_description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.company_description && Boolean(formik.errors.company_description)}
+                  helperText={formik.touched.company_description && formik.errors.company_description}
+                  placeholder="Подробное описание деятельности компании, специализация, предоставляемые услуги и т.д."
+                />
+              </Grid>
 
-              <Grid size={{ xs: 12 }} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              {/* Кнопки формы */}
+              <Grid size={12} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                 <Button
                   variant="outlined"
                   sx={{ mr: 1 }}
