@@ -17,11 +17,32 @@ export const fetchServicePoints = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.getAll(params);
+      console.log('API Response:', response.data);
+      
+      // Проверяем структуру ответа и обрабатываем соответственно
+      let servicePoints = [];
+      let totalItems = 0;
+      
+      if (response.data.data && Array.isArray(response.data.data)) {
+        // Новая структура: { data: [...], pagination: {...} }
+        servicePoints = response.data.data;
+        totalItems = response.data.pagination?.total_count || servicePoints.length;
+      } else if (response.data.service_points && Array.isArray(response.data.service_points)) {
+        // Старая структура: { service_points: [...], total_items: number }
+        servicePoints = response.data.service_points;
+        totalItems = response.data.total_items || servicePoints.length;
+      } else if (Array.isArray(response.data)) {
+        // Простой массив: [...]
+        servicePoints = response.data;
+        totalItems = servicePoints.length;
+      }
+      
       return {
-        servicePoints: response.data.service_points,
-        totalItems: response.data.total_items || response.data.service_points.length,
+        servicePoints,
+        totalItems,
       };
     } catch (error: any) {
+      console.error('Error fetching service points:', error);
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить точки обслуживания');
     }
   }

@@ -241,7 +241,11 @@ const ServicePointDetailPage: React.FC = () => {
               
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Рейтинг</Typography>
-                <Typography variant="h5">{selectedServicePoint.average_rating || 'Нет данных'}</Typography>
+                <Typography variant="h5">
+                  {selectedServicePoint.average_rating !== undefined && selectedServicePoint.average_rating !== null 
+                    ? Number(selectedServicePoint.average_rating).toFixed(1) 
+                    : 'Нет данных'}
+                </Typography>
               </Box>
               
               <Box sx={{ mb: 1 }}>
@@ -251,7 +255,11 @@ const ServicePointDetailPage: React.FC = () => {
               
               <Box>
                 <Typography variant="body2" color="text.secondary">Процент отмен</Typography>
-                <Typography variant="h5">{(selectedServicePoint.cancellation_rate || 0) * 100}%</Typography>
+                <Typography variant="h5">
+                  {selectedServicePoint.cancellation_rate !== undefined && selectedServicePoint.cancellation_rate !== null
+                    ? (Number(selectedServicePoint.cancellation_rate) * 100).toFixed(1) + '%'
+                    : '0%'}
+                </Typography>
               </Box>
             </CardContent>
           </Card>

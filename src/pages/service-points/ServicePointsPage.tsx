@@ -217,7 +217,7 @@ const ServicePointsPage: React.FC = () => {
                           size="small" 
                         />
                       </TableCell>
-                      <TableCell>{point.rating?.toFixed(1) || '-'}</TableCell>
+                      <TableCell>{(point.rating !== undefined && point.rating !== null) ? Number(point.rating).toFixed(1) : '-'}</TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Button
