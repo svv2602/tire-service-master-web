@@ -5,7 +5,7 @@ const STORAGE_KEY = 'tvoya_shina_token';
 
 // Создаем экземпляр axios с базовыми настройками
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api/v1',
+  baseURL: 'http://localhost:8000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,7 +16,7 @@ const apiClient = axios.create({
 // Функция для проверки доступности API
 const checkApiAvailability = async (url: string): Promise<boolean> => {
   try {
-    const result = await fetch(`${url}/health`, { 
+    const result = await fetch(`${url}/api/v1/health`, { 
       method: 'GET',
       mode: 'no-cors',
       cache: 'no-cache',
@@ -33,9 +33,9 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
 // Проверка доступности API и установка правильного URL
 (async () => {
   const possibleUrls = [
-    'http://localhost:8000/api/v1',
-    'http://127.0.0.1:8000/api/v1',
-    'http://192.168.9.109:8000/api/v1'
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://192.168.9.109:8000'
   ];
   
   for (const url of possibleUrls) {
@@ -92,162 +92,162 @@ export const authApi = {
   login: (email: string, password: string) => {
     console.log('authApi.login - Sending login request with:', { email, password: '***' });
     // Отправляем параметры напрямую в корень, без вложенности
-    return apiClient.post('/auth/login', { email, password });
+    return apiClient.post('/api/v1/auth/login', { email, password });
   },
   register: (userData: any) => {
-    return apiClient.post('/clients/register', userData);
+    return apiClient.post('/api/v1/clients/register', userData);
   },
   resetPassword: (email: string) => {
-    return apiClient.post('/password_resets', { email });
+    return apiClient.post('/api/v1/password_resets', { email });
   },
   getCurrentUser: () => {
-    return apiClient.get('/users/me');
+    return apiClient.get('/api/v1/users/me');
   },
 };
 
 // API для работы с партнерами
 export const partnersApi = {
   getAll: (params?: any) => {
-    return apiClient.get('/partners', { params });
+    return apiClient.get('/api/v1/partners', { params });
   },
   getById: (id: number) => {
-    return apiClient.get(`/partners/${id}`);
+    return apiClient.get(`/api/v1/partners/${id}`);
   },
   create: (data: any) => {
-    return apiClient.post('/partners', data);
+    return apiClient.post('/api/v1/partners', data);
   },
   update: (id: number, data: any) => {
-    return apiClient.put(`/partners/${id}`, data);
+    return apiClient.put(`/api/v1/partners/${id}`, data);
   },
   delete: (id: number) => {
-    return apiClient.delete(`/partners/${id}`);
+    return apiClient.delete(`/api/v1/partners/${id}`);
   },
 };
 
 // API для работы с сервисными точками
 export const servicePointsApi = {
   getAll: (params?: any) => {
-    return apiClient.get('/service_points', { params });
+    return apiClient.get('/api/v1/service_points', { params });
   },
   getById: (id: number) => {
-    return apiClient.get(`/service_points/${id}`);
+    return apiClient.get(`/api/v1/service_points/${id}`);
   },
   create: (partnerId: number, data: any) => {
-    return apiClient.post(`/partners/${partnerId}/service_points`, data);
+    return apiClient.post(`/api/v1/partners/${partnerId}/service_points`, data);
   },
   update: (partnerId: number, id: number, data: any) => {
-    return apiClient.put(`/partners/${partnerId}/service_points/${id}`, data);
+    return apiClient.put(`/api/v1/partners/${partnerId}/service_points/${id}`, data);
   },
   delete: (partnerId: number, id: number) => {
-    return apiClient.delete(`/partners/${partnerId}/service_points/${id}`);
+    return apiClient.delete(`/api/v1/partners/${partnerId}/service_points/${id}`);
   },
   findNearby: (latitude: number, longitude: number, distance: number) => {
-    return apiClient.get('/service_points/nearby', {
+    return apiClient.get('/api/v1/service_points/nearby', {
       params: { latitude, longitude, distance },
     });
   },
   getPhotos: (id: number) => {
-    return apiClient.get(`/service_points/${id}/photos`);
+    return apiClient.get(`/api/v1/service_points/${id}/photos`);
   },
   uploadPhoto: (id: number, photoData: FormData) => {
-    return apiClient.post(`/service_points/${id}/photos`, photoData, {
+    return apiClient.post(`/api/v1/service_points/${id}/photos`, photoData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
   deletePhoto: (servicePointId: number, photoId: number) => {
-    return apiClient.delete(`/service_points/${servicePointId}/photos/${photoId}`);
+    return apiClient.delete(`/api/v1/service_points/${servicePointId}/photos/${photoId}`);
   },
 };
 
 // API для работы с клиентами
 export const clientsApi = {
   getAll: (params?: any) => {
-    return apiClient.get('/clients', { params });
+    return apiClient.get('/api/v1/clients', { params });
   },
   getById: (id: number) => {
-    return apiClient.get(`/clients/${id}`);
+    return apiClient.get(`/api/v1/clients/${id}`);
   },
   update: (id: number, data: any) => {
-    return apiClient.put(`/clients/${id}`, data);
+    return apiClient.put(`/api/v1/clients/${id}`, data);
   },
   delete: (id: number) => {
-    return apiClient.delete(`/clients/${id}`);
+    return apiClient.delete(`/api/v1/clients/${id}`);
   },
   getCars: (clientId: number) => {
-    return apiClient.get(`/clients/${clientId}/cars`);
+    return apiClient.get(`/api/v1/clients/${clientId}/cars`);
   },
   getCarById: (clientId: number, carId: number) => {
-    return apiClient.get(`/clients/${clientId}/cars/${carId}`);
+    return apiClient.get(`/api/v1/clients/${clientId}/cars/${carId}`);
   },
   addCar: (clientId: number, carData: any) => {
-    return apiClient.post(`/clients/${clientId}/cars`, carData);
+    return apiClient.post(`/api/v1/clients/${clientId}/cars`, carData);
   },
   updateCar: (clientId: number, carId: number, carData: any) => {
-    return apiClient.put(`/clients/${clientId}/cars/${carId}`, carData);
+    return apiClient.put(`/api/v1/clients/${clientId}/cars/${carId}`, carData);
   },
   deleteCar: (clientId: number, carId: number) => {
-    return apiClient.delete(`/clients/${clientId}/cars/${carId}`);
+    return apiClient.delete(`/api/v1/clients/${clientId}/cars/${carId}`);
   },
 };
 
 // API для работы с бронированиями
 export const bookingsApi = {
   getClientBookings: (clientId: number, params?: any) => {
-    return apiClient.get(`/clients/${clientId}/bookings`, { params });
+    return apiClient.get(`/api/v1/clients/${clientId}/bookings`, { params });
   },
   getServicePointBookings: (servicePointId: number, params?: any) => {
-    return apiClient.get(`/service_points/${servicePointId}/bookings`, { params });
+    return apiClient.get(`/api/v1/service_points/${servicePointId}/bookings`, { params });
   },
   getById: (clientId: number, bookingId: number) => {
-    return apiClient.get(`/clients/${clientId}/bookings/${bookingId}`);
+    return apiClient.get(`/api/v1/clients/${clientId}/bookings/${bookingId}`);
   },
   create: (clientId: number, bookingData: any) => {
-    return apiClient.post(`/clients/${clientId}/bookings`, bookingData);
+    return apiClient.post(`/api/v1/clients/${clientId}/bookings`, bookingData);
   },
   update: (clientId: number, bookingId: number, bookingData: any) => {
-    return apiClient.put(`/clients/${clientId}/bookings/${bookingId}`, bookingData);
+    return apiClient.put(`/api/v1/clients/${clientId}/bookings/${bookingId}`, bookingData);
   },
   cancel: (bookingId: number) => {
-    return apiClient.post(`/bookings/${bookingId}/cancel`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/cancel`);
   },
   confirm: (bookingId: number) => {
-    return apiClient.post(`/bookings/${bookingId}/confirm`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/confirm`);
   },
   complete: (bookingId: number) => {
-    return apiClient.post(`/bookings/${bookingId}/complete`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/complete`);
   },
   noShow: (bookingId: number) => {
-    return apiClient.post(`/bookings/${bookingId}/no_show`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/no_show`);
   },
 };
 
 // API для работы со справочниками
 export const referencesApi = {
   getRegions: () => {
-    return apiClient.get('/regions');
+    return apiClient.get('/api/v1/regions');
   },
   getCities: (params?: any) => {
-    return apiClient.get('/cities', { params });
+    return apiClient.get('/api/v1/cities', { params });
   },
   getCarBrands: () => {
-    return apiClient.get('/car_brands');
+    return apiClient.get('/api/v1/car_brands');
   },
   getCarModels: (params?: any) => {
-    return apiClient.get('/car_models', { params });
+    return apiClient.get('/api/v1/car_models', { params });
   },
   getTireTypes: () => {
-    return apiClient.get('/tire_types');
+    return apiClient.get('/api/v1/tire_types');
   },
   getServiceCategories: () => {
-    return apiClient.get('/service_categories');
+    return apiClient.get('/api/v1/service_categories');
   },
   getServices: (params?: any) => {
-    return apiClient.get('/services', { params });
+    return apiClient.get('/api/v1/services', { params });
   },
   getBookingStatuses: () => {
-    return apiClient.get('/booking_statuses');
+    return apiClient.get('/api/v1/booking_statuses');
   },
   getPaymentStatuses: () => {
     return apiClient.get('/payment_statuses');

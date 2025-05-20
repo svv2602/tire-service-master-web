@@ -21,42 +21,42 @@ export interface SystemSettings {
 export const settingsApi = {
   // Получение системных настроек
   getSystemSettings: () => {
-    return apiClient.get('/settings/system');
+    return apiClient.get('/api/v1/settings/system');
   },
 
   // Обновление системных настроек
   updateSystemSettings: (settings: SystemSettings) => {
-    return apiClient.put('/settings/system', settings);
+    return apiClient.put('/api/v1/settings/system', settings);
   },
 
   // Получение настроек пользователя
   getUserSettings: (userId: number) => {
-    return apiClient.get(`/users/${userId}/settings`);
+    return apiClient.get(`/api/v1/users/${userId}/settings`);
   },
 
   // Обновление настроек пользователя
   updateUserSettings: (userId: number, settings: any) => {
-    return apiClient.put(`/users/${userId}/settings`, settings);
+    return apiClient.put(`/api/v1/users/${userId}/settings`, settings);
   },
 
   // Получение настроек уведомлений
   getNotificationSettings: () => {
-    return apiClient.get('/settings/notifications');
+    return apiClient.get('/api/v1/settings/notifications');
   },
 
   // Обновление настроек уведомлений
   updateNotificationSettings: (settings: any) => {
-    return apiClient.put('/settings/notifications', settings);
+    return apiClient.put('/api/v1/settings/notifications', settings);
   },
 
   // Сброс системных настроек до значений по умолчанию
   resetSystemSettings: () => {
-    return apiClient.post('/settings/system/reset');
+    return apiClient.post('/api/v1/settings/system/reset');
   },
 
   // Получение списка городов
   getCities: () => {
-    return apiClient.get('/cities');
+    return apiClient.get('/api/v1/cities');
   }
 };
 

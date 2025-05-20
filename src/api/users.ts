@@ -44,7 +44,7 @@ export const usersApi = {
   // Аутентификация пользователя
   login: (credentials: UserCredentials) => {
     console.log('usersApi.login called with:', { email: credentials.email, password: '***' });
-    return apiClient.post('/auth/login', credentials);
+    return apiClient.post('/api/v1/auth/login', credentials);
   },
 
   // Выход из системы
@@ -56,33 +56,33 @@ export const usersApi = {
 
   // Регистрация клиента
   registerClient: (userData: Partial<User>, clientData?: any) => {
-    return apiClient.post('/clients/register', { user: userData, client: clientData });
+    return apiClient.post('/api/v1/clients/register', { user: userData, client: clientData });
   },
 
   // Запрос на сброс пароля
   requestPasswordReset: (email: string) => {
-    return apiClient.post('/password_resets', { email });
+    return apiClient.post('/api/v1/password_resets', { email });
   },
 
   // Сброс пароля
   resetPassword: (resetData: PasswordReset) => {
-    return apiClient.put('/password_resets', resetData);
+    return apiClient.put('/api/v1/password_resets', resetData);
   },
 
   // Получение профиля текущего пользователя
   getCurrentUser: () => {
     console.log('usersApi.getCurrentUser called');
-    return apiClient.get('/users/me');
+    return apiClient.get('/api/v1/users/me');
   },
 
   // Обновление профиля текущего пользователя
   updateCurrentUser: (userData: Partial<User>) => {
-    return apiClient.put('/users/me', userData);
+    return apiClient.put('/api/v1/users/me', userData);
   },
 
   // Изменение пароля текущего пользователя
   changePassword: (currentPassword: string, newPassword: string) => {
-    return apiClient.put('/users/me/password', {
+    return apiClient.put('/api/v1/users/me/password', {
       current_password: currentPassword,
       new_password: newPassword,
       new_password_confirmation: newPassword
@@ -91,32 +91,32 @@ export const usersApi = {
 
   // Получение всех пользователей (только для администраторов)
   getAll: (params?: any) => {
-    return apiClient.get('/users', { params });
+    return apiClient.get('/api/v1/users', { params });
   },
 
   // Получение пользователя по ID
   getById: (id: number) => {
-    return apiClient.get(`/users/${id}`);
+    return apiClient.get(`/api/v1/users/${id}`);
   },
 
   // Создание нового пользователя (только для администраторов)
   create: (userData: Partial<User>) => {
-    return apiClient.post('/users', userData);
+    return apiClient.post('/api/v1/users', userData);
   },
 
   // Обновление пользователя (только для администраторов)
   update: (id: number, userData: Partial<User>) => {
-    return apiClient.put(`/users/${id}`, userData);
+    return apiClient.put(`/api/v1/users/${id}`, userData);
   },
 
   // Блокировка/разблокировка пользователя (только для администраторов)
   toggleActive: (id: number, isActive: boolean) => {
-    return apiClient.put(`/users/${id}/toggle_active`, { is_active: isActive });
+    return apiClient.put(`/api/v1/users/${id}/toggle_active`, { is_active: isActive });
   },
 
   // Удаление пользователя (только для администраторов)
   delete: (id: number) => {
-    return apiClient.delete(`/users/${id}`);
+    return apiClient.delete(`/api/v1/users/${id}`);
   },
 };
 

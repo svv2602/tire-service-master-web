@@ -45,37 +45,37 @@ export interface BookingFilters {
 export const bookingsApi = {
   // Получение списка всех бронирований с фильтрацией и пагинацией
   getAll: (filters?: BookingFilters) => {
-    return apiClient.get('/bookings', { params: filters });
+    return apiClient.get('/api/v1/bookings', { params: filters });
   },
 
   // Получение бронирования по ID
   getById: (id: number) => {
-    return apiClient.get(`/bookings/${id}`);
+    return apiClient.get(`/api/v1/bookings/${id}`);
   },
 
   // Создание нового бронирования
   create: (bookingData: Partial<Booking>, services: Partial<BookingService>[]) => {
-    return apiClient.post('/bookings', { booking: bookingData, services });
+    return apiClient.post('/api/v1/bookings', { booking: bookingData, services });
   },
 
   // Обновление существующего бронирования
   update: (id: number, bookingData: Partial<Booking>, services?: Partial<BookingService>[]) => {
-    return apiClient.put(`/bookings/${id}`, { booking: bookingData, services });
+    return apiClient.put(`/api/v1/bookings/${id}`, { booking: bookingData, services });
   },
 
   // Удаление бронирования
   delete: (id: number) => {
-    return apiClient.delete(`/bookings/${id}`);
+    return apiClient.delete(`/api/v1/bookings/${id}`);
   },
 
   // Изменение статуса бронирования
   updateStatus: (id: number, statusId: number, comment?: string) => {
-    return apiClient.put(`/bookings/${id}/status`, { status_id: statusId, comment });
+    return apiClient.put(`/api/v1/bookings/${id}/status`, { status_id: statusId, comment });
   },
 
   // Отмена бронирования
   cancel: (id: number, cancellationReasonId: number, comment?: string) => {
-    return apiClient.post(`/bookings/${id}/cancel`, {
+    return apiClient.post(`/api/v1/bookings/${id}/cancel`, {
       cancellation_reason_id: cancellationReasonId,
       comment
     });
@@ -83,34 +83,34 @@ export const bookingsApi = {
 
   // Подтверждение бронирования
   confirm: (id: number) => {
-    return apiClient.post(`/bookings/${id}/confirm`);
+    return apiClient.post(`/api/v1/bookings/${id}/confirm`);
   },
 
   // Завершение бронирования
   complete: (id: number) => {
-    return apiClient.post(`/bookings/${id}/complete`);
+    return apiClient.post(`/api/v1/bookings/${id}/complete`);
   },
 
   // Отметка о неявке клиента
   noShow: (id: number) => {
-    return apiClient.post(`/bookings/${id}/no_show`);
+    return apiClient.post(`/api/v1/bookings/${id}/no_show`);
   },
 
   // Получение доступных слотов для бронирования
   getAvailableSlots: (servicePointId: number, date: string) => {
-    return apiClient.get(`/service_points/${servicePointId}/available_slots`, {
+    return apiClient.get(`/api/v1/service_points/${servicePointId}/available_slots`, {
       params: { date }
     });
   },
 
   // Получение бронирований клиента
   getClientBookings: (clientId: number, filters?: BookingFilters) => {
-    return apiClient.get(`/clients/${clientId}/bookings`, { params: filters });
+    return apiClient.get(`/api/v1/clients/${clientId}/bookings`, { params: filters });
   },
 
   // Получение бронирований сервисной точки
   getServicePointBookings: (servicePointId: number, filters?: BookingFilters) => {
-    return apiClient.get(`/service_points/${servicePointId}/bookings`, { params: filters });
+    return apiClient.get(`/api/v1/service_points/${servicePointId}/bookings`, { params: filters });
   }
 };
 
