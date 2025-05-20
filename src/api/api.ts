@@ -9,9 +9,43 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // 15 seconds timeout
+  timeout: 5000, // 5 seconds timeout - reduced from 15s
   withCredentials: false // Важно для работы CORS
 });
+
+// Функция для проверки доступности API
+const checkApiAvailability = async (url: string): Promise<boolean> => {
+  try {
+    const result = await fetch(`${url}/health`, { 
+      method: 'GET',
+      mode: 'no-cors',
+      cache: 'no-cache',
+      headers: { 'Content-Type': 'application/json' },
+      referrerPolicy: 'no-referrer',
+    });
+    return true;
+  } catch (error) {
+    console.log(`API endpoint ${url} not available`);
+    return false;
+  }
+};
+
+// Проверка доступности API и установка правильного URL
+(async () => {
+  const possibleUrls = [
+    'http://localhost:8000/api/v1',
+    'http://127.0.0.1:8000/api/v1',
+    'http://192.168.9.109:8000/api/v1'
+  ];
+  
+  for (const url of possibleUrls) {
+    if (await checkApiAvailability(url)) {
+      console.log(`Using API endpoint: ${url}`);
+      apiClient.defaults.baseURL = url;
+      break;
+    }
+  }
+})();
 
 // Интерцептор для добавления токена к каждому запросу
 apiClient.interceptors.request.use(

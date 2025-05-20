@@ -285,6 +285,15 @@ const MainLayout: React.FC = () => {
 
   // Фильтруем разделы и пункты меню в зависимости от роли пользователя
   const getFilteredMenuSections = () => {
+    // Для отладки - проверяем специальный флаг
+    const isDevMode = localStorage.getItem('tvoya_shina_dev_mode') === 'true';
+    
+    // В режиме отладки показываем все пункты меню независимо от роли
+    if (isDevMode) {
+      console.log("Включен режим отладки! Показаны все пункты меню.");
+      return getMenuSections();
+    }
+    
     if (!user || !user.role) {
       return [];
     }
@@ -522,8 +531,7 @@ const MainLayout: React.FC = () => {
           ) : (
             <Button 
               color="inherit"
-              component={RouterLink}
-              to="/login"
+              onClick={() => navigate('/login')}
             >
               Войти
             </Button>

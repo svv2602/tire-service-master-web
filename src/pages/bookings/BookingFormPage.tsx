@@ -6,20 +6,16 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Button,
-  Autocomplete,
   CircularProgress,
-  Divider,
   Alert,
   Card,
   CardContent,
-  Chip,
   FormHelperText,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -314,14 +310,13 @@ const BookingFormPage: React.FC = () => {
       }));
       
       // Отправка данных на сервер
-      let response;
       if (isEditMode) {
         // Обновление существующего бронирования
-        response = await bookingsApi.update(parseInt(id!), bookingData, bookingServices);
+        await bookingsApi.update(parseInt(id!), bookingData, bookingServices);
         setSuccess('Бронирование успешно обновлено');
       } else {
         // Создание нового бронирования
-        response = await bookingsApi.create(bookingData, bookingServices);
+        await bookingsApi.create(bookingData, bookingServices);
         setSuccess('Бронирование успешно создано');
       }
       

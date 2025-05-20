@@ -8,6 +8,8 @@ import {
   CardContent,
   CardHeader,
   Divider,
+  Button,
+  Paper,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -80,6 +82,23 @@ const DashboardPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const activateAllMenuItems = () => {
+    // Включаем режим отладки
+    localStorage.setItem('tvoya_shina_dev_mode', 'true');
+    // Перезагружаем страницу
+    window.location.reload();
+  };
+
+  const deactivateAllMenuItems = () => {
+    // Выключаем режим отладки
+    localStorage.removeItem('tvoya_shina_dev_mode');
+    // Перезагружаем страницу
+    window.location.reload();
+  };
+
+  // Проверяем, включен ли режим отладки
+  const isDevMode = localStorage.getItem('tvoya_shina_dev_mode') === 'true';
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
@@ -89,7 +108,45 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Панель управления
+      </Typography>
+      
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12 }}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Добро пожаловать в систему "Твоя шина"!
+            </Typography>
+            <Typography paragraph>
+              Выберите раздел в меню слева для начала работы.
+            </Typography>
+            
+            {/* Кнопки для отладки меню */}
+            {isDevMode ? (
+              <Button 
+                variant="outlined" 
+                color="error" 
+                onClick={deactivateAllMenuItems}
+                sx={{ mt: 2 }}
+              >
+                Выключить режим отладки меню
+              </Button>
+            ) : (
+              <Button 
+                variant="outlined" 
+                color="secondary" 
+                onClick={activateAllMenuItems}
+                sx={{ mt: 2 }}
+              >
+                Показать все пункты меню (режим отладки)
+              </Button>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+
       <Typography variant="h4" gutterBottom>
         Дашборд
       </Typography>

@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login, getCurrentUser } from '../../store/slices/authSlice';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authApi } from '../../api';
 
 const validationSchema = yup.object({
@@ -35,22 +35,33 @@ const validationSchema = yup.object({
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [rememberMe, setRememberMe] = useState(false);
   const [directLoginError, setDirectLoginError] = useState<string | null>(null);
   const [directLoading, setDirectLoading] = useState(false);
+  
+  // Flag to track if we're logging in manually (vs redirecting due to isAuthenticated)
+  const [isManualLogin, setIsManualLogin] = useState(false);
 
+  // Only check authentication status if not in the middle of a manual login
   useEffect(() => {
-    // Redirect to dashboard if already authenticated
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    // If we're not doing a manual login and the user is authenticated
+    if (!isManualLogin && isAuthenticated) {
+      // Add a delay before redirecting to prevent flash of login screen
+      const redirectTimer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+      
+      return () => clearTimeout(redirectTimer);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, isManualLogin]);
 
   // Direct API call for login
   const directLogin = async (email: string, password: string) => {
     setDirectLoading(true);
     setDirectLoginError(null);
+    setIsManualLogin(true); // Set flag to prevent automatic redirect
     
     try {
       console.log('Attempting to login with credentials:', { email, password: '***' });
@@ -72,19 +83,25 @@ const LoginPage: React.FC = () => {
       await dispatch(getCurrentUser());
       console.log('User loaded into Redux');
       
-      // Force navigation to dashboard
+      // Only navigate after everything is complete
       console.log('Attempting to navigate to dashboard...');
       navigate('/dashboard', { replace: true });
+      
+      // Reset manual login flag after successful login and navigation
+      setIsManualLogin(false);
     } catch (err: any) {
       console.error('Login error details:', err);
       
-      if (err.code === 'ERR_NETWORK') {
+      if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED') {
         setDirectLoginError('API сервер недоступен. Убедитесь, что сервер запущен на порту 8000.');
       } else if (err.response?.status === 401) {
         setDirectLoginError('Неверный email или пароль');
       } else {
         setDirectLoginError(err.response?.data?.message || 'Произошла ошибка при входе');
       }
+      
+      // Reset manual login flag on error
+      setIsManualLogin(false);
     } finally {
       setDirectLoading(false);
     }
