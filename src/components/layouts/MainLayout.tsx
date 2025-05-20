@@ -319,25 +319,57 @@ const MainLayout: React.FC = () => {
     // Получаем роль пользователя
     const userRole = user.role;
     console.log('Роль пользователя:', userRole);
-    console.log('UserRole.ADMIN:', UserRole.ADMIN);
 
-    // Проверяем, является ли пользователь администратором
-    const isAdmin = String(userRole).toLowerCase() === String(UserRole.ADMIN).toLowerCase() || 
-                    userRole === UserRole.ADMIN;
+    // Функция для проверки соответствия ролей
+    const isRoleMatching = (requiredRole: UserRole): boolean => {
+      // Если роль пользователя - объект UserRole, просто сравниваем
+      if (typeof userRole === 'object') {
+        return userRole === requiredRole;
+      }
+      
+      // Если роль - строка, нужно сопоставить строки с API и фронтенда
+      if (typeof userRole === 'string') {
+        const apiToFrontendMapping: Record<string, UserRole> = {
+          'admin': UserRole.ADMIN,
+          'manager': UserRole.MANAGER,
+          'operator': UserRole.PARTNER, // оператор соответствует партнеру
+          'client': UserRole.CLIENT
+        };
+        
+        // Если есть прямое соответствие
+        if (apiToFrontendMapping[userRole] === requiredRole) {
+          return true;
+        }
+        
+        // Если нет прямого соответствия, проверяем совпадение строк
+        return userRole.toLowerCase() === String(requiredRole).toLowerCase();
+      }
+      
+      return false;
+    };
     
-    console.log('isAdmin:', isAdmin);
+    console.log('UserRole.ADMIN:', UserRole.ADMIN);
+    console.log('Пользователь - админ:', isRoleMatching(UserRole.ADMIN));
 
-    // Если это администратор, показываем все пункты меню
-    if (isAdmin) {
-      console.log('Пользователь - администратор, отображаем все пункты меню');
-      const sections = getMenuSections();
-      console.log('Количество секций:', sections.length);
-      return sections;
-    }
-
-    // Для других ролей пока возвращаем пустой массив
-    console.log('Пользователь не является администратором, не отображаем пункты меню');
-    return [];
+    // Получаем все секции меню
+    const allSections = getMenuSections();
+    
+    // Фильтруем секции и пункты меню в зависимости от роли пользователя
+    const filteredSections = allSections.map(section => {
+      // Фильтруем пункты меню в секции, оставляя только те, для которых у пользователя есть доступ
+      const filteredItems = section.items.filter(item => 
+        item.roles.some(role => isRoleMatching(role))
+      );
+      
+      // Возвращаем секцию только если в ней остались пункты меню
+      return {
+        ...section,
+        items: filteredItems
+      };
+    }).filter(section => section.items.length > 0);
+    
+    console.log('Количество отфильтрованных секций:', filteredSections.length);
+    return filteredSections;
   };
 
   // Разрешенные действия для каждой роли (информационный блок)

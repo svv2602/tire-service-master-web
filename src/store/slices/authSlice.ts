@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { AuthState, User } from '../../types';
+import { AuthState, User, UserRole } from '../../types';
 import { usersApi, authApi } from '../../api';
 
 // Константа для ключа хранилища
@@ -106,15 +106,34 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        // Временное решение: заполняем недостающие данные пользователя,
-        // пока API не возвращает полные данные
+        // Получаем данные пользователя
         const userData = action.payload;
         
-        // Если email admin@example.com, устанавливаем нужные данные
-        if (userData && userData.email === 'admin@example.com') {
-          userData.first_name = 'Тест';
-          userData.last_name = 'Адмін';
-          userData.phone = '+380 67 111 00 00';
+        if (userData) {
+          // Добавляем временное заполнение для тестового админа
+          if (userData.email === 'admin@example.com') {
+            userData.first_name = userData.first_name || 'Тест';
+            userData.last_name = userData.last_name || 'Адмін';
+            userData.phone = userData.phone || '+380 67 111 00 00';
+          }
+          
+          // Преобразование роли из API формата в формат фронтенда для всех пользователей
+          if (typeof userData.role === 'string') {
+            switch (userData.role) {
+              case 'admin': 
+                userData.role = UserRole.ADMIN; 
+                break;
+              case 'manager': 
+                userData.role = UserRole.MANAGER; 
+                break;
+              case 'operator': 
+                userData.role = UserRole.PARTNER; 
+                break;
+              case 'client': 
+                userData.role = UserRole.CLIENT; 
+                break;
+            }
+          }
         }
         
         state.user = userData;
