@@ -157,7 +157,7 @@ const ProfilePage: React.FC = () => {
   };
 
   // Получение метки роли
-  function getRoleLabel(role?: UserRole): string {
+  function getRoleLabel(role?: string): string {
     if (!role) return 'Користувач';
     
     switch (role) {
@@ -175,7 +175,7 @@ const ProfilePage: React.FC = () => {
   }
 
   // Получение цвета метки роли
-  const getRoleColor = (role?: UserRole) => {
+  const getRoleColor = (role?: string) => {
     if (!role) return 'default';
     
     switch (role) {
