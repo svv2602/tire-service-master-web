@@ -78,6 +78,20 @@ const MainLayout: React.FC = () => {
     }
   }, [dispatch, user]);
 
+  // Инициализация состояния открытия секций меню
+  useEffect(() => {
+    // Получаем все секции меню
+    const sections = getMenuSections();
+    // Создаем объект с состоянием "открыто" для всех секций
+    const initialOpenSections = sections.reduce((acc, section) => {
+      acc[section.title] = true; // устанавливаем true для открытия всех секций
+      return acc;
+    }, {} as {[key: string]: boolean});
+    
+    // Устанавливаем состояние
+    setOpenSections(initialOpenSections);
+  }, []);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -296,19 +310,34 @@ const MainLayout: React.FC = () => {
 
   // Фильтруем разделы и пункты меню в зависимости от роли пользователя
   const getFilteredMenuSections = () => {
-    // Всегда показываем пункты меню в зависимости от прав пользователя, без необходимости включать режим отладки
-    if (!user || !user.role) {
+    // Если пользователь не авторизован, не показываем никаких пунктов меню
+    if (!user) {
+      console.log('Пользователь не аутентифицирован, не отображаем пункты меню');
       return [];
     }
 
-    const allSections = getMenuSections();
+    // Получаем роль пользователя
+    const userRole = user.role;
+    console.log('Роль пользователя:', userRole);
+    console.log('UserRole.ADMIN:', UserRole.ADMIN);
+
+    // Проверяем, является ли пользователь администратором
+    const isAdmin = String(userRole).toLowerCase() === String(UserRole.ADMIN).toLowerCase() || 
+                    userRole === UserRole.ADMIN;
     
-    return allSections
-      .map(section => ({
-        ...section,
-        items: section.items.filter(item => item.roles.includes(user.role as UserRole))
-      }))
-      .filter(section => section.items.length > 0);
+    console.log('isAdmin:', isAdmin);
+
+    // Если это администратор, показываем все пункты меню
+    if (isAdmin) {
+      console.log('Пользователь - администратор, отображаем все пункты меню');
+      const sections = getMenuSections();
+      console.log('Количество секций:', sections.length);
+      return sections;
+    }
+
+    // Для других ролей пока возвращаем пустой массив
+    console.log('Пользователь не является администратором, не отображаем пункты меню');
+    return [];
   };
 
   // Разрешенные действия для каждой роли (информационный блок)

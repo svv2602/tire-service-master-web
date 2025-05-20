@@ -106,7 +106,18 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        // Временное решение: заполняем недостающие данные пользователя,
+        // пока API не возвращает полные данные
+        const userData = action.payload;
+        
+        // Если email admin@example.com, устанавливаем нужные данные
+        if (userData && userData.email === 'admin@example.com') {
+          userData.first_name = 'Тест';
+          userData.last_name = 'Адмін';
+          userData.phone = '+380 67 111 00 00';
+        }
+        
+        state.user = userData;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = false;

@@ -74,8 +74,8 @@ const LoginPage: React.FC = () => {
       console.log('Redux state updated');
       
       // Получить пользователя и обновить Redux
-      await dispatch(getCurrentUser());
-      console.log('User loaded into Redux');
+      const userResult = await dispatch(getCurrentUser()).unwrap();
+      console.log('User loaded into Redux:', userResult);
       
       // Устанавливаем флаг успешного логина, который активирует эффект с редиректом
       setSuccessfulLogin(true);

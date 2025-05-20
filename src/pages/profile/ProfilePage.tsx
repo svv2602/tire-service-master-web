@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -27,21 +27,9 @@ import {
   AdminPanelSettings as RoleIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
-
-// Демо-данные для профиля пользователя
-const mockUserData = {
-  id: 1,
-  firstName: 'Олександр',
-  lastName: 'Петренко',
-  email: 'o.petrenko@tireservice.ua',
-  phone: '+380 67 123 45 67',
-  position: 'Адміністратор',
-  company: 'Твоя шина',
-  role: 'admin',
-  dateRegistered: '10.05.2022',
-  lastLogin: '15.06.2023 14:30',
-  avatar: null, // URL для аватара
-};
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../store';
+import { UserRole } from '../../types';
 
 // Интерфейс для данных формы
 interface UserFormData {
@@ -56,27 +44,52 @@ interface UserFormData {
 }
 
 const ProfilePage: React.FC = () => {
-  const [userData, setUserData] = useState(mockUserData);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changePassword, setChangePassword] = useState(false);
   
+  // Вывод данных пользователя в консоль для отладки
+  useEffect(() => {
+    console.log('=== Данные пользователя в ProfilePage ===');
+    console.log('user:', user);
+    console.log('JSON.stringify(user):', JSON.stringify(user, null, 2));
+    console.log('Данные формы:', formData);
+  }, [user]);
+
   // Инициализация данных формы
   const [formData, setFormData] = useState<UserFormData>({
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    email: userData.email,
-    phone: userData.phone,
-    position: userData.position,
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    position: getRoleLabel(user?.role),
     oldPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
 
+  // Обновление данных формы при изменении пользователя
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        ...formData,
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        position: getRoleLabel(user.role),
+      });
+    }
+  }, [user]);
+
   // Получение инициалов для аватара
   const getInitials = () => {
-    return `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`;
+    if (!user) return '';
+    const firstName = user.first_name || '';
+    const lastName = user.last_name || '';
+    return `${firstName.charAt(0)}${lastName.charAt(0)}`;
   };
 
   // Обработчик изменения полей формы
@@ -122,16 +135,6 @@ const ProfilePage: React.FC = () => {
 
     // Имитация отправки данных на сервер
     setTimeout(() => {
-      // Обновляем локальные данные
-      setUserData({
-        ...userData,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        position: formData.position,
-      });
-
       // Сбрасываем поля пароля
       if (changePassword) {
         setFormData({
@@ -154,27 +157,35 @@ const ProfilePage: React.FC = () => {
   };
 
   // Получение метки роли
-  const getRoleLabel = (role: string) => {
+  function getRoleLabel(role?: UserRole): string {
+    if (!role) return 'Користувач';
+    
     switch (role) {
-      case 'admin':
+      case UserRole.ADMIN:
         return 'Адміністратор';
-      case 'manager':
+      case UserRole.PARTNER:
+        return 'Партнер';
+      case UserRole.MANAGER:
         return 'Менеджер';
-      case 'operator':
-        return 'Оператор';
+      case UserRole.CLIENT:
+        return 'Клієнт';
       default:
         return 'Користувач';
     }
-  };
+  }
 
   // Получение цвета метки роли
-  const getRoleColor = (role: string) => {
+  const getRoleColor = (role?: UserRole) => {
+    if (!role) return 'default';
+    
     switch (role) {
-      case 'admin':
+      case UserRole.ADMIN:
         return 'error';
-      case 'manager':
+      case UserRole.PARTNER:
+        return 'warning';
+      case UserRole.MANAGER:
         return 'primary';
-      case 'operator':
+      case UserRole.CLIENT:
         return 'success';
       default:
         return 'default';
@@ -192,32 +203,25 @@ const ProfilePage: React.FC = () => {
         <Box>
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 3 }}>
-              {userData.avatar ? (
-                <Avatar 
-                  src={userData.avatar} 
-                  alt={`${userData.firstName} ${userData.lastName}`}
-                  sx={{ width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '2rem' }}
-                />
-              ) : (
-                <Avatar 
-                  sx={{ width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '2rem' }}
-                >
-                  {getInitials()}
-                </Avatar>
-              )}
+              {/* Аватар пользователя */}
+              <Avatar 
+                sx={{ width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '2rem' }}
+              >
+                {getInitials()}
+              </Avatar>
               
               <Typography variant="h6">
-                {userData.firstName} {userData.lastName}
+                {user?.first_name} {user?.last_name}
               </Typography>
               
               <Typography color="textSecondary" gutterBottom>
-                {userData.position}
+                {formData.position}
               </Typography>
               
               <Chip 
                 icon={<RoleIcon />} 
-                label={getRoleLabel(userData.role)}
-                color={getRoleColor(userData.role) as 'default' | 'primary' | 'success' | 'error'} 
+                label={getRoleLabel(user?.role)}
+                color={getRoleColor(user?.role) as 'default' | 'primary' | 'success' | 'error'} 
                 sx={{ mt: 1 }}
               />
               
@@ -230,7 +234,7 @@ const ProfilePage: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText 
                     primary="Email" 
-                    secondary={userData.email} 
+                    secondary={user?.email} 
                   />
                 </ListItem>
                 
@@ -240,7 +244,7 @@ const ProfilePage: React.FC = () => {
                   </ListItemIcon>
                   <ListItemText 
                     primary="Телефон" 
-                    secondary={userData.phone} 
+                    secondary={user?.phone} 
                   />
                 </ListItem>
                 
@@ -249,8 +253,8 @@ const ProfilePage: React.FC = () => {
                     <BusinessIcon />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Компанія" 
-                    secondary={userData.company} 
+                    primary="Організація" 
+                    secondary="Твоя шина" 
                   />
                 </ListItem>
                 
@@ -259,18 +263,8 @@ const ProfilePage: React.FC = () => {
                     <CalendarIcon />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Дата реєстрації" 
-                    secondary={userData.dateRegistered} 
-                  />
-                </ListItem>
-                
-                <ListItem>
-                  <ListItemIcon>
-                    <CalendarIcon />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Останній вхід" 
-                    secondary={userData.lastLogin} 
+                    primary="Статус користувача" 
+                    secondary={user?.is_active ? 'Активний' : 'Неактивний'} 
                   />
                 </ListItem>
               </List>
