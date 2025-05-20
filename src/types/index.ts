@@ -139,12 +139,17 @@ export interface ClientCar {
 export interface CarBrand {
   id: number;
   name: string;
+  logo?: string;
+  is_active: boolean;
+  car_models?: CarModel[];
 }
 
 export interface CarModel {
   id: number;
   brand_id: number;
   name: string;
+  is_active: boolean;
+  brand?: CarBrand;
 }
 
 export interface TireType {
@@ -274,6 +279,7 @@ export interface Region {
   name: string;
   code?: string;
   is_active: boolean;
+  cities?: City[];
 }
 
 export interface City {
@@ -292,4 +298,40 @@ export interface RootState {
   clients: ClientsState;
   bookings: BookingsState;
   users: UsersState;
+  regions: RegionsState;
+  cities: CitiesState;
+  carBrands: CarBrandsState;
+  carModels: CarModelsState;
+}
+
+export interface RegionsState {
+  regions: Region[];
+  selectedRegion: Region | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface CitiesState {
+  cities: City[];
+  selectedCity: City | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface CarBrandsState {
+  carBrands: CarBrand[];
+  selectedCarBrand: CarBrand | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface CarModelsState {
+  carModels: CarModel[];
+  selectedCarModel: CarModel | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
 } 

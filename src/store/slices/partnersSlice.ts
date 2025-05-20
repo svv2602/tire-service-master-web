@@ -41,7 +41,22 @@ export const fetchPartnerById = createAsyncThunk(
 
 export const createPartner = createAsyncThunk(
   'partners/createPartner',
-  async (partnerData: any, { rejectWithValue }) => {
+  async (partnerData: { 
+    company_name: string;
+    contact_person?: string;
+    company_description?: string;
+    website?: string;
+    tax_number?: string;
+    legal_address?: string;
+    logo_url?: string;
+    user: {
+      email: string;
+      phone?: string;
+      first_name: string;
+      last_name: string;
+      middle_name?: string;
+    }
+  }, { rejectWithValue }) => {
     try {
       const response = await partnersApi.create(partnerData);
       return response.data;
@@ -53,7 +68,25 @@ export const createPartner = createAsyncThunk(
 
 export const updatePartner = createAsyncThunk(
   'partners/updatePartner',
-  async ({ id, data }: { id: number; data: any }, { rejectWithValue }) => {
+  async ({ id, data }: { 
+    id: number; 
+    data: {
+      company_name?: string;
+      contact_person?: string;
+      company_description?: string;
+      website?: string;
+      tax_number?: string;
+      legal_address?: string;
+      logo_url?: string;
+      user?: {
+        email?: string;
+        phone?: string;
+        first_name?: string;
+        last_name?: string;
+        middle_name?: string;
+      }
+    } 
+  }, { rejectWithValue }) => {
     try {
       const response = await partnersApi.update(id, data);
       return response.data;

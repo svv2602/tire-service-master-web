@@ -310,5 +310,81 @@ export const usersApi = {
   }
 };
 
+// API для работы с регионами
+export const regionsApi = {
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/regions', { params });
+  },
+  getById: (id: number) => {
+    return apiClient.get(`/api/v1/regions/${id}`);
+  },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/regions', data);
+  },
+  update: (id: number, data: any) => {
+    return apiClient.put(`/api/v1/regions/${id}`, data);
+  },
+  delete: (id: number) => {
+    return apiClient.delete(`/api/v1/regions/${id}`);
+  },
+};
+
+// API для работы с городами
+export const citiesApi = {
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/cities', { params });
+  },
+  getById: (id: number) => {
+    return apiClient.get(`/api/v1/cities/${id}`);
+  },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/cities', data);
+  },
+  update: (id: number, data: any) => {
+    return apiClient.put(`/api/v1/cities/${id}`, data);
+  },
+  delete: (id: number) => {
+    return apiClient.delete(`/api/v1/cities/${id}`);
+  },
+};
+
+// API для работы с автомобильными брендами
+export const carBrandsApi = {
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/car_brands', { params });
+  },
+  getById: (id: number) => {
+    return apiClient.get(`/api/v1/car_brands/${id}`);
+  },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/car_brands', data);
+  },
+  update: (id: number, data: any) => {
+    return apiClient.put(`/api/v1/car_brands/${id}`, data);
+  },
+  delete: (id: number) => {
+    return apiClient.delete(`/api/v1/car_brands/${id}`);
+  },
+};
+
+// API для работы с моделями автомобилей
+export const carModelsApi = {
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/car_models', { params });
+  },
+  getById: (id: number) => {
+    return apiClient.get(`/api/v1/car_models/${id}`);
+  },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/car_models', data);
+  },
+  update: (id: number, data: any) => {
+    return apiClient.put(`/api/v1/car_models/${id}`, data);
+  },
+  delete: (id: number) => {
+    return apiClient.delete(`/api/v1/car_models/${id}`);
+  },
+};
+
 // По умолчанию экспортируем apiClient
 export default apiClient; 

@@ -30,6 +30,10 @@ const validationSchema = yup.object({
   website: yup.string().url('Введите корректный URL'),
   tax_number: yup.string(),
   legal_address: yup.string(),
+  logo_url: yup.string().url('Введите корректный URL логотипа'),
+  first_name: yup.string().required('Имя обязательно'),
+  last_name: yup.string().required('Фамилия обязательна'),
+  middle_name: yup.string(),
 });
 
 interface PartnerFormData {
@@ -41,6 +45,10 @@ interface PartnerFormData {
   website: string;
   tax_number: string;
   legal_address: string;
+  logo_url: string;
+  first_name: string;
+  last_name: string;
+  middle_name: string;
 }
 
 const PartnerFormPage: React.FC = () => {
@@ -66,6 +74,10 @@ const PartnerFormPage: React.FC = () => {
     website: selectedPartner?.website || '',
     tax_number: selectedPartner?.tax_number || '',
     legal_address: selectedPartner?.legal_address || '',
+    logo_url: selectedPartner?.logo_url || '',
+    first_name: selectedPartner?.user?.first_name || '',
+    last_name: selectedPartner?.user?.last_name || '',
+    middle_name: selectedPartner?.user?.middle_name || '',
   };
 
   const formik = useFormik({
@@ -74,11 +86,35 @@ const PartnerFormPage: React.FC = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        // Подготовка данных для API
+        const userData = {
+          email: values.email,
+          phone: values.phone,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          middle_name: values.middle_name,
+        };
+        
+        const partnerData = {
+          company_name: values.company_name,
+          contact_person: values.contact_person,
+          company_description: values.company_description,
+          website: values.website,
+          tax_number: values.tax_number,
+          legal_address: values.legal_address,
+          logo_url: values.logo_url,
+        };
+        
+        const apiData = {
+          ...partnerData,
+          user: userData
+        };
+        
         if (isEditMode && id) {
-          await dispatch(updatePartner({ id: Number(id), data: values })).unwrap();
+          await dispatch(updatePartner({ id: Number(id), data: apiData })).unwrap();
           setSuccessMessage('Партнер успешно обновлен');
         } else {
-          await dispatch(createPartner(values)).unwrap();
+          await dispatch(createPartner(apiData)).unwrap();
           setSuccessMessage('Партнер успешно создан');
           setTimeout(() => {
             navigate('/partners');
@@ -186,6 +222,48 @@ const PartnerFormPage: React.FC = () => {
                 />
               </Grid>
 
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  id="first_name"
+                  name="first_name"
+                  label="Имя"
+                  value={formik.values.first_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.first_name && Boolean(formik.errors.first_name)}
+                  helperText={formik.touched.first_name && formik.errors.first_name}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  id="last_name"
+                  name="last_name"
+                  label="Фамилия"
+                  value={formik.values.last_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.last_name && Boolean(formik.errors.last_name)}
+                  helperText={formik.touched.last_name && formik.errors.last_name}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 4 }}>
+                <TextField
+                  fullWidth
+                  id="middle_name"
+                  name="middle_name"
+                  label="Отчество"
+                  value={formik.values.middle_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
+                  helperText={formik.touched.middle_name && formik.errors.middle_name}
+                />
+              </Grid>
+
               <Grid size={{ xs: 12 }}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
@@ -234,6 +312,20 @@ const PartnerFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
                   helperText={formik.touched.tax_number && formik.errors.tax_number}
+                />
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  id="logo_url"
+                  name="logo_url"
+                  label="URL логотипа"
+                  value={formik.values.logo_url}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
+                  helperText={formik.touched.logo_url && formik.errors.logo_url}
                 />
               </Grid>
 

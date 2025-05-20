@@ -22,6 +22,10 @@ import UserForm from './pages/users/UserForm';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from './store';
 import { getCurrentUser } from './store/slices/authSlice';
+import RegionsPage from './pages/catalog/RegionsPage';
+import CitiesPage from './pages/catalog/CitiesPage';
+import CarBrandsPage from './pages/catalog/CarBrandsPage';
+import CarModelsPage from './pages/catalog/CarModelsPage';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -132,6 +136,11 @@ function App() {
               {/* Другие маршруты */}
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              {/* Справочники */}
+              <Route path="regions" element={<RegionsPage />} />
+              <Route path="cities" element={<CitiesPage />} />
+              <Route path="car-brands" element={<CarBrandsPage />} />
+              <Route path="car-models" element={<CarModelsPage />} />
             </Route>
             
             {/* Маршрут по умолчанию */}

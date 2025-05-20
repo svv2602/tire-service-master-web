@@ -30,12 +30,15 @@ import {
   ExitToApp as LogoutIcon,
   AccountCircle as AccountIcon,
   DirectionsCar as CarIcon,
+  DirectionsCar,
   Build as ServiceIcon,
   Business as CompanyIcon,
   ExpandLess,
   ExpandMore,
   Assessment as ReportIcon,
   Person as UserIcon,
+  Map as MapIcon,
+  PlaceOutlined as PlaceOutlinedIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -259,6 +262,34 @@ const MainLayout: React.FC = () => {
       {
         title: 'Справочники',
         items: [
+          {
+            text: 'Регионы',
+            icon: <MapIcon />,
+            path: '/regions',
+            roles: [UserRole.ADMIN],
+            description: 'Управление регионами',
+          },
+          {
+            text: 'Города',
+            icon: <LocationOnIcon />,
+            path: '/cities',
+            roles: [UserRole.ADMIN],
+            description: 'Управление городами',
+          },
+          {
+            text: 'Бренды авто',
+            icon: <CarIcon />,
+            path: '/car-brands',
+            roles: [UserRole.ADMIN],
+            description: 'Управление брендами автомобилей',
+          },
+          {
+            text: 'Модели авто',
+            icon: <DirectionsCar />,
+            path: '/car-models',
+            roles: [UserRole.ADMIN],
+            description: 'Управление моделями автомобилей',
+          },
           {
             text: 'Автомобили',
             icon: <CarIcon />,
