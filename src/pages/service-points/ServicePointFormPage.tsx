@@ -23,6 +23,8 @@ import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
 import { fetchServicePointById, createServicePoint, updateServicePoint, clearError } from '../../store/slices/servicePointsSlice';
 import { fetchPartners } from '../../store/slices/partnersSlice';
+import { fetchRegions } from '../../store/slices/regionsSlice';
+import { fetchCities } from '../../store/slices/citiesSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 
@@ -32,6 +34,7 @@ const validationSchema = yup.object({
   partner_id: yup.number().required('Партнер обязателен'),
   address: yup.string().required('Адрес обязателен'),
   city_id: yup.number().required('Город обязателен'),
+  region_id: yup.number().required('Регион обязателен'),
   contact_phone: yup.string().required('Контактный телефон обязателен'),
   description: yup.string(),
   status_id: yup.number().required('Статус обязателен'),
@@ -46,6 +49,7 @@ interface ServicePointFormData {
   partner_id: number;
   description: string;
   city_id: number;
+  region_id: number;
   address: string;
   contact_phone: string;
   status_id: number;
@@ -55,14 +59,7 @@ interface ServicePointFormData {
   longitude?: number | null;
 }
 
-// Временные данные для тестирования
-const mockCities = [
-  { id: 1, name: 'Москва' },
-  { id: 2, name: 'Санкт-Петербург' },
-  { id: 3, name: 'Екатеринбург' },
-  { id: 4, name: 'Новосибирск' },
-];
-
+// Статусы точек обслуживания (в будущем можно загружать с сервера)
 const mockServicePointStatuses = [
   { id: 1, name: 'Активна', color: '#4caf50' },
   { id: 2, name: 'Приостановлена', color: '#ff9800' },
@@ -76,23 +73,61 @@ const ServicePointFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { selectedServicePoint, loading, error } = useSelector((state: RootState) => state.servicePoints);
   const { partners } = useSelector((state: RootState) => state.partners);
+  const { regions } = useSelector((state: RootState) => state.regions);
+  const { cities } = useSelector((state: RootState) => state.cities);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [cities] = useState(mockCities); // В реальном проекте должно загружаться с сервера
-  const [servicePointStatuses] = useState(mockServicePointStatuses); // В реальном проекте должно загружаться с сервера
+  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+  const [servicePointStatuses] = useState(mockServicePointStatuses);
+  const [filteredCities, setFilteredCities] = useState<any[]>([]);
 
   useEffect(() => {
     dispatch(fetchPartners({}));
+    // Загружаем список всех регионов для выпадающего списка
+    dispatch(fetchRegions({}));
     
     if (isEditMode && id) {
-      dispatch(fetchServicePointById(Number(id)));
+      dispatch(fetchServicePointById(Number(id)))
+        .unwrap()
+        .then((servicePoint) => {
+          // После получения данных о точке обслуживания, определяем её регион через город
+          if (servicePoint.city_id) {
+            // Сначала загружаем все города чтобы найти регион для города точки обслуживания
+            dispatch(fetchCities({ region_id: null }))
+              .unwrap()
+              .then((citiesData) => {
+                const city = citiesData.cities.find((c: any) => c.id === servicePoint.city_id);
+                if (city && city.region_id) {
+                  // Когда нашли регион города, устанавливаем его как выбранный
+                  setSelectedRegionId(city.region_id);
+                  // И загружаем города, относящиеся к этому региону
+                  dispatch(fetchCities({ region_id: city.region_id }));
+                }
+              });
+          }
+        });
+    } else {
+      // В режиме создания загружаем все города
+      dispatch(fetchCities({ region_id: null }));
     }
   }, [isEditMode, id, dispatch]);
+
+  // Фильтрация городов при изменении выбранного региона
+  useEffect(() => {
+    if (selectedRegionId) {
+      // Если выбран регион, фильтруем города только этого региона
+      setFilteredCities(cities.filter((city: any) => city.region_id === selectedRegionId));
+    } else {
+      // Если регион не выбран, показываем все города
+      setFilteredCities(cities);
+    }
+  }, [cities, selectedRegionId]);
 
   const initialValues: ServicePointFormData = {
     name: selectedServicePoint?.name || '',
     partner_id: selectedServicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
     description: selectedServicePoint?.description || '',
     city_id: selectedServicePoint?.city_id || 0,
+    region_id: selectedRegionId || 0,
     address: selectedServicePoint?.address || '',
     contact_phone: selectedServicePoint?.contact_phone || '',
     status_id: selectedServicePoint?.status_id || 1,
@@ -131,6 +166,19 @@ const ServicePointFormPage: React.FC = () => {
       }
     },
   });
+
+  // Обработчик изменения выбранного региона
+  const handleRegionChange = (event: SelectChangeEvent<string>) => {
+    const regionId = Number(event.target.value);
+    // Устанавливаем выбранный регион в состояние
+    setSelectedRegionId(regionId);
+    // Обновляем значение в форме
+    formik.setFieldValue('region_id', regionId);
+    // Сбрасываем выбранный город, так как он может не принадлежать выбранному региону
+    formik.setFieldValue('city_id', 0);
+    // Загружаем города для выбранного региона
+    dispatch(fetchCities({ region_id: regionId }));
+  };
 
   const handleCloseSnackbar = () => {
     setSuccessMessage(null);
@@ -234,6 +282,28 @@ const ServicePointFormPage: React.FC = () => {
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
+                <FormControl fullWidth error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
+                  <InputLabel id="region-id-label">Регион</InputLabel>
+                  <Select
+                    labelId="region-id-label"
+                    id="region_id"
+                    name="region_id"
+                    value={formik.values.region_id.toString()}
+                    onChange={handleRegionChange}
+                    onBlur={formik.handleBlur}
+                    label="Регион"
+                  >
+                    <MenuItem value="0" disabled>Выберите регион</MenuItem>
+                    {regions.map(region => (
+                      <MenuItem key={region.id} value={region.id.toString()}>
+                        {region.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
                 <FormControl fullWidth error={formik.touched.city_id && Boolean(formik.errors.city_id)}>
                   <InputLabel id="city-id-label">Город</InputLabel>
                   <Select
@@ -246,9 +316,10 @@ const ServicePointFormPage: React.FC = () => {
                     }}
                     onBlur={formik.handleBlur}
                     label="Город"
+                    disabled={!formik.values.region_id}
                   >
                     <MenuItem value="0" disabled>Выберите город</MenuItem>
-                    {cities.map(city => (
+                    {filteredCities.map((city: any) => (
                       <MenuItem key={city.id} value={city.id.toString()}>
                         {city.name}
                       </MenuItem>

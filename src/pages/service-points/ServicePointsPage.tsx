@@ -185,6 +185,7 @@ const ServicePointsPage: React.FC = () => {
           </Box>
         ) : (
           <>
+            {/* Таблица с точками обслуживания, включая информацию о городах и регионах из справочников */}
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="table of service points">
                 <TableHead>
@@ -192,6 +193,9 @@ const ServicePointsPage: React.FC = () => {
                     <TableCell>ID</TableCell>
                     <TableCell>Название</TableCell>
                     <TableCell>Партнер</TableCell>
+                    {/* Колонки для региона и города из связанных справочников */}
+                    <TableCell>Регион</TableCell>
+                    <TableCell>Город</TableCell>
                     <TableCell>Адрес</TableCell>
                     <TableCell>Статус</TableCell>
                     <TableCell>Рейтинг</TableCell>
@@ -209,6 +213,10 @@ const ServicePointsPage: React.FC = () => {
                       </TableCell>
                       <TableCell>{point.name}</TableCell>
                       <TableCell>{point.partner?.company_name || '-'}</TableCell>
+                      {/* Отображение данных о регионе через вложенную связь city.region */}
+                      <TableCell>{point.city?.region?.name || '-'}</TableCell>
+                      {/* Отображение данных о городе из связанной записи */}
+                      <TableCell>{point.city?.name || '-'}</TableCell>
                       <TableCell>{point.address}</TableCell>
                       <TableCell>
                         <Chip 
