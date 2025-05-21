@@ -81,6 +81,13 @@ export interface ServicePoint {
   status?: ServicePointStatus;
   photos?: ServicePointPhoto[];
   amenities?: Amenity[];
+  services?: {
+    id: number;
+    name: string;
+    price: number;
+    category_id?: number;
+    category?: ServiceCategory;
+  }[];
 }
 
 export interface ServicePointStatus {
@@ -232,22 +239,25 @@ export interface BookingService {
 
 export interface Service {
   id: number;
-  category_id: number;
   name: string;
   description?: string;
-  duration: number;
-  price: number;
+  category_id: number;
+  default_duration: number;
   is_active: boolean;
+  sort_order: number;
   category?: ServiceCategory;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ServiceCategory {
   id: number;
   name: string;
   description?: string;
-  icon?: string;
   is_active: boolean;
   sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CarType {
@@ -303,6 +313,7 @@ export interface RootState {
   cities: CitiesState;
   carBrands: CarBrandsState;
   carModels: CarModelsState;
+  services: ServicesState;
 }
 
 export interface RegionsState {
@@ -332,6 +343,16 @@ export interface CarBrandsState {
 export interface CarModelsState {
   carModels: CarModel[];
   selectedCarModel: CarModel | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+// Redux стейт для услуг
+export interface ServicesState {
+  services: Service[];
+  selectedService: Service | null;
+  serviceCategories: ServiceCategory[];
   loading: boolean;
   error: string | null;
   totalItems: number;

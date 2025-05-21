@@ -186,6 +186,9 @@ export const clientsApi = {
   getById: (id: number) => {
     return apiClient.get(`/api/v1/clients/${id}`);
   },
+  create: (data: any) => {
+    return apiClient.post('/api/v1/clients', data);
+  },
   update: (id: number, data: any) => {
     return apiClient.put(`/api/v1/clients/${id}`, data);
   },
@@ -211,6 +214,9 @@ export const clientsApi = {
 
 // API для работы с бронированиями
 export const bookingsApi = {
+  getAll: (params?: any) => {
+    return apiClient.get('/api/v1/bookings', { params });
+  },
   getClientBookings: (clientId: number, params?: any) => {
     return apiClient.get(`/api/v1/clients/${clientId}/bookings`, { params });
   },
@@ -262,6 +268,9 @@ export const referencesApi = {
   },
   getServices: (params?: any) => {
     return apiClient.get('/api/v1/services', { params });
+  },
+  getServiceById: (id: number) => {
+    return apiClient.get(`/api/v1/services/${id}`);
   },
   getBookingStatuses: () => {
     return apiClient.get('/api/v1/booking_statuses');

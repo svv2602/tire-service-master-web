@@ -7,6 +7,9 @@ import regionsReducer from './slices/regionsSlice';
 import citiesReducer from './slices/citiesSlice';
 import carBrandsReducer from './slices/carBrandsSlice';
 import carModelsReducer from './slices/carModelsSlice';
+import clientsReducer from './slices/clientsSlice';
+import bookingsReducer from './slices/bookingsSlice';
+import servicesReducer from './slices/servicesSlice';
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +21,9 @@ export const store = configureStore({
     cities: citiesReducer,
     carBrands: carBrandsReducer,
     carModels: carModelsReducer,
+    clients: clientsReducer,
+    bookings: bookingsReducer,
+    services: servicesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
