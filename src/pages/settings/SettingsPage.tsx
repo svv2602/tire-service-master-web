@@ -103,7 +103,15 @@ const SettingsPage: React.FC = () => {
       try {
         // Загрузка списка городов
         const citiesResponse = await settingsApi.getCities();
-        setCities(citiesResponse.data);
+        // Проверяем формат ответа API
+        if (citiesResponse.data.cities && Array.isArray(citiesResponse.data.cities)) {
+          setCities(citiesResponse.data.cities);
+        } else if (Array.isArray(citiesResponse.data)) {
+          setCities(citiesResponse.data);
+        } else {
+          console.warn('Неожиданный формат данных для городов:', citiesResponse.data);
+          setCities([]);
+        }
         
         // Загрузка системных настроек
         const settingsResponse = await settingsApi.getSystemSettings();
@@ -260,9 +268,11 @@ const SettingsPage: React.FC = () => {
                       label="Город по умолчанию"
                       onChange={handleSelectChange as any}
                     >
-                      {cities.map(city => (
+                      {Array.isArray(cities) ? cities.map(city => (
                         <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>
-                      ))}
+                      )) : (
+                        <MenuItem value="">Загрузка городов...</MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                 </Box>
