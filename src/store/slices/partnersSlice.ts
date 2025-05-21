@@ -108,6 +108,18 @@ export const deletePartner = createAsyncThunk(
   }
 );
 
+export const togglePartnerActive = createAsyncThunk(
+  'partners/togglePartnerActive',
+  async ({ id, active }: { id: number; active?: boolean }, { rejectWithValue }) => {
+    try {
+      const response = await partnersApi.toggleActive(id, active);
+      return response.data.partner;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Не удалось изменить статус активности партнера');
+    }
+  }
+);
+
 // Редьюсер
 const partnersSlice = createSlice({
   name: 'partners',
@@ -200,6 +212,26 @@ const partnersSlice = createSlice({
         }
       })
       .addCase(deletePartner.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      
+      // Обработка togglePartnerActive
+      .addCase(togglePartnerActive.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(togglePartnerActive.fulfilled, (state, action: PayloadAction<Partner>) => {
+        state.loading = false;
+        const index = state.partners.findIndex(partner => partner.id === action.payload.id);
+        if (index !== -1) {
+          state.partners[index] = action.payload;
+        }
+        if (state.selectedPartner?.id === action.payload.id) {
+          state.selectedPartner = action.payload;
+        }
+      })
+      .addCase(togglePartnerActive.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

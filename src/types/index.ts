@@ -46,6 +46,7 @@ export interface Partner {
   website?: string;
   tax_number?: string;
   legal_address?: string;
+  is_active: boolean;
   user?: User;
 }
 

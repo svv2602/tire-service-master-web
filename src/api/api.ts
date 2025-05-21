@@ -136,6 +136,9 @@ export const partnersApi = {
   delete: (id: number) => {
     return apiClient.delete(`/api/v1/partners/${id}`);
   },
+  toggleActive: (id: number, active?: boolean) => {
+    return apiClient.patch(`/api/v1/partners/${id}/toggle_active`, { active });
+  },
 };
 
 // API для работы с сервисными точками
