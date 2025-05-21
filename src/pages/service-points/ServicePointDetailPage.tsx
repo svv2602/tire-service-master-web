@@ -209,8 +209,44 @@ const ServicePointDetailPage: React.FC = () => {
                 ))}
               </Grid>
             ) : (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                Нет доступных фотографий
+              <Typography variant="body2" color="text.secondary">
+                Нет фотографий
+              </Typography>
+            )}
+          </Paper>
+          
+          {/* Секция с услугами */}
+          <Paper sx={{ p: 3, mt: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Услуги</Typography>
+              </Box>
+              <Button 
+                variant="outlined" 
+                size="small" 
+                startIcon={<EditIcon />} 
+                onClick={() => navigate(`/service-points/${id}/services`)}
+              >
+                Управление услугами
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+            
+            {selectedServicePoint.services && selectedServicePoint.services.length > 0 ? (
+              <Box>
+                {selectedServicePoint.services.map((service: { id: number; name: string; price: number }) => (
+                  <Chip 
+                    key={service.id}
+                    label={`${service.name} - ${service.price} ₽`}
+                    variant="outlined"
+                    sx={{ m: 0.5 }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Нет доступных услуг
               </Typography>
             )}
           </Paper>

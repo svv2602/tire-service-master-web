@@ -31,24 +31,51 @@ import { fetchWithAuth } from '../../../api/apiUtils';
 interface ServicePoint {
   id: number;
   name: string;
+  description?: string;
+  partner_id: number;
   address: string;
-  phone: string;
-  email: string;
-  description: string;
-  rating: number;
-  reviews_count: number;
-  opening_time: string;
-  closing_time: string;
-  is_favorite: boolean;
-  services: {
+  city_id: number;
+  contact_phone?: string;
+  status_id: number;
+  post_count: number;
+  default_slot_duration: number;
+  latitude?: number;
+  longitude?: number;
+  total_clients_served: number;
+  average_rating: number;
+  cancellation_rate: number;
+  rating?: number;
+  reviews_count?: number;
+  created_at?: string;
+  updated_at?: string;
+  partner?: {
+    id: number;
+    company_name: string;
+  };
+  city?: {
+    id: number;
+    name: string;
+    region?: {
+      id: number;
+      name: string;
+    }
+  };
+  status?: {
+    id: number;
+    name: string;
+    color: string;
+  };
+  services?: {
     id: number;
     name: string;
     price: number;
   }[];
-  photos: {
+  photos?: {
     id: number;
     url: string;
+    sort_order: number;
   }[];
+  is_favorite?: boolean;
 }
 
 const ServicePointsSearch: React.FC = () => {
@@ -135,14 +162,16 @@ const ServicePointsSearch: React.FC = () => {
       filtered = filtered.filter(point => 
         point.name.toLowerCase().includes(query) || 
         point.address.toLowerCase().includes(query) ||
-        point.description.toLowerCase().includes(query)
+        point.description?.toLowerCase().includes(query) ||
+        point.partner?.company_name.toLowerCase().includes(query) ||
+        point.city?.name.toLowerCase().includes(query)
       );
     }
     
     // Фильтрация по выбранной услуге
     if (selectedService) {
       filtered = filtered.filter(point => 
-        point.services.some(service => service.id === selectedService)
+        point.services?.some(service => service.id === selectedService)
       );
     }
     
@@ -276,7 +305,7 @@ const ServicePointsSearch: React.FC = () => {
                 <CardMedia
                   component="img"
                   height="160"
-                  image={point.photos.length > 0 ? point.photos[0].url : '/images/service-point-placeholder.jpg'}
+                  image={(point.photos && point.photos.length > 0) ? point.photos[0].url : '/images/service-point-placeholder.jpg'}
                   alt={point.name}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
@@ -286,13 +315,13 @@ const ServicePointsSearch: React.FC = () => {
                     </Typography>
                     <Box display="flex" alignItems="center">
                       <Rating 
-                        value={point.rating} 
+                        value={point.average_rating || 0} 
                         readOnly 
                         precision={0.5} 
                         size="small" 
                       />
                       <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                        ({point.reviews_count})
+                        ({point.total_clients_served || 0})
                       </Typography>
                     </Box>
                   </Box>
@@ -300,11 +329,21 @@ const ServicePointsSearch: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
                     <LocationIcon fontSize="small" sx={{ mr: 0.5 }} />
                     {point.address}
+                    {point.city && `, ${point.city.name}`}
+                    {point.city?.region && `, ${point.city.region.name}`}
                   </Typography>
                   
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Время работы: {point.opening_time} - {point.closing_time}
+                    {point.partner?.company_name && `Партнер: ${point.partner.company_name}`}
                   </Typography>
+                  
+                  {point.description && (
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      {point.description.length > 100 
+                        ? `${point.description.substring(0, 100)}...` 
+                        : point.description}
+                    </Typography>
+                  )}
                   
                   <Divider sx={{ my: 1 }} />
                   
@@ -313,7 +352,7 @@ const ServicePointsSearch: React.FC = () => {
                   </Typography>
                   
                   <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {point.services.slice(0, 5).map(service => (
+                    {point.services?.slice(0, 5).map(service => (
                       <Chip 
                         key={service.id} 
                         label={`${service.name} - ${service.price} ₽`} 
@@ -321,7 +360,7 @@ const ServicePointsSearch: React.FC = () => {
                         variant="outlined" 
                       />
                     ))}
-                    {point.services.length > 5 && (
+                    {point.services && point.services.length > 5 && (
                       <Chip 
                         label={`+${point.services.length - 5}`} 
                         size="small"
@@ -349,7 +388,7 @@ const ServicePointsSearch: React.FC = () => {
                   <Button 
                     size="small"
                     color={point.is_favorite ? 'error' : 'secondary'}
-                    onClick={() => toggleFavorite(point.id, point.is_favorite)}
+                    onClick={() => toggleFavorite(point.id, point.is_favorite || false)}
                     startIcon={<StarIcon />}
                   >
                     {point.is_favorite ? 'Удалить из избранного' : 'В избранное'}

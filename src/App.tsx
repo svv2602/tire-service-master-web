@@ -12,6 +12,8 @@ import ServicePointsPage from './pages/service-points/ServicePointsPage';
 import ServicePointFormPage from './pages/service-points/ServicePointFormPage';
 import ServicePointDetailPage from './pages/service-points/ServicePointDetailPage';
 import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
+import ServicePointServicesPage from './pages/service-points/ServicePointServicesPage';
+import ServicesPage from './pages/services/ServicesPage';
 import ClientsPage from './pages/clients/ClientsPage';
 import BookingsPage from './pages/bookings/BookingsPage';
 import BookingFormPage from './pages/bookings/BookingFormPage';
@@ -107,6 +109,7 @@ function App() {
               <Route path="service-points/create" element={<ServicePointFormPage />} />
               <Route path="service-points/:id" element={<ServicePointDetailPage />} />
               <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
+              <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
               {/* Маршруты для клиентов */}
               <Route path="clients" element={<ClientsPage />} />
               <Route path="clients/:id" element={<div>Информация о клиенте (в разработке)</div>} />
@@ -125,7 +128,7 @@ function App() {
               <Route path="service-points/favorites" element={<div>Избранные центры (в разработке)</div>} />
               {/* Маршруты для справочников */}
               <Route path="cars" element={<div>Управление автомобилями (в разработке)</div>} />
-              <Route path="services" element={<div>Управление услугами (в разработке)</div>} />
+              <Route path="services" element={<ServicesPage />} />
               {/* Маршруты для отчетов */}
               <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
               <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
@@ -133,6 +136,7 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="users/create" element={<UserForm />} />
               <Route path="users/:id/edit" element={<UserForm />} />
+              <Route path="users/:id" element={<div>Информация о пользователе (в разработке)</div>} />
               {/* Другие маршруты */}
               <Route path="settings" element={<SettingsPage />} />
               <Route path="profile" element={<ProfilePage />} />

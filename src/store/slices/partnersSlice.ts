@@ -17,9 +17,26 @@ export const fetchPartners = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await partnersApi.getAll(params);
+      
+      // Проверяем формат данных
+      let partners = [];
+      let totalItems = 0;
+      
+      if (response.data.partners && Array.isArray(response.data.partners)) {
+        partners = response.data.partners;
+        totalItems = response.data.total_items || partners.length;
+      } else if (Array.isArray(response.data)) {
+        partners = response.data;
+        totalItems = partners.length;
+      } else {
+        console.warn('Unexpected API response format:', response.data);
+        partners = [];
+        totalItems = 0;
+      }
+      
       return {
-        partners: response.data.partners,
-        totalItems: response.data.total_items || response.data.partners.length,
+        partners,
+        totalItems,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить партнеров');

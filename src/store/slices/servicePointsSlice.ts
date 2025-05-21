@@ -19,22 +19,23 @@ export const fetchServicePoints = createAsyncThunk(
       const response = await servicePointsApi.getAll(params);
       console.log('API Response:', response.data);
       
-      // Проверяем структуру ответа и обрабатываем соответственно
+      // Обрабатываем ответ API в формате { data: [...], pagination: {...} }
       let servicePoints = [];
       let totalItems = 0;
       
       if (response.data.data && Array.isArray(response.data.data)) {
-        // Новая структура: { data: [...], pagination: {...} }
+        // Стандартная структура ответа API
         servicePoints = response.data.data;
-        totalItems = response.data.pagination?.total_count || servicePoints.length;
-      } else if (response.data.service_points && Array.isArray(response.data.service_points)) {
-        // Старая структура: { service_points: [...], total_items: number }
-        servicePoints = response.data.service_points;
-        totalItems = response.data.total_items || servicePoints.length;
+        totalItems = response.data.pagination?.total_count || 0;
       } else if (Array.isArray(response.data)) {
-        // Простой массив: [...]
+        // Если API вернул просто массив
         servicePoints = response.data;
         totalItems = servicePoints.length;
+      } else {
+        console.warn('Unexpected API response format:', response.data);
+        // Если формат не распознан, возвращаем пустой массив
+        servicePoints = [];
+        totalItems = 0;
       }
       
       return {
