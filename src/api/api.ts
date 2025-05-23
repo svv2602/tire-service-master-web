@@ -9,23 +9,17 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 5000, // 5 seconds timeout - reduced from 15s
+  timeout: 10000, // 10 seconds timeout
   withCredentials: false // Важно для работы CORS
 });
 
 // Функция для проверки доступности API
 const checkApiAvailability = async (url: string): Promise<boolean> => {
   try {
-    // Используем axios напрямую вместо fetch с no-cors
-    const testClient = axios.create({
-      baseURL: url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 3000, // Сокращаем таймаут
+    const response = await axios.get(`${url}/api/v1/health`, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 3000
     });
-    
-    const response = await testClient.get('/api/v1/health');
     console.log(`API endpoint ${url} available, status: ${response.status}`);
     return response.status === 200;
   } catch (error) {
@@ -34,32 +28,24 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
   }
 };
 
-// Проверка доступности API и установка правильного URL
+// Инициализируем API и проверяем его доступность
 (async () => {
-  const possibleUrls = [
-    'http://localhost:8000',
-    'http://127.0.0.1:8000',
-    'http://192.168.9.109:8000'
-  ];
+  const apiUrl = 'http://localhost:8000';
   
-  for (const url of possibleUrls) {
-    try {
-      // Используем GET запрос напрямую вместо axios объекта
-      const response = await fetch(`${url}/api/v1/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (response.ok) {
-        console.log(`Using API endpoint: ${url}`);
-        apiClient.defaults.baseURL = url;
-        break;
-      }
-    } catch (error) {
-      console.log(`API endpoint ${url} not available`);
+  try {
+    const isAvailable = await checkApiAvailability(apiUrl);
+    if (isAvailable) {
+      console.log(`Using API endpoint: ${apiUrl}`);
+      apiClient.defaults.baseURL = apiUrl;
+    } else {
+      console.error(`API недоступен по адресу: ${apiUrl}`);
     }
+  } catch (error) {
+    console.error(`Ошибка при проверке API: ${error}`);
   }
-})();
+})().catch(error => {
+  console.error('Ошибка инициализации API:', error);
+});
 
 // Интерцептор для добавления токена к каждому запросу
 apiClient.interceptors.request.use(
@@ -293,7 +279,17 @@ export const referencesApi = {
 export const usersApi = {
   login: (credentials: { email: string, password: string }) => {
     console.log('usersApi.login - Sending login request with:', { email: credentials.email, password: '***' });
-    return apiClient.post('/api/v1/auth/login', credentials);
+    // Добавляем отладочную информацию и проверку формата данных
+    console.debug('Request format:', JSON.stringify(credentials));
+    return apiClient.post('/api/v1/auth/login', credentials)
+      .then(response => {
+        console.debug('Login response:', response.data);
+        return response;
+      })
+      .catch(error => {
+        console.error('Login error:', error.response?.data || error.message);
+        throw error;
+      });
   },
   getCurrentUser: () => {
     console.log('usersApi.getCurrentUser - Fetching current user data');
@@ -399,4 +395,4 @@ export const carModelsApi = {
 };
 
 // По умолчанию экспортируем apiClient
-export default apiClient; 
+export default apiClient;

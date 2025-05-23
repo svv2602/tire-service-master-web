@@ -12,7 +12,7 @@ import {
   Box,
   Alert,
   CircularProgress,
-  Link
+  Snackbar
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
 
@@ -20,6 +20,7 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [successMessage, setSuccessMessage] = useState('');
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ const LoginPage: React.FC = () => {
 
     if (!password) {
       errors.password = 'Пароль обязателен';
+    } else if (password.length < 4) {
+      errors.password = 'Пароль должен быть не менее 4 символов';
     }
 
     setFormErrors(errors);
@@ -52,14 +55,24 @@ const LoginPage: React.FC = () => {
       const actionResult = await dispatch(login({ email, password })).unwrap();
       console.log('Результат входа:', actionResult);
       
-      if (actionResult && actionResult.auth_token) {
-        console.log('Успешный вход, перенаправление на /dashboard');
-        // После успешного входа загружаем данные пользователя
-        navigate('/dashboard');
+      if (actionResult) {
+        const token = actionResult.auth_token || actionResult.token;
+        if (token) {
+          localStorage.setItem('tvoya_shina_token', token);
+          setSuccessMessage('Вход выполнен успешно!');
+          
+          // Даём время увидеть сообщение об успехе перед редиректом
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 500);
+        } else {
+          throw new Error('Не удалось получить токен авторизации');
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Ошибка при входе:', err);
-      // Ошибка уже обрабатывается в slice
+      const errorMessage = err.message || (typeof err === 'string' ? err : 'Ошибка авторизации');
+      setFormErrors(prev => ({ ...prev, submit: errorMessage }));
     }
   };
 
@@ -96,6 +109,12 @@ const LoginPage: React.FC = () => {
           </Alert>
         )}
 
+        {formErrors.submit && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {formErrors.submit}
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
@@ -109,6 +128,10 @@ const LoginPage: React.FC = () => {
             helperText={formErrors.email}
             disabled={loading}
             autoFocus
+            inputProps={{
+              'data-testid': 'email-input',
+              'aria-label': 'Email'
+            }}
           />
 
           <TextField
@@ -122,6 +145,10 @@ const LoginPage: React.FC = () => {
             error={!!formErrors.password}
             helperText={formErrors.password}
             disabled={loading}
+            inputProps={{
+              'data-testid': 'password-input',
+              'aria-label': 'Пароль'
+            }}
           />
 
           <Button
@@ -132,6 +159,7 @@ const LoginPage: React.FC = () => {
             size="large"
             disabled={loading}
             sx={{ mt: 3, mb: 2 }}
+            data-testid="submit-button"
           >
             {loading ? <CircularProgress size={24} /> : 'Войти'}
           </Button>
@@ -142,9 +170,16 @@ const LoginPage: React.FC = () => {
             Тестовые данные для входа в систему:
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Email: admin@example.com, Пароль: password
+            Email: admin@test.com, Пароль: admin
           </Typography>
         </Box>
+
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={2000}
+          message={successMessage}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        />
       </Paper>
     </Container>
   );
