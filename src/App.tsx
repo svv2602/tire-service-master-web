@@ -36,9 +36,16 @@ const ProtectedRoute: React.FC<{
   const { isAuthenticated, token, user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   
-  // Проверяем сначала Redux состояние, затем localStorage
+  // Проверяем токен и пытаемся получить пользователя, если его нет
   const hasToken = !!localStorage.getItem('tvoya_shina_token');
   const isAuth = isAuthenticated || hasToken;
+  
+  useEffect(() => {
+    // Если есть токен, но нет данных пользователя, пробуем их получить
+    if (hasToken && !user) {
+      dispatch(getCurrentUser());
+    }
+  }, [hasToken, user, dispatch]);
   
   console.log('ProtectedRoute check:', { 
     isAuthenticated, 
