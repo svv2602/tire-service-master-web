@@ -1,20 +1,52 @@
 import apiClient from './api';
 
 // Типы пользователей
-export interface User {
+// API response type - with optional fields
+export interface ApiUser {
   id: number;
   email: string;
   phone?: string;
   first_name?: string;
   last_name?: string;
   middle_name?: string;
-  role_id: number;
+  role?: string;
+  role_id?: number;
   last_login?: string;
+  is_active?: boolean;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// State type - with required fields
+export interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  role: string;
   is_active: boolean;
-  email_verified: boolean;
-  phone_verified: boolean;
-  created_at: string;
-  updated_at: string;
+  middle_name?: string;
+  role_id?: number;
+  last_login?: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UsersResponse {
+  data: ApiUser[];
+  pagination?: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
+  users?: ApiUser[]; // For backwards compatibility
+  total_items?: number; // For backwards compatibility
 }
 
 export interface UserProfile {
@@ -91,7 +123,7 @@ export const usersApi = {
 
   // Получение всех пользователей (только для администраторов)
   getAll: (params?: any) => {
-    return apiClient.get('/api/v1/users', { params });
+    return apiClient.get<UsersResponse>('/api/v1/users', { params });
   },
 
   // Получение пользователя по ID
@@ -118,6 +150,14 @@ export const usersApi = {
   delete: (id: number) => {
     return apiClient.delete(`/api/v1/users/${id}`);
   },
+
+  changeRole: (id: number, role: string) => {
+    return apiClient.put(`/api/v1/users/${id}/change_role`, { role });
+  },
+
+  changeStatus: (id: number, isActive: boolean) => {
+    return apiClient.put(`/api/v1/users/${id}/change_status`, { is_active: isActive });
+  },
 };
 
-export default usersApi; 
+export default usersApi;

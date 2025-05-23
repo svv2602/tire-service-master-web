@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { City } from '../../types';
-import { citiesApi } from '../../api/api';
+import { citiesApi, CityResponse, CitiesResponse, City } from '../../api/cities';
 
 interface CitiesState {
   cities: City[];
@@ -25,10 +24,7 @@ export const fetchCities = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await citiesApi.getAll(params);
-      return {
-        cities: response.data.cities,
-        totalItems: response.data.total_items || response.data.cities.length,
-      };
+      return response.data as CitiesResponse;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить города');
     }
@@ -40,7 +36,7 @@ export const fetchCityById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await citiesApi.getById(id);
-      return response.data;
+      return response.data as CityResponse;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти город');
     }
@@ -49,10 +45,10 @@ export const fetchCityById = createAsyncThunk(
 
 export const createCity = createAsyncThunk(
   'cities/createCity',
-  async (data: { name: string; region_id: number; is_active?: boolean }, { rejectWithValue }) => {
+  async (data: { name: string; region_id: number; is_active: boolean }, { rejectWithValue }) => {
     try {
-      const response = await citiesApi.create({ city: data });
-      return response.data;
+      const response = await citiesApi.create(data);
+      return response.data as CityResponse;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать город');
     }
@@ -63,8 +59,8 @@ export const updateCity = createAsyncThunk(
   'cities/updateCity',
   async ({ id, data }: { id: number; data: { name?: string; region_id?: number; is_active?: boolean } }, { rejectWithValue }) => {
     try {
-      const response = await citiesApi.update(id, { city: data });
-      return response.data;
+      const response = await citiesApi.update(id, data);
+      return response.data as CityResponse;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить город');
     }
@@ -102,10 +98,10 @@ const citiesSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCities.fulfilled, (state, action: PayloadAction<{ cities: City[]; totalItems: number }>) => {
+      .addCase(fetchCities.fulfilled, (state, action: PayloadAction<CitiesResponse>) => {
         state.loading = false;
         state.cities = action.payload.cities;
-        state.totalItems = action.payload.totalItems;
+        state.totalItems = action.payload.total_items;
       })
       .addCase(fetchCities.rejected, (state, action) => {
         state.loading = false;
@@ -117,9 +113,9 @@ const citiesSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCityById.fulfilled, (state, action: PayloadAction<City>) => {
+      .addCase(fetchCityById.fulfilled, (state, action: PayloadAction<CityResponse>) => {
         state.loading = false;
-        state.selectedCity = action.payload;
+        state.selectedCity = action.payload.city;
       })
       .addCase(fetchCityById.rejected, (state, action) => {
         state.loading = false;
@@ -131,9 +127,9 @@ const citiesSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createCity.fulfilled, (state, action: PayloadAction<City>) => {
+      .addCase(createCity.fulfilled, (state, action: PayloadAction<CityResponse>) => {
         state.loading = false;
-        state.cities.push(action.payload);
+        state.cities.push(action.payload.city);
         state.totalItems += 1;
       })
       .addCase(createCity.rejected, (state, action) => {
@@ -146,14 +142,14 @@ const citiesSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateCity.fulfilled, (state, action: PayloadAction<City>) => {
+      .addCase(updateCity.fulfilled, (state, action: PayloadAction<CityResponse>) => {
         state.loading = false;
-        const index = state.cities.findIndex(city => city.id === action.payload.id);
+        const index = state.cities.findIndex(city => city.id === action.payload.city.id);
         if (index !== -1) {
-          state.cities[index] = action.payload;
+          state.cities[index] = action.payload.city;
         }
-        if (state.selectedCity?.id === action.payload.id) {
-          state.selectedCity = action.payload;
+        if (state.selectedCity?.id === action.payload.city.id) {
+          state.selectedCity = action.payload.city;
         }
       })
       .addCase(updateCity.rejected, (state, action) => {
@@ -182,4 +178,4 @@ const citiesSlice = createSlice({
 });
 
 export const { clearSelectedCity, clearError } = citiesSlice.actions;
-export default citiesSlice.reducer; 
+export default citiesSlice.reducer;

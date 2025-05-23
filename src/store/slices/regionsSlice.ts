@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Region } from '../../types';
-import { regionsApi } from '../../api/api';
+import { regionsApi, RegionResponse, RegionsResponse } from '../../api/regions';
 
 interface RegionsState {
   regions: Region[];
@@ -25,9 +25,10 @@ export const fetchRegions = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await regionsApi.getAll(params);
+      const data = response.data as RegionsResponse;
       return {
-        regions: response.data.regions,
-        totalItems: response.data.total_items || response.data.regions.length,
+        regions: data.regions,
+        total_items: data.total_items,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить регионы');
@@ -40,7 +41,7 @@ export const fetchRegionById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await regionsApi.getById(id);
-      return response.data;
+      return response.data.region;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти регион');
     }
@@ -49,10 +50,10 @@ export const fetchRegionById = createAsyncThunk(
 
 export const createRegion = createAsyncThunk(
   'regions/createRegion',
-  async (data: { name: string; code?: string; is_active?: boolean }, { rejectWithValue }) => {
+  async (data: { name: string; code?: string; is_active: boolean }, { rejectWithValue }) => {
     try {
-      const response = await regionsApi.create({ region: data });
-      return response.data;
+      const response = await regionsApi.create(data);
+      return response.data.region;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать регион');
     }
@@ -61,10 +62,10 @@ export const createRegion = createAsyncThunk(
 
 export const updateRegion = createAsyncThunk(
   'regions/updateRegion',
-  async ({ id, data }: { id: number; data: { name?: string; code?: string; is_active?: boolean } }, { rejectWithValue }) => {
+  async ({ id, data }: { id: number; data: { name?: string; code?: string; is_active: boolean } }, { rejectWithValue }) => {
     try {
-      const response = await regionsApi.update(id, { region: data });
-      return response.data;
+      const response = await regionsApi.update(id, data);
+      return response.data.region;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить регион');
     }
@@ -102,10 +103,10 @@ const regionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchRegions.fulfilled, (state, action: PayloadAction<{ regions: Region[]; totalItems: number }>) => {
+      .addCase(fetchRegions.fulfilled, (state, action: PayloadAction<{ regions: Region[]; total_items: number }>) => {
         state.loading = false;
         state.regions = action.payload.regions;
-        state.totalItems = action.payload.totalItems;
+        state.totalItems = action.payload.total_items;
       })
       .addCase(fetchRegions.rejected, (state, action) => {
         state.loading = false;

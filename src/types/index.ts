@@ -1,4 +1,90 @@
-// Типы для User и AuthState
+// Типы для аутентификации
+
+// Types for car brands
+export interface CarBrand {
+  id: number;
+  name: string;
+  code: string;
+  logo_url?: string;
+  is_active: boolean;
+  is_popular: boolean;
+  models_count: number;
+  car_models?: CarModel[];
+}
+
+export interface CarModel {
+  id: number;
+  brand_id: number;
+  name: string;
+  code: string;
+  is_active: boolean;
+  is_popular: boolean;
+  year_start?: number;
+  year_end?: number;
+  brand?: CarBrand;
+}
+
+// Types for regions and cities
+export interface Region {
+  id: number;
+  name: string;
+  code?: string;
+  is_active: boolean;
+  cities?: City[];
+}
+
+export interface RegionsState {
+  regions: Region[];
+  selectedRegion: Region | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface City {
+  id: number;
+  region_id: number;
+  name: string;
+  code?: string;
+  is_active: boolean;
+  region?: {
+    id: number;
+    name: string;
+    code?: string;
+    is_active: boolean;
+  };
+}
+
+export interface CitiesState {
+  cities: City[];
+  selectedCity: City | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface CarBrandsState {
+  carBrands: CarBrand[];
+  selectedCarBrand: CarBrand | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface CarModelsState {
+  carModels: CarModel[];
+  selectedCarModel: CarModel | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
+}
+
+export interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+// Основные типы пользователей
 export interface User {
   id: number;
   email: string;
@@ -144,22 +230,6 @@ export interface ClientCar {
   tire_type?: TireType;
 }
 
-export interface CarBrand {
-  id: number;
-  name: string;
-  logo?: string;
-  is_active: boolean;
-  car_models?: CarModel[];
-}
-
-export interface CarModel {
-  id: number;
-  brand_id: number;
-  name: string;
-  is_active: boolean;
-  brand?: CarBrand;
-}
-
 export interface TireType {
   id: number;
   name: string;
@@ -293,12 +363,27 @@ export interface Region {
   cities?: City[];
 }
 
+// Types for cities
 export interface City {
   id: number;
   region_id: number;
   name: string;
+  code?: string;
   is_active: boolean;
-  region?: Region;
+  region?: {
+    id: number;
+    name: string;
+    code?: string;
+    is_active: boolean;
+  };
+}
+
+export interface CitiesState {
+  cities: City[];
+  selectedCity: City | null;
+  loading: boolean;
+  error: string | null;
+  totalItems: number;
 }
 
 // Общее состояние приложения
@@ -324,30 +409,6 @@ export interface RegionsState {
   totalItems: number;
 }
 
-export interface CitiesState {
-  cities: City[];
-  selectedCity: City | null;
-  loading: boolean;
-  error: string | null;
-  totalItems: number;
-}
-
-export interface CarBrandsState {
-  carBrands: CarBrand[];
-  selectedCarBrand: CarBrand | null;
-  loading: boolean;
-  error: string | null;
-  totalItems: number;
-}
-
-export interface CarModelsState {
-  carModels: CarModel[];
-  selectedCarModel: CarModel | null;
-  loading: boolean;
-  error: string | null;
-  totalItems: number;
-}
-
 // Redux стейт для услуг
 export interface ServicesState {
   services: Service[];
@@ -356,4 +417,4 @@ export interface ServicesState {
   loading: boolean;
   error: string | null;
   totalItems: number;
-} 
+}

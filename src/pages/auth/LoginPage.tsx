@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { login } from '../../store/slices/authSlice';
+import config from '../../config';
 import {
   Container,
   Paper,
@@ -15,6 +16,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
+import apiClient from '../../api/api';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -51,27 +53,37 @@ const LoginPage: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      console.log('Отправка данных для входа:', { email, password: '***' });
+      console.log('Sending login request:', { email, password: '***' });
       const actionResult = await dispatch(login({ email, password })).unwrap();
-      console.log('Результат входа:', actionResult);
+      console.log('Login result:', actionResult);
       
-      if (actionResult) {
-        const token = actionResult.auth_token || actionResult.token;
-        if (token) {
-          localStorage.setItem('tvoya_shina_token', token);
-          setSuccessMessage('Вход выполнен успешно!');
-          
-          // Даём время увидеть сообщение об успехе перед редиректом
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 500);
-        } else {
-          throw new Error('Не удалось получить токен авторизации');
-        }
+      if (actionResult && actionResult.auth_token) {
+        const token = actionResult.auth_token;
+        
+        // Store auth token with proper format
+        localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, token);
+        
+        // Store credentials for token refresh
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userPassword', password);
+        
+        setSuccessMessage('Вход выполнен успешно!');
+
+        // Update axios default headers
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        // Allow time to see success message before redirect
+        setTimeout(() => {
+          const returnPath = localStorage.getItem('returnPath') || '/dashboard';
+          localStorage.removeItem('returnPath');
+          navigate(returnPath);
+        }, 500);
+      } else {
+        throw new Error('Не удалось получить токен авторизации');
       }
-    } catch (err: any) {
-      console.error('Ошибка при входе:', err);
-      const errorMessage = err.message || (typeof err === 'string' ? err : 'Ошибка авторизации');
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка авторизации';
       setFormErrors(prev => ({ ...prev, submit: errorMessage }));
     }
   };

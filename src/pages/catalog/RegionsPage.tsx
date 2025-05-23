@@ -81,16 +81,25 @@ const RegionsPage: React.FC = () => {
     initialValues: {
       name: '',
       code: '',
-      is_active: true,
+      is_active: true, // Always include is_active with a default value
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
         if (editingRegion) {
-          await dispatch(updateRegion({ id: editingRegion.id, data: values })).unwrap();
+          await dispatch(updateRegion({
+            id: editingRegion.id,
+            data: {
+              ...values,
+              is_active: values.is_active || false // Ensure is_active is always defined
+            }
+          })).unwrap();
           setSuccessMessage('Регион успешно обновлен');
         } else {
-          await dispatch(createRegion(values)).unwrap();
+          await dispatch(createRegion({
+            ...values,
+            is_active: values.is_active || false // Ensure is_active is always defined
+          })).unwrap();
           setSuccessMessage('Регион успешно создан');
         }
         handleCloseDialog();

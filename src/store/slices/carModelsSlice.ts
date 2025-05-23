@@ -1,14 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { CarModel } from '../../types';
+import { CarModel, CarModelsState } from '../../types';
 import { carModelsApi } from '../../api/api';
-
-interface CarModelsState {
-  carModels: CarModel[];
-  selectedCarModel: CarModel | null;
-  loading: boolean;
-  error: string | null;
-  totalItems: number;
-}
+import { CarModelCreateRequest, CarModelUpdateRequest } from '../../types/apiResponses';
 
 // Начальное состояние
 const initialState: CarModelsState = {
@@ -19,6 +12,12 @@ const initialState: CarModelsState = {
   totalItems: 0,
 };
 
+type CreateModelPayload = CarModelCreateRequest['car_model'];
+type UpdateModelPayload = {
+  id: number;
+  data: Partial<CreateModelPayload>;
+};
+
 // Асинхронные экшены
 export const fetchCarModels = createAsyncThunk(
   'carModels/fetchCarModels',
@@ -27,7 +26,7 @@ export const fetchCarModels = createAsyncThunk(
       const response = await carModelsApi.getAll(params);
       return {
         carModels: response.data.car_models,
-        totalItems: response.data.total_items || response.data.car_models.length,
+        totalItems: response.data.total_items,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить модели автомобилей');
@@ -40,7 +39,7 @@ export const fetchCarModelById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await carModelsApi.getById(id);
-      return response.data;
+      return response.data.car_model;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти модель автомобиля');
     }
@@ -49,10 +48,11 @@ export const fetchCarModelById = createAsyncThunk(
 
 export const createCarModel = createAsyncThunk(
   'carModels/createCarModel',
-  async (data: { name: string; brand_id: number; is_active?: boolean }, { rejectWithValue }) => {
+  async (data: CreateModelPayload, { rejectWithValue }) => {
     try {
-      const response = await carModelsApi.create({ car_model: data });
-      return response.data;
+      const request: CarModelCreateRequest = { car_model: data };
+      const response = await carModelsApi.create(request);
+      return response.data.car_model;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать модель автомобиля');
     }
@@ -61,10 +61,11 @@ export const createCarModel = createAsyncThunk(
 
 export const updateCarModel = createAsyncThunk(
   'carModels/updateCarModel',
-  async ({ id, data }: { id: number; data: { name?: string; brand_id?: number; is_active?: boolean } }, { rejectWithValue }) => {
+  async ({ id, data }: UpdateModelPayload, { rejectWithValue }) => {
     try {
-      const response = await carModelsApi.update(id, { car_model: data });
-      return response.data;
+      const request: CarModelUpdateRequest = { car_model: data };
+      const response = await carModelsApi.update(id, request);
+      return response.data.car_model;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить модель автомобиля');
     }
@@ -182,4 +183,4 @@ const carModelsSlice = createSlice({
 });
 
 export const { clearSelectedCarModel, clearError } = carModelsSlice.actions;
-export default carModelsSlice.reducer; 
+export default carModelsSlice.reducer;

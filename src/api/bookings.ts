@@ -43,74 +43,66 @@ export interface BookingFilters {
 
 // API для работы с бронированиями
 export const bookingsApi = {
-  // Получение списка всех бронирований с фильтрацией и пагинацией
-  getAll: (filters?: BookingFilters) => {
-    return apiClient.get('/api/v1/bookings', { params: filters });
+  getAll: async (params?: BookingFilters): Promise<any> => {
+    console.log('Получение списка бронирований');
+    return apiClient.get('/api/v1/bookings', { params });
   },
 
-  // Получение бронирования по ID
-  getById: (id: number) => {
-    return apiClient.get(`/api/v1/bookings/${id}`);
+  getClientBookings: async (clientId: number, params?: BookingFilters): Promise<any> => {
+    console.log(`Получение бронирований клиента ${clientId}`);
+    return apiClient.get(`/api/v1/clients/${clientId}/bookings`, { params });
   },
 
-  // Создание нового бронирования
-  create: (bookingData: Partial<Booking>, services: Partial<BookingService>[]) => {
-    return apiClient.post('/api/v1/bookings', { booking: bookingData, services });
+  getServicePointBookings: async (servicePointId: number, params?: BookingFilters): Promise<any> => {
+    console.log(`Получение бронирований сервисной точки ${servicePointId}`);
+    return apiClient.get(`/api/v1/service_points/${servicePointId}/bookings`, { params });
   },
 
-  // Обновление существующего бронирования
-  update: (id: number, bookingData: Partial<Booking>, services?: Partial<BookingService>[]) => {
-    return apiClient.put(`/api/v1/bookings/${id}`, { booking: bookingData, services });
+  getById: async (clientId: number, bookingId: number): Promise<any> => {
+    console.log(`Получение бронирования ${bookingId}`);
+    return apiClient.get(`/api/v1/clients/${clientId}/bookings/${bookingId}`);
   },
 
-  // Удаление бронирования
-  delete: (id: number) => {
-    return apiClient.delete(`/api/v1/bookings/${id}`);
+  create: async (clientId: number, data: { booking: Partial<Booking>, services: Partial<BookingService>[] }): Promise<any> => {
+    console.log('Создание нового бронирования');
+    return apiClient.post(`/api/v1/clients/${clientId}/bookings`, data);
   },
 
-  // Изменение статуса бронирования
-  updateStatus: (id: number, statusId: number, comment?: string) => {
-    return apiClient.put(`/api/v1/bookings/${id}/status`, { status_id: statusId, comment });
+  update: async (clientId: number, bookingId: number, data: { booking: Partial<Booking>, services?: Partial<BookingService>[] }): Promise<any> => {
+    console.log(`Обновление бронирования ${bookingId}`);
+    return apiClient.put(`/api/v1/clients/${clientId}/bookings/${bookingId}`, data);
   },
 
-  // Отмена бронирования
-  cancel: (id: number, cancellationReasonId: number, comment?: string) => {
-    return apiClient.post(`/api/v1/bookings/${id}/cancel`, {
-      cancellation_reason_id: cancellationReasonId,
-      comment
-    });
+  updateStatus: async (bookingId: number, statusId: number, comment?: string): Promise<any> => {
+    console.log(`Обновление статуса бронирования ${bookingId}`);
+    return apiClient.put(`/api/v1/bookings/${bookingId}/status`, { status_id: statusId, comment });
   },
 
-  // Подтверждение бронирования
-  confirm: (id: number) => {
-    return apiClient.post(`/api/v1/bookings/${id}/confirm`);
+  cancel: async (bookingId: number, data?: { cancellation_reason_id?: number, comment?: string }): Promise<any> => {
+    console.log(`Отмена бронирования ${bookingId}`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/cancel`, data);
   },
 
-  // Завершение бронирования
-  complete: (id: number) => {
-    return apiClient.post(`/api/v1/bookings/${id}/complete`);
+  confirm: async (bookingId: number): Promise<any> => {
+    console.log(`Подтверждение бронирования ${bookingId}`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/confirm`);
   },
 
-  // Отметка о неявке клиента
-  noShow: (id: number) => {
-    return apiClient.post(`/api/v1/bookings/${id}/no_show`);
+  complete: async (bookingId: number): Promise<any> => {
+    console.log(`Завершение бронирования ${bookingId}`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/complete`);
   },
 
-  // Получение доступных слотов для бронирования
-  getAvailableSlots: (servicePointId: number, date: string) => {
+  noShow: async (bookingId: number): Promise<any> => {
+    console.log(`Отметка неявки для бронирования ${bookingId}`);
+    return apiClient.post(`/api/v1/bookings/${bookingId}/no_show`);
+  },
+
+  getAvailableSlots: async (servicePointId: number, date: string): Promise<any> => {
+    console.log(`Получение доступных слотов для точки ${servicePointId} на ${date}`);
     return apiClient.get(`/api/v1/service_points/${servicePointId}/available_slots`, {
       params: { date }
     });
-  },
-
-  // Получение бронирований клиента
-  getClientBookings: (clientId: number, filters?: BookingFilters) => {
-    return apiClient.get(`/api/v1/clients/${clientId}/bookings`, { params: filters });
-  },
-
-  // Получение бронирований сервисной точки
-  getServicePointBookings: (servicePointId: number, filters?: BookingFilters) => {
-    return apiClient.get(`/api/v1/service_points/${servicePointId}/bookings`, { params: filters });
   }
 };
 

@@ -40,7 +40,7 @@ import * as yup from 'yup';
 // Схема валидации для бренда
 const validationSchema = yup.object({
   name: yup.string().required('Название бренда обязательно'),
-  logo: yup.string(),
+  logo_url: yup.string(),
 });
 
 const CarBrandsPage: React.FC = () => {
@@ -80,7 +80,7 @@ const CarBrandsPage: React.FC = () => {
   const formik = useFormik({
     initialValues: {
       name: '',
-      logo: '',
+      logo_url: '',
       is_active: true,
     },
     validationSchema,
@@ -107,7 +107,7 @@ const CarBrandsPage: React.FC = () => {
       setEditingBrand(brand);
       formik.setValues({
         name: brand.name,
-        logo: brand.logo || '',
+        logo_url: brand.logo_url || '',
         is_active: brand.is_active,
       });
     } else {
@@ -214,9 +214,9 @@ const CarBrandsPage: React.FC = () => {
                       <TableCell>{brand.id}</TableCell>
                       <TableCell>{brand.name}</TableCell>
                       <TableCell>
-                        {brand.logo ? (
+                        {brand.logo_url ? (
                           <img 
-                            src={brand.logo} 
+                            src={brand.logo_url} 
                             alt={`Логотип ${brand.name}`} 
                             style={{ maxHeight: 40, maxWidth: 80 }} 
                           />
@@ -288,14 +288,14 @@ const CarBrandsPage: React.FC = () => {
             />
             <TextField
               fullWidth
-              id="logo"
-              name="logo"
+              id="logo_url"
+              name="logo_url"
               label="URL логотипа"
-              value={formik.values.logo}
+              value={formik.values.logo_url}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              error={formik.touched.logo && Boolean(formik.errors.logo)}
-              helperText={formik.touched.logo && formik.errors.logo}
+              error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
+              helperText={formik.touched.logo_url && formik.errors.logo_url}
               margin="normal"
             />
             <FormControlLabel
@@ -339,4 +339,4 @@ const CarBrandsPage: React.FC = () => {
   );
 };
 
-export default CarBrandsPage; 
+export default CarBrandsPage;

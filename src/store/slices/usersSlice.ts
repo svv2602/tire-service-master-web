@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { User, UsersState } from '../../types';
-import { usersApi } from '../../api/api';
+import { UsersState } from '../../types';
+import { User, ApiUser, UsersResponse, usersApi } from '../../api/users';
 
 // Начальное состояние
 const initialState: UsersState = {
@@ -17,33 +17,35 @@ export const fetchUsers = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await usersApi.getAll(params);
-      console.log('API Response:', response.data);
+      const data = response.data;
+      console.log('API Response:', data);
       
-      // Проверяем структуру ответа и обрабатываем соответственно
+      // Handle API response format variations
       let users = [];
       let totalItems = 0;
-      
-      if (response.data.data && Array.isArray(response.data.data)) {
-        // Новая структура: { data: [...], pagination: {...} }
-        users = response.data.data;
-        totalItems = response.data.pagination?.total_count || users.length;
-      } else if (response.data.users && Array.isArray(response.data.users)) {
-        // Старая структура: { users: [...], total_items: number }
-        users = response.data.users;
-        totalItems = response.data.total_items || users.length;
-      } else if (Array.isArray(response.data)) {
-        // Простой массив: [...]
-        users = response.data;
+
+      if (data.data && Array.isArray(data.data)) {
+        users = data.data;
+        totalItems = data.pagination?.total_count || users.length;
+      } else if (data.users && Array.isArray(data.users)) {
+        users = data.users;
+        totalItems = data.total_items || users.length;
+      } else if (Array.isArray(data)) {
+        users = data;
         totalItems = users.length;
+      } else {
+        console.warn('Unexpected API response format:', data);
+        throw new Error('Invalid API response format');
       }
-      
+
       return {
         users,
         totalItems,
       };
     } catch (error: any) {
       console.error('Error fetching users:', error);
-      return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить пользователей');
+      const errorMessage = error.response?.data?.error || error.message || 'Не удалось загрузить пользователей';
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -139,9 +141,16 @@ const usersSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<{ users: User[]; totalItems: number }>) => {
+      .addCase(fetchUsers.fulfilled, (state, action: PayloadAction<{ users: ApiUser[]; totalItems: number }>) => {
         state.loading = false;
-        state.users = action.payload.users;
+        state.users = action.payload.users.map(apiUser => ({
+          ...apiUser,
+          first_name: apiUser.first_name || '',
+          last_name: apiUser.last_name || '',
+          phone: apiUser.phone || '',
+          role: apiUser.role || 'client',
+          is_active: apiUser.is_active ?? true,
+        }));
         state.totalItems = action.payload.totalItems;
       })
       .addCase(fetchUsers.rejected, (state, action) => {
@@ -154,9 +163,16 @@ const usersSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<ApiUser>) => {
         state.loading = false;
-        state.selectedUser = action.payload;
+        state.selectedUser = {
+          ...action.payload,
+          first_name: action.payload.first_name || '',
+          last_name: action.payload.last_name || '',
+          phone: action.payload.phone || '',
+          role: action.payload.role || 'client',
+          is_active: action.payload.is_active ?? true,
+        };
       })
       .addCase(fetchUserById.rejected, (state, action) => {
         state.loading = false;
@@ -241,4 +257,4 @@ const usersSlice = createSlice({
 });
 
 export const { clearSelectedUser, clearError } = usersSlice.actions;
-export default usersSlice.reducer; 
+export default usersSlice.reducer;

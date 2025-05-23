@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { authApi, partnersApi, servicePointsApi, clientsApi, referencesApi } from './api';
+import { authApi, partnersApi, servicePointsApi, clientsApi, referencesApi, citiesApi, regionsApi } from './api';
 import { bookingsApi, Booking, BookingService, BookingFilters } from './bookings';
 import { settingsApi, SystemSettings } from './settings';
 import { usersApi, User, UserProfile, UserCredentials, PasswordReset } from './users';
@@ -14,7 +14,9 @@ export {
   referencesApi,
   bookingsApi,
   settingsApi,
-  usersApi
+  usersApi,
+  citiesApi,
+  regionsApi
 };
 
 // Экспорт типов
@@ -35,4 +37,4 @@ export const setupApiBaseUrl = (baseUrl: string) => {
 };
 
 // По умолчанию экспортируем apiClient
-export default apiClient; 
+export default apiClient;

@@ -287,11 +287,17 @@ const BookingFormPage: React.FC = () => {
     setError(null);
     
     try {
+      // Получаем ID клиента из текущего пользователя
+      const currentClientId = user?.client_id;
+      if (!currentClientId) {
+        throw new Error('Необходим ID клиента для создания/обновления бронирования');
+      }
+
       // Подготовка данных для отправки
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
       const bookingData: Partial<Booking> = {
-        client_id: clientId,
+        client_id: currentClientId,
         service_point_id: servicePointId,
         car_id: carId,
         car_type_id: carTypeId,
@@ -308,15 +314,20 @@ const BookingFormPage: React.FC = () => {
         price: service.price,
         quantity: service.quantity,
       }));
-      
-      // Отправка данных на сервер
-      if (isEditMode) {
+       // Отправка данных на сервер
+      if (isEditMode && id) {
         // Обновление существующего бронирования
-        await bookingsApi.update(parseInt(id!), bookingData, bookingServices);
+        await bookingsApi.update(clientId, parseInt(id), { 
+          booking: bookingData, 
+          services: bookingServices 
+        });
         setSuccess('Бронирование успешно обновлено');
       } else {
         // Создание нового бронирования
-        await bookingsApi.create(bookingData, bookingServices);
+        await bookingsApi.create(clientId, {
+          booking: bookingData,
+          services: bookingServices
+        });
         setSuccess('Бронирование успешно создано');
       }
       
@@ -640,4 +651,4 @@ const BookingFormPage: React.FC = () => {
   );
 };
 
-export default BookingFormPage; 
+export default BookingFormPage;

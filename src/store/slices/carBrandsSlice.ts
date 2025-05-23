@@ -1,14 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { CarBrand } from '../../types';
+import { CarBrand, CarBrandsState } from '../../types';
 import { carBrandsApi } from '../../api/api';
-
-interface CarBrandsState {
-  carBrands: CarBrand[];
-  selectedCarBrand: CarBrand | null;
-  loading: boolean;
-  error: string | null;
-  totalItems: number;
-}
+import { CarBrandCreateRequest, CarBrandUpdateRequest } from '../../types/apiResponses';
 
 // Начальное состояние
 const initialState: CarBrandsState = {
@@ -19,6 +12,12 @@ const initialState: CarBrandsState = {
   totalItems: 0,
 };
 
+type CreateBrandPayload = CarBrandCreateRequest['car_brand'];
+type UpdateBrandPayload = {
+  id: number;
+  data: Partial<CreateBrandPayload>;
+};
+
 // Асинхронные экшены
 export const fetchCarBrands = createAsyncThunk(
   'carBrands/fetchCarBrands',
@@ -27,7 +26,7 @@ export const fetchCarBrands = createAsyncThunk(
       const response = await carBrandsApi.getAll(params);
       return {
         carBrands: response.data.car_brands,
-        totalItems: response.data.total_items || response.data.car_brands.length,
+        totalItems: response.data.total_items,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить бренды автомобилей');
@@ -40,7 +39,7 @@ export const fetchCarBrandById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await carBrandsApi.getById(id);
-      return response.data;
+      return response.data.car_brand;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти бренд автомобиля');
     }
@@ -49,10 +48,11 @@ export const fetchCarBrandById = createAsyncThunk(
 
 export const createCarBrand = createAsyncThunk(
   'carBrands/createCarBrand',
-  async (data: { name: string; logo?: string; is_active?: boolean }, { rejectWithValue }) => {
+  async (data: CreateBrandPayload, { rejectWithValue }) => {
     try {
-      const response = await carBrandsApi.create({ car_brand: data });
-      return response.data;
+      const request: CarBrandCreateRequest = { car_brand: data };
+      const response = await carBrandsApi.create(request);
+      return response.data.car_brand;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать бренд автомобиля');
     }
@@ -61,10 +61,11 @@ export const createCarBrand = createAsyncThunk(
 
 export const updateCarBrand = createAsyncThunk(
   'carBrands/updateCarBrand',
-  async ({ id, data }: { id: number; data: { name?: string; logo?: string; is_active?: boolean } }, { rejectWithValue }) => {
+  async ({ id, data }: UpdateBrandPayload, { rejectWithValue }) => {
     try {
-      const response = await carBrandsApi.update(id, { car_brand: data });
-      return response.data;
+      const request: CarBrandUpdateRequest = { car_brand: data };
+      const response = await carBrandsApi.update(id, request);
+      return response.data.car_brand;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить бренд автомобиля');
     }
@@ -182,4 +183,4 @@ const carBrandsSlice = createSlice({
 });
 
 export const { clearSelectedCarBrand, clearError } = carBrandsSlice.actions;
-export default carBrandsSlice.reducer; 
+export default carBrandsSlice.reducer;

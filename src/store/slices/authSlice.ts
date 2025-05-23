@@ -1,8 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authApi } from '../../api/api';
+import apiClient from '../../api/api';
 import { User } from '../../types';
 
-const STORAGE_KEY = 'tvoya_shina_token';
+import config from '../../config';
+
+const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
 
 // Интерфейс для состояния авторизации
 interface AuthState {
@@ -29,36 +32,43 @@ export const login = createAsyncThunk(
     try {
       console.log('Login thunk - calling API with email:', loginData.email);
       
-      const response = await authApi.login(loginData.email, loginData.password);
+      const response = await authApi.login(loginData);
       console.log('Login thunk - API response:', response.data);
-      
+
       if (!response.data) {
-        throw new Error('Пустой ответ от сервера');
+        throw new Error('Empty response from server');
       }
 
+      // Extract token and ensure proper format
       const token = response.data.auth_token || response.data.token;
       if (!token) {
-        throw new Error('Ответ сервера не содержит токен');
+        throw new Error('No token in response');
       }
 
-      localStorage.setItem(STORAGE_KEY, token);
+      // Format token and save it
+      const formattedToken = token.replace(/^Bearer\s+/i, '').trim();
+      localStorage.setItem(STORAGE_KEY, formattedToken);
+      console.log('Token saved to localStorage:', formattedToken);
+
+      // Update axios defaults
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${formattedToken}`;
       
       if (!response.data.user) {
-        throw new Error('Ответ сервера не содержит данные пользователя');
+        throw new Error('No user data in response');
       }
 
       return {
-        auth_token: token,
-        token: token,
+        auth_token: formattedToken,
+        token: formattedToken,
         user: response.data.user,
-        message: response.data.message || 'Вход выполнен успешно'
+        message: response.data.message || 'Login successful'
       };
     } catch (error: any) {
       console.error('Login thunk - Error:', error);
       return rejectWithValue(
         error.response?.data?.message || 
         error.message || 
-        'Ошибка при попытке входа'
+        'Login failed'
       );
     }
   }
@@ -69,6 +79,9 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       localStorage.removeItem(STORAGE_KEY);
+      // Clear stored credentials
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPassword');
       return true;
     } catch (error: any) {
       console.error('Logout error:', error);
