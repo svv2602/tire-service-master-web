@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование интеграции API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование интеграции фронтенд-бэкенд</h1>
+        
+        <div class="test-section info">
+            <h3>📊 Статус сервисов</h3>
+            <button onclick="checkServices()">Проверить сервисы</button>
+            <div id="services-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Тестирование аутентификации</h3>
+            <div>
+                <input type="email" id="email" placeholder="Email" value="test@example.com">
+                <input type="password" id="password" placeholder="Пароль" value="password123">
+                <input type="text" id="firstName" placeholder="Имя" value="Тест">
+                <input type="text" id="lastName" placeholder="Фамилия" value="Пользователь">
+                <input type="tel" id="phone" placeholder="Телефон" value="+380501234567">
+            </div>
+            <button onclick="registerUser()">Регистрация</button>
+            <button onclick="loginUser()">Логин</button>
+            <button onclick="getProfile()" id="profileBtn" disabled>Получить профиль</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📍 Тестирование данных</h3>
+            <button onclick="getRegions()">Получить регионы</button>
+            <button onclick="getServicePoints()">Получить сервисные точки</button>
+            <button onclick="getServices()">Получить услуги</button>
+            <div id="data-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Полное тестирование</h3>
+            <button onclick="runFullTest()">Запустить полное тестирование</button>
+            <div id="full-test-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+
+        // Функция для выполнения API запросов
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                const data = await response.json();
+                return { success: response.ok, status: response.status, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Проверка статуса сервисов
+        async function checkServices() {
+            const result = document.getElementById('services-result');
+            result.textContent = 'Проверка...';
+            
+            try {
+                // Проверка API
+                const apiCheck = await fetch(`${API_BASE}/health`);
+                const apiStatus = apiCheck.ok ? '✅ Работает' : '❌ Недоступен';
+                
+                // Проверка фронтенда
+                const frontendCheck = await fetch('http://localhost:3000');
+                const frontendStatus = frontendCheck.ok ? '✅ Работает' : '❌ Недоступен';
+                
+                result.textContent = `API (порт 8000): ${apiStatus}\nФронтенд (порт 3000): ${frontendStatus}`;
+                result.className = 'result success';
+            } catch (error) {
+                result.textContent = `Ошибка: ${error.message}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Регистрация пользователя
+        async function registerUser() {
+            const result = document.getElementById('auth-result');
+            result.textContent = 'Регистрация...';
+            
+            const timestamp = Date.now();
+            const email = document.getElementById('email').value || `test${timestamp}@example.com`;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const phone = document.getElementById('phone').value || `+38050${timestamp.toString().slice(-7)}`;
+            
+            const response = await apiRequest('/clients/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    client: {
+                        email,
+                        password,
+                        password_confirmation: password,
+                        first_name: firstName,
+                        last_name: lastName,
+                        phone
+                    }
+                })
+            });
+
+            if (response.success) {
+                authToken = response.data.auth_token;
+                document.getElementById('profileBtn').disabled = false;
+                result.textContent = `✅ Регистрация успешна!\nТокен: ${authToken.substring(0, 20)}...\nСообщение: ${response.data.message}`;
+                result.className = 'result success';
+                
+                // Обновляем поля для логина
+                document.getElementById('email').value = email;
+            } else {
+                result.textContent = `❌ Ошибка регистрации:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Логин пользователя
+        async function loginUser() {
+            const result = document.getElementById('auth-result');
+            result.textContent = 'Вход в систему...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const response = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    auth: { email, password }
+                })
+            });
+
+            if (response.success) {
+                authToken = response.data.auth_token;
+                document.getElementById('profileBtn').disabled = false;
+                result.textContent = `✅ Вход выполнен!\nПользователь: ${response.data.user.first_name} ${response.data.user.last_name}\nРоль: ${response.data.user.role}\nТокен: ${authToken.substring(0, 20)}...`;
+                result.className = 'result success';
+            } else {
+                result.textContent = `❌ Ошибка входа:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Получение профиля
+        async function getProfile() {
+            const result = document.getElementById('auth-result');
+            result.textContent = 'Получение профиля...';
+            
+            const response = await apiRequest('/users/me');
+
+            if (response.success) {
+                result.textContent = `✅ Профиль получен:\nID: ${response.data.id}\nEmail: ${response.data.email}\nИмя: ${response.data.first_name} ${response.data.last_name}\nТелефон: ${response.data.phone}\nАктивен: ${response.data.is_active ? 'да' : 'нет'}`;
+                result.className = 'result success';
+            } else {
+                result.textContent = `❌ Ошибка получения профиля:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Получение регионов
+        async function getRegions() {
+            const result = document.getElementById('data-result');
+            result.textContent = 'Загрузка регионов...';
+            
+            const response = await apiRequest('/regions');
+
+            if (response.success) {
+                const count = response.data.data?.length || 0;
+                result.textContent = `✅ Регионы загружены:\nКоличество: ${count}\nПагинация: ${response.data.pagination ? 'есть' : 'нет'}`;
+                result.className = 'result success';
+            } else {
+                result.textContent = `❌ Ошибка загрузки регионов:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Получение сервисных точек
+        async function getServicePoints() {
+            const result = document.getElementById('data-result');
+            result.textContent = 'Загрузка сервисных точек...';
+            
+            const response = await apiRequest('/service_points');
+
+            if (response.success) {
+                const count = response.data.data?.length || 0;
+                result.textContent = `✅ Сервисные точки загружены:\nКоличество: ${count}\nПагинация: ${response.data.pagination ? 'есть' : 'нет'}`;
+                if (count > 0) {
+                    result.textContent += `\nПример точки: ${response.data.data[0].name}`;
+                }
+                result.className = 'result success';
+            } else {
+                result.textContent = `❌ Ошибка загрузки сервисных точек:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Получение услуг
+        async function getServices() {
+            const result = document.getElementById('data-result');
+            result.textContent = 'Загрузка услуг...';
+            
+            const response = await apiRequest('/services');
+
+            if (response.success) {
+                const count = response.data.data?.length || 0;
+                result.textContent = `✅ Услуги загружены:\nКоличество: ${count}`;
+                if (count > 0) {
+                    result.textContent += `\nПример услуги: ${response.data.data[0].name}`;
+                }
+                result.className = 'result success';
+            } else {
+                result.textContent = `❌ Ошибка загрузки услуг:\n${JSON.stringify(response.data || response.error, null, 2)}`;
+                result.className = 'result error';
+            }
+        }
+
+        // Полное тестирование
+        async function runFullTest() {
+            const result = document.getElementById('full-test-result');
+            result.textContent = 'Запуск полного тестирования...\n';
+            result.className = 'result info';
+            
+            const tests = [
+                { name: 'Health Check', func: () => apiRequest('/health') },
+                { name: 'Регионы', func: () => apiRequest('/regions') },
+                { name: 'Сервисные точки', func: () => apiRequest('/service_points') },
+                { name: 'Услуги', func: () => apiRequest('/services') }
+            ];
+            
+            let passed = 0;
+            let total = tests.length;
+            
+            for (const test of tests) {
+                try {
+                    const response = await test.func();
+                    if (response.success) {
+                        result.textContent += `✅ ${test.name}: УСПЕХ\n`;
+                        passed++;
+                    } else {
+                        result.textContent += `❌ ${test.name}: ОШИБКА\n`;
+                    }
+                } catch (error) {
+                    result.textContent += `❌ ${test.name}: ИСКЛЮЧЕНИЕ - ${error.message}\n`;
+                }
+            }
+            
+            result.textContent += `\n=== ИТОГО ===\nПройдено: ${passed}/${total}\nПроцент успеха: ${Math.round(passed/total*100)}%`;
+            result.className = passed === total ? 'result success' : 'result error';
+        }
+
+        // Автоматическая проверка при загрузке страницы
+        window.onload = function() {
+            checkServices();
+        };
+    </script>
+</body>
+</html> 
