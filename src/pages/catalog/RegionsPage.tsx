@@ -56,6 +56,8 @@ const RegionsPage: React.FC = () => {
   // Загрузка регионов при монтировании компонента
   useEffect(() => {
     loadRegions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, searchQuery, loadRegions]);
 
   const loadRegions = useCallback(() => {    dispatch(fetchRegions({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);

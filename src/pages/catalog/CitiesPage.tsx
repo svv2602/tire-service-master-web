@@ -66,6 +66,7 @@ const CitiesPage: React.FC = () => {
   useEffect(() => {
     dispatch(fetchRegions({ active: true }));
     loadCities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, searchQuery, regionFilter]);
 
   const loadCities = useCallback(() => {    dispatch(fetchCities({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);

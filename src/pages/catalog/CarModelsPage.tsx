@@ -66,6 +66,7 @@ const CarModelsPage: React.FC = () => {
   useEffect(() => {
     dispatch(fetchCarBrands({ active: true }));
     loadCarModels();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, searchQuery, brandFilter]);
 
   const loadCarModels = useCallback(() => {    dispatch(fetchCarModels({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);

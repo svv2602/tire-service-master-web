@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -38,7 +38,6 @@ import {
   Assessment as ReportIcon,
   Person as UserIcon,
   Map as MapIcon,
-  PlaceOutlined as PlaceOutlinedIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';

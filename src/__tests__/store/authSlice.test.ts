@@ -65,6 +65,7 @@ describe('authSlice', () => {
         },
       });
       
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const state = newStore.getState().auth;
       // Проверяем, что setItem был вызван с правильными параметрами
       expect(localStorage.setItem).toHaveBeenCalledWith('test_auth_token', testToken);

@@ -56,6 +56,7 @@ const CarBrandsPage: React.FC = () => {
   // Загрузка брендов при монтировании компонента
   useEffect(() => {
     loadBrands();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, rowsPerPage, searchQuery, loadBrands]);
 
   const loadBrands = useCallback(() => {    dispatch(fetchCarBrands({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
