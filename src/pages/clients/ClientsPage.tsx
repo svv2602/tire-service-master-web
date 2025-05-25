@@ -25,67 +25,30 @@ import {
   Email as EmailIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-
-// Временные данные для демонстрации
-const mockClients = [
-  { 
-    id: 1, 
-    first_name: 'Иван', 
-    last_name: 'Иванов', 
-    email: 'ivan@example.com', 
-    phone: '+7 (900) 123-45-67',
-    cars_count: 2,
-    bookings_count: 5,
-    verified: true
-  },
-  { 
-    id: 2, 
-    first_name: 'Мария', 
-    last_name: 'Петрова', 
-    email: 'maria@example.com', 
-    phone: '+7 (900) 222-33-44',
-    cars_count: 1,
-    bookings_count: 3,
-    verified: true
-  },
-  { 
-    id: 3, 
-    first_name: 'Алексей', 
-    last_name: 'Смирнов', 
-    email: 'alex@example.com', 
-    phone: '+7 (900) 555-66-77',
-    cars_count: 3,
-    bookings_count: 8,
-    verified: false
-  },
-];
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { fetchClients } from '../../store/slices/clientsSlice';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [clients, setClients] = useState(mockClients);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Получаем данные из Redux store
+  const { clients, loading, error, totalItems } = useSelector((state: RootState) => state.clients);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [totalItems, setTotalItems] = useState(mockClients.length);
 
   const loadClients = useCallback(() => {
-    setLoading(true);
+    const params = {
+      page,
+      per_page: pageSize,
+      ...(searchQuery && { search: searchQuery })
+    };
     
-    // Имитация загрузки данных с сервера
-    setTimeout(() => {
-      // Фильтрация по поисковому запросу (в реальном приложении это должно делаться на сервере)
-      const filteredClients = mockClients.filter(client => 
-        `${client.first_name} ${client.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.phone.includes(searchQuery)
-      );
-      
-      setClients(filteredClients);
-      setTotalItems(filteredClients.length);
-      setLoading(false);
-    }, 500);
-  }, [searchQuery]);
+    dispatch(fetchClients(params));
+  }, [dispatch, page, pageSize, searchQuery]);
 
   useEffect(() => {
     loadClients();
@@ -117,6 +80,9 @@ const ClientsPage: React.FC = () => {
   const handleAddClient = () => {
     navigate('/clients/create');
   };
+
+  // Вычисляем общее количество страниц
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <Box>
@@ -161,6 +127,22 @@ const ClientsPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
           </Box>
+        ) : error ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="error" variant="h6">
+              Ошибка загрузки данных
+            </Typography>
+            <Typography color="error" sx={{ mt: 1 }}>
+              {error}
+            </Typography>
+            <Button 
+              variant="contained" 
+              onClick={loadClients} 
+              sx={{ mt: 2 }}
+            >
+              Повторить попытку
+            </Button>
+          </Box>
         ) : (
           <>
             <TableContainer component={Paper}>
@@ -171,9 +153,7 @@ const ClientsPage: React.FC = () => {
                     <TableCell>Имя</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Телефон</TableCell>
-                    <TableCell>Автомобили</TableCell>
-                    <TableCell>Бронирования</TableCell>
-                    <TableCell>Статус</TableCell>
+                    <TableCell>Дата регистрации</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -193,44 +173,51 @@ const ClientsPage: React.FC = () => {
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                           <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
-                          {`${client.first_name} ${client.last_name}`}
+                          {client.user ? `${client.user.first_name} ${client.user.last_name}` : 'Не указано'}
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <EmailIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1rem' }} />
-                          {client.email}
+                          <EmailIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                          {client.user?.email || 'Не указано'}
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <PhoneIcon sx={{ mr: 1, color: 'text.secondary', fontSize: '1rem' }} />
-                          {client.phone}
+                          <PhoneIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                          {client.user?.phone || 'Не указано'}
                         </Box>
                       </TableCell>
-                      <TableCell>{client.cars_count}</TableCell>
-                      <TableCell>{client.bookings_count}</TableCell>
                       <TableCell>
-                        <Chip 
-                          label={client.verified ? "Подтвержден" : "Не подтвержден"} 
-                          color={client.verified ? "success" : "warning"} 
-                          size="small" 
-                        />
+                        {client.user?.created_at ? new Date(client.user.created_at).toLocaleDateString('ru-RU') : 'Не указано'}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-            <Divider />
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={Math.ceil(totalItems / pageSize)}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
-            </Box>
+
+            {totalPages > 1 && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            )}
+
+            {clients.length === 0 && !loading && (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                  Клиенты не найдены
+                </Typography>
+                <Typography color="text.secondary" sx={{ mt: 1 }}>
+                  {searchQuery ? 'Попробуйте изменить параметры поиска' : 'Добавьте первого клиента'}
+                </Typography>
+              </Box>
+            )}
           </>
         )}
       </Paper>
