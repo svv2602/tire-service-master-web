@@ -17,12 +17,17 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  email: string;
-  password: string;
-  password_confirmation: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
+  client: {
+    email: string;
+    password: string;
+    password_confirmation: string;
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    phone?: string;
+    preferred_notification_method?: 'email' | 'phone' | 'push';
+    marketing_consent?: boolean;
+  };
 }
 
 // Запросы для пользователей

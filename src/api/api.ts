@@ -49,7 +49,7 @@ const responseInterceptor = (response: AxiosResponse) => {
 
     // Update token if provided in auth response
     if (
-      (response.config.url?.includes('/authenticate') || response.config.url?.includes('/auth/login'))
+      (response.config.url?.includes('/auth/login') || response.config.url?.includes('/api/v1/auth/login'))
       && response.data.auth_token
     ) {
       const token = response.data.auth_token;
@@ -65,7 +65,7 @@ const responseErrorInterceptor = async (error: any) => {
   const originalRequest = error.config;
 
   if (error.response?.status === 401 && !originalRequest._retry) {
-    const isAuthRequest = originalRequest.url?.includes('/authenticate') || originalRequest.url?.includes('/auth/login');
+    const isAuthRequest = originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/api/v1/auth/login');
 
     if (!isAuthRequest && refreshAttempts < MAX_REFRESH_ATTEMPTS) {
       if (isRefreshing) {
@@ -98,9 +98,12 @@ const responseErrorInterceptor = async (error: any) => {
           throw new Error('No stored credentials');
         }
 
-        const response = await apiClient.post('/api/v1/authenticate', {
-          email,
-          password
+        // Исправляем структуру данных для refresh запроса
+        const response = await apiClient.post('/api/v1/auth/login', {
+          auth: {
+            email,
+            password
+          }
         });
 
         const newToken = response.data.auth_token;
@@ -200,26 +203,6 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
   console.error('Ошибка инициализации API:', error);
 });
 
-// API для работы с аутентификацией
-export const authApi = {
-  login: async (credentials: UserCredentials): Promise<AxiosResponse> => {
-    console.log('Отправка запроса авторизации:', { email: credentials.email, password: '***' });
-    return apiClient.post('/api/v1/authenticate', credentials);
-  },
-  register: async (userData: any): Promise<AxiosResponse> => {
-    console.log('Отправка запроса на регистрацию пользователя');
-    return apiClient.post('/api/v1/clients/register', userData);
-  },
-  resetPassword: async (email: string): Promise<AxiosResponse> => {
-    console.log('Отправка запроса на сброс пароля');
-    return apiClient.post('/api/v1/password_resets', { email });
-  },
-  getCurrentUser: async (): Promise<AxiosResponse> => {
-    console.log('Получение данных текущего пользователя');
-    return apiClient.get('/api/v1/users/me');
-  }
-};
-
 // API для работы с пользователями
 export const usersApi = {
   getAll: async (params?: any): Promise<AxiosResponse<User[]>> => {
@@ -280,118 +263,6 @@ export const partnersApi = {
   delete: async (id: number): Promise<AxiosResponse> => {
     console.log(`Удаление партнера ${id}`);
     return apiClient.delete(`/api/v1/partners/${id}`);
-  },
-  toggleActive: async (id: number, active?: boolean): Promise<AxiosResponse> => {
-    console.log(`Изменение статуса активности партнера ${id}`);
-    return apiClient.patch(`/api/v1/partners/${id}/toggle_active`, { active });
-  }
-};
-
-// API для работы с сервисными точками
-export const servicePointsApi = {
-  getAll: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка сервисных точек');
-    return apiClient.get('/api/v1/service_points', { params });
-  },
-  getById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение сервисной точки ${id}`);
-    return apiClient.get(`/api/v1/service_points/${id}`);
-  },
-  create: async (partnerId: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Создание новой сервисной точки для партнера ${partnerId}`);
-    return apiClient.post(`/api/v1/partners/${partnerId}/service_points`, data);
-  },
-  update: async (partnerId: number, id: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Обновление сервисной точки ${id}`);
-    return apiClient.put(`/api/v1/partners/${partnerId}/service_points/${id}`, data);
-  },
-  delete: async (partnerId: number, id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление сервисной точки ${id}`);
-    return apiClient.delete(`/api/v1/partners/${partnerId}/service_points/${id}`);
-  },
-  findNearby: async (latitude: number, longitude: number, distance: number): Promise<AxiosResponse> => {
-    console.log(`Поиск ближайших сервисных точек`);
-    return apiClient.get('/api/v1/service_points/nearby', {
-      params: { latitude, longitude, distance }
-    });
-  },
-  getPhotos: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение фотографий сервисной точки ${id}`);
-    return apiClient.get(`/api/v1/service_points/${id}/photos`);
-  },
-  uploadPhoto: async (id: number, photoData: FormData): Promise<AxiosResponse> => {
-    console.log(`Загрузка фотографии для сервисной точки ${id}`);
-    return apiClient.post(`/api/v1/service_points/${id}/photos`, photoData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  deletePhoto: async (servicePointId: number, photoId: number): Promise<AxiosResponse> => {
-    console.log(`Удаление фотографии ${photoId} сервисной точки ${servicePointId}`);
-    return apiClient.delete(`/api/v1/service_points/${servicePointId}/photos/${photoId}`);
-  }
-};
-
-// API для работы с клиентами
-export const clientsApi = {
-  getAll: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка клиентов');
-    return apiClient.get('/api/v1/clients', { params });
-  },
-  getById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение клиента ${id}`);
-    return apiClient.get(`/api/v1/clients/${id}`);
-  },
-  create: async (data: any): Promise<AxiosResponse> => {
-    console.log('Создание нового клиента');
-    return apiClient.post('/api/v1/clients', data);
-  },
-  update: async (id: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Обновление клиента ${id}`);
-    return apiClient.put(`/api/v1/clients/${id}`, data);
-  },
-  delete: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление клиента ${id}`);
-    return apiClient.delete(`/api/v1/clients/${id}`);
-  }
-};
-
-// API для работы со справочниками
-export const referencesApi = {
-  getCarTypes: async (): Promise<AxiosResponse> => {
-    console.log('Получение списка типов автомобилей');
-    return apiClient.get('/api/v1/car_types');
-  },
-  getTireTypes: async (): Promise<AxiosResponse> => {
-    console.log('Получение списка типов шин');
-    return apiClient.get('/api/v1/tire_types');
-  },
-  getServiceCategories: async (): Promise<AxiosResponse> => {
-    console.log('Получение категорий услуг');
-    return apiClient.get('/api/v1/service_categories');
-  },
-  getServices: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка услуг');
-    return apiClient.get('/api/v1/services', { params });
-  },
-  getServiceById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение услуги с ID: ${id}`);
-    return apiClient.get(`/api/v1/services/${id}`);
-  },
-  getBookingStatuses: async (): Promise<AxiosResponse> => {
-    console.log('Получение статусов бронирования');
-    return apiClient.get('/api/v1/booking_statuses');
-  },
-  getPaymentStatuses: async (): Promise<AxiosResponse> => {
-    console.log('Получение статусов оплаты');
-    return apiClient.get('/api/v1/payment_statuses');
-  },
-  getCancellationReasons: async (): Promise<AxiosResponse> => {
-    console.log('Получение причин отмены');
-    return apiClient.get('/api/v1/cancellation_reasons');
-  },
-  getAmenities: async (): Promise<AxiosResponse> => {
-    console.log('Получение списка удобств');
-    return apiClient.get('/api/v1/amenities');
   }
 };
 
