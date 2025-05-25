@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -68,14 +68,7 @@ const CarModelsPage: React.FC = () => {
     loadCarModels();
   }, [page, rowsPerPage, searchQuery, brandFilter]);
 
-  const loadCarModels = () => {
-    dispatch(fetchCarModels({
-      page: page + 1,
-      per_page: rowsPerPage,
-      query: searchQuery || undefined,
-      brand_id: brandFilter || undefined
-    }));
-  };
+  const loadCarModels = useCallback(() => {    dispatch(fetchCarModels({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {

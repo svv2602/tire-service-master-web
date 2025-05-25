@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -56,15 +56,9 @@ const RegionsPage: React.FC = () => {
   // Загрузка регионов при монтировании компонента
   useEffect(() => {
     loadRegions();
-  }, [page, rowsPerPage, searchQuery]);
+  }, [page, rowsPerPage, searchQuery, loadRegions]);
 
-  const loadRegions = () => {
-    dispatch(fetchRegions({
-      page: page + 1,
-      per_page: rowsPerPage,
-      query: searchQuery || undefined
-    }));
-  };
+  const loadRegions = useCallback(() => {    dispatch(fetchRegions({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {

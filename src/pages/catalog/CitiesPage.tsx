@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -68,14 +68,7 @@ const CitiesPage: React.FC = () => {
     loadCities();
   }, [page, rowsPerPage, searchQuery, regionFilter]);
 
-  const loadCities = () => {
-    dispatch(fetchCities({
-      page: page + 1,
-      per_page: rowsPerPage,
-      query: searchQuery || undefined,
-      region_id: regionFilter || undefined
-    }));
-  };
+  const loadCities = useCallback(() => {    dispatch(fetchCities({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {

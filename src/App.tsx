@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { Provider } from 'react-redux';
@@ -22,9 +22,8 @@ import SettingsPage from './pages/settings/SettingsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import UsersPage from './pages/users/UsersPage';
 import UserForm from './pages/users/UserForm';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from './store';
-import { getCurrentUser } from './store/slices/authSlice';
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
 import RegionsPage from './pages/catalog/RegionsPage';
 import CitiesPage from './pages/catalog/CitiesPage';
 import CarBrandsPage from './pages/catalog/CarBrandsPage';

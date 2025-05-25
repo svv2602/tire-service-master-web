@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -56,15 +56,9 @@ const CarBrandsPage: React.FC = () => {
   // Загрузка брендов при монтировании компонента
   useEffect(() => {
     loadBrands();
-  }, [page, rowsPerPage, searchQuery]);
+  }, [page, rowsPerPage, searchQuery, loadBrands]);
 
-  const loadBrands = () => {
-    dispatch(fetchCarBrands({
-      page: page + 1,
-      per_page: rowsPerPage,
-      query: searchQuery || undefined
-    }));
-  };
+  const loadBrands = useCallback(() => {    dispatch(fetchCarBrands({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {

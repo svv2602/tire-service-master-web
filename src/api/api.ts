@@ -1,5 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { User, UserCredentials } from '../types';
+import { User } from '../types';
 
 // Константа для ключа хранилища
 import config from '../config';
