@@ -20,7 +20,10 @@ export const fetchDashboardStats = createAsyncThunk(
   'dashboard/fetchStats',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('Fetching dashboard stats...');
       const response = await dashboardApi.getStats();
+      console.log('Dashboard API response:', response);
+      console.log('Dashboard data:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
@@ -46,6 +49,7 @@ const dashboardSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDashboardStats.fulfilled, (state, action: PayloadAction<DashboardStats>) => {
+        console.log('Dashboard stats fulfilled:', action.payload);
         state.loading = false;
         state.stats = action.payload;
       })

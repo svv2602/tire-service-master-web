@@ -71,6 +71,9 @@ const DashboardPage: React.FC = () => {
     dispatch(fetchDashboardStats());
   };
 
+  // Отладочная информация
+  console.log('Dashboard state:', { stats, loading, error });
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
@@ -126,13 +129,26 @@ const DashboardPage: React.FC = () => {
       </Typography>
       <Divider sx={{ my: 2 }} />
 
-      {stats && (
+      {!stats ? (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary">
+            Нет данных для отображения
+          </Typography>
+          <Button 
+            variant="contained" 
+            onClick={handleRetry} 
+            sx={{ mt: 2 }}
+          >
+            Загрузить данные
+          </Button>
+        </Box>
+      ) : (
         <>
           <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <InfoCard
                 title="Партнеры"
-                value={stats.partners_count}
+                value={stats.partners_count || 0}
                 icon={<PeopleIcon />}
                 color="#1976d2"
               />
@@ -140,7 +156,7 @@ const DashboardPage: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <InfoCard
                 title="Точки обслуживания"
-                value={stats.service_points_count}
+                value={stats.service_points_count || 0}
                 icon={<LocationOnIcon />}
                 color="#2e7d32"
               />
@@ -148,7 +164,7 @@ const DashboardPage: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <InfoCard
                 title="Клиенты"
-                value={stats.clients_count}
+                value={stats.clients_count || 0}
                 icon={<PeopleIcon />}
                 color="#ed6c02"
               />
@@ -156,7 +172,7 @@ const DashboardPage: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <InfoCard
                 title="Бронирования"
-                value={stats.bookings_count}
+                value={stats.bookings_count || 0}
                 icon={<EventNoteIcon />}
                 color="#9c27b0"
               />
@@ -201,7 +217,7 @@ const DashboardPage: React.FC = () => {
                       <Typography variant="body2" color="textSecondary">
                         Выполнено
                       </Typography>
-                      <Typography variant="h6">{stats.completed_bookings_count}</Typography>
+                      <Typography variant="h6">{stats.completed_bookings_count || 0}</Typography>
                     </Box>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -224,7 +240,7 @@ const DashboardPage: React.FC = () => {
                       <Typography variant="body2" color="textSecondary">
                         Отменено
                       </Typography>
-                      <Typography variant="h6">{stats.canceled_bookings_count}</Typography>
+                      <Typography variant="h6">{stats.canceled_bookings_count || 0}</Typography>
                     </Box>
                   </Box>
                 </CardContent>
