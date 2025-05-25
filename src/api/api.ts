@@ -306,6 +306,10 @@ export const referencesApi = {
     console.log('Получение категорий услуг');
     return apiClient.get('/api/v1/service_categories', { params });
   },
+  getServiceById: async (id: number): Promise<AxiosResponse> => {
+    console.log(`Получение услуги ${id}`);
+    return apiClient.get(`/api/v1/services/${id}`);
+  },
   createService: async (data: any): Promise<AxiosResponse> => {
     console.log('Создание новой услуги');
     return apiClient.post('/api/v1/services', data);

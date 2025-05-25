@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { ServicePoint, ServicePointsState } from '../../types';
+import { ServicePoint as ServicePointModel, ServicePointsState } from '../../types';
 import { servicePointsApi } from '../../api/api';
 
 // Начальное состояние
@@ -19,28 +19,10 @@ export const fetchServicePoints = createAsyncThunk(
       const response = await servicePointsApi.getAll(params);
       console.log('API Response:', response);
       
-      // Обрабатываем ответ API в формате { data: [...], pagination: {...} }
-      let servicePoints = [];
-      let totalItems = 0;
-      
-      if (response.data && Array.isArray(response.data)) {
-        // Стандартная структура ответа API
-        servicePoints = response.data;
-        totalItems = response.pagination?.total_count || 0;
-      } else if (Array.isArray(response)) {
-        // Если API вернул просто массив
-        servicePoints = response;
-        totalItems = servicePoints.length;
-      } else {
-        console.warn('Unexpected API response format:', response);
-        // Если формат не распознан, возвращаем пустой массив
-        servicePoints = [];
-        totalItems = 0;
-      }
-      
+      // Обрабатываем ответ API - просто возвращаем как есть
       return {
-        servicePoints,
-        totalItems,
+        servicePoints: response.data || response,
+        totalItems: response.pagination?.total_count || response.total_items || 0,
         pagination: response.pagination || null
       };
     } catch (error: any) {
@@ -63,7 +45,7 @@ export const fetchServicePointById = createAsyncThunk(
 
 export const createServicePoint = createAsyncThunk(
   'servicePoints/createServicePoint',
-  async ({ partnerId, data }: { partnerId: number; data: Partial<ServicePoint> }, { rejectWithValue }) => {
+  async ({ partnerId, data }: { partnerId: number; data: any }, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.create(partnerId, data);
       return response;
@@ -75,7 +57,7 @@ export const createServicePoint = createAsyncThunk(
 
 export const updateServicePoint = createAsyncThunk(
   'servicePoints/updateServicePoint',
-  async ({ partnerId, id, data }: { partnerId: number; id: number; data: Partial<ServicePoint> }, { rejectWithValue }) => {
+  async ({ partnerId, id, data }: { partnerId: number; id: number; data: any }, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.update(partnerId, id, data);
       return response;
@@ -104,7 +86,7 @@ export const fetchServicePointPhotos = createAsyncThunk(
       const response = await servicePointsApi.getPhotos(id);
       return {
         servicePointId: id,
-        photos: response.data.photos,
+        photos: response
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить фотографии');
@@ -119,7 +101,7 @@ export const uploadServicePointPhoto = createAsyncThunk(
       const response = await servicePointsApi.uploadPhoto(id, photoData);
       return {
         servicePointId: id,
-        photo: response.data.photo,
+        photo: response
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить фотографию');
@@ -161,7 +143,7 @@ const servicePointsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchServicePoints.fulfilled, (state, action: PayloadAction<{ servicePoints: ServicePoint[]; totalItems: number; pagination: any }>) => {
+      .addCase(fetchServicePoints.fulfilled, (state, action: PayloadAction<{ servicePoints: ServicePointModel[]; totalItems: number; pagination: any }>) => {
         state.loading = false;
         state.servicePoints = action.payload.servicePoints;
         state.totalItems = action.payload.totalItems;
@@ -176,7 +158,7 @@ const servicePointsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchServicePointById.fulfilled, (state, action: PayloadAction<ServicePoint>) => {
+      .addCase(fetchServicePointById.fulfilled, (state, action: PayloadAction<ServicePointModel>) => {
         state.loading = false;
         state.selectedServicePoint = action.payload;
       })
@@ -190,7 +172,7 @@ const servicePointsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createServicePoint.fulfilled, (state, action: PayloadAction<ServicePoint>) => {
+      .addCase(createServicePoint.fulfilled, (state, action: PayloadAction<ServicePointModel>) => {
         state.loading = false;
         state.servicePoints.push(action.payload);
         state.totalItems += 1;
@@ -205,7 +187,7 @@ const servicePointsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateServicePoint.fulfilled, (state, action: PayloadAction<ServicePoint>) => {
+      .addCase(updateServicePoint.fulfilled, (state, action: PayloadAction<ServicePointModel>) => {
         state.loading = false;
         const index = state.servicePoints.findIndex(point => point.id === action.payload.id);
         if (index !== -1) {

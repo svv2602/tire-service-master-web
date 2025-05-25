@@ -71,6 +71,20 @@ export const servicePointsApi = {
     return response.data;
   },
 
+  // Загрузка одной фотографии (алиас для совместимости)
+  uploadPhoto: async (id: number, photo: FormData): Promise<ServicePointPhoto> => {
+    const response: AxiosResponse<ServicePointPhoto> = await api.post(
+      `/api/v1/service_points/${id}/photos`,
+      photo,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    return response.data;
+  },
+
   // Удаление фотографии
   deletePhoto: async (servicePointId: number, photoId: number): Promise<void> => {
     await api.delete(`/api/v1/service_points/${servicePointId}/photos/${photoId}`);
