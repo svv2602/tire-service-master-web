@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -18,20 +18,9 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
-
-// В реальном приложении это будут данные от API
-const mockData = {
-  partnersCount: 24,
-  servicePointsCount: 53,
-  clientsCount: 1287,
-  bookingsCount: 4125,
-  completedBookingsCount: 3698,
-  canceledBookingsCount: 427,
-  bookingsByMonth: [120, 145, 160, 175, 185, 190, 210, 230, 250, 270, 290, 310],
-  revenueByMonth: [
-    123000, 145000, 167000, 184000, 196000, 205000, 234000, 256000, 278000, 298000, 324000, 356000,
-  ],
-};
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../store';
+import { fetchDashboardStats } from '../../store/slices/dashboardSlice';
 
 // Компонент информационной карточки
 const InfoCard: React.FC<{
@@ -69,23 +58,43 @@ const InfoCard: React.FC<{
 );
 
 const DashboardPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(mockData);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Получаем данные из Redux store
+  const { stats, loading, error } = useSelector((state: RootState) => state.dashboard);
 
   useEffect(() => {
-    // Имитируем загрузку данных с сервера
-    const timer = setTimeout(() => {
-      setData(mockData);
-      setLoading(false);
-    }, 1000);
+    dispatch(fetchDashboardStats());
+  }, [dispatch]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  const handleRetry = () => {
+    dispatch(fetchDashboardStats());
+  };
 
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="error" variant="h6">
+          Ошибка загрузки данных дашборда
+        </Typography>
+        <Typography color="error" sx={{ mt: 1 }}>
+          {error}
+        </Typography>
+        <Button 
+          variant="contained" 
+          onClick={handleRetry} 
+          sx={{ mt: 2 }}
+        >
+          Повторить попытку
+        </Button>
       </Box>
     );
   }
@@ -109,7 +118,7 @@ const DashboardPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ mt: 4 }}>
         Дашборд
       </Typography>
       <Typography variant="subtitle1" color="textSecondary" gutterBottom>
@@ -117,106 +126,113 @@ const DashboardPage: React.FC = () => {
       </Typography>
       <Divider sx={{ my: 2 }} />
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoCard
-            title="Партнеры"
-            value={data.partnersCount}
-            icon={<PeopleIcon />}
-            color="#1976d2"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoCard
-            title="Точки обслуживания"
-            value={data.servicePointsCount}
-            icon={<LocationOnIcon />}
-            color="#2e7d32"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoCard
-            title="Клиенты"
-            value={data.clientsCount}
-            icon={<PeopleIcon />}
-            color="#ed6c02"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <InfoCard
-            title="Бронирования"
-            value={data.bookingsCount}
-            icon={<EventNoteIcon />}
-            color="#9c27b0"
-          />
-        </Grid>
-      </Grid>
+      {stats && (
+        <>
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <InfoCard
+                title="Партнеры"
+                value={stats.partners_count}
+                icon={<PeopleIcon />}
+                color="#1976d2"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <InfoCard
+                title="Точки обслуживания"
+                value={stats.service_points_count}
+                icon={<LocationOnIcon />}
+                color="#2e7d32"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <InfoCard
+                title="Клиенты"
+                value={stats.clients_count}
+                icon={<PeopleIcon />}
+                color="#ed6c02"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <InfoCard
+                title="Бронирования"
+                value={stats.bookings_count}
+                icon={<EventNoteIcon />}
+                color="#9c27b0"
+              />
+            </Grid>
+          </Grid>
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Card elevation={3}>
-            <CardHeader title="Ежемесячные бронирования" />
-            <CardContent>
-              <Typography variant="body2" color="textSecondary">
-                График ежемесячных бронирований будет отображен здесь с использованием библиотеки графиков
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Card elevation={3}>
-            <CardHeader title="Статистика бронирований" />
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Box
-                  sx={{
-                    backgroundColor: '#2e7d3215',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '50%',
-                    width: 36,
-                    height: 36,
-                    color: '#2e7d32',
-                    mr: 2,
-                  }}
-                >
-                  <CheckCircleIcon />
-                </Box>
-                <Box>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 8 }}>
+              <Card elevation={3}>
+                <CardHeader title="Ежемесячные бронирования" />
+                <CardContent>
                   <Typography variant="body2" color="textSecondary">
-                    Выполнено
+                    График ежемесячных бронирований будет отображен здесь с использованием библиотеки графиков
                   </Typography>
-                  <Typography variant="h6">{data.completedBookingsCount}</Typography>
-                </Box>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box
-                  sx={{
-                    backgroundColor: '#d3202015',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '50%',
-                    width: 36,
-                    height: 36,
-                    color: '#d32020',
-                    mr: 2,
-                  }}
-                >
-                  <CancelIcon />
-                </Box>
-                <Box>
-                  <Typography variant="body2" color="textSecondary">
-                    Отменено
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                    Данные за последние 12 месяцев: {stats.bookings_by_month?.join(', ') || 'Загрузка...'}
                   </Typography>
-                  <Typography variant="h6">{data.canceledBookingsCount}</Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <Card elevation={3}>
+                <CardHeader title="Статистика бронирований" />
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box
+                      sx={{
+                        backgroundColor: '#2e7d3215',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        width: 36,
+                        height: 36,
+                        color: '#2e7d32',
+                        mr: 2,
+                      }}
+                    >
+                      <CheckCircleIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="textSecondary">
+                        Выполнено
+                      </Typography>
+                      <Typography variant="h6">{stats.completed_bookings_count}</Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box
+                      sx={{
+                        backgroundColor: '#d3202015',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '50%',
+                        width: 36,
+                        height: 36,
+                        color: '#d32020',
+                        mr: 2,
+                      }}
+                    >
+                      <CancelIcon />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="textSecondary">
+                        Отменено
+                      </Typography>
+                      <Typography variant="h6">{stats.canceled_bookings_count}</Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+        </>
+      )}
     </Box>
   );
 };

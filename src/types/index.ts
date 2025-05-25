@@ -400,6 +400,7 @@ export interface RootState {
   carBrands: CarBrandsState;
   carModels: CarModelsState;
   services: ServicesState;
+  dashboard: DashboardState;
 }
 
 export interface RegionsState {
@@ -418,4 +419,20 @@ export interface ServicesState {
   loading: boolean;
   error: string | null;
   totalItems: number;
+}
+
+// Redux стейт для дашборда
+export interface DashboardState {
+  stats: {
+    partners_count: number;
+    service_points_count: number;
+    clients_count: number;
+    bookings_count: number;
+    completed_bookings_count: number;
+    canceled_bookings_count: number;
+    bookings_by_month: number[];
+    revenue_by_month: number[];
+  } | null;
+  loading: boolean;
+  error: string | null;
 }
