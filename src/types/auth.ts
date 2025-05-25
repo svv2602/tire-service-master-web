@@ -3,10 +3,12 @@ import { User } from './models';
 // Интерфейс для ответа с токеном
 export interface TokenResponse {
   auth_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
+  token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
   user: User;
+  message?: string;
 }
 
 // Интерфейс для запроса на вход

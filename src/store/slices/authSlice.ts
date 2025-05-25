@@ -33,14 +33,14 @@ export const login = createAsyncThunk(
       console.log('Login thunk - calling API with email:', loginData.email);
       
       const response = await authApi.login(loginData);
-      console.log('Login thunk - API response:', response.data);
+      console.log('Login thunk - API response:', response);
 
-      if (!response.data) {
+      if (!response) {
         throw new Error('Empty response from server');
       }
 
       // Extract token and ensure proper format
-      const token = response.data.auth_token || response.data.token;
+      const token = response.auth_token || response.token;
       if (!token) {
         throw new Error('No token in response');
       }
@@ -53,15 +53,15 @@ export const login = createAsyncThunk(
       // Update axios defaults
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${formattedToken}`;
       
-      if (!response.data.user) {
+      if (!response.user) {
         throw new Error('No user data in response');
       }
 
       return {
         auth_token: formattedToken,
         token: formattedToken,
-        user: response.data.user,
-        message: response.data.message || 'Login successful'
+        user: response.user,
+        message: 'Login successful'
       };
     } catch (error: any) {
       console.error('Login thunk - Error:', error);

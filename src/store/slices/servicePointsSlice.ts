@@ -17,22 +17,22 @@ export const fetchServicePoints = createAsyncThunk(
   async (params: any = {}, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.getAll(params);
-      console.log('API Response:', response.data);
+      console.log('API Response:', response);
       
       // Обрабатываем ответ API в формате { data: [...], pagination: {...} }
       let servicePoints = [];
       let totalItems = 0;
       
-      if (response.data.data && Array.isArray(response.data.data)) {
+      if (response.data && Array.isArray(response.data)) {
         // Стандартная структура ответа API
-        servicePoints = response.data.data;
-        totalItems = response.data.pagination?.total_count || 0;
-      } else if (Array.isArray(response.data)) {
-        // Если API вернул просто массив
         servicePoints = response.data;
+        totalItems = response.pagination?.total_count || 0;
+      } else if (Array.isArray(response)) {
+        // Если API вернул просто массив
+        servicePoints = response;
         totalItems = servicePoints.length;
       } else {
-        console.warn('Unexpected API response format:', response.data);
+        console.warn('Unexpected API response format:', response);
         // Если формат не распознан, возвращаем пустой массив
         servicePoints = [];
         totalItems = 0;
@@ -41,9 +41,9 @@ export const fetchServicePoints = createAsyncThunk(
       return {
         servicePoints,
         totalItems,
+        pagination: response.pagination || null
       };
     } catch (error: any) {
-      console.error('Error fetching service points:', error);
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить точки обслуживания');
     }
   }
@@ -54,7 +54,7 @@ export const fetchServicePointById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.getById(id);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти точку обслуживания');
     }
@@ -63,10 +63,10 @@ export const fetchServicePointById = createAsyncThunk(
 
 export const createServicePoint = createAsyncThunk(
   'servicePoints/createServicePoint',
-  async ({ partnerId, data }: { partnerId: number; data: any }, { rejectWithValue }) => {
+  async ({ partnerId, data }: { partnerId: number; data: Partial<ServicePoint> }, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.create(partnerId, data);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать точку обслуживания');
     }
@@ -75,10 +75,10 @@ export const createServicePoint = createAsyncThunk(
 
 export const updateServicePoint = createAsyncThunk(
   'servicePoints/updateServicePoint',
-  async ({ partnerId, id, data }: { partnerId: number; id: number; data: any }, { rejectWithValue }) => {
+  async ({ partnerId, id, data }: { partnerId: number; id: number; data: Partial<ServicePoint> }, { rejectWithValue }) => {
     try {
       const response = await servicePointsApi.update(partnerId, id, data);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить точку обслуживания');
     }
@@ -161,7 +161,7 @@ const servicePointsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchServicePoints.fulfilled, (state, action: PayloadAction<{ servicePoints: ServicePoint[]; totalItems: number }>) => {
+      .addCase(fetchServicePoints.fulfilled, (state, action: PayloadAction<{ servicePoints: ServicePoint[]; totalItems: number; pagination: any }>) => {
         state.loading = false;
         state.servicePoints = action.payload.servicePoints;
         state.totalItems = action.payload.totalItems;

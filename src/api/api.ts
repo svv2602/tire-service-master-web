@@ -241,6 +241,8 @@ export { carBrandsApi } from './carBrands';
 export { carModelsApi } from './carModels';
 export { citiesApi } from './cities';
 export { regionsApi } from './regions';
+export { authApi } from './auth';
+export { servicePointsApi } from './servicePoints';
 
 // API для работы с партнерами
 export const partnersApi = {
@@ -263,6 +265,58 @@ export const partnersApi = {
   delete: async (id: number): Promise<AxiosResponse> => {
     console.log(`Удаление партнера ${id}`);
     return apiClient.delete(`/api/v1/partners/${id}`);
+  },
+  toggleActive: async (id: number, active?: boolean): Promise<AxiosResponse> => {
+    console.log(`Изменение статуса активности партнера ${id}`);
+    return apiClient.put(`/api/v1/partners/${id}/toggle_active`, { is_active: active });
+  }
+};
+
+// API для работы с клиентами
+export const clientsApi = {
+  getAll: async (params?: any): Promise<AxiosResponse> => {
+    console.log('Получение списка клиентов');
+    return apiClient.get('/api/v1/clients', { params });
+  },
+  getById: async (id: number): Promise<AxiosResponse> => {
+    console.log(`Получение клиента ${id}`);
+    return apiClient.get(`/api/v1/clients/${id}`);
+  },
+  create: async (data: any): Promise<AxiosResponse> => {
+    console.log('Создание нового клиента');
+    return apiClient.post('/api/v1/clients', data);
+  },
+  update: async (id: number, data: any): Promise<AxiosResponse> => {
+    console.log(`Обновление клиента ${id}`);
+    return apiClient.put(`/api/v1/clients/${id}`, data);
+  },
+  delete: async (id: number): Promise<AxiosResponse> => {
+    console.log(`Удаление клиента ${id}`);
+    return apiClient.delete(`/api/v1/clients/${id}`);
+  }
+};
+
+// API для работы со справочниками
+export const referencesApi = {
+  getServices: async (params?: any): Promise<AxiosResponse> => {
+    console.log('Получение списка услуг');
+    return apiClient.get('/api/v1/services', { params });
+  },
+  getServiceCategories: async (params?: any): Promise<AxiosResponse> => {
+    console.log('Получение категорий услуг');
+    return apiClient.get('/api/v1/service_categories', { params });
+  },
+  createService: async (data: any): Promise<AxiosResponse> => {
+    console.log('Создание новой услуги');
+    return apiClient.post('/api/v1/services', data);
+  },
+  updateService: async (id: number, data: any): Promise<AxiosResponse> => {
+    console.log(`Обновление услуги ${id}`);
+    return apiClient.put(`/api/v1/services/${id}`, data);
+  },
+  deleteService: async (id: number): Promise<AxiosResponse> => {
+    console.log(`Удаление услуги ${id}`);
+    return apiClient.delete(`/api/v1/services/${id}`);
   }
 };
 
