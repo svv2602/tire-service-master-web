@@ -6,6 +6,30 @@ import { User } from '../../types';
 import config from '../../config';
 
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
+const USER_STORAGE_KEY = 'tvoya_shina_user';
+
+// Функции для работы с localStorage
+const getStoredUser = (): User | null => {
+  try {
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch (error) {
+    console.error('Ошибка при чтении данных пользователя из localStorage:', error);
+    return null;
+  }
+};
+
+const setStoredUser = (user: User | null): void => {
+  try {
+    if (user) {
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(USER_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Ошибка при сохранении данных пользователя в localStorage:', error);
+  }
+};
 
 // Интерфейс для состояния авторизации
 interface AuthState {
@@ -14,15 +38,20 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  isInitialized: boolean; // Флаг для отслеживания инициализации
 }
 
-// Начальное состояние
+// Начальное состояние с восстановлением данных из localStorage
+const storedToken = localStorage.getItem(STORAGE_KEY);
+const storedUser = getStoredUser();
+
 const initialState: AuthState = {
-  user: null,
-  token: localStorage.getItem(STORAGE_KEY) || null,
-  isAuthenticated: !!localStorage.getItem(STORAGE_KEY),
+  user: storedUser,
+  token: storedToken,
+  isAuthenticated: !!(storedToken && storedUser),
   loading: false,
   error: null,
+  isInitialized: !!storedToken, // Если есть токен, считаем инициализированным
 };
 
 // Асинхронные экшены
@@ -125,14 +154,23 @@ const authSlice = createSlice({
       state.user = user;
       state.token = token;
       state.isAuthenticated = true;
+      state.isInitialized = true;
       localStorage.setItem(STORAGE_KEY, token);
+      setStoredUser(user);
     },
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      state.isInitialized = true;
       localStorage.removeItem(STORAGE_KEY);
+      setStoredUser(null);
+      // Очищаем также заголовок Authorization
+      delete apiClient.defaults.headers.common['Authorization'];
+    },
+    setInitialized: (state) => {
+      state.isInitialized = true;
     },
   },
   extraReducers: (builder) => {
@@ -148,11 +186,15 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
+        state.isInitialized = true;
+        // Сохраняем данные пользователя в localStorage
+        setStoredUser(action.payload.user);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
+        state.isInitialized = true;
       })
       
       // Обработка logout
@@ -161,6 +203,10 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         state.error = null;
+        state.isInitialized = true;
+        setStoredUser(null);
+        // Очищаем заголовок Authorization
+        delete apiClient.defaults.headers.common['Authorization'];
       })
       
       // Обработка getCurrentUser
@@ -173,15 +219,23 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isAuthenticated = true;
         state.error = null;
+        state.isInitialized = true;
+        // Сохраняем обновленные данные пользователя
+        setStoredUser(action.payload);
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
         state.token = null;
+        state.isInitialized = true;
+        // Очищаем данные при ошибке
+        localStorage.removeItem(STORAGE_KEY);
+        setStoredUser(null);
+        delete apiClient.defaults.headers.common['Authorization'];
       });
   },
 });
 
-export const { setCredentials, clearAuth } = authSlice.actions;
+export const { setCredentials, clearAuth, setInitialized } = authSlice.actions;
 export default authSlice.reducer;

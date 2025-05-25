@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Автоматический вход в систему</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 10px 5px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #1976d2; color: white; }
+        .success { background: #4caf50; color: white; }
+        .error { background: #f44336; color: white; }
+        .info { background: #2196f3; color: white; }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 4px;
+            overflow-x: auto; 
+            border-left: 4px solid #1976d2;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success { background: #e8f5e8; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        .status.info { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Автоматический вход в систему</h1>
+        
+        <div class="status info">
+            <strong>Инструкция:</strong><br>
+            1. Нажмите "Войти в систему" для аутентификации<br>
+            2. После успешного входа нажмите "Открыть страницу сервисных точек"<br>
+            3. Или используйте "Прямой переход" для автоматического входа и перехода
+        </div>
+        
+        <div style="margin: 20px 0;">
+            <button class="primary" onclick="login()">🔑 Войти в систему</button>
+            <button class="success" onclick="openServicePoints()">📍 Открыть страницу сервисных точек</button>
+            <button class="info" onclick="autoLoginAndRedirect()">⚡ Прямой переход</button>
+            <button onclick="checkStatus()">🔍 Проверить статус</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const FRONTEND_BASE = 'http://localhost:3000';
+        const TOKEN_KEY = 'tvoya_shina_token';
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function login() {
+            showStatus('🔄 Выполняется вход в систему...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'test@test.com',
+                            password: 'password'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem(TOKEN_KEY, data.auth_token);
+                    showStatus('✅ Успешный вход в систему! Токен сохранен.', 'success');
+                    showResult({
+                        success: true,
+                        user: data.user,
+                        token: data.auth_token.substring(0, 20) + '...'
+                    });
+                } else {
+                    showStatus('❌ Ошибка входа в систему', 'error');
+                    showResult({ error: data });
+                }
+            } catch (error) {
+                showStatus('❌ Ошибка сети при входе в систему', 'error');
+                showResult({ error: error.message });
+            }
+        }
+
+        function openServicePoints() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                showStatus('❌ Сначала войдите в систему!', 'error');
+                return;
+            }
+            
+            showStatus('🚀 Открываем страницу сервисных точек...', 'info');
+            window.open(`${FRONTEND_BASE}/service-points`, '_blank');
+        }
+
+        async function autoLoginAndRedirect() {
+            showStatus('🔄 Автоматический вход и переход...', 'info');
+            
+            try {
+                // Сначала входим в систему
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'test@test.com',
+                            password: 'password'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem(TOKEN_KEY, data.auth_token);
+                    showStatus('✅ Вход выполнен! Переходим на страницу сервисных точек...', 'success');
+                    
+                    // Небольшая задержка для сохранения токена
+                    setTimeout(() => {
+                        window.open(`${FRONTEND_BASE}/service-points`, '_blank');
+                    }, 500);
+                } else {
+                    showStatus('❌ Ошибка входа в систему', 'error');
+                    showResult({ error: data });
+                }
+            } catch (error) {
+                showStatus('❌ Ошибка при автоматическом входе', 'error');
+                showResult({ error: error.message });
+            }
+        }
+
+        function checkStatus() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const status = {
+                hasToken: !!token,
+                token: token ? token.substring(0, 20) + '...' : null,
+                frontendUrl: `${FRONTEND_BASE}/service-points`,
+                apiUrl: `${API_BASE}/api/v1/service_points`
+            };
+            
+            if (token) {
+                showStatus('✅ Токен найден в localStorage', 'success');
+            } else {
+                showStatus('❌ Токен не найден. Необходимо войти в систему.', 'error');
+            }
+            
+            showResult(status);
+        }
+
+        // Проверяем статус при загрузке страницы
+        window.onload = function() {
+            checkStatus();
+        };
+    </script>
+</body>
+</html> 

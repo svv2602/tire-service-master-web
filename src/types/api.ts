@@ -57,13 +57,24 @@ export class AuthenticationError extends Error {
   }
 }
 
-// Интерфейс для пагинации
+// Интерфейс для пагинации (старый формат)
 export interface PaginatedResponse<T> {
   items: T[];
   meta: {
     current_page: number;
     per_page: number;
     total: number;
+    total_pages: number;
+  };
+}
+
+// Интерфейс для реального формата API
+export interface ApiPaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_count: number;
     total_pages: number;
   };
 }

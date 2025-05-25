@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios';
 import api from './api';
 import { ServicePoint, ServicePointPhoto } from '../types/models';
-import { PaginatedResponse } from '../types/api';
+import { ApiPaginatedResponse } from '../types/api';
 
 export interface ServicePointFilters {
   city_id?: number;
@@ -15,8 +15,8 @@ export interface ServicePointFilters {
 
 export const servicePointsApi = {
   // Получение списка сервисных точек с фильтрацией и пагинацией
-  getAll: async (filters?: ServicePointFilters, page = 1, per_page = 10): Promise<PaginatedResponse<ServicePoint>> => {
-    const response: AxiosResponse<PaginatedResponse<ServicePoint>> = await api.get('/api/v1/service_points', {
+  getAll: async (filters?: ServicePointFilters, page = 1, per_page = 10): Promise<ApiPaginatedResponse<ServicePoint>> => {
+    const response: AxiosResponse<ApiPaginatedResponse<ServicePoint>> = await api.get('/api/v1/service_points', {
       params: {
         ...filters,
         page,

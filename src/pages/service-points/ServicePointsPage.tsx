@@ -220,8 +220,8 @@ const ServicePointsPage: React.FC = () => {
                       <TableCell>{point.address}</TableCell>
                       <TableCell>
                         <Chip 
-                          label={getStatusName(point.status_id)} 
-                          color={getStatusColor(point.status_id) as 'success' | 'warning' | 'error' | 'default'} 
+                          label={getStatusName(point.status_id || 0)} 
+                          color={getStatusColor(point.status_id || 0) as 'success' | 'warning' | 'error' | 'default'} 
                           size="small" 
                         />
                       </TableCell>

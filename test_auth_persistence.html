@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест сохранения аутентификации</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 10px 5px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #1976d2; color: white; }
+        .success { background: #4caf50; color: white; }
+        .error { background: #f44336; color: white; }
+        .warning { background: #ff9800; color: white; }
+        .info { background: #2196f3; color: white; }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 4px;
+            overflow-x: auto; 
+            border-left: 4px solid #1976d2;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success { background: #e8f5e8; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        .status.info { background: #e3f2fd; color: #1565c0; }
+        .status.warning { background: #fff3e0; color: #ef6c00; }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Тест сохранения аутентификации при обновлении страницы</h1>
+        
+        <div class="status info">
+            <strong>Цель теста:</strong> Проверить, что аутентификация сохраняется при обновлении страницы фронтенда
+        </div>
+
+        <div class="step">
+            <h3>Шаг 1: Проверка текущего состояния</h3>
+            <button onclick="checkCurrentState()">🔍 Проверить состояние localStorage</button>
+            <div id="current-state"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 2: Аутентификация</h3>
+            <button class="primary" onclick="login()">🔑 Войти в систему</button>
+            <button onclick="checkAuthState()">📊 Проверить состояние после входа</button>
+            <div id="auth-state"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 3: Тест сохранения</h3>
+            <button class="warning" onclick="simulatePageRefresh()">🔄 Симулировать обновление страницы</button>
+            <button class="info" onclick="openFrontendPage()">🌐 Открыть фронтенд</button>
+            <div id="persistence-test"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 4: Очистка</h3>
+            <button class="error" onclick="logout()">🚪 Выйти из системы</button>
+            <button onclick="clearAllData()">🗑️ Очистить все данные</button>
+            <div id="cleanup-result"></div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const FRONTEND_BASE = 'http://localhost:3000';
+        const TOKEN_KEY = 'tvoya_shina_token';
+        const USER_KEY = 'tvoya_shina_user';
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResult(elementId, data) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        function checkCurrentState() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            
+            const state = {
+                hasToken: !!token,
+                tokenPreview: token ? token.substring(0, 20) + '...' : null,
+                hasUser: !!user,
+                userPreview: user ? JSON.parse(user) : null,
+                allKeys: Object.keys(localStorage).filter(key => key.includes('tvoya_shina'))
+            };
+
+            if (token && user) {
+                showStatus('current-state', '✅ Найдены данные аутентификации в localStorage', 'success');
+            } else if (token) {
+                showStatus('current-state', '⚠️ Найден только токен, данные пользователя отсутствуют', 'warning');
+            } else {
+                showStatus('current-state', '❌ Данные аутентификации не найдены', 'error');
+            }
+            
+            showResult('current-state', state);
+        }
+
+        async function login() {
+            showStatus('auth-state', '🔄 Выполняется вход в систему...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'test@test.com',
+                            password: 'password'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Сохраняем данные как это делает фронтенд
+                    localStorage.setItem(TOKEN_KEY, data.auth_token);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    
+                    showStatus('auth-state', '✅ Успешный вход! Данные сохранены в localStorage.', 'success');
+                    showResult('auth-state', {
+                        success: true,
+                        user: data.user,
+                        token: data.auth_token.substring(0, 20) + '...',
+                        savedToLocalStorage: {
+                            token: !!localStorage.getItem(TOKEN_KEY),
+                            user: !!localStorage.getItem(USER_KEY)
+                        }
+                    });
+                } else {
+                    showStatus('auth-state', '❌ Ошибка входа в систему', 'error');
+                    showResult('auth-state', { error: data });
+                }
+            } catch (error) {
+                showStatus('auth-state', '❌ Ошибка сети при входе в систему', 'error');
+                showResult('auth-state', { error: error.message });
+            }
+        }
+
+        function checkAuthState() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            
+            const authState = {
+                localStorage: {
+                    hasToken: !!token,
+                    hasUser: !!user,
+                    tokenLength: token ? token.length : 0,
+                    userKeys: user ? Object.keys(JSON.parse(user)) : []
+                },
+                isAuthenticated: !!(token && user),
+                timestamp: new Date().toISOString()
+            };
+
+            if (token && user) {
+                showStatus('auth-state', '✅ Состояние аутентификации корректное', 'success');
+            } else {
+                showStatus('auth-state', '❌ Неполные данные аутентификации', 'error');
+            }
+            
+            showResult('auth-state', authState);
+        }
+
+        function simulatePageRefresh() {
+            showStatus('persistence-test', '🔄 Симуляция обновления страницы...', 'info');
+            
+            // Сохраняем текущее состояние
+            const beforeRefresh = {
+                token: localStorage.getItem(TOKEN_KEY),
+                user: localStorage.getItem(USER_KEY)
+            };
+            
+            // Симулируем обновление страницы (очистка памяти, но localStorage остается)
+            setTimeout(() => {
+                const afterRefresh = {
+                    token: localStorage.getItem(TOKEN_KEY),
+                    user: localStorage.getItem(USER_KEY)
+                };
+                
+                const isPersistent = beforeRefresh.token === afterRefresh.token && 
+                                   beforeRefresh.user === afterRefresh.user;
+                
+                if (isPersistent && afterRefresh.token && afterRefresh.user) {
+                    showStatus('persistence-test', '✅ Данные аутентификации сохранились после "обновления"', 'success');
+                } else {
+                    showStatus('persistence-test', '❌ Данные аутентификации потеряны', 'error');
+                }
+                
+                showResult('persistence-test', {
+                    beforeRefresh: {
+                        hasToken: !!beforeRefresh.token,
+                        hasUser: !!beforeRefresh.user
+                    },
+                    afterRefresh: {
+                        hasToken: !!afterRefresh.token,
+                        hasUser: !!afterRefresh.user
+                    },
+                    isPersistent,
+                    recommendation: isPersistent ? 
+                        'Фронтенд должен корректно восстановить аутентификацию' :
+                        'Проверьте сохранение данных в localStorage'
+                });
+            }, 1000);
+        }
+
+        function openFrontendPage() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            
+            if (!token || !user) {
+                showStatus('persistence-test', '❌ Сначала войдите в систему!', 'error');
+                return;
+            }
+            
+            showStatus('persistence-test', '🚀 Открываем фронтенд. Проверьте, что аутентификация работает...', 'info');
+            
+            // Открываем фронтенд в новой вкладке
+            const frontendWindow = window.open(`${FRONTEND_BASE}/service-points`, '_blank');
+            
+            // Проверяем через некоторое время
+            setTimeout(() => {
+                showResult('persistence-test', {
+                    action: 'Фронтенд открыт в новой вкладке',
+                    url: `${FRONTEND_BASE}/service-points`,
+                    expectedBehavior: [
+                        '1. Страница должна загрузиться без перенаправления на /login',
+                        '2. Должен отобразиться список сервисных точек',
+                        '3. В консоли браузера должны быть логи AuthInitializer'
+                    ],
+                    troubleshooting: [
+                        'Если перенаправляет на /login - проблема с восстановлением аутентификации',
+                        'Если показывает загрузку - проверьте консоль на ошибки API',
+                        'Если пустая страница - проблема с загрузкой данных'
+                    ]
+                });
+            }, 500);
+        }
+
+        function logout() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            showStatus('cleanup-result', '✅ Выход выполнен. Данные удалены из localStorage.', 'success');
+            showResult('cleanup-result', {
+                action: 'logout',
+                remainingKeys: Object.keys(localStorage).filter(key => key.includes('tvoya_shina'))
+            });
+        }
+
+        function clearAllData() {
+            // Очищаем все ключи, связанные с приложением
+            const keysToRemove = Object.keys(localStorage).filter(key => 
+                key.includes('tvoya_shina') || key.includes('auth') || key.includes('user')
+            );
+            
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            showStatus('cleanup-result', '🗑️ Все данные очищены', 'info');
+            showResult('cleanup-result', {
+                action: 'clearAll',
+                removedKeys: keysToRemove,
+                remainingKeys: Object.keys(localStorage)
+            });
+        }
+
+        // Проверяем состояние при загрузке страницы
+        window.onload = function() {
+            checkCurrentState();
+        };
+    </script>
+</body>
+</html> 

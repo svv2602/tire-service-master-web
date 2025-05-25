@@ -54,14 +54,35 @@ export interface ServicePoint extends BaseModel {
   amenity_ids?: number[];
   service_ids?: number[];
   status_id?: number;
+  
+  // Дополнительные поля для совместимости с фронтендом
+  post_count?: number;
+  default_slot_duration?: number;
+  rating?: number;
+  total_clients_served?: number;
+  average_rating?: number;
+  cancellation_rate?: number;
+  
+  // Связанные объекты
+  city?: City;
+  status?: ServicePointStatus;
+  services?: {
+    id: number;
+    name: string;
+    price: number;
+    category_id?: number;
+    category?: ServiceCategory;
+  }[];
 }
 
 // Модель фотографии сервисной точки
 export interface ServicePointPhoto extends BaseModel {
   service_point_id: number;
   url: string;
+  photo_url?: string;
   description?: string;
   is_main: boolean;
+  sort_order?: number;
 }
 
 // Модель рабочих часов
@@ -199,6 +220,15 @@ export interface BookingStatus extends BaseModel {
 }
 
 export interface PaymentStatus extends BaseModel {
+  name: string;
+  description?: string;
+  color: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+// Статус сервисной точки
+export interface ServicePointStatus extends BaseModel {
   name: string;
   description?: string;
   color: string;

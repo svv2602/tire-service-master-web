@@ -55,7 +55,7 @@ const ServicePointPhotosPage: React.FC = () => {
     
     try {
       const response = await servicePointsApi.getPhotos(Number(id));
-      setPhotos(response.data || []);
+      setPhotos(response || []);
     } catch (error: any) {
       setPhotoError(error.response?.data?.error || 'Не удалось загрузить фотографии');
     } finally {
