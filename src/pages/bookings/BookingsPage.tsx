@@ -18,6 +18,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,97 +29,57 @@ import {
   Event as EventIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-
-// Временные данные для демонстрации
-const mockBookings = [
-  { 
-    id: 1, 
-    client_name: 'Іван Петренко',
-    service_point_name: 'ШиноСервіс Експрес - Київ',
-    date: '2023-07-15',
-    time: '14:30',
-    duration: 60,
-    services: ['Заміна шин', 'Балансування'],
-    status: 'completed',
-    car: 'Toyota Camry (АА1234КК)',
-    phone: '+380 67 123 45 67'
-  },
-  { 
-    id: 2, 
-    client_name: 'Марія Коваленко',
-    service_point_name: 'АвтоШина Плюс - Львів',
-    date: '2023-07-16',
-    time: '12:00',
-    duration: 45,
-    services: ['Заміна шин'],
-    status: 'confirmed',
-    car: 'Honda Civic (ВН5678ІК)',
-    phone: '+380 50 222 33 44'
-  },
-  { 
-    id: 3, 
-    client_name: 'Олексій Шевченко',
-    service_point_name: 'ШиноСервіс Експрес - Київ',
-    date: '2023-07-16',
-    time: '16:15',
-    duration: 90,
-    services: ['Заміна шин', 'Балансування', 'Ремонт диска'],
-    status: 'cancelled',
-    car: 'BMW X5 (КА9999ХХ)',
-    phone: '+380 63 555 66 77'
-  },
-  { 
-    id: 4, 
-    client_name: 'Дмитро Коваль',
-    service_point_name: 'ШинМайстер - Одеса',
-    date: '2023-07-17',
-    time: '10:00',
-    duration: 60,
-    services: ['Заміна шин', 'Балансування'],
-    status: 'pending',
-    car: 'Kia Rio (ОД3210ВВ)',
-    phone: '+380 67 777 88 99'
-  },
-  { 
-    id: 5, 
-    client_name: 'Олена Мельник',
-    service_point_name: 'АвтоШина Плюс - Львів',
-    date: '2023-07-18',
-    time: '11:30',
-    duration: 30,
-    services: ['Підкачування шин'],
-    status: 'confirmed',
-    car: 'Hyundai Solaris (BC6543OO)',
-    phone: '+380 50 111 22 33'
-  },
-];
+import { bookingsApi, Booking } from '../../api/bookings';
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState(mockBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [totalItems, setTotalItems] = useState(mockBookings.length);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const loadBookings = useCallback(() => {
+  const loadBookings = useCallback(async () => {
     setLoading(true);
+    setError(null);
     
-    // Имитация загрузки данных с сервера
-    setTimeout(() => {
-      // Фильтрация по поисковому запросу
-      const filteredBookings = mockBookings.filter(booking => 
-        booking.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.service_point_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.car.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    try {
+      const response = await bookingsApi.getAll({
+        page,
+        per_page: pageSize,
+        // Добавляем поиск если есть запрос
+        ...(searchQuery && { search: searchQuery })
+      });
       
-      setBookings(filteredBookings);
-      setTotalItems(filteredBookings.length);
+      // Обрабатываем новую структуру ответа API
+      if (response.data) {
+        if (response.data.data && Array.isArray(response.data.data)) {
+          // Новая структура с пагинацией
+          setBookings(response.data.data);
+          setTotalItems(response.data.pagination?.total_count || response.data.data.length);
+        } else if (Array.isArray(response.data)) {
+          // Старая структура (массив)
+          setBookings(response.data);
+          setTotalItems(response.data.length);
+        } else {
+          setBookings([]);
+          setTotalItems(0);
+        }
+      } else {
+        setBookings([]);
+        setTotalItems(0);
+      }
+    } catch (error: any) {
+      console.error('Ошибка загрузки бронирований:', error);
+      setError(error.response?.data?.error || 'Не удалось загрузить бронирования');
+      setBookings([]);
+      setTotalItems(0);
+    } finally {
       setLoading(false);
-    }, 500);
-  }, [searchQuery]);
+    }
+  }, [page, pageSize, searchQuery]);
 
   useEffect(() => {
     loadBookings();
@@ -151,44 +112,81 @@ const BookingsPage: React.FC = () => {
     navigate('/bookings/new');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'success';
-      case 'confirmed':
-        return 'primary';
-      case 'pending':
+  const getStatusColor = (statusId: number) => {
+    // Маппинг ID статусов на цвета
+    switch (statusId) {
+      case 1: // pending
         return 'warning';
-      case 'cancelled':
+      case 2: // confirmed
+        return 'primary';
+      case 3: // in_progress
+        return 'info';
+      case 4: // completed
+        return 'success';
+      case 5: // canceled_by_client
+      case 6: // canceled_by_partner
         return 'error';
       default:
         return 'default';
     }
   };
 
-  const getStatusName = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'Виконано';
-      case 'confirmed':
-        return 'Підтверджено';
-      case 'pending':
-        return 'Очікує';
-      case 'cancelled':
-        return 'Скасовано';
+  const getStatusName = (statusId: number) => {
+    // Маппинг ID статусов на названия
+    switch (statusId) {
+      case 1:
+        return 'Ожидает';
+      case 2:
+        return 'Подтверждено';
+      case 3:
+        return 'В процессе';
+      case 4:
+        return 'Завершено';
+      case 5:
+        return 'Отменено клиентом';
+      case 6:
+        return 'Отменено партнером';
       default:
-        return 'Невідомо';
+        return 'Неизвестно';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
+  const getStatusIcon = (statusId: number) => {
+    switch (statusId) {
+      case 4: // completed
         return <CheckCircleIcon fontSize="small" />;
-      case 'cancelled':
+      case 5: // canceled_by_client
+      case 6: // canceled_by_partner
         return <CancelIcon fontSize="small" />;
       default:
         return <EventIcon fontSize="small" />;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU');
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatTime = (timeString: string) => {
+    try {
+      // Если время в формате ISO (2000-01-01T11:30:00.000Z), извлекаем только время
+      if (timeString.includes('T')) {
+        const date = new Date(timeString);
+        return date.toLocaleTimeString('ru-RU', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          timeZone: 'UTC' // Используем UTC поскольку время хранится как UTC
+        });
+      }
+      // Если время в формате HH:MM:SS, обрезаем секунды
+      return timeString.substring(0, 5);
+    } catch {
+      return timeString;
     }
   };
 
@@ -206,12 +204,18 @@ const BookingsPage: React.FC = () => {
         </Button>
       </Box>
 
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <TextField
             label="Поиск"
             variant="outlined"
-            placeholder="Клиент, сервис или автомобиль"
+            placeholder="Поиск по клиенту, сервису или автомобилю"
             value={searchQuery}
             onChange={handleSearchInputChange}
             onKeyPress={handleSearchKeyPress}
@@ -246,82 +250,86 @@ const BookingsPage: React.FC = () => {
                     <TableCell>Точка обслуживания</TableCell>
                     <TableCell>Дата и время</TableCell>
                     <TableCell>Автомобиль</TableCell>
-                    <TableCell>Услуги</TableCell>
                     <TableCell>Статус</TableCell>
                     <TableCell>Действия</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {bookings.map((booking) => (
-                    <TableRow
-                      key={booking.id}
-                      sx={{ 
-                        '&:last-child td, &:last-child th': { border: 0 },
-                        bgcolor: booking.status === 'cancelled' ? 'rgba(244, 67, 54, 0.07)' : 'inherit'
-                      }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {booking.id}
-                      </TableCell>
-                      <TableCell>{booking.client_name}</TableCell>
-                      <TableCell>{booking.service_point_name}</TableCell>
-                      <TableCell>
-                        {booking.date}, {booking.time}
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {booking.duration} мин.
+                  {bookings.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">
+                        <Typography variant="body1" color="text.secondary" sx={{ py: 4 }}>
+                          {loading ? 'Загрузка...' : 'Бронирования не найдены'}
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {booking.car}
-                        <Typography variant="caption" display="block" color="text.secondary">
-                          {booking.phone}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {booking.services.map((service, index) => (
-                          <Chip 
-                            key={index} 
-                            label={service} 
-                            size="small" 
-                            sx={{ mr: 0.5, mb: 0.5 }} 
-                          />
-                        ))}
-                      </TableCell>
-                      <TableCell>
-                        <Chip 
-                          icon={getStatusIcon(booking.status)}
-                          label={getStatusName(booking.status)} 
-                          color={getStatusColor(booking.status) as 'success' | 'primary' | 'warning' | 'error' | 'default'} 
-                          size="small" 
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Tooltip title="Просмотр деталей">
-                            <IconButton 
-                              size="small"
-                              onClick={() => handleViewBooking(booking.id)}
-                              color="primary"
-                            >
-                              <VisibilityIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    bookings.map((booking) => (
+                      <TableRow
+                        key={booking.id}
+                        sx={{ 
+                          '&:last-child td, &:last-child th': { border: 0 },
+                          bgcolor: (booking.status_id === 5 || booking.status_id === 6) ? 'rgba(244, 67, 54, 0.07)' : 'inherit'
+                        }}
+                      >
+                        <TableCell component="th" scope="row">
+                          {booking.id}
+                        </TableCell>
+                        <TableCell>
+                          {booking.client_id}
+                          {/* TODO: Добавить информацию о клиенте когда будет доступна */}
+                        </TableCell>
+                        <TableCell>
+                          {booking.service_point_id}
+                          {/* TODO: Добавить название точки обслуживания когда будет доступно */}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(booking.booking_date)}, {formatTime(booking.start_time)}
+                          {booking.end_time && (
+                            <Typography variant="caption" display="block" color="text.secondary">
+                              до {formatTime(booking.end_time)}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {booking.car_id || 'Не указан'}
+                          {/* TODO: Добавить информацию об автомобиле когда будет доступна */}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            icon={getStatusIcon(booking.status_id)}
+                            label={getStatusName(booking.status_id)}
+                            color={getStatusColor(booking.status_id) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Tooltip title="Просмотр">
+                            <IconButton
+                              color="primary"
+                              onClick={() => handleViewBooking(booking.id)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
-            <Divider />
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={Math.ceil(totalItems / pageSize)}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
-            </Box>
+
+            {totalItems > pageSize && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                <Pagination
+                  count={Math.ceil(totalItems / pageSize)}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            )}
           </>
         )}
       </Paper>

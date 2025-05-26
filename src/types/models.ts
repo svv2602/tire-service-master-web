@@ -21,16 +21,30 @@ export interface User extends BaseModel {
 
 // Модель партнера
 export interface Partner extends BaseModel {
+  id: number;
+  user_id: number;
   company_name: string;
   company_description?: string;
-  contact_person?: string;
+  contact_person: string;
   logo_url?: string;
   website?: string;
   tax_number?: string;
   legal_address?: string;
   is_active: boolean;
-  user_id: number;
+  region_id?: number;
+  city_id?: number;
+  created_at: string;
+  updated_at: string;
   user?: User;
+  region?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  city?: {
+    id: number;
+    name: string;
+  };
   service_points_count?: number;
 }
 
@@ -145,17 +159,16 @@ export interface CarModel extends BaseModel {
 export interface Region extends BaseModel {
   name: string;
   code: string;
-  cities_count: number;
+  is_active: boolean;
+  cities: City[];
 }
 
 // Город
 export interface City extends BaseModel {
   region_id: number;
   name: string;
-  code: string;
   is_active: boolean;
-  region: Region;
-  service_points_count: number;
+  region?: Region;
 }
 
 // Менеджеры

@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Partner, PartnersState } from '../../types';
-import { partnersApi } from '../../api/api';
+import { partnersApi } from '../../api/partners';
+import { CreatePartnerRequest, UpdatePartnerRequest } from '../../types/api-requests';
 
 // Начальное состояние
 const initialState: PartnersState = {
@@ -18,25 +19,9 @@ export const fetchPartners = createAsyncThunk(
     try {
       const response = await partnersApi.getAll(params);
       
-      // Проверяем формат данных
-      let partners = [];
-      let totalItems = 0;
-      
-      if (response.data.partners && Array.isArray(response.data.partners)) {
-        partners = response.data.partners;
-        totalItems = response.data.total_items || partners.length;
-      } else if (Array.isArray(response.data)) {
-        partners = response.data;
-        totalItems = partners.length;
-      } else {
-        console.warn('Unexpected API response format:', response.data);
-        partners = [];
-        totalItems = 0;
-      }
-      
       return {
-        partners,
-        totalItems,
+        partners: response.partners,
+        totalItems: response.total_items,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить партнеров');
@@ -49,7 +34,7 @@ export const fetchPartnerById = createAsyncThunk(
   async (id: number, { rejectWithValue }) => {
     try {
       const response = await partnersApi.getById(id);
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти партнера');
     }
@@ -58,57 +43,48 @@ export const fetchPartnerById = createAsyncThunk(
 
 export const createPartner = createAsyncThunk(
   'partners/createPartner',
-  async (partnerData: { 
-    company_name: string;
-    contact_person?: string;
-    company_description?: string;
-    website?: string;
-    tax_number?: string;
-    legal_address?: string;
-    logo_url?: string;
-    user: {
-      email: string;
-      phone?: string;
-      first_name: string;
-      last_name: string;
-      middle_name?: string;
-    }
-  }, { rejectWithValue }) => {
+  async (partnerData: any, { rejectWithValue }) => {
     try {
-      const response = await partnersApi.create(partnerData);
-      return response.data;
+      const requestData: CreatePartnerRequest = {
+        user: partnerData.user,
+        partner: {
+          company_name: partnerData.company_name,
+          contact_person: partnerData.contact_person,
+          company_description: partnerData.company_description,
+          website: partnerData.website,
+          tax_number: partnerData.tax_number,
+          legal_address: partnerData.legal_address,
+          logo_url: partnerData.logo_url,
+        }
+      };
+      const response = await partnersApi.create(requestData);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Не удалось создать партнера');
+      return rejectWithValue(error.response?.data || error.message || 'Не удалось создать партнера');
     }
   }
 );
 
 export const updatePartner = createAsyncThunk(
   'partners/updatePartner',
-  async ({ id, data }: { 
-    id: number; 
-    data: {
-      company_name?: string;
-      contact_person?: string;
-      company_description?: string;
-      website?: string;
-      tax_number?: string;
-      legal_address?: string;
-      logo_url?: string;
-      user?: {
-        email?: string;
-        phone?: string;
-        first_name?: string;
-        last_name?: string;
-        middle_name?: string;
-      }
-    } 
-  }, { rejectWithValue }) => {
+  async ({ id, data }: { id: number; data: any }, { rejectWithValue }) => {
     try {
-      const response = await partnersApi.update(id, data);
-      return response.data;
+      const requestData: UpdatePartnerRequest = {
+        user: data.user,
+        partner: {
+          company_name: data.company_name,
+          contact_person: data.contact_person,
+          company_description: data.company_description,
+          website: data.website,
+          tax_number: data.tax_number,
+          legal_address: data.legal_address,
+          logo_url: data.logo_url,
+        }
+      };
+      const response = await partnersApi.update(id, requestData);
+      return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.error || 'Не удалось обновить партнера');
+      return rejectWithValue(error.response?.data || error.message || 'Не удалось обновить партнера');
     }
   }
 );
@@ -127,10 +103,10 @@ export const deletePartner = createAsyncThunk(
 
 export const togglePartnerActive = createAsyncThunk(
   'partners/togglePartnerActive',
-  async ({ id, active }: { id: number; active?: boolean }, { rejectWithValue }) => {
+  async ({ id, active }: { id: number; active: boolean }, { rejectWithValue }) => {
     try {
       const response = await partnersApi.toggleActive(id, active);
-      return response.data.partner;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось изменить статус активности партнера');
     }

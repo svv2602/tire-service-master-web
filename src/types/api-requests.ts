@@ -66,17 +66,29 @@ export interface CreatePartnerRequest {
     website?: string;
     tax_number: string;
     legal_address: string;
+    region_id?: number;
+    city_id?: number;
   };
 }
 
 export interface UpdatePartnerRequest {
-  company_name?: string;
-  company_description?: string;
-  contact_person?: string;
-  logo_url?: string;
-  website?: string;
-  tax_number?: string;
-  legal_address?: string;
+  user?: {
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+  };
+  partner?: {
+    company_name?: string;
+    company_description?: string;
+    contact_person?: string;
+    logo_url?: string;
+    website?: string;
+    tax_number?: string;
+    legal_address?: string;
+    region_id?: number;
+    city_id?: number;
+  };
 }
 
 // Запросы для работы с сервисными точками

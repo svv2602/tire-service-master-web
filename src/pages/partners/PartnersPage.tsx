@@ -46,7 +46,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { fetchPartners, deletePartner, togglePartnerActive } from '../../store/slices/partnersSlice';
+import { fetchPartners, deletePartner, togglePartnerActive, clearSelectedPartner } from '../../store/slices/partnersSlice';
 import { useNavigate } from 'react-router-dom';
 
 const PartnersPage: React.FC = () => {
@@ -102,6 +102,7 @@ const PartnersPage: React.FC = () => {
   };
 
   const handleAddPartner = () => {
+    dispatch(clearSelectedPartner());
     navigate('/partners/create');
   };
 

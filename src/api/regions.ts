@@ -1,18 +1,10 @@
 import { AxiosResponse } from 'axios';
 import apiClient from './api';
+import { Region } from '../types/models';
 
-export interface Region {
+export interface City {
   id: number;
   name: string;
-  code?: string;
-  is_active: boolean;
-  cities?: Array<{
-    id: number;
-    region_id: number;
-    name: string;
-    code?: string;
-    is_active: boolean;
-  }>;
 }
 
 export interface RegionResponse {
@@ -33,16 +25,16 @@ interface GetAllParams {
 
 // API для работы с регионами
 export const regionsApi = {
-  // Получение списка регионов с фильтрацией
-  getAll: async (params?: GetAllParams): Promise<AxiosResponse<RegionsResponse>> => {
-    console.log('Получение списка регионов');
-    return apiClient.get('/api/v1/regions', { params });
+  // Получение списка регионов
+  getAll: async (): Promise<Region[]> => {
+    const response = await apiClient.get<Region[]>('/api/v1/regions');
+    return response.data;
   },
 
   // Получение региона по ID
-  getById: async (id: number): Promise<AxiosResponse<RegionResponse>> => {
-    console.log(`Получение региона ${id}`);
-    return apiClient.get(`/api/v1/regions/${id}`);
+  getById: async (id: number): Promise<Region> => {
+    const response = await apiClient.get<Region>(`/api/v1/regions/${id}`);
+    return response.data;
   },
 
   // Создание нового региона
@@ -67,5 +59,15 @@ export const regionsApi = {
   getCities: async (id: number): Promise<AxiosResponse<Region>> => {
     console.log(`Получение городов региона ${id}`);
     return apiClient.get(`/api/v1/regions/${id}/cities`);
+  },
+
+  getAllRegions: async (): Promise<Region[]> => {
+    const response = await apiClient.get<Region[]>('/api/v1/regions');
+    return response.data;
+  },
+
+  getRegionById: async (id: number): Promise<Region> => {
+    const response = await apiClient.get<Region>(`/api/v1/regions/${id}`);
+    return response.data;
   }
 };

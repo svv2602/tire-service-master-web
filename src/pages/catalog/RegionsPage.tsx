@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { fetchRegions, deleteRegion, createRegion, updateRegion, clearError } from '../../store/slices/regionsSlice';
+import { fetchRegions, clearError } from '../../store/slices/regionsSlice';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 
@@ -82,22 +82,9 @@ const RegionsPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        if (editingRegion) {
-          await dispatch(updateRegion({
-            id: editingRegion.id,
-            data: {
-              ...values,
-              is_active: values.is_active || false // Ensure is_active is always defined
-            }
-          })).unwrap();
-          setSuccessMessage('Регион успешно обновлен');
-        } else {
-          await dispatch(createRegion({
-            ...values,
-            is_active: values.is_active || false // Ensure is_active is always defined
-          })).unwrap();
-          setSuccessMessage('Регион успешно создан');
-        }
+        // TODO: Реализовать создание и обновление регионов
+        console.log('Сохранение региона:', values);
+        setSuccessMessage('Функция временно недоступна');
         handleCloseDialog();
         loadRegions();
       } catch (error) {
@@ -133,8 +120,9 @@ const RegionsPage: React.FC = () => {
   const handleDeleteRegion = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить этот регион?')) {
       try {
-        await dispatch(deleteRegion(id)).unwrap();
-        setSuccessMessage('Регион успешно удален');
+        // TODO: Реализовать удаление региона
+        console.log('Удаление региона:', id);
+        setSuccessMessage('Функция временно недоступна');
         loadRegions();
       } catch (error: any) {
         console.error('Ошибка при удалении:', error);

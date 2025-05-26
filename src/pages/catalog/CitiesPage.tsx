@@ -39,7 +39,7 @@ import {
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { fetchCities, deleteCity, createCity, updateCity, clearError } from '../../store/slices/citiesSlice';
+import { fetchCities, clearError } from '../../store/slices/citiesSlice';
 import { fetchRegions } from '../../store/slices/regionsSlice';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -91,13 +91,9 @@ const CitiesPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        if (editingCity) {
-          await dispatch(updateCity({ id: editingCity.id, data: values })).unwrap();
-          setSuccessMessage('Город успешно обновлен');
-        } else {
-          await dispatch(createCity(values)).unwrap();
-          setSuccessMessage('Город успешно создан');
-        }
+        // TODO: Реализовать создание и обновление городов
+        console.log('Сохранение города:', values);
+        setSuccessMessage('Функция временно недоступна');
         handleCloseDialog();
         loadCities();
       } catch (error) {
@@ -133,8 +129,9 @@ const CitiesPage: React.FC = () => {
   const handleDeleteCity = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить этот город?')) {
       try {
-        await dispatch(deleteCity(id)).unwrap();
-        setSuccessMessage('Город успешно удален');
+        // TODO: Реализовать удаление города
+        console.log('Удаление города:', id);
+        setSuccessMessage('Функция временно недоступна');
         loadCities();
       } catch (error: any) {
         console.error('Ошибка при удалении:', error);

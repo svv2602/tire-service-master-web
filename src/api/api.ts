@@ -239,38 +239,11 @@ export const usersApi = {
 export { bookingsApi } from './bookings';
 export { carBrandsApi } from './carBrands';
 export { carModelsApi } from './carModels';
-export { citiesApi } from './cities';
 export { regionsApi } from './regions';
+export { citiesApi } from './cities';
 export { authApi } from './auth';
 export { servicePointsApi } from './servicePoints';
-
-// API для работы с партнерами
-export const partnersApi = {
-  getAll: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка партнеров');
-    return apiClient.get('/api/v1/partners', { params });
-  },
-  getById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение партнера ${id}`);
-    return apiClient.get(`/api/v1/partners/${id}`);
-  },
-  create: async (data: any): Promise<AxiosResponse> => {
-    console.log('Создание нового партнера');
-    return apiClient.post('/api/v1/partners', data);
-  },
-  update: async (id: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Обновление партнера ${id}`);
-    return apiClient.put(`/api/v1/partners/${id}`, data);
-  },
-  delete: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление партнера ${id}`);
-    return apiClient.delete(`/api/v1/partners/${id}`);
-  },
-  toggleActive: async (id: number, active?: boolean): Promise<AxiosResponse> => {
-    console.log(`Изменение статуса активности партнера ${id}`);
-    return apiClient.put(`/api/v1/partners/${id}/toggle_active`, { is_active: active });
-  }
-};
+export { partnersApi } from './partners';
 
 // API для работы с клиентами
 export const clientsApi = {

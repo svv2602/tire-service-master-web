@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Обновление токена</title>
+</head>
+<body>
+    <h1>Обновление токена авторизации</h1>
+    <button onclick="updateToken()">Обновить токен</button>
+    <div id="result"></div>
+
+    <script>
+        function updateToken() {
+            const newToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyNSwiZXhwIjoxNzQ4MjMxMjE2LCJ0b2tlbl90eXBlIjoiYWNjZXNzIn0.P6Nr6WNrbbG6YFr2WHJ0kVoBc8HR4mSmPrMHqrS0p4s';
+            localStorage.setItem('auth_token', newToken);
+            localStorage.setItem('userEmail', 'test@dashboard.com');
+            localStorage.setItem('userPassword', 'password123');
+            
+            document.getElementById('result').innerHTML = 'Токен обновлен! Можете закрыть эту страницу и перейти к http://localhost:3008/partners/create';
+        }
+    </script>
+</body>
+</html> 

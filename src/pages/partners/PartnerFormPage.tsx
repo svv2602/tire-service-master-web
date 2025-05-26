@@ -15,15 +15,22 @@ import {
   List,
   ListItem,
   ListItemText,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { fetchPartnerById, createPartner, updatePartner, clearError } from '../../store/slices/partnersSlice';
+import { fetchPartnerById, createPartner, updatePartner, clearError, clearSelectedPartner } from '../../store/slices/partnersSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Language as LanguageIcon, Phone as PhoneIcon } from '@mui/icons-material';
+import { regionsApi } from '../../api/regions';
+import { citiesApi } from '../../api/cities';
+import { Region, City } from '../../types/models';
 
 // Расширенная схема валидации с более четкими правилами
 const validationSchema = yup.object({
@@ -74,6 +81,8 @@ interface PartnerFormData {
   logo_url: string;
   first_name: string;
   last_name: string;
+  region_id: number | '';
+  city_id: number | '';
 }
 
 const PartnerFormPage: React.FC = () => {
@@ -85,25 +94,51 @@ const PartnerFormPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [apiErrors, setApiErrors] = useState<Record<string, string[]>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [loadingRegions, setLoadingRegions] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
 
   useEffect(() => {
     if (isEditMode && id) {
       dispatch(fetchPartnerById(Number(id)));
+    } else {
+      // Очищаем выбранного партнера при создании нового
+      dispatch(clearSelectedPartner());
     }
   }, [isEditMode, id, dispatch]);
 
+  // Загружаем регионы при монтировании компонента
+  useEffect(() => {
+    const loadRegions = async () => {
+      setLoadingRegions(true);
+      try {
+        const regionsData = await regionsApi.getAll();
+        setRegions(regionsData);
+      } catch (error) {
+        console.error('Ошибка загрузки регионов:', error);
+      } finally {
+        setLoadingRegions(false);
+      }
+    };
+
+    loadRegions();
+  }, []);
+
   const initialValues: PartnerFormData = {
-    company_name: selectedPartner?.company_name || '',
-    contact_person: selectedPartner?.contact_person || '',
-    email: selectedPartner?.user?.email || '',
-    phone: selectedPartner?.user?.phone || '',
-    company_description: selectedPartner?.company_description || '',
-    website: selectedPartner?.website || '',
-    tax_number: selectedPartner?.tax_number || '',
-    legal_address: selectedPartner?.legal_address || '',
-    logo_url: selectedPartner?.logo_url || '',
-    first_name: selectedPartner?.user?.first_name || '',
-    last_name: selectedPartner?.user?.last_name || '',
+    company_name: isEditMode ? (selectedPartner?.company_name || '') : '',
+    contact_person: isEditMode ? (selectedPartner?.contact_person || '') : '',
+    email: isEditMode ? (selectedPartner?.user?.email || '') : '',
+    phone: isEditMode ? (selectedPartner?.user?.phone || '') : '',
+    company_description: isEditMode ? (selectedPartner?.company_description || '') : '',
+    website: isEditMode ? (selectedPartner?.website || '') : '',
+    tax_number: isEditMode ? (selectedPartner?.tax_number || '') : '',
+    legal_address: isEditMode ? (selectedPartner?.legal_address || '') : '',
+    logo_url: isEditMode ? (selectedPartner?.logo_url || '') : '',
+    first_name: isEditMode ? (selectedPartner?.user?.first_name || '') : '',
+    last_name: isEditMode ? (selectedPartner?.user?.last_name || '') : '',
+    region_id: isEditMode ? ((selectedPartner as any)?.region_id || '') : '',
+    city_id: isEditMode ? ((selectedPartner as any)?.city_id || '') : '',
   };
 
   const formik = useFormik({
@@ -122,6 +157,10 @@ const PartnerFormPage: React.FC = () => {
           phone: values.phone,
           first_name: values.first_name,
           last_name: values.last_name,
+          ...(isEditMode ? {} : { 
+            password: 'password123', 
+            password_confirmation: 'password123' 
+          })
         };
         
         const partnerData = {
@@ -132,6 +171,8 @@ const PartnerFormPage: React.FC = () => {
           tax_number: values.tax_number || undefined,
           legal_address: values.legal_address || undefined,
           logo_url: values.logo_url || undefined,
+          region_id: values.region_id || undefined,
+          city_id: values.city_id || undefined,
         };
         
         const apiData = {
@@ -191,6 +232,27 @@ const PartnerFormPage: React.FC = () => {
       }
     },
   });
+
+  // Загружаем города при изменении региона
+  useEffect(() => {
+    const loadCities = async (regionId: number) => {
+      setLoadingCities(true);
+      try {
+        const citiesData = await citiesApi.getAll(regionId);
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Ошибка загрузки городов:', error);
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
+    if (formik.values.region_id) {
+      loadCities(Number(formik.values.region_id));
+    } else {
+      setCities([]);
+    }
+  }, [formik.values.region_id]);
 
   const handleCloseSnackbar = () => {
     setSuccessMessage(null);
@@ -433,7 +495,61 @@ const PartnerFormPage: React.FC = () => {
                   helperText={formik.touched.legal_address && formik.errors.legal_address}
                 />
               </Grid>
-              
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="region-label">Область</InputLabel>
+                  <Select
+                    labelId="region-label"
+                    id="region_id"
+                    name="region_id"
+                    value={formik.values.region_id}
+                    label="Область"
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      // Сбрасываем город при изменении региона
+                      formik.setFieldValue('city_id', '');
+                    }}
+                    onBlur={formik.handleBlur}
+                    disabled={loadingRegions}
+                  >
+                    <MenuItem value="">
+                      <em>Выберите область</em>
+                    </MenuItem>
+                    {regions.map((region) => (
+                      <MenuItem key={region.id} value={region.id}>
+                        {region.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid size={{ xs: 12, md: 6 }}>
+                <FormControl fullWidth>
+                  <InputLabel id="city-label">Город</InputLabel>
+                  <Select
+                    labelId="city-label"
+                    id="city_id"
+                    name="city_id"
+                    value={formik.values.city_id}
+                    label="Город"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    disabled={loadingCities || !formik.values.region_id}
+                  >
+                    <MenuItem value="">
+                      <em>Выберите город</em>
+                    </MenuItem>
+                    {cities.map((city) => (
+                      <MenuItem key={city.id} value={city.id}>
+                        {city.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
               {/* Описание компании (перемещено вниз) */}
               <Grid size={12}>
                 <TextField
