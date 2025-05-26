@@ -3,7 +3,7 @@ import {
   Box,
   Typography,
   Paper,
-  Grid as MuiGrid,
+  Grid,
   CircularProgress,
   Alert,
 } from '@mui/material';
@@ -79,35 +79,35 @@ const DashboardPage: React.FC = () => {
 
       {/* Статистика */}
       <Box sx={{ mb: 4 }}>
-        <MuiGrid container spacing={3}>
+        <Grid container spacing={3}>
           {stats.map((stat, index) => (
-            <MuiGrid component="div" key={index} item xs={12} sm={6} md={4}>
+            <Grid key={index} xs={12} sm={6} md={4}>
               <StatCard {...stat} />
-            </MuiGrid>
+            </Grid>
           ))}
-        </MuiGrid>
+        </Grid>
       </Box>
 
       {/* Графики и карта */}
-      <MuiGrid container spacing={3}>
-        <MuiGrid component="div" item xs={12} md={8}>
+      <Grid container spacing={3}>
+        <Grid xs={12} md={8}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Статистика бронирований
             </Typography>
             <BookingChart data={bookingsData?.data || []} />
           </Paper>
-        </MuiGrid>
+        </Grid>
         
-        <MuiGrid component="div" item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Карта точек обслуживания
             </Typography>
             <ServicePointMap points={servicePointsData?.data || []} />
           </Paper>
-        </MuiGrid>
-      </MuiGrid>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
