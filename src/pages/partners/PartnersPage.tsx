@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -21,6 +21,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TablePagination,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,116 +30,128 @@ import {
   Delete as DeleteIcon,
   ToggleOn as ToggleOnIcon,
   ToggleOff as ToggleOffIcon,
+  Language as LanguageIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { fetchPartners, deletePartner, togglePartnerActive, clearSelectedPartner } from '../../store/slices/partnersSlice';
 import { useNavigate } from 'react-router-dom';
-import { Partner } from '../../types/models';
-import { partnersApi } from '../../api/partners';
-
-interface ApiError {
-  message?: string;
-  error?: string;
-}
+import { 
+  useGetPartnersQuery, 
+  useDeletePartnerMutation, 
+  useToggleActiveMutation 
+} from '../../api/partners';
 
 const PartnersPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { partners, loading: partnersLoading, error: partnersError } = useSelector((state: RootState) => state.partners);
-  const [search, setSearch] = React.useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [toggleError, setToggleError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<string>('company_name');
-  const [partnerToDelete, setPartnerToDelete] = useState<number | null>(null);
-  const [partnerToDeleteName, setPartnerToDeleteName] = useState<string>('');
-  const [toggleActiveDialogOpen, setToggleActiveDialogOpen] = useState(false);
-  const [partnerToToggle, setPartnerToToggle] = useState<{ id: number, is_active: boolean, name: string } | null>(null);
+  
+  // Состояние для поиска и пагинации
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  // Состояние для диалогов
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [toggleDialogOpen, setToggleDialogOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<{ id: number; name: string; isActive: boolean } | null>(null);
 
-  const filteredPartners = React.useMemo(() => {
-    if (!partners) return [];
-    return partners.filter(partner => 
-      partner.company_name.toLowerCase().includes(search.toLowerCase()) ||
-      partner.contact_person?.toLowerCase().includes(search.toLowerCase()) ||
-      partner.email?.toLowerCase().includes(search.toLowerCase()) ||
-      partner.phone?.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [partners, search]);
+  // RTK Query хуки
+  const { 
+    data: partnersData, 
+    isLoading, 
+    error 
+  } = useGetPartnersQuery({
+    query: search || undefined,
+    page: page + 1, // API использует 1-based пагинацию
+    per_page: rowsPerPage,
+  });
 
-  const loadPartners = useCallback(() => {
-    dispatch(fetchPartners({
-      query: search || undefined,
-      sort_by: sortBy,
-    }));
-  }, [dispatch, search, sortBy]);
+  const [deletePartner, { isLoading: deleteLoading }] = useDeletePartnerMutation();
+  const [toggleActive, { isLoading: toggleLoading }] = useToggleActiveMutation();
 
-  useEffect(() => {
-    loadPartners();
-  }, [loadPartners]);
-
-  const handleError = (error: unknown): string => {
-    if (error && typeof error === 'object') {
-      if ('message' in error && typeof error.message === 'string') {
-        return error.message;
-      }
-      if ('error' in error && typeof error.error === 'string') {
-        return error.error;
-      }
-    }
-    if (typeof error === 'string') {
-      return error;
-    }
-    return 'Произошла неизвестная ошибка';
+  // Обработчики событий
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+    setPage(0); // Сбрасываем на первую страницу при поиске
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить этого партнера?')) {
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDeleteClick = (partner: { id: number; company_name: string }) => {
+    setSelectedPartner({ id: partner.id, name: partner.company_name, isActive: false });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleToggleClick = (partner: { id: number; company_name: string; is_active: boolean }) => {
+    setSelectedPartner({ id: partner.id, name: partner.company_name, isActive: partner.is_active });
+    setToggleDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedPartner) {
       try {
-        setLoading(true);
-        setDeleteError(null);
-        await dispatch(deletePartner(id)).unwrap();
-        setPartnerToDelete(null);
-        loadPartners();
+        await deletePartner(selectedPartner.id).unwrap();
+        setDeleteDialogOpen(false);
+        setSelectedPartner(null);
       } catch (error) {
-        console.error('Ошибка при удалении:', error);
-        const errorMessage = handleError(error);
-        setDeleteError(errorMessage);
-      } finally {
-        setLoading(false);
+        console.error('Ошибка при удалении партнера:', error);
       }
     }
   };
 
-  const handleToggleActive = async (id: number, currentStatus: boolean, name: string) => {
-    setPartnerToToggle({ id, is_active: currentStatus, name });
-    setToggleError(null);
-    setToggleActiveDialogOpen(true);
-  };
-
-  const handleConfirmToggleActive = () => {
-    if (partnerToToggle) {
-      dispatch(togglePartnerActive({ 
-        id: partnerToToggle.id, 
-        active: !partnerToToggle.is_active 
-      }))
-        .unwrap()
-        .then(() => {
-          setToggleActiveDialogOpen(false);
-          setPartnerToToggle(null);
-          loadPartners();
-        })
-        .catch((error) => {
-          setToggleError(typeof error === 'string' ? error : 'Произошла ошибка при изменении статуса партнера');
-        });
+  const handleToggleConfirm = async () => {
+    if (selectedPartner) {
+      try {
+        await toggleActive({ 
+          id: selectedPartner.id, 
+          active: !selectedPartner.isActive 
+        }).unwrap();
+        setToggleDialogOpen(false);
+        setSelectedPartner(null);
+      } catch (error) {
+        console.error('Ошибка при изменении статуса партнера:', error);
+      }
     }
   };
+
+  const handleCloseDialogs = () => {
+    setDeleteDialogOpen(false);
+    setToggleDialogOpen(false);
+    setSelectedPartner(null);
+  };
+
+  // Отображение состояний загрузки и ошибок
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Ошибка при загрузке партнеров: {error.toString()}
+        </Alert>
+      </Box>
+    );
+  }
+
+  const partners = partnersData?.partners || [];
+  const totalItems = partnersData?.total_items || 0;
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+    <Box sx={{ p: 3 }}>
+      {/* Заголовок и кнопка добавления */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Партнеры</Typography>
         <Button
           variant="contained"
@@ -149,13 +162,14 @@ const PartnersPage: React.FC = () => {
         </Button>
       </Box>
 
+      {/* Поиск */}
       <TextField
         fullWidth
-        placeholder="Поиск по названию компании, контактному лицу, email или телефону"
+        placeholder="Поиск по названию компании или контактному лицу"
         variant="outlined"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
+        onChange={handleSearchChange}
+        sx={{ mb: 3 }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -165,6 +179,7 @@ const PartnersPage: React.FC = () => {
         }}
       />
 
+      {/* Таблица партнеров */}
       <Paper>
         <TableContainer>
           <Table>
@@ -173,207 +188,202 @@ const PartnersPage: React.FC = () => {
                 <TableCell>Компания</TableCell>
                 <TableCell>Контактное лицо</TableCell>
                 <TableCell>Контакты</TableCell>
-                <TableCell>Регион/Город</TableCell>
+                <TableCell>Местоположение</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredPartners.map((partner) => (
-                <TableRow key={partner.id}>
-                  <TableCell>
-                    <Typography variant="subtitle1">{partner.company_name}</Typography>
-                    {partner.website && (
-                      <Typography variant="body2" color="textSecondary">
-                        <a href={partner.website} target="_blank" rel="noopener noreferrer">
-                          {partner.website}
-                        </a>
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>{partner.contact_person}</TableCell>
+              {partners.map((partner) => (
+                <TableRow key={partner.id} hover>
                   <TableCell>
                     <Box>
-                      {partner.email && (
-                        <Typography variant="body2">
-                          Email: {partner.email}
+                      <Typography variant="subtitle1" fontWeight="medium">
+                        {partner.company_name}
+                      </Typography>
+                      {partner.company_description && (
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                          {partner.company_description}
                         </Typography>
                       )}
-                      {partner.phone && (
+                      {partner.website && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                          <LanguageIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                          <Typography 
+                            variant="body2" 
+                            component="a" 
+                            href={partner.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            sx={{ textDecoration: 'none', color: 'primary.main' }}
+                          >
+                            {partner.website}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Typography variant="body2">
+                      {partner.contact_person || 'Не указано'}
+                    </Typography>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Box>
+                      {partner.user?.email && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                          <EmailIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                          <Typography variant="body2">
+                            {partner.user.email}
+                          </Typography>
+                        </Box>
+                      )}
+                      {partner.user?.phone && (
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <PhoneIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                          <Typography variant="body2">
+                            {partner.user.phone}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Box>
+                      {partner.region?.name && (
                         <Typography variant="body2">
-                          Тел.: {partner.phone}
+                          {partner.region.name}
+                        </Typography>
+                      )}
+                      {partner.city?.name && (
+                        <Typography variant="body2" color="text.secondary">
+                          {partner.city.name}
+                        </Typography>
+                      )}
+                      {partner.legal_address && (
+                        <Typography variant="body2" color="text.secondary" noWrap>
+                          {partner.legal_address}
                         </Typography>
                       )}
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    {partner.region?.name && (
-                      <Typography variant="body2">
-                        {partner.region.name}
-                      </Typography>
-                    )}
-                    {partner.city?.name && (
-                      <Typography variant="body2" color="textSecondary">
-                        {partner.city.name}
-                      </Typography>
-                    )}
-                  </TableCell>
+                  
                   <TableCell>
                     <Chip
                       label={partner.is_active ? 'Активен' : 'Неактивен'}
                       color={partner.is_active ? 'success' : 'default'}
+                      size="small"
                     />
                   </TableCell>
+                  
                   <TableCell align="right">
-                    <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
-                      <IconButton
-                        onClick={() => handleToggleActive(partner.id, partner.is_active, partner.company_name)}
-                        color={partner.is_active ? 'success' : 'default'}
-                      >
-                        {partner.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Редактировать">
-                      <IconButton
-                        onClick={() => navigate(`/partners/${partner.id}/edit`)}
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDelete(partner.id)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Tooltip title="Редактировать">
+                        <IconButton
+                          size="small"
+                          onClick={() => navigate(`/partners/${partner.id}/edit`)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleToggleClick(partner)}
+                          disabled={toggleLoading}
+                        >
+                          {partner.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
+                        </IconButton>
+                      </Tooltip>
+                      
+                      <Tooltip title="Удалить">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClick(partner)}
+                          disabled={deleteLoading}
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
+              
+              {partners.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      {search ? 'Партнеры не найдены' : 'Нет партнеров'}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
+        
+        {/* Пагинация */}
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Строк на странице:"
+          labelDisplayedRows={({ from, to, count }) => 
+            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
+          }
+        />
       </Paper>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={!!partnerToDelete} onClose={() => setPartnerToDelete(null)}>
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDialogs}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить партнера "{partnerToDeleteName}"?
+            Вы уверены, что хотите удалить партнера "{selectedPartner?.name}"?
+            Это действие нельзя отменить.
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Это действие удалит партнера и все связанные с ним данные, включая учетную запись пользователя.
-            Данное действие нельзя отменить.
-          </Typography>
-          
-          {deleteError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {deleteError}
-            </Alert>
-          )}
-          
-          {deleteError && deleteError.includes('сервисные точки') && (
-            <Box sx={{ mt: 2, bgcolor: 'background.default', p: 1, borderRadius: 1 }}>
-              <Typography variant="subtitle2" color="error">
-                Сначала необходимо удалить сервисные точки, связанные с этим партнером.
-              </Typography>
-            </Box>
-          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPartnerToDelete(null)}>Отмена</Button>
+          <Button onClick={handleCloseDialogs}>Отмена</Button>
           <Button 
-            onClick={() => handleDelete(partnerToDelete!)} 
+            onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
-            disabled={loading}
+            disabled={deleteLoading}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Удалить'}
+            {deleteLoading ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог подтверждения изменения статуса */}
-      <Dialog open={toggleActiveDialogOpen} onClose={() => {
-        setToggleActiveDialogOpen(false);
-        setPartnerToToggle(null);
-      }}>
+      <Dialog open={toggleDialogOpen} onClose={handleCloseDialogs}>
         <DialogTitle>Подтверждение изменения статуса</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите {partnerToToggle?.is_active ? "деактивировать" : "активировать"} партнера "{partnerToToggle?.name}"?
+            Вы уверены, что хотите {selectedPartner?.isActive ? 'деактивировать' : 'активировать'} 
+            партнера "{selectedPartner?.name}"?
           </Typography>
-          <Box sx={{ mt: 1 }}>
-            {partnerToToggle?.is_active ? (
-              <>
-                <Typography variant="body2" color="text.secondary" fontWeight="bold">
-                  При деактивации партнера:
-                </Typography>
-                <ul>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Все сервисные точки партнера будут переведены в статус "Временно закрыты"
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Пользователь партнера и все его менеджеры будут переведены в роль "Клиент"
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Они сохранят доступ к системе, но только с правами клиента
-                    </Typography>
-                  </li>
-                </ul>
-              </>
-            ) : (
-              <>
-                <Typography variant="body2" color="text.secondary" fontWeight="bold">
-                  При активации партнера:
-                </Typography>
-                <ul>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Сервисные точки вернутся в активный статус
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Пользователь партнера вернет роль "Партнер"
-                    </Typography>
-                  </li>
-                  <li>
-                    <Typography variant="body2" color="text.secondary">
-                      Менеджеры останутся с ролью "Клиент" и потребуют ручного восстановления их ролей
-                    </Typography>
-                  </li>
-                </ul>
-              </>
-            )}
-          </Box>
-          
-          {toggleError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {toggleError}
-            </Alert>
-          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
-            setToggleActiveDialogOpen(false);
-            setPartnerToToggle(null);
-          }}>Отмена</Button>
+          <Button onClick={handleCloseDialogs}>Отмена</Button>
           <Button 
-            onClick={handleConfirmToggleActive} 
+            onClick={handleToggleConfirm} 
             color="primary" 
             variant="contained"
-            disabled={loading}
+            disabled={toggleLoading}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Изменить'}
+            {toggleLoading ? 'Изменение...' : (selectedPartner?.isActive ? 'Деактивировать' : 'Активировать')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -381,4 +391,4 @@ const PartnersPage: React.FC = () => {
   );
 };
 
-export default PartnersPage;
+export default PartnersPage; 

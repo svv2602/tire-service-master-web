@@ -6,355 +6,467 @@ import {
   TextField,
   Paper,
   CircularProgress,
-  Divider,
   Alert,
-  Snackbar,
-  InputAdornment,
-  Stack,
-  List,
-  ListItem,
-  ListItemText,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent,
+  Grid,
+  Divider,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { fetchPartnerById, createPartner, updatePartner, clearError, clearSelectedPartner } from '../../store/slices/partnersSlice';
-import { fetchRegions } from '../../store/slices/regionsSlice';
-import { fetchCities } from '../../store/slices/citiesSlice';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Language as LanguageIcon, Phone as PhoneIcon, Email as EmailIcon, LocationOn as LocationIcon } from '@mui/icons-material';
-import { PartnerFormData, Region, City } from '../../types/models';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { 
+  useGetPartnerQuery, 
+  useCreatePartnerMutation, 
+  useUpdatePartnerMutation 
+} from '../../api/partners';
+import { useGetRegionsQuery } from '../../api/regions';
+import { useGetCitiesQuery } from '../../api/cities';
+import { PartnerFormData } from '../../types/models';
 
-// Расширенная схема валидации с более четкими правилами
+// Схема валидации для всех полей партнера
 const validationSchema = yup.object({
   company_name: yup.string()
     .required('Название компании обязательно')
     .min(2, 'Название должно быть не менее 2 символов')
     .max(100, 'Название должно быть не более 100 символов'),
+  
+  company_description: yup.string()
+    .max(2000, 'Описание должно быть не более 2000 символов'),
+  
   contact_person: yup.string()
     .required('Контактное лицо обязательно')
     .min(2, 'ФИО должно быть не менее 2 символов'),
-  email: yup.string()
-    .email('Введите корректный email')
-    .required('Email обязателен'),
-  phone: yup.string()
-    .required('Телефон обязателен')
-    .matches(/^\+?[0-9\s\-\(\)]{10,15}$/, 'Введите корректный номер телефона в международном формате (от 10 до 15 символов)'),
-  company_description: yup.string()
-    .max(2000, 'Описание должно быть не более 2000 символов'),
+  
   website: yup.string()
     .url('Введите корректный URL (например, https://example.com)')
     .nullable(),
+  
   tax_number: yup.string()
     .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов')
-    .nullable()
-    .optional(),
+    .nullable(),
+  
   legal_address: yup.string()
-    .max(200, 'Адрес должен быть не более 200 символов'),
+    .max(500, 'Адрес должен быть не более 500 символов'),
+  
   logo_url: yup.string()
     .url('Введите корректный URL логотипа')
     .nullable(),
-  first_name: yup.string()
-    .required('Имя обязательно')
-    .min(2, 'Имя должно быть не менее 2 символов'),
-  last_name: yup.string()
-    .required('Фамилия обязательна')
-    .min(2, 'Фамилия должна быть не менее 2 символов'),
 });
+
+interface FormValues extends PartnerFormData {
+  user?: {
+    email?: string;
+    phone?: string;
+    first_name?: string;
+    last_name?: string;
+    password?: string;
+  };
+}
 
 const PartnerFormPage: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams<{ id: string }>();
-  const { selectedPartner, loading, error } = useSelector((state: RootState) => state.partners);
-  const { regions } = useSelector((state: RootState) => state.regions);
-  const { cities } = useSelector((state: RootState) => state.cities);
+  const isEdit = Boolean(id);
+  const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
 
-  const [formData, setFormData] = useState<PartnerFormData>({
-    company_name: '',
-    region_id: '',
-    city_id: '',
-    contact_person: '',
-    phone: '',
-    email: '',
-    website: '',
-    address: '',
-    description: '',
-    additional_info: ''
-  });
+  // RTK Query хуки
+  const { data: partner, isLoading: partnerLoading } = useGetPartnerQuery(Number(id), { skip: !id });
+  const { data: regionsData } = useGetRegionsQuery();
+  const { data: citiesData } = useGetCitiesQuery({ region_id: selectedRegionId }, { skip: !selectedRegionId });
+  const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
+  const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
-  // Загружаем данные партнера при редактировании
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchPartnerById(Number(id)));
-    }
-    return () => {
-      dispatch(clearSelectedPartner());
-    };
-  }, [dispatch, id]);
+  const formik = useFormik<FormValues>({
+    initialValues: {
+      company_name: '',
+      company_description: '',
+      contact_person: '',
+      logo_url: '',
+      website: '',
+      tax_number: '',
+      legal_address: '',
+      region_id: '',
+      city_id: '',
+      user: isEdit ? undefined : {
+        email: '',
+        phone: '',
+        first_name: '',
+        last_name: '',
+        password: '',
+      },
+    },
+    validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: async (values) => {
+      try {
+        const submitData: PartnerFormData = {
+          company_name: values.company_name,
+          company_description: values.company_description || undefined,
+          contact_person: values.contact_person || undefined,
+          logo_url: values.logo_url || undefined,
+          website: values.website || undefined,
+          tax_number: values.tax_number || undefined,
+          legal_address: values.legal_address || undefined,
+          region_id: values.region_id === '' ? undefined : Number(values.region_id),
+          city_id: values.city_id === '' ? undefined : Number(values.city_id),
+        };
 
-  // Загружаем регионы и города
-  useEffect(() => {
-    dispatch(fetchRegions({}));
-  }, [dispatch]);
+        // Добавляем данные пользователя только при создании
+        if (!isEdit && values.user) {
+          submitData.user = {
+            email: values.user.email,
+            phone: values.user.phone,
+            first_name: values.user.first_name,
+            last_name: values.user.last_name,
+            password: values.user.password || undefined,
+          };
+        }
 
-  useEffect(() => {
-    const regionId = formData.region_id;
-    if (regionId && (typeof regionId === 'number' || regionId !== '')) {
-      const numericRegionId = Number(regionId);
-      if (numericRegionId > 0) {
-        dispatch(fetchCities({ region_id: numericRegionId }));
+        if (isEdit) {
+          await updatePartner({ id: Number(id), data: submitData }).unwrap();
+        } else {
+          await createPartner(submitData).unwrap();
+        }
+        
+        navigate('/partners');
+      } catch (error) {
+        console.error('Ошибка при сохранении партнера:', error);
       }
-    }
-  }, [dispatch, formData.region_id]);
+    },
+  });
 
   // Заполняем форму данными партнера при редактировании
   useEffect(() => {
-    if (selectedPartner) {
-      setFormData({
-        company_name: selectedPartner.company_name,
-        region_id: selectedPartner.region_id || '',
-        city_id: selectedPartner.city_id || '',
-        contact_person: selectedPartner.contact_person || '',
-        phone: selectedPartner.phone || '',
-        email: selectedPartner.email || '',
-        website: selectedPartner.website || '',
-        address: selectedPartner.address || '',
-        description: selectedPartner.description || '',
-        additional_info: selectedPartner.additional_info || ''
+    if (partner && isEdit) {
+      formik.setValues({
+        company_name: partner.company_name || '',
+        company_description: partner.company_description || '',
+        contact_person: partner.contact_person || '',
+        logo_url: partner.logo_url || '',
+        website: partner.website || '',
+        tax_number: partner.tax_number || '',
+        legal_address: partner.legal_address || '',
+        region_id: partner.region_id || '',
+        city_id: partner.city_id || '',
       });
+      setSelectedRegionId(partner.region_id);
     }
-  }, [selectedPartner]);
+  }, [partner, isEdit]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Prepare the data with proper type conversion
-      const submitData = {
-        ...formData,
-        region_id: formData.region_id === '' ? undefined : Number(formData.region_id),
-        city_id: formData.city_id === '' ? undefined : Number(formData.city_id)
-      };
-      
-      if (id) {
-        await dispatch(updatePartner({ id: Number(id), data: submitData })).unwrap();
-      } else {
-        await dispatch(createPartner(submitData)).unwrap();
-      }
-      navigate('/partners');
-    } catch (error) {
-      console.error('Error saving partner:', error);
+  // Обновляем выбранный регион при изменении
+  useEffect(() => {
+    const regionId = formik.values.region_id;
+    if (regionId && regionId !== '') {
+      setSelectedRegionId(Number(regionId));
+    } else {
+      setSelectedRegionId(undefined);
+      formik.setFieldValue('city_id', '');
     }
-  };
+  }, [formik.values.region_id]);
 
-  if (loading) return <CircularProgress />;
-  if (error) return <Alert severity="error">{error}</Alert>;
+  if (partnerLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const isLoading = createLoading || updateLoading;
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 800, mx: 'auto', p: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        {id ? 'Редактировать партнера' : 'Создать партнера'}
-      </Typography>
-      
-      <Paper sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Основная информация */}
-          <Box>
-            <Typography variant="h6" gutterBottom>Основная информация</Typography>
-          </Box>
-          
-          <Box>
-            <TextField
-              required
-              fullWidth
-              name="company_name"
-              label="Название компании"
-              value={formData.company_name}
-              onChange={handleChange}
-              error={!formData.company_name}
-              helperText={!formData.company_name && "Обязательное поле"}
-            />
-          </Box>
+    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
+      {/* Заголовок и навигация */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/partners')}
+          sx={{ mr: 2 }}
+        >
+          Назад
+        </Button>
+        <Typography variant="h4">
+          {isEdit ? 'Редактировать партнера' : 'Создать партнера'}
+        </Typography>
+      </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-            <FormControl fullWidth>
-              <InputLabel>Регион</InputLabel>
-              <Select
-                name="region_id"
-                value={formData.region_id?.toString() || ''}
-                onChange={handleChange}
-                label="Регион"
-              >
-                <MenuItem value="">Не выбран</MenuItem>
-                {regions.map(region => (
-                  <MenuItem key={region.id} value={region.id.toString()}>
-                    {region.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+      <form onSubmit={formik.handleSubmit}>
+        <Paper sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Основная информация о компании */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom>
+                Основная информация о компании
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
 
-            <FormControl fullWidth>
-              <InputLabel>Город</InputLabel>
-              <Select
-                name="city_id"
-                value={formData.city_id?.toString() || ''}
-                onChange={handleChange}
-                label="Город"
-                disabled={!formData.region_id}
-              >
-                <MenuItem value="">Не выбран</MenuItem>
-                {cities.map(city => (
-                  <MenuItem key={city.id} value={city.id.toString()}>
-                    {city.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                name="company_name"
+                label="Название компании"
+                value={formik.values.company_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.company_name && Boolean(formik.errors.company_name)}
+                helperText={formik.touched.company_name && formik.errors.company_name}
+              />
+            </Grid>
 
-          {/* Контактная информация */}
-          <Box>
-            <Typography variant="h6" gutterBottom>Контактная информация</Typography>
-          </Box>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="contact_person"
+                label="Контактное лицо"
+                value={formik.values.contact_person}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
+                helperText={formik.touched.contact_person && formik.errors.contact_person}
+              />
+            </Grid>
 
-          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-            <TextField
-              fullWidth
-              name="contact_person"
-              label="Контактное лицо"
-              value={formData.contact_person}
-              onChange={handleChange}
-            />
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                name="company_description"
+                label="Описание компании"
+                value={formik.values.company_description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.company_description && Boolean(formik.errors.company_description)}
+                helperText={formik.touched.company_description && formik.errors.company_description}
+              />
+            </Grid>
 
-            <TextField
-              fullWidth
-              name="phone"
-              label="Телефон"
-              value={formData.phone}
-              onChange={handleChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PhoneIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="website"
+                label="Веб-сайт"
+                placeholder="https://example.com"
+                value={formik.values.website}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.website && Boolean(formik.errors.website)}
+                helperText={formik.touched.website && formik.errors.website}
+              />
+            </Grid>
 
-          <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-            <TextField
-              fullWidth
-              name="email"
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <EmailIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="logo_url"
+                label="URL логотипа"
+                placeholder="https://example.com/logo.png"
+                value={formik.values.logo_url}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
+                helperText={formik.touched.logo_url && formik.errors.logo_url}
+              />
+            </Grid>
 
-            <TextField
-              fullWidth
-              name="website"
-              label="Веб-сайт"
-              value={formData.website}
-              onChange={handleChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LanguageIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
+            {/* Юридическая информация */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Юридическая информация
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
 
-          <Box>
-            <TextField
-              fullWidth
-              name="address"
-              label="Адрес"
-              value={formData.address}
-              onChange={handleChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LocationIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="tax_number"
+                label="Налоговый номер"
+                placeholder="12345678"
+                value={formik.values.tax_number}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
+                helperText={formik.touched.tax_number && formik.errors.tax_number}
+              />
+            </Grid>
 
-          {/* Дополнительная информация */}
-          <Box>
-            <Typography variant="h6" gutterBottom>Дополнительная информация</Typography>
-          </Box>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="legal_address"
+                label="Юридический адрес"
+                value={formik.values.legal_address}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.legal_address && Boolean(formik.errors.legal_address)}
+                helperText={formik.touched.legal_address && formik.errors.legal_address}
+              />
+            </Grid>
 
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              name="description"
-              label="Описание"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </Box>
+            {/* Местоположение */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Местоположение
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
 
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              name="additional_info"
-              label="Дополнительная информация"
-              value={formData.additional_info}
-              onChange={handleChange}
-            />
-          </Box>
-        </Box>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Регион</InputLabel>
+                <Select
+                  name="region_id"
+                  value={formik.values.region_id?.toString() || ''}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.region_id && Boolean(formik.errors.region_id)}
+                >
+                  <MenuItem value="">Не выбран</MenuItem>
+                  {regionsData?.regions?.map((region) => (
+                    <MenuItem key={region.id} value={region.id.toString()}>
+                      {region.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/partners')}
-          >
-            Отмена
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={!formData.company_name}
-          >
-            {id ? 'Сохранить' : 'Создать'}
-          </Button>
-        </Box>
-      </Paper>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Город</InputLabel>
+                <Select
+                  name="city_id"
+                  value={formik.values.city_id?.toString() || ''}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.city_id && Boolean(formik.errors.city_id)}
+                  disabled={!formik.values.region_id}
+                >
+                  <MenuItem value="">Не выбран</MenuItem>
+                  {citiesData?.cities?.map((city) => (
+                    <MenuItem key={city.id} value={city.id.toString()}>
+                      {city.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Данные пользователя (только при создании) */}
+            {!isEdit && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Данные пользователя
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    name="user.first_name"
+                    label="Имя"
+                    value={formik.values.user?.first_name || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.user?.first_name && Boolean(formik.errors.user?.first_name)}
+                    helperText={formik.touched.user?.first_name && formik.errors.user?.first_name}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    name="user.last_name"
+                    label="Фамилия"
+                    value={formik.values.user?.last_name || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.user?.last_name && Boolean(formik.errors.user?.last_name)}
+                    helperText={formik.touched.user?.last_name && formik.errors.user?.last_name}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    type="email"
+                    name="user.email"
+                    label="Email"
+                    value={formik.values.user?.email || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.user?.email && Boolean(formik.errors.user?.email)}
+                    helperText={formik.touched.user?.email && formik.errors.user?.email}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    required
+                    name="user.phone"
+                    label="Телефон"
+                    placeholder="+380671234567"
+                    value={formik.values.user?.phone || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.user?.phone && Boolean(formik.errors.user?.phone)}
+                    helperText={formik.touched.user?.phone && formik.errors.user?.phone}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    type="password"
+                    name="user.password"
+                    label="Пароль (оставьте пустым для автогенерации)"
+                    value={formik.values.user?.password || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.user?.password && Boolean(formik.errors.user?.password)}
+                    helperText={formik.touched.user?.password && formik.errors.user?.password}
+                  />
+                </Grid>
+              </>
+            )}
+
+            {/* Кнопки действий */}
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/partners')}
+                  disabled={isLoading}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  disabled={isLoading || !formik.isValid}
+                >
+                  {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+      </form>
     </Box>
   );
 };

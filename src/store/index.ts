@@ -12,6 +12,8 @@ import bookingsReducer from './slices/bookingsSlice';
 import servicesReducer from './slices/servicesSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import { partnersApi } from '../api/partners';
+import { regionsApi } from '../api/regions';
+import { citiesApi } from '../api/cities';
 
 export const store = configureStore({
   reducer: {
@@ -28,11 +30,17 @@ export const store = configureStore({
     services: servicesReducer,
     dashboard: dashboardReducer,
     [partnersApi.reducerPath]: partnersApi.reducer,
+    [regionsApi.reducerPath]: regionsApi.reducer,
+    [citiesApi.reducerPath]: citiesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(partnersApi.middleware),
+    }).concat(
+      partnersApi.middleware,
+      regionsApi.middleware,
+      citiesApi.middleware
+    ),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

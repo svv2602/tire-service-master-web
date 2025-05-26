@@ -24,34 +24,50 @@ export interface Partner {
   id: number;
   user_id: number;
   company_name: string;
+  company_description?: string;
+  contact_person?: string;
+  logo_url?: string;
+  website?: string;
+  tax_number?: string;
+  legal_address?: string;
   region_id?: number;
   city_id?: number;
   is_active: boolean;
-  contact_person?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  address?: string;
-  description?: string;
-  additional_info?: string;
   created_at: string;
   updated_at: string;
+  
+  // Связанные объекты
   user?: User;
   region?: Region;
   city?: City;
+  
+  // Дополнительные поля для обратной совместимости
+  phone?: string;
+  email?: string;
+  address?: string;
+  description?: string;
+  additional_info?: string;
 }
 
 export interface PartnerFormData {
   company_name: string;
+  company_description?: string;
+  contact_person?: string;
+  logo_url?: string;
+  website?: string;
+  tax_number?: string;
+  legal_address?: string;
   region_id?: number | '';
   city_id?: number | '';
-  contact_person?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  address?: string;
-  description?: string;
-  additional_info?: string;
+  
+  // Данные пользователя (для создания нового партнера)
+  user?: {
+    email?: string;
+    phone?: string;
+    first_name?: string;
+    last_name?: string;
+    password?: string;
+  };
 }
 
 // Модель сервисной точки

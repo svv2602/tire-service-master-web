@@ -2,13 +2,33 @@ import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseQuery';
 import type { Partner, PartnerFormData } from '../types/models';
 
+// Интерфейс для ответа API с пагинацией
+interface PartnersResponse {
+  partners: Partner[];
+  total_items: number;
+}
+
+// Параметры запроса партнеров
+interface PartnersQueryParams {
+  query?: string;
+  page?: number;
+  per_page?: number;
+}
+
 export const partnersApi = createApi({
   reducerPath: 'partnersApi',
   baseQuery,
   tagTypes: ['Partners'],
   endpoints: (builder) => ({
-    getPartners: builder.query<Partner[], void>({
-      query: () => 'partners',
+    getPartners: builder.query<PartnersResponse, PartnersQueryParams | void>({
+      query: (params = {}) => ({
+        url: 'partners',
+        params: {
+          query: params.query,
+          page: params.page || 1,
+          per_page: params.per_page || 10,
+        },
+      }),
       providesTags: ['Partners'],
     }),
     getPartner: builder.query<Partner, number>({
@@ -19,7 +39,7 @@ export const partnersApi = createApi({
       query: (data) => ({
         url: 'partners',
         method: 'POST',
-        body: data,
+        body: { partner: data },
       }),
       invalidatesTags: ['Partners'],
     }),
@@ -27,7 +47,7 @@ export const partnersApi = createApi({
       query: ({ id, data }) => ({
         url: `partners/${id}`,
         method: 'PATCH',
-        body: data,
+        body: { partner: data },
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Partners', id }],
     }),
@@ -38,12 +58,13 @@ export const partnersApi = createApi({
       }),
       invalidatesTags: ['Partners'],
     }),
-    toggleActive: builder.mutation<Partner, number>({
-      query: (id) => ({
+    toggleActive: builder.mutation<Partner, { id: number; active?: boolean }>({
+      query: ({ id, active }) => ({
         url: `partners/${id}/toggle_active`,
-        method: 'POST',
+        method: 'PATCH',
+        body: active !== undefined ? { active } : {},
       }),
-      invalidatesTags: (_result, _error, id) => [{ type: 'Partners', id }],
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Partners', id }],
     }),
   }),
 });
