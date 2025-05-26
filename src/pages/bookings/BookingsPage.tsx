@@ -42,67 +42,81 @@ import {
   Build as BuildIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
 import { 
   useGetBookingsQuery, 
   useDeleteBookingMutation,
   useUpdateBookingStatusMutation,
-  BookingsQueryParams 
-} from '../../api/bookings';
-import { Booking } from '../../types/models';
+  useGetServicePointsQuery,
+  useGetClientsQuery,
+} from '../../api';
+import { Booking, BookingStatus } from '../../types/booking';
 
-// Статусы бронирований
-const BOOKING_STATUSES = {
-  pending: { label: 'Ожидает', color: 'warning' as const, icon: PendingIcon },
-  confirmed: { label: 'Подтверждено', color: 'info' as const, icon: CheckCircleIcon },
-  in_progress: { label: 'В работе', color: 'primary' as const, icon: BuildIcon },
-  completed: { label: 'Завершено', color: 'success' as const, icon: CheckCircleIcon },
-  cancelled: { label: 'Отменено', color: 'error' as const, icon: CancelIcon },
+// Статусы бронирований с типизацией
+const BOOKING_STATUSES: Record<BookingStatus, { 
+  label: string; 
+  color: 'warning' | 'info' | 'primary' | 'success' | 'error';
+  icon: React.ComponentType;
+}> = {
+  pending: { label: 'Ожидает', color: 'warning', icon: PendingIcon },
+  confirmed: { label: 'Подтверждено', color: 'info', icon: CheckCircleIcon },
+  in_progress: { label: 'В работе', color: 'primary', icon: BuildIcon },
+  completed: { label: 'Завершено', color: 'success', icon: CheckCircleIcon },
+  cancelled: { label: 'Отменено', color: 'error', icon: CancelIcon },
 };
-
-interface BookingWithClient extends Booking {
-  client_name: string;
-}
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | ''>('');
+  const [servicePointId, setServicePointId] = useState<string>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<BookingWithClient | null>(null);
-  const [newStatus, setNewStatus] = useState<string>('');
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [newStatus, setNewStatus] = useState<BookingStatus | ''>('');
 
   // RTK Query хуки
   const { 
     data: bookingsData, 
-    isLoading, 
-    error 
+    isLoading: bookingsLoading, 
+    error: bookingsError 
   } = useGetBookingsQuery({
-    query: search || undefined,
+    search: search || undefined,
     status: statusFilter || undefined,
-    page: page + 1, // API использует 1-based пагинацию
+    service_point_id: servicePointId || undefined,
+    page: page + 1,
     per_page: rowsPerPage,
-  } as BookingsQueryParams);
+  });
+
+  const { data: servicePoints } = useGetServicePointsQuery({});
+  const { data: clients } = useGetClientsQuery({});
 
   const [deleteBooking, { isLoading: deleteLoading }] = useDeleteBookingMutation();
   const [updateStatus, { isLoading: updateStatusLoading }] = useUpdateBookingStatusMutation();
 
+  const isLoading = bookingsLoading || deleteLoading || updateStatusLoading;
+  const error = bookingsError;
+  const bookings = bookingsData?.data || [];
+  const totalItems = bookingsData?.meta?.total || 0;
+
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-    setPage(0); // Сбрасываем на первую страницу при поиске
+    setPage(0);
   };
 
-  const handleStatusFilterChange = (event: any) => {
-    setStatusFilter(event.target.value);
+  const handleStatusFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setStatusFilter(event.target.value as BookingStatus | '');
+    setPage(0);
+  };
+
+  const handleServicePointChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+    setServicePointId(event.target.value as string);
     setPage(0);
   };
 
@@ -116,10 +130,7 @@ const BookingsPage: React.FC = () => {
   };
 
   const handleDeleteClick = (booking: Booking) => {
-    setSelectedBooking({
-      ...booking,
-      client_name: booking.client?.user?.first_name || 'Клиент'
-    });
+    setSelectedBooking(booking);
     setDeleteDialogOpen(true);
   };
 
@@ -135,11 +146,8 @@ const BookingsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChangeClick = (booking: Booking, status: string) => {
-    setSelectedBooking({
-      ...booking,
-      client_name: booking.client?.user?.first_name || 'Клиент'
-    });
+  const handleStatusChangeClick = (booking: Booking, status: BookingStatus) => {
+    setSelectedBooking(booking);
     setNewStatus(status);
     setStatusDialogOpen(true);
   };
@@ -147,7 +155,10 @@ const BookingsPage: React.FC = () => {
   const handleStatusChangeConfirm = async () => {
     if (selectedBooking && newStatus) {
       try {
-        await updateStatus({ id: selectedBooking.id, status: newStatus }).unwrap();
+        await updateStatus({ 
+          id: selectedBooking.id, 
+          status: newStatus 
+        }).unwrap();
         setStatusDialogOpen(false);
         setSelectedBooking(null);
         setNewStatus('');
@@ -164,14 +175,13 @@ const BookingsPage: React.FC = () => {
     setNewStatus('');
   };
 
-  // Функция для получения инициалов клиента
-  const getClientInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.charAt(0) || '';
-    const last = lastName?.charAt(0) || '';
-    return (first + last).toUpperCase() || 'К';
+  // Вспомогательные функции
+  const getClientInitials = (booking: Booking) => {
+    const firstName = booking.client?.firstName || '';
+    const lastName = booking.client?.lastName || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'К';
   };
 
-  // Функция для форматирования даты и времени
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -199,9 +209,6 @@ const BookingsPage: React.FC = () => {
     );
   }
 
-  const bookings = bookingsData?.data || [];
-  const totalItems = bookingsData?.pagination?.total_count || 0;
-
   return (
     <Box sx={{ p: 3 }}>
       {/* Заголовок и кнопка добавления */}
@@ -220,7 +227,7 @@ const BookingsPage: React.FC = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
-            placeholder="Поиск по клиенту или услуге"
+            placeholder="Поиск по клиенту или автомобилю"
             variant="outlined"
             size="small"
             value={search}
@@ -243,9 +250,25 @@ const BookingsPage: React.FC = () => {
               label="Статус"
             >
               <MenuItem value="">Все статусы</MenuItem>
-              {Object.entries(BOOKING_STATUSES).map(([key, status]) => (
-                <MenuItem key={key} value={key}>
-                  {status.label}
+              {Object.entries(BOOKING_STATUSES).map(([value, { label }]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Сервисная точка</InputLabel>
+            <Select
+              value={servicePointId}
+              onChange={handleServicePointChange}
+              label="Сервисная точка"
+            >
+              <MenuItem value="">Все точки</MenuItem>
+              {servicePoints?.data?.map((point) => (
+                <MenuItem key={point.id} value={point.id}>
+                  {point.name}
                 </MenuItem>
               ))}
             </Select>
@@ -254,256 +277,158 @@ const BookingsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица бронирований */}
-      <Paper>
-        <TableContainer>
-          <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Клиент</TableCell>
-                <TableCell>Услуга</TableCell>
-                    <TableCell>Дата и время</TableCell>
-                    <TableCell>Автомобиль</TableCell>
-                    <TableCell>Статус</TableCell>
-                <TableCell>Стоимость</TableCell>
-                <TableCell align="right">Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-              {bookings.map((booking) => {
-                const statusInfo = BOOKING_STATUSES[booking.status as keyof typeof BOOKING_STATUSES];
-                const StatusIcon = statusInfo?.icon || PendingIcon;
-                const scheduledDateTime = formatDateTime(booking.scheduled_at);
-                
-                return (
-                  <TableRow key={booking.id} hover>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                          {getClientInitials(
-                            booking.client?.user?.first_name,
-                            booking.client?.user?.last_name
-                          )}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight="medium">
-                            {booking.client?.user?.first_name && booking.client?.user?.last_name
-                              ? `${booking.client.user.first_name} ${booking.client.user.last_name}`
-                              : 'Имя не указано'
-                            }
-                          </Typography>
-                          {booking.client?.user?.phone && (
-                            <Typography variant="body2" color="text.secondary">
-                              {booking.client.user.phone}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="medium">
-                          {booking.service_type?.name || 'Услуга не указана'}
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                          <BusinessIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2" color="text.secondary">
-                            {booking.service_point?.name || 'Точка не указана'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      </TableCell>
-                    
-                        <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <EventIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                        <Box>
-                          <Typography variant="body2">
-                            {scheduledDateTime.date}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {scheduledDateTime.time}
-                          </Typography>
-                        </Box>
-                      </Box>
-                        </TableCell>
-                    
-                        <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <CarIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                        <Box>
-                          <Typography variant="body2">
-                            {booking.car_brand?.name} {booking.car_model?.name}
-                          </Typography>
-                          {booking.car_year && (
-                            <Typography variant="body2" color="text.secondary">
-                              {booking.car_year} г.
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                        </TableCell>
-                    
-                        <TableCell>
-                          <Chip
-                        label={statusInfo?.label || booking.status}
-                        color={statusInfo?.color || 'default'}
-                            size="small"
-                        icon={<StatusIcon />}
-                          />
-                        </TableCell>
-                    
-                        <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {booking.total_price 
-                          ? `${booking.total_price.toLocaleString('ru-RU')} ₽`
-                          : 'Не указана'
-                        }
-                      </Typography>
-                    </TableCell>
-                    
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        {/* Быстрые действия по статусу */}
-                        {booking.status === 'pending' && (
-                          <Tooltip title="Подтвердить">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleStatusChangeClick(
-                                booking,
-                                'confirmed'
-                              )}
-                              color="success"
-                            >
-                              <CheckCircleIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        
-                        {booking.status === 'confirmed' && (
-                          <Tooltip title="Начать работу">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleStatusChangeClick(
-                                booking,
-                                'in_progress'
-                              )}
-                              color="primary"
-                            >
-                              <BuildIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        
-                        {booking.status === 'in_progress' && (
-                          <Tooltip title="Завершить">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleStatusChangeClick(
-                                booking,
-                                'completed'
-                              )}
-                              color="success"
-                            >
-                              <CheckCircleIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        
-                        <Tooltip title="Редактировать">
-                          <IconButton
-                            size="small"
-                            onClick={() => navigate(`/bookings/${booking.id}/edit`)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        
-                        <Tooltip title="Удалить">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteClick(booking)}
-                            disabled={deleteLoading}
-                            color="error"
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              
-              {bookings.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      {search || statusFilter ? 'Бронирования не найдены' : 'Нет бронирований'}
-                    </Typography>
-                        </TableCell>
-                      </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Клиент</TableCell>
+              <TableCell>Дата и время</TableCell>
+              <TableCell>Сервисная точка</TableCell>
+              <TableCell>Автомобиль</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {bookings.map((booking) => {
+              const { date, time } = formatDateTime(booking.startTime);
+              const StatusIcon = BOOKING_STATUSES[booking.status].icon;
 
-        {/* Пагинация */}
+              return (
+                <TableRow key={booking.id}>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar sx={{ bgcolor: 'primary.main' }}>
+                        {getClientInitials(booking)}
+                      </Avatar>
+                      <Typography>
+                        {booking.client?.firstName} {booking.client?.lastName}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <EventIcon color="action" />
+                      <Box>
+                        <Typography>{date}</Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {time}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <BusinessIcon color="action" />
+                      <Typography>{booking.servicePoint?.name}</Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CarIcon color="action" />
+                      <Typography>
+                        {booking.clientCar?.carBrand?.name} {booking.clientCar?.carModel?.name}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      icon={<StatusIcon />}
+                      label={BOOKING_STATUSES[booking.status].label}
+                      color={BOOKING_STATUSES[booking.status].color}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      <Tooltip title="Изменить статус">
+                        <FormControl size="small" sx={{ minWidth: 120 }}>
+                          <Select
+                            value=""
+                            onChange={(e) => handleStatusChangeClick(booking, e.target.value as BookingStatus)}
+                            displayEmpty
+                            size="small"
+                          >
+                            <MenuItem value="" disabled>
+                              Изменить статус
+                            </MenuItem>
+                            {Object.entries(BOOKING_STATUSES).map(([value, { label }]) => (
+                              value !== booking.status && (
+                                <MenuItem key={value} value={value}>
+                                  {label}
+                                </MenuItem>
+                              )
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Tooltip>
+                      <Tooltip title="Редактировать">
+                        <IconButton 
+                          onClick={() => navigate(`/bookings/${booking.id}/edit`)}
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Удалить">
+                        <IconButton
+                          onClick={() => handleDeleteClick(booking)}
+                          size="small"
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
         <TablePagination
           component="div"
           count={totalItems}
-                  page={page}
+          page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => 
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
         />
-      </Paper>
+      </TableContainer>
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить бронирование клиента "{selectedBooking?.client_name}"?
-            Это действие нельзя отменить.
+            Вы действительно хотите удалить бронирование клиента{' '}
+            {selectedBooking?.client?.firstName} {selectedBooking?.client?.lastName}?
+            Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Удаление...' : 'Удалить'}
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог изменения статуса */}
       <Dialog open={statusDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Изменение статуса</DialogTitle>
+        <DialogTitle>Изменение статуса бронирования</DialogTitle>
         <DialogContent>
           <Typography>
-            Изменить статус бронирования клиента "{selectedBooking?.client_name}" на "
-            {BOOKING_STATUSES[newStatus as keyof typeof BOOKING_STATUSES]?.label}"?
+            Вы действительно хотите изменить статус бронирования клиента{' '}
+            {selectedBooking?.client?.firstName} {selectedBooking?.client?.lastName}{' '}
+            на "{newStatus ? BOOKING_STATUSES[newStatus].label : ''}"?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button 
-            onClick={handleStatusChangeConfirm} 
-            color="primary" 
-            variant="contained"
-            disabled={updateStatusLoading}
-          >
-            {updateStatusLoading ? 'Изменение...' : 'Изменить'}
+          <Button onClick={handleStatusChangeConfirm} color="primary" variant="contained">
+            Изменить
           </Button>
         </DialogActions>
       </Dialog>
