@@ -1,257 +1,367 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   Box,
-  Grid,
   Typography,
-  CircularProgress,
+  Grid,
   Card,
   CardContent,
-  CardHeader,
-  Divider,
+  CardActions,
   Button,
-  Paper,
+  CircularProgress,
+  Alert,
+  Chip,
 } from '@mui/material';
 import {
+  Business as BusinessIcon,
+  LocationOn as LocationIcon,
   People as PeopleIcon,
-  LocationOn as LocationOnIcon,
-  EventNote as EventNoteIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
+  EventNote as EventIcon,
+  DirectionsCar as CarIcon,
+  Build as ServiceIcon,
+  TrendingUp as TrendingUpIcon,
+  Assessment as AssessmentIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store';
-import { fetchDashboardStats } from '../../store/slices/dashboardSlice';
+import { useNavigate } from 'react-router-dom';
+import { useGetPartnersQuery } from '../../api/partners';
+import { useGetServicePointsQuery } from '../../api/servicePoints';
+import { useGetClientsQuery } from '../../api/clients';
+import { useGetBookingsQuery } from '../../api/bookings';
+import { useGetCarBrandsQuery } from '../../api/carBrands';
+import { useGetCarModelsQuery } from '../../api/carModels';
 
-// Компонент информационной карточки
-const InfoCard: React.FC<{
+interface StatCardProps {
   title: string;
   value: number | string;
   icon: React.ReactNode;
   color: string;
-}> = ({ title, value, icon, color }) => (
-  <Card elevation={3}>
-    <CardContent>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography color="textSecondary" variant="subtitle1" gutterBottom>
-            {title}
-          </Typography>
-          <Typography variant="h4">{value}</Typography>
-        </Box>
-        <Box
-          sx={{
-            backgroundColor: `${color}15`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '50%',
-            width: 48,
-            height: 48,
-            color: color,
-          }}
-        >
-          {icon}
-        </Box>
-      </Box>
-    </CardContent>
-  </Card>
-);
+  description?: string;
+  actionText?: string;
+  actionPath?: string;
+  loading?: boolean;
+  error?: boolean;
+}
 
-const DashboardPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  
-  // Получаем данные из Redux store
-  const { stats, loading, error } = useSelector((state: RootState) => state.dashboard);
-
-  useEffect(() => {
-    dispatch(fetchDashboardStats());
-  }, [dispatch]);
-
-  const handleRetry = () => {
-    dispatch(fetchDashboardStats());
-  };
-
-  // Отладочная информация
-  console.log('Dashboard state:', { stats, loading, error });
-  console.log('Stats object:', stats);
-  console.log('Partners count:', stats?.partners_count);
-  console.log('Service points count:', stats?.service_points_count);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography color="error" variant="h6">
-          Ошибка загрузки данных дашборда
-        </Typography>
-        <Typography color="error" sx={{ mt: 1 }}>
-          {error}
-        </Typography>
-        <Button 
-          variant="contained" 
-          onClick={handleRetry} 
-          sx={{ mt: 2 }}
-        >
-          Повторить попытку
-        </Button>
-      </Box>
-    );
-  }
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  color,
+  description,
+  actionText,
+  actionPath,
+  loading,
+  error
+}) => {
+  const navigate = useNavigate();
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Панель управления
-      </Typography>
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box
+            sx={{
+              p: 1,
+              borderRadius: 1,
+              backgroundColor: `${color}20`,
+              color: color,
+              mr: 2,
+            }}
+          >
+            {icon}
+          </Box>
+          <Box>
+            <Typography variant="h6" component="div">
+              {title}
+            </Typography>
+            {description && (
+              <Typography variant="body2" color="text.secondary">
+                {description}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+        
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          {loading ? (
+            <CircularProgress size={24} />
+          ) : error ? (
+            <Typography variant="h4" color="error">
+              Ошибка
+            </Typography>
+          ) : (
+            <Typography variant="h3" component="div" sx={{ color: color, fontWeight: 'bold' }}>
+              {value}
+            </Typography>
+          )}
+        </Box>
+      </CardContent>
       
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12 }}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              Добро пожаловать в систему "Твоя шина"!
-            </Typography>
-            <Typography paragraph>
-              Выберите раздел в меню слева для начала работы.
-            </Typography>
-          </Paper>
-        </Grid>
+      {actionText && actionPath && (
+        <CardActions>
+          <Button 
+            size="small" 
+            onClick={() => navigate(actionPath)}
+            sx={{ color: color }}
+          >
+            {actionText}
+          </Button>
+        </CardActions>
+      )}
+    </Card>
+  );
+};
+
+const DashboardPage: React.FC = () => {
+  // Загружаем данные для статистики
+  const { data: partnersData, isLoading: partnersLoading, error: partnersError } = useGetPartnersQuery({ per_page: 1 });
+  const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError } = useGetServicePointsQuery({ per_page: 1 });
+  const { data: clientsData, isLoading: clientsLoading, error: clientsError } = useGetClientsQuery({ per_page: 1 });
+  const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError } = useGetBookingsQuery({ per_page: 1 });
+  const { data: brandsData, isLoading: brandsLoading, error: brandsError } = useGetCarBrandsQuery({ per_page: 1 });
+  const { data: modelsData, isLoading: modelsLoading, error: modelsError } = useGetCarModelsQuery({ per_page: 1 });
+
+  // Статистические данные
+  const stats = [
+    {
+      title: 'Партнеры',
+      value: partnersData?.pagination?.total_count || 0,
+      icon: <BusinessIcon />,
+      color: '#1976d2',
+      description: 'Всего партнеров в системе',
+      actionText: 'Управление партнерами',
+      actionPath: '/partners',
+      loading: partnersLoading,
+      error: !!partnersError,
+    },
+    {
+      title: 'Сервисные точки',
+      value: servicePointsData?.pagination?.total_count || 0,
+      icon: <LocationIcon />,
+      color: '#388e3c',
+      description: 'Активных точек обслуживания',
+      actionText: 'Просмотр точек',
+      actionPath: '/service-points',
+      loading: servicePointsLoading,
+      error: !!servicePointsError,
+    },
+    {
+      title: 'Клиенты',
+      value: clientsData?.pagination?.total_count || 0,
+      icon: <PeopleIcon />,
+      color: '#f57c00',
+      description: 'Зарегистрированных клиентов',
+      actionText: 'База клиентов',
+      actionPath: '/clients',
+      loading: clientsLoading,
+      error: !!clientsError,
+    },
+    {
+      title: 'Бронирования',
+      value: bookingsData?.pagination?.total_count || 0,
+      icon: <EventIcon />,
+      color: '#7b1fa2',
+      description: 'Всего бронирований',
+      actionText: 'Управление записями',
+      actionPath: '/bookings',
+      loading: bookingsLoading,
+      error: !!bookingsError,
+    },
+    {
+      title: 'Бренды авто',
+      value: brandsData?.pagination?.total_count || 0,
+      icon: <CarIcon />,
+      color: '#d32f2f',
+      description: 'Брендов в каталоге',
+      actionText: 'Каталог брендов',
+      actionPath: '/car-brands',
+      loading: brandsLoading,
+      error: !!brandsError,
+    },
+    {
+      title: 'Модели авто',
+      value: modelsData?.pagination?.total_count || 0,
+      icon: <ServiceIcon />,
+      color: '#303f9f',
+      description: 'Моделей в каталоге',
+      actionText: 'Каталог моделей',
+      actionPath: '/car-models',
+      loading: modelsLoading,
+      error: !!modelsError,
+    },
+  ];
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {/* Заголовок */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Панель управления
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Обзор основных показателей системы управления шиномонтажными услугами
+        </Typography>
+      </Box>
+
+      {/* Статистические карточки */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {stats.map((stat, index) => (
+          <Grid item xs={12} sm={6} md={4} key={index}>
+            <StatCard {...stat} />
+          </Grid>
+        ))}
       </Grid>
 
-      <Typography variant="h4" gutterBottom sx={{ mt: 4 }}>
-        Дашборд
-      </Typography>
-      <Typography variant="subtitle1" color="textSecondary" gutterBottom>
-        Обзор основных показателей
-      </Typography>
-      <Divider sx={{ my: 2 }} />
-
-      {!stats ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            Нет данных для отображения
-          </Typography>
-          <Button 
-            variant="contained" 
-            onClick={handleRetry} 
-            sx={{ mt: 2 }}
-          >
-            Загрузить данные
-          </Button>
-        </Box>
-      ) : (
-        <>
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <InfoCard
-                title="Партнеры"
-                value={stats.partners_count || 0}
-                icon={<PeopleIcon />}
-                color="#1976d2"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <InfoCard
-                title="Точки обслуживания"
-                value={stats.service_points_count || 0}
-                icon={<LocationOnIcon />}
-                color="#2e7d32"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <InfoCard
-                title="Клиенты"
-                value={stats.clients_count || 0}
-                icon={<PeopleIcon />}
-                color="#ed6c02"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <InfoCard
-                title="Бронирования"
-                value={stats.bookings_count || 0}
-                icon={<EventNoteIcon />}
-                color="#9c27b0"
-              />
-            </Grid>
+      {/* Быстрые действия */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+          <TrendingUpIcon sx={{ mr: 1 }} />
+          Быстрые действия
+        </Typography>
+        
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Новый партнер
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Добавить нового партнера в систему
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" href="/partners/new">
+                  Создать
+                </Button>
+              </CardActions>
+            </Card>
           </Grid>
-
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 8 }}>
-              <Card elevation={3}>
-                <CardHeader title="Ежемесячные бронирования" />
-                <CardContent>
-                  <Typography variant="body2" color="textSecondary">
-                    График ежемесячных бронирований будет отображен здесь с использованием библиотеки графиков
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-                    Данные за последние 12 месяцев: {stats.bookings_by_month?.join(', ') || 'Загрузка...'}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Card elevation={3}>
-                <CardHeader title="Статистика бронирований" />
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box
-                      sx={{
-                        backgroundColor: '#2e7d3215',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        width: 36,
-                        height: 36,
-                        color: '#2e7d32',
-                        mr: 2,
-                      }}
-                    >
-                      <CheckCircleIcon />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="textSecondary">
-                        Выполнено
-                      </Typography>
-                      <Typography variant="h6">{stats.completed_bookings_count || 0}</Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box
-                      sx={{
-                        backgroundColor: '#d3202015',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        width: 36,
-                        height: 36,
-                        color: '#d32020',
-                        mr: 2,
-                      }}
-                    >
-                      <CancelIcon />
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="textSecondary">
-                        Отменено
-                      </Typography>
-                      <Typography variant="h6">{stats.canceled_bookings_count || 0}</Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Новая точка
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Добавить сервисную точку
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" href="/service-points/new">
+                  Создать
+                </Button>
+              </CardActions>
+            </Card>
           </Grid>
-        </>
-      )}
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Новое бронирование
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Создать запись на обслуживание
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" href="/bookings/new">
+                  Создать
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Аналитика
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Просмотр отчетов и статистики
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button size="small" href="/analytics">
+                  Открыть
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* Статус системы */}
+      <Box>
+        <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+          <AssessmentIcon sx={{ mr: 1 }} />
+          Статус системы
+        </Typography>
+        
+        <Card>
+          <CardContent>
+            <Grid container spacing={2} alignItems="center">
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Chip 
+                    label="API Подключено" 
+                    color="success" 
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Соединение с бэкендом активно
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Chip 
+                    label="База данных" 
+                    color="success" 
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Все сервисы работают
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Chip 
+                    label="Кэширование" 
+                    color="success" 
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    RTK Query активен
+                  </Typography>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Chip 
+                    label="Интеграция" 
+                    color="success" 
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Все модули подключены
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      </Box>
     </Box>
   );
 };

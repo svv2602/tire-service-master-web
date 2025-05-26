@@ -26,8 +26,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from './store';
 import RegionsPage from './pages/catalog/RegionsPage';
 import CitiesPage from './pages/catalog/CitiesPage';
-import CarBrandsPage from './pages/catalog/CarBrandsPage';
-import CarModelsPage from './pages/catalog/CarModelsPage';
+import CarBrandsPage from './pages/car-brands/CarBrandsPage';
+import CarModelsPage from './pages/car-models/CarModelsPage';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -124,25 +124,34 @@ function App() {
                 <Route path="dashboard" element={<DashboardPage />} />
                 {/* Маршруты для партнеров */}
                 <Route path="partners" element={<PartnersPage />} />
-                <Route path="partners/create" element={<PartnerFormPage />} />
+                <Route path="partners/new" element={<PartnerFormPage />} />
                 <Route path="partners/:id/edit" element={<PartnerFormPage />} />
                 <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
                 <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
                 {/* Маршруты для сервисных точек */}
                 <Route path="service-points" element={<ServicePointsPage />} />
-                <Route path="service-points/create" element={<ServicePointFormPage />} />
+                <Route path="service-points/new" element={<ServicePointFormPage />} />
                 <Route path="service-points/:id" element={<ServicePointDetailPage />} />
+                <Route path="service-points/:id/edit" element={<ServicePointFormPage />} />
                 <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
                 <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
                 {/* Маршруты для клиентов */}
                 <Route path="clients" element={<ClientsPage />} />
+                <Route path="clients/new" element={<div>Создание клиента (в разработке)</div>} />
                 <Route path="clients/:id" element={<div>Информация о клиенте (в разработке)</div>} />
-                <Route path="clients/create" element={<div>Создание клиента (в разработке)</div>} />
+                <Route path="clients/:id/edit" element={<div>Редактирование клиента (в разработке)</div>} />
                 {/* Маршруты для бронирований */}
                 <Route path="bookings" element={<BookingsPage />} />
                 <Route path="bookings/new" element={<BookingFormPage />} />
                 <Route path="bookings/:id/edit" element={<BookingFormPage />} />
                 <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
+                {/* Маршруты для брендов и моделей автомобилей */}
+                <Route path="car-brands" element={<CarBrandsPage />} />
+                <Route path="car-brands/new" element={<div>Создание бренда (в разработке)</div>} />
+                <Route path="car-brands/:id/edit" element={<div>Редактирование бренда (в разработке)</div>} />
+                <Route path="car-models" element={<CarModelsPage />} />
+                <Route path="car-models/new" element={<div>Создание модели (в разработке)</div>} />
+                <Route path="car-models/:id/edit" element={<div>Редактирование модели (в разработке)</div>} />
                 {/* Маршруты для клиентских автомобилей */}
                 <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
                 <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
@@ -167,8 +176,6 @@ function App() {
                 {/* Справочники */}
                 <Route path="regions" element={<RegionsPage />} />
                 <Route path="cities" element={<CitiesPage />} />
-                <Route path="car-brands" element={<CarBrandsPage />} />
-                <Route path="car-models" element={<CarModelsPage />} />
               </Route>
               
               {/* Маршрут по умолчанию */}
