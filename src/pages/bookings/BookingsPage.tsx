@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -34,21 +34,17 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Event as EventIcon,
-  Person as PersonIcon,
   Business as BusinessIcon,
   DirectionsCar as CarIcon,
-  Schedule as ScheduleIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Pending as PendingIcon,
   Build as BuildIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useGetBookingsQuery, 
-  useDeleteBookingMutation,
-  useUpdateBookingStatusMutation
-} from '../../api/bookings';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { fetchBookings, deleteBooking } from '../../store/slices/bookingsSlice';
 
 // Статусы бронирований
 const BOOKING_STATUSES = {

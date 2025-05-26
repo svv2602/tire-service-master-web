@@ -15,8 +15,6 @@ import {
 } from '@mui/material';
 import { 
   LocationOn as LocationIcon,
-  Star as StarIcon,
-  Store as StoreIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
@@ -161,7 +159,7 @@ const FavoriteServicePoints: React.FC = () => {
       
       {favoritePoints.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <StoreIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+          <LocationIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
           <Typography variant="h6" gutterBottom>
             У вас пока нет избранных сервисных центров
           </Typography>

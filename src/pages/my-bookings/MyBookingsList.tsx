@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
   Paper, 
@@ -11,20 +11,22 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
-import { 
-  Add as AddIcon, 
-  CalendarToday as CalendarIcon,
-  EventAvailable as EventAvailableIcon,
-  EventBusy as EventBusyIcon,
-  EventNote as EventNoteIcon
-} from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Event as EventIcon,
+  Add as AddIcon,
+  CalendarToday as CalendarIcon,
+  EventAvailable as EventAvailableIcon,
+  EventBusy as EventBusyIcon,
+  EventNote as EventNoteIcon,
+} from '@mui/icons-material';
 
 interface Booking {
   id: number;
@@ -75,13 +77,7 @@ const MyBookingsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useSelector((state: RootState) => state.auth);
 
-  useEffect(() => {
-    if (user) {
-      fetchBookings();
-    }
-  }, [user]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
       const clientId = user?.client_id;
@@ -106,7 +102,11 @@ const MyBookingsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.client_id]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleCancelBooking = async (bookingId: number) => {
     if (!window.confirm('Вы уверены, что хотите отменить запись?')) {

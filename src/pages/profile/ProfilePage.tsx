@@ -27,8 +27,8 @@ import {
   AdminPanelSettings as RoleIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
 
 // Интерфейс для данных формы
@@ -49,6 +49,7 @@ const ProfilePage: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changePassword, setChangePassword] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Вывод данных пользователя в консоль для отладки
   useEffect(() => {
@@ -73,16 +74,27 @@ const ProfilePage: React.FC = () => {
   // Обновление данных формы при изменении пользователя
   useEffect(() => {
     if (user) {
-      setFormData({
-        ...formData,
-        firstName: user.first_name || '',
-        lastName: user.last_name || '',
-        email: user.email || '',
+      setFormData(prevData => ({
+        ...prevData,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
         phone: user.phone || '',
-        position: getRoleLabel(user.role),
-      });
+      }));
     }
   }, [user]);
+
+  useEffect(() => {
+    if (isEditing && user) {
+      setFormData(prevData => ({
+        ...prevData,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone: user.phone || '',
+      }));
+    }
+  }, [isEditing, user]);
 
   // Получение инициалов для аватара
   const getInitials = () => {

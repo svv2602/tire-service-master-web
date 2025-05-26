@@ -29,15 +29,12 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Person as PersonIcon,
-  VerifiedUser as VerifiedUserIcon,
-  Block as BlockIcon
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { RootState } from '../../store/store';
 import { AppDispatch } from '../../store';
 import { fetchUsers, deleteUser, changeUserStatus } from '../../store/slices/usersSlice';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../../types';
 
 const UsersPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

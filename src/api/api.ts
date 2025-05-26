@@ -1,9 +1,14 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { User } from '../types';
+import { User } from '../types/models';
+import config from '../config';
+import { bookingsApi } from './bookings';
+import { authApi } from './auth';
+import { partnersApi } from './partners';
+import { citiesApi } from './cities';
+import { regionsApi } from './regions';
+import { settingsApi } from './settings';
 
 // Константа для ключа хранилища
-import config from '../config';
-
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
 
 // Flag for ongoing refresh
@@ -203,8 +208,21 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
   console.error('Ошибка инициализации API:', error);
 });
 
+// Экспортируем только базовый API клиент
+export { apiClient };
+
+// Экспортируем API из отдельных файлов
+export {
+  bookingsApi,
+  authApi,
+  partnersApi,
+  citiesApi,
+  regionsApi,
+  settingsApi
+};
+
 // API для работы с пользователями
-export const usersApi = {
+const usersApi = {
   getAll: async (params?: any): Promise<AxiosResponse<User[]>> => {
     console.log('Получение списка пользователей');
     return apiClient.get('/api/v1/users', { params });
@@ -235,18 +253,8 @@ export const usersApi = {
   }
 };
 
-// Import and re-export APIs
-export { bookingsApi } from './bookings';
-export { carBrandsApi } from './carBrands';
-export { carModelsApi } from './carModels';
-export { regionsApi } from './regions';
-export { citiesApi } from './cities';
-export { authApi } from './auth';
-export { servicePointsApi } from './servicePoints';
-export { partnersApi } from './partners';
-
 // API для работы с клиентами
-export const clientsApi = {
+const clientsApi = {
   getAll: async (params?: any): Promise<AxiosResponse> => {
     console.log('Получение списка клиентов');
     return apiClient.get('/api/v1/clients', { params });
@@ -270,7 +278,7 @@ export const clientsApi = {
 };
 
 // API для работы со справочниками
-export const referencesApi = {
+const referencesApi = {
   getServices: async (params?: any): Promise<AxiosResponse> => {
     console.log('Получение списка услуг');
     return apiClient.get('/api/v1/services', { params });
@@ -295,6 +303,13 @@ export const referencesApi = {
     console.log(`Удаление услуги ${id}`);
     return apiClient.delete(`/api/v1/services/${id}`);
   }
+};
+
+// Экспортируем локальные API
+export {
+  usersApi,
+  clientsApi,
+  referencesApi
 };
 
 export default apiClient;

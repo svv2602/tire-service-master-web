@@ -15,6 +15,9 @@ import {
   Select,
   MenuItem,
   SelectChangeEvent,
+  FormControlLabel,
+  Switch,
+  InputAdornment,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -27,6 +30,10 @@ import { fetchRegions } from '../../store/slices/regionsSlice';
 import { fetchCities } from '../../store/slices/citiesSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { useGetServiceCategoriesQuery } from '../../store/api/serviceCategoriesApi';
+import { useGetScheduleQuery } from '../../store/api/scheduleApi';
+import { useGetServicePointServicesQuery } from '../../store/api/servicePointServicesApi';
+import { useGetServicePointPhotosQuery } from '../../store/api/servicePointPhotosApi';
 
 // Схема валидации
 const validationSchema = yup.object({
@@ -37,11 +44,34 @@ const validationSchema = yup.object({
   region_id: yup.number().required('Регион обязателен'),
   contact_phone: yup.string().required('Контактный телефон обязателен'),
   description: yup.string(),
-  status_id: yup.number().required('Статус обязателен'),
+  is_active: yup.boolean(),
   post_count: yup.number().min(1, 'Количество постов должно быть не менее 1'),
   default_slot_duration: yup.number().min(5, 'Длительность по умолчанию должна быть не менее 5 минут'),
   latitude: yup.number().nullable(),
   longitude: yup.number().nullable(),
+  schedule: yup.array().of(
+    yup.object({
+      day_of_week: yup.number().required('День недели обязателен'),
+      start_time: yup.string().required('Время начала работы обязательно'),
+      end_time: yup.string().required('Время окончания работы обязательно'),
+      is_working_day: yup.boolean().required('Укажите, является ли день рабочим'),
+    })
+  ),
+  services: yup.array().of(
+    yup.object({
+      service_id: yup.number().required('Услуга обязательна'),
+      price: yup.number().min(0, 'Цена не может быть отрицательной').required('Цена обязательна'),
+      duration: yup.number().min(5, 'Длительность должна быть не менее 5 минут').required('Длительность обязательна'),
+      is_available: yup.boolean().required('Укажите доступность услуги'),
+    })
+  ),
+  photos: yup.array().of(
+    yup.object({
+      url: yup.string().required('URL фотографии обязателен'),
+      description: yup.string(),
+      is_main: yup.boolean(),
+    })
+  ),
 });
 
 interface ServicePointFormData {
@@ -52,11 +82,28 @@ interface ServicePointFormData {
   region_id: number;
   address: string;
   contact_phone: string;
-  status_id: number;
+  is_active: boolean;
   post_count: number;
   default_slot_duration: number;
   latitude?: number | null;
   longitude?: number | null;
+  schedule: Array<{
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    is_working_day: boolean;
+  }>;
+  services: Array<{
+    service_id: number;
+    price: number;
+    duration: number;
+    is_available: boolean;
+  }>;
+  photos: Array<{
+    url: string;
+    description?: string;
+    is_main: boolean;
+  }>;
 }
 
 // Статусы точек обслуживания (в будущем можно загружать с сервера)
@@ -79,6 +126,20 @@ const ServicePointFormPage: React.FC = () => {
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
   const [servicePointStatuses] = useState(mockServicePointStatuses);
   const [filteredCities, setFilteredCities] = useState<any[]>([]);
+
+  const { data: servicesData } = useGetServiceCategoriesQuery({});
+  const { data: scheduleData } = useGetScheduleQuery(
+    { service_point_id: Number(id) },
+    { skip: !isEditMode || !id }
+  );
+  const { data: servicePointServicesData } = useGetServicePointServicesQuery(
+    { service_point_id: Number(id) },
+    { skip: !isEditMode || !id }
+  );
+  const { data: photosData } = useGetServicePointPhotosQuery(
+    { service_point_id: Number(id) },
+    { skip: !isEditMode || !id }
+  );
 
   useEffect(() => {
     dispatch(fetchPartners({}));
@@ -130,11 +191,22 @@ const ServicePointFormPage: React.FC = () => {
     region_id: selectedRegionId || 0,
     address: selectedServicePoint?.address || '',
     contact_phone: selectedServicePoint?.contact_phone || '',
-    status_id: selectedServicePoint?.status_id || 1,
+    is_active: selectedServicePoint?.is_active ?? true,
     post_count: selectedServicePoint?.post_count || 1,
     default_slot_duration: selectedServicePoint?.default_slot_duration || 30,
     latitude: selectedServicePoint?.latitude || null,
     longitude: selectedServicePoint?.longitude || null,
+    schedule: scheduleData?.data || [
+      { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_working_day: true },
+      { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_working_day: true },
+      { day_of_week: 3, start_time: '09:00', end_time: '18:00', is_working_day: true },
+      { day_of_week: 4, start_time: '09:00', end_time: '18:00', is_working_day: true },
+      { day_of_week: 5, start_time: '09:00', end_time: '18:00', is_working_day: true },
+      { day_of_week: 6, start_time: '10:00', end_time: '17:00', is_working_day: true },
+      { day_of_week: 7, start_time: '10:00', end_time: '16:00', is_working_day: false },
+    ],
+    services: servicePointServicesData?.data || [],
+    photos: photosData?.data || [],
   };
 
   const formik = useFormik({
@@ -446,23 +518,286 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }} sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  График работы
+                </Typography>
+              </Grid>
+
+              {formik.values.schedule.map((scheduleItem, index) => (
+                <Grid item xs={12} md={6} key={scheduleItem.day_of_week}>
+                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {getDayName(scheduleItem.day_of_week)}
+                    </Typography>
+                    
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <FormControl fullWidth>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={scheduleItem.is_working_day}
+                                onChange={(e) => {
+                                  formik.setFieldValue(`schedule.${index}.is_working_day`, e.target.checked);
+                                }}
+                                name={`schedule.${index}.is_working_day`}
+                              />
+                            }
+                            label="Рабочий день"
+                          />
+                        </FormControl>
+                      </Grid>
+
+                      {scheduleItem.is_working_day && (
+                        <>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              type="time"
+                              label="Начало работы"
+                              value={scheduleItem.start_time}
+                              onChange={(e) => {
+                                formik.setFieldValue(`schedule.${index}.start_time`, e.target.value);
+                              }}
+                              InputLabelProps={{ shrink: true }}
+                            />
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              fullWidth
+                              type="time"
+                              label="Конец работы"
+                              value={scheduleItem.end_time}
+                              onChange={(e) => {
+                                formik.setFieldValue(`schedule.${index}.end_time`, e.target.value);
+                              }}
+                              InputLabelProps={{ shrink: true }}
+                            />
+                          </Grid>
+                        </>
+                      )}
+                    </Grid>
+                  </Box>
+                </Grid>
+              ))}
+
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Услуги и цены
+                </Typography>
+              </Grid>
+
+              {formik.values.services.map((service, index) => (
+                <Grid item xs={12} md={6} key={service.service_id}>
+                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <FormControl fullWidth>
+                          <InputLabel>Услуга</InputLabel>
+                          <Select
+                            value={service.service_id}
+                            onChange={(e) => {
+                              formik.setFieldValue(`services.${index}.service_id`, e.target.value);
+                            }}
+                            label="Услуга"
+                          >
+                            {servicesData?.data.map((serviceItem) => (
+                              <MenuItem key={serviceItem.id} value={serviceItem.id}>
+                                {serviceItem.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Цена"
+                          value={service.price}
+                          onChange={(e) => {
+                            formik.setFieldValue(`services.${index}.price`, Number(e.target.value));
+                          }}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label="Длительность"
+                          value={service.duration}
+                          onChange={(e) => {
+                            formik.setFieldValue(`services.${index}.duration`, Number(e.target.value));
+                          }}
+                          InputProps={{
+                            endAdornment: <InputAdornment position="end">мин</InputAdornment>,
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <FormControl fullWidth>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={service.is_available}
+                                onChange={(e) => {
+                                  formik.setFieldValue(`services.${index}.is_available`, e.target.checked);
+                                }}
+                                name={`services.${index}.is_available`}
+                              />
+                            }
+                            label="Услуга доступна"
+                          />
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              ))}
+
+              <Grid item xs={12}>
                 <Button
                   variant="outlined"
-                  sx={{ mr: 1 }}
-                  onClick={handleBack}
+                  onClick={() => {
+                    formik.setFieldValue('services', [
+                      ...formik.values.services,
+                      {
+                        service_id: 0,
+                        price: 0,
+                        duration: 30,
+                        is_available: true,
+                      },
+                    ]);
+                  }}
                 >
-                  Отмена
+                  Добавить услугу
                 </Button>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Фотографии
+                </Typography>
+              </Grid>
+
+              {formik.values.photos.map((photo, index) => (
+                <Grid item xs={12} md={4} key={index}>
+                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <img
+                          src={photo.url}
+                          alt={photo.description || 'Фото сервисной точки'}
+                          style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 4 }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="URL фотографии"
+                          value={photo.url}
+                          onChange={(e) => {
+                            formik.setFieldValue(`photos.${index}.url`, e.target.value);
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Описание"
+                          value={photo.description || ''}
+                          onChange={(e) => {
+                            formik.setFieldValue(`photos.${index}.description`, e.target.value);
+                          }}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <FormControl fullWidth>
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={photo.is_main}
+                                onChange={(e) => {
+                                  // Если включаем главное фото, выключаем у остальных
+                                  if (e.target.checked) {
+                                    formik.values.photos.forEach((_, i) => {
+                                      if (i !== index) {
+                                        formik.setFieldValue(`photos.${i}.is_main`, false);
+                                      }
+                                    });
+                                  }
+                                  formik.setFieldValue(`photos.${index}.is_main`, e.target.checked);
+                                }}
+                                name={`photos.${index}.is_main`}
+                              />
+                            }
+                            label="Главное фото"
+                          />
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Button
+                          color="error"
+                          onClick={() => {
+                            const newPhotos = [...formik.values.photos];
+                            newPhotos.splice(index, 1);
+                            formik.setFieldValue('photos', newPhotos);
+                          }}
+                        >
+                          Удалить фото
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Grid>
+              ))}
+
+              <Grid item xs={12}>
                 <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<SaveIcon />}
-                  disabled={loading}
+                  variant="outlined"
+                  onClick={() => {
+                    formik.setFieldValue('photos', [
+                      ...formik.values.photos,
+                      {
+                        url: '',
+                        description: '',
+                        is_main: formik.values.photos.length === 0, // Первое фото будет главным
+                      },
+                    ]);
+                  }}
                 >
-                  {loading ? <CircularProgress size={24} /> : 'Сохранить'}
+                  Добавить фото
                 </Button>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                  <Button onClick={handleBack}>
+                    Отмена
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    disabled={formik.isSubmitting}
+                  >
+                    {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                  </Button>
+                </Box>
               </Grid>
             </Grid>
           </form>
@@ -471,14 +806,10 @@ const ServicePointFormPage: React.FC = () => {
 
       <Snackbar
         open={Boolean(successMessage)}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
+        message={successMessage}
+      />
     </Box>
   );
 };

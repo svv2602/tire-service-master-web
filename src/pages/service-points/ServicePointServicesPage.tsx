@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -78,8 +78,7 @@ const ServicePointServicesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
   
-  // Загрузка данных сервисной точки
-  const fetchServicePoint = async () => {
+  const fetchServicePoint = useCallback(async () => {
     try {
       const response = await fetchWithAuth(`/api/v1/service_points/${id}`);
       if (!response.ok) {
@@ -90,10 +89,9 @@ const ServicePointServicesPage: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     }
-  };
+  }, [id]);
   
-  // Загрузка услуг, связанных с точкой обслуживания
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetchWithAuth(`/api/v1/service_points/${id}/services`);
@@ -107,9 +105,8 @@ const ServicePointServicesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
   
-  // Загрузка всех доступных услуг для добавления
   const fetchAllServices = async () => {
     try {
       const response = await fetchWithAuth('/api/v1/services');
@@ -123,7 +120,6 @@ const ServicePointServicesPage: React.FC = () => {
     }
   };
   
-  // Загрузка категорий услуг
   const fetchCategories = async () => {
     try {
       const response = await fetchWithAuth('/api/v1/service_categories');
@@ -138,13 +134,12 @@ const ServicePointServicesPage: React.FC = () => {
   };
   
   useEffect(() => {
-    fetchServicePoint();
-    fetchServices();
-    fetchAllServices();
-    fetchCategories();
-  }, [id]);
+    if (id) {
+      fetchServicePoint();
+      fetchServices();
+    }
+  }, [id, fetchServicePoint, fetchServices]);
   
-  // Добавление услуги
   const handleAddService = async () => {
     if (!selectedService) return;
     
@@ -162,7 +157,6 @@ const ServicePointServicesPage: React.FC = () => {
         throw new Error(errorData.error || 'Не удалось добавить услугу');
       }
       
-      // После успешного добавления обновляем список услуг
       fetchServices();
       setAddDialogOpen(false);
       setSelectedService(null);
@@ -171,7 +165,6 @@ const ServicePointServicesPage: React.FC = () => {
     }
   };
   
-  // Удаление услуги
   const handleDeleteService = async () => {
     if (!serviceToDelete) return;
     
@@ -185,7 +178,6 @@ const ServicePointServicesPage: React.FC = () => {
         throw new Error(errorData.error || 'Не удалось удалить услугу');
       }
       
-      // После успешного удаления обновляем список услуг
       fetchServices();
       setDeleteDialogOpen(false);
       setServiceToDelete(null);

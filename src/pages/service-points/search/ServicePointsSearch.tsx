@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
   Box, 
@@ -94,9 +94,38 @@ const ServicePointsSearch: React.FC = () => {
     fetchServices();
   }, []);
 
+  const filterServicePoints = useCallback(async () => {
+    try {
+      let filtered = [...servicePoints];
+      
+      // Фильтрация по поисковому запросу
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(point => 
+          point.name.toLowerCase().includes(query) || 
+          point.address.toLowerCase().includes(query) ||
+          point.description?.toLowerCase().includes(query) ||
+          point.partner?.company_name.toLowerCase().includes(query) ||
+          point.city?.name.toLowerCase().includes(query)
+        );
+      }
+      
+      // Фильтрация по выбранной услуге
+      if (selectedService) {
+        filtered = filtered.filter(point => 
+          point.services?.some(service => service.id === selectedService)
+        );
+      }
+      
+      setFilteredPoints(filtered);
+    } catch (error) {
+      console.error('Ошибка при фильтрации сервисных точек:', error);
+    }
+  }, [searchQuery, selectedService, servicePoints]);
+
   useEffect(() => {
     filterServicePoints();
-  }, [searchQuery, selectedService, servicePoints]);
+  }, [filterServicePoints]);
 
   const fetchServicePoints = async () => {
     try {
@@ -151,31 +180,6 @@ const ServicePointsSearch: React.FC = () => {
     } catch (err) {
       console.error('Ошибка загрузки услуг:', err);
     }
-  };
-
-  const filterServicePoints = () => {
-    let filtered = [...servicePoints];
-    
-    // Фильтрация по поисковому запросу
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(point => 
-        point.name.toLowerCase().includes(query) || 
-        point.address.toLowerCase().includes(query) ||
-        point.description?.toLowerCase().includes(query) ||
-        point.partner?.company_name.toLowerCase().includes(query) ||
-        point.city?.name.toLowerCase().includes(query)
-      );
-    }
-    
-    // Фильтрация по выбранной услуге
-    if (selectedService) {
-      filtered = filtered.filter(point => 
-        point.services?.some(service => service.id === selectedService)
-      );
-    }
-    
-    setFilteredPoints(filtered);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест формы партнера</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Тестирование функциональности партнеров</h1>
+    
+    <div class="test-result info">
+        <h3>Проверка API</h3>
+        <p>Тестируем доступность API endpoints...</p>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const results = [];
+            
+            try {
+                // Тест API регионов
+                const regionsResponse = await fetch('http://localhost:8000/api/v1/regions');
+                const regions = await regionsResponse.json();
+                results.push({
+                    test: 'API регионов',
+                    success: regionsResponse.ok,
+                    data: regions
+                });
+                
+                // Тест API городов
+                const citiesResponse = await fetch('http://localhost:8000/api/v1/cities?region_id=1');
+                const cities = await citiesResponse.json();
+                results.push({
+                    test: 'API городов',
+                    success: citiesResponse.ok,
+                    data: cities
+                });
+                
+                // Отображение результатов
+                displayResults(results);
+                
+            } catch (error) {
+                console.error('Ошибка тестирования:', error);
+                document.body.innerHTML += `<div class="test-result error">
+                    <h3>Ошибка</h3>
+                    <p>Не удалось выполнить тесты: ${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        function displayResults(results) {
+            results.forEach(result => {
+                const className = result.success ? 'success' : 'error';
+                const status = result.success ? 'УСПЕХ' : 'ОШИБКА';
+                
+                document.body.innerHTML += `<div class="test-result ${className}">
+                    <h3>${result.test}: ${status}</h3>
+                    <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                </div>`;
+            });
+        }
+        
+        // Запуск тестов при загрузке страницы
+        window.onload = testAPI;
+    </script>
+</body>
+</html> 

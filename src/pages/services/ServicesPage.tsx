@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -34,8 +34,8 @@ import {
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { fetchServices, fetchServiceCategories } from '../../store/slices/servicesSlice';
-import { Service, ServiceCategory } from '../../types';
+import { fetchServices, fetchServiceCategories, deleteService } from '../../store/slices/servicesSlice';
+import { Service } from '../../types/models';
 
 const ServicesPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,29 +49,31 @@ const ServicesPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   
-  // Загрузка данных при монтировании компонента
+  const loadServices = useCallback(async () => {
+    try {
+      const params: any = {
+        page: page + 1,
+        per_page: rowsPerPage,
+      };
+      
+      if (searchQuery) {
+        params.query = searchQuery;
+      }
+      
+      if (categoryFilter !== '') {
+        params.category_id = categoryFilter;
+      }
+      
+      await dispatch(fetchServices(params));
+    } catch (error) {
+      console.error('Ошибка при загрузке услуг:', error);
+    }
+  }, [dispatch, page, rowsPerPage, searchQuery, categoryFilter]);
+  
   useEffect(() => {
     dispatch(fetchServiceCategories());
     loadServices();
-  }, [dispatch, page, rowsPerPage, searchQuery, categoryFilter]);
-  
-  // Функция загрузки услуг
-  const loadServices = () => {
-    const params: any = {
-      page: page + 1,
-      per_page: rowsPerPage,
-    };
-    
-    if (searchQuery) {
-      params.query = searchQuery;
-    }
-    
-    if (categoryFilter !== '') {
-      params.category_id = categoryFilter;
-    }
-    
-    dispatch(fetchServices(params));
-  };
+  }, [dispatch, loadServices]);
   
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -114,6 +116,7 @@ const ServicesPage: React.FC = () => {
     // Реализация удаления услуги через API
     if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
       console.log('Удаляем услугу:', id);
+      dispatch(deleteService(id));
       loadServices();
     }
   };

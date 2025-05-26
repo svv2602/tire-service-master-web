@@ -9,8 +9,9 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  Divider,
   Collapse,
+  Typography,
+  useTheme,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -26,7 +27,10 @@ import {
   ExpandLess,
   ExpandMore,
   PlaceOutlined as PlaceOutlinedIcon,
-  BuildOutlined as BuildOutlinedIcon,
+  Store as StoreIcon,
+  Schedule as ScheduleIcon,
+  Group as GroupIcon,
+  Engineering as EngineeringIcon,
 } from '@mui/icons-material';
 
 interface SideNavProps {

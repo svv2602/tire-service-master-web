@@ -3,13 +3,16 @@ import {
   Box,
   Typography,
   Grid,
+  Paper,
   Card,
   CardContent,
-  CardActions,
+  CardHeader,
+  IconButton,
   Button,
   CircularProgress,
   Alert,
   Chip,
+  CardActions,
 } from '@mui/material';
 import {
   Business as BusinessIcon,
@@ -20,6 +23,7 @@ import {
   Build as ServiceIcon,
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetPartnersQuery } from '../../api/partners';

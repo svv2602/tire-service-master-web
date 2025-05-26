@@ -71,44 +71,61 @@ export interface PartnerFormData {
 }
 
 // Модель сервисной точки
-export interface ServicePoint extends BaseModel {
+export interface ServicePoint {
+  id: number;
+  partner_id: number;
   name: string;
   description?: string;
-  address: string;
   city_id: number;
-  partner_id: number;
-  latitude: number;
-  longitude: number;
+  address: string;
+  contact_phone: string;
   is_active: boolean;
-  phone?: string;
-  email?: string;
-  contact_phone?: string;
-  working_hours: WorkingHours[];
-  photos?: ServicePointPhoto[];
-  amenities?: Amenity[];
-  partner?: Partner;
-  amenity_ids?: number[];
-  service_ids?: number[];
-  status_id?: number;
-  
-  // Дополнительные поля для совместимости с фронтендом
-  post_count?: number;
-  default_slot_duration?: number;
+  post_count: number;
+  default_slot_duration: number;
+  latitude?: number;
+  longitude?: number;
   rating?: number;
-  total_clients_served?: number;
-  average_rating?: number;
-  cancellation_rate?: number;
-  
-  // Связанные объекты
+  review_count?: number;
+  partner?: Partner;
   city?: City;
-  status?: ServicePointStatus;
-  services?: {
+  schedule: Array<{
     id: number;
-    name: string;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    is_working_day: boolean;
+    created_at: string;
+    updated_at: string;
+  }>;
+  services: Array<{
+    id: number;
+    service_id: number;
     price: number;
-    category_id?: number;
-    category?: ServiceCategory;
-  }[];
+    duration: number;
+    is_available: boolean;
+    service?: Service;
+    created_at: string;
+    updated_at: string;
+  }>;
+  photos: Array<{
+    id: number;
+    url: string;
+    description?: string;
+    is_main: boolean;
+    created_at: string;
+    updated_at: string;
+  }>;
+  reviews: Array<{
+    id: number;
+    user_id: number;
+    rating: number;
+    comment: string;
+    user?: User;
+    created_at: string;
+    updated_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
 }
 
 // Модель фотографии сервисной точки
@@ -138,21 +155,22 @@ export interface Amenity extends BaseModel {
 
 // Модель категории услуг
 export interface ServiceCategory extends BaseModel {
+  id: number;
   name: string;
   description?: string;
-  icon?: string;
-  parent_id?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // Модель услуги
 export interface Service extends BaseModel {
+  id: number;
   name: string;
   description?: string;
   category_id: number;
-  default_duration: number;
-  default_price: number;
-  is_active: boolean;
   category?: ServiceCategory;
+  created_at: string;
+  updated_at: string;
 }
 
 // Бренд автомобиля

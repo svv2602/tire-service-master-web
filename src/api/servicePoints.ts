@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseQuery';
-import type { ServicePoint } from '../types/models';
+import { PaginatedResponse, ServicePoint } from './types';
 
 // Интерфейс для ответа API с пагинацией
 interface ServicePointsResponse {
@@ -11,19 +11,6 @@ interface ServicePointsResponse {
     current_page: number;
     per_page: number;
   };
-}
-
-// Параметры запроса сервисных точек
-interface ServicePointsQueryParams {
-  partner_id?: number;
-  manager_id?: number;
-  city_id?: number;
-  amenity_ids?: string;
-  query?: string;
-  sort_by?: string;
-  sort_direction?: 'asc' | 'desc';
-  page?: number;
-  per_page?: number;
 }
 
 // Параметры для поиска ближайших точек
@@ -49,54 +36,47 @@ export interface ServicePointFormData {
   status_id?: number;
 }
 
+interface GetServicePointsParams {
+  partner_id?: number;
+  city_id?: number;
+  is_active?: boolean;
+}
+
 export const servicePointsApi = createApi({
   reducerPath: 'servicePointsApi',
   baseQuery,
   tagTypes: ['ServicePoints', 'ServicePointStatuses'],
   endpoints: (builder) => ({
-    getServicePoints: builder.query<ServicePointsResponse, ServicePointsQueryParams | void>({
-      query: (params) => {
-        const queryParams = params || {};
-        return {
-          url: 'service_points',
-      params: {
-            partner_id: queryParams.partner_id,
-            manager_id: queryParams.manager_id,
-            city_id: queryParams.city_id,
-            amenity_ids: queryParams.amenity_ids,
-            query: queryParams.query,
-            sort_by: queryParams.sort_by,
-            sort_direction: queryParams.sort_direction,
-            page: queryParams.page || 1,
-            per_page: queryParams.per_page || 25,
-          },
-        };
-      },
+    getServicePoints: builder.query<PaginatedResponse<ServicePoint>, GetServicePointsParams>({
+      query: (params) => ({
+        url: 'service_points',
+        params,
+      }),
       providesTags: ['ServicePoints'],
     }),
     getServicePoint: builder.query<ServicePoint, number>({
       query: (id) => `service_points/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'ServicePoints', id }],
     }),
-    createServicePoint: builder.mutation<ServicePoint, { partner_id: number; data: ServicePointFormData }>({
-      query: ({ partner_id, data }) => ({
-        url: `partners/${partner_id}/service_points`,
+    createServicePoint: builder.mutation<ServicePoint, { partnerId: number; data: Partial<ServicePoint> }>({
+      query: ({ partnerId, data }) => ({
+        url: `partners/${partnerId}/service_points`,
         method: 'POST',
         body: { service_point: data },
       }),
       invalidatesTags: ['ServicePoints'],
     }),
-    updateServicePoint: builder.mutation<ServicePoint, { partner_id: number; id: number; data: Partial<ServicePointFormData> }>({
-      query: ({ partner_id, id, data }) => ({
-        url: `partners/${partner_id}/service_points/${id}`,
-        method: 'PATCH',
+    updateServicePoint: builder.mutation<ServicePoint, { partnerId: number; id: number; data: Partial<ServicePoint> }>({
+      query: ({ partnerId, id, data }) => ({
+        url: `partners/${partnerId}/service_points/${id}`,
+        method: 'PUT',
         body: { service_point: data },
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'ServicePoints', id }],
     }),
-    deleteServicePoint: builder.mutation<{ message: string }, { partner_id: number; id: number }>({
-      query: ({ partner_id, id }) => ({
-        url: `partners/${partner_id}/service_points/${id}`,
+    deleteServicePoint: builder.mutation<void, { partnerId: number; id: number }>({
+      query: ({ partnerId, id }) => ({
+        url: `partners/${partnerId}/service_points/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ServicePoints'],

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -15,7 +15,6 @@ import {
   TableRow,
   IconButton,
   Tooltip,
-  Chip,
   Alert,
   Dialog,
   DialogTitle,
@@ -35,13 +34,12 @@ import {
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
   Business as BusinessIcon,
-  FilterList as FilterIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useGetServicePointsQuery, 
-  useDeleteServicePointMutation 
-} from '../../api/servicePoints';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { fetchServicePoints, deleteServicePoint } from '../../store/slices/servicePointsSlice';
 import { useGetRegionsQuery } from '../../api/regions';
 import { useGetCitiesQuery } from '../../api/cities';
 
@@ -60,24 +58,21 @@ const ServicePointsPage: React.FC = () => {
   const [selectedServicePoint, setSelectedServicePoint] = useState<{ id: number; name: string; partner_id: number } | null>(null);
 
   // RTK Query хуки
-  const { 
-    data: servicePointsData, 
-    isLoading, 
-    error 
-  } = useGetServicePointsQuery({
-    query: search || undefined,
-    city_id: selectedCityId || undefined,
-    page: page + 1, // API использует 1-based пагинацию
-    per_page: rowsPerPage,
-  });
-
   const { data: regionsData } = useGetRegionsQuery();
   const { data: citiesData } = useGetCitiesQuery(
     { region_id: selectedRegionId || undefined }, 
     { skip: !selectedRegionId }
   );
 
-  const [deleteServicePoint, { isLoading: deleteLoading }] = useDeleteServicePointMutation();
+  const dispatch = useDispatch();
+  const servicePoints = useSelector((state: RootState) => state.servicePoints.servicePoints);
+  const totalItems = useSelector((state: RootState) => state.servicePoints.totalItems);
+  const isLoading = useSelector((state: RootState) => state.servicePoints.isLoading);
+  const error = useSelector((state: RootState) => state.servicePoints.error);
+
+  useEffect(() => {
+    dispatch(fetchServicePoints());
+  }, [dispatch]);
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,10 +109,10 @@ const ServicePointsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedServicePoint) {
       try {
-        await deleteServicePoint({ 
+        await dispatch(deleteServicePoint({ 
           partner_id: selectedServicePoint.partner_id, 
           id: selectedServicePoint.id 
-        }).unwrap();
+        }));
         setDeleteDialogOpen(false);
         setSelectedServicePoint(null);
       } catch (error) {
@@ -149,9 +144,6 @@ const ServicePointsPage: React.FC = () => {
       </Box>
     );
   }
-
-  const servicePoints = servicePointsData?.data || [];
-  const totalItems = servicePointsData?.pagination?.total_count || 0;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -323,9 +315,8 @@ const ServicePointsPage: React.FC = () => {
                             name: servicePoint.name,
                             partner_id: servicePoint.partner_id
                           })}
-                          disabled={deleteLoading}
-                            color="error"
-                          >
+                          color="error"
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
@@ -378,9 +369,8 @@ const ServicePointsPage: React.FC = () => {
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
-            disabled={deleteLoading}
           >
-            {deleteLoading ? 'Удаление...' : 'Удалить'}
+            Удалить
           </Button>
         </DialogActions>
       </Dialog>

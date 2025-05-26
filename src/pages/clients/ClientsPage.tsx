@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -31,15 +31,13 @@ import {
   Delete as DeleteIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  Person as PersonIcon,
   Verified as VerifiedIcon,
   Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useGetClientsQuery, 
-  useDeleteClientMutation 
-} from '../../api/clients';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { fetchClients, deleteClient } from '../../store/slices/clientsSlice';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();

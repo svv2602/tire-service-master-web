@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
   Paper, 
@@ -45,13 +45,7 @@ const MyCarsList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useSelector((state: RootState) => state.auth);
 
-  useEffect(() => {
-    if (user) {
-      fetchCars();
-    }
-  }, [user]);
-
-  const fetchCars = async () => {
+  const fetchCars = useCallback(async () => {
     try {
       setLoading(true);
       const clientId = user?.client_id;
@@ -75,7 +69,11 @@ const MyCarsList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchCars();
+  }, [fetchCars]);
 
   const handleSetPrimary = async (carId: number) => {
     if (!user?.client_id) return;

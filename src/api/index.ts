@@ -38,3 +38,11 @@ export const setupApiBaseUrl = (baseUrl: string) => {
 
 // По умолчанию экспортируем apiClient
 export default apiClient;
+
+export * from './tireTypes';
+export * from './carTypes';
+export * from './reviews';
+export * from './schedule';
+export * from './serviceCategories';
+export * from './servicePointPhotos';
+export * from './servicePointServices';

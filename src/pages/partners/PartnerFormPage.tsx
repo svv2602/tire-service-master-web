@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +13,7 @@ import {
   MenuItem,
   Grid,
   Divider,
+  FormHelperText,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -170,6 +171,32 @@ const PartnerFormPage: React.FC = () => {
       formik.setFieldValue('city_id', '');
       }
   }, [formik.values.region_id]);
+
+  const loadPartner = useCallback(async () => {
+    try {
+      // Реализация loadPartner
+    } catch (error) {
+      console.error('Ошибка при загрузке партнера:', error);
+    }
+  }, [formik]);
+
+  const loadCities = useCallback(async () => {
+    try {
+      // Реализация loadCities
+    } catch (error) {
+      console.error('Ошибка при загрузке городов:', error);
+    }
+  }, [formik]);
+
+  useEffect(() => {
+    if (id) {
+      loadPartner();
+    }
+  }, [id, loadPartner]);
+
+  useEffect(() => {
+    loadCities();
+  }, [loadCities]);
 
   if (partnerLoading) {
     return (
