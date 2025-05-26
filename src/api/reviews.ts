@@ -33,6 +33,14 @@ export const reviewsApi = createApi({
       providesTags: ['Reviews'],
     }),
     
+    getMyReviews: builder.query<PaginatedResponse<Review>, { page?: number; per_page?: number }>({
+      query: (params) => ({
+        url: 'reviews/my',
+        params,
+      }),
+      providesTags: ['Reviews'],
+    }),
+    
     getReview: builder.query<Review, number>({
       query: (id) => `reviews/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Reviews', id }],
@@ -68,6 +76,7 @@ export const reviewsApi = createApi({
 
 export const {
   useGetReviewsQuery,
+  useGetMyReviewsQuery,
   useGetReviewQuery,
   useCreateReviewMutation,
   useUpdateReviewMutation,

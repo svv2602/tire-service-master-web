@@ -30,6 +30,8 @@ import CarBrandsPage from './pages/car-brands/CarBrandsPage';
 import CarModelsPage from './pages/car-models/CarModelsPage';
 import ReviewsPage from './pages/reviews/ReviewsPage';
 import ReviewReplyPage from './pages/reviews/ReviewReplyPage';
+import MyReviewsPage from './pages/reviews/MyReviewsPage';
+import ReviewFormPage from './pages/reviews/ReviewFormPage';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -150,6 +152,8 @@ function App() {
                 {/* Маршруты для отзывов */}
                 <Route path="reviews" element={<ReviewsPage />} />
                 <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
+                <Route path="reviews/new" element={<ReviewFormPage />} />
+                <Route path="my-reviews" element={<MyReviewsPage />} />
                 {/* Маршруты для брендов и моделей автомобилей */}
                 <Route path="car-brands" element={<CarBrandsPage />} />
                 <Route path="car-brands/new" element={<div>Создание бренда (в разработке)</div>} />

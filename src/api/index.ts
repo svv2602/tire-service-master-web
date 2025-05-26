@@ -8,7 +8,7 @@ import { serviceCategoriesApi, useGetServiceCategoriesQuery } from './serviceCat
 import { scheduleApi } from './schedule.api';
 import { servicePointServicesApi, useGetServicePointServicesQuery } from './servicePointServices';
 import { servicePointPhotosApi, useGetServicePointPhotosQuery } from './servicePointPhotos';
-import { bookingsApi, useGetBookingsQuery } from './bookings';
+import { bookingsApi, useGetBookingsQuery, useGetMyBookingsQuery } from './bookings';
 import { clientsApi, useGetClientsQuery } from './clients';
 import { settingsApi } from './settings';
 import { usersApi } from './users';
@@ -17,7 +17,7 @@ import { carModelsApi } from './carModels';
 import { dashboardApi } from './dashboard';
 import { tireTypesApi } from './tireTypes';
 import { carTypesApi } from './carTypes';
-import { reviewsApi } from './reviews';
+import { reviewsApi, useGetMyReviewsQuery } from './reviews';
 import { servicesApi, useGetServicesQuery, useDeleteServiceMutation } from './services';
 
 // Настройка API URL
@@ -44,6 +44,7 @@ export {
   useGetServicePointPhotosQuery,
   bookingsApi,
   useGetBookingsQuery,
+  useGetMyBookingsQuery,
   clientsApi,
   useGetClientsQuery,
   settingsApi,
@@ -54,6 +55,7 @@ export {
   tireTypesApi,
   carTypesApi,
   reviewsApi,
+  useGetMyReviewsQuery,
   servicesApi,
   useGetServicesQuery,
   useDeleteServiceMutation,

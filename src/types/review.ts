@@ -1,20 +1,31 @@
 export interface Review {
-  id: string;
-  servicePointId: string;
-  clientId: string;
-  bookingId?: string;
-  rating: number; // 1-5
+  id: number;
+  service_point_id: number;
+  user_id: number;
+  booking_id?: number;
+  rating: number;
   comment: string;
-  response?: string; // Ответ от сервиса
-  isPublished: boolean;
-  createdAt: string;
-  updatedAt: string;
+  response?: string;
+  status: ReviewStatus;
+  created_at: string;
+  updated_at: string;
+  service_point?: {
+    id: number;
+    name: string;
+  };
+  user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
 }
 
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
 export interface ReviewFormData {
-  servicePointId: string;
-  clientId: string;
-  bookingId?: string;
+  service_point_id: number;
+  user_id: number;
+  booking_id?: number;
   rating: number;
   comment: string;
 }
@@ -24,10 +35,10 @@ export interface ReviewResponse {
 }
 
 export interface ReviewFilter {
-  servicePointId?: string;
-  clientId?: string;
+  service_point_id?: number;
+  user_id?: number;
   rating?: number;
-  isPublished?: boolean;
-  startDate?: string;
-  endDate?: string;
+  status?: ReviewStatus;
+  date_from?: string;
+  date_to?: string;
 } 

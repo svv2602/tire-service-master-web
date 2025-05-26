@@ -21,32 +21,26 @@ import {
   Info as InfoIcon,
   PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { fetchServicePointById, clearError } from '../../store/slices/servicePointsSlice';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useGetServicePointByIdQuery } from '../../api';
 
 const ServicePointDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { selectedServicePoint, loading, error } = useSelector((state: RootState) => state.servicePoints);
 
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchServicePointById(Number(id)));
-    }
-    
-    return () => {
-      // Очистка при размонтировании компонента
-      dispatch(clearError());
-    };
-  }, [id, dispatch]);
+  const { 
+    data: response,
+    isLoading,
+    error 
+  } = useGetServicePointByIdQuery(Number(id), {
+    skip: !id
+  });
+
+  const servicePoint = response?.data;
 
   const handleEdit = () => {
-    if (selectedServicePoint) {
-      navigate(`/partners/${selectedServicePoint.partner_id}/service-points/${selectedServicePoint.id}/edit`);
+    if (servicePoint) {
+      navigate(`/partners/${servicePoint.partner_id}/service-points/${servicePoint.id}/edit`);
     }
   };
 
@@ -58,7 +52,7 @@ const ServicePointDetailPage: React.FC = () => {
     navigate(`/service-points/${id}/photos`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
         <CircularProgress />
@@ -69,8 +63,8 @@ const ServicePointDetailPage: React.FC = () => {
   if (error) {
     return (
       <Box>
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>
-          {error}
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => {}}>
+          {error.message}
         </Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Вернуться к списку
@@ -79,7 +73,7 @@ const ServicePointDetailPage: React.FC = () => {
     );
   }
 
-  if (!selectedServicePoint) {
+  if (!servicePoint) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -96,7 +90,7 @@ const ServicePointDetailPage: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">
-          {selectedServicePoint.name}
+          {servicePoint.name}
         </Typography>
         <Box>
           <Button 
@@ -117,8 +111,8 @@ const ServicePointDetailPage: React.FC = () => {
       </Box>
 
       <Chip 
-        label={`Статус: ${selectedServicePoint.status?.name || 'Неизвестно'}`} 
-        color={selectedServicePoint.status_id === 1 ? 'success' : selectedServicePoint.status_id === 2 ? 'warning' : 'error'} 
+        label={`Статус: ${servicePoint.status?.name || 'Неизвестно'}`} 
+        color={servicePoint.status_id === 1 ? 'success' : servicePoint.status_id === 2 ? 'warning' : 'error'} 
         sx={{ mb: 2 }}
       />
       
@@ -138,7 +132,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <Box>
                     <Typography variant="body2" color="text.secondary">Адрес</Typography>
                     <Typography variant="body1">
-                      {selectedServicePoint.city?.name}, {selectedServicePoint.address}
+                      {servicePoint.city?.name}, {servicePoint.address}
                     </Typography>
                   </Box>
                 </Box>
@@ -150,7 +144,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <Box>
                     <Typography variant="body2" color="text.secondary">Телефон</Typography>
                     <Typography variant="body1">
-                      {selectedServicePoint.contact_phone || 'Не указан'}
+                      {servicePoint.contact_phone || 'Не указан'}
                     </Typography>
                   </Box>
                 </Box>
@@ -162,18 +156,18 @@ const ServicePointDetailPage: React.FC = () => {
                   <Box>
                     <Typography variant="body2" color="text.secondary">Партнер</Typography>
                     <Typography variant="body1">
-                      {selectedServicePoint.partner?.company_name || 'Не указан'}
+                      {servicePoint.partner?.company_name || 'Не указан'}
                     </Typography>
                   </Box>
                 </Box>
               </Grid>
             </Grid>
             
-            {selectedServicePoint.description && (
+            {servicePoint.description && (
               <Box sx={{ mt: 2 }}>
                 <Typography variant="body2" color="text.secondary">Описание</Typography>
                 <Typography variant="body1" paragraph>
-                  {selectedServicePoint.description}
+                  {servicePoint.description}
                 </Typography>
               </Box>
             )}
@@ -196,9 +190,9 @@ const ServicePointDetailPage: React.FC = () => {
             </Box>
             <Divider sx={{ mb: 2 }} />
             
-            {selectedServicePoint.photos && selectedServicePoint.photos.length > 0 ? (
+            {servicePoint.photos && servicePoint.photos.length > 0 ? (
               <Grid container spacing={2}>
-                {selectedServicePoint.photos.slice(0, 4).map(photo => (
+                {servicePoint.photos.slice(0, 4).map(photo => (
                   <Grid size={{ xs: 6, sm: 3 }} key={photo.id}>
                     <img 
                       src={photo.photo_url} 
@@ -233,9 +227,9 @@ const ServicePointDetailPage: React.FC = () => {
             </Box>
             <Divider sx={{ mb: 2 }} />
             
-            {selectedServicePoint.services && selectedServicePoint.services.length > 0 ? (
+            {servicePoint.services && servicePoint.services.length > 0 ? (
               <Box>
-                {selectedServicePoint.services.map((service: { id: number; name: string; price: number }) => (
+                {servicePoint.services.map((service: { id: number; name: string; price: number }) => (
                   <Chip 
                     key={service.id}
                     label={`${service.name} - ${service.price} ₽`}
@@ -260,12 +254,12 @@ const ServicePointDetailPage: React.FC = () => {
               
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Количество постов</Typography>
-                <Typography variant="h5">{selectedServicePoint.post_count}</Typography>
+                <Typography variant="h5">{servicePoint.post_count}</Typography>
               </Box>
               
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Длительность слота (мин)</Typography>
-                <Typography variant="h5">{selectedServicePoint.default_slot_duration}</Typography>
+                <Typography variant="h5">{servicePoint.default_slot_duration}</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -278,22 +272,22 @@ const ServicePointDetailPage: React.FC = () => {
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Рейтинг</Typography>
                 <Typography variant="h5">
-                  {selectedServicePoint.average_rating !== undefined && selectedServicePoint.average_rating !== null 
-                    ? Number(selectedServicePoint.average_rating).toFixed(1) 
+                  {servicePoint.average_rating !== undefined && servicePoint.average_rating !== null 
+                    ? Number(servicePoint.average_rating).toFixed(1) 
                     : 'Нет данных'}
                 </Typography>
               </Box>
               
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary">Обслужено клиентов</Typography>
-                <Typography variant="h5">{selectedServicePoint.total_clients_served || 0}</Typography>
+                <Typography variant="h5">{servicePoint.total_clients_served || 0}</Typography>
               </Box>
               
               <Box>
                 <Typography variant="body2" color="text.secondary">Процент отмен</Typography>
                 <Typography variant="h5">
-                  {selectedServicePoint.cancellation_rate !== undefined && selectedServicePoint.cancellation_rate !== null
-                    ? (Number(selectedServicePoint.cancellation_rate) * 100).toFixed(1) + '%'
+                  {servicePoint.cancellation_rate !== undefined && servicePoint.cancellation_rate !== null
+                    ? (Number(servicePoint.cancellation_rate) * 100).toFixed(1) + '%'
                     : '0%'}
                 </Typography>
               </Box>

@@ -3,9 +3,9 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
   CircularProgress,
   Alert,
+  Grid,
 } from '@mui/material';
 import {
   Business as BusinessIcon,
@@ -81,7 +81,7 @@ const DashboardPage: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
-            <Grid key={index} xs={12} sm={6} md={4}>
+            <Grid key={index} item xs={12} sm={6} md={4}>
               <StatCard {...stat} />
             </Grid>
           ))}
@@ -90,7 +90,7 @@ const DashboardPage: React.FC = () => {
 
       {/* Графики и карта */}
       <Grid container spacing={3}>
-        <Grid xs={12} md={8}>
+        <Grid item xs={12} md={8}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Статистика бронирований
@@ -99,7 +99,7 @@ const DashboardPage: React.FC = () => {
           </Paper>
         </Grid>
         
-        <Grid xs={12} md={4}>
+        <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Карта точек обслуживания

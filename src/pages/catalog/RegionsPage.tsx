@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -31,11 +31,15 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
-import { fetchRegions, clearError } from '../../store/slices/regionsSlice';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { 
+  useGetRegionsQuery,
+  useCreateRegionMutation,
+  useUpdateRegionMutation,
+  useDeleteRegionMutation
+} from '../../api';
+import { Region } from '../../types/models';
 
 // Схема валидации для региона
 const validationSchema = yup.object({
@@ -44,23 +48,23 @@ const validationSchema = yup.object({
 });
 
 const RegionsPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { regions, loading, error, totalItems } = useSelector((state: RootState) => state.regions);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingRegion, setEditingRegion] = useState<any>(null);
+  const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Загрузка регионов при монтировании компонента
-  useEffect(() => {
-    loadRegions();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, rowsPerPage, searchQuery]);
+  // RTK Query хуки
+  const { data: regionsData, isLoading: regionsLoading, error: regionsError } = useGetRegionsQuery({
+    page: page + 1,
+    per_page: rowsPerPage,
+    query: searchQuery || undefined
+  });
 
-  const loadRegions = useCallback(() => {    dispatch(fetchRegions({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
+  const [createRegion] = useCreateRegionMutation();
+  const [updateRegion] = useUpdateRegionMutation();
+  const [deleteRegion] = useDeleteRegionMutation();
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -77,16 +81,19 @@ const RegionsPage: React.FC = () => {
     initialValues: {
       name: '',
       code: '',
-      is_active: true, // Always include is_active with a default value
+      is_active: true,
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        // TODO: Реализовать создание и обновление регионов
-        console.log('Сохранение региона:', values);
-        setSuccessMessage('Функция временно недоступна');
+        if (editingRegion) {
+          await updateRegion({ id: editingRegion.id, ...values }).unwrap();
+          setSuccessMessage('Регион успешно обновлен');
+        } else {
+          await createRegion(values).unwrap();
+          setSuccessMessage('Регион успешно создан');
+        }
         handleCloseDialog();
-        loadRegions();
       } catch (error) {
         console.error('Ошибка при сохранении:', error);
       }
@@ -94,7 +101,7 @@ const RegionsPage: React.FC = () => {
   });
 
   // Открытие диалога создания/редактирования
-  const handleOpenDialog = (region?: any) => {
+  const handleOpenDialog = (region?: Region) => {
     if (region) {
       setEditingRegion(region);
       formik.setValues({
@@ -120,10 +127,8 @@ const RegionsPage: React.FC = () => {
   const handleDeleteRegion = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить этот регион?')) {
       try {
-        // TODO: Реализовать удаление региона
-        console.log('Удаление региона:', id);
-        setSuccessMessage('Функция временно недоступна');
-        loadRegions();
+        await deleteRegion(id).unwrap();
+        setSuccessMessage('Регион успешно удален');
       } catch (error: any) {
         console.error('Ошибка при удалении:', error);
       }
@@ -141,13 +146,15 @@ const RegionsPage: React.FC = () => {
     setSuccessMessage(null);
   };
 
+  const regions = regionsData?.regions || [];
+  const totalItems = regionsData?.meta?.total || 0;
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Управление регионами</Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
@@ -155,9 +162,9 @@ const RegionsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>
-          {error}
+      {regionsError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {regionsError.toString()}
         </Alert>
       )}
 
@@ -178,7 +185,7 @@ const RegionsPage: React.FC = () => {
       </Paper>
 
       <TableContainer component={Paper}>
-        {loading ? (
+        {regionsLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
@@ -202,7 +209,7 @@ const RegionsPage: React.FC = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  regions.map((region) => (
+                  regions.map((region: Region) => (
                     <TableRow key={region.id}>
                       <TableCell>{region.id}</TableCell>
                       <TableCell>{region.name}</TableCell>
@@ -216,18 +223,12 @@ const RegionsPage: React.FC = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Tooltip title="Редактировать">
-                          <IconButton
-                            color="primary"
-                            onClick={() => handleOpenDialog(region)}
-                          >
+                          <IconButton onClick={() => handleOpenDialog(region)} size="small">
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Удалить">
-                          <IconButton
-                            color="error"
-                            onClick={() => handleDeleteRegion(region.id)}
-                          >
+                          <IconButton onClick={() => handleDeleteRegion(region.id)} size="small" color="error">
                             <DeleteIcon />
                           </IconButton>
                         </Tooltip>
@@ -239,84 +240,75 @@ const RegionsPage: React.FC = () => {
             </Table>
             
             <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
               component="div"
               count={totalItems}
-              rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage="Строк на странице:"
+              rowsPerPageOptions={[10, 25, 50]}
             />
           </>
         )}
       </TableContainer>
 
-      {/* Диалог создания/редактирования региона */}
+      {/* Диалог создания/редактирования */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <form onSubmit={formik.handleSubmit}>
           <DialogTitle>
-            {editingRegion ? 'Редактирование региона' : 'Добавление региона'}
+            {editingRegion ? 'Редактировать регион' : 'Добавить новый регион'}
           </DialogTitle>
           <DialogContent>
-            <TextField
-              fullWidth
-              id="name"
-              name="name"
-              label="Название региона"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              id="code"
-              name="code"
-              label="Код региона"
-              value={formik.values.code}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.code && Boolean(formik.errors.code)}
-              helperText={formik.touched.code && formik.errors.code}
-              margin="normal"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formik.values.is_active}
-                  onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                  name="is_active"
-                  color="primary"
-                />
-              }
-              label="Активен"
-              sx={{ mt: 2 }}
-            />
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                fullWidth
+                id="name"
+                name="name"
+                label="Название региона"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+              <TextField
+                fullWidth
+                id="code"
+                name="code"
+                label="Код региона"
+                value={formik.values.code}
+                onChange={formik.handleChange}
+                error={formik.touched.code && Boolean(formik.errors.code)}
+                helperText={formik.touched.code && formik.errors.code}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
+                label="Активен"
+              />
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={formik.isSubmitting || !formik.isValid}
-            >
-              {formik.isSubmitting ? <CircularProgress size={24} /> : 'Сохранить'}
+            <Button type="submit" variant="contained" disabled={formik.isSubmitting}>
+              {editingRegion ? 'Сохранить' : 'Создать'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
+      {/* Уведомление об успехе */}
       <Snackbar
-        open={Boolean(successMessage)}
+        open={!!successMessage}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+        <Alert onClose={handleCloseSnackbar} severity="success">
           {successMessage}
         </Alert>
       </Snackbar>

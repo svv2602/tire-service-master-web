@@ -53,11 +53,11 @@ import { Review, ReviewStatus } from '../../types/review';
 const REVIEW_STATUSES: Record<ReviewStatus, { 
   label: string; 
   color: 'warning' | 'info' | 'success' | 'error';
-  icon: React.ComponentType;
+  icon: React.ReactNode;
 }> = {
-  pending: { label: 'На модерации', color: 'warning', icon: StarIcon },
-  approved: { label: 'Опубликован', color: 'success', icon: CheckIcon },
-  rejected: { label: 'Отклонен', color: 'error', icon: CloseIcon },
+  pending: { label: 'На модерации', color: 'warning', icon: <StarIcon /> },
+  approved: { label: 'Опубликован', color: 'success', icon: <CheckIcon /> },
+  rejected: { label: 'Отклонен', color: 'error', icon: <CloseIcon /> },
 };
 
 const ReviewsPage: React.FC = () => {
@@ -102,13 +102,13 @@ const ReviewsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleStatusFilterChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleStatusFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusFilter(event.target.value as ReviewStatus | '');
     setPage(0);
   };
 
-  const handleServicePointChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    setServicePointId(event.target.value as string);
+  const handleServicePointChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setServicePointId(event.target.value);
     setPage(0);
   };
 
@@ -156,9 +156,9 @@ const ReviewsPage: React.FC = () => {
 
   // Вспомогательные функции
   const getClientInitials = (review: Review) => {
-    const firstName = review.client?.firstName || '';
-    const lastName = review.client?.lastName || '';
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'К';
+    const firstName = review.user?.first_name || '';
+    const lastName = review.user?.last_name || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
   };
 
   const formatDate = (dateString: string) => {
@@ -328,7 +328,7 @@ const ReviewsPage: React.FC = () => {
 
                 <TableCell>
                   <Chip
-                    icon={<REVIEW_STATUSES[review.status].icon />}
+                    icon={REVIEW_STATUSES[review.status].icon}
                     label={REVIEW_STATUSES[review.status].label}
                     color={REVIEW_STATUSES[review.status].color}
                     size="small"

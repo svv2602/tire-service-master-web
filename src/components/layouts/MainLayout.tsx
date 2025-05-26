@@ -38,6 +38,7 @@ import {
   Assessment as ReportIcon,
   Person as UserIcon,
   Map as MapIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -217,6 +218,25 @@ const MainLayout: React.FC = () => {
             path: '/bookings/new',
             roles: [UserRole.CLIENT],
             description: 'Запись на сервис',
+          },
+        ],
+      },
+      {
+        title: 'Отзывы',
+        items: [
+          {
+            text: 'Все отзывы',
+            icon: <StarIcon />,
+            path: '/reviews',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Просмотр и модерация отзывов',
+          },
+          {
+            text: 'Мои отзывы',
+            icon: <StarIcon />,
+            path: '/my-reviews',
+            roles: [UserRole.CLIENT],
+            description: 'Ваши отзывы о сервисах',
           },
         ],
       },

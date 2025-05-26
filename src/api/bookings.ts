@@ -82,6 +82,16 @@ export const bookingsApi = createApi({
       },
       providesTags: ['Bookings'],
     }),
+    getMyBookings: builder.query<BookingsResponse, { page?: number; per_page?: number }>({
+      query: (params) => ({
+        url: 'bookings/my',
+        params: {
+          page: params?.page || 1,
+          per_page: params?.per_page || 25,
+        },
+      }),
+      providesTags: ['Bookings'],
+    }),
     getBooking: builder.query<Booking, number>({
       query: (id) => `bookings/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'Bookings', id }],
@@ -166,6 +176,7 @@ export const bookingsApi = createApi({
 
 export const {
   useGetBookingsQuery,
+  useGetMyBookingsQuery,
   useGetBookingQuery,
   useCreateBookingMutation,
   useUpdateBookingMutation,
