@@ -30,7 +30,7 @@ export const servicePointsApi = createApi({
   baseQuery,
   tagTypes: ['ServicePoints'],
   endpoints: (builder) => ({
-    getServicePoints: builder.query<{ data: ServicePoint[] }, QueryParams>({
+    getServicePoints: builder.query<ServicePointsResponse, QueryParams>({
       query: (params) => ({
         url: '/service-points',
         params,

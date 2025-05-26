@@ -3,17 +3,14 @@ import {
   Box,
   Typography,
   Paper,
-  Grid as MuiGrid,
+  Grid,
   CircularProgress,
   Alert,
 } from '@mui/material';
 import {
   Business as BusinessIcon,
   LocationOn as LocationIcon,
-  DirectionsCar as CarIcon,
   People as PeopleIcon,
-  Build as BuildIcon,
-  CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { useGetPartnersQuery } from '../../api/partners';
 import { useGetServicePointsQuery } from '../../api/service-points';
@@ -81,34 +78,36 @@ const DashboardPage: React.FC = () => {
       </Typography>
 
       {/* Статистика */}
-      <MuiGrid container spacing={3} sx={{ mb: 4 }}>
-        {stats.map((stat, index) => (
-          <MuiGrid item xs={12} sm={6} md={4} key={index}>
-            <StatCard {...stat} />
-          </MuiGrid>
-        ))}
-      </MuiGrid>
+      <Box sx={{ mb: 4 }}>
+        <Grid container spacing={3}>
+          {stats.map((stat, index) => (
+            <Grid key={index} item xs={12} sm={6} md={4}>
+              <StatCard {...stat} />
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
 
       {/* Графики и карта */}
-      <MuiGrid container spacing={3}>
-        <MuiGrid item xs={12} md={8}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={8}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Статистика бронирований
             </Typography>
             <BookingChart data={bookingsData?.data || []} />
           </Paper>
-        </MuiGrid>
+        </Grid>
         
-        <MuiGrid item xs={12} md={4}>
+        <Grid item xs={12} md={4}>
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               Карта точек обслуживания
             </Typography>
             <ServicePointMap points={servicePointsData?.data || []} />
           </Paper>
-        </MuiGrid>
-      </MuiGrid>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
