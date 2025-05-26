@@ -23,6 +23,7 @@ import {
   DialogActions,
   TablePagination,
   Avatar,
+  Badge,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,9 +34,17 @@ import {
   Phone as PhoneIcon,
   Verified as VerifiedIcon,
   Cancel as CancelIcon,
+  DirectionsCar as CarIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useGetClientsQuery, useDeleteClientMutation } from '../../api/clients';
+import { 
+  useGetClientsQuery, 
+  useDeleteClientMutation,
+  useGetClientCarsQuery,
+  useGetClientBookingsQuery,
+} from '../../api';
+import { Client } from '../../types/client';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,25 +56,30 @@ const ClientsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<{ id: number; name: string } | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   // RTK Query хуки
   const { 
     data: clientsData, 
-    isLoading, 
-    error 
+    isLoading: clientsLoading, 
+    error: clientsError 
   } = useGetClientsQuery({
-    query: search || undefined,
-    page: page + 1, // API использует 1-based пагинацию
+    search: search || undefined,
+    page: page + 1,
     per_page: rowsPerPage,
   });
 
   const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
 
+  const isLoading = clientsLoading || deleteLoading;
+  const error = clientsError;
+  const clients = clientsData?.data || [];
+  const totalItems = clientsData?.meta?.total || 0;
+
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-    setPage(0); // Сбрасываем на первую страницу при поиске
+    setPage(0);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -77,7 +91,7 @@ const ClientsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (client: { id: number; name: string }) => {
+  const handleDeleteClick = (client: Client) => {
     setSelectedClient(client);
     setDeleteDialogOpen(true);
   };
@@ -99,11 +113,19 @@ const ClientsPage: React.FC = () => {
     setSelectedClient(null);
   };
 
-  // Функция для получения инициалов
-  const getInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.charAt(0) || '';
-    const last = lastName?.charAt(0) || '';
-    return (first + last).toUpperCase() || 'К';
+  // Вспомогательные функции
+  const getInitials = (client: Client) => {
+    const firstName = client.firstName || '';
+    const lastName = client.lastName || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'К';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   // Отображение состояний загрузки и ошибок
@@ -125,9 +147,6 @@ const ClientsPage: React.FC = () => {
     );
   }
 
-  const clients = clientsData?.data || [];
-  const totalItems = clientsData?.pagination?.total_count || 0;
-
   return (
     <Box sx={{ p: 3 }}>
       {/* Заголовок и кнопка добавления */}
@@ -144,200 +163,153 @@ const ClientsPage: React.FC = () => {
 
       {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
-          <TextField
-          placeholder="Поиск по email, имени или фамилии"
-            variant="outlined"
+        <TextField
+          placeholder="Поиск по имени, email или телефону"
+          variant="outlined"
           size="small"
           value={search}
           onChange={handleSearchChange}
           sx={{ minWidth: 400 }}
-            InputProps={{
+          InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </Paper>
 
       {/* Таблица клиентов */}
-      <Paper>
-        <TableContainer>
-          <Table>
-                <TableHead>
-                  <TableRow>
-                <TableCell>Клиент</TableCell>
-                <TableCell>Контакты</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell>Настройки</TableCell>
-                    <TableCell>Дата регистрации</TableCell>
-                <TableCell align="right">Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {clients.map((client) => (
-                <TableRow key={client.id} hover>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                        {getInitials(client.user?.first_name, client.user?.last_name)}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight="medium">
-                          {client.user?.first_name && client.user?.last_name 
-                            ? `${client.user.first_name} ${client.user.last_name}`
-                            : 'Имя не указано'
-                          }
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Клиент</TableCell>
+              <TableCell>Контакты</TableCell>
+              <TableCell>Автомобили</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell>Дата регистрации</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {clients.map((client) => (
+              <TableRow key={client.id}>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      {getInitials(client)}
+                    </Avatar>
+                    <Box>
+                      <Typography>
+                        {client.firstName} {client.lastName}
+                      </Typography>
+                      {client.middleName && (
+                        <Typography variant="body2" color="textSecondary">
+                          {client.middleName}
                         </Typography>
-                        {client.user?.middle_name && (
-                          <Typography variant="body2" color="text.secondary">
-                            {client.user.middle_name}
-                          </Typography>
-                        )}
-                      </Box>
-                        </Box>
-                      </TableCell>
-                  
-                      <TableCell>
-                    <Box>
-                      {client.user?.email && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <EmailIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            {client.user.email}
-                          </Typography>
-                          {client.user.email_verified && (
-                            <VerifiedIcon fontSize="small" sx={{ ml: 0.5, color: 'success.main' }} />
-                          )}
-                        </Box>
-                      )}
-                      {client.user?.phone && (
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <PhoneIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            {client.user.phone}
-                          </Typography>
-                          {client.user.phone_verified && (
-                            <VerifiedIcon fontSize="small" sx={{ ml: 0.5, color: 'success.main' }} />
-                          )}
-                        </Box>
                       )}
                     </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Chip
-                      label={client.user?.is_active ? 'Активен' : 'Заблокирован'}
-                      color={client.user?.is_active ? 'success' : 'error'}
-                      size="small"
-                      icon={client.user?.is_active ? <VerifiedIcon /> : <CancelIcon />}
-                    />
-                      </TableCell>
-                  
-                      <TableCell>
-                    <Box>
-                      <Typography variant="body2">
-                        Уведомления: push
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Маркетинг: Нет
-                      </Typography>
+                  </Box>
+                </TableCell>
+
+                <TableCell>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <EmailIcon color="action" fontSize="small" />
+                      <Typography variant="body2">{client.email}</Typography>
                     </Box>
-                  </TableCell>
-                  
-                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <PhoneIcon color="action" fontSize="small" />
+                      <Typography variant="body2">{client.phone}</Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Badge 
+                      badgeContent={client.cars?.length || 0} 
+                      color="primary"
+                      sx={{ '& .MuiBadge-badge': { fontSize: '0.8rem' } }}
+                    >
+                      <CarIcon color="action" />
+                    </Badge>
                     <Typography variant="body2">
-                      {client.user?.created_at 
-                        ? new Date(client.user.created_at).toLocaleDateString('ru-RU')
-                        : 'Не указана'
+                      {client.cars?.length 
+                        ? `${client.cars.length} ${client.cars.length === 1 ? 'автомобиль' : 'автомобиля'}`
+                        : 'Нет автомобилей'
                       }
                     </Typography>
-                    {client.user?.last_login && (
-                      <Typography variant="body2" color="text.secondary">
-                        Последний вход: {new Date(client.user.last_login).toLocaleDateString('ru-RU')}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Редактировать">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/clients/${client.id}/edit`)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      <Tooltip title="Удалить">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick({
-                            id: client.id,
-                            name: client.user?.first_name && client.user?.last_name 
-                              ? `${client.user.first_name} ${client.user.last_name}`
-                              : client.user?.email || 'Клиент'
-                          })}
-                          disabled={deleteLoading}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              
-              {clients.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      {search ? 'Клиенты не найдены' : 'Нет клиентов'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </Box>
+                </TableCell>
 
-        {/* Пагинация */}
+                <TableCell>
+                  <Chip
+                    icon={client.isActive ? <VerifiedIcon /> : <CancelIcon />}
+                    label={client.isActive ? 'Активен' : 'Неактивен'}
+                    color={client.isActive ? 'success' : 'error'}
+                    size="small"
+                  />
+                </TableCell>
+
+                <TableCell>
+                  <Typography variant="body2">
+                    {formatDate(client.createdAt)}
+                  </Typography>
+                </TableCell>
+
+                <TableCell align="right">
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <Tooltip title="Редактировать">
+                      <IconButton 
+                        onClick={() => navigate(`/clients/${client.id}/edit`)}
+                        size="small"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton
+                        onClick={() => handleDeleteClick(client)}
+                        size="small"
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         <TablePagination
           component="div"
           count={totalItems}
-                  page={page}
+          page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => 
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
         />
-      </Paper>
+      </TableContainer>
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить клиента "{selectedClient?.name}"?
-            Это действие нельзя отменить.
+            Вы действительно хотите удалить клиента{' '}
+            {selectedClient?.firstName} {selectedClient?.lastName}?
+            Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Удаление...' : 'Удалить'}
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
           </Button>
         </DialogActions>
       </Dialog>
