@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -37,11 +37,12 @@ import {
   Star as StarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import { fetchServicePoints, deleteServicePoint } from '../../store/slices/servicePointsSlice';
-import { useGetRegionsQuery } from '../../api/regions';
-import { useGetCitiesQuery } from '../../api/cities';
+import { 
+  useGetServicePointsQuery,
+  useDeleteServicePointMutation,
+  useGetRegionsQuery,
+  useGetCitiesQuery,
+} from '../../api';
 
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -58,21 +59,23 @@ const ServicePointsPage: React.FC = () => {
   const [selectedServicePoint, setSelectedServicePoint] = useState<{ id: number; name: string; partner_id: number } | null>(null);
 
   // RTK Query хуки
-  const { data: regionsData } = useGetRegionsQuery();
-  const { data: citiesData } = useGetCitiesQuery(
+  const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
     { region_id: selectedRegionId || undefined }, 
     { skip: !selectedRegionId }
   );
+  const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
+    search,
+    city_id: selectedCityId || undefined,
+    region_id: selectedRegionId || undefined,
+    page: page + 1,
+    per_page: rowsPerPage,
+  });
+  const [deleteServicePoint, { isLoading: isDeleting }] = useDeleteServicePointMutation();
 
-  const dispatch = useDispatch();
-  const servicePoints = useSelector((state: RootState) => state.servicePoints.servicePoints);
-  const totalItems = useSelector((state: RootState) => state.servicePoints.totalItems);
-  const isLoading = useSelector((state: RootState) => state.servicePoints.isLoading);
-  const error = useSelector((state: RootState) => state.servicePoints.error);
-
-  useEffect(() => {
-    dispatch(fetchServicePoints());
-  }, [dispatch]);
+  const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
+  const servicePoints = servicePointsData?.data || [];
+  const totalItems = servicePointsData?.meta?.total || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,10 +112,10 @@ const ServicePointsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedServicePoint) {
       try {
-        await dispatch(deleteServicePoint({ 
+        await deleteServicePoint({ 
           partner_id: selectedServicePoint.partner_id, 
           id: selectedServicePoint.id 
-        }));
+        }).unwrap();
         setDeleteDialogOpen(false);
         setSelectedServicePoint(null);
       } catch (error) {
@@ -214,162 +217,92 @@ const ServicePointsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица сервисных точек */}
-      <Paper>
-        <TableContainer>
-          <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Название</TableCell>
-                    <TableCell>Партнер</TableCell>
-                    <TableCell>Адрес</TableCell>
-                <TableCell>Контакты</TableCell>
-                <TableCell>Статистика</TableCell>
-                <TableCell align="right">Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-              {servicePoints.map((servicePoint) => (
-                <TableRow key={servicePoint.id} hover>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="subtitle1" fontWeight="medium">
-                        {servicePoint.name}
-                      </Typography>
-                      {servicePoint.description && (
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          {servicePoint.description}
-                        </Typography>
-                      )}
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BusinessIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                      <Typography variant="body2">
-                        {servicePoint.partner?.company_name || 'Не указан'}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <LocationIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                        <Typography variant="body2">
-                          {servicePoint.address}
-                        </Typography>
-                      </Box>
-                      {servicePoint.city && (
-                        <Typography variant="body2" color="text.secondary">
-                          {servicePoint.city.name}
-                          {servicePoint.city.region && `, ${servicePoint.city.region.name}`}
-                        </Typography>
-                      )}
-                    </Box>
-                      </TableCell>
-                  
-                      <TableCell>
-                    <Box>
-                      {servicePoint.contact_phone && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <PhoneIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            {servicePoint.contact_phone}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                      </TableCell>
-                  
-                      <TableCell>
-                    <Box>
-                      <Typography variant="body2">
-                        Постов: {servicePoint.post_count || 1}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Рейтинг: {servicePoint.average_rating?.toFixed(1) || '0.0'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Клиентов: {servicePoint.total_clients_served || 0}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell align="right">
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Редактировать">
-                        <IconButton
-                            size="small"
-                          onClick={() => navigate(`/service-points/${servicePoint.id}/edit`)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      <Tooltip title="Удалить">
-                        <IconButton
-                            size="small"
-                          onClick={() => handleDeleteClick({
-                            id: servicePoint.id,
-                            name: servicePoint.name,
-                            partner_id: servicePoint.partner_id
-                          })}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              
-              {servicePoints.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      {search || selectedCityId ? 'Сервисные точки не найдены' : 'Нет сервисных точек'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-        
-        {/* Пагинация */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Название</TableCell>
+              <TableCell>Адрес</TableCell>
+              <TableCell>Контакты</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {servicePoints.map((servicePoint) => (
+              <TableRow key={servicePoint.id}>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <BusinessIcon color="action" />
+                    <Typography>{servicePoint.name}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationIcon color="action" />
+                    <Typography>{servicePoint.address}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PhoneIcon color="action" />
+                    <Typography>{servicePoint.contact_phone}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <StarIcon color={servicePoint.is_active ? "primary" : "disabled"} />
+                    <Typography>{servicePoint.is_active ? 'Активна' : 'Неактивна'}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell align="right">
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <Tooltip title="Редактировать">
+                      <IconButton 
+                        onClick={() => navigate(`/service-points/${servicePoint.partner_id}/${servicePoint.id}/edit`)}
+                        size="small"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton
+                        onClick={() => handleDeleteClick(servicePoint)}
+                        size="small"
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         <TablePagination
           component="div"
           count={totalItems}
-                page={page}
+          page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => 
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
         />
-      </Paper>
+      </TableContainer>
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить сервисную точку "{selectedServicePoint?.name}"?
-            Это действие нельзя отменить.
+            Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
+            Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-          >
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Удалить
           </Button>
         </DialogActions>
