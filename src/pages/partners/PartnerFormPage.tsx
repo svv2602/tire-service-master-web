@@ -82,18 +82,18 @@ const PartnerFormPage: React.FC = () => {
 
   const formik = useFormik<FormValues>({
     initialValues: {
-      company_name: '',
+    company_name: '',
       company_description: '',
       contact_person: '',
       logo_url: '',
       website: '',
       tax_number: '',
       legal_address: '',
-      region_id: '',
-      city_id: '',
+    region_id: '',
+    city_id: '',
       user: isEdit ? undefined : {
         email: '',
-        phone: '',
+    phone: '',
         first_name: '',
         last_name: '',
         password: '',
@@ -125,7 +125,7 @@ const PartnerFormPage: React.FC = () => {
             last_name: values.user.last_name,
             password: values.user.password || undefined,
           };
-        }
+      }
 
         if (isEdit) {
           await updatePartner({ id: Number(id), data: submitData }).unwrap();
@@ -165,10 +165,10 @@ const PartnerFormPage: React.FC = () => {
       setSelectedRegionId(regionId);
     } else if (regionId && regionId !== '' && typeof regionId === 'string') {
       setSelectedRegionId(Number(regionId));
-    } else {
+      } else {
       setSelectedRegionId(undefined);
       formik.setFieldValue('city_id', '');
-    }
+      }
   }, [formik.values.region_id]);
 
   if (partnerLoading) {
@@ -194,9 +194,9 @@ const PartnerFormPage: React.FC = () => {
         </Button>
         <Typography variant="h4">
           {isEdit ? 'Редактировать партнера' : 'Создать партнера'}
-        </Typography>
-      </Box>
-
+      </Typography>
+          </Box>
+          
       <form onSubmit={formik.handleSubmit}>
         <Paper sx={{ p: 3 }}>
           <Grid container spacing={3}>
@@ -209,11 +209,11 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField
+            <TextField
                 fullWidth
-                required
-                name="company_name"
-                label="Название компании"
+              required
+              name="company_name"
+              label="Название компании"
                 value={formik.values.company_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -232,7 +232,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
                 helperText={formik.touched.contact_person && formik.errors.contact_person}
-              />
+            />
             </Grid>
 
             <Grid item xs={12}>
@@ -322,44 +322,44 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Регион</InputLabel>
-                <Select
-                  name="region_id"
+            <FormControl fullWidth>
+              <InputLabel>Регион</InputLabel>
+              <Select
+                name="region_id"
                   value={formik.values.region_id?.toString() || ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.region_id && Boolean(formik.errors.region_id)}
-                >
-                  <MenuItem value="">Не выбран</MenuItem>
+              >
+                <MenuItem value="">Не выбран</MenuItem>
                   {regionsData?.regions?.map((region) => (
-                    <MenuItem key={region.id} value={region.id.toString()}>
-                      {region.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <MenuItem key={region.id} value={region.id.toString()}>
+                    {region.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Город</InputLabel>
-                <Select
-                  name="city_id"
+            <FormControl fullWidth>
+              <InputLabel>Город</InputLabel>
+              <Select
+                name="city_id"
                   value={formik.values.city_id?.toString() || ''}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                   disabled={!formik.values.region_id}
-                >
-                  <MenuItem value="">Не выбран</MenuItem>
+              >
+                <MenuItem value="">Не выбран</MenuItem>
                   {citiesData?.cities?.map((city) => (
-                    <MenuItem key={city.id} value={city.id.toString()}>
-                      {city.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <MenuItem key={city.id} value={city.id.toString()}>
+                    {city.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             </Grid>
 
             {/* Данные пользователя (только при создании) */}
@@ -373,8 +373,8 @@ const PartnerFormPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+            <TextField
+              fullWidth
                     required
                     name="user.first_name"
                     label="Имя"
@@ -387,8 +387,8 @@ const PartnerFormPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+            <TextField
+              fullWidth
                     required
                     name="user.last_name"
                     label="Фамилия"
@@ -397,16 +397,16 @@ const PartnerFormPage: React.FC = () => {
                     onBlur={formik.handleBlur}
                     error={formik.touched.user?.last_name && Boolean(formik.errors.user?.last_name)}
                     helperText={formik.touched.user?.last_name && formik.errors.user?.last_name}
-                  />
+            />
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+            <TextField
+              fullWidth
                     required
                     type="email"
                     name="user.email"
-                    label="Email"
+              label="Email"
                     value={formik.values.user?.email || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -416,8 +416,8 @@ const PartnerFormPage: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+            <TextField
+              fullWidth
                     required
                     name="user.phone"
                     label="Телефон"
@@ -427,12 +427,12 @@ const PartnerFormPage: React.FC = () => {
                     onBlur={formik.handleBlur}
                     error={formik.touched.user?.phone && Boolean(formik.errors.user?.phone)}
                     helperText={formik.touched.user?.phone && formik.errors.user?.phone}
-                  />
+            />
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
+            <TextField
+              fullWidth
                     type="password"
                     name="user.password"
                     label="Пароль (оставьте пустым для автогенерации)"
@@ -441,7 +441,7 @@ const PartnerFormPage: React.FC = () => {
                     onBlur={formik.handleBlur}
                     error={formik.touched.user?.password && Boolean(formik.errors.user?.password)}
                     helperText={formik.touched.user?.password && formik.errors.user?.password}
-                  />
+            />
                 </Grid>
               </>
             )}
@@ -449,25 +449,25 @@ const PartnerFormPage: React.FC = () => {
             {/* Кнопки действий */}
             <Grid item xs={12}>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/partners')}
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/partners')}
                   disabled={isLoading}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
+          >
+            Отмена
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
                   startIcon={<SaveIcon />}
                   disabled={isLoading || !formik.isValid}
-                >
+          >
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
-                </Button>
-              </Box>
+          </Button>
+        </Box>
             </Grid>
           </Grid>
-        </Paper>
+      </Paper>
       </form>
     </Box>
   );

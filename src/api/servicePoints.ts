@@ -59,7 +59,7 @@ export const servicePointsApi = createApi({
         const queryParams = params || {};
         return {
           url: 'service_points',
-          params: {
+      params: {
             partner_id: queryParams.partner_id,
             manager_id: queryParams.manager_id,
             city_id: queryParams.city_id,

@@ -148,42 +148,42 @@ const ClientsPage: React.FC = () => {
 
       {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <TextField
+          <TextField
           placeholder="Поиск по email, имени или фамилии"
-          variant="outlined"
+            variant="outlined"
           size="small"
           value={search}
           onChange={handleSearchChange}
           sx={{ minWidth: 400 }}
-          InputProps={{
+            InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
       </Paper>
 
       {/* Таблица клиентов */}
       <Paper>
         <TableContainer>
           <Table>
-            <TableHead>
-              <TableRow>
+                <TableHead>
+                  <TableRow>
                 <TableCell>Клиент</TableCell>
                 <TableCell>Контакты</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>Настройки</TableCell>
-                <TableCell>Дата регистрации</TableCell>
+                    <TableCell>Дата регистрации</TableCell>
                 <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {clients.map((client) => (
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {clients.map((client) => (
                 <TableRow key={client.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
                         {getInitials(client.user?.first_name, client.user?.last_name)}
                       </Avatar>
@@ -200,10 +200,10 @@ const ClientsPage: React.FC = () => {
                           </Typography>
                         )}
                       </Box>
-                    </Box>
-                  </TableCell>
+                        </Box>
+                      </TableCell>
                   
-                  <TableCell>
+                      <TableCell>
                     <Box>
                       {client.user?.email && (
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
@@ -237,9 +237,9 @@ const ClientsPage: React.FC = () => {
                       size="small"
                       icon={client.user?.is_active ? <VerifiedIcon /> : <CancelIcon />}
                     />
-                  </TableCell>
+                      </TableCell>
                   
-                  <TableCell>
+                      <TableCell>
                     <Box>
                       <Typography variant="body2">
                         Уведомления: {client.preferred_notification_method || 'push'}
@@ -247,10 +247,10 @@ const ClientsPage: React.FC = () => {
                       <Typography variant="body2" color="text.secondary">
                         Маркетинг: {client.marketing_consent ? 'Да' : 'Нет'}
                       </Typography>
-                    </Box>
-                  </TableCell>
+                        </Box>
+                      </TableCell>
                   
-                  <TableCell>
+                      <TableCell>
                     <Typography variant="body2">
                       {client.user?.created_at 
                         ? new Date(client.user.created_at).toLocaleDateString('ru-RU')
@@ -291,9 +291,9 @@ const ClientsPage: React.FC = () => {
                         </IconButton>
                       </Tooltip>
                     </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
               
               {clients.length === 0 && (
                 <TableRow>
@@ -304,15 +304,15 @@ const ClientsPage: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
+                </TableBody>
+              </Table>
+            </TableContainer>
+
         {/* Пагинация */}
         <TablePagination
           component="div"
           count={totalItems}
-          page={page}
+                  page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}

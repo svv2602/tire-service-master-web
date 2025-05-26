@@ -225,17 +225,17 @@ const ServicePointsPage: React.FC = () => {
       <Paper>
         <TableContainer>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Название</TableCell>
-                <TableCell>Партнер</TableCell>
-                <TableCell>Адрес</TableCell>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Название</TableCell>
+                    <TableCell>Партнер</TableCell>
+                    <TableCell>Адрес</TableCell>
                 <TableCell>Контакты</TableCell>
                 <TableCell>Статистика</TableCell>
                 <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
               {servicePoints.map((servicePoint) => (
                 <TableRow key={servicePoint.id} hover>
                   <TableCell>
@@ -275,9 +275,9 @@ const ServicePointsPage: React.FC = () => {
                         </Typography>
                       )}
                     </Box>
-                  </TableCell>
+                      </TableCell>
                   
-                  <TableCell>
+                      <TableCell>
                     <Box>
                       {servicePoint.contact_phone && (
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
@@ -288,9 +288,9 @@ const ServicePointsPage: React.FC = () => {
                         </Box>
                       )}
                     </Box>
-                  </TableCell>
+                      </TableCell>
                   
-                  <TableCell>
+                      <TableCell>
                     <Box>
                       <Typography variant="body2">
                         Постов: {servicePoint.post_count || 1}
@@ -305,10 +305,10 @@ const ServicePointsPage: React.FC = () => {
                   </TableCell>
                   
                   <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
                       <Tooltip title="Редактировать">
                         <IconButton
-                          size="small"
+                            size="small"
                           onClick={() => navigate(`/service-points/${servicePoint.id}/edit`)}
                         >
                           <EditIcon />
@@ -317,22 +317,22 @@ const ServicePointsPage: React.FC = () => {
                       
                       <Tooltip title="Удалить">
                         <IconButton
-                          size="small"
+                            size="small"
                           onClick={() => handleDeleteClick({
                             id: servicePoint.id,
                             name: servicePoint.name,
                             partner_id: servicePoint.partner_id
                           })}
                           disabled={deleteLoading}
-                          color="error"
-                        >
+                            color="error"
+                          >
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
               
               {servicePoints.length === 0 && (
                 <TableRow>
@@ -343,15 +343,15 @@ const ServicePointsPage: React.FC = () => {
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                </TableBody>
+              </Table>
+            </TableContainer>
         
         {/* Пагинация */}
         <TablePagination
           component="div"
           count={totalItems}
-          page={page}
+                page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}

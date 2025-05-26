@@ -245,18 +245,18 @@ const BookingsPage: React.FC = () => {
       <Paper>
         <TableContainer>
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Клиент</TableCell>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Клиент</TableCell>
                 <TableCell>Услуга</TableCell>
-                <TableCell>Дата и время</TableCell>
-                <TableCell>Автомобиль</TableCell>
-                <TableCell>Статус</TableCell>
+                    <TableCell>Дата и время</TableCell>
+                    <TableCell>Автомобиль</TableCell>
+                    <TableCell>Статус</TableCell>
                 <TableCell>Стоимость</TableCell>
                 <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
               {bookings.map((booking) => {
                 const statusInfo = BOOKING_STATUSES[booking.status as keyof typeof BOOKING_STATUSES];
                 const StatusIcon = statusInfo?.icon || PendingIcon;
@@ -300,9 +300,9 @@ const BookingsPage: React.FC = () => {
                           </Typography>
                         </Box>
                       </Box>
-                    </TableCell>
+                      </TableCell>
                     
-                    <TableCell>
+                        <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <EventIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
                         <Box>
@@ -314,9 +314,9 @@ const BookingsPage: React.FC = () => {
                           </Typography>
                         </Box>
                       </Box>
-                    </TableCell>
+                        </TableCell>
                     
-                    <TableCell>
+                        <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <CarIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
                         <Box>
@@ -330,18 +330,18 @@ const BookingsPage: React.FC = () => {
                           )}
                         </Box>
                       </Box>
-                    </TableCell>
+                        </TableCell>
                     
-                    <TableCell>
-                      <Chip
+                        <TableCell>
+                          <Chip
                         label={statusInfo?.label || booking.status}
                         color={statusInfo?.color || 'default'}
-                        size="small"
+                            size="small"
                         icon={<StatusIcon />}
-                      />
-                    </TableCell>
+                          />
+                        </TableCell>
                     
-                    <TableCell>
+                        <TableCell>
                       <Typography variant="body2" fontWeight="medium">
                         {booking.total_price 
                           ? `${booking.total_price.toLocaleString('ru-RU')} ₽`
@@ -432,18 +432,18 @@ const BookingsPage: React.FC = () => {
                     <Typography variant="body1" color="text.secondary">
                       {search || statusFilter ? 'Бронирования не найдены' : 'Нет бронирований'}
                     </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
+                        </TableCell>
+                      </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
         {/* Пагинация */}
         <TablePagination
           component="div"
           count={totalItems}
-          page={page}
+                  page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
