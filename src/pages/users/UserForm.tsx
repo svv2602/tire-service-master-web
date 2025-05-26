@@ -17,9 +17,11 @@ import {
   Divider
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../store';
-import { fetchUserById, createUser, updateUser, clearError } from '../../store/slices/usersSlice';
+import { 
+  useGetUserByIdQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+} from '../../api';
 import { UserRole } from '../../types';
 
 interface UserFormData {
@@ -50,37 +52,39 @@ const UserForm: React.FC = () => {
   const userId = isEditMode ? parseInt(id, 10) : 0;
 
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const { selectedUser, loading, error } = useSelector((state: RootState) => state.users);
-
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Загрузка данных пользователя при редактировании
-  useEffect(() => {
-    if (isEditMode) {
-      dispatch(fetchUserById(userId));
-    } else {
-      // Сброс формы при создании нового пользователя
-      setFormData(initialFormData);
-    }
-  }, [dispatch, isEditMode, userId]);
+  const { 
+    data: userData,
+    isLoading: isLoadingUser,
+    error: userError 
+  } = useGetUserByIdQuery(userId, {
+    skip: !isEditMode
+  });
+
+  const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+
+  const isLoading = isLoadingUser || isCreating || isUpdating;
+  const error = userError;
 
   // Заполнение формы данными пользователя
   useEffect(() => {
-    if (isEditMode && selectedUser) {
+    if (isEditMode && userData?.data) {
+      const user = userData.data;
       setFormData({
-        email: selectedUser.email || '',
-        first_name: selectedUser.first_name || '',
-        last_name: selectedUser.last_name || '',
-        phone: selectedUser.phone || '',
-        role: selectedUser.role || UserRole.CLIENT,
-        is_active: selectedUser.is_active === true,
+        email: user.email || '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        phone: user.phone || '',
+        role: user.role || UserRole.CLIENT,
+        is_active: user.is_active === true,
         password: '',
         password_confirmation: ''
       });
     }
-  }, [isEditMode, selectedUser]);
+  }, [isEditMode, userData]);
 
   // Обработка изменения полей формы
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,20 +188,18 @@ const UserForm: React.FC = () => {
 
     try {
       if (isEditMode) {
-        await dispatch(updateUser({ id: userId, data: userData })).unwrap();
-        navigate('/users');
+        await updateUser({ id: userId, data: userData }).unwrap();
       } else {
-        await dispatch(createUser(userData)).unwrap();
-        navigate('/users');
+        await createUser(userData).unwrap();
       }
+      navigate('/users');
     } catch (error) {
-      // Ошибка обрабатывается в slice
+      console.error('Ошибка при сохранении пользователя:', error);
     }
   };
 
   // Отмена и возврат к списку
   const handleCancel = () => {
-    dispatch(clearError());
     navigate('/users');
   };
 
@@ -210,7 +212,7 @@ const UserForm: React.FC = () => {
       </Box>
 
       <Paper sx={{ p: 3 }}>
-        {loading ? (
+        {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
           </Box>
@@ -218,7 +220,7 @@ const UserForm: React.FC = () => {
           <form onSubmit={handleSubmit}>
             {error && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
+                {error.toString()}
               </Alert>
             )}
 
@@ -276,18 +278,17 @@ const UserForm: React.FC = () => {
               
               <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
                 <FormControl fullWidth>
-                  <InputLabel id="role-label">Роль</InputLabel>
+                  <InputLabel>Роль</InputLabel>
                   <Select
-                    labelId="role-label"
                     name="role"
                     value={formData.role}
                     onChange={handleSelectChange}
                     label="Роль"
                   >
-                    <MenuItem value={UserRole.CLIENT}>Клиент</MenuItem>
-                    <MenuItem value={UserRole.MANAGER}>Менеджер</MenuItem>
-                    <MenuItem value={UserRole.PARTNER}>Партнер</MenuItem>
                     <MenuItem value={UserRole.ADMIN}>Администратор</MenuItem>
+                    <MenuItem value={UserRole.MANAGER}>Менеджер</MenuItem>
+                    <MenuItem value={UserRole.OPERATOR}>Оператор</MenuItem>
+                    <MenuItem value={UserRole.CLIENT}>Клиент</MenuItem>
                   </Select>
                 </FormControl>
               </div>
@@ -301,23 +302,24 @@ const UserForm: React.FC = () => {
                       onChange={handleCheckboxChange}
                     />
                   }
-                  label="Активный пользователь"
+                  label="Активен"
                 />
               </div>
-              
-              <div style={{ width: '100%', padding: '12px', boxSizing: 'border-box' }}>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  {isEditMode ? 'Сменить пароль (оставьте пустым, чтобы не менять)' : 'Пароль'}
-                </Typography>
-              </div>
-              
+            </div>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography variant="h6" gutterBottom>
+              {isEditMode ? 'Изменить пароль' : 'Пароль'}
+            </Typography>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
               <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
                 <TextField
                   fullWidth
+                  type="password"
                   label="Пароль"
                   name="password"
-                  type="password"
                   value={formData.password}
                   onChange={handleInputChange}
                   error={!!formErrors.password}
@@ -329,9 +331,9 @@ const UserForm: React.FC = () => {
               <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
                 <TextField
                   fullWidth
+                  type="password"
                   label="Подтверждение пароля"
                   name="password_confirmation"
-                  type="password"
                   value={formData.password_confirmation}
                   onChange={handleInputChange}
                   error={!!formErrors.password_confirmation}
@@ -340,12 +342,16 @@ const UserForm: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button variant="outlined" onClick={handleCancel}>
+              <Button onClick={handleCancel}>
                 Отмена
               </Button>
-              <Button variant="contained" color="primary" type="submit">
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={isLoading}
+              >
                 {isEditMode ? 'Сохранить' : 'Создать'}
               </Button>
             </Box>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,8 +10,8 @@ import {
   IconButton,
   Card,
   CardMedia,
-  CardActions,
   CardContent,
+  CardActions,
   Divider,
   Dialog,
   DialogActions,
@@ -26,74 +26,62 @@ import {
   OpenInNew as OpenInNewIcon,
   CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { fetchServicePointById, clearError } from '../../store/slices/servicePointsSlice';
 import { useNavigate, useParams } from 'react-router-dom';
-import { servicePointsApi } from '../../api';
+import { 
+  useGetServicePointByIdQuery,
+  useGetServicePointPhotosQuery,
+  useUploadServicePointPhotoMutation,
+  useDeleteServicePointPhotoMutation,
+} from '../../api';
 
 const ServicePointPhotosPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { selectedServicePoint, loading, error } = useSelector((state: RootState) => state.servicePoints);
   
-  const [photos, setPhotos] = useState<any[]>([]);
-  const [photoLoading, setPhotoLoading] = useState<boolean>(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
 
-  const fetchPhotos = useCallback(async () => {
-    if (!id) return;
-    
-    setPhotoLoading(true);
-    setPhotoError(null);
-    
-    try {
-      const response = await servicePointsApi.getPhotos(Number(id));
-      setPhotos(response || []);
-    } catch (error: any) {
-      setPhotoError(error.response?.data?.error || 'Не удалось загрузить фотографии');
-    } finally {
-      setPhotoLoading(false);
-    }
-  }, [id]);
+  const { 
+    data: servicePointResponse,
+    isLoading: servicePointLoading,
+    error: servicePointError 
+  } = useGetServicePointByIdQuery(Number(id), {
+    skip: !id
+  });
 
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchServicePointById(Number(id)));
-      fetchPhotos();
-    }
-    
-    return () => {
-      // Очистка при размонтировании компонента
-      dispatch(clearError());
-    };
-  }, [id, dispatch, fetchPhotos]);
+  const {
+    data: photos,
+    isLoading: photosLoading,
+    error: photosError,
+    refetch: refetchPhotos
+  } = useGetServicePointPhotosQuery(Number(id), {
+    skip: !id
+  });
+
+  const [uploadPhoto] = useUploadServicePointPhotoMutation();
+  const [deletePhoto] = useDeleteServicePointPhotoMutation();
+
+  const servicePoint = servicePointResponse?.data;
+  const isLoading = servicePointLoading || photosLoading;
+  const error = servicePointError || photosError;
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || !files.length || !id) return;
     
     setIsUploading(true);
-    setUploadProgress(0);
-    setPhotoError(null);
     
     const formData = new FormData();
     formData.append('photo', files[0]);
     
     try {
-      await servicePointsApi.uploadPhoto(Number(id), formData);
-      await fetchPhotos();
-    } catch (error: any) {
-      setPhotoError(error.response?.data?.error || 'Не удалось загрузить фотографию');
+      await uploadPhoto({ id: Number(id), photo: formData }).unwrap();
+      await refetchPhotos();
+    } catch (error) {
+      console.error('Ошибка при загрузке фото:', error);
     } finally {
       setIsUploading(false);
-      setUploadProgress(0);
     }
   };
 
@@ -108,16 +96,12 @@ const ServicePointPhotosPage: React.FC = () => {
       return;
     }
     
-    setPhotoLoading(true);
-    setPhotoError(null);
-    
     try {
-      await servicePointsApi.deletePhoto(Number(id), photoToDelete);
-      await fetchPhotos();
-    } catch (error: any) {
-      setPhotoError(error.response?.data?.error || 'Не удалось удалить фотографию');
+      await deletePhoto({ servicePointId: Number(id), photoId: photoToDelete }).unwrap();
+      await refetchPhotos();
+    } catch (error) {
+      console.error('Ошибка при удалении фото:', error);
     } finally {
-      setPhotoLoading(false);
       setDeleteDialogOpen(false);
       setPhotoToDelete(null);
     }
@@ -127,7 +111,7 @@ const ServicePointPhotosPage: React.FC = () => {
     navigate(`/service-points/${id}`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
         <CircularProgress />
@@ -138,8 +122,8 @@ const ServicePointPhotosPage: React.FC = () => {
   if (error) {
     return (
       <Box>
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>
-          {error}
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error.toString()}
         </Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Вернуться назад
@@ -148,7 +132,7 @@ const ServicePointPhotosPage: React.FC = () => {
     );
   }
 
-  if (!selectedServicePoint) {
+  if (!servicePoint) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -165,18 +149,12 @@ const ServicePointPhotosPage: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">
-          Фотографии: {selectedServicePoint.name}
+          Фотографии: {servicePoint.name}
         </Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Назад к точке
         </Button>
       </Box>
-
-      {photoError && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setPhotoError(null)}>
-          {photoError}
-        </Alert>
-      )}
 
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -207,7 +185,7 @@ const ServicePointPhotosPage: React.FC = () => {
           
           {isUploading && (
             <Box sx={{ mt: 2, width: '100%' }}>
-              <CircularProgress variant="determinate" value={uploadProgress} />
+              <CircularProgress />
             </Box>
           )}
         </Box>
@@ -220,14 +198,14 @@ const ServicePointPhotosPage: React.FC = () => {
         <Divider />
       </Box>
 
-      {photoLoading ? (
+      {photosLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress />
         </Box>
-      ) : photos.length > 0 ? (
+      ) : photos && photos.length > 0 ? (
         <Grid container spacing={3}>
           {photos.map((photo) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={photo.id}>
+            <Grid item xs={12} sm={6} md={4} key={photo.id}>
               <Card>
                 <CardMedia
                   component="img"
@@ -250,11 +228,11 @@ const ServicePointPhotosPage: React.FC = () => {
                   >
                     <OpenInNewIcon />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     color="error"
-                    aria-label="удалить"
                     onClick={() => handleDeleteClick(photo.id)}
+                    aria-label="удалить фото"
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -264,11 +242,9 @@ const ServicePointPhotosPage: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" color="text.secondary">
-            У этой сервисной точки еще нет фотографий
-          </Typography>
-        </Box>
+        <Typography variant="body1" color="text.secondary" align="center">
+          Нет загруженных фотографий
+        </Typography>
       )}
 
       {/* Диалог подтверждения удаления */}
@@ -279,12 +255,12 @@ const ServicePointPhotosPage: React.FC = () => {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Вы уверены, что хотите удалить эту фотографию? Это действие нельзя отменить.
+            Вы действительно хотите удалить это фото? Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
             Удалить
           </Button>
         </DialogActions>

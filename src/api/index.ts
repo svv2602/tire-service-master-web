@@ -66,11 +66,12 @@ export * from './partners.api';
 export * from './servicePoints.api';
 export * from './regions.api';
 export * from './cities.api';
-export * from './carBrands.api';
-export * from './carModels.api';
-export * from './services.api';
 export * from './bookings.api';
 export * from './clients.api';
+export * from './carBrands.api';
+export * from './carModels.api';
+export * from './users.api';
+export * from './services.api';
 export * from './reviews.api';
 export * from './schedule.api';
 

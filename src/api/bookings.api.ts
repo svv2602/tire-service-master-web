@@ -1,9 +1,6 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
 import { Booking, BookingFormData, BookingFilter, BookingStatus } from '../types/booking';
-
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
 
 export const bookingsApi = baseApi.injectEndpoints({
   endpoints: (build: BuilderType) => ({

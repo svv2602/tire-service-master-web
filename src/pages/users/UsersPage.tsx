@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -21,7 +21,8 @@ import {
   TableRow,
   Chip,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -30,37 +31,41 @@ import {
   Delete as DeleteIcon,
   Person as PersonIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import { AppDispatch } from '../../store';
-import { fetchUsers, deleteUser, changeUserStatus } from '../../store/slices/usersSlice';
 import { useNavigate } from 'react-router-dom';
+import { 
+  useGetUsersQuery,
+  useDeleteUserMutation,
+  useUpdateUserStatusMutation,
+} from '../../api';
 
 const UsersPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { users, loading, error, totalItems } = useSelector((state: RootState) => state.users);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
-  const loadUsers = useCallback(() => {
-    dispatch(fetchUsers({
-      page,
-      per_page: pageSize,
-      query: searchQuery || undefined,
-    }));
-  }, [dispatch, page, pageSize, searchQuery]);
+  const { 
+    data: usersData,
+    isLoading,
+    error,
+    refetch
+  } = useGetUsersQuery({
+    page,
+    per_page: pageSize,
+    query: searchQuery || undefined,
+  });
 
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+  const [deleteUser] = useDeleteUserMutation();
+  const [updateUserStatus] = useUpdateUserStatusMutation();
+
+  const users = usersData?.data || [];
+  const totalItems = usersData?.meta?.total || 0;
 
   const handleSearch = () => {
-    setPage(1); // Сбрасываем на первую страницу при поиске
-    loadUsers();
+    setPage(1);
+    refetch();
   };
 
   const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,8 +97,12 @@ const UsersPage: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     if (userToDelete) {
-      await dispatch(deleteUser(userToDelete));
-      loadUsers();
+      try {
+        await deleteUser(userToDelete).unwrap();
+        await refetch();
+      } catch (error) {
+        console.error('Ошибка при удалении пользователя:', error);
+      }
     }
     setDeleteDialogOpen(false);
     setUserToDelete(null);
@@ -105,7 +114,12 @@ const UsersPage: React.FC = () => {
   };
 
   const handleChangeStatus = async (id: number, isActive: boolean) => {
-    await dispatch(changeUserStatus({ id, isActive: !isActive }));
+    try {
+      await updateUserStatus({ id, is_active: !isActive }).unwrap();
+      await refetch();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса пользователя:', error);
+    }
   };
 
   // Вспомогательные функции для отображения роли
@@ -121,7 +135,7 @@ const UsersPage: React.FC = () => {
     }
   };
   
-  const getRoleColor = (role?: string): string => {
+  const getRoleColor = (role?: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
     if (!role) return 'default';
     
     switch(role) {
@@ -171,17 +185,19 @@ const UsersPage: React.FC = () => {
       </Paper>
 
       <Paper>
-        {loading ? (
+        {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
           </Box>
         ) : error ? (
-          <Box sx={{ p: 3, color: 'error.main' }}>
-            <Typography>Ошибка: {error}</Typography>
+          <Box sx={{ p: 3 }}>
+            <Alert severity="error">
+              Ошибка при загрузке пользователей: {error.toString()}
+            </Alert>
           </Box>
         ) : (
           <>
-            <TableContainer component={Paper}>
+            <TableContainer>
               <Table sx={{ minWidth: 650 }} aria-label="table of users">
                 <TableHead>
                   <TableRow>
@@ -209,7 +225,7 @@ const UsersPage: React.FC = () => {
                       <TableCell>
                         <Chip 
                           label={getRoleName(user.role)}
-                          color={getRoleColor(user.role) as 'error' | 'warning' | 'primary' | 'success' | 'default'} 
+                          color={getRoleColor(user.role)} 
                           size="small" 
                           icon={<PersonIcon />}
                         />
@@ -253,8 +269,7 @@ const UsersPage: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Divider />
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
               <Pagination
                 count={Math.ceil(totalItems / pageSize)}
                 page={page}
@@ -267,13 +282,13 @@ const UsersPage: React.FC = () => {
       </Paper>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+      >
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
-          <Typography>Вы действительно хотите удалить этого пользователя?</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Это действие удалит пользователя и все связанные с ним данные. Данное действие нельзя отменить.
-          </Typography>
+          Вы действительно хотите удалить этого пользователя? Это действие нельзя будет отменить.
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Отмена</Button>
