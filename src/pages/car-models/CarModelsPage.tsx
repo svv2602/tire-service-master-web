@@ -32,52 +32,50 @@ import {
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  LocationOn as LocationIcon,
-  Phone as PhoneIcon,
-  Business as BusinessIcon,
-  FilterList as FilterIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  DirectionsCar as CarIcon,
+  CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
-  useGetServicePointsQuery, 
-  useDeleteServicePointMutation 
-} from '../../api/servicePoints';
-import { useGetRegionsQuery } from '../../api/regions';
-import { useGetCitiesQuery } from '../../api/cities';
+  useGetCarModelsQuery, 
+  useDeleteCarModelMutation,
+  useToggleCarModelActiveMutation
+} from '../../api/carModels';
+import { useGetCarBrandsQuery } from '../../api/carBrands';
 
-const ServicePointsPage: React.FC = () => {
+const CarModelsPage: React.FC = () => {
   const navigate = useNavigate();
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
-  const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
-  const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
+  const [brandFilter, setBrandFilter] = useState<number | ''>('');
+  const [activeFilter, setActiveFilter] = useState<boolean | ''>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedServicePoint, setSelectedServicePoint] = useState<{ id: number; name: string; partner_id: number } | null>(null);
+  const [selectedModel, setSelectedModel] = useState<{ id: number; name: string; brand_id: number } | null>(null);
 
   // RTK Query хуки
   const { 
-    data: servicePointsData, 
+    data: modelsData, 
     isLoading, 
     error 
-  } = useGetServicePointsQuery({
+  } = useGetCarModelsQuery({
     query: search || undefined,
-    city_id: selectedCityId || undefined,
+    brand_id: brandFilter || undefined,
+    is_active: activeFilter !== '' ? activeFilter : undefined,
     page: page + 1, // API использует 1-based пагинацию
     per_page: rowsPerPage,
   });
 
-  const { data: regionsData } = useGetRegionsQuery();
-  const { data: citiesData } = useGetCitiesQuery(
-    { region_id: selectedRegionId || undefined }, 
-    { skip: !selectedRegionId }
-  );
+  const { data: brandsData } = useGetCarBrandsQuery({ is_active: true });
 
-  const [deleteServicePoint, { isLoading: deleteLoading }] = useDeleteServicePointMutation();
+  const [deleteModel, { isLoading: deleteLoading }] = useDeleteCarModelMutation();
+  const [toggleActive, { isLoading: toggleActiveLoading }] = useToggleCarModelActiveMutation();
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,15 +83,13 @@ const ServicePointsPage: React.FC = () => {
     setPage(0); // Сбрасываем на первую страницу при поиске
   };
 
-  const handleRegionChange = (event: any) => {
-    const regionId = event.target.value;
-    setSelectedRegionId(regionId);
-    setSelectedCityId(''); // Сбрасываем выбранный город
+  const handleBrandFilterChange = (event: any) => {
+    setBrandFilter(event.target.value);
     setPage(0);
   };
 
-  const handleCityChange = (event: any) => {
-    setSelectedCityId(event.target.value);
+  const handleActiveFilterChange = (event: any) => {
+    setActiveFilter(event.target.value);
     setPage(0);
   };
 
@@ -106,29 +102,34 @@ const ServicePointsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (servicePoint: { id: number; name: string; partner_id: number }) => {
-    setSelectedServicePoint(servicePoint);
+  const handleDeleteClick = (model: { id: number; name: string; brand_id: number }) => {
+    setSelectedModel(model);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedServicePoint) {
+    if (selectedModel) {
       try {
-        await deleteServicePoint({ 
-          partner_id: selectedServicePoint.partner_id, 
-          id: selectedServicePoint.id 
-        }).unwrap();
+        await deleteModel({ brand_id: selectedModel.brand_id, id: selectedModel.id }).unwrap();
         setDeleteDialogOpen(false);
-        setSelectedServicePoint(null);
+        setSelectedModel(null);
       } catch (error) {
-        console.error('Ошибка при удалении сервисной точки:', error);
+        console.error('Ошибка при удалении модели:', error);
       }
     }
   };
 
   const handleCloseDialog = () => {
     setDeleteDialogOpen(false);
-    setSelectedServicePoint(null);
+    setSelectedModel(null);
+  };
+
+  const handleToggleActive = async (brandId: number, id: number, currentActive: boolean) => {
+    try {
+      await toggleActive({ brand_id: brandId, id, active: !currentActive }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса активности:', error);
+    }
   };
 
   // Отображение состояний загрузки и ошибок
@@ -144,26 +145,27 @@ const ServicePointsPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке сервисных точек: {error.toString()}
+          Ошибка при загрузке моделей: {error.toString()}
         </Alert>
       </Box>
     );
   }
 
-  const servicePoints = servicePointsData?.data || [];
-  const totalItems = servicePointsData?.pagination?.total_count || 0;
+  const models = modelsData?.data || [];
+  const totalItems = modelsData?.pagination?.total_count || 0;
+  const brands = brandsData?.data || [];
 
   return (
     <Box sx={{ p: 3 }}>
       {/* Заголовок и кнопка добавления */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Сервисные точки</Typography>
+        <Typography variant="h4">Модели автомобилей</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/service-points/new')}
+          onClick={() => navigate('/car-models/new')}
         >
-          Добавить сервисную точку
+          Добавить модель
         </Button>
       </Box>
 
@@ -171,7 +173,7 @@ const ServicePointsPage: React.FC = () => {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
-            placeholder="Поиск по названию или адресу"
+            placeholder="Поиск по названию модели"
             variant="outlined"
             size="small"
             value={search}
@@ -187,121 +189,108 @@ const ServicePointsPage: React.FC = () => {
           />
           
           <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Регион</InputLabel>
+            <InputLabel>Бренд</InputLabel>
             <Select
-              value={selectedRegionId}
-              onChange={handleRegionChange}
-              label="Регион"
+              value={brandFilter}
+              onChange={handleBrandFilterChange}
+              label="Бренд"
             >
-              <MenuItem value="">Все регионы</MenuItem>
-              {regionsData?.regions?.map((region) => (
-                <MenuItem key={region.id} value={region.id}>
-                  {region.name}
+              <MenuItem value="">Все бренды</MenuItem>
+              {brands.map((brand) => (
+                <MenuItem key={brand.id} value={brand.id}>
+                  {brand.name}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Город</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Статус</InputLabel>
             <Select
-              value={selectedCityId}
-              onChange={handleCityChange}
-              label="Город"
-              disabled={!selectedRegionId}
+              value={activeFilter}
+              onChange={handleActiveFilterChange}
+              label="Статус"
             >
-              <MenuItem value="">Все города</MenuItem>
-              {citiesData?.cities?.map((city) => (
-                <MenuItem key={city.id} value={city.id}>
-                  {city.name}
-                </MenuItem>
-              ))}
+              <MenuItem value="">Все</MenuItem>
+              <MenuItem value={true}>Активные</MenuItem>
+              <MenuItem value={false}>Неактивные</MenuItem>
             </Select>
           </FormControl>
         </Box>
       </Paper>
 
-      {/* Таблица сервисных точек */}
+      {/* Таблица моделей */}
       <Paper>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Название</TableCell>
-                <TableCell>Партнер</TableCell>
-                <TableCell>Адрес</TableCell>
-                <TableCell>Контакты</TableCell>
-                <TableCell>Статистика</TableCell>
+                <TableCell>Модель</TableCell>
+                <TableCell>Бренд</TableCell>
+                <TableCell>Годы выпуска</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell>Дата создания</TableCell>
                 <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {servicePoints.map((servicePoint) => (
-                <TableRow key={servicePoint.id} hover>
+              {models.map((model) => (
+                <TableRow key={model.id} hover>
                   <TableCell>
-                    <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <CarIcon sx={{ mr: 1, color: 'text.secondary' }} />
                       <Typography variant="subtitle1" fontWeight="medium">
-                        {servicePoint.name}
+                        {model.name}
                       </Typography>
-                      {servicePoint.description && (
-                        <Typography variant="body2" color="text.secondary" noWrap>
-                          {servicePoint.description}
-                        </Typography>
-                      )}
                     </Box>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Typography variant="body2">
+                      {model.brand?.name || 'Не указан'}
+                    </Typography>
                   </TableCell>
                   
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <BusinessIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                      <CalendarIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
                       <Typography variant="body2">
-                        {servicePoint.partner?.company_name || 'Не указан'}
+                        {model.year_start && model.year_end 
+                          ? `${model.year_start} - ${model.year_end}`
+                          : model.year_start 
+                            ? `с ${model.year_start}`
+                            : 'Не указаны'
+                        }
                       </Typography>
                     </Box>
                   </TableCell>
                   
                   <TableCell>
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <LocationIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                        <Typography variant="body2">
-                          {servicePoint.address}
-                        </Typography>
-                      </Box>
-                      {servicePoint.city && (
-                        <Typography variant="body2" color="text.secondary">
-                          {servicePoint.city.name}
-                          {servicePoint.city.region && `, ${servicePoint.city.region.name}`}
-                        </Typography>
-                      )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip
+                        label={model.is_active ? 'Активна' : 'Неактивна'}
+                        color={model.is_active ? 'success' : 'default'}
+                        size="small"
+                      />
+                      <Tooltip title={model.is_active ? 'Деактивировать' : 'Активировать'}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleToggleActive(model.brand_id, model.id, model.is_active)}
+                          disabled={toggleActiveLoading}
+                        >
+                          {model.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                   
                   <TableCell>
-                    <Box>
-                      {servicePoint.contact_phone && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                          <PhoneIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                          <Typography variant="body2">
-                            {servicePoint.contact_phone}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2">
-                        Постов: {servicePoint.post_count || 1}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Рейтинг: {servicePoint.average_rating?.toFixed(1) || '0.0'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Клиентов: {servicePoint.total_clients_served || 0}
-                      </Typography>
-                    </Box>
+                    <Typography variant="body2">
+                      {model.created_at 
+                        ? new Date(model.created_at).toLocaleDateString('ru-RU')
+                        : 'Не указана'
+                      }
+                    </Typography>
                   </TableCell>
                   
                   <TableCell align="right">
@@ -309,7 +298,7 @@ const ServicePointsPage: React.FC = () => {
                       <Tooltip title="Редактировать">
                         <IconButton
                           size="small"
-                          onClick={() => navigate(`/service-points/${servicePoint.id}/edit`)}
+                          onClick={() => navigate(`/car-models/${model.id}/edit`)}
                         >
                           <EditIcon />
                         </IconButton>
@@ -319,9 +308,9 @@ const ServicePointsPage: React.FC = () => {
                         <IconButton
                           size="small"
                           onClick={() => handleDeleteClick({
-                            id: servicePoint.id,
-                            name: servicePoint.name,
-                            partner_id: servicePoint.partner_id
+                            id: model.id,
+                            name: model.name,
+                            brand_id: model.brand_id
                           })}
                           disabled={deleteLoading}
                           color="error"
@@ -334,11 +323,11 @@ const ServicePointsPage: React.FC = () => {
                 </TableRow>
               ))}
               
-              {servicePoints.length === 0 && (
+              {models.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                     <Typography variant="body1" color="text.secondary">
-                      {search || selectedCityId ? 'Сервисные точки не найдены' : 'Нет сервисных точек'}
+                      {search || brandFilter || activeFilter !== '' ? 'Модели не найдены' : 'Нет моделей'}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -368,8 +357,8 @@ const ServicePointsPage: React.FC = () => {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить сервисную точку "{selectedServicePoint?.name}"?
-            Это действие нельзя отменить.
+            Вы уверены, что хотите удалить модель "{selectedModel?.name}"?
+            Это действие нельзя отменить и может повлиять на связанные записи.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -388,4 +377,4 @@ const ServicePointsPage: React.FC = () => {
   );
 };
 
-export default ServicePointsPage; 
+export default CarModelsPage; 

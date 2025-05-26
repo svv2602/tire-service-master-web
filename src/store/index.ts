@@ -14,6 +14,11 @@ import dashboardReducer from './slices/dashboardSlice';
 import { partnersApi } from '../api/partners';
 import { regionsApi } from '../api/regions';
 import { citiesApi } from '../api/cities';
+import { servicePointsApi } from '../api/servicePoints';
+import { clientsApi } from '../api/clients';
+import { carBrandsApi } from '../api/carBrands';
+import { carModelsApi } from '../api/carModels';
+import { bookingsApi } from '../api/bookings';
 
 export const store = configureStore({
   reducer: {
@@ -32,14 +37,22 @@ export const store = configureStore({
     [partnersApi.reducerPath]: partnersApi.reducer,
     [regionsApi.reducerPath]: regionsApi.reducer,
     [citiesApi.reducerPath]: citiesApi.reducer,
+    [servicePointsApi.reducerPath]: servicePointsApi.reducer,
+    [clientsApi.reducerPath]: clientsApi.reducer,
+    [carBrandsApi.reducerPath]: carBrandsApi.reducer,
+    [carModelsApi.reducerPath]: carModelsApi.reducer,
+    [bookingsApi.reducerPath]: bookingsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }).concat(
+    getDefaultMiddleware().concat(
       partnersApi.middleware,
       regionsApi.middleware,
-      citiesApi.middleware
+      citiesApi.middleware,
+      servicePointsApi.middleware,
+      clientsApi.middleware,
+      carBrandsApi.middleware,
+      carModelsApi.middleware,
+      bookingsApi.middleware,
     ),
 });
 
