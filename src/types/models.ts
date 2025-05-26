@@ -288,3 +288,14 @@ export interface ServicePointStatus extends BaseModel {
   is_active: boolean;
   sort_order: number;
 }
+
+export interface ServicePointService {
+  id: number;
+  service_point_id: number;
+  service_id: number;
+  price: number;
+  duration: number;
+  is_available: boolean;
+  created_at: string;
+  updated_at: string;
+}

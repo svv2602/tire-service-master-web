@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetPartnersQuery } from '../../api/partners';
-import { useGetServicePointsQuery } from '../../api/servicePoints';
+import { useGetServicePointsQuery } from '../../api';
 import { useGetClientsQuery } from '../../api/clients';
 import { useGetBookingsQuery } from '../../api/bookings';
 import { useGetCarBrandsQuery } from '../../api/carBrands';

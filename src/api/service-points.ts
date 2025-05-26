@@ -1,6 +1,5 @@
-import { AxiosResponse } from 'axios';
-import apiClient from './api';
-import { ApiResponse } from '../types/api';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
 import { ServicePoint } from '../types/models';
 import { CreateServicePointRequest, UpdateServicePointRequest } from '../types/api-requests';
 
@@ -15,50 +14,65 @@ interface QueryParams {
   is_active?: boolean;
 }
 
-export const servicePointsApi = {
-  getAll: async (params?: QueryParams): Promise<ApiResponse<ServicePoint[]>> => {
-    const response = await apiClient.get<ApiResponse<ServicePoint[]>>('/service-points', { params });
-    return response.data;
-  },
+export const servicePointsApi = createApi({
+  reducerPath: 'servicePointsApi',
+  baseQuery,
+  tagTypes: ['ServicePoints'],
+  endpoints: (builder) => ({
+    getServicePoints: builder.query<{ data: ServicePoint[] }, QueryParams>({
+      query: (params) => ({
+        url: '/service-points',
+        params,
+      }),
+      providesTags: ['ServicePoints'],
+    }),
 
-  getById: async (id: number): Promise<ApiResponse<ServicePoint>> => {
-    const response = await apiClient.get<ApiResponse<ServicePoint>>(`/service-points/${id}`);
-    return response.data;
-  },
+    getServicePointById: builder.query<{ data: ServicePoint }, number>({
+      query: (id) => `/service-points/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'ServicePoints', id }],
+    }),
 
-  create: async (partnerId: number, data: CreateServicePointRequest): Promise<ApiResponse<ServicePoint>> => {
-    const response = await apiClient.post<ApiResponse<ServicePoint>>(`/partners/${partnerId}/service-points`, data);
-    return response.data;
-  },
+    createServicePoint: builder.mutation<{ data: ServicePoint }, { partnerId: number; data: CreateServicePointRequest }>({
+      query: ({ partnerId, data }) => ({
+        url: `/partners/${partnerId}/service-points`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['ServicePoints'],
+    }),
 
-  update: async (partnerId: number, id: number, data: UpdateServicePointRequest): Promise<ApiResponse<ServicePoint>> => {
-    const response = await apiClient.put<ApiResponse<ServicePoint>>(`/partners/${partnerId}/service-points/${id}`, data);
-    return response.data;
-  },
+    updateServicePoint: builder.mutation<{ data: ServicePoint }, { partnerId: number; id: number; data: UpdateServicePointRequest }>({
+      query: ({ partnerId, id, data }) => ({
+        url: `/partners/${partnerId}/service-points/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'ServicePoints', id }],
+    }),
 
-  delete: async (partnerId: number, id: number): Promise<void> => {
-    await apiClient.delete(`/partners/${partnerId}/service-points/${id}`);
-  },
+    deleteServicePoint: builder.mutation<void, { partnerId: number; id: number }>({
+      query: ({ partnerId, id }) => ({
+        url: `/partners/${partnerId}/service-points/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ServicePoints'],
+    }),
 
-  findNearby: async (latitude: number, longitude: number, distance: number): Promise<ApiResponse<ServicePoint[]>> => {
-    const response = await apiClient.get<ApiResponse<ServicePoint[]>>('/service-points/nearby', {
-      params: { latitude, longitude, distance }
-    });
-    return response.data;
-  },
+    findNearbyServicePoints: builder.query<{ data: ServicePoint[] }, { latitude: number; longitude: number; distance: number }>({
+      query: (params) => ({
+        url: '/service-points/nearby',
+        params,
+      }),
+      providesTags: ['ServicePoints'],
+    }),
+  }),
+});
 
-  uploadPhoto: async (id: number, photoData: FormData): Promise<ApiResponse<{ id: number; url: string }>> => {
-    const response = await apiClient.post<ApiResponse<{ id: number; url: string }>>(
-      `/service-points/${id}/photos`,
-      photoData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      }
-    );
-    return response.data;
-  },
-
-  deletePhoto: async (servicePointId: number, photoId: number): Promise<void> => {
-    await apiClient.delete(`/service-points/${servicePointId}/photos/${photoId}`);
-  }
-}; 
+export const {
+  useGetServicePointsQuery,
+  useGetServicePointByIdQuery,
+  useCreateServicePointMutation,
+  useUpdateServicePointMutation,
+  useDeleteServicePointMutation,
+  useFindNearbyServicePointsQuery,
+} = servicePointsApi; 

@@ -11,14 +11,16 @@ import clientsReducer from './slices/clientsSlice';
 import bookingsReducer from './slices/bookingsSlice';
 import servicesReducer from './slices/servicesSlice';
 import dashboardReducer from './slices/dashboardSlice';
-import { partnersApi } from '../api/partners';
-import { regionsApi } from '../api/regions';
-import { citiesApi } from '../api/cities';
-import { servicePointsApi } from '../api/servicePoints';
-import { clientsApi } from '../api/clients';
-import { carBrandsApi } from '../api/carBrands';
-import { carModelsApi } from '../api/carModels';
-import { bookingsApi } from '../api/bookings';
+import {
+  partnersApi,
+  regionsApi,
+  citiesApi,
+  servicePointsApi,
+  clientsApi,
+  carBrandsApi,
+  carModelsApi,
+  bookingsApi,
+} from '../api';
 
 export const store = configureStore({
   reducer: {

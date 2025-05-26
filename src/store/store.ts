@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import {
   partnersApi,
   citiesApi,
@@ -20,8 +21,19 @@ import {
   servicePointServicesApi,
 } from '../api';
 
+import authReducer from './slices/authSlice';
+import partnersReducer from './slices/partnersSlice';
+import servicePointsReducer from './slices/servicePointsSlice';
+import regionsReducer from './slices/regionsSlice';
+import citiesReducer from './slices/citiesSlice';
+
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
+    partners: partnersReducer,
+    servicePoints: servicePointsReducer,
+    regions: regionsReducer,
+    cities: citiesReducer,
     [partnersApi.reducerPath]: partnersApi.reducer,
     [citiesApi.reducerPath]: citiesApi.reducer,
     [regionsApi.reducerPath]: regionsApi.reducer,
@@ -36,10 +48,10 @@ export const store = configureStore({
     [tireTypesApi.reducerPath]: tireTypesApi.reducer,
     [carTypesApi.reducerPath]: carTypesApi.reducer,
     [reviewsApi.reducerPath]: reviewsApi.reducer,
-    [scheduleApi.reducerPath]: scheduleApi.reducer,
     [serviceCategoriesApi.reducerPath]: serviceCategoriesApi.reducer,
-    [servicePointPhotosApi.reducerPath]: servicePointPhotosApi.reducer,
+    [scheduleApi.reducerPath]: scheduleApi.reducer,
     [servicePointServicesApi.reducerPath]: servicePointServicesApi.reducer,
+    [servicePointPhotosApi.reducerPath]: servicePointPhotosApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -62,4 +74,9 @@ export const store = configureStore({
       servicePointPhotosApi.middleware,
       servicePointServicesApi.middleware,
     ),
-}); 
+});
+
+setupListeners(store.dispatch);
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch; 

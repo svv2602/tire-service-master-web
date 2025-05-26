@@ -1,48 +1,57 @@
 import apiClient from './api';
-import { authApi, partnersApi, servicePointsApi, clientsApi, referencesApi, citiesApi, regionsApi } from './api';
-import { bookingsApi, Booking, BookingService, BookingFilters } from './bookings';
-import { settingsApi, SystemSettings } from './settings';
-import { usersApi, User, UserProfile, UserCredentials, PasswordReset } from './users';
-
-// Экспорт всех API
-export {
-  apiClient,
-  authApi,
-  partnersApi,
-  servicePointsApi,
-  clientsApi,
-  referencesApi,
-  bookingsApi,
-  settingsApi,
-  usersApi,
-  citiesApi,
-  regionsApi
-};
-
-// Экспорт типов
-export type {
-  Booking,
-  BookingService,
-  BookingFilters,
-  SystemSettings,
-  User,
-  UserProfile,
-  UserCredentials,
-  PasswordReset
-};
+import { authApi } from './auth';
+import { partnersApi, useGetPartnersQuery } from './partners';
+import { servicePointsApi, useGetServicePointsQuery } from './service-points';
+import { citiesApi } from './cities';
+import { regionsApi } from './regions';
+import { serviceCategoriesApi, useGetServiceCategoriesQuery } from './serviceCategories';
+import { scheduleApi, useGetScheduleQuery } from './schedule';
+import { servicePointServicesApi, useGetServicePointServicesQuery } from './servicePointServices';
+import { servicePointPhotosApi, useGetServicePointPhotosQuery } from './servicePointPhotos';
+import { bookingsApi, useGetBookingsQuery } from './bookings';
+import { clientsApi, useGetClientsQuery } from './clients';
+import { settingsApi } from './settings';
+import { usersApi } from './users';
+import { carBrandsApi } from './carBrands';
+import { carModelsApi } from './carModels';
+import { dashboardApi } from './dashboard';
+import { tireTypesApi } from './tireTypes';
+import { carTypesApi } from './carTypes';
+import { reviewsApi } from './reviews';
 
 // Настройка API URL
 export const setupApiBaseUrl = (baseUrl: string) => {
   apiClient.defaults.baseURL = baseUrl;
 };
 
-// По умолчанию экспортируем apiClient
-export default apiClient;
-
-export * from './tireTypes';
-export * from './carTypes';
-export * from './reviews';
-export * from './schedule';
-export * from './serviceCategories';
-export * from './servicePointPhotos';
-export * from './servicePointServices';
+// Экспорт всех API и хуков
+export {
+  apiClient,
+  authApi,
+  partnersApi,
+  useGetPartnersQuery,
+  servicePointsApi,
+  useGetServicePointsQuery,
+  citiesApi,
+  regionsApi,
+  serviceCategoriesApi,
+  useGetServiceCategoriesQuery,
+  scheduleApi,
+  useGetScheduleQuery,
+  servicePointServicesApi,
+  useGetServicePointServicesQuery,
+  servicePointPhotosApi,
+  useGetServicePointPhotosQuery,
+  bookingsApi,
+  useGetBookingsQuery,
+  clientsApi,
+  useGetClientsQuery,
+  settingsApi,
+  usersApi,
+  carBrandsApi,
+  carModelsApi,
+  dashboardApi,
+  tireTypesApi,
+  carTypesApi,
+  reviewsApi,
+};

@@ -18,6 +18,9 @@ import {
   FormControlLabel,
   Switch,
   InputAdornment,
+  Card,
+  CardContent,
+  CardActions,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -30,10 +33,13 @@ import { fetchRegions } from '../../store/slices/regionsSlice';
 import { fetchCities } from '../../store/slices/citiesSlice';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
-import { useGetServiceCategoriesQuery } from '../../store/api/serviceCategoriesApi';
-import { useGetScheduleQuery } from '../../store/api/scheduleApi';
-import { useGetServicePointServicesQuery } from '../../store/api/servicePointServicesApi';
-import { useGetServicePointPhotosQuery } from '../../store/api/servicePointPhotosApi';
+import {
+  useGetServiceCategoriesQuery,
+  useGetScheduleQuery,
+  useGetServicePointServicesQuery,
+  useGetServicePointPhotosQuery,
+} from '../../api';
+import { ServiceCategory } from '../../types/models';
 
 // Схема валидации
 const validationSchema = yup.object({
@@ -87,6 +93,7 @@ interface ServicePointFormData {
   default_slot_duration: number;
   latitude?: number | null;
   longitude?: number | null;
+  status_id: number;
   schedule: Array<{
     day_of_week: number;
     start_time: string;
@@ -112,6 +119,19 @@ const mockServicePointStatuses = [
   { id: 2, name: 'Приостановлена', color: '#ff9800' },
   { id: 3, name: 'Заблокирована', color: '#f44336' },
 ];
+
+const getDayName = (dayOfWeek: number): string => {
+  const days = [
+    'Воскресенье',
+    'Понедельник',
+    'Вторник',
+    'Среда',
+    'Четверг',
+    'Пятница',
+    'Суббота'
+  ];
+  return days[dayOfWeek % 7];
+};
 
 const ServicePointFormPage: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
@@ -196,6 +216,7 @@ const ServicePointFormPage: React.FC = () => {
     default_slot_duration: selectedServicePoint?.default_slot_duration || 30,
     latitude: selectedServicePoint?.latitude || null,
     longitude: selectedServicePoint?.longitude || null,
+    status_id: selectedServicePoint?.status_id || 1,
     schedule: scheduleData?.data || [
       { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_working_day: true },
       { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_working_day: true },
@@ -285,13 +306,13 @@ const ServicePointFormPage: React.FC = () => {
         ) : (
           <form onSubmit={formik.handleSubmit}>
             <Grid container spacing={3}>
-              <Grid size={{ xs: 12 }}>
+              <Grid component="div" xs={12}>
                 <Typography variant="h6" gutterBottom>
                   Основная информация
                 </Typography>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="name"
@@ -305,7 +326,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}>
                   <InputLabel id="partner-id-label">Партнер</InputLabel>
                   <Select
@@ -330,7 +351,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid component="div" xs={12}>
                 <TextField
                   fullWidth
                   id="description"
@@ -346,14 +367,14 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid component="div" xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Контактная информация
                 </Typography>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
                   <InputLabel id="region-id-label">Регион</InputLabel>
                   <Select
@@ -375,7 +396,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.city_id && Boolean(formik.errors.city_id)}>
                   <InputLabel id="city-id-label">Город</InputLabel>
                   <Select
@@ -400,7 +421,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12}>
                 <TextField
                   fullWidth
                   id="contact_phone"
@@ -414,7 +435,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid component="div" xs={12}>
                 <TextField
                   fullWidth
                   id="address"
@@ -428,7 +449,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="latitude"
@@ -443,7 +464,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid component="div" xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="longitude"
@@ -458,14 +479,14 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12 }}>
+              <Grid component="div" xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Параметры обслуживания
                 </Typography>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid component="div" xs={12} md={4}>
                 <FormControl fullWidth error={formik.touched.status_id && Boolean(formik.errors.status_id)}>
                   <InputLabel id="status-id-label">Статус</InputLabel>
                   <Select
@@ -488,7 +509,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid component="div" xs={12} md={4}>
                 <TextField
                   fullWidth
                   id="post_count"
@@ -503,7 +524,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid size={{ xs: 12, md: 4 }}>
+              <Grid component="div" xs={12} md={4}>
                 <TextField
                   fullWidth
                   id="default_slot_duration"
@@ -518,7 +539,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   График работы
@@ -526,14 +547,14 @@ const ServicePointFormPage: React.FC = () => {
               </Grid>
 
               {formik.values.schedule.map((scheduleItem, index) => (
-                <Grid item xs={12} md={6} key={scheduleItem.day_of_week}>
+                <Grid component="div" xs={12} md={6} key={scheduleItem.day_of_week}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Typography variant="subtitle1" gutterBottom>
                       {getDayName(scheduleItem.day_of_week)}
                     </Typography>
                     
                     <Grid container spacing={2}>
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
@@ -552,7 +573,7 @@ const ServicePointFormPage: React.FC = () => {
 
                       {scheduleItem.is_working_day && (
                         <>
-                          <Grid item xs={6}>
+                          <Grid component="div" xs={6}>
                             <TextField
                               fullWidth
                               type="time"
@@ -564,7 +585,7 @@ const ServicePointFormPage: React.FC = () => {
                               InputLabelProps={{ shrink: true }}
                             />
                           </Grid>
-                          <Grid item xs={6}>
+                          <Grid component="div" xs={6}>
                             <TextField
                               fullWidth
                               type="time"
@@ -583,7 +604,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Услуги и цены
@@ -591,10 +612,10 @@ const ServicePointFormPage: React.FC = () => {
               </Grid>
 
               {formik.values.services.map((service, index) => (
-                <Grid item xs={12} md={6} key={service.service_id}>
+                <Grid component="div" xs={12} md={6} key={service.service_id}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Grid container spacing={2}>
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <FormControl fullWidth>
                           <InputLabel>Услуга</InputLabel>
                           <Select
@@ -604,7 +625,7 @@ const ServicePointFormPage: React.FC = () => {
                             }}
                             label="Услуга"
                           >
-                            {servicesData?.data.map((serviceItem) => (
+                            {servicesData?.data.map((serviceItem: ServiceCategory) => (
                               <MenuItem key={serviceItem.id} value={serviceItem.id}>
                                 {serviceItem.name}
                               </MenuItem>
@@ -613,7 +634,7 @@ const ServicePointFormPage: React.FC = () => {
                         </FormControl>
                       </Grid>
 
-                      <Grid item xs={6}>
+                      <Grid component="div" xs={6}>
                         <TextField
                           fullWidth
                           type="number"
@@ -628,7 +649,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={6}>
+                      <Grid component="div" xs={6}>
                         <TextField
                           fullWidth
                           type="number"
@@ -643,7 +664,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
@@ -664,7 +685,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Button
                   variant="outlined"
                   onClick={() => {
@@ -683,7 +704,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Button>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Фотографии
@@ -691,10 +712,10 @@ const ServicePointFormPage: React.FC = () => {
               </Grid>
 
               {formik.values.photos.map((photo, index) => (
-                <Grid item xs={12} md={4} key={index}>
+                <Grid component="div" xs={12} md={4} key={index}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Grid container spacing={2}>
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <img
                           src={photo.url}
                           alt={photo.description || 'Фото сервисной точки'}
@@ -702,7 +723,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <TextField
                           fullWidth
                           label="URL фотографии"
@@ -713,7 +734,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <TextField
                           fullWidth
                           label="Описание"
@@ -724,14 +745,13 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
                               <Switch
                                 checked={photo.is_main}
                                 onChange={(e) => {
-                                  // Если включаем главное фото, выключаем у остальных
                                   if (e.target.checked) {
                                     formik.values.photos.forEach((_, i) => {
                                       if (i !== index) {
@@ -749,7 +769,7 @@ const ServicePointFormPage: React.FC = () => {
                         </FormControl>
                       </Grid>
 
-                      <Grid item xs={12}>
+                      <Grid component="div" xs={12}>
                         <Button
                           color="error"
                           onClick={() => {
@@ -766,7 +786,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Button
                   variant="outlined"
                   onClick={() => {
@@ -775,7 +795,7 @@ const ServicePointFormPage: React.FC = () => {
                       {
                         url: '',
                         description: '',
-                        is_main: formik.values.photos.length === 0, // Первое фото будет главным
+                        is_main: formik.values.photos.length === 0,
                       },
                     ]);
                   }}
@@ -784,7 +804,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Button>
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid component="div" xs={12}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                   <Button onClick={handleBack}>
                     Отмена
