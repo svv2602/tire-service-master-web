@@ -51,7 +51,7 @@ const CarModelsPage: React.FC = () => {
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
   const [brandFilter, setBrandFilter] = useState<number | ''>('');
-  const [activeFilter, setActiveFilter] = useState<boolean | ''>('');
+  const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
@@ -67,8 +67,8 @@ const CarModelsPage: React.FC = () => {
   } = useGetCarModelsQuery({
     query: search || undefined,
     brand_id: brandFilter || undefined,
-    is_active: activeFilter !== '' ? activeFilter : undefined,
-    page: page + 1, // API использует 1-based пагинацию
+    is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
+    page: page + 1,
     per_page: rowsPerPage,
   });
 
@@ -110,7 +110,7 @@ const CarModelsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedModel) {
       try {
-        await deleteModel({ brand_id: selectedModel.brand_id, id: selectedModel.id }).unwrap();
+        await deleteModel(selectedModel.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedModel(null);
       } catch (error) {
@@ -124,9 +124,9 @@ const CarModelsPage: React.FC = () => {
     setSelectedModel(null);
   };
 
-  const handleToggleActive = async (brandId: number, id: number, currentActive: boolean) => {
+  const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
-      await toggleActive({ brand_id: brandId, id, active: !currentActive }).unwrap();
+      await toggleActive({ id, active: !currentActive }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса активности:', error);
     }
@@ -212,8 +212,8 @@ const CarModelsPage: React.FC = () => {
               label="Статус"
             >
               <MenuItem value="">Все</MenuItem>
-              <MenuItem value={true}>Активные</MenuItem>
-              <MenuItem value={false}>Неактивные</MenuItem>
+              <MenuItem value="true">Активные</MenuItem>
+              <MenuItem value="false">Неактивные</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -275,7 +275,7 @@ const CarModelsPage: React.FC = () => {
                       <Tooltip title={model.is_active ? 'Деактивировать' : 'Активировать'}>
                         <IconButton
                           size="small"
-                          onClick={() => handleToggleActive(model.brand_id, model.id, model.is_active)}
+                          onClick={() => handleToggleActive(model.id, model.is_active)}
                           disabled={toggleActiveLoading}
                         >
                           {model.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}

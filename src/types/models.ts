@@ -12,11 +12,13 @@ export interface User extends BaseModel {
   email: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
   phone?: string;
   role: string;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
+  last_login?: string;
 }
 
 // Модель партнера
@@ -225,6 +227,8 @@ export interface Client extends BaseModel {
   user: User;
   cars: Car[];
   bookings_count: number;
+  preferred_notification_method?: string;
+  marketing_consent?: boolean;
 }
 
 export interface Car extends BaseModel {
@@ -240,19 +244,35 @@ export interface Car extends BaseModel {
 
 // Бронирования
 export interface Booking extends BaseModel {
+  id: number;
   client_id: number;
-  client: Client;
+  client?: {
+    user?: {
+      first_name?: string;
+      last_name?: string;
+      phone?: string;
+    };
+  };
   service_point_id: number;
-  service_point: ServicePoint;
-  car_id: number;
-  car: Car;
-  services: BookingService[];
-  booking_status: BookingStatus;
-  payment_status: PaymentStatus;
-  total_price: number;
-  start_time: string;
-  end_time: string;
-  cancellation_reason?: string;
+  service_point?: {
+    name: string;
+    address: string;
+  };
+  car_id?: number;
+  car_type_id: number;
+  car_brand?: {
+    name: string;
+  };
+  car_model?: {
+    name: string;
+  };
+  car_year?: number;
+  service_type?: {
+    name: string;
+  };
+  status: string;
+  scheduled_at: string;
+  total_price?: number;
   notes?: string;
 }
 

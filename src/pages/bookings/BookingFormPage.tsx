@@ -29,8 +29,8 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { bookingsApi, Booking, BookingService } from '../../api/bookings';
-import { User, UserRole } from '../../types';
+import { bookingsApi, useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings';
+import { User, UserRole, Booking } from '../../types';
 
 // Типы для формы бронирования
 interface ServiceSelection {
@@ -51,6 +51,9 @@ const BookingFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  
+  const [createBooking] = useCreateBookingMutation();
+  const [updateBooking] = useUpdateBookingMutation();
   
   const isEditMode = !!id;
   
@@ -271,73 +274,44 @@ const BookingFormPage: React.FC = () => {
   // Отправка формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Валидация формы
-    if (!clientId || !servicePointId || !carId || !carTypeId || !selectedDate || !selectedTimeSlot) {
+    if (!clientId || !servicePointId || !carTypeId || !selectedTimeSlot) {
       setError('Пожалуйста, заполните все обязательные поля');
-      return;
-    }
-    
-    if (services.length === 0) {
-      setError('Добавьте хотя бы одну услугу');
       return;
     }
     
     setSaving(true);
     setError(null);
     
-    try {
-      // Получаем ID клиента из текущего пользователя
-      const currentClientId = user?.client_id;
-      if (!currentClientId) {
-        throw new Error('Необходим ID клиента для создания/обновления бронирования');
-      }
-
-      // Подготовка данных для отправки
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      
-      const bookingData: Partial<Booking> = {
-        client_id: currentClientId,
-        service_point_id: servicePointId,
-        car_id: carId,
-        car_type_id: carTypeId,
-        booking_date: formattedDate,
-        start_time: selectedTimeSlot.start_time,
-        end_time: selectedTimeSlot.end_time,
-        notes: notes,
-        total_price: totalPrice,
-      };
-      
-      // Подготовка данных услуг
-      const bookingServices: Partial<BookingService>[] = services.map(service => ({
+    const bookingData = {
+      client_id: clientId,
+      service_point_id: servicePointId,
+      car_id: carId || undefined,
+      car_type_id: carTypeId,
+      slot_id: selectedTimeSlot.id,
+      booking_date: format(selectedDate!, 'yyyy-MM-dd'),
+      start_time: selectedTimeSlot.start_time,
+      end_time: selectedTimeSlot.end_time,
+      notes: notes || undefined,
+      services: services.map(service => ({
         service_id: service.service_id,
-        price: service.price,
         quantity: service.quantity,
-      }));
-       // Отправка данных на сервер
+        price: service.price
+      }))
+    };
+    
+    try {
       if (isEditMode && id) {
-        // Обновление существующего бронирования
-        await bookingsApi.update(clientId, parseInt(id), { 
-          booking: bookingData, 
-          services: bookingServices 
-        });
-        setSuccess('Бронирование успешно обновлено');
+        await updateBooking({ id: parseInt(id), data: bookingData }).unwrap();
       } else {
-        // Создание нового бронирования
-        await bookingsApi.create(clientId, {
-          booking: bookingData,
-          services: bookingServices
-        });
-        setSuccess('Бронирование успешно создано');
+        await createBooking(bookingData).unwrap();
       }
       
-      // Переход к списку бронирований после короткой задержки
+      setSuccess('Бронирование успешно сохранено');
       setTimeout(() => {
         navigate('/bookings');
       }, 1500);
-    } catch (error) {
-      console.error('Error saving booking:', error);
-      setError('Не удалось сохранить бронирование. Пожалуйста, попробуйте снова.');
+    } catch (error: any) {
+      setError(error.data?.message || 'Произошла ошибка при сохранении бронирования');
     } finally {
       setSaving(false);
     }

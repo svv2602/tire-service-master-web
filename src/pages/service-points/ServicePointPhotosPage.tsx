@@ -31,7 +31,7 @@ import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
 import { fetchServicePointById, clearError } from '../../store/slices/servicePointsSlice';
 import { useNavigate, useParams } from 'react-router-dom';
-import { servicePointsApi } from '../../api/api';
+import { servicePointsApi } from '../../api';
 
 const ServicePointPhotosPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

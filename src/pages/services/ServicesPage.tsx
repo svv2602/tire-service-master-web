@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -32,15 +32,10 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
-import { fetchServices, fetchServiceCategories, deleteService } from '../../store/slices/servicesSlice';
+import { useGetServicesQuery, useDeleteServiceMutation, useGetServiceCategoriesQuery } from '../../api';
 import { Service } from '../../types/models';
 
 const ServicesPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { services, serviceCategories, loading, error, totalItems } = useSelector((state: RootState) => state.services);
-  
   // Состояние страницы
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -49,31 +44,16 @@ const ServicesPage: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
   
-  const loadServices = useCallback(async () => {
-    try {
-      const params: any = {
-        page: page + 1,
-        per_page: rowsPerPage,
-      };
-      
-      if (searchQuery) {
-        params.query = searchQuery;
-      }
-      
-      if (categoryFilter !== '') {
-        params.category_id = categoryFilter;
-      }
-      
-      await dispatch(fetchServices(params));
-    } catch (error) {
-      console.error('Ошибка при загрузке услуг:', error);
-    }
-  }, [dispatch, page, rowsPerPage, searchQuery, categoryFilter]);
+  // RTK Query хуки
+  const { data: servicesData, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery({
+    page: page + 1,
+    per_page: rowsPerPage,
+    query: searchQuery || undefined,
+    category_id: categoryFilter || undefined,
+  });
   
-  useEffect(() => {
-    dispatch(fetchServiceCategories());
-    loadServices();
-  }, [dispatch, loadServices]);
+  const { data: categoriesData } = useGetServiceCategoriesQuery();
+  const [deleteService] = useDeleteServiceMutation();
   
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -105,19 +85,13 @@ const ServicesPage: React.FC = () => {
     setEditingService(null);
   };
   
-  // Функции CRUD для услуг (заглушка)
-  const handleSaveService = () => {
-    // Реализация сохранения/обновления услуги через API
-    handleCloseDialog();
-    loadServices();
-  };
-  
-  const handleDeleteService = (id: number) => {
-    // Реализация удаления услуги через API
+  const handleDeleteService = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
-      console.log('Удаляем услугу:', id);
-      dispatch(deleteService(id));
-      loadServices();
+      try {
+        await deleteService(id).unwrap();
+      } catch (error) {
+        console.error('Ошибка при удалении услуги:', error);
+      }
     }
   };
   
@@ -128,9 +102,9 @@ const ServicesPage: React.FC = () => {
         Управление услугами
       </Typography>
       
-      {error && (
+      {servicesError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
+          {servicesError instanceof Error ? servicesError.message : 'Произошла ошибка при загрузке услуг'}
         </Alert>
       )}
       
@@ -164,7 +138,7 @@ const ServicesPage: React.FC = () => {
               <MenuItem value="">
                 <em>Все категории</em>
               </MenuItem>
-              {serviceCategories.map((category) => (
+              {categoriesData?.data.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>
@@ -200,132 +174,69 @@ const ServicesPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading ? (
+              {isLoadingServices ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : (
-                services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell>{service.id}</TableCell>
-                    <TableCell>{service.name}</TableCell>
-                    <TableCell>{service.category?.name || 'Нет категории'}</TableCell>
-                    <TableCell>{service.default_duration}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={service.is_active ? 'Активна' : 'Неактивна'}
-                        color={service.is_active ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        aria-label="редактировать"
-                        onClick={() => handleOpenDialog(service)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        aria-label="удалить"
-                        onClick={() => handleDeleteService(service.id)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-              {!loading && services.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    Услуги не найдены
+              ) : servicesData?.data.map((service) => (
+                <TableRow key={service.id}>
+                  <TableCell>{service.id}</TableCell>
+                  <TableCell>{service.name}</TableCell>
+                  <TableCell>
+                    {categoriesData?.data.find(cat => cat.id === service.category_id)?.name}
+                  </TableCell>
+                  <TableCell>{service.duration}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={service.is_active ? 'Активна' : 'Неактивна'}
+                      color={service.is_active ? 'success' : 'default'}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenDialog(service)}
+                      title="Редактировать"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteService(service.id)}
+                      title="Удалить"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
-              )}
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
-        
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25, 50]}
+          rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={totalItems}
+          count={servicesData?.total || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
         />
       </Paper>
       
-      {/* Диалог добавления/редактирования услуги */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      {/* Диалог создания/редактирования услуги */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>
-          {editingService ? 'Редактирование услуги' : 'Добавление новой услуги'}
+          {editingService ? 'Редактирование услуги' : 'Создание новой услуги'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Название услуги"
-              fullWidth
-              value={editingService?.name || ''}
-              // onChange здесь должен обновлять состояние editingService
-            />
-            
-            <TextField
-              label="Описание"
-              fullWidth
-              multiline
-              rows={3}
-              value={editingService?.description || ''}
-              // onChange здесь должен обновлять состояние editingService
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Категория</InputLabel>
-              <Select
-                value={editingService?.category_id || ''}
-                label="Категория"
-                // onChange здесь должен обновлять состояние editingService
-              >
-                {serviceCategories.map((category) => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <TextField
-              label="Длительность (мин)"
-              type="number"
-              fullWidth
-              value={editingService?.default_duration || 30}
-              // onChange здесь должен обновлять состояние editingService
-            />
-            
-            <FormControl fullWidth>
-              <InputLabel>Статус</InputLabel>
-              <Select
-                value={editingService?.is_active ? 1 : 0}
-                label="Статус"
-                // onChange здесь должен обновлять состояние editingService
-              >
-                <MenuItem value={1}>Активна</MenuItem>
-                <MenuItem value={0}>Неактивна</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+          {/* Форма редактирования/создания */}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleSaveService} variant="contained" color="primary">
+          <Button variant="contained" onClick={handleCloseDialog}>
             Сохранить
           </Button>
         </DialogActions>

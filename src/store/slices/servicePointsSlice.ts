@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { ServicePoint } from '../../types/models';
-import { servicePointsApi } from '../../api/api';
+import { servicePointsApi } from '../../api';
 
 // Локальный интерфейс состояния, использующий правильный тип ServicePoint
 interface ServicePointsState {
@@ -31,16 +31,19 @@ export const fetchServicePoints = createAsyncThunk(
       const servicePointFilters = {
         ...filters,
         search: query, // Переименовываем query в search
+        page,
+        per_page
       };
       
-      const response = await servicePointsApi.getAll(servicePointFilters, page, per_page);
-      console.log('API Response:', response);
+      const response = await servicePointsApi.endpoints.getServicePoints.initiate(servicePointFilters);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось загрузить точки обслуживания');
+      }
       
-      // Обрабатываем ответ API согласно реальному формату
       return {
-        servicePoints: response.data || [],
-        totalItems: response.pagination?.total_count || 0,
-        pagination: response.pagination || null
+        servicePoints: response.data.data,
+        totalItems: response.data.pagination.total_count,
+        pagination: response.data.pagination
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить точки обслуживания');
@@ -52,8 +55,11 @@ export const fetchServicePointById = createAsyncThunk(
   'servicePoints/fetchServicePointById',
   async (id: number, { rejectWithValue }) => {
     try {
-      const response = await servicePointsApi.getById(id);
-      return response;
+      const response = await servicePointsApi.endpoints.getServicePoint.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось найти точку обслуживания');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти точку обслуживания');
     }
@@ -64,8 +70,11 @@ export const createServicePoint = createAsyncThunk(
   'servicePoints/createServicePoint',
   async ({ partnerId, data }: { partnerId: number; data: any }, { rejectWithValue }) => {
     try {
-      const response = await servicePointsApi.create(partnerId, data);
-      return response;
+      const response = await servicePointsApi.endpoints.createServicePoint.initiate({ partnerId, data });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось создать точку обслуживания');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать точку обслуживания');
     }
@@ -76,8 +85,11 @@ export const updateServicePoint = createAsyncThunk(
   'servicePoints/updateServicePoint',
   async ({ partnerId, id, data }: { partnerId: number; id: number; data: any }, { rejectWithValue }) => {
     try {
-      const response = await servicePointsApi.update(partnerId, id, data);
-      return response;
+      const response = await servicePointsApi.endpoints.updateServicePoint.initiate({ partnerId, id, data });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось обновить точку обслуживания');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить точку обслуживания');
     }
@@ -88,7 +100,10 @@ export const deleteServicePoint = createAsyncThunk(
   'servicePoints/deleteServicePoint',
   async ({ partnerId, id }: { partnerId: number; id: number }, { rejectWithValue }) => {
     try {
-      await servicePointsApi.delete(partnerId, id);
+      const response = await servicePointsApi.endpoints.deleteServicePoint.initiate({ partnerId, id });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось удалить точку обслуживания');
+      }
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось удалить точку обслуживания');
@@ -100,10 +115,13 @@ export const fetchServicePointPhotos = createAsyncThunk(
   'servicePoints/fetchServicePointPhotos',
   async (id: number, { rejectWithValue }) => {
     try {
-      const response = await servicePointsApi.getPhotos(id);
+      const response = await servicePointsApi.endpoints.getServicePointPhotos.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось загрузить фотографии');
+      }
       return {
         servicePointId: id,
-        photos: response
+        photos: response.data
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить фотографии');
@@ -115,10 +133,13 @@ export const uploadServicePointPhoto = createAsyncThunk(
   'servicePoints/uploadServicePointPhoto',
   async ({ id, photoData }: { id: number; photoData: FormData }, { rejectWithValue }) => {
     try {
-      const response = await servicePointsApi.uploadPhoto(id, photoData);
+      const response = await servicePointsApi.endpoints.uploadServicePointPhoto.initiate({ id, photoData });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось загрузить фотографию');
+      }
       return {
         servicePointId: id,
-        photo: response
+        photo: response.data
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить фотографию');
@@ -130,7 +151,10 @@ export const deleteServicePointPhoto = createAsyncThunk(
   'servicePoints/deleteServicePointPhoto',
   async ({ servicePointId, photoId }: { servicePointId: number; photoId: number }, { rejectWithValue }) => {
     try {
-      await servicePointsApi.deletePhoto(servicePointId, photoId);
+      const response = await servicePointsApi.endpoints.deleteServicePointPhoto.initiate({ servicePointId, photoId });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось удалить фотографию');
+      }
       return {
         servicePointId,
         photoId,

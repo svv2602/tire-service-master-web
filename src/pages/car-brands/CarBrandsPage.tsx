@@ -52,8 +52,8 @@ const CarBrandsPage: React.FC = () => {
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState<boolean | ''>('');
-  const [popularFilter, setPopularFilter] = useState<boolean | ''>('');
+  const [activeFilter, setActiveFilter] = useState<string>('');
+  const [popularFilter, setPopularFilter] = useState<string>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
@@ -68,8 +68,8 @@ const CarBrandsPage: React.FC = () => {
     error 
   } = useGetCarBrandsQuery({
     query: search || undefined,
-    is_active: activeFilter !== '' ? activeFilter : undefined,
-    is_popular: popularFilter !== '' ? popularFilter : undefined,
+    is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
+    is_popular: popularFilter !== '' ? popularFilter === 'true' : undefined,
     page: page + 1, // API использует 1-based пагинацию
     per_page: rowsPerPage,
   });
@@ -204,8 +204,8 @@ const CarBrandsPage: React.FC = () => {
               label="Статус"
             >
               <MenuItem value="">Все</MenuItem>
-              <MenuItem value={true}>Активные</MenuItem>
-              <MenuItem value={false}>Неактивные</MenuItem>
+              <MenuItem value="true">Активные</MenuItem>
+              <MenuItem value="false">Неактивные</MenuItem>
             </Select>
           </FormControl>
 
@@ -217,8 +217,8 @@ const CarBrandsPage: React.FC = () => {
               label="Популярность"
             >
               <MenuItem value="">Все</MenuItem>
-              <MenuItem value={true}>Популярные</MenuItem>
-              <MenuItem value={false}>Обычные</MenuItem>
+              <MenuItem value="true">Популярные</MenuItem>
+              <MenuItem value="false">Обычные</MenuItem>
             </Select>
           </FormControl>
         </Box>

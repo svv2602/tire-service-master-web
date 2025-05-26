@@ -19,6 +19,7 @@ import {
   serviceCategoriesApi,
   servicePointPhotosApi,
   servicePointServicesApi,
+  servicesApi,
 } from '../api';
 
 import authReducer from './slices/authSlice';
@@ -52,6 +53,7 @@ export const store = configureStore({
     [scheduleApi.reducerPath]: scheduleApi.reducer,
     [servicePointServicesApi.reducerPath]: servicePointServicesApi.reducer,
     [servicePointPhotosApi.reducerPath]: servicePointPhotosApi.reducer,
+    [servicesApi.reducerPath]: servicesApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -73,6 +75,7 @@ export const store = configureStore({
       serviceCategoriesApi.middleware,
       servicePointPhotosApi.middleware,
       servicePointServicesApi.middleware,
+      servicesApi.middleware,
     ),
 });
 

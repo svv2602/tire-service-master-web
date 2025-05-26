@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CarModel, CarModelsState } from '../../types';
-import { carModelsApi } from '../../api/api';
-import { CarModelCreateRequest, CarModelUpdateRequest } from '../../types/apiResponses';
+import { carModelsApi } from '../../api';
+import { CarModelFormData } from '../../api/carModels';
 
 // Начальное состояние
 const initialState: CarModelsState = {
@@ -12,7 +12,7 @@ const initialState: CarModelsState = {
   totalItems: 0,
 };
 
-type CreateModelPayload = CarModelCreateRequest['car_model'];
+type CreateModelPayload = CarModelFormData;
 type UpdateModelPayload = {
   id: number;
   data: Partial<CreateModelPayload>;
@@ -23,10 +23,13 @@ export const fetchCarModels = createAsyncThunk(
   'carModels/fetchCarModels',
   async (params: any = {}, { rejectWithValue }) => {
     try {
-      const response = await carModelsApi.getAll(params);
+      const response = await carModelsApi.endpoints.getCarModels.initiate(params);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось загрузить модели автомобилей');
+      }
       return {
-        carModels: response.data.car_models,
-        totalItems: response.data.total_items,
+        carModels: response.data.data,
+        totalItems: response.data.pagination.total_count,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить модели автомобилей');
@@ -38,8 +41,11 @@ export const fetchCarModelById = createAsyncThunk(
   'carModels/fetchCarModelById',
   async (id: number, { rejectWithValue }) => {
     try {
-      const response = await carModelsApi.getById(id);
-      return response.data.car_model;
+      const response = await carModelsApi.endpoints.getCarModel.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось найти модель автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти модель автомобиля');
     }
@@ -50,9 +56,11 @@ export const createCarModel = createAsyncThunk(
   'carModels/createCarModel',
   async (data: CreateModelPayload, { rejectWithValue }) => {
     try {
-      const request: CarModelCreateRequest = { car_model: data };
-      const response = await carModelsApi.create(request);
-      return response.data.car_model;
+      const response = await carModelsApi.endpoints.createCarModel.initiate(data);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось создать модель автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать модель автомобиля');
     }
@@ -63,9 +71,11 @@ export const updateCarModel = createAsyncThunk(
   'carModels/updateCarModel',
   async ({ id, data }: UpdateModelPayload, { rejectWithValue }) => {
     try {
-      const request: CarModelUpdateRequest = { car_model: data };
-      const response = await carModelsApi.update(id, request);
-      return response.data.car_model;
+      const response = await carModelsApi.endpoints.updateCarModel.initiate({ id, data });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось обновить модель автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить модель автомобиля');
     }
@@ -76,7 +86,10 @@ export const deleteCarModel = createAsyncThunk(
   'carModels/deleteCarModel',
   async (id: number, { rejectWithValue }) => {
     try {
-      await carModelsApi.delete(id);
+      const response = await carModelsApi.endpoints.deleteCarModel.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось удалить модель автомобиля');
+      }
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось удалить модель автомобиля');

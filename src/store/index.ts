@@ -1,4 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { bookingsApi } from '../api/bookings';
+import { carBrandsApi } from '../api/carBrands';
+import { carModelsApi } from '../api/carModels';
+import { servicePointsApi } from '../api/service-points';
 import authReducer from './slices/authSlice';
 import partnersReducer from './slices/partnersSlice';
 import servicePointsReducer from './slices/servicePointsSlice';
@@ -8,18 +13,13 @@ import citiesReducer from './slices/citiesSlice';
 import carBrandsReducer from './slices/carBrandsSlice';
 import carModelsReducer from './slices/carModelsSlice';
 import clientsReducer from './slices/clientsSlice';
-import bookingsReducer from './slices/bookingsSlice';
 import servicesReducer from './slices/servicesSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import {
   partnersApi,
   regionsApi,
   citiesApi,
-  servicePointsApi,
   clientsApi,
-  carBrandsApi,
-  carModelsApi,
-  bookingsApi,
 } from '../api';
 
 export const store = configureStore({
@@ -33,7 +33,6 @@ export const store = configureStore({
     carBrands: carBrandsReducer,
     carModels: carModelsReducer,
     clients: clientsReducer,
-    bookings: bookingsReducer,
     services: servicesReducer,
     dashboard: dashboardReducer,
     [partnersApi.reducerPath]: partnersApi.reducer,
@@ -57,6 +56,8 @@ export const store = configureStore({
       bookingsApi.middleware,
     ),
 });
+
+setupListeners(store.dispatch);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch; 

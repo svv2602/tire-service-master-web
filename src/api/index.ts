@@ -18,6 +18,7 @@ import { dashboardApi } from './dashboard';
 import { tireTypesApi } from './tireTypes';
 import { carTypesApi } from './carTypes';
 import { reviewsApi } from './reviews';
+import { servicesApi, useGetServicesQuery, useDeleteServiceMutation } from './services';
 
 // Настройка API URL
 export const setupApiBaseUrl = (baseUrl: string) => {
@@ -54,4 +55,7 @@ export {
   tireTypesApi,
   carTypesApi,
   reviewsApi,
+  servicesApi,
+  useGetServicesQuery,
+  useDeleteServiceMutation,
 };

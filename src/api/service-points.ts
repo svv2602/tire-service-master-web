@@ -3,6 +3,17 @@ import { baseQuery } from './baseQuery';
 import { ServicePoint } from '../types/models';
 import { CreateServicePointRequest, UpdateServicePointRequest } from '../types/api-requests';
 
+// Интерфейс для ответа API с пагинацией
+export interface ServicePointsResponse {
+  data: ServicePoint[];
+  pagination: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
+}
+
 interface QueryParams {
   page?: number;
   per_page?: number;

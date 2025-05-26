@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -35,9 +35,7 @@ import {
   Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../store/store';
-import { fetchClients, deleteClient } from '../../store/slices/clientsSlice';
+import { useGetClientsQuery, useDeleteClientMutation } from '../../api/clients';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -240,15 +238,15 @@ const ClientsPage: React.FC = () => {
                       <TableCell>
                     <Box>
                       <Typography variant="body2">
-                        Уведомления: {client.preferred_notification_method || 'push'}
+                        Уведомления: push
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Маркетинг: {client.marketing_consent ? 'Да' : 'Нет'}
+                        Маркетинг: Нет
                       </Typography>
-                        </Box>
-                      </TableCell>
+                    </Box>
+                  </TableCell>
                   
-                      <TableCell>
+                  <TableCell>
                     <Typography variant="body2">
                       {client.user?.created_at 
                         ? new Date(client.user.created_at).toLocaleDateString('ru-RU')

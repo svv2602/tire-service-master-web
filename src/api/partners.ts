@@ -3,9 +3,14 @@ import { baseQuery } from './baseQuery';
 import type { Partner, PartnerFormData } from '../types/models';
 
 // Интерфейс для ответа API с пагинацией
-interface PartnersResponse {
-  partners: Partner[];
-  total_items: number;
+export interface PartnersResponse {
+  data: Partner[];
+  pagination: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
 }
 
 // Параметры запроса партнеров

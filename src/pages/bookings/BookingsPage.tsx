@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -42,9 +42,15 @@ import {
   Build as BuildIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { fetchBookings, deleteBooking } from '../../store/slices/bookingsSlice';
+import { 
+  useGetBookingsQuery, 
+  useDeleteBookingMutation,
+  useUpdateBookingStatusMutation,
+  BookingsQueryParams 
+} from '../../api/bookings';
+import { Booking } from '../../types/models';
 
 // Статусы бронирований
 const BOOKING_STATUSES = {
@@ -54,6 +60,10 @@ const BOOKING_STATUSES = {
   completed: { label: 'Завершено', color: 'success' as const, icon: CheckCircleIcon },
   cancelled: { label: 'Отменено', color: 'error' as const, icon: CancelIcon },
 };
+
+interface BookingWithClient extends Booking {
+  client_name: string;
+}
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,7 +77,7 @@ const BookingsPage: React.FC = () => {
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<{ id: number; client_name: string } | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingWithClient | null>(null);
   const [newStatus, setNewStatus] = useState<string>('');
 
   // RTK Query хуки
@@ -80,7 +90,7 @@ const BookingsPage: React.FC = () => {
     status: statusFilter || undefined,
     page: page + 1, // API использует 1-based пагинацию
     per_page: rowsPerPage,
-  });
+  } as BookingsQueryParams);
 
   const [deleteBooking, { isLoading: deleteLoading }] = useDeleteBookingMutation();
   const [updateStatus, { isLoading: updateStatusLoading }] = useUpdateBookingStatusMutation();
@@ -105,8 +115,11 @@ const BookingsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (booking: { id: number; client_name: string }) => {
-    setSelectedBooking(booking);
+  const handleDeleteClick = (booking: Booking) => {
+    setSelectedBooking({
+      ...booking,
+      client_name: booking.client?.user?.first_name || 'Клиент'
+    });
     setDeleteDialogOpen(true);
   };
 
@@ -122,8 +135,11 @@ const BookingsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChangeClick = (booking: { id: number; client_name: string }, status: string) => {
-    setSelectedBooking(booking);
+  const handleStatusChangeClick = (booking: Booking, status: string) => {
+    setSelectedBooking({
+      ...booking,
+      client_name: booking.client?.user?.first_name || 'Клиент'
+    });
     setNewStatus(status);
     setStatusDialogOpen(true);
   };
@@ -354,7 +370,7 @@ const BookingsPage: React.FC = () => {
                             <IconButton
                               size="small"
                               onClick={() => handleStatusChangeClick(
-                                { id: booking.id, client_name: booking.client?.user?.first_name || 'Клиент' },
+                                booking,
                                 'confirmed'
                               )}
                               color="success"
@@ -369,7 +385,7 @@ const BookingsPage: React.FC = () => {
                             <IconButton
                               size="small"
                               onClick={() => handleStatusChangeClick(
-                                { id: booking.id, client_name: booking.client?.user?.first_name || 'Клиент' },
+                                booking,
                                 'in_progress'
                               )}
                               color="primary"
@@ -384,7 +400,7 @@ const BookingsPage: React.FC = () => {
                             <IconButton
                               size="small"
                               onClick={() => handleStatusChangeClick(
-                                { id: booking.id, client_name: booking.client?.user?.first_name || 'Клиент' },
+                                booking,
                                 'completed'
                               )}
                               color="success"
@@ -406,10 +422,7 @@ const BookingsPage: React.FC = () => {
                         <Tooltip title="Удалить">
                           <IconButton
                             size="small"
-                            onClick={() => handleDeleteClick({
-                              id: booking.id,
-                              client_name: booking.client?.user?.first_name || 'Клиент'
-                            })}
+                            onClick={() => handleDeleteClick(booking)}
                             disabled={deleteLoading}
                             color="error"
                           >

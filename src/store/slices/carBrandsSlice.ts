@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CarBrand, CarBrandsState } from '../../types';
-import { carBrandsApi } from '../../api/api';
+import { carBrandsApi } from '../../api';
 import { CarBrandCreateRequest, CarBrandUpdateRequest } from '../../types/apiResponses';
 
 // Начальное состояние
@@ -23,10 +23,13 @@ export const fetchCarBrands = createAsyncThunk(
   'carBrands/fetchCarBrands',
   async (params: any = {}, { rejectWithValue }) => {
     try {
-      const response = await carBrandsApi.getAll(params);
+      const response = await carBrandsApi.endpoints.getCarBrands.initiate(params);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось загрузить бренды автомобилей');
+      }
       return {
-        carBrands: response.data.car_brands,
-        totalItems: response.data.total_items,
+        carBrands: response.data.data,
+        totalItems: response.data.pagination.total_count,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить бренды автомобилей');
@@ -38,8 +41,11 @@ export const fetchCarBrandById = createAsyncThunk(
   'carBrands/fetchCarBrandById',
   async (id: number, { rejectWithValue }) => {
     try {
-      const response = await carBrandsApi.getById(id);
-      return response.data.car_brand;
+      const response = await carBrandsApi.endpoints.getCarBrand.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось найти бренд автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось найти бренд автомобиля');
     }
@@ -50,9 +56,11 @@ export const createCarBrand = createAsyncThunk(
   'carBrands/createCarBrand',
   async (data: CreateBrandPayload, { rejectWithValue }) => {
     try {
-      const request: CarBrandCreateRequest = { car_brand: data };
-      const response = await carBrandsApi.create(request);
-      return response.data.car_brand;
+      const response = await carBrandsApi.endpoints.createCarBrand.initiate(data);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось создать бренд автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось создать бренд автомобиля');
     }
@@ -63,9 +71,11 @@ export const updateCarBrand = createAsyncThunk(
   'carBrands/updateCarBrand',
   async ({ id, data }: UpdateBrandPayload, { rejectWithValue }) => {
     try {
-      const request: CarBrandUpdateRequest = { car_brand: data };
-      const response = await carBrandsApi.update(id, request);
-      return response.data.car_brand;
+      const response = await carBrandsApi.endpoints.updateCarBrand.initiate({ id, data });
+      if ('error' in response) {
+        return rejectWithValue('Не удалось обновить бренд автомобиля');
+      }
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось обновить бренд автомобиля');
     }
@@ -76,7 +86,10 @@ export const deleteCarBrand = createAsyncThunk(
   'carBrands/deleteCarBrand',
   async (id: number, { rejectWithValue }) => {
     try {
-      await carBrandsApi.delete(id);
+      const response = await carBrandsApi.endpoints.deleteCarBrand.initiate(id);
+      if ('error' in response) {
+        return rejectWithValue('Не удалось удалить бренд автомобиля');
+      }
       return id;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Не удалось удалить бренд автомобиля');

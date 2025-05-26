@@ -14,7 +14,7 @@ interface BookingsResponse {
 }
 
 // Параметры запроса бронирований
-interface BookingsQueryParams {
+export interface BookingsQueryParams {
   client_id?: number;
   service_point_id?: number;
   partner_id?: number;
@@ -102,6 +102,21 @@ export const bookingsApi = createApi({
       }),
       invalidatesTags: (_result, _error, { id }) => [{ type: 'Bookings', id }],
     }),
+    deleteBooking: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `bookings/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Bookings'],
+    }),
+    updateBookingStatus: builder.mutation<Booking, { id: number; status: string }>({
+      query: ({ id, status }) => ({
+        url: `bookings/${id}/status`,
+        method: 'PATCH',
+        body: { status },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Bookings', id }],
+    }),
     cancelBooking: builder.mutation<Booking, { id: number; reason_id?: number; comment?: string }>({
       query: ({ id, reason_id, comment }) => ({
         url: `bookings/${id}/cancel`,
@@ -154,6 +169,8 @@ export const {
   useGetBookingQuery,
   useCreateBookingMutation,
   useUpdateBookingMutation,
+  useDeleteBookingMutation,
+  useUpdateBookingStatusMutation,
   useCancelBookingMutation,
   useConfirmBookingMutation,
   useCompleteBookingMutation,
