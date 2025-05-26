@@ -28,6 +28,8 @@ import RegionsPage from './pages/catalog/RegionsPage';
 import CitiesPage from './pages/catalog/CitiesPage';
 import CarBrandsPage from './pages/car-brands/CarBrandsPage';
 import CarModelsPage from './pages/car-models/CarModelsPage';
+import ReviewsPage from './pages/reviews/ReviewsPage';
+import ReviewReplyPage from './pages/reviews/ReviewReplyPage';
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -145,6 +147,9 @@ function App() {
                 <Route path="bookings/new" element={<BookingFormPage />} />
                 <Route path="bookings/:id/edit" element={<BookingFormPage />} />
                 <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
+                {/* Маршруты для отзывов */}
+                <Route path="reviews" element={<ReviewsPage />} />
+                <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
                 {/* Маршруты для брендов и моделей автомобилей */}
                 <Route path="car-brands" element={<CarBrandsPage />} />
                 <Route path="car-brands/new" element={<div>Создание бренда (в разработке)</div>} />
