@@ -133,8 +133,23 @@ export interface Partner {
   website?: string;
   tax_number?: string;
   legal_address?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
   is_active: boolean;
+  region_id?: number;
+  city_id?: number;
+  region?: {
+    id: number;
+    name: string;
+  };
+  city?: {
+    id: number;
+    name: string;
+  };
   user?: User;
+  description?: string;
+  additional_info?: string;
 }
 
 export interface PartnersState {

@@ -20,32 +20,38 @@ export interface User extends BaseModel {
 }
 
 // Модель партнера
-export interface Partner extends BaseModel {
+export interface Partner {
   id: number;
   user_id: number;
   company_name: string;
-  company_description?: string;
-  contact_person: string;
-  logo_url?: string;
-  website?: string;
-  tax_number?: string;
-  legal_address?: string;
-  is_active: boolean;
   region_id?: number;
   city_id?: number;
+  is_active: boolean;
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  description?: string;
+  additional_info?: string;
   created_at: string;
   updated_at: string;
   user?: User;
-  region?: {
-    id: number;
-    name: string;
-    code: string;
-  };
-  city?: {
-    id: number;
-    name: string;
-  };
-  service_points_count?: number;
+  region?: Region;
+  city?: City;
+}
+
+export interface PartnerFormData {
+  company_name: string;
+  region_id?: number | '';
+  city_id?: number | '';
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  description?: string;
+  additional_info?: string;
 }
 
 // Модель сервисной точки
@@ -247,4 +253,4 @@ export interface ServicePointStatus extends BaseModel {
   color: string;
   is_active: boolean;
   sort_order: number;
-} 
+}

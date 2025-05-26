@@ -11,6 +11,7 @@ import clientsReducer from './slices/clientsSlice';
 import bookingsReducer from './slices/bookingsSlice';
 import servicesReducer from './slices/servicesSlice';
 import dashboardReducer from './slices/dashboardSlice';
+import { partnersApi } from '../api/partners';
 
 export const store = configureStore({
   reducer: {
@@ -26,11 +27,12 @@ export const store = configureStore({
     bookings: bookingsReducer,
     services: servicesReducer,
     dashboard: dashboardReducer,
+    [partnersApi.reducerPath]: partnersApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).concat(partnersApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
