@@ -33,6 +33,7 @@ import {
   useUploadServicePointPhotoMutation,
   useDeleteServicePointPhotoMutation,
 } from '../../api';
+import { ServicePointPhoto } from '../../types/servicePoint';
 
 const ServicePointPhotosPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +52,7 @@ const ServicePointPhotosPage: React.FC = () => {
   });
 
   const {
-    data: photos,
+    data: photosResponse,
     isLoading: photosLoading,
     error: photosError,
     refetch: refetchPhotos
@@ -63,6 +64,7 @@ const ServicePointPhotosPage: React.FC = () => {
   const [deletePhoto] = useDeleteServicePointPhotoMutation();
 
   const servicePoint = servicePointResponse?.data;
+  const photos = photosResponse?.data || [];
   const isLoading = servicePointLoading || photosLoading;
   const error = servicePointError || photosError;
 
@@ -202,9 +204,9 @@ const ServicePointPhotosPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress />
         </Box>
-      ) : photos && photos.length > 0 ? (
+      ) : photos.length > 0 ? (
         <Grid container spacing={3}>
-          {photos.map((photo) => (
+          {photos.map((photo: ServicePointPhoto) => (
             <Grid item xs={12} sm={6} md={4} key={photo.id}>
               <Card>
                 <CardMedia

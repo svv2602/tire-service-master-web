@@ -8,9 +8,17 @@ export interface ServicePoint {
   workingHours: WorkingHours;
   location: Location;
   services: string[];
-  photos: string[];
+  photos: ServicePointPhoto[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ServicePointPhoto {
+  id: number;
+  service_point_id: number;
+  photo_url: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface WorkingHours {

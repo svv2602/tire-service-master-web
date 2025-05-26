@@ -22,6 +22,7 @@ export const baseApi = createApi({
   tagTypes: [
     'Partners',
     'ServicePoints',
+    'ServicePointPhotos',
     'Regions',
     'Cities',
     'Bookings',

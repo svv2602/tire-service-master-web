@@ -74,6 +74,7 @@ export * from './users.api';
 export * from './services.api';
 export * from './reviews.api';
 export * from './schedule.api';
+export * from './service-point-photos.api';
 
 // Экспорт типов
 export type { Partner } from '../types/partner';
