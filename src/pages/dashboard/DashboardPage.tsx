@@ -73,6 +73,9 @@ const DashboardPage: React.FC = () => {
 
   // Отладочная информация
   console.log('Dashboard state:', { stats, loading, error });
+  console.log('Stats object:', stats);
+  console.log('Partners count:', stats?.partners_count);
+  console.log('Service points count:', stats?.service_points_count);
 
   if (loading) {
     return (

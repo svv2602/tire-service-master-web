@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { dashboardApi, DashboardStats } from '../../api/dashboard';
+import { dashboardApi, DashboardStats, DashboardResponse } from '../../api/dashboard';
 
 // Интерфейс состояния дашборда
 export interface DashboardState {
@@ -21,10 +21,11 @@ export const fetchDashboardStats = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log('Fetching dashboard stats...');
-      const response = await dashboardApi.getStats();
+      const response: DashboardResponse = await dashboardApi.getStats();
       console.log('Dashboard API response:', response);
       console.log('Dashboard data:', response.data);
-      return response.data;
+      // API возвращает {data: {data: {...}}}, нам нужны данные из response.data.data
+      return response.data.data;
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
       return rejectWithValue(error.response?.data?.error || 'Не удалось загрузить статистику дашборда');

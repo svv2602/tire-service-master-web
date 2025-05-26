@@ -13,7 +13,9 @@ export interface DashboardStats {
 }
 
 export interface DashboardResponse {
-  data: DashboardStats;
+  data: {
+    data: DashboardStats;
+  };
 }
 
 // API методы для дашборда
