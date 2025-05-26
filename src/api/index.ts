@@ -5,7 +5,7 @@ import { servicePointsApi, useGetServicePointsQuery } from './service-points';
 import { citiesApi } from './cities';
 import { regionsApi } from './regions';
 import { serviceCategoriesApi, useGetServiceCategoriesQuery } from './serviceCategories';
-import { scheduleApi, useGetScheduleQuery } from './schedule';
+import { scheduleApi } from './schedule.api';
 import { servicePointServicesApi, useGetServicePointServicesQuery } from './servicePointServices';
 import { servicePointPhotosApi, useGetServicePointPhotosQuery } from './servicePointPhotos';
 import { bookingsApi, useGetBookingsQuery } from './bookings';
@@ -38,7 +38,6 @@ export {
   serviceCategoriesApi,
   useGetServiceCategoriesQuery,
   scheduleApi,
-  useGetScheduleQuery,
   servicePointServicesApi,
   useGetServicePointServicesQuery,
   servicePointPhotosApi,
@@ -71,6 +70,7 @@ export * from './services.api';
 export * from './bookings.api';
 export * from './clients.api';
 export * from './reviews.api';
+export * from './schedule.api';
 
 // Экспорт типов
 export type { Partner } from '../types/partner';
@@ -82,5 +82,6 @@ export type { Booking, BookingService, BookingFilter } from '../types/booking';
 export { BookingStatus } from '../types/booking';
 export type { Client, ClientCar, ClientFilter } from '../types/client';
 export type { Review, ReviewFilter } from '../types/review';
+export type { Schedule, TimeSlot, ScheduleFilter } from '../types/schedule';
 
 // Другие API будут добавлены по мере их создания
