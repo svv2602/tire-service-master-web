@@ -59,3 +59,28 @@ export {
   useGetServicesQuery,
   useDeleteServiceMutation,
 };
+
+export * from './baseApi';
+export * from './partners.api';
+export * from './servicePoints.api';
+export * from './regions.api';
+export * from './cities.api';
+export * from './carBrands.api';
+export * from './carModels.api';
+export * from './services.api';
+export * from './bookings.api';
+export * from './clients.api';
+export * from './reviews.api';
+
+// Экспорт типов
+export type { Partner } from '../types/partner';
+export type { ServicePoint } from '../types/servicePoint';
+export type { Region, City } from '../types/location';
+export type { CarBrand, CarModel } from '../types/car';
+export type { Service, ServiceCategory, ServicePointService } from '../types/service';
+export type { Booking, BookingService, BookingFilter } from '../types/booking';
+export { BookingStatus } from '../types/booking';
+export type { Client, ClientCar, ClientFilter } from '../types/client';
+export type { Review, ReviewFilter } from '../types/review';
+
+// Другие API будут добавлены по мере их создания
