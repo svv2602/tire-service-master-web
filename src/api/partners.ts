@@ -21,14 +21,17 @@ export const partnersApi = createApi({
   tagTypes: ['Partners'],
   endpoints: (builder) => ({
     getPartners: builder.query<PartnersResponse, PartnersQueryParams | void>({
-      query: (params = {}) => ({
-        url: 'partners',
-        params: {
-          query: params.query,
-          page: params.page || 1,
-          per_page: params.per_page || 10,
-        },
-      }),
+      query: (params) => {
+        const queryParams = params || {};
+        return {
+          url: 'partners',
+          params: {
+            query: queryParams.query,
+            page: queryParams.page || 1,
+            per_page: queryParams.per_page || 10,
+          },
+        };
+      },
       providesTags: ['Partners'],
     }),
     getPartner: builder.query<Partner, number>({

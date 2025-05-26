@@ -1,51 +1,110 @@
-import { AxiosResponse } from 'axios';
-import apiClient from './api';
-import { CarModel } from '../types';
-import { CarModelsResponse, CarModelResponse, CarModelRequest } from '../types/apiResponses';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
+import type { CarModel } from '../types/models';
 
-export interface CarModelFilters {
+// Интерфейс для ответа API с пагинацией
+interface CarModelsResponse {
+  data: CarModel[];
+  pagination: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
+}
+
+// Параметры запроса моделей
+interface CarModelsQueryParams {
   brand_id?: number;
   query?: string;
-  popular?: boolean;
+  is_active?: boolean;
+  is_popular?: boolean;
   page?: number;
   per_page?: number;
 }
 
-// API methods for working with car models
-export const carModelsApi = {
-  // Get all car models with optional filters
-  getAll: async (params?: CarModelFilters): Promise<AxiosResponse<CarModelsResponse>> => {
-    console.log('Получение списка моделей автомобилей');
-    return apiClient.get('/api/v1/car_models', { params });
-  },
+// Данные формы модели
+export interface CarModelFormData {
+  brand_id: number;
+  name: string;
+  is_active?: boolean;
+  is_popular?: boolean;
+}
 
-  // Get car model by ID
-  getById: async (id: number): Promise<AxiosResponse<CarModelResponse>> => {
-    console.log(`Получение модели автомобиля ${id}`);
-    return apiClient.get(`/api/v1/car_models/${id}`);
-  },
+export const carModelsApi = createApi({
+  reducerPath: 'carModelsApi',
+  baseQuery,
+  tagTypes: ['CarModels'],
+  endpoints: (builder) => ({
+    getCarModels: builder.query<CarModelsResponse, CarModelsQueryParams | void>({
+      query: (params) => {
+        const queryParams = params || {};
+        return {
+          url: 'car_models',
+          params: {
+            brand_id: queryParams.brand_id,
+            query: queryParams.query,
+            is_active: queryParams.is_active,
+            is_popular: queryParams.is_popular,
+            page: queryParams.page || 1,
+            per_page: queryParams.per_page || 25,
+          },
+        };
+      },
+      providesTags: ['CarModels'],
+    }),
+    getCarModel: builder.query<CarModel, number>({
+      query: (id) => `car_models/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'CarModels', id }],
+    }),
+    createCarModel: builder.mutation<CarModel, CarModelFormData>({
+      query: (data) => ({
+        url: 'car_models',
+        method: 'POST',
+        body: { car_model: data },
+      }),
+      invalidatesTags: ['CarModels'],
+    }),
+    updateCarModel: builder.mutation<CarModel, { id: number; data: Partial<CarModelFormData> }>({
+      query: ({ id, data }) => ({
+        url: `car_models/${id}`,
+        method: 'PATCH',
+        body: { car_model: data },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarModels', id }],
+    }),
+    deleteCarModel: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `car_models/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['CarModels'],
+    }),
+    toggleCarModelActive: builder.mutation<CarModel, { id: number; active?: boolean }>({
+      query: ({ id, active }) => ({
+        url: `car_models/${id}/toggle_active`,
+        method: 'PATCH',
+        body: active !== undefined ? { active } : {},
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarModels', id }],
+    }),
+    toggleCarModelPopular: builder.mutation<CarModel, { id: number; popular?: boolean }>({
+      query: ({ id, popular }) => ({
+        url: `car_models/${id}/toggle_popular`,
+        method: 'PATCH',
+        body: popular !== undefined ? { popular } : {},
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarModels', id }],
+    }),
+  }),
+});
 
-  // Get car models by brand ID
-  getByBrandId: async (brandId: number, params?: Omit<CarModelFilters, 'brand_id'>): Promise<AxiosResponse<CarModelResponse>> => {
-    console.log(`Получение моделей для марки ${brandId}`);
-    return apiClient.get(`/api/v1/car_brands/${brandId}/car_models`, { params });
-  },
-
-  // Create new car model
-  create: async (data: CarModelRequest): Promise<AxiosResponse<CarModelResponse>> => {
-    console.log('Создание новой модели автомобиля');
-    return apiClient.post('/api/v1/car_models', data);
-  },
-
-  // Update existing car model
-  update: async (id: number, data: CarModelRequest): Promise<AxiosResponse<CarModelResponse>> => {
-    console.log(`Обновление модели автомобиля ${id}`);
-    return apiClient.put(`/api/v1/car_models/${id}`, data);
-  },
-
-  // Delete car model
-  delete: async (id: number): Promise<AxiosResponse<void>> => {
-    console.log(`Удаление модели автомобиля ${id}`);
-    return apiClient.delete(`/api/v1/car_models/${id}`);
-  }
-};
+export const {
+  useGetCarModelsQuery,
+  useGetCarModelQuery,
+  useCreateCarModelMutation,
+  useUpdateCarModelMutation,
+  useDeleteCarModelMutation,
+  useToggleCarModelActiveMutation,
+  useToggleCarModelPopularMutation,
+} = carModelsApi;

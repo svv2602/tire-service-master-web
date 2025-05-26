@@ -1,3 +1,119 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  InputAdornment,
+  Paper,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Search as SearchIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  LocationOn as LocationIcon,
+  Phone as PhoneIcon,
+  Business as BusinessIcon,
+  FilterList as FilterIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { 
+  useGetServicePointsQuery, 
+  useDeleteServicePointMutation 
+} from '../../api/servicePoints';
+import { useGetRegionsQuery } from '../../api/regions';
+import { useGetCitiesQuery } from '../../api/cities';
+
+const ServicePointsPage: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // Состояние для поиска, фильтрации и пагинации
+  const [search, setSearch] = useState('');
+  const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
+  const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  
+  // Состояние для диалогов
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedServicePoint, setSelectedServicePoint] = useState<{ id: number; name: string; partner_id: number } | null>(null);
+
+  // RTK Query хуки
+  const { 
+    data: servicePointsData, 
+    isLoading, 
+    error 
+  } = useGetServicePointsQuery({
+    query: search || undefined,
+    city_id: selectedCityId || undefined,
+    page: page + 1, // API использует 1-based пагинацию
+    per_page: rowsPerPage,
+  });
+
+  const { data: regionsData } = useGetRegionsQuery();
+  const { data: citiesData } = useGetCitiesQuery(
+    { region_id: selectedRegionId || undefined }, 
+    { skip: !selectedRegionId }
+  );
+
+  const [deleteServicePoint, { isLoading: deleteLoading }] = useDeleteServicePointMutation();
+
+  // Обработчики событий
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+    setPage(0); // Сбрасываем на первую страницу при поиске
+  };
+
+  const handleRegionChange = (event: any) => {
+    const regionId = event.target.value;
+    setSelectedRegionId(regionId);
+    setSelectedCityId(''); // Сбрасываем выбранный город
+    setPage(0);
+  };
+
+  const handleCityChange = (event: any) => {
+    setSelectedCityId(event.target.value);
+    setPage(0);
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDeleteClick = (servicePoint: { id: number; name: string; partner_id: number }) => {
+    setSelectedServicePoint(servicePoint);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedServicePoint) {
+      try {
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   Box,

@@ -161,7 +161,9 @@ const PartnerFormPage: React.FC = () => {
   // Обновляем выбранный регион при изменении
   useEffect(() => {
     const regionId = formik.values.region_id;
-    if (regionId && regionId !== '') {
+    if (regionId && regionId !== '' && typeof regionId === 'number') {
+      setSelectedRegionId(regionId);
+    } else if (regionId && regionId !== '' && typeof regionId === 'string') {
       setSelectedRegionId(Number(regionId));
     } else {
       setSelectedRegionId(undefined);

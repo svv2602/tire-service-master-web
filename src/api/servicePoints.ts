@@ -1,114 +1,132 @@
-import { AxiosResponse } from 'axios';
-import api from './api';
-import { ServicePoint, ServicePointPhoto } from '../types/models';
-import { ApiPaginatedResponse } from '../types/api';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
+import type { ServicePoint } from '../types/models';
 
-export interface ServicePointFilters {
-  city_id?: number;
-  partner_id?: number;
-  search?: string;
-  is_active?: boolean;
-  latitude?: number;
-  longitude?: number;
-  distance?: number;
+// Интерфейс для ответа API с пагинацией
+interface ServicePointsResponse {
+  data: ServicePoint[];
+  pagination: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
 }
 
-export const servicePointsApi = {
-  // Получение списка сервисных точек с фильтрацией и пагинацией
-  getAll: async (filters?: ServicePointFilters, page = 1, per_page = 10): Promise<ApiPaginatedResponse<ServicePoint>> => {
-    const response: AxiosResponse<ApiPaginatedResponse<ServicePoint>> = await api.get('/api/v1/service_points', {
-      params: {
-        ...filters,
-        page,
-        per_page
-      }
-    });
-    return response.data;
-  },
+// Параметры запроса сервисных точек
+interface ServicePointsQueryParams {
+  partner_id?: number;
+  manager_id?: number;
+  city_id?: number;
+  amenity_ids?: string;
+  query?: string;
+  sort_by?: string;
+  sort_direction?: 'asc' | 'desc';
+  page?: number;
+  per_page?: number;
+}
 
-  // Получение конкретной сервисной точки
-  getById: async (id: number): Promise<ServicePoint> => {
-    const response: AxiosResponse<ServicePoint> = await api.get(`/api/v1/service_points/${id}`);
-    return response.data;
-  },
+// Параметры для поиска ближайших точек
+interface NearbyServicePointsParams {
+  latitude: number;
+  longitude: number;
+  distance?: number;
+  page?: number;
+  per_page?: number;
+}
 
-  // Создание сервисной точки
-  create: async (partnerId: number, data: Partial<ServicePoint>): Promise<ServicePoint> => {
-    const response: AxiosResponse<ServicePoint> = await api.post(`/api/v1/partners/${partnerId}/service_points`, data);
-    return response.data;
-  },
+// Данные формы сервисной точки
+export interface ServicePointFormData {
+  name: string;
+  description?: string;
+  address: string;
+  city_id: number;
+  latitude?: number;
+  longitude?: number;
+  contact_phone?: string;
+  post_count?: number;
+  default_slot_duration?: number;
+  status_id?: number;
+}
 
-  // Обновление сервисной точки
-  update: async (partnerId: number, id: number, data: Partial<ServicePoint>): Promise<ServicePoint> => {
-    const response: AxiosResponse<ServicePoint> = await api.put(`/api/v1/partners/${partnerId}/service_points/${id}`, data);
-    return response.data;
-  },
+export const servicePointsApi = createApi({
+  reducerPath: 'servicePointsApi',
+  baseQuery,
+  tagTypes: ['ServicePoints', 'ServicePointStatuses'],
+  endpoints: (builder) => ({
+    getServicePoints: builder.query<ServicePointsResponse, ServicePointsQueryParams | void>({
+      query: (params) => {
+        const queryParams = params || {};
+        return {
+          url: 'service_points',
+          params: {
+            partner_id: queryParams.partner_id,
+            manager_id: queryParams.manager_id,
+            city_id: queryParams.city_id,
+            amenity_ids: queryParams.amenity_ids,
+            query: queryParams.query,
+            sort_by: queryParams.sort_by,
+            sort_direction: queryParams.sort_direction,
+            page: queryParams.page || 1,
+            per_page: queryParams.per_page || 25,
+          },
+        };
+      },
+      providesTags: ['ServicePoints'],
+    }),
+    getServicePoint: builder.query<ServicePoint, number>({
+      query: (id) => `service_points/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'ServicePoints', id }],
+    }),
+    createServicePoint: builder.mutation<ServicePoint, { partner_id: number; data: ServicePointFormData }>({
+      query: ({ partner_id, data }) => ({
+        url: `partners/${partner_id}/service_points`,
+        method: 'POST',
+        body: { service_point: data },
+      }),
+      invalidatesTags: ['ServicePoints'],
+    }),
+    updateServicePoint: builder.mutation<ServicePoint, { partner_id: number; id: number; data: Partial<ServicePointFormData> }>({
+      query: ({ partner_id, id, data }) => ({
+        url: `partners/${partner_id}/service_points/${id}`,
+        method: 'PATCH',
+        body: { service_point: data },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'ServicePoints', id }],
+    }),
+    deleteServicePoint: builder.mutation<{ message: string }, { partner_id: number; id: number }>({
+      query: ({ partner_id, id }) => ({
+        url: `partners/${partner_id}/service_points/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['ServicePoints'],
+    }),
+    getNearbyServicePoints: builder.query<ServicePointsResponse, NearbyServicePointsParams>({
+      query: (params) => ({
+        url: 'service_points/nearby',
+        params: {
+          latitude: params.latitude,
+          longitude: params.longitude,
+          distance: params.distance || 10,
+          page: params.page || 1,
+          per_page: params.per_page || 25,
+        },
+      }),
+      providesTags: ['ServicePoints'],
+    }),
+    getServicePointStatuses: builder.query<{ id: number; name: string; description?: string; color: string; is_active: boolean; sort_order: number }[], void>({
+      query: () => 'service_point_statuses',
+      providesTags: ['ServicePointStatuses'],
+    }),
+  }),
+});
 
-  // Удаление сервисной точки
-  delete: async (partnerId: number, id: number): Promise<void> => {
-    await api.delete(`/api/v1/partners/${partnerId}/service_points/${id}`);
-  },
-
-  // Получение ближайших сервисных точек
-  getNearby: async (latitude: number, longitude: number, distance: number = 10): Promise<ServicePoint[]> => {
-    const response: AxiosResponse<ServicePoint[]> = await api.get('/api/v1/service_points/nearby', {
-      params: { latitude, longitude, distance }
-    });
-    return response.data;
-  },
-
-  // Загрузка фотографий
-  uploadPhotos: async (id: number, photos: FormData): Promise<ServicePointPhoto[]> => {
-    const response: AxiosResponse<ServicePointPhoto[]> = await api.post(
-      `/api/v1/service_points/${id}/photos`,
-      photos,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
-    return response.data;
-  },
-
-  // Загрузка одной фотографии (алиас для совместимости)
-  uploadPhoto: async (id: number, photo: FormData): Promise<ServicePointPhoto> => {
-    const response: AxiosResponse<ServicePointPhoto> = await api.post(
-      `/api/v1/service_points/${id}/photos`,
-      photo,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    );
-    return response.data;
-  },
-
-  // Удаление фотографии
-  deletePhoto: async (servicePointId: number, photoId: number): Promise<void> => {
-    await api.delete(`/api/v1/service_points/${servicePointId}/photos/${photoId}`);
-  },
-
-  // Получение фотографий сервисной точки
-  getPhotos: async (id: number): Promise<ServicePointPhoto[]> => {
-    const response: AxiosResponse<ServicePointPhoto[]> = await api.get(`/api/v1/service_points/${id}/photos`);
-    return response.data;
-  },
-
-  // Обновление рабочих часов
-  updateWorkingHours: async (partnerId: number, id: number, workingHours: ServicePoint['working_hours']): Promise<ServicePoint> => {
-    const response: AxiosResponse<ServicePoint> = await api.put(`/api/v1/partners/${partnerId}/service_points/${id}`, {
-      working_hours: workingHours
-    });
-    return response.data;
-  },
-
-  // Обновление статуса
-  updateStatus: async (partnerId: number, id: number, statusId: number): Promise<ServicePoint> => {
-    const response: AxiosResponse<ServicePoint> = await api.put(`/api/v1/partners/${partnerId}/service_points/${id}`, {
-      status_id: statusId
-    });
-    return response.data;
-  }
-}; 
+export const {
+  useGetServicePointsQuery,
+  useGetServicePointQuery,
+  useCreateServicePointMutation,
+  useUpdateServicePointMutation,
+  useDeleteServicePointMutation,
+  useGetNearbyServicePointsQuery,
+  useGetServicePointStatusesQuery,
+} = servicePointsApi; 

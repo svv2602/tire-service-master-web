@@ -1,44 +1,109 @@
-import { AxiosResponse } from 'axios';
-import apiClient from './api';
-import { CarBrand } from '../types';
-import { CarBrandsResponse, CarBrandResponse, CarBrandRequest } from '../types/apiResponses';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
+import type { CarBrand } from '../types/models';
 
-interface GetAllParams {
-  page?: number;
-  per_page?: number;
-  query?: string;
-  popular?: boolean;
+// Интерфейс для ответа API с пагинацией
+interface CarBrandsResponse {
+  data: CarBrand[];
+  pagination: {
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+    per_page: number;
+  };
 }
 
-// API methods for working with car brands
-export const carBrandsApi = {
-  // Get all car brands with optional filters
-  getAll: async (params?: GetAllParams): Promise<AxiosResponse<CarBrandsResponse>> => {
-    console.log('Получение списка марок автомобилей');
-    return apiClient.get('/api/v1/car_brands', { params });
-  },
+// Параметры запроса брендов
+interface CarBrandsQueryParams {
+  query?: string;
+  is_active?: boolean;
+  is_popular?: boolean;
+  page?: number;
+  per_page?: number;
+}
 
-  // Get car brand by ID
-  getById: async (id: number): Promise<AxiosResponse<CarBrandResponse>> => {
-    console.log(`Получение марки автомобиля ${id}`);
-    return apiClient.get(`/api/v1/car_brands/${id}`);
-  },
+// Данные формы бренда
+export interface CarBrandFormData {
+  name: string;
+  code: string;
+  logo_url?: string;
+  is_active?: boolean;
+  is_popular?: boolean;
+}
 
-  // Create new car brand
-  create: async (data: CarBrandRequest): Promise<AxiosResponse<CarBrandResponse>> => {
-    console.log('Создание новой марки автомобиля');
-    return apiClient.post('/api/v1/car_brands', data);
-  },
+export const carBrandsApi = createApi({
+  reducerPath: 'carBrandsApi',
+  baseQuery,
+  tagTypes: ['CarBrands'],
+  endpoints: (builder) => ({
+    getCarBrands: builder.query<CarBrandsResponse, CarBrandsQueryParams | void>({
+      query: (params) => {
+        const queryParams = params || {};
+        return {
+          url: 'car_brands',
+          params: {
+            query: queryParams.query,
+            is_active: queryParams.is_active,
+            is_popular: queryParams.is_popular,
+            page: queryParams.page || 1,
+            per_page: queryParams.per_page || 25,
+          },
+        };
+      },
+      providesTags: ['CarBrands'],
+    }),
+    getCarBrand: builder.query<CarBrand, number>({
+      query: (id) => `car_brands/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'CarBrands', id }],
+    }),
+    createCarBrand: builder.mutation<CarBrand, CarBrandFormData>({
+      query: (data) => ({
+        url: 'car_brands',
+        method: 'POST',
+        body: { car_brand: data },
+      }),
+      invalidatesTags: ['CarBrands'],
+    }),
+    updateCarBrand: builder.mutation<CarBrand, { id: number; data: Partial<CarBrandFormData> }>({
+      query: ({ id, data }) => ({
+        url: `car_brands/${id}`,
+        method: 'PATCH',
+        body: { car_brand: data },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarBrands', id }],
+    }),
+    deleteCarBrand: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `car_brands/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['CarBrands'],
+    }),
+    toggleCarBrandActive: builder.mutation<CarBrand, { id: number; active?: boolean }>({
+      query: ({ id, active }) => ({
+        url: `car_brands/${id}/toggle_active`,
+        method: 'PATCH',
+        body: active !== undefined ? { active } : {},
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarBrands', id }],
+    }),
+    toggleCarBrandPopular: builder.mutation<CarBrand, { id: number; popular?: boolean }>({
+      query: ({ id, popular }) => ({
+        url: `car_brands/${id}/toggle_popular`,
+        method: 'PATCH',
+        body: popular !== undefined ? { popular } : {},
+      }),
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'CarBrands', id }],
+    }),
+  }),
+});
 
-  // Update existing car brand
-  update: async (id: number, data: CarBrandRequest): Promise<AxiosResponse<CarBrandResponse>> => {
-    console.log(`Обновление марки автомобиля ${id}`);
-    return apiClient.put(`/api/v1/car_brands/${id}`, data);
-  },
-
-  // Delete car brand
-  delete: async (id: number): Promise<AxiosResponse<void>> => {
-    console.log(`Удаление марки автомобиля ${id}`);
-    return apiClient.delete(`/api/v1/car_brands/${id}`);
-  }
-};
+export const {
+  useGetCarBrandsQuery,
+  useGetCarBrandQuery,
+  useCreateCarBrandMutation,
+  useUpdateCarBrandMutation,
+  useDeleteCarBrandMutation,
+  useToggleCarBrandActiveMutation,
+  useToggleCarBrandPopularMutation,
+} = carBrandsApi;
