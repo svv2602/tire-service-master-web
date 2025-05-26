@@ -24,20 +24,21 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { AppDispatch } from '../../store';
-import { fetchServicePointById, createServicePoint, updateServicePoint, clearError } from '../../store/slices/servicePointsSlice';
-import { fetchPartners } from '../../store/slices/partnersSlice';
-import { fetchRegions } from '../../store/slices/regionsSlice';
-import { fetchCities } from '../../store/slices/citiesSlice';
-import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServiceCategoriesQuery,
   useGetScheduleQuery,
   useGetServicePointServicesQuery,
   useGetServicePointPhotosQuery,
+  useGetPartnersQuery,
+  useGetRegionsQuery,
+  useGetCitiesQuery,
+  useGetServicePointByIdQuery,
+  useCreateServicePointMutation,
+  useUpdateServicePointMutation,
 } from '../../api';
 import { ServiceCategory } from '../../types/models';
 
@@ -136,16 +137,24 @@ const getDayName = (dayOfWeek: number): string => {
 const ServicePointFormPage: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { selectedServicePoint, loading, error } = useSelector((state: RootState) => state.servicePoints);
-  const { partners } = useSelector((state: RootState) => state.partners);
-  const { regions } = useSelector((state: RootState) => state.regions);
-  const { cities } = useSelector((state: RootState) => state.cities);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
   const [servicePointStatuses] = useState(mockServicePointStatuses);
-  const [filteredCities, setFilteredCities] = useState<any[]>([]);
+
+  // RTK Query хуки
+  const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
+  const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery({});
+  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
+    { region_id: selectedRegionId },
+    { skip: !selectedRegionId }
+  );
+  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(
+    Number(id),
+    { skip: !isEditMode || !id }
+  );
+  const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
+  const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
 
   const { data: servicesData } = useGetServiceCategoriesQuery({});
   const { data: scheduleData } = useGetScheduleQuery(
@@ -161,62 +170,23 @@ const ServicePointFormPage: React.FC = () => {
     { skip: !isEditMode || !id }
   );
 
-  useEffect(() => {
-    dispatch(fetchPartners({}));
-    // Загружаем список всех регионов для выпадающего списка
-    dispatch(fetchRegions({}));
-    
-    if (isEditMode && id) {
-      dispatch(fetchServicePointById(Number(id)))
-        .unwrap()
-        .then((servicePoint) => {
-          // После получения данных о точке обслуживания, определяем её регион через город
-          if (servicePoint.city_id) {
-            // Сначала загружаем все города чтобы найти регион для города точки обслуживания
-            dispatch(fetchCities({ region_id: null }))
-              .unwrap()
-              .then((citiesData) => {
-                const city = citiesData.cities.find((c: any) => c.id === servicePoint.city_id);
-                if (city && city.region_id) {
-                  // Когда нашли регион города, устанавливаем его как выбранный
-                  setSelectedRegionId(city.region_id);
-                  // И загружаем города, относящиеся к этому региону
-                  dispatch(fetchCities({ region_id: city.region_id }));
-                }
-              });
-          }
-        });
-    } else {
-      // В режиме создания загружаем все города
-      dispatch(fetchCities({ region_id: null }));
-    }
-  }, [isEditMode, id, dispatch]);
-
-  // Фильтрация городов при изменении выбранного региона
-  useEffect(() => {
-    if (selectedRegionId) {
-      // Если выбран регион, фильтруем города только этого региона
-      setFilteredCities(cities.filter((city: any) => city.region_id === selectedRegionId));
-    } else {
-      // Если регион не выбран, показываем все города
-      setFilteredCities(cities);
-    }
-  }, [cities, selectedRegionId]);
+  const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || isCreating || isUpdating;
+  const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
   const initialValues: ServicePointFormData = {
-    name: selectedServicePoint?.name || '',
-    partner_id: selectedServicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
-    description: selectedServicePoint?.description || '',
-    city_id: selectedServicePoint?.city_id || 0,
+    name: servicePoint?.name || '',
+    partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
+    description: servicePoint?.description || '',
+    city_id: servicePoint?.city_id || 0,
     region_id: selectedRegionId || 0,
-    address: selectedServicePoint?.address || '',
-    contact_phone: selectedServicePoint?.contact_phone || '',
-    is_active: selectedServicePoint?.is_active ?? true,
-    post_count: selectedServicePoint?.post_count || 1,
-    default_slot_duration: selectedServicePoint?.default_slot_duration || 30,
-    latitude: selectedServicePoint?.latitude || null,
-    longitude: selectedServicePoint?.longitude || null,
-    status_id: selectedServicePoint?.status_id || 1,
+    address: servicePoint?.address || '',
+    contact_phone: servicePoint?.contact_phone || '',
+    is_active: servicePoint?.is_active ?? true,
+    post_count: servicePoint?.post_count || 1,
+    default_slot_duration: servicePoint?.default_slot_duration || 30,
+    latitude: servicePoint?.latitude || null,
+    longitude: servicePoint?.longitude || null,
+    status_id: servicePoint?.status_id || 1,
     schedule: scheduleData?.data || [
       { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_working_day: true },
       { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_working_day: true },
@@ -237,18 +207,18 @@ const ServicePointFormPage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         if (isEditMode && id && partnerId) {
-          await dispatch(updateServicePoint({
+          await updateServicePoint({
             partnerId: Number(partnerId),
             id: Number(id),
             data: values
-          })).unwrap();
+          }).unwrap();
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
           const targetPartnerId = values.partner_id;
-          await dispatch(createServicePoint({
+          await createServicePoint({
             partnerId: targetPartnerId,
             data: values
-          })).unwrap();
+          }).unwrap();
           setSuccessMessage('Точка обслуживания успешно создана');
           setTimeout(() => {
             navigate('/service-points');
@@ -260,17 +230,22 @@ const ServicePointFormPage: React.FC = () => {
     },
   });
 
-  // Обработчик изменения выбранного региона
+  // Эффект для установки региона при загрузке точки обслуживания
+  useEffect(() => {
+    if (servicePoint?.city_id && cities) {
+      const city = cities.find((c: any) => c.id === servicePoint.city_id);
+      if (city?.region_id && city.region_id !== selectedRegionId) {
+        setSelectedRegionId(city.region_id);
+      }
+    }
+  }, [servicePoint, cities, selectedRegionId]);
+
+  // Обработчик изменения региона
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
     const regionId = Number(event.target.value);
-    // Устанавливаем выбранный регион в состояние
     setSelectedRegionId(regionId);
-    // Обновляем значение в форме
     formik.setFieldValue('region_id', regionId);
-    // Сбрасываем выбранный город, так как он может не принадлежать выбранному региону
     formik.setFieldValue('city_id', 0);
-    // Загружаем города для выбранного региона
-    dispatch(fetchCities({ region_id: regionId }));
   };
 
   const handleCloseSnackbar = () => {
@@ -293,7 +268,7 @@ const ServicePointFormPage: React.FC = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
@@ -412,7 +387,7 @@ const ServicePointFormPage: React.FC = () => {
                     disabled={!formik.values.region_id}
                   >
                     <MenuItem value="0" disabled>Выберите город</MenuItem>
-                    {filteredCities.map((city: any) => (
+                    {cities.map((city: any) => (
                       <MenuItem key={city.id} value={city.id.toString()}>
                         {city.name}
                       </MenuItem>
