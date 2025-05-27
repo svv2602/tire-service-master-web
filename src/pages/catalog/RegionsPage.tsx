@@ -96,7 +96,7 @@ const RegionsPage: React.FC = () => {
       try {
         if (editingRegion) {
           await updateRegion({ 
-            id: editingRegion.id.toString(), 
+            id: editingRegion.id, 
             region: values 
           }).unwrap();
           setSuccessMessage('Регион успешно обновлен');
@@ -135,7 +135,7 @@ const RegionsPage: React.FC = () => {
   };
 
   // Удаление региона
-  const handleDeleteRegion = async (id: string) => {
+  const handleDeleteRegion = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить этот регион?')) {
       try {
         await deleteRegion(id).unwrap();

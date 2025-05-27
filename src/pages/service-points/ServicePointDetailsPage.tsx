@@ -29,8 +29,7 @@ import {
   Chip,
   Alert,
 } from '@mui/material';
-import { ServicePointService } from '../../types/service';
-import { TimeSlot, Schedule } from '../../types/schedule';
+import { ServicePointService, WorkingHours } from '../../types/models';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -43,7 +42,7 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 import { ServicePoint } from '../../types/models';
-import { Partner } from '../../types/partner';
+import { Partner } from '../../types/models';
 
 const getDayName = (day: number): string => {
   const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -63,18 +62,20 @@ const ServicePointDetailsPage = () => {
 
   const { data: schedule, isLoading: scheduleLoading } = useGetScheduleQuery({
     service_point_id: id || '',
-    date: new Date().toISOString().split('T')[0] // Текущая дата в формате YYYY-MM-DD
-  }, { skip: !id });
+    date: new Date().toISOString().split('T')[0]
+  }, {
+    skip: !id
+  });
 
-  const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(servicePoint?.partner_id.toString() || '', {
+  const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(servicePoint?.partner_id || 0, {
     skip: !servicePoint?.partner_id,
   });
 
-  const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(servicePoint?.city_id?.toString() || '', {
+  const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(servicePoint?.city_id || 0, {
     skip: !servicePoint?.city_id,
   });
 
-  const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.region_id?.toString() || '', {
+  const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.region_id || 0, {
     skip: !city?.region_id,
   });
 
@@ -96,7 +97,7 @@ const ServicePointDetailsPage = () => {
     );
   }
 
-  const servicePointServicesData = servicePointServices?.data || [];
+  const servicePointServicesData = servicePointServices || [];
   const servicesMap = new Map(allServices?.map(service => [service.id, service]) || []);
 
   return (
@@ -127,45 +128,6 @@ const ServicePointDetailsPage = () => {
           </Box>
         )}
       </Box>
-
-      {servicePoint.working_hours && typeof servicePoint.working_hours === 'object' && (
-        <>
-          <Typography variant="h6" gutterBottom>
-            Режим работы:
-          </Typography>
-          <TableContainer component={Paper} sx={{ mb: 4 }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>День недели</TableCell>
-                  <TableCell>Время работы</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Object.entries(servicePoint.working_hours as Record<string, { start: string; end: string }>).map(([day, hours]) => (
-                  <TableRow key={day}>
-                    <TableCell>{getDayName(Number(day))}</TableCell>
-                    <TableCell>
-                      {hours.start} - {hours.end}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </>
-      )}
-
-      {servicePoint.working_hours && typeof servicePoint.working_hours === 'string' && (
-        <>
-          <Typography variant="h6" gutterBottom>
-            Режим работы:
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 4 }}>
-            {servicePoint.working_hours}
-          </Typography>
-        </>
-      )}
 
       {partner && (
         <>
@@ -229,26 +191,31 @@ const ServicePointDetailsPage = () => {
       {schedule && schedule.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom>
-            Расписание на {schedule[0]?.date ? format(new Date(schedule[0].date), 'd MMMM yyyy', { locale: ru }) : new Date().toLocaleDateString('ru-RU')}:
+            Расписание на {new Date().toLocaleDateString('ru-RU')}:
           </Typography>
           <TableContainer component={Paper} sx={{ mb: 4 }}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Время</TableCell>
+                  <TableCell>День недели</TableCell>
+                  <TableCell>Время работы</TableCell>
                   <TableCell>Статус</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {schedule[0]?.slots?.map((slot: TimeSlot) => (
-                  <TableRow key={slot.id}>
+                {schedule.map((workingDay: WorkingHours, index: number) => (
+                  <TableRow key={index}>
+                    <TableCell>{getDayName(workingDay.day_of_week)}</TableCell>
                     <TableCell>
-                      {format(new Date(`2000-01-01T${slot.startTime}`), 'HH:mm')} - {format(new Date(`2000-01-01T${slot.endTime}`), 'HH:mm')}
+                      {workingDay.is_working_day 
+                        ? `${workingDay.start_time} - ${workingDay.end_time}`
+                        : 'Выходной'
+                      }
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={slot.isAvailable ? 'Доступно' : 'Занято'} 
-                        color={slot.isAvailable ? 'success' : 'error'} 
+                        label={workingDay.is_working_day ? 'Рабочий день' : 'Выходной'} 
+                        color={workingDay.is_working_day ? 'success' : 'default'} 
                         size="small" 
                       />
                     </TableCell>
@@ -266,7 +233,7 @@ const ServicePointDetailsPage = () => {
       {servicePointServicesData.length > 0 ? (
         <Grid container spacing={2}>
           {servicePointServicesData.map((service: ServicePointService) => {
-            const serviceDetails = servicesMap.get(service.serviceId);
+            const serviceDetails = servicesMap.get(service.service_id.toString());
             return (
               <Grid item xs={12} sm={6} md={4} key={service.id}>
                 <Card>
@@ -282,9 +249,9 @@ const ServicePointDetailsPage = () => {
                     <Typography variant="body1" color="primary">
                       {service.price || serviceDetails?.price || 'Цена по запросу'} руб.
                     </Typography>
-                    {serviceDetails?.duration && (
+                    {(serviceDetails?.duration || service.duration) && (
                       <Typography variant="body2" color="text.secondary">
-                        Длительность: {serviceDetails.duration} мин.
+                        Длительность: {serviceDetails?.duration || service.duration} мин.
                       </Typography>
                     )}
                   </CardContent>
@@ -295,7 +262,7 @@ const ServicePointDetailsPage = () => {
         </Grid>
       ) : (
         <Typography variant="body1" color="text.secondary">
-          Нет доступных услуг
+          Услуги не найдены
         </Typography>
       )}
     </Box>

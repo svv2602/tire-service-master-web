@@ -144,7 +144,7 @@ const ServicePointFormPage: React.FC = () => {
   const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({});
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
-    selectedRegionId ? { region_id: selectedRegionId.toString() } : {},
+    selectedRegionId ? { region_id: selectedRegionId.toString() } : { region_id: '' },
     { skip: !selectedRegionId }
   );
   const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id ?? '', { skip: !id });
@@ -182,15 +182,10 @@ const ServicePointFormPage: React.FC = () => {
 
   const initialValues: ServicePointFormData = {
     name: servicePoint?.name || '',
-    partner_id: servicePoint?.partner_id || partnerId || '',
-    description: servicePoint?.description || '',
     city_id: servicePoint?.city_id || 0,
     region_id: selectedRegionId || 0,
     address: servicePoint?.address || '',
-    contact_phone: servicePoint?.contact_phone || '',
     is_active: servicePoint?.is_active ?? true,
-    post_count: servicePoint?.post_count || 1,
-    default_slot_duration: servicePoint?.default_slot_duration || 30,
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
     status_id: servicePoint?.status_id || 1,
@@ -205,7 +200,7 @@ const ServicePointFormPage: React.FC = () => {
     ],
     services: servicePointServicesData || [],
     photos: photosData?.map((photo, index) => ({
-      id: photo.id,
+      id: Number(photo.id),
       service_point_id: 0, // Будет установлено при сохранении
       url: photo.url,
       description: photo.description || '',
@@ -221,14 +216,22 @@ const ServicePointFormPage: React.FC = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        // Преобразуем данные формы в правильный формат для API
+        const submitData = {
+          ...values,
+          partner_id: values.partner_id ? Number(values.partner_id) : undefined,
+          region_id: values.region_id || undefined,
+          city_id: values.city_id || undefined,
+        };
+
         if (isEditMode && id) {
           await updateServicePoint({
             id,
-            servicePoint: values
+            servicePoint: submitData
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
-          await createServicePoint(values).unwrap();
+          await createServicePoint(submitData).unwrap();
           setSuccessMessage('Точка обслуживания успешно создана');
           setTimeout(() => {
             navigate('/service-points');
@@ -243,7 +246,7 @@ const ServicePointFormPage: React.FC = () => {
   // Эффект для установки региона при загрузке точки обслуживания
   useEffect(() => {
     if (servicePoint?.city_id && cities) {
-      const city = cities.find((c: City) => c.id === servicePoint.city_id.toString());
+      const city = cities.find((c: City) => c.id.toString() === servicePoint.city_id.toString());
       if (city?.region_id && Number(city.region_id) !== selectedRegionId) {
         setSelectedRegionId(Number(city.region_id));
       }
@@ -311,47 +314,6 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}>
-                  <InputLabel id="partner-id-label">Партнер</InputLabel>
-                  <Select
-                    labelId="partner-id-label"
-                    id="partner_id"
-                    name="partner_id"
-                    value={formik.values.partner_id || ''}
-                    onChange={(e: SelectChangeEvent<string>) => {
-                      formik.setFieldValue('partner_id', e.target.value);
-                    }}
-                    onBlur={formik.handleBlur}
-                    label="Партнер"
-                    disabled={isEditMode}
-                  >
-                    <MenuItem value="" disabled>Выберите партнера</MenuItem>
-                    {partners.map((partner) => (
-                      <MenuItem key={partner.id} value={partner.id}>
-                        {partner.company_name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  id="description"
-                  name="description"
-                  label="Описание"
-                  multiline
-                  rows={4}
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.description && Boolean(formik.errors.description)}
-                  helperText={formik.touched.description && formik.errors.description}
-                />
-              </Grid>
-
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
@@ -404,20 +366,6 @@ const ServicePointFormPage: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  id="contact_phone"
-                  name="contact_phone"
-                  label="Контактный телефон"
-                  value={formik.values.contact_phone}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.contact_phone && Boolean(formik.errors.contact_phone)}
-                  helperText={formik.touched.contact_phone && formik.errors.contact_phone}
-                />
               </Grid>
 
               <Grid item xs={12}>
@@ -492,36 +440,6 @@ const ServicePointFormPage: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  id="post_count"
-                  name="post_count"
-                  label="Количество постов"
-                  type="number"
-                  value={formik.values.post_count}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.post_count && Boolean(formik.errors.post_count)}
-                  helperText={formik.touched.post_count && formik.errors.post_count}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  id="default_slot_duration"
-                  name="default_slot_duration"
-                  label="Длительность слота (мин)"
-                  type="number"
-                  value={formik.values.default_slot_duration}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.default_slot_duration && Boolean(formik.errors.default_slot_duration)}
-                  helperText={formik.touched.default_slot_duration && formik.errors.default_slot_duration}
-                />
               </Grid>
 
               <Grid item xs={12}>

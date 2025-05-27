@@ -7,7 +7,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Получение списка сервисных точек
     getServicePoints: builder.query<ApiResponse<ServicePoint>, ServicePointFilter>({
       query: (params) => ({
-        url: 'service-points',
+        url: 'service_points',
         method: 'GET',
         params,
       }),
@@ -17,7 +17,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Получение сервисной точки по ID
     getServicePointById: builder.query<ServicePoint, string>({
       query: (id) => ({
-        url: `service-points/${id}`,
+        url: `service_points/${id}`,
         method: 'GET',
       }),
       providesTags: (result, error, id) => [{ type: 'ServicePoint', id }],
@@ -26,7 +26,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Создание новой сервисной точки
     createServicePoint: builder.mutation<ServicePoint, Partial<ServicePoint>>({
       query: (servicePoint) => ({
-        url: 'service-points',
+        url: 'service_points',
         method: 'POST',
         body: servicePoint,
       }),
@@ -36,7 +36,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Обновление сервисной точки
     updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: Partial<ServicePoint> }>({
       query: ({ id, servicePoint }) => ({
-        url: `service-points/${id}`,
+        url: `service_points/${id}`,
         method: 'PUT',
         body: servicePoint,
       }),
@@ -46,7 +46,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Удаление сервисной точки
     deleteServicePoint: builder.mutation<void, string>({
       query: (id) => ({
-        url: `service-points/${id}`,
+        url: `service_points/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ServicePoint'],

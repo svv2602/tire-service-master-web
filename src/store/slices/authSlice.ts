@@ -50,6 +50,12 @@ const initialState: AuthState = {
   isInitialized: false, // Всегда начинаем с false, инициализация происходит в AuthInitializer
 };
 
+// Устанавливаем заголовок Authorization если есть токен при инициализации
+const storedToken = localStorage.getItem(STORAGE_KEY);
+if (storedToken) {
+  apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+}
+
 // Создаем slice
 const authSlice = createSlice({
   name: 'auth',
@@ -126,9 +132,8 @@ const authSlice = createSlice({
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
-        state.isAuthenticated = true;
+        // Не изменяем isAuthenticated и token здесь - они должны устанавливаться через setCredentials
         state.error = null;
-        state.isInitialized = true;
         // Сохраняем обновленные данные пользователя
         setStoredUser(action.payload);
       })

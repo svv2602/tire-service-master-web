@@ -19,7 +19,10 @@ export const baseApi = createApi({
     'Service',
     'ServiceCategory',
     'Settings',
-    'ClientCars'
+    'ClientCars',
+    'Schedule',
+    'ServicePointPhoto',
+    'ServicePointService'
   ],
   endpoints: () => ({}),
 }); 

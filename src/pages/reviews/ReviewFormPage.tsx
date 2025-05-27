@@ -55,7 +55,7 @@ const ReviewFormPage: React.FC = () => {
     data: bookingsData, 
     isLoading: bookingsLoading,
     error: bookingsError
-  } = useGetBookingsByClientQuery(userId || '', { skip: !userId });
+  } = useGetBookingsByClientQuery(userId?.toString() || '', { skip: !userId });
 
   const formik = useFormik({
     initialValues: {
@@ -67,10 +67,10 @@ const ReviewFormPage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         // Находим выбранное бронирование для получения service_point_id
-        const selectedBooking = bookingsData?.find((booking: Booking) => booking.id === values.booking_id);
+        const selectedBooking = bookingsData?.find((booking: Booking) => booking.id.toString() === values.booking_id);
         
         await createReview({
-          service_point_id: selectedBooking?.service_point_id || '',
+          service_point_id: selectedBooking?.service_point_id?.toString() || '',
           rating: values.rating,
           comment: values.comment,
         }).unwrap();

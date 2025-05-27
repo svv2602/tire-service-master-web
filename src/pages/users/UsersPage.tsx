@@ -133,7 +133,7 @@ const UsersPage: React.FC = () => {
         phone_verified: user.phone_verified
       };
       await updateUser({
-        id: user.id,
+        id: user.id.toString(),
         data: updateData
       }).unwrap();
       enqueueSnackbar('Статус пользователя успешно обновлен', { variant: 'success' });
@@ -266,7 +266,7 @@ const UsersPage: React.FC = () => {
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           <Button
                             size="small"
-                            onClick={() => handleEditUser(user.id)}
+                            onClick={() => handleEditUser(user.id.toString())}
                             startIcon={<EditIcon />}
                             variant="outlined"
                             color="primary"
@@ -275,7 +275,7 @@ const UsersPage: React.FC = () => {
                           </Button>
                           <Button
                             size="small"
-                            onClick={() => handleDeleteClick(user.id)}
+                            onClick={() => handleDeleteClick(user.id.toString())}
                             startIcon={<DeleteIcon />}
                             variant="outlined"
                             color="error"

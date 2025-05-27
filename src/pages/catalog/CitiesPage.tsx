@@ -137,8 +137,11 @@ const CitiesPage: React.FC = () => {
       try {
         if (editingCity) {
           await updateCity({ 
-            id: editingCity.id.toString(), 
-            city: values 
+            id: editingCity.id, 
+            city: {
+              ...values,
+              region_id: parseInt(values.region_id)
+            }
           }).unwrap();
           setSuccessMessage('Город успешно обновлен');
           handleCloseDialog();
@@ -179,7 +182,7 @@ const CitiesPage: React.FC = () => {
   };
 
   // Удаление города
-  const handleDeleteCity = async (id: string) => {
+  const handleDeleteCity = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить этот город?')) {
       try {
         await deleteCity(id).unwrap();

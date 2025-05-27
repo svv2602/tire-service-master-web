@@ -1,4 +1,4 @@
-import { Partner } from './partner';
+import { Partner } from './models';
 
 export interface ServicePoint {
   id: number;

@@ -125,7 +125,7 @@ const PartnerFormPage: React.FC = () => {
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
 
   // RTK Query хуки
-  const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id || '', {
+  const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id ? parseInt(id) : 0, {
     skip: !id,
   });
   const { data: regionsData } = useGetRegionsQuery({});
@@ -173,7 +173,7 @@ const PartnerFormPage: React.FC = () => {
 
         if (isEdit && id) {
           await updatePartner({ 
-            id: id.toString(), 
+            id: parseInt(id), 
             partner: submitData 
           }).unwrap();
         } else {
@@ -203,7 +203,7 @@ const PartnerFormPage: React.FC = () => {
         city_id: partner.city_id?.toString() || '',
         user: null,
       });
-      setSelectedRegionId(partner.region_id);
+      setSelectedRegionId(partner.region_id || undefined);
     }
   }, [partner, isEdit, formik]);
 

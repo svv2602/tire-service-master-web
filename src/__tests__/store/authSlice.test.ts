@@ -15,7 +15,7 @@ describe('authSlice', () => {
 
   // Создаем тестового пользователя
   const testUser = {
-    id: '1',
+    id: 1,
     email: 'test@example.com',
     first_name: 'Тест',
     last_name: 'Пользователь',

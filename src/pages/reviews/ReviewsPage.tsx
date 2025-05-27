@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -47,8 +47,26 @@ import {
   useUpdateReviewMutation,
   useGetServicePointsQuery,
 } from '../../api';
-import { Review, ReviewStatus, ServicePoint, ReviewFilter, ReviewFormData } from '../../types/models';
+import { Review, ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
+import { ServicePoint } from '../../types/models';
 import { SelectChangeEvent } from '@mui/material/Select';
+
+// Расширяем интерфейс Review для отображения
+interface ReviewWithClient extends Review {
+  client?: {
+    first_name: string;
+    last_name: string;
+  };
+  text?: string; // Альтернативное поле для comment
+  booking?: {
+    id: number;
+    scheduled_at: string;
+    clientCar?: {
+      carBrand?: { name: string };
+      carModel?: { name: string };
+    };
+  };
+}
 
 // Статусы отзывов с типизацией
 const REVIEW_STATUSES: Record<ReviewStatus, {
@@ -73,7 +91,7 @@ const ReviewsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [selectedReview, setSelectedReview] = useState<ReviewWithClient | null>(null);
 
   // RTK Query хуки
   const { 
@@ -94,7 +112,7 @@ const ReviewsPage: React.FC = () => {
 
   const isLoading = reviewsLoading || deleteLoading;
   const error = reviewsError;
-  const reviews = (reviewsData as unknown as Review[]) || [];
+  const reviews = (reviewsData as unknown as ReviewWithClient[]) || [];
   const totalItems = reviews.length;
   const servicePoints = (servicePointsData as unknown as ServicePoint[]) || [];
 
@@ -123,7 +141,7 @@ const ReviewsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (review: Review) => {
+  const handleDeleteClick = (review: ReviewWithClient) => {
     setSelectedReview(review);
     setDeleteDialogOpen(true);
   };
@@ -140,7 +158,7 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (review: Review, status: ReviewStatus) => {
+  const handleStatusChange = async (review: ReviewWithClient, status: ReviewStatus) => {
     try {
       await updateReview({
         id: review.id.toString(),
@@ -157,9 +175,9 @@ const ReviewsPage: React.FC = () => {
   };
 
   // Вспомогательные функции
-  const getClientInitials = (review: Review) => {
-    const firstName = review.client?.first_name || '';
-    const lastName = review.client?.last_name || '';
+  const getClientInitials = (review: ReviewWithClient) => {
+    const firstName = review.client?.first_name || review.user?.first_name || '';
+    const lastName = review.client?.last_name || review.user?.last_name || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
   };
 
@@ -274,7 +292,7 @@ const ReviewsPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography>
-                        {review.client?.first_name} {review.client?.last_name}
+                        {review.client?.first_name || review.user?.first_name} {review.client?.last_name || review.user?.last_name}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
                         {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
@@ -301,7 +319,7 @@ const ReviewsPage: React.FC = () => {
                       WebkitBoxOrient: 'vertical',
                     }}
                   >
-                    {review.text}
+                    {review.text || review.comment}
                   </Typography>
                   {review.response && (
                     <Box sx={{ mt: 1, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -407,7 +425,7 @@ const ReviewsPage: React.FC = () => {
         <DialogContent>
           <Typography>
             Вы действительно хотите удалить отзыв клиента{' '}
-            {selectedReview?.client?.first_name} {selectedReview?.client?.last_name}?
+            {selectedReview?.client?.first_name || selectedReview?.user?.first_name} {selectedReview?.client?.last_name || selectedReview?.user?.last_name}?
             Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>

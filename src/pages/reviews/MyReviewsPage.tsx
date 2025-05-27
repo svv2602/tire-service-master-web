@@ -62,7 +62,7 @@ const MyReviewsPage: React.FC = () => {
     data: reviewsData, 
     isLoading: reviewsLoading, 
     error: reviewsError 
-  } = useGetReviewsByClientQuery(userId || '', { skip: !userId });
+  } = useGetReviewsByClientQuery(userId?.toString() || '', { skip: !userId });
 
   const [deleteReview, { isLoading: deleteLoading }] = useDeleteReviewMutation();
   const [updateReview, { isLoading: updateLoading }] = useUpdateReviewMutation();

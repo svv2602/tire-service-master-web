@@ -4,7 +4,7 @@ import type { Client, ClientCar as ClientCarType, ClientFilter as ClientFilterTy
 
 // Базовый интерфейс для всех моделей
 export interface BaseModel {
-  id: string;
+  id: number;
   created_at: string;
   updated_at: string;
 }
@@ -20,11 +20,18 @@ export interface PaginationMeta {
 // Интерфейс для ответа API с пагинацией
 export interface ApiResponse<T> {
   data: T[];
-  total: number;
-  meta: {
+  total?: number;
+  meta?: {
     current_page: number;
     total_pages: number;
     total_count: number;
+    total?: number;
+  };
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    total?: number;
   };
 }
 
@@ -42,7 +49,7 @@ export type {
 
 // Модель пользователя
 export interface User {
-  id: string;
+  id: number;
   email: string;
   phone?: string;
   first_name: string;
@@ -57,7 +64,7 @@ export interface User {
 
 // Модель партнера
 export interface Partner {
-  id: string;
+  id: number;
   user_id: number;
   name?: string;
   company_name: string;
@@ -70,15 +77,15 @@ export interface Partner {
   legal_address?: string;
   phone?: string;
   email?: string;
-  region_id: number;
-  city_id: number;
+  region_id: number | null;
+  city_id: number | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   
   // Связанные объекты - делаем user более гибким для совместимости с API
   user?: User | {
-    id: string;
+    id: number;
     email: string;
     phone: string;
     first_name: string;
@@ -90,8 +97,8 @@ export interface Partner {
 
 // Модель сервисной точки
 export interface ServicePoint {
-  id: string;
-  partner_id: string;
+  id: number;
+  partner_id: number;
   name: string;
   description?: string;
   address: string;
@@ -177,7 +184,7 @@ export interface CarModel extends BaseModel {
 
 // Регион
 export interface Region {
-  id: string;
+  id: number;
   name: string;
   code?: string;
   is_active?: boolean;
@@ -185,9 +192,10 @@ export interface Region {
 
 // Город
 export interface City {
-  id: string;
+  id: number;
   name: string;
-  region_id: string;
+  region_id: number;
+  regionId?: number;
   code?: string;
   is_active?: boolean;
   region?: Region;
@@ -195,9 +203,9 @@ export interface City {
 
 // Бронирования
 export interface Booking {
-  id: string;
-  service_point_id: string;
-  client_id: string;
+  id: number;
+  service_point_id: number;
+  client_id: number;
   service_type: string;
   status: string;
   scheduled_at: string;
@@ -215,7 +223,7 @@ export interface Booking {
 
 // Интерфейсы для форм
 export interface BookingFormData {
-  service_point_id: string;
+  service_point_id: number;
   service_type: string;
   scheduled_at: string;
 }
@@ -255,11 +263,14 @@ export interface RegionFormData {
 
 // Типы для фильтров
 export interface ServicePointFilter {
+  search?: string;
   query?: string;
   status?: string;
   service_point_id?: string;
   city_id?: number | string;
+  cityId?: number | string;
   region_id?: number | string;
+  regionId?: number | string;
   page?: number;
   per_page?: number;
 }
@@ -281,7 +292,8 @@ export interface ClientFilter {
 
 export interface CityFilter {
   query?: string;
-  region_id?: string;
+  region_id?: string | number;
+  regionId?: string | number;
   page?: number;
   per_page?: number;
 }
@@ -335,9 +347,9 @@ export interface ServicePointService {
 export type ReviewStatus = 'pending' | 'published' | 'rejected';
 
 export interface Review {
-  id: string;
-  service_point_id: string;
-  client_id: string;
+  id: number;
+  service_point_id: number;
+  client_id: number;
   rating: number;
   comment: string;
   text?: string;
@@ -401,19 +413,19 @@ export interface Amenity extends BaseModel {
 
 // Модель автомобиля
 export interface Car {
-  id: string;
+  id: number;
   brand: string;
   model: string;
   year: number;
   license_plate: string;
-  client_id?: string;
+  client_id?: number;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ReviewFormData {
-  service_point_id: string;
-  booking_id?: string;
+  service_point_id: number;
+  booking_id?: number;
   rating: number;
   comment: string;
 }

@@ -18,7 +18,7 @@ import { User } from '../../types/models';
 describe('auth utils', () => {
   // Создаем тестового пользователя
   const mockUser: User = {
-    id: '1',
+    id: 1,
     email: 'test@example.com',
     phone: '+1234567890',
     first_name: 'Test',
@@ -264,7 +264,7 @@ describe('auth utils', () => {
       // Второй пользователь с другой ролью
       const adminUser: User = {
         ...mockUser,
-        id: '2',
+        id: 2,
         email: 'admin@example.com',
         role: 'admin',
       };

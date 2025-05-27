@@ -66,9 +66,6 @@ const ServicePointPhotosPage: React.FC = () => {
     
     setIsUploading(true);
     
-    const formData = new FormData();
-    formData.append('photo', files[0]);
-    
     try {
       await uploadPhoto({ servicePointId: id, file: files[0] }).unwrap();
       await refetchPhotos();

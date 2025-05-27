@@ -1,39 +1,60 @@
 import { baseApi } from './baseApi';
-
-interface ServicePointPhoto {
-  id: number;
-  service_point_id: number;
-  url: string;
-  description?: string;
-  is_main: boolean;
-}
-
-interface ServicePointPhotosResponse {
-  data: ServicePointPhoto[];
-}
+import { ServicePointPhoto, ApiResponse } from '../types/models';
 
 export const servicePointPhotosApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getServicePointPhotos: builder.query<ServicePointPhotosResponse, number>({
-      query: (servicePointId) => `/service-points/${servicePointId}/photos`,
-      providesTags: ['ServicePoint'],
+    // Получение фотографий сервисной точки
+    getServicePointPhotos: builder.query<ApiResponse<ServicePointPhoto>, string>({
+      query: (servicePointId) => `service_points/${servicePointId}/photos`,
+      providesTags: (result, error, servicePointId) => [
+        { type: 'ServicePointPhoto', id: servicePointId },
+        'ServicePointPhoto',
+      ],
     }),
 
-    uploadServicePointPhoto: builder.mutation<ServicePointPhoto, { id: number; photo: FormData }>({
-      query: ({ id, photo }) => ({
-        url: `/service-points/${id}/photos`,
-        method: 'POST',
-        body: photo,
-      }),
-      invalidatesTags: ['ServicePoint'],
+    // Загрузка фотографии
+    uploadServicePointPhoto: builder.mutation<ServicePointPhoto, { servicePointId: string; file: File; description?: string }>({
+      query: ({ servicePointId, file, description }) => {
+        const formData = new FormData();
+        formData.append('photo', file);
+        if (description) {
+          formData.append('description', description);
+        }
+        return {
+          url: `service_points/${servicePointId}/photos`,
+          method: 'POST',
+          body: formData,
+        };
+      },
+      invalidatesTags: (result, error, { servicePointId }) => [
+        { type: 'ServicePointPhoto', id: servicePointId },
+        'ServicePointPhoto',
+      ],
     }),
 
-    deleteServicePointPhoto: builder.mutation<void, { servicePointId: number; photoId: number }>({
+    // Удаление фотографии
+    deleteServicePointPhoto: builder.mutation<void, { servicePointId: string; photoId: string }>({
       query: ({ servicePointId, photoId }) => ({
-        url: `/service-points/${servicePointId}/photos/${photoId}`,
+        url: `service_points/${servicePointId}/photos/${photoId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ServicePoint'],
+      invalidatesTags: (result, error, { servicePointId }) => [
+        { type: 'ServicePointPhoto', id: servicePointId },
+        'ServicePointPhoto',
+      ],
+    }),
+
+    // Обновление фотографии
+    updateServicePointPhoto: builder.mutation<ServicePointPhoto, { servicePointId: string; photoId: string; description: string }>({
+      query: ({ servicePointId, photoId, description }) => ({
+        url: `service_points/${servicePointId}/photos/${photoId}`,
+        method: 'PATCH',
+        body: { description },
+      }),
+      invalidatesTags: (result, error, { servicePointId }) => [
+        { type: 'ServicePointPhoto', id: servicePointId },
+        'ServicePointPhoto',
+      ],
     }),
   }),
 });
@@ -42,4 +63,5 @@ export const {
   useGetServicePointPhotosQuery,
   useUploadServicePointPhotoMutation,
   useDeleteServicePointPhotoMutation,
+  useUpdateServicePointPhotoMutation,
 } = servicePointPhotosApi; 

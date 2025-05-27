@@ -106,7 +106,7 @@ const RegionsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedRegion) {
       try {
-        await deleteRegion(selectedRegion.id.toString()).unwrap();
+        await deleteRegion(selectedRegion.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedRegion(null);
       } catch (error) {
@@ -118,7 +118,7 @@ const RegionsPage: React.FC = () => {
   const handleToggleStatus = async (region: Region) => {
     try {
       await updateRegion({
-        id: region.id.toString(),
+        id: region.id,
         region: { is_active: !region.is_active } as Partial<RegionFormData>
       }).unwrap();
     } catch (error) {

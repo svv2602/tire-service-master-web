@@ -13,7 +13,7 @@ export const citiesApi = baseApi.injectEndpoints({
       providesTags: ['City'],
     }),
 
-    getCitiesByRegion: builder.query<City[], string>({
+    getCitiesByRegion: builder.query<City[], number>({
       query: (regionId) => ({
         url: 'cities',
         method: 'GET',
@@ -22,7 +22,7 @@ export const citiesApi = baseApi.injectEndpoints({
       providesTags: ['City'],
     }),
 
-    getCityById: builder.query<City, string>({
+    getCityById: builder.query<City, number>({
       query: (id) => ({
         url: `cities/${id}`,
         method: 'GET',
@@ -39,7 +39,7 @@ export const citiesApi = baseApi.injectEndpoints({
       invalidatesTags: ['City'],
     }),
 
-    updateCity: builder.mutation<City, { id: string; city: Partial<City> }>({
+    updateCity: builder.mutation<City, { id: number; city: Partial<City> }>({
       query: ({ id, city }) => ({
         url: `cities/${id}`,
         method: 'PUT',
@@ -48,7 +48,7 @@ export const citiesApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: 'City', id }],
     }),
 
-    deleteCity: builder.mutation<void, string>({
+    deleteCity: builder.mutation<void, number>({
       query: (id) => ({
         url: `cities/${id}`,
         method: 'DELETE',

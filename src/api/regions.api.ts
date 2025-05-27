@@ -16,7 +16,7 @@ export const regionsApi = baseApi.injectEndpoints({
     }),
 
     // Получение региона по ID
-    getRegionById: builder.query<Region, string>({
+    getRegionById: builder.query<Region, number>({
       query: (id) => ({
         url: `regions/${id}`,
         method: 'GET',
@@ -35,7 +35,7 @@ export const regionsApi = baseApi.injectEndpoints({
     }),
 
     // Обновление региона
-    updateRegion: builder.mutation<Region, { id: string; region: Partial<Region> }>({
+    updateRegion: builder.mutation<Region, { id: number; region: Partial<Region> }>({
       query: ({ id, region }) => ({
         url: `regions/${id}`,
         method: 'PUT',
@@ -45,7 +45,7 @@ export const regionsApi = baseApi.injectEndpoints({
     }),
 
     // Удаление региона
-    deleteRegion: builder.mutation<void, string>({
+    deleteRegion: builder.mutation<void, number>({
       query: (id) => ({
         url: `regions/${id}`,
         method: 'DELETE',

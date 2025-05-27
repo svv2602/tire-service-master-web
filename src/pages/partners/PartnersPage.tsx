@@ -39,7 +39,7 @@ import {
   useDeletePartnerMutation,
   useUpdatePartnerMutation,
 } from '../../api';
-import { Partner, PartnerFilter, PartnerFormData } from '../../types/partner';
+import { Partner, PartnerFilter, PartnerFormData } from '../../types/models';
 
 const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -95,7 +95,7 @@ const PartnersPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedPartner) {
       try {
-        await deletePartner(selectedPartner.id.toString()).unwrap();
+        await deletePartner(selectedPartner.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedPartner(null);
       } catch (error) {
@@ -107,7 +107,7 @@ const PartnersPage: React.FC = () => {
   const handleToggleStatus = async (partner: Partner) => {
     try {
       await updatePartner({
-        id: partner.id.toString(),
+        id: partner.id,
         partner: { is_active: !partner.is_active } as Partial<PartnerFormData>
       }).unwrap();
     } catch (error) {

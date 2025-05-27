@@ -111,7 +111,7 @@ const CitiesPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedCity) {
       try {
-        await deleteCity(selectedCity.id.toString()).unwrap();
+        await deleteCity(selectedCity.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedCity(null);
       } catch (error) {
@@ -123,7 +123,7 @@ const CitiesPage: React.FC = () => {
   const handleToggleStatus = async (city: City) => {
     try {
       await updateCity({
-        id: city.id.toString(),
+        id: city.id,
         city: { is_active: !city.is_active } as Partial<City>
       }).unwrap();
     } catch (error) {

@@ -6,7 +6,7 @@ export enum UserRole {
 }
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
   first_name: string;
   last_name: string;
@@ -15,8 +15,8 @@ export interface User {
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
-  client_id?: string;
-  partner_id?: string;
+  client_id?: number;
+  partner_id?: number;
   created_at?: string;
   updated_at?: string;
 }

@@ -1,67 +1,63 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { baseQuery } from './baseQuery';
-import { Schedule, ScheduleFormData, ScheduleFilter, GenerateScheduleData } from '../types/schedule';
+import { baseApi } from './baseApi';
+import { WorkingHours, ServicePointService } from '../types/models';
 
-export const scheduleApi = createApi({
-  reducerPath: 'scheduleApi',
-  baseQuery,
-  tagTypes: ['Schedule', 'ServicePointServices'],
+export const scheduleApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSchedule: builder.query<Schedule[], { service_point_id: string; date: string }>({
+    getSchedule: builder.query<WorkingHours[], { service_point_id: string; date?: string }>({
       query: ({ service_point_id, date }) => ({
-        url: `service-points/${service_point_id}/schedule`,
-        method: 'GET',
+        url: `service_points/${service_point_id}/schedule`,
+        params: date ? { date } : {},
+      }),
+      providesTags: ['Schedule'],
+    }),
+
+    getServicePointServices: builder.query<ServicePointService[], string>({
+      query: (service_point_id) => ({
+        url: `service_points/${service_point_id}/services`,
+      }),
+      providesTags: ['ServicePointService'],
+    }),
+
+    updateSchedule: builder.mutation<WorkingHours[], { service_point_id: string; schedule: WorkingHours[] }>({
+      query: ({ service_point_id, schedule }) => ({
+        url: `service_points/${service_point_id}/schedule`,
+        method: 'PUT',
+        body: { schedule },
+      }),
+      invalidatesTags: ['Schedule'],
+    }),
+
+    generateSchedule: builder.mutation<void, { service_point_id: string; from_date: string; to_date: string }>({
+      query: ({ service_point_id, from_date, to_date }) => ({
+        url: `service_points/${service_point_id}/generate_schedule`,
+        method: 'POST',
+        body: { from_date, to_date },
+      }),
+      invalidatesTags: ['Schedule'],
+    }),
+
+    getAvailableSlots: builder.query<any[], { service_point_id: string; date: string }>({
+      query: ({ service_point_id, date }) => ({
+        url: `service_points/${service_point_id}/available_slots`,
         params: { date },
       }),
       providesTags: ['Schedule'],
     }),
-    getServicePointServices: builder.query<any, string>({
-      query: (service_point_id) => ({
-        url: `service-points/${service_point_id}/services`,
-        method: 'GET',
+
+    getOccupancy: builder.query<any, { service_point_id: string; date: string }>({
+      query: ({ service_point_id, date }) => ({
+        url: `service_points/${service_point_id}/occupancy`,
+        params: { date },
       }),
-      providesTags: ['ServicePointServices'],
+      providesTags: ['Schedule'],
     }),
-    getScheduleById: builder.query<Schedule, string>({
-      query: (id: string) => `schedule/${id}`,
-      providesTags: (result, error, id) => [
-        { type: 'Schedule' as const, id }
-      ],
-    }),
-    createSchedule: builder.mutation<Schedule, ScheduleFormData>({
-      query: (data: ScheduleFormData) => ({
-        url: 'schedule',
-        method: 'POST',
-        body: data,
+
+    getWeeklyOccupancy: builder.query<any[], { service_point_id: string; week_start: string }>({
+      query: ({ service_point_id, week_start }) => ({
+        url: `service_points/${service_point_id}/weekly_occupancy`,
+        params: { week_start },
       }),
-      invalidatesTags: ['Schedule'],
-    }),
-    updateSchedule: builder.mutation<Schedule, { id: string; data: Partial<ScheduleFormData> }>({
-      query: ({ id, data }) => ({
-        url: `schedule/${id}`,
-        method: 'PATCH',
-        body: data,
-      }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: 'Schedule' as const, id },
-        'Schedule',
-      ],
-    }),
-    deleteSchedule: builder.mutation<void, string>({
-      query: (id: string) => ({
-        url: `schedule/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Schedule'],
-    }),
-    generateSchedule: builder.mutation<Schedule[], GenerateScheduleData>({
-      query: (data: GenerateScheduleData) => ({
-        url: 'schedule/generate',
-        method: 'POST',
-        body: data,
-      }),
-      invalidatesTags: ['Schedule'],
+      providesTags: ['Schedule'],
     }),
   }),
 });
@@ -69,9 +65,9 @@ export const scheduleApi = createApi({
 export const {
   useGetScheduleQuery,
   useGetServicePointServicesQuery,
-  useGetScheduleByIdQuery,
-  useCreateScheduleMutation,
   useUpdateScheduleMutation,
-  useDeleteScheduleMutation,
   useGenerateScheduleMutation,
+  useGetAvailableSlotsQuery,
+  useGetOccupancyQuery,
+  useGetWeeklyOccupancyQuery,
 } = scheduleApi; 

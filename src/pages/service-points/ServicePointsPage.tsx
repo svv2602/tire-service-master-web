@@ -68,9 +68,9 @@ const ServicePointsPage: React.FC = () => {
     { skip: !selectedRegionId }
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
-    query: search,
-    city_id: selectedCityId || undefined,
-    region_id: selectedRegionId || undefined,
+    search,
+    cityId: selectedCityId || undefined,
+    regionId: selectedRegionId || undefined,
     page: page + 1,
     per_page: rowsPerPage,
   });
@@ -78,7 +78,7 @@ const ServicePointsPage: React.FC = () => {
 
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
-  const totalItems = servicePointsData?.meta?.total_count || 0;
+  const totalItems = servicePointsData?.meta?.total_count || servicePointsData?.pagination?.total_count || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +115,7 @@ const ServicePointsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedServicePoint) {
       try {
-        await deleteServicePoint(selectedServicePoint.id).unwrap();
+        await deleteServicePoint(selectedServicePoint.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedServicePoint(null);
       } catch (error) {
@@ -246,7 +246,7 @@ const ServicePointsPage: React.FC = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <LocationIcon color="action" />
-                    <Typography>{servicePoint.contact_phone}</Typography>
+                    <Typography>{servicePoint.phone || servicePoint.contact_phone || 'Не указан'}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
@@ -259,7 +259,7 @@ const ServicePointsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Tooltip title="Редактировать">
                       <IconButton 
-                        onClick={() => navigate(`/service-points/${servicePoint.partner_id}/${servicePoint.id}/edit`)}
+                        onClick={() => navigate(`/service-points/${servicePoint.id}/edit`)}
                         size="small"
                       >
                         <EditIcon />
