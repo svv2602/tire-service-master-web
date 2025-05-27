@@ -41,9 +41,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   useGetCarModelsQuery, 
   useDeleteCarModelMutation,
-  useToggleCarModelActiveMutation
-} from '../../api/carModels';
-import { useGetCarBrandsQuery } from '../../api/carBrands';
+  useToggleCarModelActiveMutation,
+  useGetCarBrandsQuery
+} from '../../api';
+import { CarModel, CarBrand } from '../../types/car';
 
 const CarModelsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ const CarModelsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<{ id: number; name: string; brand_id: number } | null>(null);
+  const [selectedModel, setSelectedModel] = useState<{ id: string; name: string; brand_id: number } | null>(null);
 
   // RTK Query хуки
   const { 
@@ -102,7 +103,7 @@ const CarModelsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (model: { id: number; name: string; brand_id: number }) => {
+  const handleDeleteClick = (model: { id: string; name: string; brand_id: number }) => {
     setSelectedModel(model);
     setDeleteDialogOpen(true);
   };
@@ -124,9 +125,9 @@ const CarModelsPage: React.FC = () => {
     setSelectedModel(null);
   };
 
-  const handleToggleActive = async (id: number, currentActive: boolean) => {
+  const handleToggleActive = async (id: string, currentActive: boolean) => {
     try {
-      await toggleActive({ id, active: !currentActive }).unwrap();
+      await toggleActive({ id, is_active: !currentActive }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса активности:', error);
     }
@@ -152,7 +153,7 @@ const CarModelsPage: React.FC = () => {
   }
 
   const models = modelsData?.data || [];
-  const totalItems = modelsData?.pagination?.total_count || 0;
+  const totalItems = modelsData?.total || 0;
   const brands = brandsData?.data || [];
 
   return (
@@ -196,7 +197,7 @@ const CarModelsPage: React.FC = () => {
               label="Бренд"
             >
               <MenuItem value="">Все бренды</MenuItem>
-              {brands.map((brand) => (
+              {brands.map((brand: CarBrand) => (
                 <MenuItem key={brand.id} value={brand.id}>
                   {brand.name}
                 </MenuItem>
@@ -234,7 +235,7 @@ const CarModelsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {models.map((model) => (
+              {models.map((model: CarModel) => (
                 <TableRow key={model.id} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

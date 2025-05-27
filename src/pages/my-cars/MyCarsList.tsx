@@ -27,6 +27,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
+import { User } from '../../types/user';
 
 interface Car {
   id: number;
@@ -48,7 +49,7 @@ const MyCarsList: React.FC = () => {
   const fetchCars = useCallback(async () => {
     try {
       setLoading(true);
-      const clientId = user?.client_id;
+      const clientId = user?.id;
       
       if (!clientId) {
         throw new Error('Отсутствует идентификатор клиента');
@@ -56,70 +57,54 @@ const MyCarsList: React.FC = () => {
       
       const response = await fetchWithAuth(`/api/v1/clients/${clientId}/cars`);
       const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось загрузить данные автомобилей');
-      }
-      
-      setCars(data);
-      setError(null);
-    } catch (err) {
-      console.error('Ошибка загрузки автомобилей:', err);
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setCars(data.cars || []);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      setError('Ошибка при загрузке автомобилей');
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchCars();
   }, [fetchCars]);
 
-  const handleSetPrimary = async (carId: number) => {
-    if (!user?.client_id) return;
+  const handleSetPrimary = async (carId: string) => {
+    if (!user?.id) return;
     
     try {
-      // Находим текущий автомобиль в списке
-      const car = cars.find(c => c.id === carId);
-      if (!car) return;
-      
-      // Если автомобиль уже основной, ничего не делаем
-      if (car.is_primary) return;
-      
       const response = await fetchWithAuth(
-        `/api/v1/clients/${user.client_id}/cars/${carId}`,
+        `/api/v1/clients/${user.id}/cars/${carId}`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ car: { is_primary: true } }),
+          body: JSON.stringify({ is_primary: true }),
         }
       );
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось установить основной автомобиль');
+        throw new Error('Не удалось установить автомобиль как основной');
       }
       
-      // Обновляем список автомобилей
       fetchCars();
-    } catch (err) {
-      console.error('Ошибка установки основного автомобиля:', err);
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+    } catch (error) {
+      console.error('Error setting primary car:', error);
+      setError('Ошибка при установке основного автомобиля');
     }
   };
 
   const handleDeleteCar = async (carId: number) => {
-    if (!user?.client_id) return;
-    
     if (!window.confirm('Вы уверены, что хотите удалить этот автомобиль?')) {
       return;
     }
     
     try {
+      const clientId = user?.id;
       const response = await fetchWithAuth(
-        `/api/v1/clients/${user.client_id}/cars/${carId}`,
+        `/api/v1/clients/${clientId}/cars/${carId}`,
         {
           method: 'DELETE',
         }
@@ -136,6 +121,12 @@ const MyCarsList: React.FC = () => {
       console.error('Ошибка удаления автомобиля:', err);
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     }
+  };
+
+  const handleEditCar = (carId: number) => {
+    const clientId = user?.id;
+    // Здесь можно добавить логику редактирования
+    console.log(`Редактирование автомобиля ${carId} для клиента ${clientId}`);
   };
 
   if (loading) {
@@ -263,7 +254,7 @@ const MyCarsList: React.FC = () => {
                   {!car.is_primary && (
                     <Button
                       startIcon={<StarBorderIcon />}
-                      onClick={() => handleSetPrimary(car.id)}
+                      onClick={() => handleSetPrimary(car.id.toString())}
                       size="small"
                     >
                       Сделать основным

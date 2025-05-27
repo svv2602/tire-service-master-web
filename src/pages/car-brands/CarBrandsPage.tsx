@@ -42,10 +42,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { 
   useGetCarBrandsQuery, 
+  useCreateCarBrandMutation,
+  useUpdateCarBrandMutation,
   useDeleteCarBrandMutation,
   useToggleCarBrandActiveMutation,
   useToggleCarBrandPopularMutation
-} from '../../api/carBrands';
+} from '../../api';
+import { CarBrand } from '../../types/car';
 
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,7 +62,7 @@ const CarBrandsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<{ id: string; name: string } | null>(null);
 
   // RTK Query хуки
   const { 
@@ -103,7 +106,7 @@ const CarBrandsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (brand: { id: number; name: string }) => {
+  const handleDeleteClick = (brand: { id: string; name: string }) => {
     setSelectedBrand(brand);
     setDeleteDialogOpen(true);
   };
@@ -125,17 +128,17 @@ const CarBrandsPage: React.FC = () => {
     setSelectedBrand(null);
   };
 
-  const handleToggleActive = async (id: number, currentActive: boolean) => {
+  const handleToggleActive = async (id: string, currentActive: boolean) => {
     try {
-      await toggleActive({ id, active: !currentActive }).unwrap();
+      await toggleActive({ id, is_active: !currentActive }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса активности:', error);
     }
   };
 
-  const handleTogglePopular = async (id: number, currentPopular: boolean) => {
+  const handleTogglePopular = async (id: string, currentPopular: boolean) => {
     try {
-      await togglePopular({ id, popular: !currentPopular }).unwrap();
+      await togglePopular({ id, is_popular: !currentPopular }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса популярности:', error);
     }
@@ -161,7 +164,7 @@ const CarBrandsPage: React.FC = () => {
   }
 
   const brands = brandsData?.data || [];
-  const totalItems = brandsData?.pagination?.total_count || 0;
+  const totalItems = brandsData?.total || 0;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -239,7 +242,7 @@ const CarBrandsPage: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {brands.map((brand) => (
+              {brands.map((brand: CarBrand) => (
                 <TableRow key={brand.id} hover>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

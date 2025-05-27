@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
   Button,
+  TextField,
+  InputAdornment,
   Paper,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -11,68 +14,144 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Chip,
-  TextField,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControlLabel,
-  Switch,
-  CircularProgress,
-  Snackbar,
-  Alert,
-  Tooltip,
   TablePagination,
-  MenuItem,
-  Select,
+  Alert,
   FormControl,
   InputLabel,
-  FormHelperText,
-  SelectChangeEvent,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add as AddIcon,
+  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Search as SearchIcon,
 } from '@mui/icons-material';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
-import { fetchCarModels, deleteCarModel, createCarModel, updateCarModel, clearError } from '../../store/slices/carModelsSlice';
-import { fetchCarBrands } from '../../store/slices/carBrandsSlice';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import {
+  useGetCarModelsQuery,
+  useGetCarBrandsQuery,
+  useCreateCarModelMutation,
+  useUpdateCarModelMutation,
+  useDeleteCarModelMutation,
+} from '../../api';
+import { CarModel, CarBrand } from '../../types/car';
 
-// Схема валидации для модели автомобиля
 const validationSchema = yup.object({
-  name: yup.string().required('Название модели обязательно'),
+  name: yup.string().required('Название обязательно'),
+  code: yup.string().required('Код обязателен'),
   brand_id: yup.number().required('Бренд обязателен'),
 });
 
+interface ModelFormValues {
+  name: string;
+  code: string;
+  brand_id: number;
+  is_active: boolean;
+  is_popular: boolean;
+  year_start?: number | null;
+  year_end?: number | null;
+}
+
 const CarModelsPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { carModels, loading, error, totalItems } = useSelector((state: RootState) => state.carModels);
-  const { carBrands } = useSelector((state: RootState) => state.carBrands);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingCarModel, setEditingCarModel] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [brandFilter, setBrandFilter] = useState<number | ''>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedBrandId, setSelectedBrandId] = useState<number | ''>('');
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editingModel, setEditingModel] = useState<CarModel | null>(null);
 
-  // Загрузка моделей и брендов при монтировании компонента
-  useEffect(() => {
-    dispatch(fetchCarBrands({ active: true }));
-    loadCarModels();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, rowsPerPage, searchQuery, brandFilter]);
+  // RTK Query хуки
+  const { data: modelsData, isLoading, error: fetchError } = useGetCarModelsQuery({
+    page: page + 1,
+    per_page: rowsPerPage,
+    query: searchQuery || undefined,
+    brand_id: selectedBrandId || undefined,
+  });
 
-  const loadCarModels = useCallback(() => {    dispatch(fetchCarModels({      page: page + 1,      per_page: rowsPerPage,      query: searchQuery || undefined    }));  }, [dispatch, page, rowsPerPage, searchQuery]);
+  const { data: brandsData } = useGetCarBrandsQuery({});
+  const [createModel, { error: createError }] = useCreateCarModelMutation();
+  const [updateModel, { error: updateError }] = useUpdateCarModelMutation();
+  const [deleteModel, { error: deleteError }] = useDeleteCarModelMutation();
 
-  // Обработчики пагинации
-  const handleChangePage = (_: unknown, newPage: number) => {
+  const error = fetchError || createError || updateError || deleteError;
+  const models = modelsData?.data || [];
+  const totalItems = modelsData?.total || 0;
+  const brands = brandsData?.data || [];
+
+  const formik = useFormik<ModelFormValues>({
+    initialValues: {
+      name: '',
+      code: '',
+      brand_id: 0,
+      is_active: true,
+      is_popular: false,
+      year_start: null,
+      year_end: null,
+    },
+    validationSchema,
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        const submitData = {
+          ...values,
+          year_start: values.year_start || undefined,
+          year_end: values.year_end || undefined,
+        };
+        
+        if (editingModel) {
+          await updateModel({ id: editingModel.id, data: submitData }).unwrap();
+        } else {
+          await createModel(submitData).unwrap();
+        }
+        resetForm();
+        setOpenDialog(false);
+        setEditingModel(null);
+      } catch (err) {
+        console.error('Failed to save model:', err);
+      }
+    },
+  });
+
+  const handleOpenDialog = (model?: CarModel) => {
+    if (model) {
+      setEditingModel(model);
+      formik.setValues({
+        name: model.name,
+        code: model.code,
+        brand_id: model.brand_id,
+        is_active: model.is_active,
+        is_popular: model.is_popular,
+        year_start: model.year_start,
+        year_end: model.year_end,
+      });
+    } else {
+      setEditingModel(null);
+      formik.resetForm();
+    }
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setEditingModel(null);
+    formik.resetForm();
+  };
+
+  const handleDeleteModel = async (id: string) => {
+    try {
+      await deleteModel(id).unwrap();
+    } catch (err) {
+      console.error('Failed to delete model:', err);
+    }
+  };
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -81,92 +160,20 @@ const CarModelsPage: React.FC = () => {
     setPage(0);
   };
 
-  // Формик для формы модели
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      brand_id: 0,
-      is_active: true,
-    },
-    validationSchema,
-    onSubmit: async (values) => {
-      try {
-        if (editingCarModel) {
-          await dispatch(updateCarModel({ id: editingCarModel.id, data: values })).unwrap();
-          setSuccessMessage('Модель успешно обновлена');
-        } else {
-          await dispatch(createCarModel(values)).unwrap();
-          setSuccessMessage('Модель успешно создана');
-        }
-        handleCloseDialog();
-        loadCarModels();
-      } catch (error) {
-        console.error('Ошибка при сохранении:', error);
-      }
-    },
-  });
-
-  // Открытие диалога создания/редактирования
-  const handleOpenDialog = (carModel?: any) => {
-    if (carModel) {
-      setEditingCarModel(carModel);
-      formik.setValues({
-        name: carModel.name,
-        brand_id: carModel.brand_id,
-        is_active: carModel.is_active,
-      });
-    } else {
-      setEditingCarModel(null);
-      formik.resetForm();
-    }
-    setOpenDialog(true);
-  };
-
-  // Закрытие диалога
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    formik.resetForm();
-    setEditingCarModel(null);
-  };
-
-  // Удаление модели
-  const handleDeleteCarModel = async (id: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить эту модель?')) {
-      try {
-        await dispatch(deleteCarModel(id)).unwrap();
-        setSuccessMessage('Модель успешно удалена');
-        loadCarModels();
-      } catch (error: any) {
-        console.error('Ошибка при удалении:', error);
-      }
-    }
-  };
-
-  // Обработчик поиска
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setPage(0);
-  };
-
-  // Обработчик фильтра по бренду
-  const handleBrandFilterChange = (event: SelectChangeEvent<number | string>) => {
-    const value = event.target.value;
-    setBrandFilter(value === '' ? '' : Number(value));
-    setPage(0);
-  };
-
-  // Закрытие уведомления
-  const handleCloseSnackbar = () => {
-    setSuccessMessage(null);
-  };
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <Box>
+    <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Управление моделями автомобилей</Typography>
+        <Typography variant="h4">Модели автомобилей</Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
         >
@@ -175,35 +182,37 @@ const CarModelsPage: React.FC = () => {
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>
-          {error}
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Произошла ошибка: {error.toString()}
         </Alert>
       )}
 
-      <Paper sx={{ mb: 3, p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2 }}>
           <TextField
-            label="Поиск по названию"
+            placeholder="Поиск по названию"
             variant="outlined"
             size="small"
-            fullWidth
             value={searchQuery}
-            onChange={handleSearch}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ minWidth: 300 }}
             InputProps={{
-              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
             }}
           />
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel id="brand-filter-label">Фильтр по бренду</InputLabel>
+            <InputLabel>Бренд</InputLabel>
             <Select
-              labelId="brand-filter-label"
-              id="brand-filter"
-              value={brandFilter}
-              label="Фильтр по бренду"
-              onChange={handleBrandFilterChange}
+              value={selectedBrandId}
+              onChange={(e) => setSelectedBrandId(e.target.value as number)}
+              label="Бренд"
             >
               <MenuItem value="">Все бренды</MenuItem>
-              {carBrands.map((brand) => (
+              {brands.map((brand: CarBrand) => (
                 <MenuItem key={brand.id} value={brand.id}>
                   {brand.name}
                 </MenuItem>
@@ -214,161 +223,137 @@ const CarModelsPage: React.FC = () => {
       </Paper>
 
       <TableContainer component={Paper}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Название</TableCell>
-                  <TableCell>Бренд</TableCell>
-                  <TableCell>Статус</TableCell>
-                  <TableCell align="right">Действия</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {carModels.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      Модели не найдены
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  carModels.map((model) => (
-                    <TableRow key={model.id}>
-                      <TableCell>{model.id}</TableCell>
-                      <TableCell>{model.name}</TableCell>
-                      <TableCell>{model.brand?.name || `Бренд ID ${model.brand_id}`}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={model.is_active ? 'Активна' : 'Неактивна'}
-                          color={model.is_active ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Редактировать">
-                          <IconButton
-                            color="primary"
-                            onClick={() => handleOpenDialog(model)}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Удалить">
-                          <IconButton
-                            color="error"
-                            onClick={() => handleDeleteCarModel(model.id)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={totalItems}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              labelRowsPerPage="Строк на странице:"
-            />
-          </>
-        )}
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Название</TableCell>
+              <TableCell>Код</TableCell>
+              <TableCell>Бренд</TableCell>
+              <TableCell>Годы выпуска</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell>Популярная</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {models.map((model: CarModel) => (
+              <TableRow key={model.id}>
+                <TableCell>{model.id}</TableCell>
+                <TableCell>{model.name}</TableCell>
+                <TableCell>{model.code}</TableCell>
+                <TableCell>{model.brand?.name}</TableCell>
+                <TableCell>
+                  {model.year_start && model.year_end
+                    ? `${model.year_start} - ${model.year_end}`
+                    : '—'}
+                </TableCell>
+                <TableCell>{model.is_active ? 'Активная' : 'Неактивная'}</TableCell>
+                <TableCell>{model.is_popular ? 'Да' : 'Нет'}</TableCell>
+                <TableCell align="right">
+                  <Tooltip title="Редактировать">
+                    <IconButton onClick={() => handleOpenDialog(model)} size="small">
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Удалить">
+                    <IconButton
+                      onClick={() => handleDeleteModel(model.id)}
+                      size="small"
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          labelRowsPerPage="Строк на странице:"
+          labelDisplayedRows={({ from, to, count }) => 
+            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
+          }
+        />
       </TableContainer>
 
-      {/* Диалог создания/редактирования модели */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <form onSubmit={formik.handleSubmit}>
           <DialogTitle>
-            {editingCarModel ? 'Редактирование модели' : 'Добавление модели'}
+            {editingModel ? 'Редактировать модель' : 'Добавить модель'}
           </DialogTitle>
           <DialogContent>
-            <TextField
-              fullWidth
-              id="name"
-              name="name"
-              label="Название модели"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-              margin="normal"
-            />
-            <FormControl
-              fullWidth
-              margin="normal"
-              error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
-            >
-              <InputLabel id="brand-label">Бренд</InputLabel>
-              <Select
-                labelId="brand-label"
-                id="brand_id"
-                name="brand_id"
-                value={formik.values.brand_id}
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                fullWidth
+                name="name"
+                label="Название"
+                value={formik.values.name}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                label="Бренд"
-              >
-                {carBrands.map((brand) => (
-                  <MenuItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {formik.touched.brand_id && formik.errors.brand_id && (
-                <FormHelperText>{formik.errors.brand_id as string}</FormHelperText>
-              )}
-            </FormControl>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formik.values.is_active}
-                  onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                  name="is_active"
-                  color="primary"
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+              />
+              <TextField
+                fullWidth
+                name="code"
+                label="Код"
+                value={formik.values.code}
+                onChange={formik.handleChange}
+                error={formik.touched.code && Boolean(formik.errors.code)}
+                helperText={formik.touched.code && formik.errors.code}
+              />
+              <FormControl fullWidth>
+                <InputLabel>Бренд</InputLabel>
+                <Select
+                  name="brand_id"
+                  value={formik.values.brand_id}
+                  onChange={formik.handleChange}
+                  error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
+                  label="Бренд"
+                >
+                  {brands.map((brand: CarBrand) => (
+                    <MenuItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  name="year_start"
+                  label="Год начала выпуска"
+                  type="number"
+                  value={formik.values.year_start || ''}
+                  onChange={formik.handleChange}
                 />
-              }
-              label="Активна"
-              sx={{ mt: 2 }}
-            />
+                <TextField
+                  fullWidth
+                  name="year_end"
+                  label="Год окончания выпуска"
+                  type="number"
+                  value={formik.values.year_end || ''}
+                  onChange={formik.handleChange}
+                />
+              </Box>
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={formik.isSubmitting || !formik.isValid}
-            >
-              {formik.isSubmitting ? <CircularProgress size={24} /> : 'Сохранить'}
+            <Button type="submit" variant="contained">
+              {editingModel ? 'Сохранить' : 'Добавить'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
-
-      <Snackbar
-        open={Boolean(successMessage)}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };

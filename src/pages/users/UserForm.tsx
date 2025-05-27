@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 import {
   Box,
   Typography,
@@ -14,7 +16,8 @@ import {
   Checkbox,
   CircularProgress,
   Alert,
-  Divider
+  Divider,
+  Grid
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -29,7 +32,7 @@ interface UserFormData {
   first_name: string;
   last_name: string;
   phone?: string;
-  role: string;
+  role: UserRole;
   is_active: boolean;
   password?: string;
   password_confirmation?: string;
@@ -59,7 +62,7 @@ const UserForm: React.FC = () => {
     data: userData,
     isLoading: isLoadingUser,
     error: userError 
-  } = useGetUserByIdQuery(userId, {
+  } = useGetUserByIdQuery(userId.toString(), {
     skip: !isEditMode
   });
 
@@ -78,7 +81,7 @@ const UserForm: React.FC = () => {
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         phone: user.phone || '',
-        role: user.role || UserRole.CLIENT,
+        role: (user.role as UserRole) || UserRole.CLIENT,
         is_active: user.is_active === true,
         password: '',
         password_confirmation: ''
@@ -177,7 +180,9 @@ const UserForm: React.FC = () => {
 
     // Подготовка данных для отправки
     const userData = {
-      ...formData
+      ...formData,
+      email_verified: true,  // Добавляем обязательные поля из типа User
+      phone_verified: false  // Добавляем обязательные поля из типа User
     };
 
     // Удаляем поля пароля, если они пустые при редактировании
@@ -188,7 +193,7 @@ const UserForm: React.FC = () => {
 
     try {
       if (isEditMode) {
-        await updateUser({ id: userId, data: userData }).unwrap();
+        await updateUser({ id: userId.toString(), data: userData }).unwrap();
       } else {
         await createUser(userData).unwrap();
       }
@@ -287,7 +292,6 @@ const UserForm: React.FC = () => {
                   >
                     <MenuItem value={UserRole.ADMIN}>Администратор</MenuItem>
                     <MenuItem value={UserRole.MANAGER}>Менеджер</MenuItem>
-                    <MenuItem value={UserRole.OPERATOR}>Оператор</MenuItem>
                     <MenuItem value={UserRole.CLIENT}>Клиент</MenuItem>
                   </Select>
                 </FormControl>

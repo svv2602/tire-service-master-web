@@ -23,28 +23,21 @@ import {
   DialogActions,
   TablePagination,
   Avatar,
-  Badge,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  Verified as VerifiedIcon,
-  Cancel as CancelIcon,
-  DirectionsCar as CarIcon,
-  Star as StarIcon,
+  Add as AddIcon,
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
   useGetClientsQuery, 
   useDeleteClientMutation,
-  useGetClientCarsQuery,
-  useGetClientBookingsQuery,
-} from '../../api';
-import { Client } from '../../types/client';
+} from '../../api/clients.api';
+import { Client, ClientFilter } from '../../types/client';
+import { ApiResponse } from '../../types/models';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -64,17 +57,17 @@ const ClientsPage: React.FC = () => {
     isLoading: clientsLoading, 
     error: clientsError 
   } = useGetClientsQuery({
-    search: search || undefined,
+    query: search || undefined,
     page: page + 1,
     per_page: rowsPerPage,
-  });
+  } as ClientFilter);
 
   const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
 
   const isLoading = clientsLoading || deleteLoading;
   const error = clientsError;
-  const clients = clientsData?.data || [];
-  const totalItems = clientsData?.meta?.total || 0;
+  const clients = (clientsData as unknown as ApiResponse<Client>)?.data || [];
+  const totalItems = (clientsData as unknown as ApiResponse<Client>)?.total || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,7 +92,7 @@ const ClientsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedClient) {
       try {
-        await deleteClient(selectedClient.id).unwrap();
+        await deleteClient(selectedClient.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedClient(null);
       } catch (error) {
@@ -111,21 +104,6 @@ const ClientsPage: React.FC = () => {
   const handleCloseDialog = () => {
     setDeleteDialogOpen(false);
     setSelectedClient(null);
-  };
-
-  // Вспомогательные функции
-  const getInitials = (client: Client) => {
-    const firstName = client.firstName || '';
-    const lastName = client.lastName || '';
-    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'К';
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
   };
 
   // Отображение состояний загрузки и ошибок
@@ -149,7 +127,7 @@ const ClientsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Заголовок и кнопка добавления */}
+      {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Клиенты</Typography>
         <Button
@@ -164,12 +142,12 @@ const ClientsPage: React.FC = () => {
       {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <TextField
-          placeholder="Поиск по имени, email или телефону"
+          placeholder="Поиск по имени или телефону"
           variant="outlined"
           size="small"
           value={search}
           onChange={handleSearchChange}
-          sx={{ minWidth: 400 }}
+          fullWidth
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -186,84 +164,32 @@ const ClientsPage: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Клиент</TableCell>
-              <TableCell>Контакты</TableCell>
-              <TableCell>Автомобили</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell>Дата регистрации</TableCell>
+              <TableCell>Телефон</TableCell>
+              <TableCell>Email</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {clients.map((client) => (
+            {clients.map((client: Client) => (
               <TableRow key={client.id}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {getInitials(client)}
+                    <Avatar>
+                      <PersonIcon />
                     </Avatar>
-                    <Box>
-                      <Typography>
-                        {client.firstName} {client.lastName}
-                      </Typography>
-                      {client.middleName && (
-                        <Typography variant="body2" color="textSecondary">
-                          {client.middleName}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <EmailIcon color="action" fontSize="small" />
-                      <Typography variant="body2">{client.email}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PhoneIcon color="action" fontSize="small" />
-                      <Typography variant="body2">{client.phone}</Typography>
-                    </Box>
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Badge 
-                      badgeContent={client.cars?.length || 0} 
-                      color="primary"
-                      sx={{ '& .MuiBadge-badge': { fontSize: '0.8rem' } }}
-                    >
-                      <CarIcon color="action" />
-                    </Badge>
-                    <Typography variant="body2">
-                      {client.cars?.length 
-                        ? `${client.cars.length} ${client.cars.length === 1 ? 'автомобиль' : 'автомобиля'}`
-                        : 'Нет автомобилей'
-                      }
+                    <Typography>
+                      {client.first_name} {client.last_name}
                     </Typography>
                   </Box>
                 </TableCell>
 
-                <TableCell>
-                  <Chip
-                    icon={client.isActive ? <VerifiedIcon /> : <CancelIcon />}
-                    label={client.isActive ? 'Активен' : 'Неактивен'}
-                    color={client.isActive ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <Typography variant="body2">
-                    {formatDate(client.createdAt)}
-                  </Typography>
-                </TableCell>
+                <TableCell>{client.phone}</TableCell>
+                <TableCell>{client.email}</TableCell>
 
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Tooltip title="Редактировать">
-                      <IconButton 
+                      <IconButton
                         onClick={() => navigate(`/clients/${client.id}/edit`)}
                         size="small"
                       >
@@ -301,8 +227,7 @@ const ClientsPage: React.FC = () => {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить клиента{' '}
-            {selectedClient?.firstName} {selectedClient?.lastName}?
+            Вы действительно хотите удалить клиента {selectedClient?.first_name} {selectedClient?.last_name}?
             Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>

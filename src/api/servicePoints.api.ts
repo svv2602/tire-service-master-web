@@ -1,70 +1,62 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { ServicePoint, ServicePointFormData } from '../types/servicePoint';
+import { ServicePoint, ApiResponse, ServicePointFilter } from '../types/models';
 
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
-
+// Расширяем базовый API для работы с сервисными точками
 export const servicePointsApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getServicePoints: build.query<ServicePoint[], void>({
-      query: () => 'service-points',
-      providesTags: ['ServicePoints'],
+  endpoints: (builder) => ({
+    // Получение списка сервисных точек
+    getServicePoints: builder.query<ApiResponse<ServicePoint>, ServicePointFilter>({
+      query: (params) => ({
+        url: 'service-points',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['ServicePoint'],
     }),
 
-    getServicePointsByPartnerId: build.query<ServicePoint[], string>({
-      query: (partnerId: string) => `service-points?partnerId=${partnerId}`,
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ServicePoints' as const, id })),
-              'ServicePoints',
-            ]
-          : ['ServicePoints'],
+    // Получение сервисной точки по ID
+    getServicePointById: builder.query<ServicePoint, string>({
+      query: (id) => ({
+        url: `service-points/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'ServicePoint', id }],
     }),
-    
-    getServicePointById: build.query<ServicePoint, string>({
-      query: (id: string) => `service-points/${id}`,
-      providesTags: (_result: ServicePoint | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'ServicePoints' as const, id }
-      ],
-    }),
-    
-    createServicePoint: build.mutation<ServicePoint, ServicePointFormData>({
-      query: (data: ServicePointFormData) => ({
+
+    // Создание новой сервисной точки
+    createServicePoint: builder.mutation<ServicePoint, Partial<ServicePoint>>({
+      query: (servicePoint) => ({
         url: 'service-points',
         method: 'POST',
-        body: data,
+        body: servicePoint,
       }),
-      invalidatesTags: ['ServicePoints'],
+      invalidatesTags: ['ServicePoint'],
     }),
-    
-    updateServicePoint: build.mutation<ServicePoint, { id: string; data: Partial<ServicePointFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<ServicePointFormData> }) => ({
+
+    // Обновление сервисной точки
+    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: Partial<ServicePoint> }>({
+      query: ({ id, servicePoint }) => ({
         url: `service-points/${id}`,
-        method: 'PATCH',
-        body: data,
+        method: 'PUT',
+        body: servicePoint,
       }),
-      invalidatesTags: (_result: ServicePoint | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'ServicePoints' as const, id },
-        'ServicePoints',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'ServicePoint', id }],
     }),
-    
-    deleteServicePoint: build.mutation<void, string>({
-      query: (id: string) => ({
+
+    // Удаление сервисной точки
+    deleteServicePoint: builder.mutation<void, string>({
+      query: (id) => ({
         url: `service-points/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['ServicePoints'],
+      invalidatesTags: ['ServicePoint'],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
+// Экспортируем хуки
 export const {
   useGetServicePointsQuery,
-  useGetServicePointsByPartnerIdQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,

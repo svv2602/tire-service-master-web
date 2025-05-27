@@ -47,16 +47,17 @@ import {
   useUpdateReviewMutation,
   useGetServicePointsQuery,
 } from '../../api';
-import { Review, ReviewStatus } from '../../types/review';
+import { Review, ReviewStatus, ServicePoint, ReviewFilter, ReviewFormData } from '../../types/models';
+import { SelectChangeEvent } from '@mui/material/Select';
 
 // Статусы отзывов с типизацией
-const REVIEW_STATUSES: Record<ReviewStatus, { 
-  label: string; 
-  color: 'warning' | 'info' | 'success' | 'error';
+const REVIEW_STATUSES: Record<ReviewStatus, {
+  label: string;
+  color: 'error' | 'info' | 'success' | 'warning';
   icon: React.ReactNode;
 }> = {
   pending: { label: 'На модерации', color: 'warning', icon: <StarIcon /> },
-  approved: { label: 'Опубликован', color: 'success', icon: <CheckIcon /> },
+  published: { label: 'Опубликован', color: 'success', icon: <CheckIcon /> },
   rejected: { label: 'Отклонен', color: 'error', icon: <CloseIcon /> },
 };
 
@@ -82,19 +83,20 @@ const ReviewsPage: React.FC = () => {
   } = useGetReviewsQuery({
     search: search || undefined,
     status: statusFilter || undefined,
-    service_point_id: servicePointId || undefined,
+    service_point_id: servicePointId ? Number(servicePointId) : undefined,
     page: page + 1,
     per_page: rowsPerPage,
-  });
+  } as ReviewFilter);
 
-  const { data: servicePoints } = useGetServicePointsQuery({});
+  const { data: servicePointsData } = useGetServicePointsQuery({} as any);
   const [deleteReview, { isLoading: deleteLoading }] = useDeleteReviewMutation();
   const [updateReview] = useUpdateReviewMutation();
 
   const isLoading = reviewsLoading || deleteLoading;
   const error = reviewsError;
-  const reviews = reviewsData?.data || [];
-  const totalItems = reviewsData?.meta?.total || 0;
+  const reviews = (reviewsData as unknown as Review[]) || [];
+  const totalItems = reviews.length;
+  const servicePoints = (servicePointsData as unknown as ServicePoint[]) || [];
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,12 +104,12 @@ const ReviewsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleStatusFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStatusFilterChange = (event: SelectChangeEvent<ReviewStatus | ''>) => {
     setStatusFilter(event.target.value as ReviewStatus | '');
     setPage(0);
   };
 
-  const handleServicePointChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
     setServicePointId(event.target.value);
     setPage(0);
   };
@@ -129,7 +131,7 @@ const ReviewsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedReview) {
       try {
-        await deleteReview(selectedReview.id).unwrap();
+        await deleteReview(selectedReview.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedReview(null);
       } catch (error) {
@@ -138,11 +140,11 @@ const ReviewsPage: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (review: Review, newStatus: ReviewStatus) => {
+  const handleStatusChange = async (review: Review, status: ReviewStatus) => {
     try {
-      await updateReview({ 
-        id: review.id,
-        status: newStatus,
+      await updateReview({
+        id: review.id.toString(),
+        data: { status } as Partial<ReviewFormData>
       }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
@@ -156,8 +158,8 @@ const ReviewsPage: React.FC = () => {
 
   // Вспомогательные функции
   const getClientInitials = (review: Review) => {
-    const firstName = review.user?.first_name || '';
-    const lastName = review.user?.last_name || '';
+    const firstName = review.client?.first_name || '';
+    const lastName = review.client?.last_name || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
   };
 
@@ -238,8 +240,8 @@ const ReviewsPage: React.FC = () => {
               label="Сервисная точка"
             >
               <MenuItem value="">Все точки</MenuItem>
-              {servicePoints?.data?.map((point) => (
-                <MenuItem key={point.id} value={point.id}>
+              {servicePoints.map((point) => (
+                <MenuItem key={point.id} value={point.id.toString()}>
                   {point.name}
                 </MenuItem>
               ))}
@@ -272,7 +274,7 @@ const ReviewsPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography>
-                        {review.client?.firstName} {review.client?.lastName}
+                        {review.client?.first_name} {review.client?.last_name}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
                         {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
@@ -284,7 +286,7 @@ const ReviewsPage: React.FC = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <BusinessIcon color="action" />
-                    <Typography>{review.servicePoint?.name}</Typography>
+                    <Typography>{review.service_point?.name}</Typography>
                   </Box>
                 </TableCell>
 
@@ -328,16 +330,16 @@ const ReviewsPage: React.FC = () => {
 
                 <TableCell>
                   <Chip
-                    icon={REVIEW_STATUSES[review.status].icon}
-                    label={REVIEW_STATUSES[review.status].label}
-                    color={REVIEW_STATUSES[review.status].color}
+                    icon={REVIEW_STATUSES[review.status as ReviewStatus].icon as React.ReactElement}
+                    label={REVIEW_STATUSES[review.status as ReviewStatus].label}
+                    color={REVIEW_STATUSES[review.status as ReviewStatus].color}
                     size="small"
                   />
                 </TableCell>
 
                 <TableCell>
                   <Typography variant="body2">
-                    {formatDate(review.createdAt)}
+                    {formatDate(review.created_at)}
                   </Typography>
                 </TableCell>
 
@@ -347,7 +349,7 @@ const ReviewsPage: React.FC = () => {
                       <>
                         <Tooltip title="Одобрить">
                           <IconButton
-                            onClick={() => handleStatusChange(review, 'approved')}
+                            onClick={() => handleStatusChange(review, 'published')}
                             size="small"
                             color="success"
                           >
@@ -405,7 +407,7 @@ const ReviewsPage: React.FC = () => {
         <DialogContent>
           <Typography>
             Вы действительно хотите удалить отзыв клиента{' '}
-            {selectedReview?.client?.firstName} {selectedReview?.client?.lastName}?
+            {selectedReview?.client?.first_name} {selectedReview?.client?.last_name}?
             Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>

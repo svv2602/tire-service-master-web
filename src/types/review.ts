@@ -1,36 +1,36 @@
+import { User, ServicePoint, Booking } from './models';
+
+export type ReviewStatus = 'pending' | 'published' | 'rejected';
+
 export interface Review {
   id: number;
-  service_point_id: number;
   user_id: number;
-  booking_id?: number;
+  service_point_id: number;
+  booking_id: number;
   rating: number;
   comment: string;
-  response?: string;
   status: ReviewStatus;
+  response?: string;
   created_at: string;
   updated_at: string;
+  user?: User;
   service_point?: {
     id: number;
     name: string;
   };
-  user?: {
+  booking?: {
     id: number;
-    first_name: string;
-    last_name: string;
+    scheduled_at: string;
   };
 }
 
-export type ReviewStatus = 'pending' | 'approved' | 'rejected';
-
 export interface ReviewFormData {
-  service_point_id: number;
-  user_id: number;
-  booking_id?: number;
+  service_point_id: string;
   rating: number;
   comment: string;
 }
 
-export interface ReviewResponse {
+export interface ReviewResponseData {
   response: string;
 }
 

@@ -33,19 +33,32 @@ import {
   useGetScheduleQuery,
   useGetServicePointServicesQuery,
   useGetServicePointPhotosQuery,
-  useGetPartnersQuery,
-  useGetRegionsQuery,
-  useGetCitiesQuery,
+} from '../../api';
+import {
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,
-} from '../../api';
-import { ServiceCategory } from '../../types/models';
+  useGetServicePointsQuery,
+} from '../../api/servicePoints.api';
+import { useGetPartnersQuery } from '../../api/partners.api';
+import { useGetRegionsQuery } from '../../api/regions.api';
+import { useGetCitiesQuery } from '../../api/cities.api';
+import type { 
+  ServicePointFormData, 
+  ServicePoint, 
+  ServiceCategory, 
+  WorkingHours, 
+  ServicePointService, 
+  ServicePointPhoto,
+  Partner,
+  Region,
+  City
+} from '../../types/models';
 
 // Схема валидации
 const validationSchema = yup.object({
   name: yup.string().required('Название точки обязательно'),
-  partner_id: yup.number().required('Партнер обязателен'),
+  partner_id: yup.string().required('Партнер обязателен'),
   address: yup.string().required('Адрес обязателен'),
   city_id: yup.number().required('Город обязателен'),
   region_id: yup.number().required('Регион обязателен'),
@@ -81,39 +94,6 @@ const validationSchema = yup.object({
   ),
 });
 
-interface ServicePointFormData {
-  name: string;
-  partner_id: number;
-  description: string;
-  city_id: number;
-  region_id: number;
-  address: string;
-  contact_phone: string;
-  is_active: boolean;
-  post_count: number;
-  default_slot_duration: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  status_id: number;
-  schedule: Array<{
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    is_working_day: boolean;
-  }>;
-  services: Array<{
-    service_id: number;
-    price: number;
-    duration: number;
-    is_available: boolean;
-  }>;
-  photos: Array<{
-    url: string;
-    description?: string;
-    is_main: boolean;
-  }>;
-}
-
 // Статусы точек обслуживания (в будущем можно загружать с сервера)
 const mockServicePointStatuses = [
   { id: 1, name: 'Активна', color: '#4caf50' },
@@ -134,6 +114,24 @@ const getDayName = (dayOfWeek: number): string => {
   return days[dayOfWeek % 7];
 };
 
+// Обновляем интерфейсы для параметров запросов
+interface CitiesQueryParams {
+  region_id?: number;
+}
+
+interface ServicePointQueryParams {
+  service_point_id: string;
+  date?: string;
+}
+
+interface ServicePointServicesQueryParams {
+  service_point_id: string;
+}
+
+interface ServicePointPhotosQueryParams {
+  service_point_id: string;
+}
+
 const ServicePointFormPage: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
@@ -143,39 +141,48 @@ const ServicePointFormPage: React.FC = () => {
   const [servicePointStatuses] = useState(mockServicePointStatuses);
 
   // RTK Query хуки
-  const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
-  const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery({});
-  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
-    { region_id: selectedRegionId },
+  const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({});
+  const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
+    selectedRegionId ? { region_id: selectedRegionId.toString() } : {},
     { skip: !selectedRegionId }
   );
-  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(
-    Number(id),
-    { skip: !isEditMode || !id }
-  );
+  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id ?? '', { skip: !id });
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
+  const { data: servicePointsData } = useGetServicePointsQuery({});
 
-  const { data: servicesData } = useGetServiceCategoriesQuery({});
-  const { data: scheduleData } = useGetScheduleQuery(
-    { service_point_id: Number(id) },
+  const { data: servicesData } = useGetServiceCategoriesQuery();
+  const scheduleQueryResult = useGetScheduleQuery(
+    { 
+      service_point_id: id ?? '',
+      date: new Date().toISOString().split('T')[0]
+    },
     { skip: !isEditMode || !id }
   );
-  const { data: servicePointServicesData } = useGetServicePointServicesQuery(
-    { service_point_id: Number(id) },
+  const servicePointServicesQueryResult = useGetServicePointServicesQuery(
+    id ?? '',
     { skip: !isEditMode || !id }
   );
-  const { data: photosData } = useGetServicePointPhotosQuery(
-    { service_point_id: Number(id) },
+  const photosQueryResult = useGetServicePointPhotosQuery(
+    id ?? '',
     { skip: !isEditMode || !id }
   );
+
+  // Извлекаем данные из результатов запросов
+  const partners = partnersData?.data || [];
+  const regions = regionsData?.data || [];
+  const cities = citiesData?.data || [];
+  const scheduleData = scheduleQueryResult.data;
+  const servicePointServicesData = servicePointServicesQueryResult.data;
+  const photosData = photosQueryResult.data;
 
   const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || isCreating || isUpdating;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
   const initialValues: ServicePointFormData = {
     name: servicePoint?.name || '',
-    partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
+    partner_id: servicePoint?.partner_id || partnerId || '',
     description: servicePoint?.description || '',
     city_id: servicePoint?.city_id || 0,
     region_id: selectedRegionId || 0,
@@ -187,7 +194,7 @@ const ServicePointFormPage: React.FC = () => {
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
     status_id: servicePoint?.status_id || 1,
-    schedule: scheduleData?.data || [
+    schedule: [
       { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_working_day: true },
       { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_working_day: true },
       { day_of_week: 3, start_time: '09:00', end_time: '18:00', is_working_day: true },
@@ -196,8 +203,16 @@ const ServicePointFormPage: React.FC = () => {
       { day_of_week: 6, start_time: '10:00', end_time: '17:00', is_working_day: true },
       { day_of_week: 7, start_time: '10:00', end_time: '16:00', is_working_day: false },
     ],
-    services: servicePointServicesData?.data || [],
-    photos: photosData?.data || [],
+    services: servicePointServicesData || [],
+    photos: photosData?.map((photo, index) => ({
+      id: photo.id,
+      service_point_id: 0, // Будет установлено при сохранении
+      url: photo.url,
+      description: photo.description || '',
+      is_main: index === 0, // Первое фото по умолчанию главное
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })) || [],
   };
 
   const formik = useFormik({
@@ -206,19 +221,14 @@ const ServicePointFormPage: React.FC = () => {
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        if (isEditMode && id && partnerId) {
+        if (isEditMode && id) {
           await updateServicePoint({
-            partnerId: Number(partnerId),
-            id: Number(id),
-            data: values
+            id,
+            servicePoint: values
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
-          const targetPartnerId = values.partner_id;
-          await createServicePoint({
-            partnerId: targetPartnerId,
-            data: values
-          }).unwrap();
+          await createServicePoint(values).unwrap();
           setSuccessMessage('Точка обслуживания успешно создана');
           setTimeout(() => {
             navigate('/service-points');
@@ -233,14 +243,14 @@ const ServicePointFormPage: React.FC = () => {
   // Эффект для установки региона при загрузке точки обслуживания
   useEffect(() => {
     if (servicePoint?.city_id && cities) {
-      const city = cities.find((c: any) => c.id === servicePoint.city_id);
-      if (city?.region_id && city.region_id !== selectedRegionId) {
-        setSelectedRegionId(city.region_id);
+      const city = cities.find((c: City) => c.id === servicePoint.city_id.toString());
+      if (city?.region_id && Number(city.region_id) !== selectedRegionId) {
+        setSelectedRegionId(Number(city.region_id));
       }
     }
   }, [servicePoint, cities, selectedRegionId]);
 
-  // Обработчик изменения региона
+  // Обновляем типы для обработчиков
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
     const regionId = Number(event.target.value);
     setSelectedRegionId(regionId);
@@ -281,13 +291,13 @@ const ServicePointFormPage: React.FC = () => {
         ) : (
           <form onSubmit={formik.handleSubmit}>
             <Grid container spacing={3}>
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   Основная информация
                 </Typography>
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="name"
@@ -301,24 +311,24 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}>
                   <InputLabel id="partner-id-label">Партнер</InputLabel>
                   <Select
                     labelId="partner-id-label"
                     id="partner_id"
                     name="partner_id"
-                    value={formik.values.partner_id.toString()}
+                    value={formik.values.partner_id || ''}
                     onChange={(e: SelectChangeEvent<string>) => {
-                      formik.setFieldValue('partner_id', Number(e.target.value));
+                      formik.setFieldValue('partner_id', e.target.value);
                     }}
                     onBlur={formik.handleBlur}
                     label="Партнер"
-                    disabled={isEditMode} // Нельзя изменить партнера в режиме редактирования
+                    disabled={isEditMode}
                   >
-                    <MenuItem value="0" disabled>Выберите партнера</MenuItem>
-                    {partners.map(partner => (
-                      <MenuItem key={partner.id} value={partner.id.toString()}>
+                    <MenuItem value="" disabled>Выберите партнера</MenuItem>
+                    {partners.map((partner) => (
+                      <MenuItem key={partner.id} value={partner.id}>
                         {partner.company_name}
                       </MenuItem>
                     ))}
@@ -326,7 +336,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   id="description"
@@ -342,21 +352,21 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Контактная информация
                 </Typography>
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
                   <InputLabel id="region-id-label">Регион</InputLabel>
                   <Select
                     labelId="region-id-label"
                     id="region_id"
                     name="region_id"
-                    value={formik.values.region_id.toString()}
+                    value={(formik.values.region_id || 0).toString()}
                     onChange={handleRegionChange}
                     onBlur={formik.handleBlur}
                     label="Регион"
@@ -371,14 +381,14 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={formik.touched.city_id && Boolean(formik.errors.city_id)}>
                   <InputLabel id="city-id-label">Город</InputLabel>
                   <Select
                     labelId="city-id-label"
                     id="city_id"
                     name="city_id"
-                    value={formik.values.city_id.toString()}
+                    value={(formik.values.city_id || 0).toString()}
                     onChange={(e: SelectChangeEvent<string>) => {
                       formik.setFieldValue('city_id', Number(e.target.value));
                     }}
@@ -387,7 +397,7 @@ const ServicePointFormPage: React.FC = () => {
                     disabled={!formik.values.region_id}
                   >
                     <MenuItem value="0" disabled>Выберите город</MenuItem>
-                    {cities.map((city: any) => (
+                    {cities.map((city: City) => (
                       <MenuItem key={city.id} value={city.id.toString()}>
                         {city.name}
                       </MenuItem>
@@ -396,7 +406,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   id="contact_phone"
@@ -410,7 +420,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   id="address"
@@ -424,7 +434,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="latitude"
@@ -439,7 +449,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12} md={6}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   id="longitude"
@@ -454,21 +464,21 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Параметры обслуживания
                 </Typography>
               </Grid>
 
-              <Grid component="div" xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <FormControl fullWidth error={formik.touched.status_id && Boolean(formik.errors.status_id)}>
                   <InputLabel id="status-id-label">Статус</InputLabel>
                   <Select
                     labelId="status-id-label"
                     id="status_id"
                     name="status_id"
-                    value={formik.values.status_id.toString()}
+                    value={(formik.values.status_id || 1).toString()}
                     onChange={(e: SelectChangeEvent<string>) => {
                       formik.setFieldValue('status_id', Number(e.target.value));
                     }}
@@ -484,7 +494,7 @@ const ServicePointFormPage: React.FC = () => {
                 </FormControl>
               </Grid>
 
-              <Grid component="div" xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   id="post_count"
@@ -499,7 +509,7 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   id="default_slot_duration"
@@ -514,22 +524,22 @@ const ServicePointFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   График работы
                 </Typography>
               </Grid>
 
-              {formik.values.schedule.map((scheduleItem, index) => (
-                <Grid component="div" xs={12} md={6} key={scheduleItem.day_of_week}>
+              {(formik.values.schedule || []).map((scheduleItem: WorkingHours, index: number) => (
+                <Grid item xs={12} md={6} key={scheduleItem.day_of_week}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Typography variant="subtitle1" gutterBottom>
                       {getDayName(scheduleItem.day_of_week)}
                     </Typography>
                     
                     <Grid container spacing={2}>
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
@@ -548,7 +558,7 @@ const ServicePointFormPage: React.FC = () => {
 
                       {scheduleItem.is_working_day && (
                         <>
-                          <Grid component="div" xs={6}>
+                          <Grid item xs={6}>
                             <TextField
                               fullWidth
                               type="time"
@@ -560,7 +570,7 @@ const ServicePointFormPage: React.FC = () => {
                               InputLabelProps={{ shrink: true }}
                             />
                           </Grid>
-                          <Grid component="div" xs={6}>
+                          <Grid item xs={6}>
                             <TextField
                               fullWidth
                               type="time"
@@ -579,18 +589,18 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Услуги и цены
                 </Typography>
               </Grid>
 
-              {formik.values.services.map((service, index) => (
-                <Grid component="div" xs={12} md={6} key={service.service_id}>
+              {(formik.values.services || []).map((service: ServicePointService, index: number) => (
+                <Grid item xs={12} md={6} key={service.service_id}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Grid container spacing={2}>
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <FormControl fullWidth>
                           <InputLabel>Услуга</InputLabel>
                           <Select
@@ -600,7 +610,7 @@ const ServicePointFormPage: React.FC = () => {
                             }}
                             label="Услуга"
                           >
-                            {servicesData?.data.map((serviceItem: ServiceCategory) => (
+                            {(servicesData || []).map((serviceItem) => (
                               <MenuItem key={serviceItem.id} value={serviceItem.id}>
                                 {serviceItem.name}
                               </MenuItem>
@@ -609,7 +619,7 @@ const ServicePointFormPage: React.FC = () => {
                         </FormControl>
                       </Grid>
 
-                      <Grid component="div" xs={6}>
+                      <Grid item xs={6}>
                         <TextField
                           fullWidth
                           type="number"
@@ -624,7 +634,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid component="div" xs={6}>
+                      <Grid item xs={6}>
                         <TextField
                           fullWidth
                           type="number"
@@ -639,7 +649,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
@@ -660,12 +670,12 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Button
                   variant="outlined"
                   onClick={() => {
                     formik.setFieldValue('services', [
-                      ...formik.values.services,
+                      ...(formik.values.services || []),
                       {
                         service_id: 0,
                         price: 0,
@@ -679,18 +689,18 @@ const ServicePointFormPage: React.FC = () => {
                 </Button>
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   Фотографии
                 </Typography>
               </Grid>
 
-              {formik.values.photos.map((photo, index) => (
-                <Grid component="div" xs={12} md={4} key={index}>
+              {(formik.values.photos || []).map((photo: ServicePointPhoto, index: number) => (
+                <Grid item xs={12} md={4} key={index}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Grid container spacing={2}>
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <img
                           src={photo.url}
                           alt={photo.description || 'Фото сервисной точки'}
@@ -698,7 +708,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <TextField
                           fullWidth
                           label="URL фотографии"
@@ -709,7 +719,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <TextField
                           fullWidth
                           label="Описание"
@@ -720,7 +730,7 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       </Grid>
 
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <FormControl fullWidth>
                           <FormControlLabel
                             control={
@@ -728,7 +738,7 @@ const ServicePointFormPage: React.FC = () => {
                                 checked={photo.is_main}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    formik.values.photos.forEach((_, i) => {
+                                    (formik.values.photos || []).forEach((_, i) => {
                                       if (i !== index) {
                                         formik.setFieldValue(`photos.${i}.is_main`, false);
                                       }
@@ -744,11 +754,11 @@ const ServicePointFormPage: React.FC = () => {
                         </FormControl>
                       </Grid>
 
-                      <Grid component="div" xs={12}>
+                      <Grid item xs={12}>
                         <Button
                           color="error"
                           onClick={() => {
-                            const newPhotos = [...formik.values.photos];
+                            const newPhotos = [...(formik.values.photos || [])];
                             newPhotos.splice(index, 1);
                             formik.setFieldValue('photos', newPhotos);
                           }}
@@ -761,16 +771,20 @@ const ServicePointFormPage: React.FC = () => {
                 </Grid>
               ))}
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Button
                   variant="outlined"
                   onClick={() => {
                     formik.setFieldValue('photos', [
-                      ...formik.values.photos,
+                      ...(formik.values.photos || []),
                       {
+                        id: '',
+                        service_point_id: 0,
                         url: '',
                         description: '',
-                        is_main: formik.values.photos.length === 0,
+                        is_main: (formik.values.photos || []).length === 0,
+                        created_at: '',
+                        updated_at: '',
                       },
                     ]);
                   }}
@@ -779,7 +793,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Button>
               </Grid>
 
-              <Grid component="div" xs={12}>
+              <Grid item xs={12}>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                   <Button onClick={handleBack}>
                     Отмена

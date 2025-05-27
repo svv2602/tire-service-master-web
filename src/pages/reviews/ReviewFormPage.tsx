@@ -19,13 +19,15 @@ import {
   Star as StarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { 
+  useGetBookingsByClientQuery,
   useCreateReviewMutation,
-  useGetMyBookingsQuery,
-  Booking,
 } from '../../api';
+import { Booking } from '../../types/models';
+import { RootState } from '../../store';
 
 // Схема валидации
 const validationSchema = yup.object({
@@ -45,15 +47,15 @@ const ReviewFormPage: React.FC = () => {
   const navigate = useNavigate();
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation();
   
-  // Получаем список бронирований пользователя
+  // Получаем userId из Redux store
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
+
+  // RTK Query хуки
   const { 
-    data: bookingsData,
+    data: bookingsData, 
     isLoading: bookingsLoading,
     error: bookingsError
-  } = useGetMyBookingsQuery({
-    page: 1,
-    per_page: 100,
-  });
+  } = useGetBookingsByClientQuery(userId || '', { skip: !userId });
 
   const formik = useFormik({
     initialValues: {
@@ -64,8 +66,11 @@ const ReviewFormPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
+        // Находим выбранное бронирование для получения service_point_id
+        const selectedBooking = bookingsData?.find((booking: Booking) => booking.id === values.booking_id);
+        
         await createReview({
-          booking_id: Number(values.booking_id),
+          service_point_id: selectedBooking?.service_point_id || '',
           rating: values.rating,
           comment: values.comment,
         }).unwrap();
@@ -98,7 +103,7 @@ const ReviewFormPage: React.FC = () => {
     );
   }
 
-  const bookings = bookingsData?.data || [];
+  const bookings = bookingsData || [];
 
   // Если нет завершенных бронирований
   if (bookings.length === 0) {
@@ -140,7 +145,7 @@ const ReviewFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 label="Выберите бронирование"
               >
-                {bookings.map((booking) => (
+                {bookings.map((booking: Booking) => (
                   <MenuItem key={booking.id} value={booking.id}>
                     {booking.service_point?.name} - {new Date(booking.scheduled_at).toLocaleDateString()}
                   </MenuItem>

@@ -25,7 +25,7 @@ import {
   Security as SecurityIcon,
   Devices as DevicesIcon,
 } from '@mui/icons-material';
-import { settingsApi, SystemSettings } from '../../api/settings';
+import { SystemSettings, useGetSettingsQuery, useUpdateSettingsMutation, settingsApi } from '../../api';
 
 // Интерфейс для панелей настроек
 interface TabPanelProps {
@@ -84,43 +84,48 @@ const SettingsPage: React.FC = () => {
     systemName: 'Твоя шина',
     contactEmail: 'admin@tvoya-shina.ua',
     supportPhone: '+380 67 000 00 00',
-    defaultCityId: 1,
+    defaultCityId: '1',
     dateFormat: 'DD.MM.YYYY',
     timeFormat: '24h',
     slotDuration: 30,
     enableNotifications: true,
     enableSmsNotifications: false,
+    emailNotifications: true,
+    smsNotifications: false,
     maxBookingsPerDay: 50,
     workdayStart: '09:00',
-    workdayEnd: '18:00',
-    workDays: [1, 2, 3, 4, 5], // Пн-Пт
+    workdayEnd: '18:00'
   });
 
   // Загрузка настроек при первом рендере компонента
+  // Используем RTK Query для загрузки данных
+  const { data: settingsData, isLoading: isSettingsLoading, error: settingsError } = useGetSettingsQuery();
+  const [updateSettings, { isLoading: isUpdating }] = useUpdateSettingsMutation();
+  
+  // Загружаем данные при первом рендере
   useEffect(() => {
     const loadSettings = async () => {
       setLoading(true);
       try {
-        // Загрузка списка городов
-        const citiesResponse = await settingsApi.getCities();
+        // Загрузка списка городов из обычного API
+        // Этот код можно будет заменить на RTK Query endpoint
+        const citiesResponse = await fetch('http://localhost:8000/api/v1/cities');
+        const citiesData = await citiesResponse.json();
+        
         // Проверяем формат ответа API
-        if (citiesResponse.data.cities && Array.isArray(citiesResponse.data.cities)) {
-          setCities(citiesResponse.data.cities);
-        } else if (Array.isArray(citiesResponse.data)) {
-          setCities(citiesResponse.data);
+        if (citiesData.cities && Array.isArray(citiesData.cities)) {
+          setCities(citiesData.cities);
+        } else if (Array.isArray(citiesData)) {
+          setCities(citiesData);
         } else {
-          console.warn('Неожиданный формат данных для городов:', citiesResponse.data);
+          console.warn('Неожиданный формат данных для городов:', citiesData);
           setCities([]);
         }
         
-        // Загрузка системных настроек
-        const settingsResponse = await settingsApi.getSystemSettings();
-        setSettings(settingsResponse.data);
-        
         setError(null);
       } catch (err) {
-        console.error('Ошибка при загрузке настроек:', err);
-        setError('Не удалось загрузить настройки. Пожалуйста, попробуйте позже.');
+        console.error('Ошибка при загрузке городов:', err);
+        setError('Не удалось загрузить города. Пожалуйста, попробуйте позже.');
       } finally {
         setLoading(false);
       }
@@ -128,6 +133,13 @@ const SettingsPage: React.FC = () => {
     
     loadSettings();
   }, []);
+  
+  // Обновляем локальное состояние при получении данных с сервера
+  useEffect(() => {
+    if (settingsData) {
+      setSettings(settingsData);
+    }
+  }, [settingsData]);
 
   // Обработчик изменения вкладки
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -168,8 +180,8 @@ const SettingsPage: React.FC = () => {
     setError(null);
     
     try {
-      // Отправка данных на сервер
-      await settingsApi.updateSystemSettings(settings);
+      // Отправка данных на сервер с использованием RTK Query
+      await updateSettings(settings).unwrap();
       
       // Показываем сообщение об успешном сохранении
       setSaveSuccess(true);

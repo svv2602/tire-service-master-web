@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -25,6 +26,7 @@ import {
   InputAdornment,
   CircularProgress,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -33,7 +35,7 @@ import {
   Search as SearchIcon,
 } from '@mui/icons-material';
 import { useGetServicesQuery, useDeleteServiceMutation, useGetServiceCategoriesQuery } from '../../api';
-import { Service } from '../../types/models';
+import { Service } from '../../types/service';
 
 const ServicesPage: React.FC = () => {
   // Состояние страницы
@@ -45,12 +47,7 @@ const ServicesPage: React.FC = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   
   // RTK Query хуки
-  const { data: servicesData, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery({
-    page: page + 1,
-    per_page: rowsPerPage,
-    query: searchQuery || undefined,
-    category_id: categoryFilter || undefined,
-  });
+  const { data: servicesData, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery();
   
   const { data: categoriesData } = useGetServiceCategoriesQuery();
   const [deleteService] = useDeleteServiceMutation();
@@ -85,7 +82,7 @@ const ServicesPage: React.FC = () => {
     setEditingService(null);
   };
   
-  const handleDeleteService = async (id: number) => {
+  const handleDeleteService = async (id: string) => {
     if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
       try {
         await deleteService(id).unwrap();
@@ -138,7 +135,7 @@ const ServicesPage: React.FC = () => {
               <MenuItem value="">
                 <em>Все категории</em>
               </MenuItem>
-              {categoriesData?.data.map((category) => (
+              {(categoriesData || []).map((category) => (
                 <MenuItem key={category.id} value={category.id}>
                   {category.name}
                 </MenuItem>
@@ -180,18 +177,18 @@ const ServicesPage: React.FC = () => {
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : servicesData?.data.map((service) => (
+              ) : (servicesData || []).map((service) => (
                 <TableRow key={service.id}>
                   <TableCell>{service.id}</TableCell>
                   <TableCell>{service.name}</TableCell>
                   <TableCell>
-                    {categoriesData?.data.find(cat => cat.id === service.category_id)?.name}
+                    {(categoriesData || []).find(cat => cat.id === service.categoryId)?.name}
                   </TableCell>
                   <TableCell>{service.duration}</TableCell>
                   <TableCell>
                     <Chip
-                      label={service.is_active ? 'Активна' : 'Неактивна'}
-                      color={service.is_active ? 'success' : 'default'}
+                      label={service.isActive ? 'Активна' : 'Неактивна'}
+                      color={service.isActive ? 'success' : 'default'}
                     />
                   </TableCell>
                   <TableCell>
@@ -218,7 +215,7 @@ const ServicesPage: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={servicesData?.total || 0}
+          count={(servicesData || []).length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

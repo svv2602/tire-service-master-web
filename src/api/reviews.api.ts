@@ -1,52 +1,61 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Review, ReviewFormData, ReviewFilter, ReviewResponse } from '../types/review';
-
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
+import { Review, ApiResponse, ReviewFilter } from '../types/models';
+import { ReviewFormData, ReviewResponseData } from '../types/review';
 
 export const reviewsApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getReviews: build.query<Review[], ReviewFilter>({
+  endpoints: (build) => ({
+    getReviews: build.query<ApiResponse<Review>, ReviewFilter>({
       query: (filter: ReviewFilter) => ({
         url: 'reviews',
         params: filter,
       }),
-      providesTags: (result: Review[] | undefined) =>
-        result
+      providesTags: (result: ApiResponse<Review> | undefined) =>
+        result?.data
           ? [
-              ...result.map(({ id }) => ({ type: 'Reviews' as const, id })),
-              'Reviews',
+              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              'Review',
             ]
-          : ['Reviews'],
+          : ['Review'],
     }),
 
-    getReviewsByServicePoint: build.query<Review[], string>({
-      query: (servicePointId: string) => `reviews?servicePointId=${servicePointId}`,
-      providesTags: (result: Review[] | undefined) =>
-        result
+    getReviewsByServicePoint: build.query<ApiResponse<Review>, string>({
+      query: (servicePointId: string) => `reviews?service_point_id=${servicePointId}`,
+      providesTags: (result: ApiResponse<Review> | undefined) =>
+        result?.data
           ? [
-              ...result.map(({ id }) => ({ type: 'Reviews' as const, id })),
-              'Reviews',
+              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              'Review',
             ]
-          : ['Reviews'],
+          : ['Review'],
     }),
 
-    getReviewsByClient: build.query<Review[], string>({
-      query: (clientId: string) => `reviews?clientId=${clientId}`,
-      providesTags: (result: Review[] | undefined) =>
-        result
+    getReviewsByClient: build.query<ApiResponse<Review>, string>({
+      query: (clientId: string) => `reviews?client_id=${clientId}`,
+      providesTags: (result: ApiResponse<Review> | undefined) =>
+        result?.data
           ? [
-              ...result.map(({ id }) => ({ type: 'Reviews' as const, id })),
-              'Reviews',
+              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              'Review',
             ]
-          : ['Reviews'],
+          : ['Review'],
+    }),
+
+    getReviewsByPartner: build.query<ApiResponse<Review>, string>({
+      query: (partnerId: string) => `reviews?partner_id=${partnerId}`,
+      providesTags: (result: ApiResponse<Review> | undefined) =>
+        result?.data
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              'Review',
+            ]
+          : ['Review'],
     }),
     
     getReviewById: build.query<Review, string>({
       query: (id: string) => `reviews/${id}`,
       providesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Reviews' as const, id }
+        { type: 'Review' as const, id }
       ],
     }),
     
@@ -56,7 +65,7 @@ export const reviewsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Reviews'],
+      invalidatesTags: ['Review'],
     }),
     
     updateReview: build.mutation<Review, { id: string; data: Partial<ReviewFormData> }>({
@@ -66,20 +75,20 @@ export const reviewsApi = baseApi.injectEndpoints({
         body: data,
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Reviews' as const, id },
-        'Reviews',
+        { type: 'Review' as const, id },
+        'Review',
       ],
     }),
 
-    respondToReview: build.mutation<Review, { id: string; data: ReviewResponse }>({
-      query: ({ id, data }: { id: string; data: ReviewResponse }) => ({
+    respondToReview: build.mutation<Review, { id: string; data: ReviewResponseData }>({
+      query: ({ id, data }: { id: string; data: ReviewResponseData }) => ({
         url: `reviews/${id}/response`,
         method: 'POST',
         body: data,
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Reviews' as const, id },
-        'Reviews',
+        { type: 'Review' as const, id },
+        'Review',
       ],
     }),
 
@@ -89,8 +98,8 @@ export const reviewsApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Reviews' as const, id },
-        'Reviews',
+        { type: 'Review' as const, id },
+        'Review',
       ],
     }),
 
@@ -100,8 +109,8 @@ export const reviewsApi = baseApi.injectEndpoints({
         method: 'POST',
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Reviews' as const, id },
-        'Reviews',
+        { type: 'Review' as const, id },
+        'Review',
       ],
     }),
     
@@ -110,7 +119,7 @@ export const reviewsApi = baseApi.injectEndpoints({
         url: `reviews/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Reviews'],
+      invalidatesTags: ['Review'],
     }),
   }),
 });
@@ -120,6 +129,7 @@ export const {
   useGetReviewsQuery,
   useGetReviewsByServicePointQuery,
   useGetReviewsByClientQuery,
+  useGetReviewsByPartnerQuery,
   useGetReviewByIdQuery,
   useCreateReviewMutation,
   useUpdateReviewMutation,
@@ -127,4 +137,4 @@ export const {
   usePublishReviewMutation,
   useUnpublishReviewMutation,
   useDeleteReviewMutation,
-} = reviewsApi; 
+} = reviewsApi;

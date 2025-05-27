@@ -25,10 +25,11 @@ import {
   Delete as DeleteIcon,
   OpenInNew as OpenInNewIcon,
   CloudUpload as CloudUploadIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-  useGetServicePointByIdQuery,
+import {
   useGetServicePointPhotosQuery,
   useUploadServicePointPhotoMutation,
   useDeleteServicePointPhotoMutation,
@@ -41,32 +42,23 @@ const ServicePointPhotosPage: React.FC = () => {
   
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [photoToDelete, setPhotoToDelete] = useState<number | null>(null);
-
-  const { 
-    data: servicePointResponse,
-    isLoading: servicePointLoading,
-    error: servicePointError 
-  } = useGetServicePointByIdQuery(Number(id), {
-    skip: !id
-  });
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
 
   const {
     data: photosResponse,
     isLoading: photosLoading,
     error: photosError,
     refetch: refetchPhotos
-  } = useGetServicePointPhotosQuery(Number(id), {
+  } = useGetServicePointPhotosQuery(id || '', {
     skip: !id
   });
 
   const [uploadPhoto] = useUploadServicePointPhotoMutation();
   const [deletePhoto] = useDeleteServicePointPhotoMutation();
 
-  const servicePoint = servicePointResponse?.data;
-  const photos = photosResponse?.data || [];
-  const isLoading = servicePointLoading || photosLoading;
-  const error = servicePointError || photosError;
+  const photos = photosResponse || [];
+  const isLoading = photosLoading;
+  const error = photosError;
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -78,7 +70,7 @@ const ServicePointPhotosPage: React.FC = () => {
     formData.append('photo', files[0]);
     
     try {
-      await uploadPhoto({ id: Number(id), photo: formData }).unwrap();
+      await uploadPhoto({ servicePointId: id, file: files[0] }).unwrap();
       await refetchPhotos();
     } catch (error) {
       console.error('Ошибка при загрузке фото:', error);
@@ -87,7 +79,7 @@ const ServicePointPhotosPage: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (photoId: number) => {
+  const handleDeleteClick = (photoId: string) => {
     setPhotoToDelete(photoId);
     setDeleteDialogOpen(true);
   };
@@ -99,7 +91,7 @@ const ServicePointPhotosPage: React.FC = () => {
     }
     
     try {
-      await deletePhoto({ servicePointId: Number(id), photoId: photoToDelete }).unwrap();
+      await deletePhoto({ servicePointId: id, photoId: photoToDelete }).unwrap();
       await refetchPhotos();
     } catch (error) {
       console.error('Ошибка при удалении фото:', error);
@@ -134,11 +126,11 @@ const ServicePointPhotosPage: React.FC = () => {
     );
   }
 
-  if (!servicePoint) {
+  if (!photos.length) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 2 }}>
-          Сервисная точка не найдена
+          Нет загруженных фотографий
         </Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/service-points')}>
           Вернуться к списку
@@ -151,7 +143,7 @@ const ServicePointPhotosPage: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">
-          Фотографии: {servicePoint.name}
+          Фотографии: {id}
         </Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
           Назад к точке
@@ -206,23 +198,23 @@ const ServicePointPhotosPage: React.FC = () => {
         </Box>
       ) : photos.length > 0 ? (
         <Grid container spacing={3}>
-          {photos.map((photo: ServicePointPhoto) => (
+          {photos.map((photo) => (
             <Grid item xs={12} sm={6} md={4} key={photo.id}>
               <Card>
                 <CardMedia
                   component="img"
                   height="200"
-                  image={photo.photo_url}
+                  image={photo.url}
                   alt={`Фото ${photo.id}`}
                 />
                 <CardContent>
                   <Typography variant="body2" color="text.secondary">
-                    {`Фото #${photo.id}`}
+                    {photo.description || `Фото #${photo.id}`}
                   </Typography>
                 </CardContent>
                 <CardActions>
                   <IconButton 
-                    href={photo.photo_url} 
+                    href={photo.url} 
                     target="_blank" 
                     size="small" 
                     color="primary"

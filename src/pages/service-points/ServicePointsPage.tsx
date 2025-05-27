@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -15,34 +16,36 @@ import {
   TableRow,
   IconButton,
   Tooltip,
+  Chip,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TablePagination,
+  Avatar,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Add as AddIcon,
   LocationOn as LocationIcon,
-  Phone as PhoneIcon,
-  Business as BusinessIcon,
-  Star as StarIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { 
+import {
   useGetServicePointsQuery,
   useDeleteServicePointMutation,
+  useUpdateServicePointMutation,
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
+import { ServicePoint } from '../../types/models';
 
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,16 +59,16 @@ const ServicePointsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedServicePoint, setSelectedServicePoint] = useState<{ id: number; name: string; partner_id: number } | null>(null);
+  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
 
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
-    { region_id: selectedRegionId || undefined }, 
+    { region_id: selectedRegionId?.toString() || undefined }, 
     { skip: !selectedRegionId }
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
-    search,
+    query: search,
     city_id: selectedCityId || undefined,
     region_id: selectedRegionId || undefined,
     page: page + 1,
@@ -75,7 +78,7 @@ const ServicePointsPage: React.FC = () => {
 
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
-  const totalItems = servicePointsData?.meta?.total || 0;
+  const totalItems = servicePointsData?.meta?.total_count || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +107,7 @@ const ServicePointsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (servicePoint: { id: number; name: string; partner_id: number }) => {
+  const handleDeleteClick = (servicePoint: ServicePoint) => {
     setSelectedServicePoint(servicePoint);
     setDeleteDialogOpen(true);
   };
@@ -112,10 +115,7 @@ const ServicePointsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedServicePoint) {
       try {
-        await deleteServicePoint({ 
-          partner_id: selectedServicePoint.partner_id, 
-          id: selectedServicePoint.id 
-        }).unwrap();
+        await deleteServicePoint(selectedServicePoint.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedServicePoint(null);
       } catch (error) {
@@ -189,7 +189,7 @@ const ServicePointsPage: React.FC = () => {
               label="Регион"
             >
               <MenuItem value="">Все регионы</MenuItem>
-              {regionsData?.regions?.map((region) => (
+              {regionsData?.data?.map((region) => (
                 <MenuItem key={region.id} value={region.id}>
                   {region.name}
                 </MenuItem>
@@ -206,7 +206,7 @@ const ServicePointsPage: React.FC = () => {
               disabled={!selectedRegionId}
             >
               <MenuItem value="">Все города</MenuItem>
-              {citiesData?.cities?.map((city) => (
+              {citiesData?.data?.map((city) => (
                 <MenuItem key={city.id} value={city.id}>
                   {city.name}
                 </MenuItem>
@@ -233,7 +233,7 @@ const ServicePointsPage: React.FC = () => {
               <TableRow key={servicePoint.id}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <BusinessIcon color="action" />
+                    <LocationIcon color="action" />
                     <Typography>{servicePoint.name}</Typography>
                   </Box>
                 </TableCell>
@@ -245,13 +245,13 @@ const ServicePointsPage: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <PhoneIcon color="action" />
+                    <LocationIcon color="action" />
                     <Typography>{servicePoint.contact_phone}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <StarIcon color={servicePoint.is_active ? "primary" : "disabled"} />
+                    <LocationIcon color="action" />
                     <Typography>{servicePoint.is_active ? 'Активна' : 'Неактивна'}</Typography>
                   </Box>
                 </TableCell>

@@ -19,12 +19,12 @@ import * as yup from 'yup';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { 
-  useGetPartnerQuery, 
+  useGetPartnerByIdQuery, 
   useCreatePartnerMutation, 
-  useUpdatePartnerMutation 
-} from '../../api/partners';
-import { useGetRegionsQuery } from '../../api/regions';
-import { useGetCitiesQuery } from '../../api/cities';
+  useUpdatePartnerMutation,
+  useGetRegionsQuery,
+  useGetCitiesQuery,
+} from '../../api';
 import { PartnerFormData } from '../../types/models';
 
 // Обновляем интерфейс для пользовательских данных
@@ -125,9 +125,11 @@ const PartnerFormPage: React.FC = () => {
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
 
   // RTK Query хуки
-  const { data: partner, isLoading: partnerLoading } = useGetPartnerQuery(Number(id), { skip: !id });
-  const { data: regionsData } = useGetRegionsQuery();
-  const { data: citiesData } = useGetCitiesQuery({ region_id: selectedRegionId }, { skip: !selectedRegionId });
+  const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id || '', {
+    skip: !id,
+  });
+  const { data: regionsData } = useGetRegionsQuery({});
+  const { data: citiesData } = useGetCitiesQuery({ region_id: selectedRegionId?.toString() }, { skip: !selectedRegionId });
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
@@ -156,38 +158,30 @@ const PartnerFormPage: React.FC = () => {
     validateOnBlur: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const submitData: PartnerFormData = {
+        const submitData = {
           company_name: values.company_name,
-          company_description: values.company_description || undefined,
-          contact_person: values.contact_person || undefined,
-          logo_url: values.logo_url || undefined,
-          website: values.website || undefined,
-          tax_number: values.tax_number || undefined,
-          legal_address: values.legal_address || undefined,
-          region_id: values.region_id === '' ? undefined : Number(values.region_id),
-          city_id: values.city_id === '' ? undefined : Number(values.city_id),
+          company_description: values.company_description,
+          contact_person: values.contact_person,
+          logo_url: values.logo_url,
+          website: values.website,
+          tax_number: values.tax_number,
+          legal_address: values.legal_address,
+          region_id: values.region_id ? Number(values.region_id) : undefined,
+          city_id: values.city_id ? Number(values.city_id) : undefined,
+          user: values.user || undefined
         };
 
-        // Добавляем данные пользователя только при создании
-        if (!isEdit && values.user) {
-          submitData.user = {
-            email: values.user.email,
-            phone: values.user.phone,
-            first_name: values.user.first_name,
-            last_name: values.user.last_name,
-            password: values.user.password || undefined,
-          };
-        }
-
-        if (isEdit) {
-          await updatePartner({ id: Number(id), data: submitData }).unwrap();
+        if (isEdit && id) {
+          await updatePartner({ 
+            id: id.toString(), 
+            partner: submitData 
+          }).unwrap();
         } else {
           await createPartner(submitData).unwrap();
         }
-        
         navigate('/partners');
       } catch (error) {
-        console.error('Ошибка при сохранении партнера:', error);
+        console.error('Ошибка при сохранении:', error);
       } finally {
         setSubmitting(false);
       }
@@ -205,13 +199,13 @@ const PartnerFormPage: React.FC = () => {
         website: partner.website || '',
         tax_number: partner.tax_number || '',
         legal_address: partner.legal_address || '',
-        region_id: partner.region_id || '',
-        city_id: partner.city_id || '',
+        region_id: partner.region_id?.toString() || '',
+        city_id: partner.city_id?.toString() || '',
         user: null,
       });
       setSelectedRegionId(partner.region_id);
     }
-  }, [partner, isEdit]);
+  }, [partner, isEdit, formik]);
 
   // Обновляем выбранный регион при изменении
   useEffect(() => {
@@ -222,7 +216,7 @@ const PartnerFormPage: React.FC = () => {
       setSelectedRegionId(undefined);
       formik.setFieldValue('city_id', '');
     }
-  }, [formik.values.region_id]);
+  }, [formik.values.region_id, formik]);
 
   const loadPartner = useCallback(async () => {
     try {
@@ -230,7 +224,7 @@ const PartnerFormPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при загрузке партнера:', error);
     }
-  }, [formik]);
+  }, []);
 
   const loadCities = useCallback(async () => {
     try {
@@ -238,7 +232,7 @@ const PartnerFormPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при загрузке городов:', error);
     }
-  }, [formik]);
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -263,6 +257,49 @@ const PartnerFormPage: React.FC = () => {
   // Создаем типизированные версии touched и errors
   const touched = formik.touched as FormikTouched<FormValues>;
   const errors = formik.errors as FormikErrors<FormValues>;
+
+  // Создаем типизированные версии touched и errors для пользователя
+  type FormikTouchedUser = {
+    first_name?: boolean;
+    last_name?: boolean;
+    email?: boolean;
+    phone?: boolean;
+    password?: boolean;
+  };
+
+  type FormikErrorsUser = {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+  };
+
+  type FormikTouchedValues = {
+    company_name?: boolean;
+    company_description?: boolean;
+    contact_person?: boolean;
+    logo_url?: boolean;
+    website?: boolean;
+    tax_number?: boolean;
+    legal_address?: boolean;
+    region_id?: boolean;
+    city_id?: boolean;
+    user?: FormikTouchedUser;
+  };
+
+  type FormikErrorsValues = {
+    company_name?: string;
+    company_description?: string;
+    contact_person?: string;
+    logo_url?: string;
+    website?: string;
+    tax_number?: string;
+    legal_address?: string;
+    region_id?: string;
+    city_id?: string;
+    user?: FormikErrorsUser;
+  };
 
   return (
     <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
@@ -415,7 +452,7 @@ const PartnerFormPage: React.FC = () => {
                   error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                 >
                   <MenuItem value="">Не выбран</MenuItem>
-                  {regionsData?.regions?.map((region) => (
+                  {regionsData?.data?.map((region) => (
                     <MenuItem key={region.id} value={region.id.toString()}>
                       {region.name}
                     </MenuItem>
@@ -436,7 +473,7 @@ const PartnerFormPage: React.FC = () => {
                   disabled={!formik.values.region_id}
                 >
                   <MenuItem value="">Не выбран</MenuItem>
-                  {citiesData?.cities?.map((city) => (
+                  {citiesData?.data?.map((city) => (
                     <MenuItem key={city.id} value={city.id.toString()}>
                       {city.name}
                     </MenuItem>
@@ -464,8 +501,14 @@ const PartnerFormPage: React.FC = () => {
                     value={formik.values.user?.first_name || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.user?.first_name && formik.errors.user?.first_name)}
-                    helperText={formik.touched.user?.first_name && formik.errors.user?.first_name || ''}
+                    error={Boolean(
+                      (formik.touched as FormikTouchedValues).user?.first_name && 
+                      (formik.errors as FormikErrorsValues).user?.first_name
+                    )}
+                    helperText={
+                      (formik.touched as FormikTouchedValues).user?.first_name && 
+                      (formik.errors as FormikErrorsValues).user?.first_name || ''
+                    }
                   />
                 </Grid>
 
@@ -478,8 +521,14 @@ const PartnerFormPage: React.FC = () => {
                     value={formik.values.user?.last_name || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.user?.last_name && formik.errors.user?.last_name)}
-                    helperText={formik.touched.user?.last_name && formik.errors.user?.last_name || ''}
+                    error={Boolean(
+                      (formik.touched as FormikTouchedValues).user?.last_name && 
+                      (formik.errors as FormikErrorsValues).user?.last_name
+                    )}
+                    helperText={
+                      (formik.touched as FormikTouchedValues).user?.last_name && 
+                      (formik.errors as FormikErrorsValues).user?.last_name || ''
+                    }
                   />
                 </Grid>
 
@@ -493,8 +542,14 @@ const PartnerFormPage: React.FC = () => {
                     value={formik.values.user?.email || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.user?.email && formik.errors.user?.email)}
-                    helperText={formik.touched.user?.email && formik.errors.user?.email || ''}
+                    error={Boolean(
+                      (formik.touched as FormikTouchedValues).user?.email && 
+                      (formik.errors as FormikErrorsValues).user?.email
+                    )}
+                    helperText={
+                      (formik.touched as FormikTouchedValues).user?.email && 
+                      (formik.errors as FormikErrorsValues).user?.email || ''
+                    }
                   />
                 </Grid>
 
@@ -508,8 +563,14 @@ const PartnerFormPage: React.FC = () => {
                     value={formik.values.user?.phone || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.user?.phone && formik.errors.user?.phone)}
-                    helperText={formik.touched.user?.phone && formik.errors.user?.phone || ''}
+                    error={Boolean(
+                      (formik.touched as FormikTouchedValues).user?.phone && 
+                      (formik.errors as FormikErrorsValues).user?.phone
+                    )}
+                    helperText={
+                      (formik.touched as FormikTouchedValues).user?.phone && 
+                      (formik.errors as FormikErrorsValues).user?.phone || ''
+                    }
                   />
                 </Grid>
 
@@ -522,8 +583,14 @@ const PartnerFormPage: React.FC = () => {
                     value={formik.values.user?.password || ''}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    error={Boolean(formik.touched.user?.password && formik.errors.user?.password)}
-                    helperText={formik.touched.user?.password && formik.errors.user?.password || ''}
+                    error={Boolean(
+                      (formik.touched as FormikTouchedValues).user?.password && 
+                      (formik.errors as FormikErrorsValues).user?.password
+                    )}
+                    helperText={
+                      (formik.touched as FormikTouchedValues).user?.password && 
+                      (formik.errors as FormikErrorsValues).user?.password || ''
+                    }
                   />
                 </Grid>
               </>

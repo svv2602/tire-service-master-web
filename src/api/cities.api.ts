@@ -1,76 +1,66 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { City, CityFormData } from '../types/location';
-
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
+import { City, CityFilter, ApiResponse } from '../types/models';
 
 export const citiesApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getCities: build.query<City[], void>({
-      query: () => 'cities',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Cities' as const, id })),
-              'Cities',
-            ]
-          : ['Cities'],
+  endpoints: (builder) => ({
+    getCities: builder.query<ApiResponse<City>, CityFilter>({
+      query: (params) => ({
+        url: 'cities',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['City'],
     }),
 
-    getCitiesByRegionId: build.query<City[], string>({
-      query: (regionId: string) => `cities?regionId=${regionId}`,
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Cities' as const, id })),
-              'Cities',
-            ]
-          : ['Cities'],
+    getCitiesByRegion: builder.query<City[], string>({
+      query: (regionId) => ({
+        url: 'cities',
+        method: 'GET',
+        params: { regionId },
+      }),
+      providesTags: ['City'],
     }),
-    
-    getCityById: build.query<City, string>({
-      query: (id: string) => `cities/${id}`,
-      providesTags: (_result: City | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Cities' as const, id }
-      ],
+
+    getCityById: builder.query<City, string>({
+      query: (id) => ({
+        url: `cities/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'City', id }],
     }),
-    
-    createCity: build.mutation<City, CityFormData>({
-      query: (data: CityFormData) => ({
+
+    createCity: builder.mutation<City, Partial<City>>({
+      query: (city) => ({
         url: 'cities',
         method: 'POST',
-        body: data,
+        body: city,
       }),
-      invalidatesTags: ['Cities'],
+      invalidatesTags: ['City'],
     }),
-    
-    updateCity: build.mutation<City, { id: string; data: Partial<CityFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<CityFormData> }) => ({
+
+    updateCity: builder.mutation<City, { id: string; city: Partial<City> }>({
+      query: ({ id, city }) => ({
         url: `cities/${id}`,
-        method: 'PATCH',
-        body: data,
+        method: 'PUT',
+        body: city,
       }),
-      invalidatesTags: (_result: City | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Cities' as const, id },
-        'Cities',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'City', id }],
     }),
-    
-    deleteCity: build.mutation<void, string>({
-      query: (id: string) => ({
+
+    deleteCity: builder.mutation<void, string>({
+      query: (id) => ({
         url: `cities/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Cities'],
+      invalidatesTags: ['City'],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
 export const {
   useGetCitiesQuery,
-  useGetCitiesByRegionIdQuery,
+  useGetCitiesByRegionQuery,
   useGetCityByIdQuery,
   useCreateCityMutation,
   useUpdateCityMutation,

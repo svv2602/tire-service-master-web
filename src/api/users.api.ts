@@ -1,68 +1,84 @@
-import { baseApi } from './baseApi';
-import { User, UserFormData } from '../types/user';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseQuery';
+import type { User } from '../types/models';
 
-interface UsersResponse {
-  data: User[];
-  meta: {
-    total: number;
-    per_page: number;
-    current_page: number;
-    total_pages: number;
-  };
+export interface UsersResponse {
+  users: User[];
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+  itemsPerPage: number;
 }
 
-interface UserResponse {
-  data: User;
+export interface UsersQueryParams {
+  page?: string;
+  per_page?: string;
+  query?: string;
+  role?: string;
+  active?: boolean;
 }
 
-export const usersApi = baseApi.injectEndpoints({
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  position?: string;
+  preferred_notification_method?: string;
+  marketing_consent?: boolean;
+  access_level?: number;
+  partner_id?: string;
+}
+
+export interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+export interface PasswordReset {
+  email: string;
+}
+
+export const usersApi = createApi({
+  reducerPath: 'usersApi',
+  baseQuery,
+  tagTypes: ['User'],
   endpoints: (builder) => ({
-    getUsers: builder.query<UsersResponse, { page?: number; per_page?: number; query?: string }>({
+    getUsers: builder.query<UsersResponse, UsersQueryParams>({
       query: (params) => ({
-        url: '/users',
+        url: 'users',
+        method: 'GET',
         params,
       }),
-      providesTags: ['Users'],
+      providesTags: ['User'],
     }),
-
-    getUserById: builder.query<UserResponse, number>({
-      query: (id) => `/users/${id}`,
-      providesTags: (_result, _error, id) => [{ type: 'Users', id }],
+    getUserById: builder.query<{ data: User }, string>({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['User'],
     }),
-
-    createUser: builder.mutation<UserResponse, UserFormData>({
+    createUser: builder.mutation<{ data: User }, Omit<User, 'id' | 'created_at' | 'updated_at'>>({
       query: (data) => ({
-        url: '/users',
+        url: 'users',
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Users'],
+      invalidatesTags: ['User'],
     }),
-
-    updateUser: builder.mutation<UserResponse, { id: number; data: Partial<UserFormData> }>({
+    updateUser: builder.mutation<{ data: User }, { id: string; data: Omit<User, 'id' | 'created_at' | 'updated_at'> }>({
       query: ({ id, data }) => ({
-        url: `/users/${id}`,
-        method: 'PATCH',
+        url: `users/${id}`,
+        method: 'PUT',
         body: data,
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Users', id }],
+      invalidatesTags: ['User'],
     }),
-
-    deleteUser: builder.mutation<void, number>({
+    deleteUser: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/users/${id}`,
+        url: `users/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Users'],
-    }),
-
-    updateUserStatus: builder.mutation<UserResponse, { id: number; is_active: boolean }>({
-      query: ({ id, is_active }) => ({
-        url: `/users/${id}/status`,
-        method: 'PATCH',
-        body: { is_active },
-      }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: 'Users', id }],
+      invalidatesTags: ['User'],
     }),
   }),
 });
@@ -73,5 +89,4 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
-  useUpdateUserStatusMutation,
 } = usersApi; 

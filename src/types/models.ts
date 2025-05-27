@@ -1,133 +1,120 @@
 import { UserRole } from './user-role';
+import { BookingStatus } from './booking';
+import type { Client, ClientCar as ClientCarType, ClientFilter as ClientFilterType } from './client';
 
-// Базовая модель
+// Базовый интерфейс для всех моделей
 export interface BaseModel {
-  id: number;
+  id: string;
   created_at: string;
   updated_at: string;
 }
 
+// Интерфейс для метаданных пагинации
+export interface PaginationMeta {
+  current_page: number;
+  per_page: number;
+  total_count: number;
+  total_pages: number;
+}
+
+// Интерфейс для ответа API с пагинацией
+export interface ApiResponse<T> {
+  data: T[];
+  total: number;
+  meta: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+  };
+}
+
+export interface ApiResponseSingle<T> {
+  data: T;
+}
+
+// Экспортируем все типы
+export type {
+  Client,
+  ClientCarType as ClientCar,
+  UserRole,
+  BookingStatus
+};
+
 // Модель пользователя
-export interface User extends BaseModel {
+export interface User {
+  id: string;
   email: string;
+  phone?: string;
   first_name: string;
   last_name: string;
-  middle_name?: string;
-  phone?: string;
   role: string;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
-  last_login?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // Модель партнера
 export interface Partner {
-  id: number;
+  id: string;
   user_id: number;
+  name?: string;
   company_name: string;
   company_description?: string;
+  description?: string;
   contact_person?: string;
   logo_url?: string;
   website?: string;
   tax_number?: string;
   legal_address?: string;
-  region_id?: number;
-  city_id?: number;
+  phone?: string;
+  email?: string;
+  region_id: number;
+  city_id: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   
-  // Связанные объекты
-  user?: User;
+  // Связанные объекты - делаем user более гибким для совместимости с API
+  user?: User | {
+    id: string;
+    email: string;
+    phone: string;
+    first_name: string;
+    last_name: string;
+  };
   region?: Region;
   city?: City;
-  
-  // Дополнительные поля для обратной совместимости
-  phone?: string;
-  email?: string;
-  address?: string;
-  description?: string;
-  additional_info?: string;
-}
-
-export interface PartnerFormData {
-  company_name: string;
-  company_description?: string;
-  contact_person?: string;
-  logo_url?: string;
-  website?: string;
-  tax_number?: string;
-  legal_address?: string;
-  region_id?: number | '';
-  city_id?: number | '';
-  
-  // Данные пользователя (для создания нового партнера)
-  user?: {
-    email?: string;
-    phone?: string;
-    first_name?: string;
-    last_name?: string;
-    password?: string;
-  };
 }
 
 // Модель сервисной точки
 export interface ServicePoint {
-  id: number;
-  partner_id: number;
+  id: string;
+  partner_id: string;
   name: string;
   description?: string;
-  city_id: number;
   address: string;
-  contact_phone: string;
+  phone: string;
+  contact_phone?: string;
+  email: string;
+  working_hours: string | Record<string, { start: string; end: string }>;
+  region_id: number;
+  city_id: number;
   is_active: boolean;
-  post_count: number;
-  default_slot_duration: number;
-  latitude?: number;
-  longitude?: number;
-  rating?: number;
-  review_count?: number;
-  partner?: Partner;
-  city?: City;
-  schedule: Array<{
-    id: number;
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    is_working_day: boolean;
-    created_at: string;
-    updated_at: string;
-  }>;
-  services: Array<{
-    id: number;
-    service_id: number;
-    price: number;
-    duration: number;
-    is_available: boolean;
-    service?: Service;
-    created_at: string;
-    updated_at: string;
-  }>;
-  photos: Array<{
-    id: number;
-    url: string;
-    description?: string;
-    is_main: boolean;
-    created_at: string;
-    updated_at: string;
-  }>;
-  reviews: Array<{
-    id: number;
-    user_id: number;
-    rating: number;
-    comment: string;
-    user?: User;
-    created_at: string;
-    updated_at: string;
-  }>;
+  post_count?: number;
+  default_slot_duration?: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  status_id?: number;
   created_at: string;
   updated_at: string;
+  
+  // Связанные объекты
+  partner?: Partner;
+  region?: Region;
+  city?: City;
+  photos?: ServicePointPhoto[];
 }
 
 // Модель фотографии сервисной точки
@@ -142,37 +129,28 @@ export interface ServicePointPhoto extends BaseModel {
 
 // Модель рабочих часов
 export interface WorkingHours {
-  day: number;
-  open_time: string;
-  close_time: string;
-  is_day_off: boolean;
-}
-
-// Модель удобств
-export interface Amenity extends BaseModel {
-  name: string;
-  icon?: string;
-  description?: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_working_day: boolean;
 }
 
 // Модель категории услуг
 export interface ServiceCategory extends BaseModel {
-  id: number;
   name: string;
   description?: string;
-  created_at: string;
-  updated_at: string;
+  is_active: boolean;
 }
 
 // Модель услуги
 export interface Service extends BaseModel {
-  id: number;
   name: string;
   description?: string;
+  price: number;
+  duration: number;
   category_id: number;
+  is_active: boolean;
   category?: ServiceCategory;
-  created_at: string;
-  updated_at: string;
 }
 
 // Бренд автомобиля
@@ -198,106 +176,138 @@ export interface CarModel extends BaseModel {
 }
 
 // Регион
-export interface Region extends BaseModel {
+export interface Region {
+  id: string;
   name: string;
-  code: string;
-  is_active: boolean;
-  cities: City[];
+  code?: string;
+  is_active?: boolean;
 }
 
 // Город
-export interface City extends BaseModel {
-  region_id: number;
+export interface City {
+  id: string;
   name: string;
-  is_active: boolean;
+  region_id: string;
+  code?: string;
+  is_active?: boolean;
   region?: Region;
 }
 
-// Менеджеры
-export interface Manager extends BaseModel {
-  user: User;
-  partner_id: number;
-  position: string;
-  access_level: number;
-  service_points: ServicePoint[];
-}
-
-// Клиенты и автомобили
-export interface Client extends BaseModel {
-  user: User;
-  cars: Car[];
-  bookings_count: number;
-  preferred_notification_method?: string;
-  marketing_consent?: boolean;
-}
-
-export interface Car extends BaseModel {
-  client_id: number;
-  brand_id: number;
-  brand: CarBrand;
-  model_id: number;
-  model: CarModel;
-  year: number;
-  registration_number: string;
-  vin?: string;
-}
-
 // Бронирования
-export interface Booking extends BaseModel {
-  id: number;
-  client_id: number;
-  client?: {
-    user?: {
-      first_name?: string;
-      last_name?: string;
-      phone?: string;
-    };
-  };
-  service_point_id: number;
-  service_point?: {
-    name: string;
-    address: string;
-  };
-  car_id?: number;
-  car_type_id: number;
-  car_brand?: {
-    name: string;
-  };
-  car_model?: {
-    name: string;
-  };
-  car_year?: number;
-  service_type?: {
-    name: string;
-  };
+export interface Booking {
+  id: string;
+  service_point_id: string;
+  client_id: string;
+  service_type: string;
   status: string;
   scheduled_at: string;
-  total_price?: number;
-  notes?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Связанные объекты
+  service_point?: ServicePoint;
+  client?: Client;
+  clientCar?: {
+    carBrand?: CarBrand;
+    carModel?: CarModel;
+  };
 }
 
-export interface BookingService extends BaseModel {
-  booking_id: number;
-  service_id: number;
-  service: Service;
-  quantity: number;
-  price: number;
+// Интерфейсы для форм
+export interface BookingFormData {
+  service_point_id: string;
+  service_type: string;
+  scheduled_at: string;
 }
 
-export interface BookingStatus extends BaseModel {
+export interface PartnerFormData {
+  company_name: string;
+  company_description?: string;
+  contact_person?: string;
+  logo_url?: string;
+  website?: string;
+  tax_number?: string;
+  legal_address?: string;
+  region_id?: number;
+  city_id?: number;
+  is_active?: boolean;
+  user?: {
+    email: string;
+    phone: string;
+    first_name: string;
+    last_name: string;
+    password?: string;
+  };
+}
+
+export interface CityFormData {
   name: string;
-  description?: string;
-  color: string;
+  code: string;
+  region_id: number;
   is_active: boolean;
-  sort_order: number;
 }
 
-export interface PaymentStatus extends BaseModel {
+export interface RegionFormData {
   name: string;
-  description?: string;
-  color: string;
+  code: string;
   is_active: boolean;
-  sort_order: number;
+}
+
+// Типы для фильтров
+export interface ServicePointFilter {
+  query?: string;
+  status?: string;
+  service_point_id?: string;
+  city_id?: number | string;
+  region_id?: number | string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface PartnerFilter {
+  query?: string;
+  status?: string;
+  partner_id?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface ClientFilter {
+  query?: string;
+  client_id?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface CityFilter {
+  query?: string;
+  region_id?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface RegionFilter {
+  query?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface ReviewFilter {
+  query?: string;
+  rating?: number;
+  status?: ReviewStatus | string;
+  service_point_id?: number;
+  review_id?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface BookingFilter {
+  query?: string;
+  status?: string;
+  booking_id?: string;
+  page?: number;
+  per_page?: number;
 }
 
 // Статус сервисной точки
@@ -318,4 +328,99 @@ export interface ServicePointService {
   is_available: boolean;
   created_at: string;
   updated_at: string;
+  service?: Service;
+}
+
+// Типы статусов отзывов
+export type ReviewStatus = 'pending' | 'published' | 'rejected';
+
+export interface Review {
+  id: string;
+  service_point_id: string;
+  client_id: string;
+  rating: number;
+  comment: string;
+  text?: string;
+  response?: string;
+  status?: ReviewStatus;
+  created_at: string;
+  updated_at: string;
+  
+  // Связанные объекты
+  service_point?: ServicePoint;
+  client?: Client;
+  booking?: Booking;
+}
+
+export interface ServicePointFormData {
+  name: string;
+  partner_id?: string;
+  description?: string;
+  address: string;
+  phone?: string;
+  contact_phone?: string;
+  email?: string;
+  working_hours?: string;
+  region_id?: number;
+  city_id?: number;
+  is_active?: boolean;
+  post_count?: number;
+  default_slot_duration?: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  status_id?: number;
+  schedule?: WorkingHours[];
+  services?: ServicePointService[];
+  photos?: ServicePointPhoto[];
+}
+
+// Этот интерфейс перемещён в файл client.ts и импортирован как Client
+// Не используется здесь больше, так как импортируется из client.ts
+// Сохранен для справки
+/*
+export interface Client extends BaseModel {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  phone?: string;
+  email?: string;
+  is_active: boolean;
+  user?: User;
+  cars?: ClientCarType[];
+*/
+// }
+
+// Модель удобств
+export interface Amenity extends BaseModel {
+  name: string;
+  description?: string;
+  icon?: string;
+  is_active: boolean;
+}
+
+// Модель автомобиля
+export interface Car {
+  id: string;
+  brand: string;
+  model: string;
+  year: number;
+  license_plate: string;
+  client_id?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewFormData {
+  service_point_id: string;
+  booking_id?: string;
+  rating: number;
+  comment: string;
+}
+
+export interface ReviewUpdateData {
+  response?: string;
+  status?: ReviewStatus;
+  rating?: number;
+  comment?: string;
 }

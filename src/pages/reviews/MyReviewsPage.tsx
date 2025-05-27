@@ -31,15 +31,20 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { 
-  useGetMyReviewsQuery, 
+  useGetReviewsByClientQuery, 
   useDeleteReviewMutation,
   useUpdateReviewMutation,
 } from '../../api';
-import { Review } from '../../api/types';
+import { Review } from '../../types/models';
+import { RootState } from '../../store';
 
 const MyReviewsPage: React.FC = () => {
   const navigate = useNavigate();
+  
+  // Получаем userId из Redux store
+  const userId = useSelector((state: RootState) => state.auth.user?.id);
   
   // Состояние для пагинации
   const [page, setPage] = useState(0);
@@ -57,10 +62,7 @@ const MyReviewsPage: React.FC = () => {
     data: reviewsData, 
     isLoading: reviewsLoading, 
     error: reviewsError 
-  } = useGetMyReviewsQuery({
-    page: page + 1,
-    per_page: rowsPerPage,
-  });
+  } = useGetReviewsByClientQuery(userId || '', { skip: !userId });
 
   const [deleteReview, { isLoading: deleteLoading }] = useDeleteReviewMutation();
   const [updateReview, { isLoading: updateLoading }] = useUpdateReviewMutation();
@@ -68,7 +70,7 @@ const MyReviewsPage: React.FC = () => {
   const isLoading = reviewsLoading || deleteLoading || updateLoading;
   const error = reviewsError;
   const reviews = reviewsData?.data || [];
-  const totalItems = reviewsData?.pagination?.total_items || 0;
+  const totalItems = reviewsData?.total || 0;
 
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -95,7 +97,7 @@ const MyReviewsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedReview) {
       try {
-        await deleteReview(selectedReview.id).unwrap();
+        await deleteReview(selectedReview.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedReview(null);
       } catch (error) {
@@ -108,7 +110,7 @@ const MyReviewsPage: React.FC = () => {
     if (selectedReview) {
       try {
         await updateReview({
-          id: selectedReview.id,
+          id: selectedReview.id.toString(),
           data: {
             comment: editedComment,
             rating: editedRating,
@@ -185,7 +187,7 @@ const MyReviewsPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {reviews.map((review) => (
+            {reviews.map((review: Review) => (
               <TableRow key={review.id}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

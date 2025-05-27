@@ -1,44 +1,60 @@
-export interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
+import { BaseModel } from './models';
+
+// Интерфейс клиента
+export interface Client extends BaseModel {
+  user_id?: number;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  phone?: string;
   email?: string;
-  cars: ClientCar[];
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  cars?: ClientCar[];
 }
 
-export interface ClientCar {
-  id: string;
-  clientId: string;
-  carBrandId: string;
-  carModelId: string;
-  year?: number;
-  registrationNumber?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+// Интерфейс для формы клиента
 export interface ClientFormData {
-  firstName: string;
-  lastName: string;
-  phone: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  phone?: string;
   email?: string;
-  cars?: ClientCarFormData[];
+  is_active?: boolean;
 }
 
-export interface ClientCarFormData {
-  carBrandId: string;
-  carModelId: string;
-  year?: number;
-  registrationNumber?: string;
-  notes?: string;
-}
-
+// Интерфейс для фильтрации клиентов
 export interface ClientFilter {
-  search?: string; // Поиск по имени, фамилии или телефону
-  carBrandId?: string;
-  carModelId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Интерфейс автомобиля клиента
+export interface ClientCar extends BaseModel {
+  clientId: string;
+  brand: string;
+  model: string;
+  year: number;
+  vin: string;
+  license_plate: string;
+  client_id?: number;
+}
+
+// Интерфейс для формы автомобиля клиента
+export interface ClientCarFormData {
+  brand: string;
+  model: string;
+  year: number;
+  vin: string;
+  license_plate: string;
+}
+
+// Интерфейс для фильтрации автомобилей клиента
+export interface ClientCarFilter {
+  client_id?: number;
+  query?: string;
+  page?: number;
+  per_page?: number;
 } 

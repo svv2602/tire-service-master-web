@@ -1,0 +1,961 @@
+Compiled with problems:
+×
+ERROR in src/components/ServicePointDetails.tsx:224:43
+TS2551: Property 'first_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'firstName'?
+    222 |                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    223 |                         <Typography variant="subtitle1">
+  > 224 |                           {review.client?.first_name} {review.client?.last_name}
+        |                                           ^^^^^^^^^^
+    225 |                         </Typography>
+    226 |                         <Rating value={review.rating} readOnly size="small" />
+    227 |                         <Typography variant="body2" color="text.secondary">
+ERROR in src/components/ServicePointDetails.tsx:224:71
+TS2551: Property 'last_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'lastName'?
+    222 |                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    223 |                         <Typography variant="subtitle1">
+  > 224 |                           {review.client?.first_name} {review.client?.last_name}
+        |                                                                       ^^^^^^^^^
+    225 |                         </Typography>
+    226 |                         <Rating value={review.rating} readOnly size="small" />
+    227 |                         <Typography variant="body2" color="text.secondary">
+ERROR in src/pages/dashboard/DashboardPage.tsx:34:5
+TS2353: Object literal may only specify known properties, and 'per_page' does not exist in type 'ServicePointFilter'.
+    32 |   const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError } = useGetServicePointsQuery({
+    33 |     page: 1,
+  > 34 |     per_page: 1
+       |     ^^^^^^^^
+    35 |   });
+    36 |   const { data: clientsData, isLoading: clientsLoading, error: clientsError } = useGetClientsQuery({
+    37 |     page: 1,
+ERROR in src/pages/dashboard/DashboardPage.tsx:38:5
+TS2353: Object literal may only specify known properties, and 'per_page' does not exist in type 'ClientFilter'.
+    36 |   const { data: clientsData, isLoading: clientsLoading, error: clientsError } = useGetClientsQuery({
+    37 |     page: 1,
+  > 38 |     per_page: 1
+       |     ^^^^^^^^
+    39 |   });
+    40 |   const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError } = useGetBookingsQuery({
+    41 |     page: 1,
+ERROR in src/pages/partners/PartnersPage.tsx:194:27
+TS2345: Argument of type '(partner: Partner) => JSX.Element' is not assignable to parameter of type '(value: Partner, index: number, array: Partner[]) => Element'.
+  Types of parameters 'partner' and 'value' are incompatible.
+    Type 'import("/home/snisar/mobi_tz/tire-service-master-web/src/types/partner").Partner' is not assignable to type 'import("/home/snisar/mobi_tz/tire-service-master-web/src/types/models").Partner'.
+      Types of property 'user' are incompatible.
+        Type '{ id: string; email: string; phone: string; first_name: string; last_name: string; } | undefined' is not assignable to type 'User | undefined'.
+          Type '{ id: string; email: string; phone: string; first_name: string; last_name: string; }' is missing the following properties from type 'User': role, is_active, email_verified, phone_verified, and 2 more.
+    192 |           </TableHead>
+    193 |           <TableBody>
+  > 194 |             {partners.map((partner: Partner) => (
+        |                           ^^^^^^^^^^^^^^^^^^^^^^^
+  > 195 |               <TableRow key={partner.id}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 196 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 197 |                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 198 |                     <Avatar sx={{ bgcolor: 'primary.main' }}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 199 |                       {getPartnerInitials(partner)}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 200 |                     </Avatar>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 201 |                     <Box>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 202 |                       <Typography>{partner.company_name}</Typography>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 203 |                       <Typography variant="body2" color="textSecondary">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 204 |                         {partner.company_description}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 205 |                       </Typography>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 206 |                     </Box>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 207 |                   </Box>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 208 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 209 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 210 |                 <TableCell>{partner.contact_person}</TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 211 |                 <TableCell>{partner.user?.phone}</TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 212 |                 <TableCell>{partner.user?.email}</TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 213 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 214 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 215 |                   <Chip
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 216 |                     icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 217 |                     label={partner.is_active ? 'Активен' : 'Неактивен'}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 218 |                     color={partner.is_active ? 'success' : 'error'}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 219 |                     size="small"
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 220 |                   />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 221 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 222 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 223 |                 <TableCell align="right">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 224 |                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 225 |                     <Tooltip title="Редактировать">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 226 |                       <IconButton
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 227 |                         onClick={() => navigate(`/partners/${partner.id}/edit`)}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 228 |                         size="small"
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 229 |                       >
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 230 |                         <EditIcon />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 231 |                       </IconButton>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 232 |                     </Tooltip>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 233 |                     <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 234 |                       <IconButton
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 235 |                         onClick={() => handleToggleStatus(partner)}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 236 |                         size="small"
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 237 |                         color={partner.is_active ? 'error' : 'success'}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 238 |                       >
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 239 |                         {partner.is_active ? <CloseIcon /> : <CheckIcon />}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 240 |                       </IconButton>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 241 |                     </Tooltip>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 242 |                     <Tooltip title="Удалить">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 243 |                       <IconButton
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 244 |                         onClick={() => handleDeleteClick(partner)}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 245 |                         size="small"
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 246 |                         color="error"
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 247 |                       >
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 248 |                         <DeleteIcon />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 249 |                       </IconButton>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 250 |                     </Tooltip>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 251 |                   </Box>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 252 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 253 |               </TableRow>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 254 |             ))}
+        | ^^^^^^^^^^^^^^
+    255 |           </TableBody>
+    256 |         </Table>
+    257 |         <TablePagination
+ERROR in src/pages/reviews/MyReviewsPage.tsx:190:26
+TS2345: Argument of type '(review: Review) => JSX.Element' is not assignable to parameter of type '(value: Review, index: number, array: Review[]) => Element'.
+  Types of parameters 'review' and 'value' are incompatible.
+    Property 'client_id' is missing in type 'import("/home/snisar/mobi_tz/tire-service-master-web/src/types/review").Review' but required in type 'import("/home/snisar/mobi_tz/tire-service-master-web/src/types/models").Review'.
+    188 |           </TableHead>
+    189 |           <TableBody>
+  > 190 |             {reviews.map((review: Review) => (
+        |                          ^^^^^^^^^^^^^^^^^^^^^
+  > 191 |               <TableRow key={review.id}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 192 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 193 |                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 194 |                     <BusinessIcon color="action" />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 195 |                     <Typography>{review.service_point?.name}</Typography>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 196 |                   </Box>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 197 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 198 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 199 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 200 |                   <Typography
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 201 |                     sx={{
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 202 |                       maxWidth: 300,
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 203 |                       overflow: 'hidden',
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 204 |                       textOverflow: 'ellipsis',
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 205 |                       display: '-webkit-box',
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 206 |                       WebkitLineClamp: 2,
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 207 |                       WebkitBoxOrient: 'vertical',
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 208 |                     }}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 209 |                   >
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 210 |                     {review.comment}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 211 |                   </Typography>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 212 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 213 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 214 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 215 |                   <Rating value={review.rating} readOnly size="small" />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 216 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 217 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 218 |                 <TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 219 |                   {formatDate(review.created_at)}
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 220 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 221 |
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 222 |                 <TableCell align="right">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 223 |                   <Tooltip title="Редактировать">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 224 |                     <IconButton onClick={() => handleEditClick(review)} size="small">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 225 |                       <EditIcon />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 226 |                     </IconButton>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 227 |                   </Tooltip>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 228 |                   <Tooltip title="Удалить">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 229 |                     <IconButton onClick={() => handleDeleteClick(review)} color="error" size="small">
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 230 |                       <DeleteIcon />
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 231 |                     </IconButton>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 232 |                   </Tooltip>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 233 |                 </TableCell>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 234 |               </TableRow>
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 235 |             ))}
+        | ^^^^^^^^^^^^^^
+    236 |           </TableBody>
+    237 |         </Table>
+    238 |
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:60:13
+TS2353: Object literal may only specify known properties, and 'response' does not exist in type '{ id: string; data: Partial<ReviewFormData>; }'.
+    58 |           await updateReview({
+    59 |             id: id || '',
+  > 60 |             response: values.response,
+       |             ^^^^^^^^
+    61 |           }).unwrap();
+    62 |           navigate('/reviews');
+    63 |         } catch (error) {
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:134:39
+TS2339: Property 'client' does not exist on type 'Review'.
+    132 |         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+    133 |           <Avatar sx={{ bgcolor: 'primary.main' }}>
+  > 134 |             {getClientInitials(review.client?.firstName, review.client?.lastName)}
+        |                                       ^^^^^^
+    135 |           </Avatar>
+    136 |           <Box sx={{ flex: 1 }}>
+    137 |             <Typography variant="h6">
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:134:65
+TS2339: Property 'client' does not exist on type 'Review'.
+    132 |         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+    133 |           <Avatar sx={{ bgcolor: 'primary.main' }}>
+  > 134 |             {getClientInitials(review.client?.firstName, review.client?.lastName)}
+        |                                                                 ^^^^^^
+    135 |           </Avatar>
+    136 |           <Box sx={{ flex: 1 }}>
+    137 |             <Typography variant="h6">
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:138:23
+TS2339: Property 'client' does not exist on type 'Review'.
+    136 |           <Box sx={{ flex: 1 }}>
+    137 |             <Typography variant="h6">
+  > 138 |               {review.client?.firstName} {review.client?.lastName}
+        |                       ^^^^^^
+    139 |             </Typography>
+    140 |             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+    141 |               <Rating value={review.rating} readOnly size="small" />
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:138:50
+TS2339: Property 'client' does not exist on type 'Review'.
+    136 |           <Box sx={{ flex: 1 }}>
+    137 |             <Typography variant="h6">
+  > 138 |               {review.client?.firstName} {review.client?.lastName}
+        |                                                  ^^^^^^
+    139 |             </Typography>
+    140 |             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+    141 |               <Rating value={review.rating} readOnly size="small" />
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:147:41
+TS2339: Property 'text' does not exist on type 'Review'.
+    145 |             </Box>
+    146 |             <Typography sx={{ mb: 2 }}>
+  > 147 |               {review.comment || review.text}
+        |                                         ^^^^
+    148 |             </Typography>
+    149 |           </Box>
+    150 |         </Box>
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:164:32
+TS2339: Property 'clientCar' does not exist on type '{ id: number; scheduled_at: string; }'.
+    162 |             <CarIcon color="action" />
+    163 |             <Typography>
+  > 164 |               {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+        |                                ^^^^^^^^^
+    165 |             </Typography>
+    166 |           </Box>
+    167 |         </Box>
+ERROR in src/pages/reviews/ReviewReplyPage.tsx:164:76
+TS2339: Property 'clientCar' does not exist on type '{ id: number; scheduled_at: string; }'.
+    162 |             <CarIcon color="action" />
+    163 |             <Typography>
+  > 164 |               {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+        |                                                                            ^^^^^^^^^
+    165 |             </Typography>
+    166 |           </Box>
+    167 |         </Box>
+ERROR in src/pages/reviews/ReviewsPage.tsx:161:38
+TS2551: Property 'first_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'firstName'?
+    159 |   // Вспомогательные функции
+    160 |   const getClientInitials = (review: Review) => {
+  > 161 |     const firstName = review.client?.first_name || '';
+        |                                      ^^^^^^^^^^
+    162 |     const lastName = review.client?.last_name || '';
+    163 |     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
+    164 |   };
+ERROR in src/pages/reviews/ReviewsPage.tsx:162:37
+TS2551: Property 'last_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'lastName'?
+    160 |   const getClientInitials = (review: Review) => {
+    161 |     const firstName = review.client?.first_name || '';
+  > 162 |     const lastName = review.client?.last_name || '';
+        |                                     ^^^^^^^^^
+    163 |     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
+    164 |   };
+    165 |
+ERROR in src/pages/reviews/ReviewsPage.tsx:277:41
+TS2551: Property 'first_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'firstName'?
+    275 |                     <Box>
+    276 |                       <Typography>
+  > 277 |                         {review.client?.first_name} {review.client?.last_name}
+        |                                         ^^^^^^^^^^
+    278 |                       </Typography>
+    279 |                       <Typography variant="body2" color="textSecondary">
+    280 |                         {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+ERROR in src/pages/reviews/ReviewsPage.tsx:277:69
+TS2551: Property 'last_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'lastName'?
+    275 |                     <Box>
+    276 |                       <Typography>
+  > 277 |                         {review.client?.first_name} {review.client?.last_name}
+        |                                                                     ^^^^^^^^^
+    278 |                       </Typography>
+    279 |                       <Typography variant="body2" color="textSecondary">
+    280 |                         {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+ERROR in src/pages/reviews/ReviewsPage.tsx:410:38
+TS2551: Property 'first_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'firstName'?
+    408 |           <Typography>
+    409 |             Вы действительно хотите удалить отзыв клиента{' '}
+  > 410 |             {selectedReview?.client?.first_name} {selectedReview?.client?.last_name}?
+        |                                      ^^^^^^^^^^
+    411 |             Это действие нельзя будет отменить.
+    412 |           </Typography>
+    413 |         </DialogContent>
+ERROR in src/pages/reviews/ReviewsPage.tsx:410:75
+TS2551: Property 'last_name' does not exist on type '{ firstName: string; lastName: string; }'. Did you mean 'lastName'?
+    408 |           <Typography>
+    409 |             Вы действительно хотите удалить отзыв клиента{' '}
+  > 410 |             {selectedReview?.client?.first_name} {selectedReview?.client?.last_name}?
+        |                                                                           ^^^^^^^^^
+    411 |             Это действие нельзя будет отменить.
+    412 |           </Typography>
+    413 |         </DialogContent>
+ERROR in src/pages/service-points/ServicePointDetailPage.tsx:33:3
+TS2724: '"../../api"' has no exported member named 'useGetServicePointScheduleQuery'. Did you mean 'useGetServicePointsQuery'?
+    31 |   useGetServicePointByIdQuery,
+    32 |   useGetServicePointServicesQuery,
+  > 33 |   useGetServicePointScheduleQuery,
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    34 | } from '../../api';
+    35 | import { useTranslation } from 'react-i18next';
+    36 | import { ServicePoint } from '../../types/models';
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:73:78
+TS2345: Argument of type 'string' is not assignable to parameter of type 'unique symbol | { service_point_id: string; date: string; }'.
+    71 |   const { data: photos, isLoading: photosLoading } = useGetServicePointPhotosQuery(id || '');
+    72 |
+  > 73 |   const { data: schedule, isLoading: scheduleLoading } = useGetScheduleQuery(id || '');
+       |                                                                              ^^^^^^^^
+    74 |
+    75 |   const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(servicePoint?.partner_id.toString() || '', {
+    76 |     skip: !servicePoint?.partner_id,
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:79:84
+TS2551: Property 'cityId' does not exist on type 'ServicePoint'. Did you mean 'city_id'?
+    77 |   });
+    78 |
+  > 79 |   const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(servicePoint?.cityId?.toString() || '', {
+       |                                                                                    ^^^^^^
+    80 |     skip: !servicePoint?.cityId,
+    81 |   });
+    82 |
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:80:26
+TS2551: Property 'cityId' does not exist on type 'ServicePoint'. Did you mean 'city_id'?
+    78 |
+    79 |   const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(servicePoint?.cityId?.toString() || '', {
+  > 80 |     skip: !servicePoint?.cityId,
+       |                          ^^^^^^
+    81 |   });
+    82 |
+    83 |   const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.regionId?.toString() || '', {
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:83:82
+TS2551: Property 'regionId' does not exist on type 'City'. Did you mean 'region_id'?
+    81 |   });
+    82 |
+  > 83 |   const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.regionId?.toString() || '', {
+       |                                                                                  ^^^^^^^^
+    84 |     skip: !city?.regionId,
+    85 |   });
+    86 |
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:84:18
+TS2551: Property 'regionId' does not exist on type 'City'. Did you mean 'region_id'?
+    82 |
+    83 |   const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.regionId?.toString() || '', {
+  > 84 |     skip: !city?.regionId,
+       |                  ^^^^^^^^
+    85 |   });
+    86 |
+    87 |   if (servicePointLoading || servicesLoading || allServicesLoading || photosLoading || scheduleLoading || partnerLoading || cityLoading || regionLoading) {
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:137:21
+TS2339: Property 'working_hours' does not exist on type 'ServicePoint'.
+    135 |       </Box>
+    136 |
+  > 137 |       {servicePoint.working_hours && (
+        |                     ^^^^^^^^^^^^^
+    138 |         <>
+    139 |           <Typography variant="h6" gutterBottom>
+    140 |             Режим работы:
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:151:46
+TS2339: Property 'working_hours' does not exist on type 'ServicePoint'.
+    149 |               </TableHead>
+    150 |               <TableBody>
+  > 151 |                 {Object.entries(servicePoint.working_hours).map(([day, hours]) => (
+        |                                              ^^^^^^^^^^^^^
+    152 |                   <TableRow key={day}>
+    153 |                     <TableCell>{getDayName(Number(day))}</TableCell>
+    154 |                     <TableCell>
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:155:24
+TS18046: 'hours' is of type 'unknown'.
+    153 |                     <TableCell>{getDayName(Number(day))}</TableCell>
+    154 |                     <TableCell>
+  > 155 |                       {hours.start} - {hours.end}
+        |                        ^^^^^
+    156 |                     </TableCell>
+    157 |                   </TableRow>
+    158 |                 ))}
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:155:40
+TS18046: 'hours' is of type 'unknown'.
+    153 |                     <TableCell>{getDayName(Number(day))}</TableCell>
+    154 |                     <TableCell>
+  > 155 |                       {hours.start} - {hours.end}
+        |                                        ^^^^^
+    156 |                     </TableCell>
+    157 |                   </TableRow>
+    158 |                 ))}
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:173:26
+TS2339: Property 'name' does not exist on type 'Partner'.
+    171 |             <CardContent>
+    172 |               <Typography variant="h6" gutterBottom>
+  > 173 |                 {partner.name}
+        |                          ^^^^
+    174 |               </Typography>
+    175 |               <Typography variant="body1" paragraph>
+    176 |                 {partner.description}
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:176:26
+TS2339: Property 'description' does not exist on type 'Partner'.
+    174 |               </Typography>
+    175 |               <Typography variant="body1" paragraph>
+  > 176 |                 {partner.description}
+        |                          ^^^^^^^^^^^
+    177 |               </Typography>
+    178 |               <Typography variant="body2" color="text.secondary">
+    179 |                 Телефон: {partner.phone}
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:179:35
+TS2339: Property 'phone' does not exist on type 'Partner'.
+    177 |               </Typography>
+    178 |               <Typography variant="body2" color="text.secondary">
+  > 179 |                 Телефон: {partner.phone}
+        |                                   ^^^^^
+    180 |               </Typography>
+    181 |               <Typography variant="body2" color="text.secondary">
+    182 |                 Email: {partner.email}
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:182:33
+TS2339: Property 'email' does not exist on type 'Partner'.
+    180 |               </Typography>
+    181 |               <Typography variant="body2" color="text.secondary">
+  > 182 |                 Email: {partner.email}
+        |                                 ^^^^^
+    183 |               </Typography>
+    184 |             </CardContent>
+    185 |           </Card>
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:190:8
+TS18048: 'photos' is possibly 'undefined'.
+    188 |       )}
+    189 |
+  > 190 |       {photos.length > 0 && (
+        |        ^^^^^^
+    191 |         <>
+    192 |           <Typography variant="h6" gutterBottom>
+    193 |             Фотографии:
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:196:14
+TS18048: 'photos' is possibly 'undefined'.
+    194 |           </Typography>
+    195 |           <Grid container spacing={2} sx={{ mb: 4 }}>
+  > 196 |             {photos.map((photo) => (
+        |              ^^^^^^
+    197 |               <Grid item xs={12} sm={6} md={4} key={photo.id}>
+    198 |                 <Card>
+    199 |                   <CardMedia
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:222:53
+TS2339: Property 'date' does not exist on type 'Schedule[]'.
+    220 |         <>
+    221 |           <Typography variant="h6" gutterBottom>
+  > 222 |             Расписание на {format(new Date(schedule.date), 'd MMMM yyyy', { locale: ru })}:
+        |                                                     ^^^^
+    223 |           </Typography>
+    224 |           <TableContainer component={Paper} sx={{ mb: 4 }}>
+    225 |             <Table>
+ERROR in src/pages/service-points/ServicePointDetailsPage.tsx:233:19
+TS2352: Conversion of type 'Schedule[]' to type 'Schedule' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'slots' is missing in type 'Schedule[]' but required in type 'Schedule'.
+    231 |               </TableHead>
+    232 |               <TableBody>
+  > 233 |                 {(schedule as Schedule)?.slots.map((slot: TimeSlot) => (
+        |                   ^^^^^^^^^^^^^^^^^^^^
+    234 |                   <TableRow key={slot.id}>
+    235 |                     <TableCell>
+    236 |                       {format(new Date(`2000-01-01T${slot.startTime}`), 'HH:mm')} - {format(new Date(`2000-01-01T${slot.endTime}`), 'HH:mm')}
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:144:58
+TS2554: Expected 1-2 arguments, but got 0.
+    142 |
+    143 |   // RTK Query хуки
+  > 144 |   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery();
+        |                                                          ^^^^^^^^^^^^^^^^^^^
+    145 |   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery();
+    146 |   const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery<CitiesQueryParams>(
+    147 |     selectedRegionId ? { region_id: selectedRegionId } : undefined,
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:145:56
+TS2554: Expected 1-2 arguments, but got 0.
+    143 |   // RTK Query хуки
+    144 |   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery();
+  > 145 |   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery();
+        |                                                        ^^^^^^^^^^^^^^^^^^
+    146 |   const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery<CitiesQueryParams>(
+    147 |     selectedRegionId ? { region_id: selectedRegionId } : undefined,
+    148 |     { skip: !selectedRegionId }
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:146:11
+TS2339: Property 'data' does not exist on type 'UseQueryHookResult<QueryDefinition<CityFilter, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, "User" | "Booking" | "ServicePoint" | ... 10 more ... | "ClientCars", ApiResponse<...>, "api", unknown>, CitiesQueryParams>'.
+    144 |   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery();
+    145 |   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery();
+  > 146 |   const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery<CitiesQueryParams>(
+        |           ^^^^
+    147 |     selectedRegionId ? { region_id: selectedRegionId } : undefined,
+    148 |     { skip: !selectedRegionId }
+    149 |   );
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:146:25
+TS2339: Property 'isLoading' does not exist on type 'UseQueryHookResult<QueryDefinition<CityFilter, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, "User" | "Booking" | "ServicePoint" | ... 10 more ... | "ClientCars", ApiResponse<...>, "api", unknown>, CitiesQueryParams>'.
+    144 |   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery();
+    145 |   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery();
+  > 146 |   const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery<CitiesQueryParams>(
+        |                         ^^^^^^^^^
+    147 |     selectedRegionId ? { region_id: selectedRegionId } : undefined,
+    148 |     { skip: !selectedRegionId }
+    149 |   );
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:147:5
+TS2345: Argument of type '{ region_id: number; } | undefined' is not assignable to parameter of type 'unique symbol | CityFilter'.
+  Type 'undefined' is not assignable to type 'unique symbol | CityFilter'.
+    145 |   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery();
+    146 |   const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery<CitiesQueryParams>(
+  > 147 |     selectedRegionId ? { region_id: selectedRegionId } : undefined,
+        |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    148 |     { skip: !selectedRegionId }
+    149 |   );
+    150 |   const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id ?? '', { skip: !id });
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:153:35
+TS2554: Expected 1-2 arguments, but got 0.
+    151 |   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
+    152 |   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
+  > 153 |   const { data: servicePoints } = useGetServicePointsQuery();
+        |                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+    154 |
+    155 |   const { data: servicesData } = useGetServiceCategoriesQuery();
+    156 |   const { data: scheduleData } = useGetScheduleQuery<ServicePointQueryParams>(
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:156:11
+TS2339: Property 'data' does not exist on type 'UseQueryHookResult<QueryDefinition<{ service_point_id: string; date: string; }, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, "Schedule" | "ServicePointServices", Schedule[], "scheduleApi", unknown>, ServicePointQueryParams>'.
+    154 |
+    155 |   const { data: servicesData } = useGetServiceCategoriesQuery();
+  > 156 |   const { data: scheduleData } = useGetScheduleQuery<ServicePointQueryParams>(
+        |           ^^^^
+    157 |     { 
+    158 |       service_point_id: id ?? '',
+    159 |       date: new Date().toISOString().split('T')[0]
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:163:11
+TS2339: Property 'data' does not exist on type 'UseQueryHookResult<QueryDefinition<string, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, "Schedule" | "ServicePointServices", any, "scheduleApi", unknown>, ServicePointServicesQueryParams>'.
+    161 |     { skip: !isEditMode || !id }
+    162 |   );
+  > 163 |   const { data: servicePointServicesData } = useGetServicePointServicesQuery<ServicePointServicesQueryParams>(
+        |           ^^^^
+    164 |     { service_point_id: id ?? '' },
+    165 |     { skip: !isEditMode || !id }
+    166 |   );
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:164:5
+TS2345: Argument of type '{ service_point_id: string; }' is not assignable to parameter of type 'string | unique symbol'.
+    162 |   );
+    163 |   const { data: servicePointServicesData } = useGetServicePointServicesQuery<ServicePointServicesQueryParams>(
+  > 164 |     { service_point_id: id ?? '' },
+        |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    165 |     { skip: !isEditMode || !id }
+    166 |   );
+    167 |   const { data: photosData } = useGetServicePointPhotosQuery<ServicePointPhotosQueryParams>(
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:167:11
+TS2339: Property 'data' does not exist on type 'UseQueryHookResult<QueryDefinition<string, BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, "User" | "Booking" | "ServicePoint" | "City" | "Region" | ... 8 more ... | "ClientCars", Photo[], "api", unknown>, ServicePointPhotosQueryParams>'.
+    165 |     { skip: !isEditMode || !id }
+    166 |   );
+  > 167 |   const { data: photosData } = useGetServicePointPhotosQuery<ServicePointPhotosQueryParams>(
+        |           ^^^^
+    168 |     { service_point_id: id ?? '' },
+    169 |     { skip: !isEditMode || !id }
+    170 |   );
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:168:5
+TS2345: Argument of type '{ service_point_id: string; }' is not assignable to parameter of type 'string | unique symbol'.
+    166 |   );
+    167 |   const { data: photosData } = useGetServicePointPhotosQuery<ServicePointPhotosQueryParams>(
+  > 168 |     { service_point_id: id ?? '' },
+        |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    169 |     { skip: !isEditMode || !id }
+    170 |   );
+    171 |
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:188:30
+TS2339: Property 'status_id' does not exist on type 'ServicePoint'.
+    186 |     latitude: servicePoint?.latitude || null,
+    187 |     longitude: servicePoint?.longitude || null,
+  > 188 |     status_id: servicePoint?.status_id || 1,
+        |                              ^^^^^^^^^
+    189 |     schedule: scheduleData || [
+    190 |       { day_of_week: 1, start_time: '09:00', end_time: '18:00', is_working_day: true },
+    191 |       { day_of_week: 2, start_time: '09:00', end_time: '18:00', is_working_day: true },
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:199:29
+TS7006: Parameter 'photo' implicitly has an 'any' type.
+    197 |     ],
+    198 |     services: servicePointServicesData || [],
+  > 199 |     photos: photosData?.map(photo => ({
+        |                             ^^^^^
+    200 |       ...photo,
+    201 |       is_main: photo.is_main || false
+    202 |     })) || [],
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:214:13
+TS2353: Object literal may only specify known properties, and 'data' does not exist in type '{ id: string; servicePoint: Partial<ServicePoint>; }'.
+    212 |           await updateServicePoint({
+    213 |             id,
+  > 214 |             data: values
+        |             ^^^^
+    215 |           }).unwrap();
+    216 |           setSuccessMessage('Точка обслуживания успешно обновлена');
+    217 |         } else {
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:218:36
+TS2345: Argument of type 'ServicePointFormData' is not assignable to parameter of type 'Partial<ServicePoint>'.
+  Types of property 'latitude' are incompatible.
+    Type 'number | null | undefined' is not assignable to type 'number | undefined'.
+      Type 'null' is not assignable to type 'number | undefined'.
+    216 |           setSuccessMessage('Точка обслуживания успешно обновлена');
+    217 |         } else {
+  > 218 |           await createServicePoint(values).unwrap();
+        |                                    ^^^^^^
+    219 |           setSuccessMessage('Точка обслуживания успешно создана');
+    220 |           setTimeout(() => {
+    221 |             navigate('/service-points');
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:233:45
+TS2367: This comparison appears to be unintentional because the types 'string' and 'number' have no overlap.
+    231 |   useEffect(() => {
+    232 |     if (servicePoint?.city_id && cities) {
+  > 233 |       const city = cities.find((c: City) => c.id === servicePoint.city_id);
+        |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    234 |       if (city?.regionId && city.regionId !== selectedRegionId) {
+    235 |         setSelectedRegionId(city.regionId);
+    236 |       }
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:317:32
+TS2339: Property 'map' does not exist on type 'ApiResponse<Partner>'.
+    315 |                   >
+    316 |                     <MenuItem value="0" disabled>Выберите партнера</MenuItem>
+  > 317 |                     {partners?.map((partner: Partner) => (
+        |                                ^^^
+    318 |                       <MenuItem key={partner.id} value={partner.id.toString()}>
+    319 |                         {partner.company_name}
+    320 |                       </MenuItem>
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:362:22
+TS18048: 'regions' is possibly 'undefined'.
+    360 |                   >
+    361 |                     <MenuItem value="0" disabled>Выберите регион</MenuItem>
+  > 362 |                     {regions.map(region => (
+        |                      ^^^^^^^
+    363 |                       <MenuItem key={region.id} value={region.id.toString()}>
+    364 |                         {region.name}
+    365 |                       </MenuItem>
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:362:30
+TS2339: Property 'map' does not exist on type 'ApiResponse<Region>'.
+    360 |                   >
+    361 |                     <MenuItem value="0" disabled>Выберите регион</MenuItem>
+  > 362 |                     {regions.map(region => (
+        |                              ^^^
+    363 |                       <MenuItem key={region.id} value={region.id.toString()}>
+    364 |                         {region.name}
+    365 |                       </MenuItem>
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:362:34
+TS7006: Parameter 'region' implicitly has an 'any' type.
+    360 |                   >
+    361 |                     <MenuItem value="0" disabled>Выберите регион</MenuItem>
+  > 362 |                     {regions.map(region => (
+        |                                  ^^^^^^
+    363 |                       <MenuItem key={region.id} value={region.id.toString()}>
+    364 |                         {region.name}
+    365 |                       </MenuItem>
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:468:28
+TS18048: 'formik.values.status_id' is possibly 'undefined'.
+    466 |                     id="status_id"
+    467 |                     name="status_id"
+  > 468 |                     value={formik.values.status_id.toString()}
+        |                            ^^^^^^^^^^^^^^^^^^^^^^^
+    469 |                     onChange={(e: SelectChangeEvent<string>) => {
+    470 |                       formik.setFieldValue('status_id', Number(e.target.value));
+    471 |                     }}
+ERROR in src/pages/service-points/ServicePointFormPage.tsx:600:44
+TS2339: Property 'data' does not exist on type 'ServiceCategory[]'.
+    598 |                             label="Услуга"
+    599 |                           >
+  > 600 |                             {servicesData?.data.map((serviceItem: ServiceCategory) => (
+        |                                            ^^^^
+    601 |                               <MenuItem key={serviceItem.id} value={serviceItem.id}>
+    602 |                                 {serviceItem.name}
+    603 |                               </MenuItem>
+ERROR in src/pages/service-points/ServicePointPhotosPage.tsx:52:37
+TS2345: Argument of type 'number' is not assignable to parameter of type 'string | unique symbol'.
+    50 |     error: photosError,
+    51 |     refetch: refetchPhotos
+  > 52 |   } = useGetServicePointPhotosQuery(Number(id), {
+       |                                     ^^^^^^^^^^
+    53 |     skip: !id
+    54 |   });
+    55 |
+ERROR in src/pages/service-points/ServicePointPhotosPage.tsx:59:34
+TS2339: Property 'data' does not exist on type 'Photo[]'.
+    57 |   const [deletePhoto] = useDeleteServicePointPhotoMutation();
+    58 |
+  > 59 |   const photos = photosResponse?.data || [];
+       |                                  ^^^^
+    60 |   const isLoading = photosLoading;
+    61 |   const error = photosError;
+    62 |
+ERROR in src/pages/service-points/ServicePointPhotosPage.tsx:73:27
+TS2353: Object literal may only specify known properties, and 'id' does not exist in type '{ servicePointId: string; file: File; }'.
+    71 |     
+    72 |     try {
+  > 73 |       await uploadPhoto({ id: Number(id), photo: formData }).unwrap();
+       |                           ^^
+    74 |       await refetchPhotos();
+    75 |     } catch (error) {
+    76 |       console.error('Ошибка при загрузке фото:', error);
+ERROR in src/pages/service-points/ServicePointPhotosPage.tsx:94:27
+TS2322: Type 'number' is not assignable to type 'string'.
+    92 |     
+    93 |     try {
+  > 94 |       await deletePhoto({ servicePointId: Number(id), photoId: photoToDelete }).unwrap();
+       |                           ^^^^^^^^^^^^^^
+    95 |       await refetchPhotos();
+    96 |     } catch (error) {
+    97 |       console.error('Ошибка при удалении фото:', error);
+ERROR in src/pages/service-points/ServicePointPhotosPage.tsx:94:55
+TS2322: Type 'number' is not assignable to type 'string'.
+    92 |     
+    93 |     try {
+  > 94 |       await deletePhoto({ servicePointId: Number(id), photoId: photoToDelete }).unwrap();
+       |                                                       ^^^^^^^
+    95 |       await refetchPhotos();
+    96 |     } catch (error) {
+    97 |       console.error('Ошибка при удалении фото:', error);
+ERROR in src/pages/service-points/ServicePointsPage.tsx:72:5
+TS2561: Object literal may only specify known properties, but 'city_id' does not exist in type 'ServicePointFilter'. Did you mean to write 'cityId'?
+    70 |   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
+    71 |     search,
+  > 72 |     city_id: selectedCityId || undefined,
+       |     ^^^^^^^
+    73 |     region_id: selectedRegionId || undefined,
+    74 |     page: page + 1,
+    75 |     per_page: rowsPerPage,
+ERROR in src/pages/service-points/ServicePointsPage.tsx:81:41
+TS2339: Property 'meta' does not exist on type 'ApiResponse<ServicePoint>'.
+    79 |   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
+    80 |   const servicePoints = servicePointsData?.data || [];
+  > 81 |   const totalItems = servicePointsData?.meta?.total || 0;
+       |                                         ^^^^
+    82 |
+    83 |   // Обработчики событий
+    84 |   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+ERROR in src/pages/service-points/ServicePointsPage.tsx:118:34
+TS2345: Argument of type '{ partner_id: number; id: number; }' is not assignable to parameter of type 'string'.
+    116 |     if (selectedServicePoint) {
+    117 |       try {
+  > 118 |         await deleteServicePoint({ 
+        |                                  ^^
+  > 119 |           partner_id: selectedServicePoint.partner_id, 
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 120 |           id: selectedServicePoint.id 
+        | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 121 |         }).unwrap();
+        | ^^^^^^^^^^
+    122 |         setDeleteDialogOpen(false);
+    123 |         setSelectedServicePoint(null);
+    124 |       } catch (error) {
+ERROR in src/pages/service-points/ServicePointsPage.tsx:195:29
+TS2339: Property 'regions' does not exist on type 'ApiResponse<Region>'.
+    193 |             >
+    194 |               <MenuItem value="">Все регионы</MenuItem>
+  > 195 |               {regionsData?.regions?.map((region) => (
+        |                             ^^^^^^^
+    196 |                 <MenuItem key={region.id} value={region.id}>
+    197 |                   {region.name}
+    198 |                 </MenuItem>
+ERROR in src/pages/service-points/ServicePointsPage.tsx:195:43
+TS7006: Parameter 'region' implicitly has an 'any' type.
+    193 |             >
+    194 |               <MenuItem value="">Все регионы</MenuItem>
+  > 195 |               {regionsData?.regions?.map((region) => (
+        |                                           ^^^^^^
+    196 |                 <MenuItem key={region.id} value={region.id}>
+    197 |                   {region.name}
+    198 |                 </MenuItem>
+ERROR in src/pages/service-points/ServicePointsPage.tsx:212:28
+TS2339: Property 'cities' does not exist on type 'ApiResponse<City>'.
+    210 |             >
+    211 |               <MenuItem value="">Все города</MenuItem>
+  > 212 |               {citiesData?.cities?.map((city) => (
+        |                            ^^^^^^
+    213 |                 <MenuItem key={city.id} value={city.id}>
+    214 |                   {city.name}
+    215 |                 </MenuItem>
+ERROR in src/pages/service-points/ServicePointsPage.tsx:212:41
+TS7006: Parameter 'city' implicitly has an 'any' type.
+    210 |             >
+    211 |               <MenuItem value="">Все города</MenuItem>
+  > 212 |               {citiesData?.cities?.map((city) => (
+        |                                         ^^^^
+    213 |                 <MenuItem key={city.id} value={city.id}>
+    214 |                   {city.name}
+    215 |                 </MenuItem>
+ERROR in src/pages/service-points/ServicePointsPage.tsx:273:58
+TS2345: Argument of type 'ServicePoint' is not assignable to parameter of type '{ id: number; name: string; partner_id: number; }'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number'.
+    271 |                     <Tooltip title="Удалить">
+    272 |                       <IconButton
+  > 273 |                         onClick={() => handleDeleteClick(servicePoint)}
+        |                                                          ^^^^^^^^^^^^
+    274 |                         size="small"
+    275 |                         color="error"
+    276 |                       >
+ERROR in src/pages/services/ServicesPage.tsx:88:29
+TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+    86 |     if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
+    87 |       try {
+  > 88 |         await deleteService(id).unwrap();
+       |                             ^^
+    89 |       } catch (error) {
+    90 |         console.error('Ошибка при удалении услуги:', error);
+    91 |       }
+ERROR in src/pages/services/ServicesPage.tsx:138:32
+TS2339: Property 'data' does not exist on type 'ServiceCategory[]'.
+    136 |                 <em>Все категории</em>
+    137 |               </MenuItem>
+  > 138 |               {categoriesData?.data.map((category) => (
+        |                                ^^^^
+    139 |                 <MenuItem key={category.id} value={category.id}>
+    140 |                   {category.name}
+    141 |                 </MenuItem>
+ERROR in src/pages/services/ServicesPage.tsx:138:42
+TS7006: Parameter 'category' implicitly has an 'any' type.
+    136 |                 <em>Все категории</em>
+    137 |               </MenuItem>
+  > 138 |               {categoriesData?.data.map((category) => (
+        |                                          ^^^^^^^^
+    139 |                 <MenuItem key={category.id} value={category.id}>
+    140 |                   {category.name}
+    141 |                 </MenuItem>
+ERROR in src/pages/services/ServicesPage.tsx:180:33
+TS2339: Property 'data' does not exist on type 'Service[]'.
+    178 |                   </TableCell>
+    179 |                 </TableRow>
+  > 180 |               ) : servicesData?.data.map((service) => (
+        |                                 ^^^^
+    181 |                 <TableRow key={service.id}>
+    182 |                   <TableCell>{service.id}</TableCell>
+    183 |                   <TableCell>{service.name}</TableCell>
+ERROR in src/pages/services/ServicesPage.tsx:180:43
+TS7006: Parameter 'service' implicitly has an 'any' type.
+    178 |                   </TableCell>
+    179 |                 </TableRow>
+  > 180 |               ) : servicesData?.data.map((service) => (
+        |                                           ^^^^^^^
+    181 |                 <TableRow key={service.id}>
+    182 |                   <TableCell>{service.id}</TableCell>
+    183 |                   <TableCell>{service.name}</TableCell>
+ERROR in src/pages/services/ServicesPage.tsx:185:38
+TS2339: Property 'data' does not exist on type 'ServiceCategory[]'.
+    183 |                   <TableCell>{service.name}</TableCell>
+    184 |                   <TableCell>
+  > 185 |                     {categoriesData?.data.find(cat => cat.id === service.category_id)?.name}
+        |                                      ^^^^
+    186 |                   </TableCell>
+    187 |                   <TableCell>{service.duration}</TableCell>
+    188 |                   <TableCell>
+ERROR in src/pages/services/ServicesPage.tsx:185:48
+TS7006: Parameter 'cat' implicitly has an 'any' type.
+    183 |                   <TableCell>{service.name}</TableCell>
+    184 |                   <TableCell>
+  > 185 |                     {categoriesData?.data.find(cat => cat.id === service.category_id)?.name}
+        |                                                ^^^
+    186 |                   </TableCell>
+    187 |                   <TableCell>{service.duration}</TableCell>
+    188 |                   <TableCell>
+ERROR in src/pages/services/ServicesPage.tsx:218:32
+TS2339: Property 'total' does not exist on type 'Service[]'.
+    216 |           rowsPerPageOptions={[5, 10, 25]}
+    217 |           component="div"
+  > 218 |           count={servicesData?.total || 0}
+        |                                ^^^^^
+    219 |           rowsPerPage={rowsPerPage}
+    220 |           page={page}
+    221 |           onPageChange={handleChangePage}

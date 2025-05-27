@@ -141,63 +141,40 @@ const NewCarForm: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     
-    if (!user?.client_id) {
-      setError('Для добавления автомобиля необходимо войти в систему как клиент');
+    if (!user?.id) {
+      setError('Отсутствует идентификатор клиента');
       return;
     }
     
     try {
-      setSubmitting(true);
-      setError(null);
+      setLoading(true);
       
-      // Подготавливаем данные для отправки
-      const carData = {
-        car: {
-          make: formData.make,
-          model: formData.model,
-          year: formData.year,
-          license_plate: formData.license_plate,
-          color: formData.color,
-          is_primary: formData.is_primary,
-          car_type_id: formData.car_type_id,
-          car_brand_id: formData.car_brand_id,
-          car_model_id: formData.car_model_id
-        }
-      };
-      
-      // Отправляем запрос на создание автомобиля
       const response = await fetchWithAuth(
-        `/api/v1/clients/${user.client_id}/cars`,
+        `/api/v1/clients/${user.id}/cars`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(carData),
+          body: JSON.stringify(formData),
         }
       );
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось создать автомобиль');
+        throw new Error(errorData.error || 'Не удалось добавить автомобиль');
       }
       
-      // Показываем сообщение об успехе
-      setSuccess(true);
-      
-      // Через 2 секунды редиректим на страницу со списком автомобилей
-      setTimeout(() => {
-        navigate('/my-cars');
-      }, 2000);
-      
+      // Перенаправляем на страницу со списком автомобилей
+      navigate('/my-cars');
     } catch (err) {
-      console.error('Ошибка создания автомобиля:', err);
+      console.error('Ошибка добавления автомобиля:', err);
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
   

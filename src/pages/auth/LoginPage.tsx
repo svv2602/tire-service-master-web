@@ -16,7 +16,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
-import apiClient from '../../api/api';
+import { apiClient } from '../../api';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');

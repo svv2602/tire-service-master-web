@@ -1,91 +1,90 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Booking, BookingFormData, BookingFilter, BookingStatus } from '../types/booking';
+import { Booking, ApiResponse, BookingFilter } from '../types/models';
+import { BookingFormData, BookingStatus } from '../types/booking';
+
+export interface BookingsQueryParams {
+  query?: string;
+  status?: BookingStatus;
+  service_point_id?: number;
+  page?: number;
+  per_page?: number;
+}
 
 export const bookingsApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getBookings: build.query<Booking[], BookingFilter>({
-      query: (filter: BookingFilter) => ({
+  endpoints: (builder) => ({
+    getBookings: builder.query<ApiResponse<Booking>, BookingFilter>({
+      query: (params) => ({
         url: 'bookings',
-        params: filter,
+        method: 'GET',
+        params,
       }),
-      providesTags: (result: Booking[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Bookings' as const, id })),
-              'Bookings',
-            ]
-          : ['Bookings'],
+      providesTags: ['Booking'],
     }),
 
-    getBookingsByServicePoint: build.query<Booking[], string>({
-      query: (servicePointId: string) => `bookings?servicePointId=${servicePointId}`,
+    getBookingsByServicePoint: builder.query<Booking[], string>({
+      query: (servicePointId: string) => `bookings?service_point_id=${servicePointId}`,
       providesTags: (result: Booking[] | undefined) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'Bookings' as const, id })),
-              'Bookings',
+              ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
+              'Booking',
             ]
-          : ['Bookings'],
+          : ['Booking'],
     }),
 
-    getBookingsByClient: build.query<Booking[], string>({
-      query: (clientId: string) => `bookings?clientId=${clientId}`,
+    getBookingsByClient: builder.query<Booking[], string>({
+      query: (clientId: string) => `bookings?client_id=${clientId}`,
       providesTags: (result: Booking[] | undefined) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'Bookings' as const, id })),
-              'Bookings',
+              ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
+              'Booking',
             ]
-          : ['Bookings'],
+          : ['Booking'],
     }),
     
-    getBookingById: build.query<Booking, string>({
-      query: (id: string) => `bookings/${id}`,
-      providesTags: (_result: Booking | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Bookings' as const, id }
-      ],
+    getBookingById: builder.query<Booking, string>({
+      query: (id) => ({
+        url: `bookings/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Booking', id }],
     }),
     
-    createBooking: build.mutation<Booking, BookingFormData>({
-      query: (data: BookingFormData) => ({
+    createBooking: builder.mutation<Booking, BookingFormData>({
+      query: (booking) => ({
         url: 'bookings',
         method: 'POST',
-        body: data,
+        body: booking,
       }),
-      invalidatesTags: ['Bookings'],
+      invalidatesTags: ['Booking'],
     }),
     
-    updateBooking: build.mutation<Booking, { id: string; data: Partial<BookingFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<BookingFormData> }) => ({
+    updateBooking: builder.mutation<Booking, { id: string; booking: Partial<BookingFormData> }>({
+      query: ({ id, booking }) => ({
         url: `bookings/${id}`,
-        method: 'PATCH',
-        body: data,
+        method: 'PUT',
+        body: booking,
       }),
-      invalidatesTags: (_result: Booking | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Bookings' as const, id },
-        'Bookings',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }],
     }),
 
-    updateBookingStatus: build.mutation<Booking, { id: string; status: BookingStatus }>({
+    updateBookingStatus: builder.mutation<Booking, { id: string; status: BookingStatus }>({
       query: ({ id, status }: { id: string; status: BookingStatus }) => ({
         url: `bookings/${id}/status`,
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: (_result: Booking | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Bookings' as const, id },
-        'Bookings',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }],
     }),
     
-    deleteBooking: build.mutation<void, string>({
-      query: (id: string) => ({
+    deleteBooking: builder.mutation<void, string>({
+      query: (id) => ({
         url: `bookings/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Bookings'],
+      invalidatesTags: ['Booking'],
     }),
   }),
 });

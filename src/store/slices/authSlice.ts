@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { authApi } from '../../api/api';
-import apiClient from '../../api/api';
-import { User } from '../../types';
+import { apiClient } from '../../api/api';
+import { User } from '../../types/user';
 
 import config from '../../config';
 
@@ -31,140 +30,50 @@ const setStoredUser = (user: User | null): void => {
   }
 };
 
-// Интерфейс для состояния авторизации
+// Типы
 interface AuthState {
-  user: User | null;
   token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
   isInitialized: boolean; // Флаг для отслеживания инициализации
 }
 
-// Начальное состояние с восстановлением данных из localStorage
-const storedToken = localStorage.getItem(STORAGE_KEY);
-const storedUser = getStoredUser();
-
+// Начальное состояние
 const initialState: AuthState = {
-  user: storedUser,
-  token: storedToken,
-  isAuthenticated: !!(storedToken && storedUser),
+  token: localStorage.getItem('auth_token'),
+  user: getStoredUser(),
+  isAuthenticated: !!localStorage.getItem('auth_token'),
   loading: false,
   error: null,
-  isInitialized: !!storedToken, // Если есть токен, считаем инициализированным
+  isInitialized: !!localStorage.getItem('auth_token'),
 };
 
-// Асинхронные экшены
-export const login = createAsyncThunk(
-  'auth/login',
-  async (loginData: { email: string; password: string }, { rejectWithValue }) => {
-    try {
-      console.log('Login thunk - calling API with email:', loginData.email);
-      
-      const response = await authApi.login(loginData);
-      console.log('Login thunk - API response:', response);
-
-      if (!response) {
-        throw new Error('Empty response from server');
-      }
-
-      // Extract token and ensure proper format
-      const token = response.auth_token || response.token;
-      if (!token) {
-        throw new Error('No token in response');
-      }
-
-      // Format token and save it
-      const formattedToken = token.replace(/^Bearer\s+/i, '').trim();
-      localStorage.setItem(STORAGE_KEY, formattedToken);
-      console.log('Token saved to localStorage:', formattedToken);
-
-      // Update axios defaults
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${formattedToken}`;
-      
-      if (!response.user) {
-        throw new Error('No user data in response');
-      }
-
-      return {
-        auth_token: formattedToken,
-        token: formattedToken,
-        user: response.user,
-        message: 'Login successful'
-      };
-    } catch (error: any) {
-      console.error('Login thunk - Error:', error);
-      return rejectWithValue(
-        error.response?.data?.message || 
-        error.message || 
-        'Login failed'
-      );
-    }
-  }
-);
-
-export const logoutUser = createAsyncThunk(
-  'auth/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-      // Clear stored credentials
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userPassword');
-      return true;
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      return rejectWithValue('Ошибка при выходе из системы');
-    }
-  }
-);
-
-export const getCurrentUser = createAsyncThunk(
-  'auth/getCurrentUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem(STORAGE_KEY);
-      if (!token) {
-        throw new Error('Токен не найден');
-      }
-
-      const response = await authApi.getCurrentUser();
-      return response.data;
-    } catch (error: any) {
-      console.error('getCurrentUser error:', error);
-      if (error.response?.status === 401) {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-      return rejectWithValue(
-        error.response?.data?.message || 
-        error.message || 
-        'Ошибка получения данных пользователя'
-      );
-    }
-  }
-);
-
-// Редьюсер
+// Создаем slice
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<{ user: User; token: string }>) => {
-      const { user, token } = action.payload;
-      state.user = user;
+    setCredentials: (
+      state,
+      action: PayloadAction<{ token: string; user: User }>
+    ) => {
+      const { token, user } = action.payload;
       state.token = token;
+      state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      localStorage.setItem(STORAGE_KEY, token);
+      localStorage.setItem('auth_token', token);
       setStoredUser(user);
     },
-    clearAuth: (state) => {
-      state.user = null;
+    logout: (state) => {
       state.token = null;
+      state.user = null;
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('auth_token');
       setStoredUser(null);
       // Очищаем также заголовок Authorization
       delete apiClient.defaults.headers.common['Authorization'];
@@ -237,5 +146,76 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, clearAuth, setInitialized } = authSlice.actions;
+// Создаем асинхронные thunks
+export const login = createAsyncThunk(
+  'auth/login',
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post('/api/v1/auth/login', { auth: { email, password }});
+      localStorage.setItem(STORAGE_KEY, response.data.auth_token);
+      
+      // Приведение возвращаемого пользователя к типу User
+      const user: User = {
+        id: response.data.user.id.toString(),
+        email: response.data.user.email,
+        first_name: response.data.user.first_name || '',
+        last_name: response.data.user.last_name || '',
+        role: response.data.user.role,
+        is_active: response.data.user.is_active || true,
+        email_verified: response.data.user.email_verified || false,
+        phone_verified: response.data.user.phone_verified || false
+      };
+      
+      return {
+        auth_token: response.data.auth_token,
+        user
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка авторизации');
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  'auth/logoutUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      await apiClient.post('/api/v1/auth/logout');
+      localStorage.removeItem(STORAGE_KEY);
+      return {};
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка выхода');
+    }
+  }
+);
+
+export const getCurrentUser = createAsyncThunk(
+  'auth/getCurrentUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get('/api/v1/users/current');
+      
+      // Приведение возвращаемого пользователя к типу User
+      const user: User = {
+        id: response.data.id.toString(),
+        email: response.data.email,
+        first_name: response.data.first_name || '',
+        last_name: response.data.last_name || '',
+        role: response.data.role,
+        is_active: response.data.is_active || true,
+        email_verified: response.data.email_verified || false,
+        phone_verified: response.data.phone_verified || false,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at
+      };
+      
+      return user;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка получения данных пользователя');
+    }
+  }
+);
+
+// Экспортируем actions и reducer
+export const { setCredentials, logout, setInitialized } = authSlice.actions;
 export default authSlice.reducer;

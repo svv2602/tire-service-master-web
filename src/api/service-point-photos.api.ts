@@ -1,5 +1,12 @@
 import { baseApi } from './baseApi';
-import { ServicePointPhoto } from '../types/servicePoint';
+
+interface ServicePointPhoto {
+  id: number;
+  service_point_id: number;
+  url: string;
+  description?: string;
+  is_main: boolean;
+}
 
 interface ServicePointPhotosResponse {
   data: ServicePointPhoto[];
@@ -9,10 +16,7 @@ export const servicePointPhotosApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getServicePointPhotos: builder.query<ServicePointPhotosResponse, number>({
       query: (servicePointId) => `/service-points/${servicePointId}/photos`,
-      providesTags: (_result, _error, servicePointId) => [
-        { type: 'ServicePointPhotos', id: servicePointId },
-        'ServicePointPhotos',
-      ],
+      providesTags: ['ServicePoint'],
     }),
 
     uploadServicePointPhoto: builder.mutation<ServicePointPhoto, { id: number; photo: FormData }>({
@@ -21,10 +25,7 @@ export const servicePointPhotosApi = baseApi.injectEndpoints({
         method: 'POST',
         body: photo,
       }),
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'ServicePointPhotos', id },
-        'ServicePointPhotos',
-      ],
+      invalidatesTags: ['ServicePoint'],
     }),
 
     deleteServicePointPhoto: builder.mutation<void, { servicePointId: number; photoId: number }>({
@@ -32,10 +33,7 @@ export const servicePointPhotosApi = baseApi.injectEndpoints({
         url: `/service-points/${servicePointId}/photos/${photoId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _error, { servicePointId }) => [
-        { type: 'ServicePointPhotos', id: servicePointId },
-        'ServicePointPhotos',
-      ],
+      invalidatesTags: ['ServicePoint'],
     }),
   }),
 });

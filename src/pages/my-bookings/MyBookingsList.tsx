@@ -27,6 +27,7 @@ import {
   EventBusy as EventBusyIcon,
   EventNote as EventNoteIcon,
 } from '@mui/icons-material';
+import { User } from '../../types/user';
 
 interface Booking {
   id: number;
@@ -80,29 +81,22 @@ const MyBookingsList: React.FC = () => {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const clientId = user?.client_id;
+      const clientId = user?.id;
       
       if (!clientId) {
         throw new Error('Отсутствует идентификатор клиента');
       }
       
       const response = await fetchWithAuth(`/api/v1/clients/${clientId}/bookings`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось загрузить данные записей');
-      }
-      
       const data = await response.json();
-      setBookings(data);
-      setError(null);
-    } catch (err) {
-      console.error('Ошибка загрузки записей:', err);
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setBookings(data.bookings || []);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setError('Ошибка при загрузке бронирований');
     } finally {
       setLoading(false);
     }
-  }, [user?.client_id]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchBookings();

@@ -6,26 +6,43 @@ export enum UserRole {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
-  role: UserRole;
+  role: string;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  email_verified: boolean;
+  phone_verified: boolean;
+  client_id?: string;
+  partner_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface UserFormData {
   email: string;
+  password?: string;
   first_name: string;
   last_name: string;
   phone?: string;
-  role: UserRole;
-  is_active: boolean;
-  password?: string;
-  password_confirmation?: string;
+  role?: string;
+  is_active?: boolean;
+}
+
+export interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+export interface PasswordReset {
+  email: string;
+}
+
+export interface PasswordResetConfirm {
+  token: string;
+  password: string;
 }
 
 export interface AuthState {

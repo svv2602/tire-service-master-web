@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer, { 
   setCredentials, 
-  clearAuth
+  logout
 } from '../../store/slices/authSlice';
-import { RootState } from '../../types';
+import { RootState } from '../../store/store';
 
 // Мокирование config
 jest.mock('../../config', () => ({
@@ -15,7 +15,7 @@ describe('authSlice', () => {
 
   // Создаем тестового пользователя
   const testUser = {
-    id: 1,
+    id: '1',
     email: 'test@example.com',
     first_name: 'Тест',
     last_name: 'Пользователь',
@@ -49,6 +49,7 @@ describe('authSlice', () => {
         isAuthenticated: false,
         loading: false,
         error: null,
+        isInitialized: false,
       });
     });
 
@@ -56,7 +57,7 @@ describe('authSlice', () => {
       const testToken = 'test-token-123';
       
       // Устанавливаем токен в localStorage перед созданием store
-      localStorage.setItem('test_auth_token', testToken);
+      localStorage.setItem('auth_token', testToken);
       
       // Пересоздаем store чтобы проверить инициализацию
       const newStore = configureStore({
@@ -68,7 +69,7 @@ describe('authSlice', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const state = newStore.getState().auth;
       // Проверяем, что setItem был вызван с правильными параметрами
-      expect(localStorage.setItem).toHaveBeenCalledWith('test_auth_token', testToken);
+      expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', testToken);
       
       // Проверяем, что мы можем установить состояние с токеном
       newStore.dispatch(setCredentials({ user: testUser, token: testToken }));
@@ -90,15 +91,15 @@ describe('authSlice', () => {
       expect(state.isAuthenticated).toBe(true);
       
       // Проверяем, что setItem был вызван с правильными параметрами
-      expect(localStorage.setItem).toHaveBeenCalledWith('test_auth_token', token);
+      expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', token);
     });
 
-    it('clearAuth должен очищать состояние авторизации', () => {
+    it('logout должен очищать состояние авторизации', () => {
       // Сначала устанавливаем данные
       store.dispatch(setCredentials({ user: testUser, token: 'test-token' }));
       
       // Затем очищаем
-      store.dispatch(clearAuth());
+      store.dispatch(logout());
       
       const state = store.getState().auth;
       expect(state.user).toBeNull();
@@ -107,7 +108,7 @@ describe('authSlice', () => {
       expect(state.error).toBeNull();
       
       // Проверяем, что removeItem был вызван
-      expect(localStorage.removeItem).toHaveBeenCalledWith('test_auth_token');
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
@@ -118,18 +119,18 @@ describe('authSlice', () => {
       store.dispatch(setCredentials({ user: testUser, token }));
       
       // Проверяем, что setItem был вызван с правильными параметрами
-      expect(localStorage.setItem).toHaveBeenCalledWith('test_auth_token', token);
+      expect(localStorage.setItem).toHaveBeenCalledWith('auth_token', token);
     });
 
-    it('должен удалять токен из localStorage при clearAuth', () => {
+    it('должен удалять токен из localStorage при logout', () => {
       // Устанавливаем токен
       store.dispatch(setCredentials({ user: testUser, token: 'some-token' }));
       
       // Очищаем
-      store.dispatch(clearAuth());
+      store.dispatch(logout());
       
       // Проверяем, что removeItem был вызван
-      expect(localStorage.removeItem).toHaveBeenCalledWith('test_auth_token');
+      expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     });
   });
 
@@ -147,7 +148,7 @@ describe('authSlice', () => {
       expect(store.getState().auth.isAuthenticated).toBe(true);
       
       // Затем очищаем
-      store.dispatch(clearAuth());
+      store.dispatch(logout());
       expect(store.getState().auth.isAuthenticated).toBe(false);
     });
   });
@@ -168,11 +169,11 @@ describe('authSlice', () => {
       expect(state.user?.email_verified).toBe(true);
     });
 
-    it('должен очищать данные пользователя при clearAuth', () => {
+    it('должен очищать данные пользователя при logout', () => {
       store.dispatch(setCredentials({ user: testUser, token: 'test-token' }));
       expect(store.getState().auth.user).not.toBeNull();
       
-      store.dispatch(clearAuth());
+      store.dispatch(logout());
       expect(store.getState().auth.user).toBeNull();
     });
   });

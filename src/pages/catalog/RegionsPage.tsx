@@ -30,16 +30,19 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useNavigate } from 'react-router-dom';
 import { 
   useGetRegionsQuery,
   useCreateRegionMutation,
   useUpdateRegionMutation,
   useDeleteRegionMutation
 } from '../../api';
-import { Region } from '../../types/models';
+import { Region, RegionFilter, RegionFormData, ApiResponse } from '../../types/models';
 
 // Схема валидации для региона
 const validationSchema = yup.object({
@@ -47,20 +50,29 @@ const validationSchema = yup.object({
   code: yup.string(),
 });
 
+const initialValues: RegionFormData = {
+  name: '',
+  code: '',
+  is_active: true,
+};
+
 const RegionsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading, error: regionsError } = useGetRegionsQuery({
+    query: searchQuery || undefined,
     page: page + 1,
     per_page: rowsPerPage,
-    query: searchQuery || undefined
-  });
+  } as RegionFilter);
 
   const [createRegion] = useCreateRegionMutation();
   const [updateRegion] = useUpdateRegionMutation();
@@ -78,16 +90,15 @@ const RegionsPage: React.FC = () => {
 
   // Формик для формы региона
   const formik = useFormik({
-    initialValues: {
-      name: '',
-      code: '',
-      is_active: true,
-    },
+    initialValues: initialValues,
     validationSchema,
     onSubmit: async (values) => {
       try {
         if (editingRegion) {
-          await updateRegion({ id: editingRegion.id, ...values }).unwrap();
+          await updateRegion({ 
+            id: editingRegion.id.toString(), 
+            region: values 
+          }).unwrap();
           setSuccessMessage('Регион успешно обновлен');
         } else {
           await createRegion(values).unwrap();
@@ -107,7 +118,7 @@ const RegionsPage: React.FC = () => {
       formik.setValues({
         name: region.name,
         code: region.code || '',
-        is_active: region.is_active,
+        is_active: region.is_active ?? true,
       });
     } else {
       setEditingRegion(null);
@@ -124,7 +135,7 @@ const RegionsPage: React.FC = () => {
   };
 
   // Удаление региона
-  const handleDeleteRegion = async (id: number) => {
+  const handleDeleteRegion = async (id: string) => {
     if (window.confirm('Вы уверены, что хотите удалить этот регион?')) {
       try {
         await deleteRegion(id).unwrap();
@@ -146,8 +157,38 @@ const RegionsPage: React.FC = () => {
     setSuccessMessage(null);
   };
 
-  const regions = regionsData?.regions || [];
-  const totalItems = regionsData?.meta?.total || 0;
+  const isLoading = regionsLoading;
+  const error = regionsError;
+  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
+  const totalItems = (regionsData as unknown as ApiResponse<Region>)?.total || 0;
+
+  const handleDeleteClick = (region: Region) => {
+    setSelectedRegion(region);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedRegion) {
+      try {
+        await deleteRegion(selectedRegion.id).unwrap();
+        setDeleteDialogOpen(false);
+        setSelectedRegion(null);
+      } catch (error) {
+        console.error('Ошибка при удалении региона:', error);
+      }
+    }
+  };
+
+  const handleToggleStatus = async (region: Region) => {
+    try {
+      await updateRegion({
+        id: region.id,
+        region: { is_active: !region.is_active } as Partial<RegionFormData>
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  };
 
   return (
     <Box>
@@ -156,15 +197,15 @@ const RegionsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
+          onClick={() => navigate('/catalog/regions/new')}
         >
           Добавить регион
         </Button>
       </Box>
 
-      {regionsError && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {regionsError.toString()}
+          {error.toString()}
         </Alert>
       )}
 
@@ -185,7 +226,7 @@ const RegionsPage: React.FC = () => {
       </Paper>
 
       <TableContainer component={Paper}>
-        {regionsLoading ? (
+        {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
@@ -216,8 +257,9 @@ const RegionsPage: React.FC = () => {
                       <TableCell>{region.code || '—'}</TableCell>
                       <TableCell>
                         <Chip
+                          icon={region.is_active ? <CheckIcon /> : <CloseIcon />}
                           label={region.is_active ? 'Активен' : 'Неактивен'}
-                          color={region.is_active ? 'success' : 'default'}
+                          color={region.is_active ? 'success' : 'error'}
                           size="small"
                         />
                       </TableCell>
@@ -227,8 +269,17 @@ const RegionsPage: React.FC = () => {
                             <EditIcon />
                           </IconButton>
                         </Tooltip>
+                        <Tooltip title={region.is_active ? 'Деактивировать' : 'Активировать'}>
+                          <IconButton
+                            onClick={() => handleToggleStatus(region)}
+                            size="small"
+                            color={region.is_active ? 'error' : 'success'}
+                          >
+                            {region.is_active ? <CloseIcon /> : <CheckIcon />}
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Удалить">
-                          <IconButton onClick={() => handleDeleteRegion(region.id)} size="small" color="error">
+                          <IconButton onClick={() => handleDeleteClick(region)} size="small" color="error">
                             <DeleteIcon />
                           </IconButton>
                         </Tooltip>
@@ -312,6 +363,23 @@ const RegionsPage: React.FC = () => {
           {successMessage}
         </Alert>
       </Snackbar>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы действительно хотите удалить регион {selectedRegion?.name}?
+            Это действие нельзя будет отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

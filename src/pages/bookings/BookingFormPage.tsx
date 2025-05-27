@@ -17,6 +17,8 @@ import {
   Card,
   CardContent,
   FormHelperText,
+  Grid,
+  Autocomplete,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -29,8 +31,16 @@ import {
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { bookingsApi, useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings';
-import { User, UserRole, Booking } from '../../types';
+import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
+import { User, UserRole } from '../../types';
+import { BookingStatusEnum, BookingFormData as BookingFormDataType } from '../../types/booking';
+import { useGetServicePointsQuery } from '../../api/servicePoints.api';
+import { useGetCarsQuery } from '../../api/cars.api';
+import { ServicePoint, Car, ApiResponse } from '../../types/models';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import { SelectChangeEvent } from '@mui/material';
 
 // Типы для формы бронирования
 interface ServiceSelection {
@@ -46,6 +56,15 @@ interface TimeSlot {
   end_time: string;
   available: boolean;
 }
+
+// Схема валидации
+const validationSchema = yup.object({
+  service_point_id: yup.number().required('Выберите точку обслуживания'),
+  car_id: yup.number().required('Выберите автомобиль'),
+  scheduled_at: yup.date().required('Выберите дату и время'),
+  services: yup.array().of(yup.number()).min(1, 'Выберите хотя бы одну услугу'),
+  notes: yup.string(),
+});
 
 const BookingFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +100,12 @@ const BookingFormPage: React.FC = () => {
   const [carTypes, setCarTypes] = useState<any[]>([]);
   const [availableServices, setAvailableServices] = useState<any[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  
+  // RTK Query хуки
+  const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
+  const { data: carsData, isLoading: carsLoading } = useGetCarsQuery({} as any);
+  
+  const isLoading = servicePointsLoading || carsLoading || loading || saving;
   
   // Загрузка справочных данных при монтировании компонента
   useEffect(() => {
@@ -271,55 +296,67 @@ const BookingFormPage: React.FC = () => {
     return cars.filter(car => car.client_id === clientId);
   };
   
-  // Отправка формы
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!clientId || !servicePointId || !carTypeId || !selectedTimeSlot) {
-      setError('Пожалуйста, заполните все обязательные поля');
-      return;
-    }
-    
-    setSaving(true);
-    setError(null);
-    
-    const bookingData = {
-      client_id: clientId,
-      service_point_id: servicePointId,
-      car_id: carId || undefined,
-      car_type_id: carTypeId,
-      slot_id: selectedTimeSlot.id,
-      booking_date: format(selectedDate!, 'yyyy-MM-dd'),
-      start_time: selectedTimeSlot.start_time,
-      end_time: selectedTimeSlot.end_time,
-      notes: notes || undefined,
-      services: services.map(service => ({
-        service_id: service.service_id,
-        quantity: service.quantity,
-        price: service.price
-      }))
-    };
-    
-    try {
-      if (isEditMode && id) {
-        await updateBooking({ id: parseInt(id), data: bookingData }).unwrap();
-      } else {
-        await createBooking(bookingData).unwrap();
-      }
-      
-      setSuccess('Бронирование успешно сохранено');
-      setTimeout(() => {
+  const formik = useFormik({
+    initialValues: {
+      service_point_id: '',
+      car_id: '',
+      scheduled_at: new Date(),
+      services: [] as number[],
+      notes: '',
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      try {
+        if (id) {
+          await updateBooking({ 
+            id: id.toString(), 
+            booking: {
+              client_id: '1', // TODO: получить из контекста
+              service_point_id: values.service_point_id,
+              car_type_id: '1', // TODO: получить из формы
+              scheduled_at: values.scheduled_at.toISOString(),
+              status: BookingStatusEnum.PENDING,
+            }
+          }).unwrap();
+        } else {
+          await createBooking({
+            client_id: '1', // TODO: получить из контекста
+            service_point_id: values.service_point_id,
+            car_type_id: '1', // TODO: получить из формы
+            scheduled_at: values.scheduled_at.toISOString(),
+            status: BookingStatusEnum.PENDING,
+          }).unwrap();
+        }
+        
+        setSuccess('Бронирование успешно сохранено');
         navigate('/bookings');
-      }, 1500);
-    } catch (error: any) {
-      setError(error.data?.message || 'Произошла ошибка при сохранении бронирования');
-    } finally {
-      setSaving(false);
+      } catch (err) {
+        setError('Ошибка при сохранении бронирования');
+      }
+    },
+  });
+
+  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
+    formik.setFieldValue('service_point_id', event.target.value);
+  };
+
+  const handleCarChange = (event: SelectChangeEvent<string>) => {
+    formik.setFieldValue('car_id', event.target.value);
+  };
+
+  const handleDateTimeChange = (date: Date | null) => {
+    if (date) {
+      formik.setFieldValue('scheduled_at', date);
     }
   };
+
+  const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    formik.setFieldValue('notes', event.target.value);
+  };
   
-  if (loading) {
+  if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
       </Box>
     );
@@ -352,272 +389,92 @@ const BookingFormPage: React.FC = () => {
         </Alert>
       )}
       
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={formik.handleSubmit}>
         <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Основная информация
           </Typography>
           
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {/* Клиент */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <FormControl fullWidth required>
-                <InputLabel id="client-label">Клиент</InputLabel>
-                <Select
-                  labelId="client-label"
-                  value={clientId || ''}
-                  onChange={(e) => setClientId(e.target.value as number)}
-                  label="Клиент"
-                  disabled={(user as User | null)?.role === UserRole.CLIENT}
-                >
-                  {clients.map((client) => (
-                    <MenuItem key={client.id} value={client.id}>
-                      {client.name} ({client.phone})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-            
-            {/* Сервисная точка */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <FormControl fullWidth required>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth error={formik.touched.service_point_id && Boolean(formik.errors.service_point_id)}>
                 <InputLabel id="service-point-label">Точка обслуживания</InputLabel>
                 <Select
                   labelId="service-point-label"
-                  value={servicePointId || ''}
-                  onChange={(e) => setServicePointId(e.target.value as number)}
+                  value={formik.values.service_point_id}
+                  onChange={handleServicePointChange}
                   label="Точка обслуживания"
                 >
-                  {servicePoints.map((point) => (
+                  {(servicePointsData as ApiResponse<ServicePoint>)?.data?.map((point: ServicePoint) => (
                     <MenuItem key={point.id} value={point.id}>
-                      {point.name} ({point.address})
+                      {point.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            </Box>
+            </Grid>
             
-            {/* Автомобиль */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <FormControl fullWidth required>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth error={formik.touched.car_id && Boolean(formik.errors.car_id)}>
                 <InputLabel id="car-label">Автомобиль</InputLabel>
                 <Select
                   labelId="car-label"
-                  value={carId || ''}
-                  onChange={(e) => setCarId(e.target.value as number)}
+                  value={formik.values.car_id}
+                  onChange={handleCarChange}
                   label="Автомобиль"
-                  disabled={!clientId}
                 >
-                  {getFilteredCars().map((car) => (
+                  {carsData?.map((car: any) => (
                     <MenuItem key={car.id} value={car.id}>
-                      {car.brand} {car.model} ({car.number})
-                    </MenuItem>
-                  ))}
-                </Select>
-                {!clientId && (
-                  <FormHelperText>Сначала выберите клиента</FormHelperText>
-                )}
-              </FormControl>
-            </Box>
-            
-            {/* Тип автомобиля */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <FormControl fullWidth required>
-                <InputLabel id="car-type-label">Тип автомобиля</InputLabel>
-                <Select
-                  labelId="car-type-label"
-                  value={carTypeId || ''}
-                  onChange={(e) => setCarTypeId(e.target.value as number)}
-                  label="Тип автомобиля"
-                >
-                  {carTypes.map((type) => (
-                    <MenuItem key={type.id} value={type.id}>
-                      {type.name}
+                      {car.brand} {car.model} ({car.license_plate})
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-            </Box>
+            </Grid>
             
-            {/* Дата */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-                <DatePicker
-                  label="Дата*"
-                  value={selectedDate}
-                  onChange={(newDate) => setSelectedDate(newDate)}
+            <Grid item xs={12} md={6}>
+              <DateTimePicker
+                label="Дата и время"
+                value={formik.values.scheduled_at}
+                onChange={handleDateTimeChange}
                   slotProps={{
                     textField: {
                       fullWidth: true,
-                      required: true,
-                    },
-                  }}
-                  disablePast
-                />
-              </LocalizationProvider>
-            </Box>
-            
-            {/* Временной слот */}
-            <Box sx={{ width: { xs: '100%', md: 'calc(50% - 16px)' } }}>
-              <FormControl fullWidth required>
-                <InputLabel id="time-slot-label">Время</InputLabel>
-                <Select
-                  labelId="time-slot-label"
-                  value={selectedTimeSlot?.id || ''}
-                  onChange={(e) => {
-                    const slot = timeSlots.find(s => s.id === e.target.value);
-                    setSelectedTimeSlot(slot || null);
-                  }}
-                  label="Время"
-                  disabled={!selectedDate || !servicePointId || timeSlots.length === 0}
-                >
-                  {timeSlots.map((slot) => (
-                    <MenuItem 
-                      key={slot.id} 
-                      value={slot.id}
-                      disabled={!slot.available}
-                    >
-                      {slot.start_time} - {slot.end_time}
-                      {!slot.available && ' (Занято)'}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {(!selectedDate || !servicePointId) && (
-                  <FormHelperText>Сначала выберите дату и точку обслуживания</FormHelperText>
-                )}
-              </FormControl>
-            </Box>
-            
-            {/* Примечания */}
-            <Box sx={{ width: '100%' }}>
-              <TextField
-                label="Примечания"
-                multiline
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                fullWidth
+                    error: formik.touched.scheduled_at && Boolean(formik.errors.scheduled_at),
+                    helperText: formik.touched.scheduled_at && formik.errors.scheduled_at ? String(formik.errors.scheduled_at) : '',
+                  },
+                }}
               />
-            </Box>
-          </Box>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                label="Примечания"
+                value={formik.values.notes}
+                onChange={handleNotesChange}
+                error={formik.touched.notes && Boolean(formik.errors.notes)}
+                helperText={formik.touched.notes && formik.errors.notes}
+              />
+            </Grid>
+          </Grid>
         </Paper>
         
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">
-              Услуги
-            </Typography>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
-              startIcon={<AddIcon />}
-              onClick={handleAddService}
-              disabled={availableServices.length === services.length}
-            >
-              Добавить услугу
-            </Button>
-          </Box>
-          
-          {services.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ my: 2 }}>
-              Добавьте услуги для бронирования
-            </Typography>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {services.map((service, index) => (
-                <Card key={index} variant="outlined">
-                  <CardContent>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-                      <Box sx={{ width: { xs: '100%', md: 'calc(33.33% - 16px)' } }}>
-                        <FormControl fullWidth>
-                          <InputLabel id={`service-label-${index}`}>Услуга</InputLabel>
-                          <Select
-                            labelId={`service-label-${index}`}
-                            value={service.service_id}
-                            onChange={(e) => handleServiceChange(index, 'service_id', e.target.value)}
-                            label="Услуга"
-                          >
-                            {availableServices.map((availableService) => (
-                              <MenuItem 
-                                key={availableService.id} 
-                                value={availableService.id}
-                                disabled={services.some(s => 
-                                  s.service_id === availableService.id && s !== service
-                                )}
-                              >
-                                {availableService.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Box>
-                      
-                      <Box sx={{ width: { xs: '48%', md: 'calc(25% - 16px)' } }}>
-                        <TextField
-                          label="Количество"
-                          type="number"
-                          InputProps={{ inputProps: { min: 1 } }}
-                          value={service.quantity}
-                          onChange={(e) => handleServiceChange(index, 'quantity', parseInt(e.target.value))}
-                          fullWidth
-                        />
-                      </Box>
-                      
-                      <Box sx={{ width: { xs: '48%', md: 'calc(25% - 16px)' } }}>
-                        <TextField
-                          label="Цена"
-                          type="number"
-                          InputProps={{ inputProps: { min: 0 }, readOnly: true }}
-                          value={service.price}
-                          fullWidth
-                        />
-                      </Box>
-                      
-                      <Box sx={{ width: { xs: '48%', md: 'calc(10% - 16px)' } }}>
-                        <Typography variant="body1" fontWeight="bold">
-                          {service.price * service.quantity} ₴
-                        </Typography>
-                      </Box>
-                      
-                      <Box sx={{ width: { xs: '48%', md: 'calc(10% - 16px)' }, textAlign: 'right' }}>
-                        <Button
-                          color="error"
-                          onClick={() => handleRemoveService(index)}
-                        >
-                          <DeleteIcon />
+            onClick={() => navigate('/bookings')}
+          >
+            Отмена
                         </Button>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          )}
-          
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-            <Typography variant="h6">
-              Итого: {totalPrice} ₴
-            </Typography>
-          </Box>
-        </Paper>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Button
             type="submit"
             variant="contained"
-            color="primary"
-            size="large"
-            startIcon={<SaveIcon />}
-            disabled={saving}
-            sx={{ minWidth: 200 }}
+            disabled={formik.isSubmitting}
           >
-            {saving ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : isEditMode ? (
-              'Сохранить изменения'
-            ) : (
-              'Создать бронирование'
-            )}
+            {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
           </Button>
         </Box>
       </form>

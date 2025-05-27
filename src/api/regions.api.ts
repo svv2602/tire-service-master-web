@@ -1,62 +1,61 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Region, RegionFormData } from '../types/location';
+import { Region, RegionFilter, ApiResponse } from '../types/models';
 
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
-
+// Расширяем базовый API для работы с регионами
 export const regionsApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getRegions: build.query<Region[], void>({
-      query: () => 'regions',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Regions' as const, id })),
-              'Regions',
-            ]
-          : ['Regions'],
+  endpoints: (builder) => ({
+    // Получение списка регионов
+    getRegions: builder.query<ApiResponse<Region>, RegionFilter>({
+      query: (params) => ({
+        url: 'regions',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Region'],
     }),
-    
-    getRegionById: build.query<Region, string>({
-      query: (id: string) => `regions/${id}`,
-      providesTags: (_result: Region | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Regions' as const, id }
-      ],
+
+    // Получение региона по ID
+    getRegionById: builder.query<Region, string>({
+      query: (id) => ({
+        url: `regions/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Region', id }],
     }),
-    
-    createRegion: build.mutation<Region, RegionFormData>({
-      query: (data: RegionFormData) => ({
+
+    // Создание нового региона
+    createRegion: builder.mutation<Region, Partial<Region>>({
+      query: (region) => ({
         url: 'regions',
         method: 'POST',
-        body: data,
+        body: region,
       }),
-      invalidatesTags: ['Regions'],
+      invalidatesTags: ['Region'],
     }),
-    
-    updateRegion: build.mutation<Region, { id: string; data: Partial<RegionFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<RegionFormData> }) => ({
+
+    // Обновление региона
+    updateRegion: builder.mutation<Region, { id: string; region: Partial<Region> }>({
+      query: ({ id, region }) => ({
         url: `regions/${id}`,
-        method: 'PATCH',
-        body: data,
+        method: 'PUT',
+        body: region,
       }),
-      invalidatesTags: (_result: Region | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Regions' as const, id },
-        'Regions',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Region', id }],
     }),
-    
-    deleteRegion: build.mutation<void, string>({
-      query: (id: string) => ({
+
+    // Удаление региона
+    deleteRegion: builder.mutation<void, string>({
+      query: (id) => ({
         url: `regions/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Regions'],
+      invalidatesTags: ['Region'],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
+// Экспортируем хуки
 export const {
   useGetRegionsQuery,
   useGetRegionByIdQuery,

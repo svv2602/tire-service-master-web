@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -6,37 +7,43 @@ import {
   TextField,
   InputAdornment,
   Paper,
-  Divider,
   CircularProgress,
-  Pagination,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  IconButton,
+  Tooltip,
   Chip,
-  Switch,
-  FormControlLabel,
   Alert,
+  Dialog,
+  FormControlLabel,
+  Switch,
+  Pagination,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TablePagination,
+  Avatar,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Add as AddIcon,
   Person as PersonIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { 
+import {
   useGetUsersQuery,
   useDeleteUserMutation,
-  useUpdateUserStatusMutation,
+  useUpdateUserMutation,
 } from '../../api';
+import { User } from '../../types/user';
+import { useSnackbar } from 'notistack';
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,7 +51,8 @@ const UsersPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   const { 
     data: usersData,
@@ -52,16 +60,16 @@ const UsersPage: React.FC = () => {
     error,
     refetch
   } = useGetUsersQuery({
-    page,
-    per_page: pageSize,
+    page: page.toString(),
+    per_page: pageSize.toString(),
     query: searchQuery || undefined,
   });
 
   const [deleteUser] = useDeleteUserMutation();
-  const [updateUserStatus] = useUpdateUserStatusMutation();
+  const [updateUser] = useUpdateUserMutation();
 
-  const users = usersData?.data || [];
-  const totalItems = usersData?.meta?.total || 0;
+  const users = (usersData?.users || []) as User[];
+  const totalItems = usersData?.totalItems || 0;
 
   const handleSearch = () => {
     setPage(1);
@@ -86,11 +94,11 @@ const UsersPage: React.FC = () => {
     navigate('/users/create');
   };
 
-  const handleEditUser = (id: number) => {
+  const handleEditUser = (id: string) => {
     navigate(`/users/${id}/edit`);
   };
 
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: string) => {
     setUserToDelete(id);
     setDeleteDialogOpen(true);
   };
@@ -113,12 +121,24 @@ const UsersPage: React.FC = () => {
     setUserToDelete(null);
   };
 
-  const handleChangeStatus = async (id: number, isActive: boolean) => {
+  const handleToggleStatus = async (user: User) => {
     try {
-      await updateUserStatus({ id, is_active: !isActive }).unwrap();
-      await refetch();
+      const updateData = {
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        role: user.role,
+        is_active: !user.is_active,
+        email_verified: user.email_verified,
+        phone_verified: user.phone_verified
+      };
+      await updateUser({
+        id: user.id,
+        data: updateData
+      }).unwrap();
+      enqueueSnackbar('Статус пользователя успешно обновлен', { variant: 'success' });
     } catch (error) {
-      console.error('Ошибка при изменении статуса пользователя:', error);
+      enqueueSnackbar('Ошибка при обновлении статуса пользователя', { variant: 'error' });
     }
   };
 
@@ -235,7 +255,7 @@ const UsersPage: React.FC = () => {
                           control={
                             <Switch
                               checked={user.is_active === true}
-                              onChange={() => handleChangeStatus(user.id, user.is_active === true)}
+                              onChange={() => handleToggleStatus(user)}
                               color="primary"
                             />
                           }
@@ -249,6 +269,7 @@ const UsersPage: React.FC = () => {
                             onClick={() => handleEditUser(user.id)}
                             startIcon={<EditIcon />}
                             variant="outlined"
+                            color="primary"
                           >
                             Ред.
                           </Button>
@@ -301,4 +322,4 @@ const UsersPage: React.FC = () => {
   );
 };
 
-export default UsersPage; 
+export default UsersPage;

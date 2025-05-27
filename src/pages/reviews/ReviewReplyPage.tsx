@@ -24,6 +24,7 @@ import {
   useGetReviewByIdQuery,
   useUpdateReviewMutation,
 } from '../../api';
+import { ReviewUpdateData } from '../../types/models';
 
 // Схема валидации
 const validationSchema = yup.object({
@@ -42,7 +43,7 @@ const ReviewReplyPage: React.FC = () => {
     data: review,
     isLoading: reviewLoading,
     error: reviewError,
-  } = useGetReviewByIdQuery(Number(id), { skip: !id });
+  } = useGetReviewByIdQuery(id || '', { skip: !id });
 
   const [updateReview, { isLoading: updateLoading }] = useUpdateReviewMutation();
 
@@ -56,8 +57,8 @@ const ReviewReplyPage: React.FC = () => {
       if (id) {
         try {
           await updateReview({
-            id: Number(id),
-            response: values.response,
+            id: id || '',
+            data: { response: values.response } as ReviewUpdateData,
           }).unwrap();
           navigate('/reviews');
         } catch (error) {
@@ -131,37 +132,31 @@ const ReviewReplyPage: React.FC = () => {
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main' }}>
-            {getClientInitials(review.client?.firstName, review.client?.lastName)}
+            {getClientInitials(review.client?.first_name, review.client?.last_name)}
           </Avatar>
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6">
-              {review.client?.firstName} {review.client?.lastName}
+              {review.client?.first_name} {review.client?.last_name}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Rating value={review.rating} readOnly size="small" />
               <Typography variant="body2" color="textSecondary">
-                {formatDate(review.createdAt)}
+                {formatDate(review.created_at)}
               </Typography>
             </Box>
             <Typography sx={{ mb: 2 }}>
-              {review.text}
+              {review.comment}
             </Typography>
           </Box>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <BusinessIcon color="action" />
             <Typography>
-              {review.servicePoint?.name}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CarIcon color="action" />
-            <Typography>
-              {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+              {review.service_point?.name}
             </Typography>
           </Box>
         </Box>

@@ -1,16 +1,12 @@
 export interface ServicePoint {
-  id: string;
-  partnerId: string;
+  id: number;
   name: string;
   address: string;
   phone: string;
+  working_hours: string;
   description?: string;
-  workingHours: WorkingHours;
-  location: Location;
-  services: string[];
-  photos: ServicePointPhoto[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ServicePointPhoto {

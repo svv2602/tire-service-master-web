@@ -43,9 +43,10 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { logoutUser, getCurrentUser } from '../../store/slices/authSlice';
+import { logout, getCurrentUser, logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
-import { UserRole, User } from '../../types';
+import { UserRole } from '../../types';
+import { User } from '../../types/user';
 
 const drawerWidth = 240;
 

@@ -1,12 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
-import { User } from '../types/models';
 import config from '../config';
-import { bookingsApi } from './bookings';
-import { authApi } from './auth';
-import { partnersApi } from './partners';
-import { citiesApi } from './cities';
-import { regionsApi } from './regions';
-import { settingsApi } from './settings';
 
 // Константа для ключа хранилища
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
@@ -208,108 +201,6 @@ const checkApiAvailability = async (url: string): Promise<boolean> => {
   console.error('Ошибка инициализации API:', error);
 });
 
-// Экспортируем только базовый API клиент
+// Экспортируем API клиент
 export { apiClient };
-
-// Экспортируем API из отдельных файлов
-export {
-  bookingsApi,
-  authApi,
-  partnersApi,
-  citiesApi,
-  regionsApi,
-  settingsApi
-};
-
-// API для работы с пользователями
-const usersApi = {
-  getAll: async (params?: any): Promise<AxiosResponse<User[]>> => {
-    console.log('Получение списка пользователей');
-    return apiClient.get('/api/v1/users', { params });
-  },
-  getById: async (id: number): Promise<AxiosResponse<User>> => {
-    console.log(`Получение данных пользователя с ID: ${id}`);
-    return apiClient.get(`/api/v1/users/${id}`);
-  },
-  create: async (data: Partial<User>): Promise<AxiosResponse<User>> => {
-    console.log('Создание нового пользователя');
-    return apiClient.post('/api/v1/users', data);
-  },
-  update: async (id: number, data: Partial<User>): Promise<AxiosResponse<User>> => {
-    console.log(`Обновление данных пользователя ${id}`);
-    return apiClient.put(`/api/v1/users/${id}`, data);
-  },
-  delete: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление пользователя ${id}`);
-    return apiClient.delete(`/api/v1/users/${id}`);
-  },
-  changeRole: async (id: number, role: string): Promise<AxiosResponse<User>> => {
-    console.log(`Изменение роли пользователя ${id} на ${role}`);
-    return apiClient.put(`/api/v1/users/${id}/change_role`, { role });
-  },
-  changeStatus: async (id: number, isActive: boolean): Promise<AxiosResponse<User>> => {
-    console.log(`Изменение статуса пользователя ${id} на ${isActive ? 'активный' : 'неактивный'}`);
-    return apiClient.put(`/api/v1/users/${id}/change_status`, { is_active: isActive });
-  }
-};
-
-// API для работы с клиентами
-const clientsApi = {
-  getAll: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка клиентов');
-    return apiClient.get('/api/v1/clients', { params });
-  },
-  getById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение клиента ${id}`);
-    return apiClient.get(`/api/v1/clients/${id}`);
-  },
-  create: async (data: any): Promise<AxiosResponse> => {
-    console.log('Создание нового клиента');
-    return apiClient.post('/api/v1/clients', data);
-  },
-  update: async (id: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Обновление клиента ${id}`);
-    return apiClient.put(`/api/v1/clients/${id}`, data);
-  },
-  delete: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление клиента ${id}`);
-    return apiClient.delete(`/api/v1/clients/${id}`);
-  }
-};
-
-// API для работы со справочниками
-const referencesApi = {
-  getServices: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение списка услуг');
-    return apiClient.get('/api/v1/services', { params });
-  },
-  getServiceCategories: async (params?: any): Promise<AxiosResponse> => {
-    console.log('Получение категорий услуг');
-    return apiClient.get('/api/v1/service_categories', { params });
-  },
-  getServiceById: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Получение услуги ${id}`);
-    return apiClient.get(`/api/v1/services/${id}`);
-  },
-  createService: async (data: any): Promise<AxiosResponse> => {
-    console.log('Создание новой услуги');
-    return apiClient.post('/api/v1/services', data);
-  },
-  updateService: async (id: number, data: any): Promise<AxiosResponse> => {
-    console.log(`Обновление услуги ${id}`);
-    return apiClient.put(`/api/v1/services/${id}`, data);
-  },
-  deleteService: async (id: number): Promise<AxiosResponse> => {
-    console.log(`Удаление услуги ${id}`);
-    return apiClient.delete(`/api/v1/services/${id}`);
-  }
-};
-
-// Экспортируем локальные API
-export {
-  usersApi,
-  clientsApi,
-  referencesApi
-};
-
 export default apiClient;

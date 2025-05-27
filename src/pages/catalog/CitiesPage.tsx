@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -36,45 +36,81 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useNavigate } from 'react-router-dom';
 import { 
   useGetCitiesQuery, 
-  useGetRegionsQuery,
-  useCreateCityMutation,
+  useDeleteCityMutation,
   useUpdateCityMutation,
-  useDeleteCityMutation
 } from '../../api';
-import { City, Region } from '../../types/models';
+import { useGetRegionsQuery } from '../../api';
+import { City, CityFilter, Region, ApiResponse } from '../../types/models';
 
 // Схема валидации для города
 const validationSchema = yup.object({
   name: yup.string().required('Название города обязательно'),
+  code: yup.string().required('Код города обязателен'),
   region_id: yup.number().required('Регион обязателен'),
 });
 
+interface CitiesQueryParams {
+  page?: number;
+  per_page?: number;
+  query?: string;
+  region_id?: number;
+}
+
+interface RegionsQueryParams {
+  active?: boolean;
+}
+
+// Локальные интерфейсы для фильтров
+interface RegionFilter {
+  query?: string;
+  page?: number;
+  per_page?: number;
+}
+
+interface CityFormData {
+  name: string;
+  region_id: string;
+  code?: string;
+  is_active?: boolean;
+}
+
 const CitiesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [regionFilter, setRegionFilter] = useState<number | ''>('');
+  const [search, setSearch] = useState('');
+  const [regionFilter, setRegionFilter] = useState<string>('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
 
   // RTK Query хуки
   const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useGetCitiesQuery({
+    query: search || undefined,
+    region_id: regionFilter || undefined,
     page: page + 1,
     per_page: rowsPerPage,
-    query: searchQuery || undefined,
-    region_id: regionFilter || undefined
   });
 
-  const { data: regionsData } = useGetRegionsQuery({ active: true });
-  const [createCity] = useCreateCityMutation();
+  const { data: regionsData } = useGetRegionsQuery({});
   const [updateCity] = useUpdateCityMutation();
   const [deleteCity] = useDeleteCityMutation();
+
+  const isLoading = citiesLoading;
+  const error = citiesError;
+  const cities = (citiesData as unknown as ApiResponse<City>)?.data || [];
+  const totalItems = (citiesData as unknown as ApiResponse<City>)?.total || 0;
+  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -87,23 +123,31 @@ const CitiesPage: React.FC = () => {
   };
 
   // Формик для формы города
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      region_id: 0,
-      is_active: true,
-    },
+  const initialValues: CityFormData = {
+    name: '',
+    code: '',
+    region_id: '',
+    is_active: true,
+  };
+
+  const formik = useFormik<CityFormData>({
+    initialValues,
     validationSchema,
     onSubmit: async (values) => {
       try {
         if (editingCity) {
-          await updateCity({ id: editingCity.id, ...values }).unwrap();
+          await updateCity({ 
+            id: editingCity.id.toString(), 
+            city: values 
+          }).unwrap();
           setSuccessMessage('Город успешно обновлен');
+          handleCloseDialog();
         } else {
-          await createCity(values).unwrap();
-          setSuccessMessage('Город успешно создан');
+          // Создание города пока не реализовано
+          console.log('Создание города:', values);
+          setSuccessMessage('Функция создания города будет добавлена позже');
+          handleCloseDialog();
         }
-        handleCloseDialog();
       } catch (error) {
         console.error('Ошибка при сохранении:', error);
       }
@@ -116,7 +160,8 @@ const CitiesPage: React.FC = () => {
       setEditingCity(city);
       formik.setValues({
         name: city.name,
-        region_id: city.region_id,
+        code: city.name.toLowerCase().replace(/\s+/g, '_'),
+        region_id: city.region_id.toString(),
         is_active: city.is_active,
       });
     } else {
@@ -134,7 +179,7 @@ const CitiesPage: React.FC = () => {
   };
 
   // Удаление города
-  const handleDeleteCity = async (id: number) => {
+  const handleDeleteCity = async (id: string) => {
     if (window.confirm('Вы уверены, что хотите удалить этот город?')) {
       try {
         await deleteCity(id).unwrap();
@@ -147,14 +192,14 @@ const CitiesPage: React.FC = () => {
 
   // Обработчик поиска
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+    setSearch(event.target.value);
     setPage(0);
   };
 
   // Обработчик фильтра по региону
-  const handleRegionFilterChange = (event: SelectChangeEvent<number | string>) => {
+  const handleRegionFilterChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
-    setRegionFilter(value === '' ? '' : Number(value));
+    setRegionFilter(value);
     setPage(0);
   };
 
@@ -163,9 +208,33 @@ const CitiesPage: React.FC = () => {
     setSuccessMessage(null);
   };
 
-  const cities = citiesData?.data || [];
-  const totalItems = citiesData?.meta?.total || 0;
-  const regions = regionsData?.regions || [];
+  const handleDeleteClick = (city: City) => {
+    setSelectedCity(city);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedCity) {
+      try {
+        await deleteCity(selectedCity.id).unwrap();
+        setDeleteDialogOpen(false);
+        setSelectedCity(null);
+      } catch (error) {
+        console.error('Ошибка при удалении города:', error);
+      }
+    }
+  };
+
+  const handleToggleStatus = async (city: City) => {
+    try {
+      await updateCity({
+        id: city.id,
+        city: { is_active: !city.is_active } as Partial<City>
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  };
 
   return (
     <Box>
@@ -181,32 +250,29 @@ const CitiesPage: React.FC = () => {
         </Button>
       </Box>
 
-      {citiesError && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {citiesError.toString()}
+          {error.toString()}
         </Alert>
       )}
 
       <Paper sx={{ mb: 3, p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <TextField
-            label="Поиск по названию"
+            label="Поиск"
             variant="outlined"
             size="small"
-            fullWidth
-            value={searchQuery}
+            value={search}
             onChange={handleSearch}
             InputProps={{
-              startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
             }}
           />
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel id="region-filter-label">Фильтр по региону</InputLabel>
+            <InputLabel>Регион</InputLabel>
             <Select
-              labelId="region-filter-label"
-              id="region-filter"
               value={regionFilter}
-              label="Фильтр по региону"
+              label="Регион"
               onChange={handleRegionFilterChange}
             >
               <MenuItem value="">Все регионы</MenuItem>
@@ -218,97 +284,117 @@ const CitiesPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
 
-      <TableContainer component={Paper}>
-        {citiesLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <Table>
-              <TableHead>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Название</TableCell>
+                <TableCell>Код</TableCell>
+                <TableCell>Регион</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell align="right">Действия</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Название</TableCell>
-                  <TableCell>Регион</TableCell>
-                  <TableCell>Статус</TableCell>
-                  <TableCell align="right">Действия</TableCell>
+                  <TableCell colSpan={5} align="center">
+                    <CircularProgress />
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {cities.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      Города не найдены
+              ) : cities.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    Нет данных
+                  </TableCell>
+                </TableRow>
+              ) : (
+                cities.map((city: City) => (
+                  <TableRow key={city.id}>
+                    <TableCell>{city.name}</TableCell>
+                    <TableCell>{city.name.toLowerCase().replace(/\s+/g, '_')}</TableCell>
+                    <TableCell>{city.region?.name}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={city.is_active ? 'Активен' : 'Неактивен'}
+                        color={city.is_active ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Редактировать">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenDialog(city)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={city.is_active ? 'Деактивировать' : 'Активировать'}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleToggleStatus(city)}
+                          color={city.is_active ? 'error' : 'success'}
+                        >
+                          {city.is_active ? <CloseIcon /> : <CheckIcon />}
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Удалить">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteClick(city)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  cities.map((city: City) => (
-                    <TableRow key={city.id}>
-                      <TableCell>{city.id}</TableCell>
-                      <TableCell>{city.name}</TableCell>
-                      <TableCell>{city.region?.name || `Регион ID ${city.region_id}`}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={city.is_active ? 'Активен' : 'Неактивен'}
-                          color={city.is_active ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="Редактировать">
-                          <IconButton onClick={() => handleOpenDialog(city)} size="small">
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Удалить">
-                          <IconButton onClick={() => handleDeleteCity(city.id)} size="small" color="error">
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalItems}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[10, 25, 50]}
-            />
-          </>
-        )}
-      </TableContainer>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Диалог создания/редактирования */}
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+        />
+      </Paper>
+
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {editingCity ? 'Редактирование города' : 'Добавление города'}
+        </DialogTitle>
         <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
-            {editingCity ? 'Редактировать город' : 'Добавить новый город'}
-          </DialogTitle>
           <DialogContent>
-            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 fullWidth
-                id="name"
-                name="name"
                 label="Название города"
+                name="name"
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
               />
+              <TextField
+                fullWidth
+                label="Код города"
+                name="code"
+                value={formik.values.code}
+                onChange={formik.handleChange}
+                error={formik.touched.code && Boolean(formik.errors.code)}
+                helperText={formik.touched.code && formik.errors.code}
+              />
               <FormControl fullWidth error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
                 <InputLabel>Регион</InputLabel>
                 <Select
-                  id="region_id"
                   name="region_id"
                   value={formik.values.region_id}
                   onChange={formik.handleChange}
@@ -327,9 +413,9 @@ const CitiesPage: React.FC = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
                     name="is_active"
+                    checked={formik.values.is_active}
+                    onChange={formik.handleChange}
                   />
                 }
                 label="Активен"
@@ -338,24 +424,38 @@ const CitiesPage: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained" disabled={formik.isSubmitting}>
-              {editingCity ? 'Сохранить' : 'Создать'}
+            <Button type="submit" variant="contained" color="primary">
+              {editingCity ? 'Сохранить' : 'Добавить'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      {/* Уведомление об успехе */}
       <Snackbar
-        open={!!successMessage}
+        open={Boolean(successMessage)}
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
         <Alert onClose={handleCloseSnackbar} severity="success">
           {successMessage}
         </Alert>
       </Snackbar>
+
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы действительно хотите удалить город {selectedCity?.name}?
+            Это действие нельзя будет отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

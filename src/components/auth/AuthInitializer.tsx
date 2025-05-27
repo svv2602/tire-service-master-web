@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { getCurrentUser, setInitialized } from '../../store/slices/authSlice';
-import apiClient from '../../api/api';
+import { apiClient } from '../../api';
 import config from '../../config';
 
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;

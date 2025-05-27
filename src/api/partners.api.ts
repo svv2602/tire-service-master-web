@@ -1,15 +1,22 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Partner, PartnerFormData } from '../types/partner';
-
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
+import { Partner, PartnerFormData, PartnerFilter } from '../types/partner';
+import { ApiResponse } from '../types/models';
 
 export const partnersApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    getPartners: build.query<Partner[], void>({
-      query: () => 'partners',
-      providesTags: ['Partners'],
+  endpoints: (build) => ({
+    getPartners: build.query<ApiResponse<Partner>, PartnerFilter>({
+      query: (params: PartnerFilter = {}) => ({
+        url: 'partners',
+        params,
+      }),
+      providesTags: (result: ApiResponse<Partner> | undefined) =>
+        result?.data
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'Partners' as const, id })),
+              'Partners',
+            ]
+          : ['Partners'],
     }),
     
     getPartnerById: build.query<Partner, string>({
@@ -23,16 +30,16 @@ export const partnersApi = baseApi.injectEndpoints({
       query: (data: PartnerFormData) => ({
         url: 'partners',
         method: 'POST',
-        body: data,
+        body: { partner: data },
       }),
       invalidatesTags: ['Partners'],
     }),
     
-    updatePartner: build.mutation<Partner, { id: string; data: Partial<PartnerFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<PartnerFormData> }) => ({
+    updatePartner: build.mutation<Partner, { id: string; partner: Partial<PartnerFormData> }>({
+      query: ({ id, partner }: { id: string; partner: Partial<PartnerFormData> }) => ({
         url: `partners/${id}`,
         method: 'PATCH',
-        body: data,
+        body: { partner },
       }),
       invalidatesTags: (_result: Partner | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
         { type: 'Partners' as const, id },
@@ -47,6 +54,18 @@ export const partnersApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Partners'],
     }),
+
+    togglePartnerActive: build.mutation<Partner, { id: string; isActive: boolean }>({
+      query: ({ id, isActive }: { id: string; isActive: boolean }) => ({
+        url: `partners/${id}/toggle-active`,
+        method: 'PATCH',
+        body: { is_active: isActive },
+      }),
+      invalidatesTags: (_result: Partner | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
+        { type: 'Partners' as const, id },
+        'Partners',
+      ],
+    }),
   }),
 });
 
@@ -57,4 +76,5 @@ export const {
   useCreatePartnerMutation,
   useUpdatePartnerMutation,
   useDeletePartnerMutation,
+  useTogglePartnerActiveMutation,
 } = partnersApi; 

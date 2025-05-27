@@ -1,125 +1,141 @@
-import { EndpointBuilder } from '@reduxjs/toolkit/dist/query/endpointDefinitions';
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Client, ClientFormData, ClientFilter, ClientCar, ClientCarFormData } from '../types/client';
+import { Client, ClientCar, ClientFilter, ApiResponse } from '../types/models';
 
-type BuilderType = EndpointBuilder<BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>, never, 'api'>;
+// Типы для форм
+interface ClientFormData {
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  phone?: string;
+  email?: string;
+  is_active?: boolean;
+}
+
+interface ClientCarFormData {
+  brand: string;
+  model: string;
+  year: number;
+  vin: string;
+  license_plate: string;
+}
 
 export const clientsApi = baseApi.injectEndpoints({
-  endpoints: (build: BuilderType) => ({
-    // Клиенты
-    getClients: build.query<Client[], ClientFilter>({
-      query: (filter: ClientFilter) => ({
+  endpoints: (builder) => ({
+    getClients: builder.query<ApiResponse<Client>, ClientFilter>({
+      query: (params) => ({
         url: 'clients',
-        params: filter,
+        method: 'GET',
+        params,
       }),
-      providesTags: (result: Client[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Clients' as const, id })),
-              'Clients',
-            ]
-          : ['Clients'],
+      providesTags: ['Client'],
     }),
-    
-    getClientById: build.query<Client, string>({
-      query: (id: string) => `clients/${id}`,
-      providesTags: (_result: Client | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Clients' as const, id }
-      ],
+
+    getClientById: builder.query<Client, string>({
+      query: (id) => ({
+        url: `clients/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'Client', id }],
     }),
-    
-    createClient: build.mutation<Client, ClientFormData>({
-      query: (data: ClientFormData) => ({
+
+    createClient: builder.mutation<Client, ClientFormData>({
+      query: (client) => ({
         url: 'clients',
         method: 'POST',
-        body: data,
+        body: client,
       }),
-      invalidatesTags: ['Clients'],
+      invalidatesTags: ['Client'],
     }),
-    
-    updateClient: build.mutation<Client, { id: string; data: Partial<ClientFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<ClientFormData> }) => ({
+
+    updateClient: builder.mutation<Client, { id: string; client: Partial<ClientFormData> }>({
+      query: ({ id, client }) => ({
         url: `clients/${id}`,
-        method: 'PATCH',
-        body: data,
+        method: 'PUT',
+        body: client,
       }),
-      invalidatesTags: (_result: Client | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
-        { type: 'Clients' as const, id },
-        'Clients',
-      ],
+      invalidatesTags: (result, error, { id }) => [{ type: 'Client', id }],
     }),
-    
-    deleteClient: build.mutation<void, string>({
-      query: (id: string) => ({
+
+    deleteClient: builder.mutation<void, string>({
+      query: (id) => ({
         url: `clients/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Clients'],
+      invalidatesTags: ['Client'],
     }),
 
-    // Автомобили клиентов
-    getClientCars: build.query<ClientCar[], string>({
+    getClientCars: builder.query<ClientCar[], string>({
       query: (clientId: string) => `clients/${clientId}/cars`,
-      providesTags: (result: ClientCar[] | undefined, _err, clientId) =>
+      providesTags: (result: ClientCar[] | undefined, _err: FetchBaseQueryError | undefined, clientId: string) =>
         result
           ? [
               ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
               { type: 'ClientCars' as const, id: clientId },
+              'ClientCars',
             ]
-          : [{ type: 'ClientCars' as const, id: clientId }],
+          : [{ type: 'ClientCars' as const, id: clientId }, 'ClientCars'],
     }),
 
-    addClientCar: build.mutation<ClientCar, { clientId: string; data: ClientCarFormData }>({
-      query: ({ clientId, data }) => ({
+    getClientCarById: builder.query<ClientCar, { clientId: string; carId: string }>({
+      query: ({ clientId, carId }: { clientId: string; carId: string }) => `clients/${clientId}/cars/${carId}`,
+      providesTags: (_result: ClientCar | undefined, _err: FetchBaseQueryError | undefined, args: { clientId: string; carId: string }) => [
+        { type: 'ClientCars' as const, id: args.carId },
+        { type: 'ClientCars' as const, id: args.clientId },
+        'ClientCars',
+      ],
+    }),
+
+    createClientCar: builder.mutation<ClientCar, { clientId: string; data: ClientCarFormData }>({
+      query: ({ clientId, data }: { clientId: string; data: ClientCarFormData }) => ({
         url: `clients/${clientId}/cars`,
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: (_result, _err, { clientId }) => [
-        { type: 'ClientCars' as const, id: clientId },
-        'Clients',
+      invalidatesTags: (_result: ClientCar | undefined, _err: FetchBaseQueryError | undefined, args: { clientId: string }) => [
+        { type: 'ClientCars' as const, id: args.clientId },
+        'ClientCars',
       ],
     }),
 
-    updateClientCar: build.mutation<ClientCar, { clientId: string; carId: string; data: Partial<ClientCarFormData> }>({
-      query: ({ clientId, carId, data }) => ({
+    updateClientCar: builder.mutation<
+      ClientCar,
+      { clientId: string; carId: string; data: Partial<ClientCarFormData> }
+    >({
+      query: ({ clientId, carId, data }: { clientId: string; carId: string; data: Partial<ClientCarFormData> }) => ({
         url: `clients/${clientId}/cars/${carId}`,
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: (_result, _err, { clientId, carId }) => [
-        { type: 'ClientCars' as const, id: carId },
-        { type: 'ClientCars' as const, id: clientId },
-        'Clients',
+      invalidatesTags: (_result: ClientCar | undefined, _err: FetchBaseQueryError | undefined, args: { clientId: string; carId: string }) => [
+        { type: 'ClientCars' as const, id: args.carId },
+        { type: 'ClientCars' as const, id: args.clientId },
+        'ClientCars',
       ],
     }),
 
-    deleteClientCar: build.mutation<void, { clientId: string; carId: string }>({
-      query: ({ clientId, carId }) => ({
+    deleteClientCar: builder.mutation<void, { clientId: string; carId: string }>({
+      query: ({ clientId, carId }: { clientId: string; carId: string }) => ({
         url: `clients/${clientId}/cars/${carId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (_result, _err, { clientId, carId }) => [
-        { type: 'ClientCars' as const, id: carId },
-        { type: 'ClientCars' as const, id: clientId },
-        'Clients',
+      invalidatesTags: (_result: void | undefined, _err: FetchBaseQueryError | undefined, args: { clientId: string }) => [
+        { type: 'ClientCars' as const, id: args.clientId },
+        'ClientCars',
       ],
     }),
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
 export const {
-  // Клиенты
   useGetClientsQuery,
   useGetClientByIdQuery,
   useCreateClientMutation,
   useUpdateClientMutation,
   useDeleteClientMutation,
-  // Автомобили клиентов
   useGetClientCarsQuery,
-  useAddClientCarMutation,
+  useGetClientCarByIdQuery,
+  useCreateClientCarMutation,
   useUpdateClientCarMutation,
   useDeleteClientCarMutation,
 } = clientsApi; 
