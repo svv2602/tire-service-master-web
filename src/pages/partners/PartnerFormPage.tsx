@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +13,8 @@ import {
   MenuItem,
   Divider,
   Grid,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import { useFormik, FormikHelpers, FormikProps } from 'formik';
 import * as yup from 'yup';
@@ -46,6 +48,7 @@ interface FormValues {
   legal_address?: string;
   region_id?: string;
   city_id?: string;
+  is_active: boolean;
   user: UserFormData | null;
 }
 
@@ -99,6 +102,8 @@ const validationSchema = yup.object({
   city_id: yup.string()
     .nullable(),
   
+  is_active: yup.boolean(),
+  
   user: yup.object().shape({
     email: yup.string()
       .email('Введите корректный email')
@@ -133,9 +138,24 @@ const PartnerFormPage: React.FC = () => {
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
-  // Используем FormikProps для типизации
-  const formik = useFormik<FormValues>({
-    initialValues: {
+  // Мемоизированные начальные значения
+  const initialValues = useMemo(() => {
+    if (partner && isEdit) {
+      return {
+        company_name: partner.company_name || '',
+        company_description: partner.company_description || '',
+        contact_person: partner.contact_person || '',
+        logo_url: partner.logo_url || '',
+        website: partner.website || '',
+        tax_number: partner.tax_number || '',
+        legal_address: partner.legal_address || '',
+        region_id: partner.region_id?.toString() || '',
+        city_id: partner.city_id?.toString() || '',
+        is_active: partner.is_active ?? true,
+        user: null,
+      };
+    }
+    return {
       company_name: '',
       company_description: '',
       contact_person: '',
@@ -145,14 +165,21 @@ const PartnerFormPage: React.FC = () => {
       legal_address: '',
       region_id: '',
       city_id: '',
-      user: isEdit ? null : {
+      is_active: true,
+      user: {
         email: '',
         phone: '',
         first_name: '',
         last_name: '',
         password: '',
       },
-    },
+    };
+  }, [partner, isEdit]);
+
+  // Используем FormikProps для типизации
+  const formik = useFormik<FormValues>({
+    initialValues,
+    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
     validationSchema,
     validateOnChange: true,
     validateOnBlur: true,
@@ -168,6 +195,7 @@ const PartnerFormPage: React.FC = () => {
           legal_address: values.legal_address,
           region_id: values.region_id ? Number(values.region_id) : undefined,
           city_id: values.city_id ? Number(values.city_id) : undefined,
+          is_active: values.is_active,
           user: values.user || undefined
         };
 
@@ -188,24 +216,12 @@ const PartnerFormPage: React.FC = () => {
     },
   });
 
-  // Заполняем форму данными партнера при редактировании
+  // Устанавливаем выбранный регион при загрузке данных партнера
   useEffect(() => {
-    if (partner && isEdit) {
-      formik.setValues({
-        company_name: partner.company_name || '',
-        company_description: partner.company_description || '',
-        contact_person: partner.contact_person || '',
-        logo_url: partner.logo_url || '',
-        website: partner.website || '',
-        tax_number: partner.tax_number || '',
-        legal_address: partner.legal_address || '',
-        region_id: partner.region_id?.toString() || '',
-        city_id: partner.city_id?.toString() || '',
-        user: null,
-      });
-      setSelectedRegionId(partner.region_id || undefined);
+    if (partner && isEdit && partner.region_id) {
+      setSelectedRegionId(partner.region_id);
     }
-  }, [partner, isEdit, formik]);
+  }, [partner, isEdit]);
 
   // Обновляем выбранный регион при изменении
   useEffect(() => {
@@ -216,33 +232,7 @@ const PartnerFormPage: React.FC = () => {
       setSelectedRegionId(undefined);
       formik.setFieldValue('city_id', '');
     }
-  }, [formik.values.region_id, formik]);
-
-  const loadPartner = useCallback(async () => {
-    try {
-      // Реализация loadPartner
-    } catch (error) {
-      console.error('Ошибка при загрузке партнера:', error);
-    }
-  }, []);
-
-  const loadCities = useCallback(async () => {
-    try {
-      // Реализация loadCities
-    } catch (error) {
-      console.error('Ошибка при загрузке городов:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (id) {
-      loadPartner();
-    }
-  }, [id, loadPartner]);
-
-  useEffect(() => {
-    loadCities();
-  }, [loadCities]);
+  }, [formik.values.region_id]);
 
   if (partnerLoading) {
     return (
@@ -285,6 +275,7 @@ const PartnerFormPage: React.FC = () => {
     legal_address?: boolean;
     region_id?: boolean;
     city_id?: boolean;
+    is_active?: boolean;
     user?: FormikTouchedUser;
   };
 
@@ -298,6 +289,7 @@ const PartnerFormPage: React.FC = () => {
     legal_address?: string;
     region_id?: string;
     city_id?: string;
+    is_active?: string;
     user?: FormikErrorsUser;
   };
 
@@ -480,6 +472,27 @@ const PartnerFormPage: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Статус */}
+            <Grid item xs={12}>
+              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                Статус
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
+                label="Активный партнер"
+              />
             </Grid>
 
             {/* Данные пользователя (только при создании) */}

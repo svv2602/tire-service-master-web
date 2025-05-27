@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   Person as PersonIcon,
+  DirectionsCar as CarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -38,6 +39,64 @@ import {
 } from '../../api/clients.api';
 import { Client, ClientFilter } from '../../types/client';
 import { ApiResponse } from '../../types/models';
+import { useDebounce } from '../../hooks/useDebounce';
+
+// Мемоизированный компонент строки клиента
+const ClientRow = React.memo<{
+  client: Client;
+  onEdit: (id: string) => void;
+  onDelete: (client: Client) => void;
+  onViewCars: (id: string) => void;
+}>(({ client, onEdit, onDelete, onViewCars }) => (
+  <TableRow>
+    <TableCell>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Avatar>
+          <PersonIcon />
+        </Avatar>
+        <Typography>
+          {client.first_name} {client.last_name}
+        </Typography>
+      </Box>
+    </TableCell>
+
+    <TableCell>{client.phone}</TableCell>
+    <TableCell>{client.email}</TableCell>
+
+    <TableCell align="right">
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Tooltip title="Автомобили">
+          <IconButton
+            onClick={() => onViewCars(client.id.toString())}
+            size="small"
+            color="primary"
+          >
+            <CarIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Редактировать">
+          <IconButton
+            onClick={() => onEdit(client.id.toString())}
+            size="small"
+          >
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Удалить">
+          <IconButton
+            onClick={() => onDelete(client)}
+            size="small"
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </TableCell>
+  </TableRow>
+));
+
+ClientRow.displayName = 'ClientRow';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -51,16 +110,22 @@ const ClientsPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
+  // Дебаунсированный поиск
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Мемоизированные параметры запроса
+  const queryParams = useMemo(() => ({
+    query: debouncedSearch || undefined,
+    page: page + 1,
+    per_page: rowsPerPage,
+  } as ClientFilter), [debouncedSearch, page, rowsPerPage]);
+
   // RTK Query хуки
   const { 
     data: clientsData, 
     isLoading: clientsLoading, 
     error: clientsError 
-  } = useGetClientsQuery({
-    query: search || undefined,
-    page: page + 1,
-    per_page: rowsPerPage,
-  } as ClientFilter);
+  } = useGetClientsQuery(queryParams);
 
   const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
 
@@ -69,27 +134,27 @@ const ClientsPage: React.FC = () => {
   const clients = (clientsData as unknown as ApiResponse<Client>)?.data || [];
   const totalItems = (clientsData as unknown as ApiResponse<Client>)?.pagination?.total_count || 0;
 
-  // Обработчики событий
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Мемоизированные обработчики событий
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0);
-  };
+  }, []);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
+  }, []);
 
-  const handleDeleteClick = (client: Client) => {
+  const handleDeleteClick = useCallback((client: Client) => {
     setSelectedClient(client);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (selectedClient) {
       try {
         await deleteClient(selectedClient.id.toString()).unwrap();
@@ -99,12 +164,24 @@ const ClientsPage: React.FC = () => {
         console.error('Ошибка при удалении клиента:', error);
       }
     }
-  };
+  }, [selectedClient, deleteClient]);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setDeleteDialogOpen(false);
     setSelectedClient(null);
-  };
+  }, []);
+
+  const handleAddClient = useCallback(() => {
+    navigate('/clients/new');
+  }, [navigate]);
+
+  const handleEditClient = useCallback((id: string) => {
+    navigate(`/clients/${id}/edit`);
+  }, [navigate]);
+
+  const handleViewCars = useCallback((id: string) => {
+    navigate(`/clients/${id}/cars`);
+  }, [navigate]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -133,7 +210,7 @@ const ClientsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/clients/new')}
+          onClick={handleAddClient}
         >
           Добавить клиента
         </Button>
@@ -171,43 +248,13 @@ const ClientsPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {clients.map((client: Client) => (
-              <TableRow key={client.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar>
-                      <PersonIcon />
-                    </Avatar>
-                    <Typography>
-                      {client.first_name} {client.last_name}
-                    </Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell>{client.phone}</TableCell>
-                <TableCell>{client.email}</TableCell>
-
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Tooltip title="Редактировать">
-                      <IconButton
-                        onClick={() => navigate(`/clients/${client.id}/edit`)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(client)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
+              <ClientRow
+                key={client.id}
+                client={client}
+                onEdit={handleEditClient}
+                onDelete={handleDeleteClick}
+                onViewCars={handleViewCars}
+              />
             ))}
           </TableBody>
         </Table>

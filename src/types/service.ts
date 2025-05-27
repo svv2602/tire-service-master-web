@@ -1,13 +1,19 @@
 export interface Service {
-  id: string;
+  id: string | number;
   name: string;
   description?: string;
-  price: number;
-  duration: number; // в минутах
-  categoryId: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  price?: number;
+  duration?: number; // в минутах (для обратной совместимости)
+  default_duration?: number; // поле из API
+  category_id?: number; // поле из API
+  categoryId?: string; // для обратной совместимости
+  is_active?: boolean; // поле из API
+  isActive?: boolean; // для обратной совместимости
+  sort_order?: number;
+  created_at?: string; // поле из API
+  updated_at?: string; // поле из API
+  createdAt?: string; // для обратной совместимости
+  updatedAt?: string; // для обратной совместимости
 }
 
 export interface ServiceCategory {

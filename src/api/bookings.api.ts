@@ -24,24 +24,28 @@ export const bookingsApi = baseApi.injectEndpoints({
 
     getBookingsByServicePoint: builder.query<Booking[], string>({
       query: (servicePointId: string) => `bookings?service_point_id=${servicePointId}`,
-      providesTags: (result: Booking[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-              'Booking',
-            ]
-          : ['Booking'],
+      providesTags: (result: Booking[] | undefined) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
+            'Booking',
+          ];
+        }
+        return ['Booking'];
+      },
     }),
 
     getBookingsByClient: builder.query<Booking[], string>({
       query: (clientId: string) => `bookings?client_id=${clientId}`,
-      providesTags: (result: Booking[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-              'Booking',
-            ]
-          : ['Booking'],
+      providesTags: (result: Booking[] | undefined) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
+            'Booking',
+          ];
+        }
+        return ['Booking'];
+      },
     }),
     
     getBookingById: builder.query<Booking, string>({

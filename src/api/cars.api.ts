@@ -5,13 +5,15 @@ export const carsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCars: build.query<Car[], void>({
       query: () => 'cars',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
-              { type: 'ClientCars', id: 'LIST' },
-            ]
-          : [{ type: 'ClientCars', id: 'LIST' }],
+      providesTags: (result) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
+            { type: 'ClientCars', id: 'LIST' },
+          ];
+        }
+        return [{ type: 'ClientCars', id: 'LIST' }];
+      },
     }),
     
     getCarById: build.query<Car, string>({

@@ -19,6 +19,9 @@ import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPag
 import ServicePointServicesPage from './pages/service-points/ServicePointServicesPage';
 import ServicesPage from './pages/services/ServicesPage';
 import ClientsPage from './pages/clients/ClientsPage';
+import ClientFormPage from './pages/clients/ClientFormPage';
+import ClientCarsPage from './pages/clients/ClientCarsPage';
+import ClientCarFormPage from './pages/clients/ClientCarFormPage';
 import BookingsPage from './pages/bookings/BookingsPage';
 import BookingFormPage from './pages/bookings/BookingFormPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -124,9 +127,11 @@ function App() {
                   <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
                   {/* Маршруты для клиентов */}
                   <Route path="clients" element={<ClientsPage />} />
-                  <Route path="clients/new" element={<div>Создание клиента (в разработке)</div>} />
-                  <Route path="clients/:id" element={<div>Информация о клиенте (в разработке)</div>} />
-                  <Route path="clients/:id/edit" element={<div>Редактирование клиента (в разработке)</div>} />
+                  <Route path="clients/new" element={<ClientFormPage />} />
+                  <Route path="clients/:id/edit" element={<ClientFormPage />} />
+                  <Route path="clients/:clientId/cars" element={<ClientCarsPage />} />
+                  <Route path="clients/:clientId/cars/new" element={<ClientCarFormPage />} />
+                  <Route path="clients/:clientId/cars/:carId/edit" element={<ClientCarFormPage />} />
                   {/* Маршруты для бронирований */}
                   <Route path="bookings" element={<BookingsPage />} />
                   <Route path="bookings/new" element={<BookingFormPage />} />

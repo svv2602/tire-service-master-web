@@ -34,7 +34,7 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
 } from '@mui/icons-material';
-import { useGetServicesQuery, useDeleteServiceMutation, useGetServiceCategoriesQuery } from '../../api';
+import { useGetServicesQuery, useDeleteServiceMutation } from '../../api';
 import { Service } from '../../types/service';
 
 const ServicesPage: React.FC = () => {
@@ -47,10 +47,14 @@ const ServicesPage: React.FC = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   
   // RTK Query хуки
-  const { data: servicesData, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery();
+  const { data: servicesResponse, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery();
   
-  const { data: categoriesData } = useGetServiceCategoriesQuery();
+  // const { data: categoriesData } = useGetServiceCategoriesQuery(); // Временно отключено - API не существует
   const [deleteService] = useDeleteServiceMutation();
+  
+  // Извлекаем массив услуг из ответа API
+  const servicesData = servicesResponse?.data || [];
+  const totalServices = servicesResponse?.pagination?.total_count || 0;
   
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -123,6 +127,7 @@ const ServicesPage: React.FC = () => {
           />
         </Box>
         
+        {/* Временно отключен фильтр по категориям
         <Box sx={{ width: { xs: '100%', md: '300px' } }}>
           <FormControl fullWidth>
             <InputLabel id="category-filter-label">Категория</InputLabel>
@@ -143,6 +148,7 @@ const ServicesPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
+        */}
         
         <Box sx={{ marginLeft: 'auto' }}>
           <Button
@@ -164,7 +170,7 @@ const ServicesPage: React.FC = () => {
               <TableRow>
                 <TableCell>ID</TableCell>
                 <TableCell>Название</TableCell>
-                <TableCell>Категория</TableCell>
+                <TableCell>Описание</TableCell>
                 <TableCell>Длительность (мин)</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>Действия</TableCell>
@@ -181,14 +187,12 @@ const ServicesPage: React.FC = () => {
                 <TableRow key={service.id}>
                   <TableCell>{service.id}</TableCell>
                   <TableCell>{service.name}</TableCell>
-                  <TableCell>
-                    {(categoriesData || []).find(cat => cat.id === service.categoryId)?.name}
-                  </TableCell>
-                  <TableCell>{service.duration}</TableCell>
+                  <TableCell>{service.description}</TableCell>
+                  <TableCell>{service.default_duration}</TableCell>
                   <TableCell>
                     <Chip
-                      label={service.isActive ? 'Активна' : 'Неактивна'}
-                      color={service.isActive ? 'success' : 'default'}
+                      label={service.is_active ? 'Активна' : 'Неактивна'}
+                      color={service.is_active ? 'success' : 'default'}
                     />
                   </TableCell>
                   <TableCell>
@@ -201,7 +205,7 @@ const ServicesPage: React.FC = () => {
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDeleteService(service.id)}
+                      onClick={() => handleDeleteService(service.id.toString())}
                       title="Удалить"
                     >
                       <DeleteIcon />
@@ -215,7 +219,7 @@ const ServicesPage: React.FC = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={(servicesData || []).length}
+          count={totalServices}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

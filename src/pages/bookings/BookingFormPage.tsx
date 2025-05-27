@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -107,56 +107,64 @@ const BookingFormPage: React.FC = () => {
   
   const isLoading = servicePointsLoading || carsLoading || loading || saving;
   
+  // Мемоизированные данные
+  const mockClients = useMemo(() => [
+          { id: 1, name: 'Иван Петренко', phone: '+380 67 123 45 67' },
+          { id: 2, name: 'Мария Коваленко', phone: '+380 50 222 33 44' },
+          { id: 3, name: 'Алексей Шевченко', phone: '+380 63 555 66 77' },
+  ], []);
+        
+  const mockServicePoints = useMemo(() => [
+          { id: 1, name: 'ШиноСервис Экспресс - Киев', address: 'ул. Киевская, 1' },
+          { id: 2, name: 'АвтоШина Плюс - Львов', address: 'ул. Львовская, 10' },
+          { id: 3, name: 'ШинМайстер - Одесса', address: 'ул. Одесская, 5' },
+  ], []);
+        
+  const mockCars = useMemo(() => [
+          { id: 1, brand: 'Toyota', model: 'Camry', number: 'АА1234КК', client_id: 1 },
+          { id: 2, brand: 'Honda', model: 'Civic', number: 'ВН5678ІК', client_id: 2 },
+          { id: 3, brand: 'BMW', model: 'X5', number: 'КА9999ХХ', client_id: 3 },
+  ], []);
+        
+  const mockCarTypes = useMemo(() => [
+          { id: 1, name: 'Легковой' },
+          { id: 2, name: 'Кроссовер/SUV' },
+          { id: 3, name: 'Внедорожник' },
+  ], []);
+        
+  const mockAvailableServices = useMemo(() => [
+          { id: 1, name: 'Замена шин', price: 400 },
+          { id: 2, name: 'Балансировка', price: 200 },
+          { id: 3, name: 'Ремонт диска', price: 600 },
+          { id: 4, name: 'Подкачка шин', price: 100 },
+  ], []);
+
+  // Мемоизированная функция обновления цены
+  const updateTotalPrice = useCallback((servicesList: ServiceSelection[]) => {
+    const total = servicesList.reduce((sum, service) => {
+      return sum + (service.price * service.quantity);
+    }, 0);
+    setTotalPrice(total);
+  }, []);
+
   // Загрузка справочных данных при монтировании компонента
   useEffect(() => {
     const fetchReferenceData = async () => {
       setLoading(true);
       try {
-        // Здесь должны быть запросы к API для загрузки справочных данных
-        // Временно используем моковые данные
-        
-        // Клиенты
-        setClients([
-          { id: 1, name: 'Иван Петренко', phone: '+380 67 123 45 67' },
-          { id: 2, name: 'Мария Коваленко', phone: '+380 50 222 33 44' },
-          { id: 3, name: 'Алексей Шевченко', phone: '+380 63 555 66 77' },
-        ]);
-        
-        // Сервисные точки
-        setServicePoints([
-          { id: 1, name: 'ШиноСервис Экспресс - Киев', address: 'ул. Киевская, 1' },
-          { id: 2, name: 'АвтоШина Плюс - Львов', address: 'ул. Львовская, 10' },
-          { id: 3, name: 'ШинМайстер - Одесса', address: 'ул. Одесская, 5' },
-        ]);
-        
-        // Автомобили
-        setCars([
-          { id: 1, brand: 'Toyota', model: 'Camry', number: 'АА1234КК', client_id: 1 },
-          { id: 2, brand: 'Honda', model: 'Civic', number: 'ВН5678ІК', client_id: 2 },
-          { id: 3, brand: 'BMW', model: 'X5', number: 'КА9999ХХ', client_id: 3 },
-        ]);
-        
-        // Типы автомобилей
-        setCarTypes([
-          { id: 1, name: 'Легковой' },
-          { id: 2, name: 'Кроссовер/SUV' },
-          { id: 3, name: 'Внедорожник' },
-        ]);
-        
-        // Доступные услуги
-        setAvailableServices([
-          { id: 1, name: 'Замена шин', price: 400 },
-          { id: 2, name: 'Балансировка', price: 200 },
-          { id: 3, name: 'Ремонт диска', price: 600 },
-          { id: 4, name: 'Подкачка шин', price: 100 },
-        ]);
+        // Устанавливаем моковые данные
+        setClients(mockClients);
+        setServicePoints(mockServicePoints);
+        setCars(mockCars);
+        setCarTypes(mockCarTypes);
+        setAvailableServices(mockAvailableServices);
         
         // Загружаем данные о существующем бронировании при редактировании
-        if (isEditMode) {
+        if (isEditMode && id) {
           // Здесь должен быть запрос к API для загрузки данных бронирования
           // Временно используем моковые данные
           const mockBooking = {
-            id: parseInt(id!),
+            id: parseInt(id),
             client_id: 1,
             service_point_id: 1,
             car_id: 1,
@@ -198,7 +206,7 @@ const BookingFormPage: React.FC = () => {
     };
     
     fetchReferenceData();
-  }, [id, isEditMode]);
+  }, [id, isEditMode, mockClients, mockServicePoints, mockCars, mockCarTypes, mockAvailableServices, updateTotalPrice]);
   
   // Загрузка временных слотов при выборе даты и сервисной точки
   useEffect(() => {
@@ -228,17 +236,8 @@ const BookingFormPage: React.FC = () => {
     fetchTimeSlots();
   }, [selectedDate, servicePointId]);
   
-  // Обновление общей стоимости при изменении услуг
-  const updateTotalPrice = (servicesList: ServiceSelection[]) => {
-    const total = servicesList.reduce((sum, service) => {
-      return sum + (service.price * service.quantity);
-    }, 0);
-    
-    setTotalPrice(total);
-  };
-  
   // Добавление услуги
-  const handleAddService = () => {
+  const handleAddService = useCallback(() => {
     // Добавляем первую доступную услугу, которой еще нет в списке
     const unusedServices = availableServices.filter(
       service => !services.some(s => s.service_id === service.id)
@@ -256,18 +255,18 @@ const BookingFormPage: React.FC = () => {
       setServices(updatedServices);
       updateTotalPrice(updatedServices);
     }
-  };
+  }, [availableServices, services, updateTotalPrice]);
   
   // Удаление услуги
-  const handleRemoveService = (index: number) => {
+  const handleRemoveService = useCallback((index: number) => {
     const updatedServices = [...services];
     updatedServices.splice(index, 1);
     setServices(updatedServices);
     updateTotalPrice(updatedServices);
-  };
+  }, [services, updateTotalPrice]);
   
   // Изменение услуги
-  const handleServiceChange = (index: number, field: string, value: any) => {
+  const handleServiceChange = useCallback((index: number, field: string, value: any) => {
     const updatedServices = [...services];
     
     if (field === 'service_id') {
@@ -288,22 +287,26 @@ const BookingFormPage: React.FC = () => {
     
     setServices(updatedServices);
     updateTotalPrice(updatedServices);
-  };
+  }, [services, availableServices, updateTotalPrice]);
   
   // Фильтрация автомобилей по выбранному клиенту
-  const getFilteredCars = () => {
+  const getFilteredCars = useCallback(() => {
     if (!clientId) return [];
     return cars.filter(car => car.client_id === clientId);
-  };
+  }, [clientId, cars]);
   
+  // Мемоизированные начальные значения
+  const initialValues = useMemo(() => ({
+    service_point_id: '',
+    car_id: '',
+    scheduled_at: new Date(),
+    services: [] as number[],
+    notes: '',
+  }), []);
+
   const formik = useFormik({
-    initialValues: {
-      service_point_id: '',
-      car_id: '',
-      scheduled_at: new Date(),
-      services: [] as number[],
-      notes: '',
-    },
+    initialValues,
+    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -318,7 +321,7 @@ const BookingFormPage: React.FC = () => {
               status: BookingStatusEnum.PENDING,
             }
           }).unwrap();
-        } else {
+      } else {
           await createBooking({
             client_id: '1', // TODO: получить из контекста
             service_point_id: values.service_point_id,
@@ -326,9 +329,9 @@ const BookingFormPage: React.FC = () => {
             scheduled_at: values.scheduled_at.toISOString(),
             status: BookingStatusEnum.PENDING,
           }).unwrap();
-        }
-        
-        setSuccess('Бронирование успешно сохранено');
+      }
+      
+      setSuccess('Бронирование успешно сохранено');
         navigate('/bookings');
       } catch (err) {
         setError('Ошибка при сохранении бронирования');
@@ -336,23 +339,32 @@ const BookingFormPage: React.FC = () => {
     },
   });
 
-  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
+  // Мемоизированные обработчики
+  const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('service_point_id', event.target.value);
-  };
+  }, [formik]);
 
-  const handleCarChange = (event: SelectChangeEvent<string>) => {
+  const handleCarChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('car_id', event.target.value);
-  };
+  }, [formik]);
 
-  const handleDateTimeChange = (date: Date | null) => {
+  const handleDateTimeChange = useCallback((date: Date | null) => {
     if (date) {
       formik.setFieldValue('scheduled_at', date);
     }
-  };
+  }, [formik]);
 
-  const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNotesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     formik.setFieldValue('notes', event.target.value);
-  };
+  }, [formik]);
+
+  const handleBack = useCallback(() => {
+    navigate('/bookings');
+  }, [navigate]);
+
+  const handleCancel = useCallback(() => {
+    navigate('/bookings');
+  }, [navigate]);
   
   if (isLoading) {
     return (
@@ -371,7 +383,7 @@ const BookingFormPage: React.FC = () => {
         <Button 
           variant="outlined" 
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/bookings')}
+          onClick={handleBack}
         >
           Назад к списку
         </Button>
@@ -465,7 +477,7 @@ const BookingFormPage: React.FC = () => {
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
             <Button
               variant="outlined"
-            onClick={() => navigate('/bookings')}
+            onClick={handleCancel}
           >
             Отмена
                         </Button>

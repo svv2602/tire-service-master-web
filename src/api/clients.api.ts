@@ -28,7 +28,16 @@ export const clientsApi = baseApi.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: ['Client'],
+      providesTags: (result, error, arg) => {
+        // Проверяем, что result существует и имеет массив data
+        if (result && result.data && Array.isArray(result.data)) {
+          return [
+            ...result.data.map(({ id }) => ({ type: 'Client' as const, id })),
+            'Client',
+          ];
+        }
+        return ['Client'];
+      },
     }),
 
     getClientById: builder.query<Client, string>({
@@ -67,14 +76,16 @@ export const clientsApi = baseApi.injectEndpoints({
 
     getClientCars: builder.query<ClientCar[], string>({
       query: (clientId: string) => `clients/${clientId}/cars`,
-      providesTags: (result: ClientCar[] | undefined, _err: FetchBaseQueryError | undefined, clientId: string) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
-              { type: 'ClientCars' as const, id: clientId },
-              'ClientCars',
-            ]
-          : [{ type: 'ClientCars' as const, id: clientId }, 'ClientCars'],
+      providesTags: (result: ClientCar[] | undefined, _err: FetchBaseQueryError | undefined, clientId: string) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
+            { type: 'ClientCars' as const, id: clientId },
+            'ClientCars',
+          ];
+        }
+        return [{ type: 'ClientCars' as const, id: clientId }, 'ClientCars'];
+      },
     }),
 
     getClientCarById: builder.query<ClientCar, { clientId: string; carId: string }>({

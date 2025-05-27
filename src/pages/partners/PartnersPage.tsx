@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -36,10 +36,102 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { 
   useGetPartnersQuery, 
-  useDeletePartnerMutation,
+  useDeletePartnerMutation, 
   useUpdatePartnerMutation,
 } from '../../api';
 import { Partner, PartnerFilter, PartnerFormData } from '../../types/models';
+
+// Хук для debounce
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+// Мемоизированный компонент строки партнера
+const PartnerRow = React.memo(({ 
+  partner, 
+  onEdit, 
+  onToggleStatus, 
+  onDelete, 
+  getInitials 
+}: {
+  partner: Partner;
+  onEdit: (id: number) => void;
+  onToggleStatus: (partner: Partner) => void;
+  onDelete: (partner: Partner) => void;
+  getInitials: (partner: Partner) => string;
+}) => (
+  <TableRow key={partner.id}>
+    <TableCell>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Avatar sx={{ bgcolor: 'primary.main' }}>
+          {getInitials(partner)}
+        </Avatar>
+        <Box>
+          <Typography>{partner.company_name}</Typography>
+          <Typography variant="body2" color="textSecondary">
+            {partner.company_description}
+          </Typography>
+        </Box>
+      </Box>
+    </TableCell>
+
+    <TableCell>{partner.contact_person}</TableCell>
+    <TableCell>{partner.user?.phone}</TableCell>
+    <TableCell>{partner.user?.email}</TableCell>
+
+    <TableCell>
+      <Chip
+        icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
+        label={partner.is_active ? 'Активен' : 'Неактивен'}
+        color={partner.is_active ? 'success' : 'error'}
+        size="small"
+      />
+    </TableCell>
+
+    <TableCell align="right">
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Tooltip title="Редактировать">
+          <IconButton
+            onClick={() => onEdit(partner.id)}
+            size="small"
+          >
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
+          <IconButton
+            onClick={() => onToggleStatus(partner)}
+            size="small"
+            color={partner.is_active ? 'error' : 'success'}
+          >
+            {partner.is_active ? <CloseIcon /> : <CheckIcon />}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Удалить">
+          <IconButton
+            onClick={() => onDelete(partner)}
+            size="small"
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </TableCell>
+  </TableRow>
+));
 
 const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,16 +145,22 @@ const PartnersPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
+  // Debounce для поиска
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Мемоизированные параметры запроса
+  const queryParams = useMemo(() => ({
+    query: debouncedSearch || undefined,
+    page: page + 1,
+    per_page: rowsPerPage,
+  }), [debouncedSearch, page, rowsPerPage]);
+
   // RTK Query хуки
   const { 
     data: partnersData, 
     isLoading: partnersLoading, 
     error: partnersError 
-  } = useGetPartnersQuery({
-    query: search || undefined,
-    page: page + 1,
-    per_page: rowsPerPage,
-  });
+  } = useGetPartnersQuery(queryParams);
 
   const [deletePartner, { isLoading: deleteLoading }] = useDeletePartnerMutation();
   const [updatePartner] = useUpdatePartnerMutation();
@@ -70,29 +168,29 @@ const PartnersPage: React.FC = () => {
   const isLoading = partnersLoading || deleteLoading;
   const error = partnersError;
   const partners = partnersData?.data || [];
-  const totalItems = partnersData?.total || 0;
+  const totalItems = partnersData?.meta?.total_count || 0;
 
-  // Обработчики событий
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Мемоизированные обработчики событий
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0);
-  };
+  }, []);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
-  };
+  }, []);
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
+  }, []);
 
-  const handleDeleteClick = (partner: Partner) => {
+  const handleDeleteClick = useCallback((partner: Partner) => {
     setSelectedPartner(partner);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (selectedPartner) {
       try {
         await deletePartner(selectedPartner.id).unwrap();
@@ -102,28 +200,37 @@ const PartnersPage: React.FC = () => {
         console.error('Ошибка при удалении партнера:', error);
       }
     }
-  };
+  }, [selectedPartner, deletePartner]);
 
-  const handleToggleStatus = async (partner: Partner) => {
+  const handleToggleStatus = useCallback(async (partner: Partner) => {
     try {
       await updatePartner({
         id: partner.id,
         partner: { is_active: !partner.is_active } as Partial<PartnerFormData>
-      }).unwrap();
-    } catch (error) {
+        }).unwrap();
+      } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
-  };
+  }, [updatePartner]);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setDeleteDialogOpen(false);
     setSelectedPartner(null);
-  };
+  }, []);
 
-  // Вспомогательные функции
-  const getPartnerInitials = (partner: Partner) => {
+  // Мемоизированная функция для получения инициалов
+  const getPartnerInitials = useCallback((partner: Partner) => {
     return partner.company_name.charAt(0).toUpperCase() || 'П';
-  };
+  }, []);
+
+  // Мемоизированные обработчики для PartnerRow
+  const handleEditPartner = useCallback((id: number) => {
+    navigate(`/partners/${id}/edit`);
+  }, [navigate]);
+
+  const handleAddPartner = useCallback(() => {
+    navigate('/partners/new');
+  }, [navigate]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -152,7 +259,7 @@ const PartnersPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/partners/new')}
+          onClick={handleAddPartner}
         >
           Добавить партнера
         </Button>
@@ -160,100 +267,49 @@ const PartnersPage: React.FC = () => {
 
       {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <TextField
+      <TextField
           placeholder="Поиск по названию компании"
-          variant="outlined"
+        variant="outlined"
           size="small"
-          value={search}
-          onChange={handleSearchChange}
+        value={search}
+        onChange={handleSearchChange}
           sx={{ minWidth: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon />
+            </InputAdornment>
+          ),
+        }}
+      />
       </Paper>
 
       {/* Таблица партнеров */}
       <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Компания</TableCell>
-              <TableCell>Контактное лицо</TableCell>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Компания</TableCell>
+                <TableCell>Контактное лицо</TableCell>
               <TableCell>Телефон</TableCell>
               <TableCell>Email</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {partners.map((partner: Partner) => (
-              <TableRow key={partner.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {getPartnerInitials(partner)}
-                    </Avatar>
-                    <Box>
-                      <Typography>{partner.company_name}</Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {partner.company_description}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </TableCell>
-
-                <TableCell>{partner.contact_person}</TableCell>
-                <TableCell>{partner.user?.phone}</TableCell>
-                <TableCell>{partner.user?.email}</TableCell>
-
-                <TableCell>
-                  <Chip
-                    icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
-                    label={partner.is_active ? 'Активен' : 'Неактивен'}
-                    color={partner.is_active ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    <Tooltip title="Редактировать">
-                      <IconButton
-                        onClick={() => navigate(`/partners/${partner.id}/edit`)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
-                      <IconButton
-                        onClick={() => handleToggleStatus(partner)}
-                        size="small"
-                        color={partner.is_active ? 'error' : 'success'}
-                      >
-                        {partner.is_active ? <CloseIcon /> : <CheckIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(partner)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell align="right">Действия</TableCell>
               </TableRow>
+            </TableHead>
+            <TableBody>
+            {partners.map((partner: Partner) => (
+              <PartnerRow
+                key={partner.id}
+                partner={partner}
+                onEdit={handleEditPartner}
+                onToggleStatus={handleToggleStatus}
+                onDelete={handleDeleteClick}
+                getInitials={getPartnerInitials}
+              />
             ))}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
         <TablePagination
           component="div"
           count={totalItems}

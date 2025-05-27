@@ -43,6 +43,7 @@ import {
 } from '@mui/icons-material';
 import { ServicePoint } from '../../types/models';
 import { Partner } from '../../types/models';
+import { Service } from '../../types/service';
 
 const getDayName = (day: number): string => {
   const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -98,7 +99,7 @@ const ServicePointDetailsPage = () => {
   }
 
   const servicePointServicesData = servicePointServices || [];
-  const servicesMap = new Map(allServices?.map(service => [service.id, service]) || []);
+  const servicesMap = new Map((allServices?.data || []).map((service: any) => [service.id, service]) || []);
 
   return (
     <Box p={3}>
@@ -249,9 +250,9 @@ const ServicePointDetailsPage = () => {
                     <Typography variant="body1" color="primary">
                       {service.price || serviceDetails?.price || 'Цена по запросу'} руб.
                     </Typography>
-                    {(serviceDetails?.duration || service.duration) && (
+                    {(serviceDetails?.default_duration || serviceDetails?.duration || service.duration) && (
                       <Typography variant="body2" color="text.secondary">
-                        Длительность: {serviceDetails?.duration || service.duration} мин.
+                        Длительность: {serviceDetails?.default_duration || serviceDetails?.duration || service.duration} мин.
                       </Typography>
                     )}
                   </CardContent>

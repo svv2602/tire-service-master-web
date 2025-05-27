@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -40,16 +40,32 @@ const ClientFormPage: React.FC = () => {
 
   const isLoading = isLoadingClient || isCreating || isUpdating;
 
-  // Инициализация формы
-  const formik = useFormik<ClientFormData>({
-    initialValues: {
+  // Мемоизированные начальные значения
+  const initialValues = useMemo(() => {
+    if (client && isEditMode) {
+      return {
+        first_name: client.first_name,
+        last_name: client.last_name,
+        middle_name: client.middle_name || '',
+        phone: client.phone || '',
+        email: client.email || '',
+        is_active: client.is_active,
+      };
+    }
+    return {
       first_name: '',
       last_name: '',
       middle_name: '',
       phone: '',
       email: '',
       is_active: true,
-    },
+    };
+  }, [client, isEditMode]);
+
+  // Инициализация формы
+  const formik = useFormik<ClientFormData>({
+    initialValues,
+    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -65,19 +81,10 @@ const ClientFormPage: React.FC = () => {
     },
   });
 
-  // Заполнение формы данными при редактировании
-  useEffect(() => {
-    if (client) {
-      formik.setValues({
-        first_name: client.first_name,
-        last_name: client.last_name,
-        middle_name: client.middle_name || '',
-        phone: client.phone || '',
-        email: client.email || '',
-        is_active: client.is_active,
-      });
-    }
-  }, [client]);
+  // Мемоизированный обработчик навигации
+  const handleCancel = useCallback(() => {
+    navigate('/clients');
+  }, [navigate]);
 
   if (isLoading) {
     return (
@@ -160,7 +167,7 @@ const ClientFormPage: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/clients')}
+                  onClick={handleCancel}
                 >
                   Отмена
                 </Button>

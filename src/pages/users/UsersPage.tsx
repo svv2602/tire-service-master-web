@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -44,6 +44,89 @@ import {
 } from '../../api';
 import { User } from '../../types/user';
 import { useSnackbar } from 'notistack';
+import { useDebounce } from '../../hooks/useDebounce';
+
+// Мемоизированный компонент строки пользователя
+const UserRow = React.memo<{
+  user: User;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleStatus: (user: User) => void;
+  getRoleName: (role?: string) => string;
+  getRoleColor: (role?: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
+}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor }) => (
+  <TableRow>
+    <TableCell>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Avatar>
+          <PersonIcon />
+        </Avatar>
+        <Box>
+          <Typography variant="body2" fontWeight="medium">
+            {user.first_name} {user.last_name}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user.email}
+          </Typography>
+        </Box>
+      </Box>
+    </TableCell>
+    <TableCell>
+      <Chip
+        label={getRoleName(user.role)}
+        color={getRoleColor(user.role)}
+        size="small"
+      />
+    </TableCell>
+    <TableCell>
+      <FormControlLabel
+        control={
+          <Switch
+            checked={user.is_active}
+            onChange={() => onToggleStatus(user)}
+            size="small"
+          />
+        }
+        label={user.is_active ? 'Активен' : 'Неактивен'}
+      />
+    </TableCell>
+    <TableCell>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {user.email_verified ? (
+          <CheckIcon color="success" fontSize="small" />
+        ) : (
+          <CloseIcon color="error" fontSize="small" />
+        )}
+        <Typography variant="body2">
+          {user.email_verified ? 'Подтвержден' : 'Не подтвержден'}
+        </Typography>
+      </Box>
+    </TableCell>
+    <TableCell align="right">
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Tooltip title="Редактировать">
+          <IconButton
+            onClick={() => onEdit(user.id.toString())}
+            size="small"
+          >
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Удалить">
+          <IconButton
+            onClick={() => onDelete(user.id.toString())}
+            size="small"
+            color="error"
+          >
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </TableCell>
+  </TableRow>
+));
+
+UserRow.displayName = 'UserRow';
 
 const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,16 +137,22 @@ const UsersPage: React.FC = () => {
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const { enqueueSnackbar } = useSnackbar();
 
+  // Дебаунсированный поиск
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Мемоизированные параметры запроса
+  const queryParams = useMemo(() => ({
+    page: page.toString(),
+    per_page: pageSize.toString(),
+    query: debouncedSearch || undefined,
+  }), [page, pageSize, debouncedSearch]);
+
   const { 
     data: usersData,
     isLoading,
     error,
     refetch
-  } = useGetUsersQuery({
-    page: page.toString(),
-    per_page: pageSize.toString(),
-    query: searchQuery || undefined,
-  });
+  } = useGetUsersQuery(queryParams);
 
   const [deleteUser] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
@@ -71,39 +160,55 @@ const UsersPage: React.FC = () => {
   const users = (usersData?.users || []) as User[];
   const totalItems = usersData?.totalItems || 0;
 
-  const handleSearch = () => {
-    setPage(1);
-    refetch();
-  };
-
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleSearch();
+  // Мемоизированные вспомогательные функции
+  const getRoleName = useCallback((role?: string): string => {
+    if (!role) return 'Неизвестно';
+    
+    switch(role) {
+      case 'admin': return 'Администратор';
+      case 'manager': return 'Менеджер';
+      case 'operator': return 'Оператор';
+      case 'client': return 'Клиент';
+      default: return role;
     }
-  };
+  }, []);
+  
+  const getRoleColor = useCallback((role?: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
+    if (!role) return 'default';
+    
+    switch(role) {
+      case 'admin': return 'error';
+      case 'manager': return 'warning';
+      case 'operator': return 'primary';
+      case 'client': return 'success';
+      default: return 'default';
+    }
+  }, []);
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  // Мемоизированные обработчики событий
+  const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+    setPage(1); // Сбрасываем страницу при поиске
+  }, []);
+
+  const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
-  };
+  }, []);
 
-  const handleAddUser = () => {
+  const handleAddUser = useCallback(() => {
     navigate('/users/create');
-  };
+  }, [navigate]);
 
-  const handleEditUser = (id: string) => {
+  const handleEditUser = useCallback((id: string) => {
     navigate(`/users/${id}/edit`);
-  };
+  }, [navigate]);
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = useCallback((id: string) => {
     setUserToDelete(id);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (userToDelete) {
       try {
         await deleteUser(userToDelete).unwrap();
@@ -114,14 +219,14 @@ const UsersPage: React.FC = () => {
     }
     setDeleteDialogOpen(false);
     setUserToDelete(null);
-  };
+  }, [userToDelete, deleteUser, refetch]);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteDialogOpen(false);
     setUserToDelete(null);
-  };
+  }, []);
 
-  const handleToggleStatus = async (user: User) => {
+  const handleToggleStatus = useCallback(async (user: User) => {
     try {
       const updateData = {
         email: user.email,
@@ -140,32 +245,7 @@ const UsersPage: React.FC = () => {
     } catch (error) {
       enqueueSnackbar('Ошибка при обновлении статуса пользователя', { variant: 'error' });
     }
-  };
-
-  // Вспомогательные функции для отображения роли
-  const getRoleName = (role?: string): string => {
-    if (!role) return 'Неизвестно';
-    
-    switch(role) {
-      case 'admin': return 'Администратор';
-      case 'manager': return 'Менеджер';
-      case 'operator': return 'Оператор';
-      case 'client': return 'Клиент';
-      default: return role;
-    }
-  };
-  
-  const getRoleColor = (role?: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
-    if (!role) return 'default';
-    
-    switch(role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'operator': return 'primary';
-      case 'client': return 'success';
-      default: return 'default';
-    }
-  };
+  }, [updateUser, enqueueSnackbar]);
 
   return (
     <Box>
@@ -188,7 +268,6 @@ const UsersPage: React.FC = () => {
             variant="outlined"
             value={searchQuery}
             onChange={handleSearchInputChange}
-            onKeyPress={handleSearchKeyPress}
             fullWidth
             InputProps={{
               endAdornment: (
@@ -198,9 +277,6 @@ const UsersPage: React.FC = () => {
               ),
             }}
           />
-          <Button variant="contained" onClick={handleSearch}>
-            Поиск
-          </Button>
         </Box>
       </Paper>
 
@@ -221,71 +297,24 @@ const UsersPage: React.FC = () => {
               <Table sx={{ minWidth: 650 }} aria-label="table of users">
                 <TableHead>
                   <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Имя</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Телефон</TableCell>
+                    <TableCell>Пользователь</TableCell>
                     <TableCell>Роль</TableCell>
                     <TableCell>Статус</TableCell>
-                    <TableCell>Действия</TableCell>
+                    <TableCell>Email подтвержден</TableCell>
+                    <TableCell align="right">Действия</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {users.map((user) => (
-                    <TableRow
+                    <UserRow
                       key={user.id}
-                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {user.id}
-                      </TableCell>
-                      <TableCell>{user.first_name} {user.last_name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.phone || '-'}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={getRoleName(user.role)}
-                          color={getRoleColor(user.role)} 
-                          size="small" 
-                          icon={<PersonIcon />}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={user.is_active === true}
-                              onChange={() => handleToggleStatus(user)}
-                              color="primary"
-                            />
-                          }
-                          label={user.is_active === true ? "Активен" : "Неактивен"}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Button
-                            size="small"
-                            onClick={() => handleEditUser(user.id.toString())}
-                            startIcon={<EditIcon />}
-                            variant="outlined"
-                            color="primary"
-                          >
-                            Ред.
-                          </Button>
-                          <Button
-                            size="small"
-                            onClick={() => handleDeleteClick(user.id.toString())}
-                            startIcon={<DeleteIcon />}
-                            variant="outlined"
-                            color="error"
-                            disabled={user.role === 'admin'} // Не даем удалять админов
-                          >
-                            Удал.
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
+                      user={user}
+                      onEdit={handleEditUser}
+                      onDelete={handleDeleteClick}
+                      onToggleStatus={handleToggleStatus}
+                      getRoleName={getRoleName}
+                      getRoleColor={getRoleColor}
+                    />
                   ))}
                 </TableBody>
               </Table>

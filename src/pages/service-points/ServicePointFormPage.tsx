@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -180,7 +180,7 @@ const ServicePointFormPage: React.FC = () => {
   const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || isCreating || isUpdating;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
-  const initialValues: ServicePointFormData = {
+  const initialValues: ServicePointFormData = useMemo(() => ({
     name: servicePoint?.name || '',
     city_id: servicePoint?.city_id || 0,
     region_id: selectedRegionId || 0,
@@ -208,7 +208,7 @@ const ServicePointFormPage: React.FC = () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })) || [],
-  };
+  }), [servicePoint, selectedRegionId, servicePointServicesData, photosData]);
 
   const formik = useFormik({
     initialValues,
@@ -245,29 +245,29 @@ const ServicePointFormPage: React.FC = () => {
 
   // Эффект для установки региона при загрузке точки обслуживания
   useEffect(() => {
-    if (servicePoint?.city_id && cities) {
+    if (servicePoint?.city_id && cities.length > 0) {
       const city = cities.find((c: City) => c.id.toString() === servicePoint.city_id.toString());
       if (city?.region_id && Number(city.region_id) !== selectedRegionId) {
         setSelectedRegionId(Number(city.region_id));
       }
     }
-  }, [servicePoint, cities, selectedRegionId]);
+  }, [servicePoint?.city_id, cities.length, selectedRegionId]);
 
-  // Обновляем типы для обработчиков
-  const handleRegionChange = (event: SelectChangeEvent<string>) => {
+  // Мемоизированные обработчики
+  const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
     const regionId = Number(event.target.value);
     setSelectedRegionId(regionId);
     formik.setFieldValue('region_id', regionId);
     formik.setFieldValue('city_id', 0);
-  };
+  }, [formik]);
 
-  const handleCloseSnackbar = () => {
+  const handleCloseSnackbar = useCallback(() => {
     setSuccessMessage(null);
-  };
+  }, []);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate('/service-points');
-  };
+  }, [navigate]);
 
   return (
     <Box>

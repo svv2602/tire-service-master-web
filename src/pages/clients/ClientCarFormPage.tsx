@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -47,15 +47,30 @@ const ClientCarFormPage: React.FC = () => {
 
   const isLoading = isLoadingClient || isLoadingCar || isCreating || isUpdating;
 
-  // Инициализация формы
-  const formik = useFormik<ClientCarFormData>({
-    initialValues: {
+  // Мемоизированные начальные значения
+  const initialValues = useMemo(() => {
+    if (car && isEditMode) {
+      return {
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        vin: car.vin,
+        license_plate: car.license_plate,
+      };
+    }
+    return {
       brand: '',
       model: '',
       year: new Date().getFullYear(),
       vin: '',
       license_plate: '',
-    },
+    };
+  }, [car, isEditMode]);
+
+  // Инициализация формы
+  const formik = useFormik<ClientCarFormData>({
+    initialValues,
+    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -71,18 +86,10 @@ const ClientCarFormPage: React.FC = () => {
     },
   });
 
-  // Заполнение формы данными при редактировании
-  useEffect(() => {
-    if (car) {
-      formik.setValues({
-        brand: car.brand,
-        model: car.model,
-        year: car.year,
-        vin: car.vin,
-        license_plate: car.license_plate,
-      });
-    }
-  }, [car]);
+  // Мемоизированный обработчик навигации
+  const handleCancel = useCallback(() => {
+    navigate(`/clients/${clientId}/cars`);
+  }, [navigate, clientId]);
 
   if (isLoading) {
     return (
@@ -176,7 +183,7 @@ const ClientCarFormPage: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate(`/clients/${clientId}/cars`)}
+                  onClick={handleCancel}
                 >
                   Отмена
                 </Button>

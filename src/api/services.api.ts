@@ -1,18 +1,21 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
 import { Service, ServiceFormData, ServiceCategory, ServiceCategoryFormData } from '../types/service';
+import { ApiResponse } from '../types/models';
 
 export const servicesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getServices: build.query<Service[], void>({
+    getServices: build.query<ApiResponse<Service>, void>({
       query: () => 'services',
-      providesTags: (result: Service[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'Service' as const, id })),
-              'Service',
-            ]
-          : ['Service'],
+      providesTags: (result: ApiResponse<Service> | undefined) => {
+        if (result && result.data && Array.isArray(result.data)) {
+          return [
+            ...result.data.map(({ id }) => ({ type: 'Service' as const, id })),
+            'Service',
+          ];
+        }
+        return ['Service'];
+      },
     }),
 
     getServiceById: build.query<Service, string>({
@@ -54,13 +57,15 @@ export const servicesApi = baseApi.injectEndpoints({
     // Категории услуг
     getServiceCategories: build.query<ServiceCategory[], void>({
       query: () => 'service-categories',
-      providesTags: (result: ServiceCategory[] | undefined) =>
-        result
-          ? [
-              ...result.map(({ id }) => ({ type: 'ServiceCategory' as const, id })),
-              'ServiceCategory',
-            ]
-          : ['ServiceCategory'],
+      providesTags: (result: ServiceCategory[] | undefined) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'ServiceCategory' as const, id })),
+            'ServiceCategory',
+          ];
+        }
+        return ['ServiceCategory'];
+      },
     }),
 
     getServiceCategoryById: build.query<ServiceCategory, string>({
