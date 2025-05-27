@@ -39,8 +39,17 @@ const ProtectedRoute: React.FC<{
 }> = ({ children }) => {
   const { isAuthenticated, token, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   
-  // Если приложение еще не инициализировано, показываем загрузку
-  if (!isInitialized) {
+  console.log('ProtectedRoute check:', { 
+    isAuthenticated, 
+    hasToken: !!token,
+    hasUser: !!user,
+    isInitialized,
+    loading
+  });
+  
+  // Если приложение еще не инициализировано И есть токен, показываем загрузку
+  // Это нужно только когда есть токен, но еще идет процесс получения данных пользователя
+  if (!isInitialized && token && loading) {
     return (
       <div style={{
         display: 'flex',
@@ -72,19 +81,47 @@ const ProtectedRoute: React.FC<{
     );
   }
 
-  // Проверяем аутентификацию после инициализации
-  const hasValidAuth = isAuthenticated && token && user;
-  
-  console.log('ProtectedRoute check:', { 
-    isAuthenticated, 
-    hasToken: !!token,
-    hasUser: !!user,
-    isInitialized,
-    loading,
-    hasValidAuth
-  });
-  
-  return hasValidAuth ? <>{children}</> : <Navigate to="/login" />;
+  // Если инициализация завершена, проверяем аутентификацию
+  if (isInitialized) {
+    const hasValidAuth = isAuthenticated && token && user;
+    return hasValidAuth ? <>{children}</> : <Navigate to="/login" />;
+  }
+
+  // Если нет токена и инициализация не завершена, сразу перенаправляем на логин
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+
+  // В остальных случаях показываем загрузку (не должно происходить)
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      flexDirection: 'column'
+    }}>
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #1976d2',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+      </div>
+      <div style={{ color: '#666', fontSize: '16px' }}>
+        Инициализация...
+      </div>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
 };
 
 // Создание темы Material UI

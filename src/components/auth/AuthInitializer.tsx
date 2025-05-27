@@ -27,7 +27,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
         // Устанавливаем токен в заголовки axios
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         
-        // Если есть токен, но нет данных пользователя, пытаемся их получить
+        // Если есть токен, но нет данных пользователя в Redux store, пытаемся их получить
         if (!user) {
           console.log('AuthInitializer: Найден токен, загружаем данные пользователя...');
           try {
@@ -37,6 +37,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
             console.error('AuthInitializer: Ошибка при загрузке данных пользователя:', error);
             // Если не удалось получить данные пользователя, очищаем токен
             localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('tvoya_shina_user');
             delete apiClient.defaults.headers.common['Authorization'];
           }
         } else {
@@ -47,9 +48,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
       }
       
       // Помечаем инициализацию как завершенную
-      if (!isInitialized) {
-        dispatch(setInitialized());
-      }
+      dispatch(setInitialized());
     };
 
     // Запускаем инициализацию только если она еще не была выполнена
@@ -58,8 +57,13 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
     }
   }, [dispatch, user, isInitialized]);
 
-  // Показываем загрузку только если идет процесс инициализации
-  if (!isInitialized || (token && !user && loading)) {
+  // Показываем загрузку только если:
+  // 1. Инициализация не завершена И есть токен в localStorage
+  // 2. ИЛИ есть токен в Redux, но нет пользователя и идет загрузка
+  const shouldShowLoading = (!isInitialized && localStorage.getItem(STORAGE_KEY)) || 
+                           (token && !user && loading);
+
+  if (shouldShowLoading) {
     return (
       <div style={{
         display: 'flex',

@@ -42,12 +42,12 @@ interface AuthState {
 
 // Начальное состояние
 const initialState: AuthState = {
-  token: localStorage.getItem('auth_token'),
+  token: localStorage.getItem(STORAGE_KEY),
   user: getStoredUser(),
-  isAuthenticated: !!localStorage.getItem('auth_token'),
+  isAuthenticated: !!localStorage.getItem(STORAGE_KEY) && !!getStoredUser(),
   loading: false,
   error: null,
-  isInitialized: !!localStorage.getItem('auth_token'),
+  isInitialized: false, // Всегда начинаем с false, инициализация происходит в AuthInitializer
 };
 
 // Создаем slice
@@ -64,7 +64,7 @@ const authSlice = createSlice({
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      localStorage.setItem('auth_token', token);
+      localStorage.setItem(STORAGE_KEY, token);
       setStoredUser(user);
     },
     logout: (state) => {
@@ -73,7 +73,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem(STORAGE_KEY);
       setStoredUser(null);
       // Очищаем также заголовок Authorization
       delete apiClient.defaults.headers.common['Authorization'];
@@ -193,7 +193,7 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/api/v1/users/current');
+      const response = await apiClient.get('/api/v1/users/me');
       
       // Приведение возвращаемого пользователя к типу User
       const user: User = {
