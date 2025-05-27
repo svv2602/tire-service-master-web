@@ -67,7 +67,7 @@ const ClientsPage: React.FC = () => {
   const isLoading = clientsLoading || deleteLoading;
   const error = clientsError;
   const clients = (clientsData as unknown as ApiResponse<Client>)?.data || [];
-  const totalItems = (clientsData as unknown as ApiResponse<Client>)?.total || 0;
+  const totalItems = (clientsData as unknown as ApiResponse<Client>)?.pagination?.total_count || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
