@@ -19,6 +19,7 @@ import {
 import { useFormik, FormikHelpers, FormikProps } from 'formik';
 import * as yup from 'yup';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { 
   useGetPartnerByIdQuery, 
@@ -28,6 +29,7 @@ import {
   useGetCitiesQuery,
 } from '../../api';
 import { PartnerFormData } from '../../types/models';
+import { RootState } from '../../store/store';
 
 // Обновляем интерфейс для пользовательских данных
 interface UserFormData {
@@ -64,6 +66,66 @@ type FormikErrors<T> = {
     ? FormikErrors<NonNullable<T[K]>>
     : string;
 };
+
+// Функция для создания схемы валидации в зависимости от режима
+const createValidationSchema = (isEdit: boolean) => yup.object({
+  company_name: yup.string()
+    .required('Название компании обязательно')
+    .min(2, 'Название должно быть не менее 2 символов')
+    .max(100, 'Название должно быть не более 100 символов'),
+  
+  company_description: yup.string()
+    .max(2000, 'Описание должно быть не более 2000 символов')
+    .nullable(),
+  
+  contact_person: yup.string()
+    .required('Контактное лицо обязательно')
+    .min(2, 'ФИО должно быть не менее 2 символов'),
+  
+  website: yup.string()
+    .url('Введите корректный URL (например, https://example.com)')
+    .nullable(),
+  
+  tax_number: yup.string()
+    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов')
+    .nullable(),
+  
+  legal_address: yup.string()
+    .max(500, 'Адрес должен быть не более 500 символов')
+    .nullable(),
+  
+  logo_url: yup.string()
+    .url('Введите корректный URL логотипа')
+    .nullable(),
+  
+  region_id: yup.string()
+    .nullable(),
+  
+  city_id: yup.string()
+    .nullable(),
+  
+  is_active: yup.boolean(),
+  
+  user: isEdit 
+    ? yup.object().nullable() // При редактировании user может быть null
+    : yup.object().shape({     // При создании user обязателен
+        email: yup.string()
+          .email('Введите корректный email')
+          .required('Email обязателен'),
+        phone: yup.string()
+          .required('Телефон обязателен')
+          .matches(/^\+?[0-9]{10,12}$/, 'Введите корректный номер телефона'),
+        first_name: yup.string()
+          .required('Имя обязательно')
+          .min(2, 'Имя должно быть не менее 2 символов'),
+        last_name: yup.string()
+          .required('Фамилия обязательна')
+          .min(2, 'Фамилия должна быть не менее 2 символов'),
+        password: yup.string()
+          .min(6, 'Пароль должен быть не менее 6 символов')
+          .nullable(),
+      }).required('Данные пользователя обязательны'),
+});
 
 // Обновляем схему валидации
 const validationSchema = yup.object({
@@ -129,6 +191,17 @@ const PartnerFormPage: React.FC = () => {
   const isEdit = Boolean(id);
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
 
+  // Проверяем состояние аутентификации
+  const { token, user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  console.log('Состояние аутентификации:', { 
+    hasToken: !!token, 
+    hasUser: !!user, 
+    isAuthenticated,
+    userRole: user?.role,
+    tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
+  });
+
   // RTK Query хуки
   const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id ? parseInt(id) : 0, {
     skip: !id,
@@ -180,11 +253,13 @@ const PartnerFormPage: React.FC = () => {
   const formik = useFormik<FormValues>({
     initialValues,
     enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
-    validationSchema,
+    validationSchema: createValidationSchema(isEdit),
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
+        console.log('Отправка данных партнера:', values);
+        
         const submitData = {
           company_name: values.company_name,
           company_description: values.company_description,
@@ -199,17 +274,23 @@ const PartnerFormPage: React.FC = () => {
           user: values.user || undefined
         };
 
+        console.log('Подготовленные данные для отправки:', submitData);
+
         if (isEdit && id) {
+          console.log('Обновление партнера с ID:', id);
           await updatePartner({ 
             id: parseInt(id), 
             partner: submitData 
           }).unwrap();
         } else {
-          await createPartner(submitData).unwrap();
+          console.log('Создание нового партнера');
+          const result = await createPartner(submitData).unwrap();
+          console.log('Результат создания партнера:', result);
         }
         navigate('/partners');
       } catch (error) {
         console.error('Ошибка при сохранении:', error);
+        console.error('Детали ошибки:', JSON.stringify(error, null, 2));
       } finally {
         setSubmitting(false);
       }
@@ -628,6 +709,31 @@ const PartnerFormPage: React.FC = () => {
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
                 </Button>
               </Box>
+              {/* Временная отладочная информация для создания партнера */}
+              {!isEdit && process.env.NODE_ENV === 'development' && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+                  <Typography variant="caption" display="block">
+                    Отладка создания партнера:
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isValid: {formik.isValid.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isLoading: {isLoading.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isEdit: {isEdit.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    user данные: {JSON.stringify(formik.values.user, null, 2)}
+                  </Typography>
+                  {Object.keys(formik.errors).length > 0 && (
+                    <Typography variant="caption" display="block" color="error">
+                      Ошибки: {JSON.stringify(formik.errors, null, 2)}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Grid>
           </Grid>
         </Paper>

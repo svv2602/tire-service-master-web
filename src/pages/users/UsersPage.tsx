@@ -37,7 +37,7 @@ import {
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import {
+import { 
   useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation,
@@ -351,4 +351,4 @@ const UsersPage: React.FC = () => {
   );
 };
 
-export default UsersPage;
+export default UsersPage; 
