@@ -163,12 +163,15 @@ export const login = createAsyncThunk(
       const user: User = {
         id: response.data.user.id.toString(),
         email: response.data.user.email,
+        phone: response.data.user.phone || '',
         first_name: response.data.user.first_name || '',
         last_name: response.data.user.last_name || '',
         role: response.data.user.role,
-        is_active: response.data.user.is_active || true,
-        email_verified: response.data.user.email_verified || false,
-        phone_verified: response.data.user.phone_verified || false
+        is_active: response.data.user.is_active,
+        email_verified: response.data.user.email_verified,
+        phone_verified: response.data.user.phone_verified,
+        created_at: response.data.user.created_at || new Date().toISOString(),
+        updated_at: response.data.user.updated_at || new Date().toISOString()
       };
       
       return {
@@ -204,14 +207,15 @@ export const getCurrentUser = createAsyncThunk(
       const user: User = {
         id: response.data.id.toString(),
         email: response.data.email,
+        phone: response.data.phone || '',
         first_name: response.data.first_name || '',
         last_name: response.data.last_name || '',
         role: response.data.role,
-        is_active: response.data.is_active || true,
-        email_verified: response.data.email_verified || false,
-        phone_verified: response.data.phone_verified || false,
-        created_at: response.data.created_at,
-        updated_at: response.data.updated_at
+        is_active: response.data.is_active,
+        email_verified: response.data.email_verified,
+        phone_verified: response.data.phone_verified,
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString()
       };
       
       return user;

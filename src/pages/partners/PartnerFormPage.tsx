@@ -28,11 +28,13 @@ import {
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
-import { PartnerFormData } from '../../types/models';
+import { Partner, PartnerFormData } from '../../types/models';
+import type { User } from '../../types/user';
 import { RootState } from '../../store/store';
+import { SelectChangeEvent } from '@mui/material';
 
-// Обновляем интерфейс для пользовательских данных
-interface UserFormData {
+// Определяем локальный интерфейс для формы пользователя
+interface FormUserData {
   email: string;
   phone: string;
   first_name: string;
@@ -51,7 +53,7 @@ interface FormValues {
   region_id?: string;
   city_id?: string;
   is_active: boolean;
-  user: UserFormData | null;
+  user: FormUserData | null;
 }
 
 // Обновляем типы для Formik
@@ -127,64 +129,6 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
       }).required('Данные пользователя обязательны'),
 });
 
-// Обновляем схему валидации
-const validationSchema = yup.object({
-  company_name: yup.string()
-    .required('Название компании обязательно')
-    .min(2, 'Название должно быть не менее 2 символов')
-    .max(100, 'Название должно быть не более 100 символов'),
-  
-  company_description: yup.string()
-    .max(2000, 'Описание должно быть не более 2000 символов')
-    .nullable(),
-  
-  contact_person: yup.string()
-    .required('Контактное лицо обязательно')
-    .min(2, 'ФИО должно быть не менее 2 символов'),
-  
-  website: yup.string()
-    .url('Введите корректный URL (например, https://example.com)')
-    .nullable(),
-  
-  tax_number: yup.string()
-    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов')
-    .nullable(),
-  
-  legal_address: yup.string()
-    .max(500, 'Адрес должен быть не более 500 символов')
-    .nullable(),
-  
-  logo_url: yup.string()
-    .url('Введите корректный URL логотипа')
-    .nullable(),
-  
-  region_id: yup.string()
-    .nullable(),
-  
-  city_id: yup.string()
-    .nullable(),
-  
-  is_active: yup.boolean(),
-  
-  user: yup.object().shape({
-    email: yup.string()
-      .email('Введите корректный email')
-      .required('Email обязателен'),
-    phone: yup.string()
-      .required('Телефон обязателен')
-      .matches(/^\+?[0-9]{10,12}$/, 'Введите корректный номер телефона'),
-    first_name: yup.string()
-      .required('Имя обязательно')
-      .min(2, 'Имя должно быть не менее 2 символов'),
-    last_name: yup.string()
-      .required('Фамилия обязательна')
-      .min(2, 'Фамилия должна быть не менее 2 символов'),
-    password: yup.string()
-      .min(6, 'Пароль должен быть не менее 6 символов')
-      .nullable(),
-  }).nullable(),
-});
-
 const PartnerFormPage: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -194,20 +138,25 @@ const PartnerFormPage: React.FC = () => {
   // Проверяем состояние аутентификации
   const { token, user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   
-  console.log('Состояние аутентификации:', { 
-    hasToken: !!token, 
-    hasUser: !!user, 
-    isAuthenticated,
-    userRole: user?.role,
-    tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
-  });
-
   // RTK Query хуки
   const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id ? parseInt(id) : 0, {
     skip: !id,
   });
   const { data: regionsData } = useGetRegionsQuery({});
-  const { data: citiesData } = useGetCitiesQuery({ region_id: selectedRegionId?.toString() }, { skip: !selectedRegionId });
+  
+  // Обновляем логику запроса городов
+  const regionIdForCities = useMemo(() => {
+    if (partner && isEdit && partner.region_id) {
+      return partner.region_id;
+    }
+    return selectedRegionId ? Number(selectedRegionId) : undefined;
+  }, [partner, isEdit, selectedRegionId]);
+  
+  const { data: citiesData } = useGetCitiesQuery(
+    { region_id: regionIdForCities }, 
+    { skip: !regionIdForCities }
+  );
+  
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
@@ -258,39 +207,48 @@ const PartnerFormPage: React.FC = () => {
     validateOnBlur: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        console.log('Отправка данных партнера:', values);
+        console.log('Сохранение партнера:', isEdit ? 'обновление' : 'создание');
+        console.log('Исходные значения формы:', values);
         
-        const submitData = {
+        const submitData: PartnerFormData = {
           company_name: values.company_name,
-          company_description: values.company_description,
-          contact_person: values.contact_person,
-          logo_url: values.logo_url,
-          website: values.website,
-          tax_number: values.tax_number,
-          legal_address: values.legal_address,
+          company_description: values.company_description || undefined,
+          contact_person: values.contact_person || undefined,
+          logo_url: values.logo_url || undefined,
+          website: values.website || undefined,
+          tax_number: values.tax_number || undefined,
+          legal_address: values.legal_address || undefined,
           region_id: values.region_id ? Number(values.region_id) : undefined,
           city_id: values.city_id ? Number(values.city_id) : undefined,
           is_active: values.is_active,
-          user: values.user || undefined
+          user: values.user ? {
+            email: values.user.email,
+            phone: values.user.phone || '',
+            first_name: values.user.first_name,
+            last_name: values.user.last_name,
+            role: 'manager',
+            is_active: true,
+            email_verified: false,
+            phone_verified: false,
+            password: values.user.password
+          } : undefined
         };
 
         console.log('Подготовленные данные для отправки:', submitData);
 
         if (isEdit && id) {
-          console.log('Обновление партнера с ID:', id);
-          await updatePartner({ 
+          const result = await updatePartner({ 
             id: parseInt(id), 
             partner: submitData 
           }).unwrap();
+          console.log('Результат обновления:', result);
         } else {
-          console.log('Создание нового партнера');
           const result = await createPartner(submitData).unwrap();
-          console.log('Результат создания партнера:', result);
+          console.log('Результат создания:', result);
         }
         navigate('/partners');
       } catch (error) {
-        console.error('Ошибка при сохранении:', error);
-        console.error('Детали ошибки:', JSON.stringify(error, null, 2));
+        console.error('Ошибка при сохранении партнера:', error);
       } finally {
         setSubmitting(false);
       }
@@ -304,16 +262,29 @@ const PartnerFormPage: React.FC = () => {
     }
   }, [partner, isEdit]);
 
-  // Обновляем выбранный регион при изменении
-  useEffect(() => {
-    const regionId = formik.values.region_id;
-    if (regionId && regionId.toString().length > 0) {
-      setSelectedRegionId(Number(regionId));
+  // Обработчик изменения региона
+  const handleRegionChange = (event: SelectChangeEvent<string>) => {
+    const newRegionId = event.target.value;
+    console.log('Изменение региона:', newRegionId);
+    
+    formik.setFieldValue('region_id', newRegionId);
+    formik.setFieldValue('city_id', '');
+    
+    if (newRegionId && newRegionId !== '') {
+      setSelectedRegionId(Number(newRegionId));
     } else {
+      console.log('Регион сброшен');
       setSelectedRegionId(undefined);
-      formik.setFieldValue('city_id', '');
+      console.log('Город сброшен');
     }
-  }, [formik.values.region_id]);
+  };
+
+  // Обработчик изменения города
+  const handleCityChange = (event: SelectChangeEvent<string>) => {
+    const newCityId = event.target.value;
+    console.log('Изменение города:', newCityId);
+    formik.setFieldValue('city_id', newCityId);
+  };
 
   if (partnerLoading) {
     return (
@@ -520,7 +491,7 @@ const PartnerFormPage: React.FC = () => {
                 <Select
                   name="region_id"
                   value={formik.values.region_id?.toString() || ''}
-                  onChange={formik.handleChange}
+                  onChange={handleRegionChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                 >
@@ -540,7 +511,7 @@ const PartnerFormPage: React.FC = () => {
                 <Select
                   name="city_id"
                   value={formik.values.city_id?.toString() || ''}
-                  onChange={formik.handleChange}
+                  onChange={handleCityChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                   disabled={!formik.values.region_id}
@@ -723,6 +694,46 @@ const PartnerFormPage: React.FC = () => {
                   </Typography>
                   <Typography variant="caption" display="block">
                     isEdit: {isEdit.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    user данные: {JSON.stringify(formik.values.user, null, 2)}
+                  </Typography>
+                  {Object.keys(formik.errors).length > 0 && (
+                    <Typography variant="caption" display="block" color="error">
+                      Ошибки: {JSON.stringify(formik.errors, null, 2)}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              {/* Отладочная информация для редактирования партнера */}
+              {isEdit && process.env.NODE_ENV === 'development' && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'blue.50', borderRadius: 1 }}>
+                  <Typography variant="caption" display="block">
+                    Отладка редактирования партнера:
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isValid: {formik.isValid.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isLoading: {isLoading.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    isEdit: {isEdit.toString()}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    partner ID: {id}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    region_id: {formik.values.region_id || 'пусто'}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    city_id: {formik.values.city_id || 'пусто'}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    selectedRegionId: {selectedRegionId || 'не выбран'}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    доступно городов: {citiesData?.data?.length || 0}
                   </Typography>
                   <Typography variant="caption" display="block">
                     user данные: {JSON.stringify(formik.values.user, null, 2)}

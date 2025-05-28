@@ -144,7 +144,7 @@ const ServicePointFormPage: React.FC = () => {
   const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({});
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
-    selectedRegionId ? { region_id: selectedRegionId.toString() } : { region_id: '' },
+    selectedRegionId ? { region_id: Number(selectedRegionId) } : { region_id: undefined },
     { skip: !selectedRegionId }
   );
   const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id ?? '', { skip: !id });

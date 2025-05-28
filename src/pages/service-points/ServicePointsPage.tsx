@@ -64,7 +64,7 @@ const ServicePointsPage: React.FC = () => {
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
-    { region_id: selectedRegionId?.toString() || undefined }, 
+    { region_id: selectedRegionId ? Number(selectedRegionId) : undefined },
     { skip: !selectedRegionId }
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({

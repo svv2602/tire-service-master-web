@@ -97,7 +97,7 @@ const CitiesPage: React.FC = () => {
   // RTK Query хуки
   const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useGetCitiesQuery({
     query: search || undefined,
-    region_id: regionFilter || undefined,
+    region_id: regionFilter ? Number(regionFilter) : undefined,
     page: page + 1,
     per_page: rowsPerPage,
   });
@@ -317,7 +317,7 @@ const CitiesPage: React.FC = () => {
                   <TableRow key={city.id}>
                     <TableCell>{city.name}</TableCell>
                     <TableCell>{city.name.toLowerCase().replace(/\s+/g, '_')}</TableCell>
-                    <TableCell>{city.region?.name}</TableCell>
+                    <TableCell>{regionsData?.data?.find(r => r.id === city.region_id)?.name}</TableCell>
                     <TableCell>
                       <Chip
                         label={city.is_active ? 'Активен' : 'Неактивен'}

@@ -8,27 +8,23 @@ export enum UserRole {
 export interface User {
   id: number;
   email: string;
+  phone: string;
   first_name: string;
   last_name: string;
-  phone?: string;
   role: string;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
-  client_id?: number;
-  partner_id?: number;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserFormData {
   email: string;
-  password?: string;
+  phone: string;
   first_name: string;
   last_name: string;
-  phone?: string;
-  role?: string;
-  is_active?: boolean;
+  password?: string;
 }
 
 export interface UserCredentials {
