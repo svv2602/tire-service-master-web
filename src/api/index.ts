@@ -74,8 +74,8 @@ export {
 } from './carModels.api';
 
 // Экспортируем базовые типы
-export type { User, UserFormData, UserCredentials, PasswordReset, PasswordResetConfirm } from '../types/user';
-export type { Booking, ServicePoint, City, Region, Review } from '../types/models';
+export type { UserFormData, UserCredentials, PasswordReset, PasswordResetConfirm } from '../types/user';
+export type { User, Booking, ServicePoint, City, Region, Review } from '../types/models';
 export type { Client } from '../types/client';
 export type { BookingStatusEnum, PaymentStatus } from '../types/booking';
 export type { CarBrand, CarModel, CarBrandFormData, CarModelFormData } from '../types/car';

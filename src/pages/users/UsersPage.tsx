@@ -42,7 +42,7 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation,
 } from '../../api';
-import { User } from '../../types/user';
+import { User } from '../../types/models';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
 
@@ -167,7 +167,7 @@ const UsersPage: React.FC = () => {
     switch(role) {
       case 'admin': return 'Администратор';
       case 'manager': return 'Менеджер';
-      case 'operator': return 'Оператор';
+      case 'partner': return 'Партнер';
       case 'client': return 'Клиент';
       default: return role;
     }
@@ -179,7 +179,7 @@ const UsersPage: React.FC = () => {
     switch(role) {
       case 'admin': return 'error';
       case 'manager': return 'warning';
-      case 'operator': return 'primary';
+      case 'partner': return 'primary';
       case 'client': return 'success';
       default: return 'default';
     }

@@ -167,6 +167,13 @@ const MainLayout: React.FC = () => {
         title: 'Управление',
         items: [
           {
+            text: 'Пользователи',
+            icon: <PeopleIcon />,
+            path: '/users',
+            roles: [UserRole.ADMIN],
+            description: 'Управление пользователями системы',
+          },
+          {
             text: 'Партнеры',
             icon: <CompanyIcon />,
             path: '/partners',
@@ -374,9 +381,8 @@ const MainLayout: React.FC = () => {
     ];
   };
 
-  // Фильтруем разделы и пункты меню в зависимости от роли пользователя
+  // Фильтрация пунктов меню в зависимости от роли пользователя
   const getFilteredMenuSections = () => {
-    // Если пользователь не авторизован, не показываем никаких пунктов меню
     if (!user) {
       console.log('Пользователь не аутентифицирован, не отображаем пункты меню');
       return [];
@@ -393,7 +399,7 @@ const MainLayout: React.FC = () => {
     const filteredSections = allSections.map(section => {
       // Фильтруем пункты меню в секции, оставляя только те, для которых у пользователя есть доступ
       const filteredItems = section.items.filter(item => 
-        item.roles.some(role => role === userRole as unknown as UserRole)
+        item.roles.some(role => role.valueOf() === userRole)
       );
       
       // Возвращаем секцию только если в ней остались пункты меню
