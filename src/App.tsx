@@ -5,7 +5,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
 import { Provider } from 'react-redux';
-import { store } from './store/store';
+import { store } from './store';
 import MainLayout from './components/layouts/MainLayout';
 import AuthInitializer from './components/auth/AuthInitializer';
 import LoginPage from './pages/auth/LoginPage';
@@ -29,7 +29,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import UsersPage from './pages/users/UsersPage';
 import UserForm from './pages/users/UserForm';
 import { useSelector } from 'react-redux';
-import { RootState } from './store/store';
+import { RootState } from './store';
 import RegionsPage from './pages/catalog/RegionsPage';
 import CitiesPage from './pages/catalog/CitiesPage';
 import CarBrandsPage from './pages/car-brands/CarBrandsPage';
@@ -45,8 +45,8 @@ const ProtectedRoute: React.FC<{
 }> = ({ children }) => {
   const { isAuthenticated, token, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   
-  const storedToken = localStorage.getItem('tvoya_shina_auth_token');
-  const storedUser = localStorage.getItem('tvoya_shina_user');
+  const storedToken = localStorage.getItem('token');
+  const storedUser = localStorage.getItem('user');
   
   console.log('ProtectedRoute check:', { 
     isAuthenticated, 

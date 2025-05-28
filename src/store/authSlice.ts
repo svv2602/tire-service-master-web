@@ -22,7 +22,7 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }) => {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch('http://localhost:8000/api/v1/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { getState }) => {
     const state = getState() as { auth: AuthState };
-    const response = await fetch('/api/auth/me', {
+    const response = await fetch('http://localhost:8000/api/v1/auth/me', {
       headers: {
         Authorization: `Bearer ${state.auth.token}`,
       },

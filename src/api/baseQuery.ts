@@ -1,5 +1,5 @@
 import { fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../store/store';
+import { RootState } from '../store';
 import { apiClient } from './api';
 
 // Создаем базовый query с обработкой ошибок и авторизации

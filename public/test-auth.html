@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth</title>
+</head>
+<body>
+    <h1>Тестирование аутентификации</h1>
+    <button onclick="setToken()">Установить токен</button>
+    <button onclick="clearToken()">Очистить токен</button>
+    <button onclick="checkToken()">Проверить токен</button>
+    <div id="result"></div>
+
+    <script>
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NDg0Mjg2MzksInRva2VuX3R5cGUiOiJhY2Nlc3MifQ.vagX0vL3nfBfe9vcIUBR_objGkMxApaGFL3Z0V0HFHA';
+        
+        function setToken() {
+            localStorage.setItem('token', token);
+            document.getElementById('result').innerHTML = 'Токен установлен';
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.getElementById('result').innerHTML = 'Токен очищен';
+        }
+        
+        function checkToken() {
+            const storedToken = localStorage.getItem('token');
+            document.getElementById('result').innerHTML = 'Токен: ' + (storedToken ? 'есть' : 'нет');
+        }
+    </script>
+</body>
+</html> 

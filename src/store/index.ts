@@ -1,26 +1,25 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { 
   baseApi,
-  partnersApi,
-  regionsApi,
-  citiesApi,
-  servicePointsApi,
-  servicesApi,
-  bookingsApi,
-  reviewsApi,
-  usersApi,
-  authApi
+  usersApi
 } from '../api';
 import { authReducer } from './authSlice';
 
 export const store = configureStore({
   reducer: {
+    // Базовый API (включает в себя все injected endpoints)
     [baseApi.reducerPath]: baseApi.reducer,
+    
+    // Отдельные API
+    [usersApi.reducerPath]: usersApi.reducer,
+    
+    // Обычные reducers
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
-      baseApi.middleware
+      baseApi.middleware,
+      usersApi.middleware
     ),
 });
 
