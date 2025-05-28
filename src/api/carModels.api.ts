@@ -11,13 +11,64 @@ interface CarModelFilter {
   per_page?: number;
 }
 
+// Интерфейс для ответа API (как приходит с бэкенда)
+interface ApiCarModelsResponse {
+  car_models: Array<{
+    id: number;
+    brand_id: number;
+    name: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+    brand: {
+      id: number;
+      name: string;
+    };
+  }>;
+  total_items: number;
+}
+
 export const carModelsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCarModels: build.query<ApiResponse<CarModel>, CarModelFilter>({
       query: (params = {}) => ({
-        url: 'car-models',
+        url: 'car_models',
         params,
       }),
+      transformResponse: (response: ApiCarModelsResponse): ApiResponse<CarModel> => {
+        return {
+          data: response.car_models.map(model => ({
+            id: model.id,
+            brand_id: model.brand_id,
+            name: model.name,
+            code: model.name.toLowerCase().replace(/\s+/g, '_'), // Генерируем код из названия
+            is_active: model.is_active,
+            is_popular: false, // По умолчанию false
+            year_start: undefined,
+            year_end: undefined,
+            created_at: model.created_at,
+            updated_at: model.updated_at,
+            brand: {
+              id: model.brand.id,
+              name: model.brand.name,
+              code: model.brand.name.toLowerCase().replace(/\s+/g, '_'),
+              logo_url: undefined,
+              is_active: true,
+              is_popular: false,
+              models_count: 0,
+              created_at: model.created_at, // Используем дату модели
+              updated_at: model.updated_at, // Используем дату модели
+            },
+          })),
+          total: response.total_items,
+          meta: {
+            current_page: 1,
+            total_pages: 1,
+            total_count: response.total_items,
+            total: response.total_items,
+          },
+        };
+      },
       providesTags: (result) =>
         result?.data
           ? [
@@ -28,7 +79,32 @@ export const carModelsApi = baseApi.injectEndpoints({
     }),
 
     getCarModelsByBrandId: build.query<CarModel[], string>({
-      query: (brandId: string) => `car-models?brand_id=${brandId}`,
+      query: (brandId: string) => `car_models?brand_id=${brandId}`,
+      transformResponse: (response: ApiCarModelsResponse): CarModel[] => {
+        return response.car_models.map(model => ({
+          id: model.id,
+          brand_id: model.brand_id,
+          name: model.name,
+          code: model.name.toLowerCase().replace(/\s+/g, '_'),
+          is_active: model.is_active,
+          is_popular: false,
+          year_start: undefined,
+          year_end: undefined,
+          created_at: model.created_at,
+          updated_at: model.updated_at,
+          brand: {
+            id: model.brand.id,
+            name: model.brand.name,
+            code: model.brand.name.toLowerCase().replace(/\s+/g, '_'),
+            logo_url: undefined,
+            is_active: true,
+            is_popular: false,
+            models_count: 0,
+            created_at: model.created_at, // Используем дату модели
+            updated_at: model.updated_at, // Используем дату модели
+          },
+        }));
+      },
       providesTags: (result) => {
         if (result && Array.isArray(result)) {
           return [
@@ -41,7 +117,7 @@ export const carModelsApi = baseApi.injectEndpoints({
     }),
 
     getCarModelById: build.query<CarModel, string>({
-      query: (id: string) => `car-models/${id}`,
+      query: (id: string) => `car_models/${id}`,
       providesTags: (_result, _err, id) => [
         { type: 'CarModels' as const, id }
       ],
@@ -49,7 +125,7 @@ export const carModelsApi = baseApi.injectEndpoints({
 
     createCarModel: build.mutation<CarModel, CarModelFormData>({
       query: (data: CarModelFormData) => ({
-        url: 'car-models',
+        url: 'car_models',
         method: 'POST',
         body: data,
       }),
@@ -58,7 +134,7 @@ export const carModelsApi = baseApi.injectEndpoints({
 
     updateCarModel: build.mutation<CarModel, { id: string; data: Partial<CarModelFormData> }>({
       query: ({ id, data }) => ({
-        url: `car-models/${id}`,
+        url: `car_models/${id}`,
         method: 'PATCH',
         body: data,
       }),
@@ -70,7 +146,7 @@ export const carModelsApi = baseApi.injectEndpoints({
 
     deleteCarModel: build.mutation<void, string>({
       query: (id: string) => ({
-        url: `car-models/${id}`,
+        url: `car_models/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['CarModels'],
@@ -78,7 +154,7 @@ export const carModelsApi = baseApi.injectEndpoints({
     
     toggleCarModelActive: build.mutation<CarModel, { id: string; is_active: boolean }>({
       query: ({ id, is_active }) => ({
-        url: `car-models/${id}`,
+        url: `car_models/${id}`,
         method: 'PATCH',
         body: { is_active },
       }),

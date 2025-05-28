@@ -62,7 +62,7 @@ const CarBrandsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<{ id: string; name: string } | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
 
   // RTK Query хуки
   const { 
@@ -106,7 +106,7 @@ const CarBrandsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (brand: { id: string; name: string }) => {
+  const handleDeleteClick = (brand: { id: number; name: string }) => {
     setSelectedBrand(brand);
     setDeleteDialogOpen(true);
   };
@@ -114,7 +114,7 @@ const CarBrandsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedBrand) {
       try {
-        await deleteBrand(selectedBrand.id).unwrap();
+        await deleteBrand(selectedBrand.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedBrand(null);
       } catch (error) {
@@ -128,17 +128,17 @@ const CarBrandsPage: React.FC = () => {
     setSelectedBrand(null);
   };
 
-  const handleToggleActive = async (id: string, currentActive: boolean) => {
+  const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
-      await toggleActive({ id, is_active: !currentActive }).unwrap();
+      await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса активности:', error);
     }
   };
 
-  const handleTogglePopular = async (id: string, currentPopular: boolean) => {
+  const handleTogglePopular = async (id: number, currentPopular: boolean) => {
     try {
-      await togglePopular({ id, is_popular: !currentPopular }).unwrap();
+      await togglePopular({ id: id.toString(), is_popular: !currentPopular }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса популярности:', error);
     }

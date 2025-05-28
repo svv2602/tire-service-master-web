@@ -77,7 +77,7 @@ const CarBrandsPage: React.FC = () => {
     onSubmit: async (values, { resetForm }) => {
       try {
         if (editingBrand) {
-          await updateBrand({ id: editingBrand.id, data: values }).unwrap();
+          await updateBrand({ id: editingBrand.id.toString(), data: values }).unwrap();
         } else {
           await createBrand(values).unwrap();
         }
@@ -113,9 +113,9 @@ const CarBrandsPage: React.FC = () => {
     formik.resetForm();
   };
 
-  const handleDeleteBrand = async (id: string) => {
+  const handleDeleteBrand = async (id: number) => {
     try {
-      await deleteBrand(id).unwrap();
+      await deleteBrand(id.toString()).unwrap();
     } catch (err) {
       console.error('Failed to delete brand:', err);
     }

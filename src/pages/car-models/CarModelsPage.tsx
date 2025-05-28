@@ -58,7 +58,7 @@ const CarModelsPage: React.FC = () => {
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<{ id: string; name: string; brand_id: number } | null>(null);
+  const [selectedModel, setSelectedModel] = useState<{ id: number; name: string; brand_id: number } | null>(null);
 
   // RTK Query хуки
   const { 
@@ -103,7 +103,7 @@ const CarModelsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleDeleteClick = (model: { id: string; name: string; brand_id: number }) => {
+  const handleDeleteClick = (model: { id: number; name: string; brand_id: number }) => {
     setSelectedModel(model);
     setDeleteDialogOpen(true);
   };
@@ -111,7 +111,7 @@ const CarModelsPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedModel) {
       try {
-        await deleteModel(selectedModel.id).unwrap();
+        await deleteModel(selectedModel.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedModel(null);
       } catch (error) {
@@ -125,9 +125,9 @@ const CarModelsPage: React.FC = () => {
     setSelectedModel(null);
   };
 
-  const handleToggleActive = async (id: string, currentActive: boolean) => {
+  const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
-      await toggleActive({ id, is_active: !currentActive }).unwrap();
+      await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса активности:', error);
     }

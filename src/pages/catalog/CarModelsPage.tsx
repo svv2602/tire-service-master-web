@@ -105,7 +105,7 @@ const CarModelsPage: React.FC = () => {
         };
         
         if (editingModel) {
-          await updateModel({ id: editingModel.id, data: submitData }).unwrap();
+          await updateModel({ id: editingModel.id.toString(), data: submitData }).unwrap();
         } else {
           await createModel(submitData).unwrap();
         }
@@ -143,9 +143,9 @@ const CarModelsPage: React.FC = () => {
     formik.resetForm();
   };
 
-  const handleDeleteModel = async (id: string) => {
+  const handleDeleteModel = async (id: number) => {
     try {
-      await deleteModel(id).unwrap();
+      await deleteModel(id.toString()).unwrap();
     } catch (err) {
       console.error('Failed to delete model:', err);
     }

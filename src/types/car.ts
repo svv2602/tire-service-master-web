@@ -1,5 +1,5 @@
 export interface CarBrand {
-  id: string;
+  id: number;
   name: string;
   code: string;
   logo_url?: string;
@@ -11,7 +11,7 @@ export interface CarBrand {
 }
 
 export interface CarModel {
-  id: string;
+  id: number;
   brand_id: number;
   name: string;
   code: string;
