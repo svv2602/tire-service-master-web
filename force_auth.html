@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Принудительная авторизация</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Принудительная авторизация и тестирование API</h1>
+        
+        <div class="section info">
+            <h3>Текущее состояние</h3>
+            <div id="currentState">Проверяем...</div>
+        </div>
+        
+        <div class="section">
+            <h3>Действия</h3>
+            <button onclick="checkCurrentState()">Проверить состояние</button>
+            <button onclick="forceLogin()">Принудительная авторизация</button>
+            <button onclick="testClientsAPI()">Тестировать API клиентов</button>
+            <button onclick="clearAuth()">Очистить авторизацию</button>
+        </div>
+        
+        <div class="section">
+            <h3>Логи</h3>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const TOKEN_KEY = 'tvoya_shina_auth_token';
+        const USER_KEY = 'tvoya_shina_user';
+        
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `section ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+        
+        function updateCurrentState() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            
+            let stateHtml = '<ul>';
+            stateHtml += `<li>Токен: ${token ? 'ЕСТЬ' : 'НЕТ'}</li>`;
+            stateHtml += `<li>Пользователь: ${user ? 'ЕСТЬ' : 'НЕТ'}</li>`;
+            
+            if (token) {
+                stateHtml += `<li>Токен (первые 50 символов): ${token.substring(0, 50)}...</li>`;
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    stateHtml += `<li>Email: ${userData.email}</li>`;
+                    stateHtml += `<li>Роль: ${userData.role}</li>`;
+                } catch (e) {
+                    stateHtml += `<li>Ошибка парсинга пользователя: ${e.message}</li>`;
+                }
+            }
+            
+            stateHtml += '</ul>';
+            document.getElementById('currentState').innerHTML = stateHtml;
+        }
+        
+        function checkCurrentState() {
+            log('Проверяем текущее состояние авторизации...');
+            updateCurrentState();
+        }
+        
+        async function forceLogin() {
+            log('Начинаем принудительную авторизацию...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'admin@test.com',
+                            password: 'admin'
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Сохраняем токен и пользователя
+                localStorage.setItem(TOKEN_KEY, data.auth_token);
+                localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                
+                log('Авторизация успешна!', 'success');
+                log(`Токен сохранен: ${data.auth_token.substring(0, 50)}...`, 'success');
+                log(`Пользователь: ${data.user.email} (${data.user.role})`, 'success');
+                
+                updateCurrentState();
+                
+            } catch (error) {
+                log(`Ошибка авторизации: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testClientsAPI() {
+            log('Тестируем API клиентов...');
+            
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                log('Токен отсутствует! Сначала выполните авторизацию.', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/clients?page=1&per_page=5`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`Статус ответа: ${response.status}`);
+                
+                if (response.status === 401) {
+                    log('Ошибка 401: Токен недействителен или истек', 'error');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log('API клиентов работает корректно!', 'success');
+                log(`Получено клиентов: ${data.data ? data.data.length : 0}`, 'success');
+                
+                if (data.data && data.data.length > 0) {
+                    log(`Первый клиент: ${data.data[0].first_name} ${data.data[0].last_name}`, 'info');
+                }
+                
+            } catch (error) {
+                log(`Ошибка тестирования API: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearAuth() {
+            log('Очищаем данные авторизации...');
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            log('Данные авторизации очищены', 'success');
+            updateCurrentState();
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Страница загружена, проверяем состояние...');
+            updateCurrentState();
+        });
+    </script>
+</body>
+</html> 
