@@ -4,7 +4,7 @@ import { RootState, AppDispatch } from '../../store';
 import { getCurrentUser } from '../../store/authSlice';
 import { apiClient } from '../../api';
 
-const STORAGE_KEY = 'token';
+const STORAGE_KEY = 'tvoya_shina_token';
 const USER_STORAGE_KEY = 'user';
 
 interface AuthInitializerProps {

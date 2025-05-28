@@ -45,7 +45,7 @@ const ProtectedRoute: React.FC<{
 }> = ({ children }) => {
   const { isAuthenticated, token, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   
-  const storedToken = localStorage.getItem('token');
+  const storedToken = localStorage.getItem('tvoya_shina_token');
   const storedUser = localStorage.getItem('user');
   
   console.log('ProtectedRoute check:', { 
@@ -59,6 +59,12 @@ const ProtectedRoute: React.FC<{
     tokenValue: token ? token.substring(0, 20) + '...' : 'null',
     userEmail: user?.email || 'null'
   });
+  
+  // Если идет загрузка или инициализация не завершена, показываем загрузку
+  if (loading || !isInitialized) {
+    console.log('ProtectedRoute: Ожидание завершения инициализации...');
+    return <div>Загрузка...</div>; // Можно заменить на красивый спиннер
+  }
   
   // Проверяем аутентификацию: достаточно иметь токен и пользователя
   const hasValidAuth = (isAuthenticated && token && user) || (storedToken && storedUser);

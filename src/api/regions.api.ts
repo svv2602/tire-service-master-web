@@ -2,6 +2,9 @@ import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/qu
 import { baseApi } from './baseApi';
 import { Region, RegionFilter, ApiResponse } from '../types/models';
 
+// Определяем тип для тега Region
+type RegionTag = { type: 'Region'; id: number | 'LIST' };
+
 // Расширяем базовый API для работы с регионами
 export const regionsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -21,7 +24,7 @@ export const regionsApi = baseApi.injectEndpoints({
         url: `regions/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'Region', id }],
+      providesTags: ['Region'],
     }),
 
     // Создание нового региона
@@ -41,7 +44,7 @@ export const regionsApi = baseApi.injectEndpoints({
         method: 'PUT',
         body: region,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Region', id }],
+      invalidatesTags: ['Region'],
     }),
 
     // Удаление региона

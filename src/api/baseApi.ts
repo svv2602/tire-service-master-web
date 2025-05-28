@@ -1,21 +1,27 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQuery } from './baseQuery';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// Создаем базовый API с RTK Query
 export const baseApi = createApi({
   reducerPath: 'api',
-  baseQuery,
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'http://localhost:8000/api/v1/',
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem('tvoya_shina_token');
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
   tagTypes: [
-    'User', 
-    'Booking', 
-    'ServicePoint', 
-    'City', 
-    'Region', 
-    'Client', 
-    'Review', 
-    'Partners', 
-    'CarBrands', 
+    'Region',
+    'Booking',
+    'CarBrands',
     'CarModels',
+    'ServicePoint',
+    'City',
+    'Client',
+    'Review',
+    'Partners',
     'Service',
     'ServiceCategory',
     'Settings',

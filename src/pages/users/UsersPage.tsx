@@ -226,17 +226,19 @@ const UsersPage: React.FC = () => {
     setUserToDelete(null);
   }, []);
 
-  const handleToggleStatus = useCallback(async (user: User) => {
+  const handleToggleStatus = async (user: User) => {
     try {
       const updateData = {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+        phone: user.phone || '',
         role: user.role,
         is_active: !user.is_active,
         email_verified: user.email_verified,
         phone_verified: user.phone_verified
       };
+
       await updateUser({
         id: user.id.toString(),
         data: updateData
@@ -245,7 +247,7 @@ const UsersPage: React.FC = () => {
     } catch (error) {
       enqueueSnackbar('Ошибка при обновлении статуса пользователя', { variant: 'error' });
     }
-  }, [updateUser, enqueueSnackbar]);
+  };
 
   return (
     <Box>

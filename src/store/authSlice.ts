@@ -12,7 +12,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('token'),
+  token: localStorage.getItem('tvoya_shina_token'),
   isAuthenticated: false,
   isInitialized: false,
   loading: false,
@@ -35,7 +35,7 @@ export const login = createAsyncThunk(
     }
     
     const data = await response.json();
-    localStorage.setItem('token', data.auth_token);
+    localStorage.setItem('tvoya_shina_token', data.auth_token);
     return data;
   }
 );
@@ -44,7 +44,7 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { getState }) => {
     const state = getState() as { auth: AuthState };
-    const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+    const response = await fetch('http://localhost:8000/api/v1/users/me', {
       headers: {
         Authorization: `Bearer ${state.auth.token}`,
       },
@@ -67,7 +67,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('token');
+      localStorage.removeItem('tvoya_shina_token');
     },
     clearError: (state) => {
       state.error = null;
@@ -107,7 +107,7 @@ const authSlice = createSlice({
         state.error = action.error.message || 'Ошибка получения данных пользователя';
         state.isAuthenticated = false;
         state.token = null;
-        localStorage.removeItem('token');
+        localStorage.removeItem('tvoya_shina_token');
       });
   },
 });

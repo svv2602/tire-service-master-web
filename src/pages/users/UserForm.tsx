@@ -171,25 +171,25 @@ const UserForm: React.FC = () => {
   };
 
   // Отправка формы
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    // Подготовка данных для отправки
     const userData = {
-      ...formData,
-      email_verified: true,  // Добавляем обязательные поля из типа User
-      phone_verified: false  // Добавляем обязательные поля из типа User
+      email: formData.email,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone || '',
+      role: formData.role,
+      is_active: formData.is_active,
+      email_verified: true,
+      phone_verified: false,
+      ...(formData.password && { password: formData.password }),
+      ...(formData.password_confirmation && { password_confirmation: formData.password_confirmation })
     };
-
-    // Удаляем поля пароля, если они пустые при редактировании
-    if (isEditMode && !userData.password) {
-      delete userData.password;
-      delete userData.password_confirmation;
-    }
 
     try {
       if (isEditMode) {
