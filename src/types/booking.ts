@@ -2,13 +2,12 @@ import { BaseModel } from './models';
 import { User } from './user';
 import { ServicePoint } from './servicePoint';
 import { CarBrand, CarModel } from './car';
+import { PaginationFilter } from './models';
 
 export enum BookingStatusEnum {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  PENDING = 1,
+  COMPLETED = 2,
+  CANCELLED = 3
 }
 
 export type BookingStatus = BookingStatusEnum;
@@ -36,27 +35,35 @@ export interface Booking {
 }
 
 export interface BookingService {
-  serviceId: string;
+  service_id: number;
+  quantity: number;
   price: number;
-  duration: number;
 }
 
 export interface BookingFormData {
-  client_id: string;
-  service_point_id: string;
-  car_id?: string;
-  car_type_id: string;
-  scheduled_at: string;
+  service_point_id: number;
+  client_id: number;
+  car_id: number;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  status_id?: number;
+  payment_status_id?: number;
+  total_price?: string;
+  payment_method?: string;
   notes?: string;
-  status: BookingStatus;
+  car_type_id?: number;
+  services: BookingService[];
 }
 
-export interface BookingFilter {
+export interface BookingFilter extends PaginationFilter {
   query?: string;
-  status?: BookingStatus;
-  service_point_id?: string;
-  page?: number;
-  per_page?: number;
+  status_id?: number;
+  service_point_id?: number;
+  client_id?: number;
+  date?: string;
+  from_date?: string;
+  to_date?: string;
 }
 
 // Типы статусов бронирования

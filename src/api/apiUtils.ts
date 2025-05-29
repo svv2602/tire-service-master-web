@@ -2,6 +2,7 @@
  * Утилиты для работы с API
  */
 import config from '../config';
+import { ApiResponse } from '../types/models';
 
 /**
  * Выполняет запрос к API с автоматическим добавлением токена авторизации
@@ -42,24 +43,43 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
  * @returns Promise с данными или ошибкой
  */
 export const handleApiResponse = async (response: Response) => {
+  const contentType = response.headers.get('content-type');
+  const isJson = contentType && contentType.includes('application/json');
+
   if (!response.ok) {
-    // Пробуем получить JSON с ошибкой
-    try {
-      const errorData = await response.json();
-      throw new Error(errorData.error || errorData.message || 'Ошибка запроса к API');
-    } catch (e) {
-      // Если не удалось распарсить JSON, используем статус и текст ошибки
-      throw new Error(`Ошибка ${response.status}: ${response.statusText || 'Неизвестная ошибка'}`);
+    let errorMessage = `Ошибка ${response.status}: ${response.statusText || 'Неизвестная ошибка'}`;
+    
+    if (isJson) {
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch (e) {
+        console.error('Ошибка при парсинге JSON ответа:', e);
+      }
     }
+
+    // Для 401 ошибки, очищаем токен и перезагружаем страницу
+    if (response.status === 401) {
+      localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
+      window.location.href = '/login';
+      return null;
+    }
+
+    throw new Error(errorMessage);
   }
   
-  // Если статус ответа 204 (No Content), возвращаем null
-  if (response.status === 204) {
+  // Если статус 204 или нет контента
+  if (response.status === 204 || !contentType) {
     return null;
   }
   
-  // В противном случае возвращаем данные в формате JSON
-  return response.json();
+  // Для JSON ответов
+  if (isJson) {
+    return response.json();
+  }
+  
+  // Для других типов контента
+  return response.text();
 };
 
 /**
@@ -76,4 +96,45 @@ export const fetchApi = async (url: string, options: RequestInit = {}) => {
     console.error('API Error:', error);
     throw error;
   }
+};
+
+// Общий трансформер для ответов API с пагинацией
+export const transformPaginatedResponse = <T>(response: any): ApiResponse<T> => {
+  // Проверяем, есть ли данные в ответе
+  if (!response) {
+    return {
+      data: [],
+      message: 'Нет данных',
+      status: 404
+    };
+  }
+
+  // Если данные пришли в старом формате (массивом)
+  if (Array.isArray(response)) {
+    return {
+      data: response,
+      status: 200
+    };
+  }
+
+  // Если данные пришли в новом формате с пагинацией
+  if (response.data) {
+    return {
+      data: Array.isArray(response.data) ? response.data : [response.data],
+      pagination: response.pagination ? {
+        current_page: response.pagination.current_page || 1,
+        total_pages: response.pagination.total_pages || 1,
+        total_count: response.pagination.total_count || response.data.length,
+        per_page: response.pagination.per_page || response.data.length
+      } : undefined,
+      message: response.message,
+      status: response.status || 200
+    };
+  }
+
+  // Если структура ответа неизвестна, пытаемся извлечь данные
+  return {
+    data: [response],
+    status: 200
+  };
 }; 

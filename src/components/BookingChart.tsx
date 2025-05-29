@@ -11,7 +11,7 @@ const BookingChart: React.FC<BookingChartProps> = ({ data }) => {
   // Подготовка данных для графика
   const chartData = React.useMemo(() => {
     const groupedByDate = data.reduce((acc, booking) => {
-      const date = new Date(booking.scheduled_at).toLocaleDateString('ru-RU');
+      const date = new Date(booking.booking_date).toLocaleDateString('ru-RU');
       acc[date] = (acc[date] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);

@@ -82,7 +82,7 @@ const CarModelsPage: React.FC = () => {
 
   const error = fetchError || createError || updateError || deleteError;
   const models = modelsData?.data || [];
-  const totalItems = modelsData?.total || 0;
+  const totalItems = modelsData?.pagination?.total_count || 0;
   const brands = brandsData?.data || [];
 
   const formik = useFormik<ModelFormValues>({

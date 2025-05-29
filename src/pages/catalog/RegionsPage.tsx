@@ -160,7 +160,7 @@ const RegionsPage: React.FC = () => {
   const isLoading = regionsLoading;
   const error = regionsError;
   const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
-  const totalItems = (regionsData as unknown as ApiResponse<Region>)?.total || 0;
+  const totalItems = (regionsData as unknown as ApiResponse<Region>)?.pagination?.total_count || 0;
 
   const handleDeleteClick = (region: Region) => {
     setSelectedRegion(region);

@@ -164,7 +164,7 @@ const CarBrandsPage: React.FC = () => {
   }
 
   const brands = brandsData?.data || [];
-  const totalItems = brandsData?.total || 0;
+  const totalItems = brandsData?.pagination?.total_count || 0;
 
   return (
     <Box sx={{ p: 3 }}>

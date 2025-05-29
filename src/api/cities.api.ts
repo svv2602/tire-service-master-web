@@ -1,6 +1,7 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { City, CityFilter, ApiResponse } from '../types/models';
+import { City } from '../types/models';
+import { ApiResponse, CityFilter } from '../types/api';
 
 export const citiesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -65,4 +66,4 @@ export const {
   useCreateCityMutation,
   useUpdateCityMutation,
   useDeleteCityMutation,
-} = citiesApi; 
+} = citiesApi;

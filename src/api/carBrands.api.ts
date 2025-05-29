@@ -2,6 +2,7 @@ import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/qu
 import { baseApi } from './baseApi';
 import { CarBrand, CarBrandFormData } from '../types/car';
 import { ApiResponse } from '../types/models';
+import { transformPaginatedResponse } from './apiUtils';
 
 interface CarBrandFilter {
   query?: string;
@@ -31,28 +32,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
         url: 'car_brands',
         params,
       }),
-      transformResponse: (response: ApiCarBrandsResponse): ApiResponse<CarBrand> => {
-        return {
-          data: response.car_brands.map(brand => ({
-            id: brand.id,
-            name: brand.name,
-            code: brand.name.toLowerCase().replace(/\s+/g, '_'), // Генерируем код из названия
-            logo_url: brand.logo,
-            is_active: brand.is_active,
-            is_popular: false, // По умолчанию false, так как API не возвращает это поле
-            models_count: 0, // По умолчанию 0, так как API не возвращает это поле
-            created_at: brand.created_at,
-            updated_at: brand.updated_at,
-          })),
-          total: response.total_items,
-          meta: {
-            current_page: 1,
-            total_pages: 1,
-            total_count: response.total_items,
-            total: response.total_items,
-          },
-        };
-      },
+      transformResponse: (response: ApiResponse<CarBrand>) => transformPaginatedResponse(response),
       providesTags: (result) =>
         result?.data
           ? [

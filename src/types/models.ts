@@ -10,30 +10,26 @@ export interface BaseModel {
   updated_at: string;
 }
 
-// Интерфейс для метаданных пагинации
-export interface PaginationMeta {
+// Интерфейс для пагинации
+export interface Pagination {
   current_page: number;
-  per_page: number;
-  total_count: number;
   total_pages: number;
+  total_count: number;
+  per_page: number;
 }
 
-// Интерфейс для ответа API с пагинацией
+// Общий интерфейс для ответа API
 export interface ApiResponse<T> {
   data: T[];
-  total?: number;
-  meta?: {
-    current_page: number;
-    total_pages: number;
-    total_count: number;
-    total?: number;
-  };
-  pagination?: {
-    current_page: number;
-    total_pages: number;
-    total_count: number;
-    total?: number;
-  };
+  pagination?: Pagination;
+  message?: string;
+  status?: number;
+}
+
+// Базовый интерфейс для фильтров с пагинацией
+export interface PaginationFilter {
+  page?: number;
+  per_page?: number;
 }
 
 export interface ApiResponseSingle<T> {
@@ -167,31 +163,40 @@ export interface Region {
 }
 
 // Город
-export interface City extends BaseModel {
+export interface City {
+  id: number;
   name: string;
   region_id: number;
   is_active: boolean;
-  region?: Region;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Бронирования
 export interface Booking {
   id: number;
-  service_point_id: number;
   client_id: number;
-  service_type: string;
-  status: string;
-  scheduled_at: string;
+  service_point_id: number;
+  car_id: number | null;
+  car_type_id: number;
+  slot_id: number;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  notes: string;
+  services: {
+    service_id: number;
+    quantity: number;
+    price: number;
+  }[];
+  status_id: number;
   created_at: string;
   updated_at: string;
   
   // Связанные объекты
   service_point?: ServicePoint;
   client?: Client;
-  clientCar?: {
-    carBrand?: CarBrand;
-    carModel?: CarModel;
-  };
+  car?: Car;
 }
 
 // Интерфейсы для форм
@@ -217,7 +222,6 @@ export interface PartnerFormData {
 
 export interface CityFormData {
   name: string;
-  code: string;
   region_id: number;
   is_active: boolean;
 }
@@ -229,67 +233,51 @@ export interface RegionFormData {
 }
 
 // Типы для фильтров
-export interface ServicePointFilter {
+export interface ServicePointFilter extends PaginationFilter {
   search?: string;
   query?: string;
   status?: string;
   service_point_id?: string;
-  city_id?: number | string;
-  cityId?: number | string;
-  region_id?: number | string;
-  regionId?: number | string;
-  page?: number;
-  per_page?: number;
+  city_id?: number;
+  region_id?: number;
 }
 
-export interface PartnerFilter {
-  page?: number;
-  per_page?: number;
+export interface PartnerFilter extends PaginationFilter {
   search?: string;
   is_active?: boolean;
   region_id?: number;
   city_id?: number;
 }
 
-export interface ClientFilter {
+export interface ClientFilter extends PaginationFilter {
   query?: string;
   client_id?: string;
-  page?: number;
-  per_page?: number;
 }
 
 export interface CityFilter {
-  page?: number;
-  per_page?: number;
-  search?: string;
   query?: string;
-  is_active?: boolean;
   region_id?: number;
-}
-
-export interface RegionFilter {
   page?: number;
   per_page?: number;
+}
+
+export interface RegionFilter extends PaginationFilter {
   search?: string;
   is_active?: boolean;
 }
 
-export interface ReviewFilter {
+export interface ReviewFilter extends PaginationFilter {
   query?: string;
   rating?: number;
   status?: ReviewStatus | string;
   service_point_id?: number;
   review_id?: string;
-  page?: number;
-  per_page?: number;
 }
 
-export interface BookingFilter {
+export interface BookingFilter extends PaginationFilter {
   query?: string;
   status?: string;
   booking_id?: string;
-  page?: number;
-  per_page?: number;
 }
 
 // Статус сервисной точки

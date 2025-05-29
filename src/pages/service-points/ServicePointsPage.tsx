@@ -69,8 +69,8 @@ const ServicePointsPage: React.FC = () => {
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
     search,
-    cityId: selectedCityId || undefined,
-    regionId: selectedRegionId || undefined,
+    city_id: selectedCityId || undefined,
+    region_id: selectedRegionId || undefined,
     page: page + 1,
     per_page: rowsPerPage,
   });
@@ -78,7 +78,7 @@ const ServicePointsPage: React.FC = () => {
 
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
-  const totalItems = servicePointsData?.meta?.total_count || servicePointsData?.pagination?.total_count || 0;
+  const totalItems = servicePointsData?.pagination?.total_count || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

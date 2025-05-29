@@ -1,53 +1,58 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Partner, PartnerFormData, PartnerFilter, ApiResponse } from '../types/models';
+import { 
+  Partner, 
+  PartnerFormData, 
+  PartnerFilter, 
+  ApiResponse,
+} from '../types/models';
+import { transformPaginatedResponse } from './apiUtils';
 
 export const partnersApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getPartners: build.query<ApiResponse<Partner>, PartnerFilter>({
-      query: (params: PartnerFilter = {}) => ({
+      query: (params = {}) => ({
         url: 'partners',
         params,
       }),
-      providesTags: (result: ApiResponse<Partner> | undefined) =>
+      transformResponse: (response: ApiResponse<Partner>) => transformPaginatedResponse(response),
+      providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Partners' as const, id })),
+              ...result.data.map(({ id }: Partner) => ({ type: 'Partners' as const, id })),
               'Partners',
             ]
           : ['Partners'],
     }),
     
     getPartnerById: build.query<Partner, number>({
-      query: (id: number) => `partners/${id}`,
-      providesTags: (_result: Partner | undefined, _err: FetchBaseQueryError | undefined, id: number) => [
-        { type: 'Partners' as const, id }
-      ],
+      query: (id) => `partners/${id}`,
+      providesTags: (_result, _err, id) => [{ type: 'Partners' as const, id }],
     }),
     
     createPartner: build.mutation<Partner, PartnerFormData>({
-      query: (data: PartnerFormData) => ({
+      query: (data) => ({
         url: 'partners',
         method: 'POST',
-        body: { partner: data },
+        body: data,
       }),
       invalidatesTags: ['Partners'],
     }),
     
     updatePartner: build.mutation<Partner, { id: number; partner: Partial<PartnerFormData> }>({
-      query: ({ id, partner }: { id: number; partner: Partial<PartnerFormData> }) => ({
+      query: ({ id, partner }) => ({
         url: `partners/${id}`,
-        method: 'PUT',
-        body: { partner },
+        method: 'PATCH',
+        body: partner,
       }),
-      invalidatesTags: (_result: Partner | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: number }) => [
+      invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },
         'Partners',
       ],
     }),
     
     deletePartner: build.mutation<void, number>({
-      query: (id: number) => ({
+      query: (id) => ({
         url: `partners/${id}`,
         method: 'DELETE',
       }),
@@ -55,12 +60,12 @@ export const partnersApi = baseApi.injectEndpoints({
     }),
 
     togglePartnerActive: build.mutation<Partner, { id: number; isActive: boolean }>({
-      query: ({ id, isActive }: { id: number; isActive: boolean }) => ({
+      query: ({ id, isActive }) => ({
         url: `partners/${id}/toggle-active`,
         method: 'PATCH',
         body: { is_active: isActive },
       }),
-      invalidatesTags: (_result: Partner | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: number }) => [
+      invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },
         'Partners',
       ],
@@ -68,7 +73,6 @@ export const partnersApi = baseApi.injectEndpoints({
   }),
 });
 
-// Экспортируем хуки для использования в компонентах
 export const {
   useGetPartnersQuery,
   useGetPartnerByIdQuery,

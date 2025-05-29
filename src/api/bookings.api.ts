@@ -2,6 +2,7 @@ import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/qu
 import { baseApi } from './baseApi';
 import { Booking, ApiResponse, BookingFilter } from '../types/models';
 import { BookingFormData, BookingStatus } from '../types/booking';
+import { transformPaginatedResponse } from './apiUtils';
 
 export interface BookingsQueryParams {
   query?: string;
@@ -19,33 +20,28 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'GET',
         params,
       }),
+      transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
       providesTags: ['Booking'],
     }),
 
-    getBookingsByServicePoint: builder.query<Booking[], string>({
-      query: (servicePointId: string) => `bookings?service_point_id=${servicePointId}`,
-      providesTags: (result: Booking[] | undefined) => {
-        if (result && Array.isArray(result)) {
-          return [
-            ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-            { type: 'Booking' as const, id: 'LIST' },
-          ];
-        }
-        return [{ type: 'Booking' as const, id: 'LIST' }];
-      },
+    getBookingsByServicePoint: builder.query<ApiResponse<Booking>, string>({
+      query: (servicePointId: string) => ({
+        url: 'bookings',
+        method: 'GET',
+        params: { service_point_id: servicePointId }
+      }),
+      transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
+      providesTags: ['Booking'],
     }),
 
-    getBookingsByClient: builder.query<Booking[], string>({
-      query: (clientId: string) => `bookings?client_id=${clientId}`,
-      providesTags: (result: Booking[] | undefined) => {
-        if (result && Array.isArray(result)) {
-          return [
-            ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-            { type: 'Booking' as const, id: 'LIST' },
-          ];
-        }
-        return [{ type: 'Booking' as const, id: 'LIST' }];
-      },
+    getBookingsByClient: builder.query<ApiResponse<Booking>, string>({
+      query: (clientId: string) => ({
+        url: 'bookings',
+        method: 'GET',
+        params: { client_id: clientId }
+      }),
+      transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
+      providesTags: ['Booking'],
     }),
     
     getBookingById: builder.query<Booking, string>({
@@ -53,7 +49,11 @@ export const bookingsApi = baseApi.injectEndpoints({
         url: `bookings/${id}`,
         method: 'GET',
       }),
-      providesTags: (_result, _error, id) => [{ type: 'Booking' as const, id }],
+      transformResponse: (response: any) => {
+        const transformed = transformPaginatedResponse<Booking>(response);
+        return transformed.data[0];
+      },
+      providesTags: (_result, _error, id) => [{ type: 'Booking', id }],
     }),
     
     createBooking: builder.mutation<Booking, BookingFormData>({
@@ -62,7 +62,11 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: booking,
       }),
-      invalidatesTags: [{ type: 'Booking' as const, id: 'LIST' }],
+      transformResponse: (response: any) => {
+        const transformed = transformPaginatedResponse<Booking>(response);
+        return transformed.data[0];
+      },
+      invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
     
     updateBooking: builder.mutation<Booking, { id: string; booking: Partial<BookingFormData> }>({
@@ -71,21 +75,29 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'PUT',
         body: booking,
       }),
+      transformResponse: (response: any) => {
+        const transformed = transformPaginatedResponse<Booking>(response);
+        return transformed.data[0];
+      },
       invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Booking' as const, id: 'LIST' },
-        { type: 'Booking' as const, id },
+        { type: 'Booking', id: 'LIST' },
+        { type: 'Booking', id },
       ],
     }),
 
-    updateBookingStatus: builder.mutation<Booking, { id: string; status: BookingStatus }>({
-      query: ({ id, status }: { id: string; status: BookingStatus }) => ({
+    updateBookingStatus: builder.mutation<Booking, { id: string; status_id: number }>({
+      query: ({ id, status_id }) => ({
         url: `bookings/${id}/status`,
         method: 'PATCH',
-        body: { status },
+        body: { status_id },
       }),
+      transformResponse: (response: any) => {
+        const transformed = transformPaginatedResponse<Booking>(response);
+        return transformed.data[0];
+      },
       invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Booking' as const, id: 'LIST' },
-        { type: 'Booking' as const, id },
+        { type: 'Booking', id: 'LIST' },
+        { type: 'Booking', id },
       ],
     }),
     
@@ -94,7 +106,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         url: `bookings/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'Booking' as const, id: 'LIST' }],
+      invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
   }),
 });

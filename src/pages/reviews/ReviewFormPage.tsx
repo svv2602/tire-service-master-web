@@ -26,7 +26,7 @@ import {
   useGetBookingsByClientQuery,
   useCreateReviewMutation,
 } from '../../api';
-import { Booking } from '../../types/models';
+import { Booking, ApiResponse } from '../../types/models';
 import { RootState } from '../../store';
 
 // Схема валидации
@@ -67,7 +67,7 @@ const ReviewFormPage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         // Находим выбранное бронирование для получения service_point_id
-        const selectedBooking = bookingsData?.find((booking: Booking) => booking.id.toString() === values.booking_id);
+        const selectedBooking = bookingsData?.data?.find((booking: Booking) => booking.id.toString() === values.booking_id);
         
         await createReview({
           service_point_id: selectedBooking?.service_point_id?.toString() || '',
@@ -103,7 +103,7 @@ const ReviewFormPage: React.FC = () => {
     );
   }
 
-  const bookings = bookingsData || [];
+  const bookings = bookingsData?.data || [];
 
   // Если нет завершенных бронирований
   if (bookings.length === 0) {
@@ -147,7 +147,7 @@ const ReviewFormPage: React.FC = () => {
               >
                 {bookings.map((booking: Booking) => (
                   <MenuItem key={booking.id} value={booking.id}>
-                    {booking.service_point?.name} - {new Date(booking.scheduled_at).toLocaleDateString()}
+                    {booking.service_point?.name} - {new Date(booking.booking_date).toLocaleDateString()}
                   </MenuItem>
                 ))}
               </Select>

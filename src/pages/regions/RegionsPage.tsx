@@ -75,8 +75,8 @@ const RegionsPage: React.FC = () => {
 
   const isLoading = regionsLoading || deleteLoading;
   const error = regionsError;
-  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
-  const totalItems = (regionsData as unknown as ApiResponse<Region>)?.total || 0;
+  const regions = regionsData?.data || [];
+  const totalItems = regionsData?.pagination?.total_count || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
+  Pagination,
   Avatar,
 } from '@mui/material';
 import {
@@ -40,6 +40,8 @@ import {
   useUpdatePartnerMutation,
 } from '../../api';
 import { Partner, PartnerFilter, PartnerFormData } from '../../types/models';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { SerializedError } from '@reduxjs/toolkit';
 
 // Хук для debounce
 const useDebounce = (value: string, delay: number) => {
@@ -138,8 +140,8 @@ const PartnersPage: React.FC = () => {
   
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -151,9 +153,9 @@ const PartnersPage: React.FC = () => {
   // Мемоизированные параметры запроса
   const queryParams = useMemo(() => ({
     query: debouncedSearch || undefined,
-    page: page + 1,
-    per_page: rowsPerPage,
-  }), [debouncedSearch, page, rowsPerPage]);
+    page,
+    per_page: pageSize,
+  }), [debouncedSearch, page, pageSize]);
 
   // RTK Query хуки
   const { 
@@ -166,23 +168,28 @@ const PartnersPage: React.FC = () => {
   const [updatePartner] = useUpdatePartnerMutation();
 
   const isLoading = partnersLoading || deleteLoading;
-  const error = partnersError;
+  const error = partnersError as FetchBaseQueryError | SerializedError | undefined;
   const partners = partnersData?.data || [];
-  const totalItems = partnersData?.meta?.total_count || 0;
+  const totalItems = partnersData?.pagination?.total_count || 0;
+
+  // Вспомогательная функция для получения текста ошибки
+  const getErrorMessage = (error: FetchBaseQueryError | SerializedError): string => {
+    if ('status' in error) {
+      const fetchError = error as FetchBaseQueryError;
+      return (fetchError.data as { message?: string })?.message || 'Ошибка сервера';
+    }
+    return (error as SerializedError).message || 'Неизвестная ошибка';
+  };
 
   // Мемоизированные обработчики событий
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-    setPage(0);
+    setPage(1);
   }, []);
 
-  const handleChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const handleChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+    window.scrollTo(0, 0);
   }, []);
 
   const handleDeleteClick = useCallback((partner: Partner) => {
@@ -245,93 +252,120 @@ const PartnersPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке партнеров: {error.toString()}
+          Ошибка при загрузке партнеров: {getErrorMessage(error)}
         </Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Заголовок */}
+    <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Партнеры</Typography>
         <Button
           variant="contained"
+          color="primary"
           startIcon={<AddIcon />}
-          onClick={handleAddPartner}
+          onClick={() => navigate('/partners/create')}
         >
           Добавить партнера
         </Button>
       </Box>
 
-      {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
-      <TextField
-          placeholder="Поиск по названию компании"
-        variant="outlined"
-          size="small"
-        value={search}
-        onChange={handleSearchChange}
-          sx={{ minWidth: 300 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon />
-            </InputAdornment>
-          ),
-        }}
-      />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <TextField
+            label="Поиск"
+            variant="outlined"
+            value={search}
+            onChange={handleSearchChange}
+            fullWidth
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
       </Paper>
 
-      {/* Таблица партнеров */}
-      <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Компания</TableCell>
-                <TableCell>Контактное лицо</TableCell>
-              <TableCell>Телефон</TableCell>
-              <TableCell>Email</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-            {partners.map((partner: Partner) => (
-              <PartnerRow
-                key={partner.id}
-                partner={partner}
-                onEdit={handleEditPartner}
-                onToggleStatus={handleToggleStatus}
-                onDelete={handleDeleteClick}
-                getInitials={getPartnerInitials}
-              />
-            ))}
-            </TableBody>
-          </Table>
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
-      </TableContainer>
+      <Paper>
+        {isLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box sx={{ p: 3 }}>
+            <Alert severity="error">
+              Ошибка при загрузке партнеров: {getErrorMessage(error)}
+            </Alert>
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table sx={{ minWidth: 650 }} aria-label="table of partners">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Партнер</TableCell>
+                    <TableCell>Контактное лицо</TableCell>
+                    <TableCell>Телефон</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Статус</TableCell>
+                    <TableCell align="right">Действия</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {partners.length > 0 ? (
+                    partners.map((partner: Partner) => (
+                      <PartnerRow
+                        key={partner.id}
+                        partner={partner}
+                        onEdit={handleEditPartner}
+                        onDelete={handleDeleteClick}
+                        onToggleStatus={handleToggleStatus}
+                        getInitials={getPartnerInitials}
+                      />
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center">
+                        <Typography variant="body1" color="text.secondary">
+                          {page > 1 ? "На этой странице нет данных" : "Нет данных для отображения"}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+              {partnersData?.pagination && partnersData.pagination.total_pages > 0 && (
+                <Pagination
+                  count={partnersData.pagination.total_pages}
+                  page={Math.min(page, partnersData.pagination.total_pages)}
+                  onChange={handlePageChange}
+                  color="primary"
+                  disabled={partnersData.pagination.total_pages <= 1}
+                />
+              )}
+            </Box>
+          </>
+        )}
+      </Paper>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
-          <Typography>
-            Вы действительно хотите удалить партнера {selectedPartner?.company_name}?
-            Это действие нельзя будет отменить.
-          </Typography>
+          Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Удалить
           </Button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -28,7 +28,6 @@ import {
   Select,
   FormControl,
   InputLabel,
-  FormHelperText,
   SelectChangeEvent,
 } from '@mui/material';
 import {
@@ -36,8 +35,6 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -46,39 +43,20 @@ import {
   useGetCitiesQuery, 
   useDeleteCityMutation,
   useUpdateCityMutation,
-} from '../../api';
-import { useGetRegionsQuery } from '../../api';
-import { City, CityFilter, Region, ApiResponse } from '../../types/models';
+} from '../../api/cities.api';
+import { useGetRegionsQuery } from '../../api/regions.api';
+import { City, Region } from '../../types/models';
+import { CityFilter } from '../../types/api';
 
 // Схема валидации для города
 const validationSchema = yup.object({
   name: yup.string().required('Название города обязательно'),
-  code: yup.string().required('Код города обязателен'),
-  region_id: yup.number().required('Регион обязателен'),
+  region_id: yup.string().required('Регион обязателен'),
 });
-
-interface CitiesQueryParams {
-  page?: number;
-  per_page?: number;
-  query?: string;
-  region_id?: number;
-}
-
-interface RegionsQueryParams {
-  active?: boolean;
-}
-
-// Локальные интерфейсы для фильтров
-interface RegionFilter {
-  query?: string;
-  page?: number;
-  per_page?: number;
-}
 
 interface CityFormData {
   name: string;
   region_id: string;
-  code?: string;
   is_active?: boolean;
 }
 
@@ -93,6 +71,7 @@ const CitiesPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // RTK Query хуки
   const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useGetCitiesQuery({
@@ -108,9 +87,9 @@ const CitiesPage: React.FC = () => {
 
   const isLoading = citiesLoading;
   const error = citiesError;
-  const cities = (citiesData as unknown as ApiResponse<City>)?.data || [];
-  const totalItems = (citiesData as unknown as ApiResponse<City>)?.total || 0;
-  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
+  const cities = citiesData?.data || [];
+  const totalItems = citiesData?.pagination?.total_count || 0;
+  const regions = regionsData?.data || [];
 
   // Обработчики пагинации
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -123,36 +102,32 @@ const CitiesPage: React.FC = () => {
   };
 
   // Формик для формы города
-  const initialValues: CityFormData = {
-    name: '',
-    code: '',
-    region_id: '',
-    is_active: true,
-  };
-
   const formik = useFormik<CityFormData>({
-    initialValues,
+    initialValues: {
+      name: editingCity?.name || '',
+      region_id: editingCity?.region_id?.toString() || '',
+      is_active: editingCity?.is_active ?? true,
+    },
     validationSchema,
     onSubmit: async (values) => {
       try {
         if (editingCity) {
           await updateCity({ 
-            id: editingCity.id, 
+            id: Number(editingCity.id),
             city: {
-              ...values,
-              region_id: parseInt(values.region_id)
+              name: values.name,
+              region_id: Number(values.region_id),
+              is_active: values.is_active
             }
           }).unwrap();
           setSuccessMessage('Город успешно обновлен');
           handleCloseDialog();
         } else {
-          // Создание города пока не реализовано
-          console.log('Создание города:', values);
           setSuccessMessage('Функция создания города будет добавлена позже');
           handleCloseDialog();
         }
       } catch (error) {
-        console.error('Ошибка при сохранении:', error);
+        console.error('Ошибка при сохранении города:', error);
       }
     },
   });
@@ -163,7 +138,6 @@ const CitiesPage: React.FC = () => {
       setEditingCity(city);
       formik.setValues({
         name: city.name,
-        code: city.name.toLowerCase().replace(/\s+/g, '_'),
         region_id: city.region_id.toString(),
         is_active: city.is_active,
       });
@@ -183,13 +157,14 @@ const CitiesPage: React.FC = () => {
 
   // Удаление города
   const handleDeleteCity = async (id: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот город?')) {
-      try {
-        await deleteCity(id).unwrap();
-        setSuccessMessage('Город успешно удален');
-      } catch (error: any) {
-        console.error('Ошибка при удалении:', error);
-      }
+    try {
+      await deleteCity(Number(id)).unwrap();
+      setSuccessMessage('Город успешно удален');
+      setDeleteDialogOpen(false);
+      setSelectedCity(null);
+    } catch (error) {
+      console.error('Ошибка при удалении города:', error);
+      setErrorMessage('Не удалось удалить город');
     }
   };
 
@@ -201,8 +176,7 @@ const CitiesPage: React.FC = () => {
 
   // Обработчик фильтра по региону
   const handleRegionFilterChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value;
-    setRegionFilter(value);
+    setRegionFilter(event.target.value);
     setPage(0);
   };
 
@@ -216,28 +190,32 @@ const CitiesPage: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    if (selectedCity) {
-      try {
-        await deleteCity(selectedCity.id).unwrap();
-        setDeleteDialogOpen(false);
-        setSelectedCity(null);
-      } catch (error) {
-        console.error('Ошибка при удалении города:', error);
-      }
-    }
-  };
-
   const handleToggleStatus = async (city: City) => {
     try {
       await updateCity({
-        id: city.id,
-        city: { is_active: !city.is_active } as Partial<City>
+        id: Number(city.id),
+        city: { is_active: !city.is_active }
       }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error">
+        Произошла ошибка при загрузке данных: {(error as any)?.data?.message || 'Неизвестная ошибка'}
+      </Alert>
+    );
+  }
 
   return (
     <Box>
@@ -253,13 +231,7 @@ const CitiesPage: React.FC = () => {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error.toString()}
-        </Alert>
-      )}
-
-      <Paper sx={{ mb: 3, p: 2 }}>
+      <Paper sx={{ mb: 2, p: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <TextField
             label="Поиск"
@@ -268,19 +240,20 @@ const CitiesPage: React.FC = () => {
             value={search}
             onChange={handleSearch}
             InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              startAdornment: <SearchIcon color="action" />,
             }}
+            sx={{ minWidth: 200 }}
           />
           <FormControl size="small" sx={{ minWidth: 200 }}>
             <InputLabel>Регион</InputLabel>
             <Select
               value={regionFilter}
-              label="Регион"
               onChange={handleRegionFilterChange}
+              label="Регион"
             >
               <MenuItem value="">Все регионы</MenuItem>
               {regions.map((region: Region) => (
-                <MenuItem key={region.id} value={region.id}>
+                <MenuItem key={region.id} value={region.id.toString()}>
                   {region.name}
                 </MenuItem>
               ))}
@@ -293,39 +266,32 @@ const CitiesPage: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Название</TableCell>
-                <TableCell>Код</TableCell>
                 <TableCell>Регион</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    <CircularProgress />
+              {cities.map((city: City) => (
+                <TableRow key={city.id}>
+                  <TableCell>{city.name}</TableCell>
+                  <TableCell>
+                    {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
                   </TableCell>
-                </TableRow>
-              ) : cities.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    Нет данных
+                  <TableCell>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={city.is_active}
+                          onChange={() => handleToggleStatus(city)}
+                          color="primary"
+                        />
+                      }
+                      label={city.is_active ? 'Активен' : 'Неактивен'}
+                    />
                   </TableCell>
-                </TableRow>
-              ) : (
-                cities.map((city: City) => (
-                  <TableRow key={city.id}>
-                    <TableCell>{city.name}</TableCell>
-                    <TableCell>{city.name.toLowerCase().replace(/\s+/g, '_')}</TableCell>
-                    <TableCell>{regionsData?.data?.find(r => r.id === city.region_id)?.name}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={city.is_active ? 'Активен' : 'Неактивен'}
-                        color={city.is_active ? 'success' : 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell align="right">
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                       <Tooltip title="Редактировать">
                         <IconButton
                           size="small"
@@ -334,27 +300,19 @@ const CitiesPage: React.FC = () => {
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={city.is_active ? 'Деактивировать' : 'Активировать'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleToggleStatus(city)}
-                          color={city.is_active ? 'error' : 'success'}
-                        >
-                          {city.is_active ? <CloseIcon /> : <CheckIcon />}
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title="Удалить">
                         <IconButton
                           size="small"
+                          color="error"
                           onClick={() => handleDeleteClick(city)}
                         >
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -366,52 +324,42 @@ const CitiesPage: React.FC = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25, 50]}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </Paper>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {editingCity ? 'Редактирование города' : 'Добавление города'}
-        </DialogTitle>
+      {/* Диалог создания/редактирования */}
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
         <form onSubmit={formik.handleSubmit}>
+          <DialogTitle>
+            {editingCity ? 'Редактировать город' : 'Добавить город'}
+          </DialogTitle>
           <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <TextField
                 fullWidth
-                label="Название города"
+                label="Название"
                 name="name"
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
               />
-              <TextField
-                fullWidth
-                label="Код города"
-                name="code"
-                value={formik.values.code}
-                onChange={formik.handleChange}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={formik.touched.code && formik.errors.code}
-              />
-              <FormControl fullWidth error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
+              <FormControl fullWidth>
                 <InputLabel>Регион</InputLabel>
                 <Select
                   name="region_id"
                   value={formik.values.region_id}
                   onChange={formik.handleChange}
                   label="Регион"
+                  error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                 >
                   {regions.map((region: Region) => (
-                    <MenuItem key={region.id} value={region.id}>
+                    <MenuItem key={region.id} value={region.id.toString()}>
                       {region.name}
                     </MenuItem>
                   ))}
                 </Select>
-                {formik.touched.region_id && formik.errors.region_id && (
-                  <FormHelperText>{formik.errors.region_id}</FormHelperText>
-                )}
               </FormControl>
               <FormControlLabel
                 control={
@@ -428,22 +376,13 @@ const CitiesPage: React.FC = () => {
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
             <Button type="submit" variant="contained" color="primary">
-              {editingCity ? 'Сохранить' : 'Добавить'}
+              {editingCity ? 'Сохранить' : 'Создать'}
             </Button>
           </DialogActions>
         </form>
       </Dialog>
 
-      <Snackbar
-        open={Boolean(successMessage)}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          {successMessage}
-        </Alert>
-      </Snackbar>
-
+      {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
@@ -454,11 +393,27 @@ const CitiesPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button
+            onClick={() => selectedCity && handleDeleteCity(selectedCity.id)}
+            color="error"
+            variant="contained"
+          >
             Удалить
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомление об успехе */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success">
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

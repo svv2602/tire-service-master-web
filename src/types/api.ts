@@ -1,5 +1,6 @@
 import { InternalAxiosRequestConfig } from 'axios';
 import { User } from './user';
+import { PaginationFilter } from './models';
 
 // Расширяем конфигурацию axios
 declare module 'axios' {
@@ -8,18 +9,62 @@ declare module 'axios' {
   }
 }
 
-// Базовый интерфейс для ответа API
+// Общий тип для пагинации
+export interface Pagination {
+  current_page: number;
+  total_pages: number;
+  total_count: number;
+}
+
+// Общий тип для ответа API
 export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  status: number;
-  meta?: {
-    current_page: number;
-    per_page: number;
-    total: number;
-    total_pages: number;
-  };
-  errors?: Record<string, string[]>;
+  data: T[];
+  pagination: Pagination;
+}
+
+// Общий тип для фильтров
+export interface BaseFilter {
+  page?: number;
+  per_page?: number;
+}
+
+// Фильтр для городов
+export interface CityFilter extends PaginationFilter {
+  query?: string;
+  region_id?: number;
+}
+
+// Фильтр для регионов
+export interface RegionFilter extends BaseFilter {
+  query?: string;
+}
+
+// Фильтр для сервисных точек
+export interface ServicePointFilter extends BaseFilter {
+  city_id?: string | number;
+  region_id?: string | number;
+  query?: string;
+}
+
+// Фильтр для клиентов
+export interface ClientFilter extends BaseFilter {
+  query?: string;
+}
+
+// Фильтр для бронирований
+export interface BookingFilter extends BaseFilter {
+  service_point_id?: string | number;
+  client_id?: string | number;
+  date_from?: string;
+  date_to?: string;
+  status?: string;
+}
+
+// Фильтр для отзывов
+export interface ReviewFilter extends BaseFilter {
+  service_point_id?: string | number;
+  client_id?: string | number;
+  rating?: number;
 }
 
 // Интерфейс для ошибки API

@@ -70,8 +70,9 @@ const BookingsPage: React.FC = () => {
 
   const isLoading = bookingsLoading || deleteLoading;
   const error = bookingsError;
-  const bookings = (bookingsData as ApiResponse<Booking>)?.data || [];
-  const totalItems = (bookingsData as ApiResponse<Booking>)?.total || 0;
+  const bookings = bookingsData?.data || [];
+  const totalItems = bookingsData?.pagination?.total_count || 0;
+  const totalPages = bookingsData?.pagination?.total_pages || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,9 +111,7 @@ const BookingsPage: React.FC = () => {
       await updateBooking({
         id: booking.id.toString(),
         booking: { 
-          status: booking.status === BookingStatusEnum.PENDING ? 
-            BookingStatusEnum.COMPLETED : 
-            BookingStatusEnum.PENDING 
+          status_id: booking.status_id === 1 ? 2 : 1
         }
       }).unwrap();
     } catch (error) {
@@ -126,24 +125,20 @@ const BookingsPage: React.FC = () => {
   };
 
   // Вспомогательные функции
-  const getStatusLabel = (status: string): string => {
-    switch (status) {
-      case 'pending': return 'В ожидании';
-      case 'confirmed': return 'Подтверждено';
-      case 'in_progress': return 'В работе';
-      case 'completed': return 'Завершено';
-      case 'cancelled': return 'Отменено';
-      default: return status;
+  const getStatusLabel = (statusId: number): string => {
+    switch (statusId) {
+      case 1: return 'В ожидании';
+      case 2: return 'Завершено';
+      case 3: return 'Отменено';
+      default: return `Статус ${statusId}`;
     }
   };
 
-  const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
-    switch (status) {
-      case 'pending': return 'warning';
-      case 'confirmed': return 'info';
-      case 'in_progress': return 'primary';
-      case 'completed': return 'success';
-      case 'cancelled': return 'error';
+  const getStatusColor = (statusId: number): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+    switch (statusId) {
+      case 1: return 'warning';
+      case 2: return 'success';
+      case 3: return 'error';
       default: return 'default';
     }
   };
@@ -229,13 +224,13 @@ const BookingsPage: React.FC = () => {
                 <TableCell>{booking.service_point?.name}</TableCell>
 
                 <TableCell>
-                  {new Date(booking.scheduled_at).toLocaleString()}
+                  {new Date(booking.booking_date).toLocaleDateString()} {new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </TableCell>
 
                 <TableCell>
                   <Chip
-                    label={getStatusLabel(booking.status)}
-                    color={getStatusColor(booking.status)}
+                    label={getStatusLabel(booking.status_id)}
+                    color={getStatusColor(booking.status_id)}
                     size="small"
                   />
                 </TableCell>
@@ -250,13 +245,13 @@ const BookingsPage: React.FC = () => {
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={booking.status === 'completed' ? 'Отметить как ожидающее' : 'Отметить как завершенное'}>
+                    <Tooltip title={booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное'}>
                       <IconButton
                         onClick={() => handleToggleStatus(booking)}
                         size="small"
-                        color={booking.status === 'completed' ? 'warning' : 'success'}
+                        color={booking.status_id === 2 ? 'warning' : 'success'}
                       >
-                        {booking.status === 'completed' ? <CloseIcon /> : <CheckIcon />}
+                        {booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />}
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Удалить">

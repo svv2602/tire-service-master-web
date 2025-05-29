@@ -19,24 +19,28 @@ import {
   useGetClientsQuery,
   useGetBookingsQuery
 } from '../../api';
+import { ApiResponse, Partner, ServicePoint, Client, Booking } from '../../types/models';
 import StatCard from '../../components/StatCard';
 import BookingChart from '../../components/BookingChart';
 import ServicePointMap from '../../components/ServicePointMap';
 
 const DashboardPage: React.FC = () => {
-  // RTK Query хуки
+  // RTK Query хуки с типизацией
   const { data: partnersData, isLoading: partnersLoading, error: partnersError } = useGetPartnersQuery({
     page: 1,
     per_page: 1
   });
+
   const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError } = useGetServicePointsQuery({
     page: 1,
     per_page: 1
   });
+
   const { data: clientsData, isLoading: clientsLoading, error: clientsError } = useGetClientsQuery({
     page: 1,
     per_page: 1
   });
+
   const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError } = useGetBookingsQuery({
     page: 1,
     per_page: 1
@@ -46,21 +50,21 @@ const DashboardPage: React.FC = () => {
   const stats = [
     {
       title: 'Партнеры',
-      value: partnersData?.total || 0,
+      value: partnersData?.pagination?.total_count || 0,
       icon: <BusinessIcon />,
       color: '#1976d2',
       description: 'Всего партнеров в системе',
     },
     {
       title: 'Сервисные точки',
-      value: servicePointsData?.total || 0,
+      value: servicePointsData?.pagination?.total_count || 0,
       icon: <LocationIcon />,
       color: '#388e3c',
       description: 'Активных точек обслуживания',
     },
     {
       title: 'Клиенты',
-      value: clientsData?.total || 0,
+      value: clientsData?.pagination?.total_count || 0,
       icon: <PeopleIcon />,
       color: '#e64a19',
       description: 'Зарегистрированных клиентов',

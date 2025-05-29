@@ -63,7 +63,7 @@ const CarBrandsPage: React.FC = () => {
 
   const error = fetchError || createError || updateError || deleteError;
   const brands = brandsData?.data || [];
-  const totalItems = brandsData?.total || 0;
+  const totalItems = brandsData?.pagination?.total_count || 0;
 
   const formik = useFormik({
     initialValues: {

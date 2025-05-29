@@ -70,7 +70,7 @@ const MyReviewsPage: React.FC = () => {
   const isLoading = reviewsLoading || deleteLoading || updateLoading;
   const error = reviewsError;
   const reviews = reviewsData?.data || [];
-  const totalItems = reviewsData?.total || 0;
+  const totalItems = reviewsData?.pagination?.total_count || 0;
 
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {

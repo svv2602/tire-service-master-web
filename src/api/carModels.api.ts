@@ -2,6 +2,7 @@ import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/qu
 import { baseApi } from './baseApi';
 import { CarModel, CarModelFormData } from '../types/car';
 import { ApiResponse } from '../types/models';
+import { transformPaginatedResponse } from './apiUtils';
 
 interface CarModelFilter {
   query?: string;
@@ -35,40 +36,7 @@ export const carModelsApi = baseApi.injectEndpoints({
         url: 'car_models',
         params,
       }),
-      transformResponse: (response: ApiCarModelsResponse): ApiResponse<CarModel> => {
-        return {
-          data: response.car_models.map(model => ({
-            id: model.id,
-            brand_id: model.brand_id,
-            name: model.name,
-            code: model.name.toLowerCase().replace(/\s+/g, '_'), // Генерируем код из названия
-            is_active: model.is_active,
-            is_popular: false, // По умолчанию false
-            year_start: undefined,
-            year_end: undefined,
-            created_at: model.created_at,
-            updated_at: model.updated_at,
-            brand: {
-              id: model.brand.id,
-              name: model.brand.name,
-              code: model.brand.name.toLowerCase().replace(/\s+/g, '_'),
-              logo_url: undefined,
-              is_active: true,
-              is_popular: false,
-              models_count: 0,
-              created_at: model.created_at, // Используем дату модели
-              updated_at: model.updated_at, // Используем дату модели
-            },
-          })),
-          total: response.total_items,
-          meta: {
-            current_page: 1,
-            total_pages: 1,
-            total_count: response.total_items,
-            total: response.total_items,
-          },
-        };
-      },
+      transformResponse: (response: ApiResponse<CarModel>) => transformPaginatedResponse(response),
       providesTags: (result) =>
         result?.data
           ? [

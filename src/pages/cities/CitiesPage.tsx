@@ -46,20 +46,22 @@ import {
 import { 
   useGetRegionsQuery 
 } from '../../api/regions.api';
-import { City, CityFilter, CityFormData, Region, ApiResponse } from '../../types/models';
+import { ApiResponse, City, CityFilter, CityFormData, Region } from '../../types/models';
 
 const CitiesPage: React.FC = () => {
   const navigate = useNavigate();
   
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
-  const [regionId, setRegionId] = useState<string>('');
+  const [regionId, setRegionId] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // RTK Query хуки
   const { 
@@ -79,9 +81,9 @@ const CitiesPage: React.FC = () => {
 
   const isLoading = citiesLoading || deleteLoading;
   const error = citiesError;
-  const cities = (citiesData as unknown as ApiResponse<City>)?.data || [];
-  const totalItems = (citiesData as unknown as ApiResponse<City>)?.total || 0;
-  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
+  const cities = citiesData?.data || [];
+  const totalItems = citiesData?.pagination?.total_count || 0;
+  const regions = regionsData?.data || [];
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,11 +113,13 @@ const CitiesPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (selectedCity) {
       try {
-        await deleteCity(selectedCity.id).unwrap();
+        await deleteCity(Number(selectedCity.id)).unwrap();
+        setSuccessMessage('Город успешно удален');
         setDeleteDialogOpen(false);
         setSelectedCity(null);
       } catch (error) {
         console.error('Ошибка при удалении города:', error);
+        setErrorMessage('Не удалось удалить город');
       }
     }
   };
@@ -123,8 +127,8 @@ const CitiesPage: React.FC = () => {
   const handleToggleStatus = async (city: City) => {
     try {
       await updateCity({
-        id: city.id,
-        city: { is_active: !city.is_active } as Partial<City>
+        id: Number(city.id),
+        city: { is_active: !city.is_active }
       }).unwrap();
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
@@ -197,7 +201,7 @@ const CitiesPage: React.FC = () => {
             >
               <MenuItem value="">Все регионы</MenuItem>
               {regions.map((region: Region) => (
-                <MenuItem key={region.id} value={region.id.toString()}>
+                <MenuItem key={region.id} value={region.id}>
                   {region.name}
                 </MenuItem>
               ))}
@@ -227,7 +231,9 @@ const CitiesPage: React.FC = () => {
                   </Box>
                 </TableCell>
 
-                <TableCell>{city.region?.name}</TableCell>
+                <TableCell>
+                  {regions.find(r => r.id === city.region_id)?.name}
+                </TableCell>
 
                 <TableCell>
                   <Chip
@@ -248,15 +254,6 @@ const CitiesPage: React.FC = () => {
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={city.is_active ? 'Деактивировать' : 'Активировать'}>
-                      <IconButton
-                        onClick={() => handleToggleStatus(city)}
-                        size="small"
-                        color={city.is_active ? 'error' : 'success'}
-                      >
-                        {city.is_active ? <CloseIcon /> : <CheckIcon />}
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Удалить">
                       <IconButton
                         onClick={() => handleDeleteClick(city)}
@@ -272,6 +269,7 @@ const CitiesPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
+
         <TablePagination
           component="div"
           count={totalItems}
@@ -279,13 +277,18 @@ const CitiesPage: React.FC = () => {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
+          rowsPerPageOptions={[10, 25, 50]}
         />
       </TableContainer>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDialog}
+      >
+        <DialogTitle>
+          Подтверждение удаления
+        </DialogTitle>
         <DialogContent>
           <Typography>
             Вы действительно хотите удалить город {selectedCity?.name}?
@@ -293,8 +296,14 @@ const CitiesPage: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button onClick={handleCloseDialog}>
+            Отмена
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+          >
             Удалить
           </Button>
         </DialogActions>

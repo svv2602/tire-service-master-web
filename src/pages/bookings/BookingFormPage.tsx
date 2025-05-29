@@ -33,7 +33,11 @@ import {
 import { format } from 'date-fns';
 import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
 import { User, UserRole } from '../../types';
-import { BookingStatusEnum, BookingFormData as BookingFormDataType } from '../../types/booking';
+import { 
+  BookingStatusEnum, 
+  BookingFormData as BookingFormDataType,
+  BookingService
+} from '../../types/booking';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { useGetCarsQuery } from '../../api/cars.api';
 import { ServicePoint, Car, ApiResponse } from '../../types/models';
@@ -300,13 +304,13 @@ const BookingFormPage: React.FC = () => {
     service_point_id: '',
     car_id: '',
     scheduled_at: new Date(),
-    services: [] as number[],
+    services: [] as BookingService[],
     notes: '',
   }), []);
 
   const formik = useFormik({
     initialValues,
-    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
+    enableReinitialize: true,
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -314,24 +318,42 @@ const BookingFormPage: React.FC = () => {
           await updateBooking({ 
             id: id.toString(), 
             booking: {
-              client_id: '1', // TODO: получить из контекста
-              service_point_id: values.service_point_id,
-              car_type_id: '1', // TODO: получить из формы
-              scheduled_at: values.scheduled_at.toISOString(),
-              status: BookingStatusEnum.PENDING,
+              client_id: 1, // TODO: получить из контекста
+              service_point_id: Number(values.service_point_id),
+              car_id: Number(values.car_id),
+              car_type_id: 1, // TODO: получить из формы
+              booking_date: values.scheduled_at.toISOString().split('T')[0],
+              start_time: values.scheduled_at.toISOString(),
+              end_time: new Date(values.scheduled_at.getTime() + 60 * 60 * 1000).toISOString(),
+              status_id: BookingStatusEnum.PENDING,
+              notes: values.notes || '',
+              services: services.map(service => ({
+                service_id: service.service_id,
+                quantity: service.quantity,
+                price: service.price
+              }))
             }
           }).unwrap();
-      } else {
+        } else {
           await createBooking({
-            client_id: '1', // TODO: получить из контекста
-            service_point_id: values.service_point_id,
-            car_type_id: '1', // TODO: получить из формы
-            scheduled_at: values.scheduled_at.toISOString(),
-            status: BookingStatusEnum.PENDING,
+            client_id: 1, // TODO: получить из контекста
+            service_point_id: Number(values.service_point_id),
+            car_id: Number(values.car_id),
+            car_type_id: 1, // TODO: получить из формы
+            booking_date: values.scheduled_at.toISOString().split('T')[0],
+            start_time: values.scheduled_at.toISOString(),
+            end_time: new Date(values.scheduled_at.getTime() + 60 * 60 * 1000).toISOString(),
+            status_id: BookingStatusEnum.PENDING,
+            notes: values.notes || '',
+            services: services.map(service => ({
+              service_id: service.service_id,
+              quantity: service.quantity,
+              price: service.price
+            }))
           }).unwrap();
-      }
-      
-      setSuccess('Бронирование успешно сохранено');
+        }
+        
+        setSuccess('Бронирование успешно сохранено');
         navigate('/bookings');
       } catch (err) {
         setError('Ошибка при сохранении бронирования');
