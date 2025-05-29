@@ -35,8 +35,8 @@ export interface UsersResponse {
 }
 
 export interface UsersQueryParams {
-  page?: string;
-  per_page?: string;
+  page?: number;
+  per_page?: number;
   query?: string;
   role?: string;
   active?: boolean;
@@ -81,7 +81,11 @@ export const usersApi = createApi({
       query: (params) => ({
         url: 'users',
         method: 'GET',
-        params,
+        params: {
+          ...params,
+          page: params.page,
+          per_page: params.per_page
+        },
       }),
       transformResponse: (response: ApiUsersResponse): UsersResponse => {
         return {
@@ -99,9 +103,9 @@ export const usersApi = createApi({
             updated_at: user.updated_at,
           })),
           totalItems: response.pagination.total_count,
-          currentPage: response.pagination.current_page,
-          totalPages: response.pagination.total_pages,
-          itemsPerPage: response.pagination.per_page,
+          currentPage: Number(response.pagination.current_page),
+          totalPages: Number(response.pagination.total_pages),
+          itemsPerPage: Number(response.pagination.per_page),
         };
       },
       providesTags: ['User'],
