@@ -21,7 +21,12 @@ export interface Pagination {
 // Общий интерфейс для ответа API
 export interface ApiResponse<T> {
   data: T[];
-  pagination?: Pagination;
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
   message?: string;
   status?: number;
 }
@@ -66,32 +71,46 @@ export interface Partner {
 }
 
 // Модель сервисной точки
-export interface ServicePoint {
-  id: number;
-  partner_id: number;
+export interface ServicePoint extends BaseModel {
   name: string;
+  partner_id: number;
   description?: string;
   address: string;
   phone: string;
-  contact_phone?: string;
+  contact_phone: string;
   email: string;
-  working_hours: string | Record<string, { start: string; end: string }>;
+  working_hours: WorkingHoursSchedule;
   region_id: number;
   city_id: number;
   is_active: boolean;
-  post_count?: number;
-  default_slot_duration?: number;
+  post_count: number;
+  default_slot_duration: number;
   latitude?: number | null;
   longitude?: number | null;
-  status_id?: number;
-  created_at: string;
-  updated_at: string;
+  status_id: number;
+  rating?: number;
+  reviews_count?: number;
+  services_count?: number;
+  photos_count?: number;
   
   // Связанные объекты
   partner?: Partner;
   region?: Region;
   city?: City;
   photos?: ServicePointPhoto[];
+  services?: ServicePointService[];
+  schedule?: WorkingHours[];
+  amenities?: Amenity[];
+  reviews?: Review[];
+}
+
+// Тип для рабочих часов
+export interface WorkingHoursSchedule {
+  [key: string]: {
+    start: string;
+    end: string;
+    is_working_day: boolean;
+  };
 }
 
 // Модель фотографии сервисной точки
@@ -254,11 +273,9 @@ export interface ClientFilter extends PaginationFilter {
   client_id?: string;
 }
 
-export interface CityFilter {
-  query?: string;
+export interface CityFilter extends PaginationFilter {
   region_id?: number;
-  page?: number;
-  per_page?: number;
+  query?: string;
 }
 
 export interface RegionFilter extends PaginationFilter {
@@ -324,24 +341,39 @@ export interface Review {
 
 export interface ServicePointFormData {
   name: string;
-  partner_id?: string;
+  partner_id: number;
   description?: string;
   address: string;
-  phone?: string;
-  contact_phone?: string;
-  email?: string;
-  working_hours?: string;
-  region_id?: number;
-  city_id?: number;
-  is_active?: boolean;
-  post_count?: number;
-  default_slot_duration?: number;
+  phone: string;
+  contact_phone: string;
+  email: string;
+  working_hours: WorkingHoursSchedule;
+  region_id: number;
+  city_id: number;
+  is_active: boolean;
+  post_count: number;
+  default_slot_duration: number;
   latitude?: number | null;
   longitude?: number | null;
-  status_id?: number;
-  schedule?: WorkingHours[];
-  services?: ServicePointService[];
-  photos?: ServicePointPhoto[];
+  status_id: number;
+  schedule?: Array<{
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    is_working_day: boolean;
+  }>;
+  services?: Array<{
+    service_id: number;
+    price: number;
+    duration: number;
+    is_available: boolean;
+  }>;
+  photos?: Array<{
+    url: string;
+    description?: string;
+    is_main: boolean;
+    sort_order?: number;
+  }>;
 }
 
 // Модель удобств
@@ -376,4 +408,42 @@ export interface ReviewUpdateData {
   status?: ReviewStatus;
   rating?: number;
   comment?: string;
+}
+
+export interface ServicePointCreateRequest {
+  service_point: {
+    name: string;
+    partner_id: number;
+    city_id: number;
+    region_id: number;
+    address: string;
+    phone: string;
+    contact_phone: string;
+    email: string;
+    description?: string;
+    is_active: boolean;
+    post_count: number;
+    default_slot_duration: number;
+    latitude?: number | null;
+    longitude?: number | null;
+    status_id?: number;
+    working_hours: WorkingHoursSchedule;
+    services?: Array<{
+      service_id: number;
+      price: number;
+      duration: number;
+      is_available: boolean;
+    }>;
+    photos?: Array<{
+      url: string;
+      description?: string;
+      is_main: boolean;
+      sort_order?: number;
+    }>;
+  };
+}
+
+export interface ServicePointUpdateRequest {
+  id: string;
+  servicePoint: ServicePointCreateRequest['service_point'];
 }

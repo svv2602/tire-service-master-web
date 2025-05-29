@@ -153,7 +153,11 @@ const PartnerFormPage: React.FC = () => {
   }, [partner, isEdit, selectedRegionId]);
   
   const { data: citiesData } = useGetCitiesQuery(
-    { region_id: regionIdForCities }, 
+    { 
+      region_id: regionIdForCities || undefined,
+      page: 1,
+      per_page: 100
+    }, 
     { skip: !regionIdForCities }
   );
   

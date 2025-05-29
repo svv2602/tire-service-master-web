@@ -11,7 +11,6 @@ export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
   },
   timeout: 10000,
   withCredentials: false
@@ -22,39 +21,38 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem(STORAGE_KEY);
 
   if (token && config.headers) {
-    // Очищаем существующие заголовки авторизации
+    // Remove any existing auth header to avoid duplicates
     delete config.headers.Authorization;
     delete config.headers.authorization;
 
-    // Добавляем токен в правильном формате
-    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    // Add token with correct Bearer format
+    const formattedToken = token.replace(/^Bearer\s+/i, '').trim();
+    config.headers.Authorization = `Bearer ${formattedToken}`;
   }
 
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
 // Response interceptor
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Обновляем токен если он пришел в ответе
-    if (response.data?.auth_token) {
-      const newToken = response.data.auth_token;
-      localStorage.setItem(STORAGE_KEY, newToken.startsWith('Bearer ') ? newToken : `Bearer ${newToken}`);
+    if (
+      (response.config.url?.includes('/auth/login'))
+      && response.data.auth_token
+    ) {
+      localStorage.setItem(STORAGE_KEY, response.data.auth_token);
     }
     return response;
   },
   async (error) => {
     if (error.response?.status === 401) {
-      // При 401 ошибке очищаем токен
+      // При 401 ошибке очищаем токен и перенаправляем на логин
       localStorage.removeItem(STORAGE_KEY);
       
-      // Проверяем, не находимся ли мы уже на странице логина
-      const isLoginPage = window.location.pathname === '/login';
-      if (!isLoginPage) {
-        // Сохраняем текущий путь для редиректа после логина
-        const currentPath = window.location.pathname + window.location.search;
+      // Сохраняем текущий путь для редиректа после логина
+      const currentPath = window.location.pathname + window.location.search;
+      if (!currentPath.includes('/login')) {
         localStorage.setItem('returnPath', currentPath);
         window.location.href = '/login';
       }

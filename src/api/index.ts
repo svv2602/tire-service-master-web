@@ -16,6 +16,7 @@ export * from './reviews.api';
 export * from './schedule.api';
 export * from './servicePoints.api';
 export * from './services.api';
+export * from './amenities.api';
 export * from './settings.api';
 export * from './users.api';
 

@@ -72,12 +72,9 @@ const ServicePointDetailsPage = () => {
     skip: !servicePoint?.partner_id,
   });
 
-  const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(
-    servicePoint?.city_id || 0,
-    {
-      skip: !servicePoint?.city_id,
-    }
-  );
+  const { data: city, isLoading: cityLoading } = useGetCityByIdQuery(servicePoint?.city_id || 0, {
+    skip: !servicePoint?.city_id,
+  });
 
   const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.region_id || 0, {
     skip: !city?.region_id,

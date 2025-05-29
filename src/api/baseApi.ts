@@ -1,17 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import config from '../config';
-import authService from '../services/authService';
-import { ApiResponse } from '../types/api';
 
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: `${config.API_URL}${config.API_PREFIX}`,
     prepareHeaders: (headers) => {
-      // Получаем заголовок авторизации из сервиса
-      const authHeader = authService.getAuthorizationHeader();
-      if (authHeader) {
-        headers.set('Authorization', authHeader);
+      const token = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
       }
 
       if (!headers.has('Content-Type')) {
@@ -29,26 +26,11 @@ export const baseApi = createApi({
 
       if (!response.ok) {
         if (response.status === 401) {
-          // Очищаем токен через сервис
-          authService.setToken(null);
-          
-          // Проверяем, не находимся ли мы уже на странице логина
-          const isLoginPage = window.location.pathname === '/login';
-          if (!isLoginPage) {
-            const currentPath = window.location.pathname + window.location.search;
-            localStorage.setItem('returnPath', currentPath);
-            window.location.href = '/login';
-          }
-          throw new Error('Unauthorized');
+          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
+          window.location.href = '/login';
+          return null;
         }
-
-        // Пытаемся получить детали ошибки из тела ответа
-        const errorData = isJson ? await response.json() : await response.text();
-        throw {
-          status: response.status,
-          data: errorData,
-          message: errorData.message || `Ошибка ${response.status}: ${response.statusText}`
-        };
+        throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
       }
 
       return isJson ? response.json() : response.text();

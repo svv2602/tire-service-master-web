@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '../../api/api';
 import { User } from '../../types/user';
-import authService from '../../services/authService';
 
 import config from '../../config';
 
@@ -43,9 +42,9 @@ interface AuthState {
 
 // Начальное состояние
 const initialState: AuthState = {
-  token: authService.getToken(),
+  token: localStorage.getItem(STORAGE_KEY),
   user: getStoredUser(),
-  isAuthenticated: authService.isAuthenticated() && !!getStoredUser(),
+  isAuthenticated: !!localStorage.getItem(STORAGE_KEY) && !!getStoredUser(),
   loading: false,
   error: null,
   isInitialized: false, // Всегда начинаем с false, инициализация происходит в AuthInitializer
@@ -71,7 +70,7 @@ const authSlice = createSlice({
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      authService.setToken(token);
+      localStorage.setItem(STORAGE_KEY, token);
       setStoredUser(user);
     },
     logout: (state) => {
@@ -80,7 +79,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
-      authService.setToken(null);
+      localStorage.removeItem(STORAGE_KEY);
       setStoredUser(null);
       // Очищаем также заголовок Authorization
       delete apiClient.defaults.headers.common['Authorization'];
@@ -103,7 +102,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
-        authService.setToken(action.payload.auth_token);
+        // Сохраняем данные пользователя в localStorage
         setStoredUser(action.payload.user);
       })
       .addCase(login.rejected, (state, action) => {
@@ -120,7 +119,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.isInitialized = true;
-        authService.setToken(null);
         setStoredUser(null);
         // Очищаем заголовок Authorization
         delete apiClient.defaults.headers.common['Authorization'];
@@ -134,7 +132,9 @@ const authSlice = createSlice({
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
+        // Не изменяем isAuthenticated и token здесь - они должны устанавливаться через setCredentials
         state.error = null;
+        // Сохраняем обновленные данные пользователя
         setStoredUser(action.payload);
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
@@ -143,10 +143,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.token = null;
         state.isInitialized = true;
-        authService.setToken(null);
-        setStoredUser(null);
         // Очищаем данные при ошибке
         localStorage.removeItem(STORAGE_KEY);
+        setStoredUser(null);
         delete apiClient.defaults.headers.common['Authorization'];
       });
   },
@@ -158,6 +157,7 @@ export const login = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/api/v1/auth/login', { auth: { email, password }});
+      localStorage.setItem(STORAGE_KEY, response.data.auth_token);
       
       // Приведение возвращаемого пользователя к типу User
       const user: User = {
@@ -189,6 +189,7 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await apiClient.post('/api/v1/auth/logout');
+      localStorage.removeItem(STORAGE_KEY);
       return {};
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка выхода');
@@ -200,8 +201,24 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/api/v1/users/current');
-      return response.data;
+      const response = await apiClient.get('/api/v1/users/me');
+      
+      // Приведение возвращаемого пользователя к типу User
+      const user: User = {
+        id: response.data.id.toString(),
+        email: response.data.email,
+        phone: response.data.phone || '',
+        first_name: response.data.first_name || '',
+        last_name: response.data.last_name || '',
+        role: response.data.role,
+        is_active: response.data.is_active,
+        email_verified: response.data.email_verified,
+        phone_verified: response.data.phone_verified,
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString()
+      };
+      
+      return user;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка получения данных пользователя');
     }

@@ -26,7 +26,7 @@ import {
   useGetBookingsByClientQuery,
   useCreateReviewMutation,
 } from '../../api';
-import { Booking, ApiResponse } from '../../types/models';
+import { Booking } from '../../types/models';
 import { RootState } from '../../store';
 
 // Схема валидации
