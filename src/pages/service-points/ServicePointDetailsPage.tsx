@@ -57,7 +57,7 @@ const ServicePointDetailsPage = () => {
 
   const { data: servicePointServices, isLoading: servicesLoading } = useGetServicePointServicesQuery(id || '');
 
-  const { data: allServices, isLoading: allServicesLoading } = useGetServicesQuery();
+  const { data: allServices } = useGetServicesQuery();
 
   const { data: photos, isLoading: photosLoading } = useGetServicePointPhotosQuery(id || '');
 
@@ -80,7 +80,7 @@ const ServicePointDetailsPage = () => {
     skip: !city?.region_id,
   });
 
-  if (servicePointLoading || servicesLoading || allServicesLoading || photosLoading || scheduleLoading || partnerLoading || cityLoading || regionLoading) {
+  if (servicePointLoading || servicesLoading || photosLoading || scheduleLoading || partnerLoading || cityLoading || regionLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
         <CircularProgress />
@@ -98,8 +98,12 @@ const ServicePointDetailsPage = () => {
     );
   }
 
+  const servicesMap = React.useMemo(() => {
+    if (!allServices?.data) return new Map<number, Service>();
+    return new Map(allServices.data.map((service: Service) => [service.id, service]));
+  }, [allServices]);
+
   const servicePointServicesData = servicePointServices || [];
-  const servicesMap = new Map((allServices?.data || []).map((service: any) => [service.id, service]) || []);
 
   return (
     <Box p={3}>
@@ -234,7 +238,7 @@ const ServicePointDetailsPage = () => {
       {servicePointServicesData.length > 0 ? (
         <Grid container spacing={2}>
           {servicePointServicesData.map((service: ServicePointService) => {
-            const serviceDetails = servicesMap.get(service.service_id.toString());
+            const serviceDetails: Service | undefined = servicesMap.get(service.service_id);
             return (
               <Grid item xs={12} sm={6} md={4} key={service.id}>
                 <Card>
@@ -250,9 +254,9 @@ const ServicePointDetailsPage = () => {
                     <Typography variant="body1" color="primary">
                       {service.price || serviceDetails?.price || 'Цена по запросу'} руб.
                     </Typography>
-                    {(serviceDetails?.default_duration || serviceDetails?.duration || service.duration) && (
+                    {(service.duration || serviceDetails?.duration) && (
                       <Typography variant="body2" color="text.secondary">
-                        Длительность: {serviceDetails?.default_duration || serviceDetails?.duration || service.duration} мин.
+                        Длительность: {service.duration || serviceDetails?.duration} мин.
                       </Typography>
                     )}
                   </CardContent>

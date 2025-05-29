@@ -1,27 +1,16 @@
-export interface Service {
-  id: string | number;
-  name: string;
-  description?: string;
-  price?: number;
-  duration?: number; // в минутах (для обратной совместимости)
-  default_duration?: number; // поле из API
-  category_id?: number; // поле из API
-  categoryId?: string; // для обратной совместимости
-  is_active?: boolean; // поле из API
-  isActive?: boolean; // для обратной совместимости
-  sort_order?: number;
-  created_at?: string; // поле из API
-  updated_at?: string; // поле из API
-  createdAt?: string; // для обратной совместимости
-  updatedAt?: string; // для обратной совместимости
-}
+import { ServiceCategory } from './models';
 
-export interface ServiceCategory {
-  id: string;
+export interface Service {
+  id: number;
   name: string;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
+  price: number;
+  duration: number;
+  category?: ServiceCategory;
+  category_id?: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ServiceFormData {
@@ -29,22 +18,34 @@ export interface ServiceFormData {
   description?: string;
   price: number;
   duration: number;
-  categoryId: string;
-  isActive: boolean;
+  category_id: number;
+  is_active: boolean;
 }
 
 export interface ServiceCategoryFormData {
   name: string;
   description?: string;
+  is_active: boolean;
 }
 
 // Тип для связи сервиса с точкой обслуживания
 export interface ServicePointService {
-  id: string;
-  servicePointId: string;
-  serviceId: string;
-  price?: number; // Опциональная цена, если отличается от базовой
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  id: number;
+  service_point_id: number;
+  service_id: number;
+  price: number;
+  duration: number;
+  is_available: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ServicesResponse {
+  data: Service[];
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
 } 

@@ -47,14 +47,14 @@ const ServicesPage: React.FC = () => {
   const [editingService, setEditingService] = useState<Service | null>(null);
   
   // RTK Query хуки
-  const { data: servicesResponse, isLoading: isLoadingServices, error: servicesError } = useGetServicesQuery();
+  const { data: servicesResponse, isLoading } = useGetServicesQuery();
   
   // const { data: categoriesData } = useGetServiceCategoriesQuery(); // Временно отключено - API не существует
   const [deleteService] = useDeleteServiceMutation();
   
   // Извлекаем массив услуг из ответа API
   const servicesData = servicesResponse?.data || [];
-  const totalServices = servicesResponse?.pagination?.total_count || 0;
+  const totalServices = servicesData.length;
   
   // Обработчики событий
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -86,7 +86,7 @@ const ServicesPage: React.FC = () => {
     setEditingService(null);
   };
   
-  const handleDeleteService = async (id: string) => {
+  const handleDeleteClick = async (id: number) => {
     if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
       try {
         await deleteService(id).unwrap();
@@ -102,12 +102,6 @@ const ServicesPage: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Управление услугами
       </Typography>
-      
-      {servicesError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {servicesError instanceof Error ? servicesError.message : 'Произошла ошибка при загрузке услуг'}
-        </Alert>
-      )}
       
       {/* Фильтры и кнопка добавления */}
       <Box sx={{ display: 'flex', mb: 2, gap: 2, flexWrap: 'wrap' }}>
@@ -171,42 +165,36 @@ const ServicesPage: React.FC = () => {
                 <TableCell>ID</TableCell>
                 <TableCell>Название</TableCell>
                 <TableCell>Описание</TableCell>
+                <TableCell>Цена (руб.)</TableCell>
                 <TableCell>Длительность (мин)</TableCell>
-                <TableCell>Статус</TableCell>
                 <TableCell>Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {isLoadingServices ? (
+              {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : (servicesData || []).map((service) => (
+              ) : servicesData.map((service: Service) => (
                 <TableRow key={service.id}>
                   <TableCell>{service.id}</TableCell>
                   <TableCell>{service.name}</TableCell>
                   <TableCell>{service.description}</TableCell>
-                  <TableCell>{service.default_duration}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={service.is_active ? 'Активна' : 'Неактивна'}
-                      color={service.is_active ? 'success' : 'default'}
-                    />
-                  </TableCell>
+                  <TableCell>{service.price} руб.</TableCell>
+                  <TableCell>{service.duration} мин.</TableCell>
                   <TableCell>
                     <IconButton
                       size="small"
                       onClick={() => handleOpenDialog(service)}
-                      title="Редактировать"
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDeleteService(service.id.toString())}
-                      title="Удалить"
+                      color="error"
+                      onClick={() => handleDeleteClick(service.id)}
                     >
                       <DeleteIcon />
                     </IconButton>

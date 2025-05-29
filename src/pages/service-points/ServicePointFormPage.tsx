@@ -61,7 +61,7 @@ import type {
   ServicePointCreateRequest,
   ServicePointUpdateRequest
 } from '../../types/models';
-import type { Service } from '../../types/service';
+import type { Service, ServicesResponse } from '../../types/service';
 
 // Определяем типы для расписания
 interface ScheduleItem {
@@ -89,8 +89,23 @@ const DAYS_OF_WEEK = [
 ] as const;
 
 // Определяем типы для FormikTouched и FormikErrors
-interface FormValues extends ServicePointFormData {
+interface ServiceFormData {
+  service_id: number;
+  price: number;
+  duration: number;
+  is_available: boolean;
+}
+
+interface ServiceFormErrors {
+  service_id?: string;
+  price?: string;
+  duration?: string;
+  is_available?: string;
+}
+
+interface FormValues extends Omit<ServicePointFormData, 'services'> {
   working_hours: WorkingHoursSchedule;
+  services: ServiceFormData[];
 }
 
 type FormikTouchedFields = FormikTouched<FormValues>;
@@ -144,7 +159,7 @@ const validationSchema = yup.object({
   longitude: yup.number().nullable(),
   working_hours: yup.object().shape(workingHoursShape),
   services: yup.array().of(
-    yup.object({
+    yup.object().shape({
       service_id: yup.number()
         .required('Услуга обязательна')
         .min(1, 'Выберите услугу'),
@@ -251,12 +266,17 @@ const ServicePointFormPage: React.FC = () => {
   const scheduleData = scheduleQueryResult.data;
   const servicePointServicesData = servicePointServicesQueryResult.data;
   const photosData = photosQueryResult.data;
-  const servicesData = services?.data || [];
+
+  // Преобразуем данные сервисов в нужный формат
+  const servicesData = React.useMemo(() => {
+    if (!services) return [];
+    return services.data || [];
+  }, [services]);
 
   const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || isCreating || isUpdating;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
-  const initialValues: ServicePointFormData = useMemo(() => ({
+  const initialValues: FormValues = useMemo(() => ({
     name: servicePoint?.name || '',
     partner_id: servicePoint?.partner_id || 0,
     city_id: servicePoint?.city_id || 0,
@@ -287,7 +307,7 @@ const ServicePointFormPage: React.FC = () => {
     })),
   }), [servicePoint, selectedRegionId]);
 
-  const formik = useFormik<ServicePointFormData>({
+  const formik = useFormik<FormValues>({
     initialValues,
     validationSchema,
     enableReinitialize: false,
@@ -359,10 +379,10 @@ const ServicePointFormPage: React.FC = () => {
                 default_slot_duration: Number(servicePointData.default_slot_duration),
                 status_id: Number(servicePointData.status_id)
               }
-            }).unwrap();
+          }).unwrap();
             
             console.log('Update response:', result);
-            setSuccessMessage('Точка обслуживания успешно обновлена');
+          setSuccessMessage('Точка обслуживания успешно обновлена');
             setTimeout(() => {
               navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
             }, 1000);
@@ -682,7 +702,7 @@ const ServicePointFormPage: React.FC = () => {
                   label="Основной телефон"
                   value={formik.values.phone}
                   onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                    onBlur={formik.handleBlur}
                   error={formik.touched.phone && Boolean(formik.errors.phone)}
                   helperText={formik.touched.phone && formik.errors.phone}
                 />
@@ -740,11 +760,11 @@ const ServicePointFormPage: React.FC = () => {
                     inputProps: { min: 1 }
                   }}
                 />
-              </Grid>
+                      </Grid>
 
               <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
+                            <TextField
+                              fullWidth
                   id="default_slot_duration"
                   name="default_slot_duration"
                   label="Длительность слота (мин.)"
@@ -757,8 +777,8 @@ const ServicePointFormPage: React.FC = () => {
                   InputProps={{
                     inputProps: { min: 5 }
                   }}
-                />
-              </Grid>
+                            />
+                          </Grid>
 
               <Grid item xs={12} md={4}>
                           <FormControlLabel
@@ -780,34 +800,46 @@ const ServicePointFormPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              {(formik.values.services || []).map((service, index) => (
+              {formik.values.services?.map((service, index) => (
                 <Grid item xs={12} md={6} key={index}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Grid container spacing={2}>
                       <Grid item xs={12}>
-                        <FormControl fullWidth>
+                        <FormControl fullWidth error={Boolean(
+                          formik.touched.services?.[index]?.service_id && 
+                          typeof formik.errors.services?.[index] === 'object' &&
+                          (formik.errors.services[index] as ServiceFormErrors)?.service_id
+                        )}>
                           <InputLabel>Услуга</InputLabel>
                           <Select
-                            value={service.service_id?.toString() || ''}
+                            value={service.service_id ? String(service.service_id) : '0'}
                             onChange={(e) => {
-                              const selectedService = servicesData.find(s => String(s.id) === e.target.value);
+                              const selectedService = servicesData?.find((s: Service) => String(s.id) === e.target.value);
                               if (selectedService) {
                                 formik.setFieldValue(`services.${index}`, {
                                   ...service,
                                   service_id: Number(e.target.value),
-                                  duration: selectedService.default_duration || selectedService.duration || service.duration,
-                                  price: selectedService.price || service.price || 0,
+                                  duration: selectedService.duration || service.duration,
+                                  price: selectedService.price || service.price,
                                 });
                               }
                             }}
                             label="Услуга"
                           >
-                            {servicesData && servicesData.map((serviceItem: Service) => (
+                            <MenuItem value="0" disabled>Выберите услугу</MenuItem>
+                            {servicesData?.map((serviceItem: Service) => (
                               <MenuItem key={serviceItem.id} value={String(serviceItem.id)}>
-                                {serviceItem.name} ({serviceItem.category_id})
+                                {serviceItem.name} ({serviceItem.category?.name || 'Без категории'})
                               </MenuItem>
                             ))}
                           </Select>
+                          {formik.touched.services?.[index]?.service_id && 
+                           typeof formik.errors.services?.[index] === 'object' &&
+                           (formik.errors.services[index] as ServiceFormErrors)?.service_id && (
+                            <FormHelperText>
+                              {(formik.errors.services[index] as ServiceFormErrors).service_id}
+                            </FormHelperText>
+                          )}
                         </FormControl>
                       </Grid>
 
@@ -822,6 +854,7 @@ const ServicePointFormPage: React.FC = () => {
                           }}
                           InputProps={{
                             endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+                            inputProps: { min: 0 }
                           }}
                         />
                       </Grid>
@@ -837,6 +870,7 @@ const ServicePointFormPage: React.FC = () => {
                           }}
                           InputProps={{
                             endAdornment: <InputAdornment position="end">мин</InputAdornment>,
+                            inputProps: { min: 5 }
                           }}
                         />
                       </Grid>
@@ -885,8 +919,8 @@ const ServicePointFormPage: React.FC = () => {
                         service_id: 0,
                         price: 0,
                         duration: 30,
-                        is_available: true,
-                      },
+                        is_available: true
+                      }
                     ]);
                   }}
                 >
@@ -1099,9 +1133,21 @@ const ServicePointFormPage: React.FC = () => {
                   <Alert severity="error" sx={{ mt: 2 }}>
                     <Typography variant="subtitle2">Пожалуйста, исправьте следующие ошибки:</Typography>
                     <ul>
-                      {Object.entries(formik.errors).map(([field, error]) => (
-                        <li key={field}>{error as string}</li>
-                      ))}
+                      {Object.entries(formik.errors).map(([field, error]) => {
+                        // Проверяем, является ли ошибка объектом
+                        if (typeof error === 'object' && error !== null) {
+                          return Object.entries(error as Record<string, unknown>).map(([subField, subError]) => (
+                            <li key={`${field}.${subField}`}>
+                              {typeof subError === 'string' ? subError : JSON.stringify(subError)}
+                            </li>
+                          ));
+                        }
+                        return (
+                          <li key={field}>
+                            {typeof error === 'string' ? error : JSON.stringify(error)}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </Alert>
                 </Grid>

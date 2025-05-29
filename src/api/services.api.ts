@@ -1,53 +1,44 @@
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { baseApi } from './baseApi';
-import { Service, ServiceFormData, ServiceCategory, ServiceCategoryFormData } from '../types/service';
+import type { Service, ServicesResponse, ServiceFormData, ServiceCategoryFormData } from '../types/service';
+import type { ServiceCategory } from '../types/models';
 import { ApiResponse } from '../types/models';
+import { baseApi } from './baseApi';
 
+// Расширяем baseApi вместо создания нового
 export const servicesApi = baseApi.injectEndpoints({
-  endpoints: (build) => ({
-    getServices: build.query<ApiResponse<Service>, void>({
-      query: () => 'services',
-      providesTags: (result: ApiResponse<Service> | undefined) => {
-        if (result && result.data && Array.isArray(result.data)) {
-          return [
-            ...result.data.map(({ id }) => ({ type: 'Service' as const, id })),
-            'Service',
-          ];
-        }
-        return ['Service'];
-      },
+  endpoints: (builder) => ({
+    getServices: builder.query<ServicesResponse, void>({
+      query: () => '/services',
+      providesTags: ['Service'],
     }),
 
-    getServiceById: build.query<Service, string>({
-      query: (id: string) => `services/${id}`,
-      providesTags: (_result: Service | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'Service' as const, id }
-      ],
+    getServiceById: builder.query<Service, number>({
+      query: (id) => `/services/${id}`,
+      providesTags: (_result, _err, id) => [{ type: 'Service' as const, id }],
     }),
 
-    createService: build.mutation<Service, ServiceFormData>({
-      query: (data: ServiceFormData) => ({
+    createService: builder.mutation<Service, ServiceFormData>({
+      query: (data) => ({
         url: 'services',
         method: 'POST',
-        body: data,
+        body: { service: data },
       }),
       invalidatesTags: ['Service'],
     }),
 
-    updateService: build.mutation<Service, { id: string; data: Partial<ServiceFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<ServiceFormData> }) => ({
+    updateService: builder.mutation<Service, { id: number; data: Partial<ServiceFormData> }>({
+      query: ({ id, data }) => ({
         url: `services/${id}`,
         method: 'PATCH',
-        body: data,
+        body: { service: data },
       }),
-      invalidatesTags: (_result: Service | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
+      invalidatesTags: (_result, _err, { id }) => [
         { type: 'Service' as const, id },
         'Service',
       ],
     }),
 
-    deleteService: build.mutation<void, string>({
-      query: (id: string) => ({
+    deleteService: builder.mutation<void, number>({
+      query: (id) => ({
         url: `services/${id}`,
         method: 'DELETE',
       }),
@@ -55,50 +46,40 @@ export const servicesApi = baseApi.injectEndpoints({
     }),
 
     // Категории услуг
-    getServiceCategories: build.query<ServiceCategory[], void>({
-      query: () => 'service-categories',
-      providesTags: (result: ServiceCategory[] | undefined) => {
-        if (result && Array.isArray(result)) {
-          return [
-            ...result.map(({ id }) => ({ type: 'ServiceCategory' as const, id })),
-            'ServiceCategory',
-          ];
-        }
-        return ['ServiceCategory'];
-      },
+    getServiceCategories: builder.query<ApiResponse<ServiceCategory[]>, void>({
+      query: () => 'service_categories',
+      providesTags: ['ServiceCategory'],
     }),
 
-    getServiceCategoryById: build.query<ServiceCategory, string>({
-      query: (id: string) => `service-categories/${id}`,
-      providesTags: (_result: ServiceCategory | undefined, _err: FetchBaseQueryError | undefined, id: string) => [
-        { type: 'ServiceCategory' as const, id }
-      ],
+    getServiceCategoryById: builder.query<ServiceCategory, number>({
+      query: (id) => `service_categories/${id}`,
+      providesTags: (_result, _err, id) => [{ type: 'ServiceCategory' as const, id }],
     }),
 
-    createServiceCategory: build.mutation<ServiceCategory, ServiceCategoryFormData>({
-      query: (data: ServiceCategoryFormData) => ({
-        url: 'service-categories',
+    createServiceCategory: builder.mutation<ServiceCategory, ServiceCategoryFormData>({
+      query: (data) => ({
+        url: 'service_categories',
         method: 'POST',
-        body: data,
+        body: { service_category: data },
       }),
       invalidatesTags: ['ServiceCategory'],
     }),
 
-    updateServiceCategory: build.mutation<ServiceCategory, { id: string; data: Partial<ServiceCategoryFormData> }>({
-      query: ({ id, data }: { id: string; data: Partial<ServiceCategoryFormData> }) => ({
-        url: `service-categories/${id}`,
+    updateServiceCategory: builder.mutation<ServiceCategory, { id: number; data: Partial<ServiceCategoryFormData> }>({
+      query: ({ id, data }) => ({
+        url: `service_categories/${id}`,
         method: 'PATCH',
-        body: data,
+        body: { service_category: data },
       }),
-      invalidatesTags: (_result: ServiceCategory | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
+      invalidatesTags: (_result, _err, { id }) => [
         { type: 'ServiceCategory' as const, id },
         'ServiceCategory',
       ],
     }),
 
-    deleteServiceCategory: build.mutation<void, string>({
-      query: (id: string) => ({
-        url: `service-categories/${id}`,
+    deleteServiceCategory: builder.mutation<void, number>({
+      query: (id) => ({
+        url: `service_categories/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['ServiceCategory'],

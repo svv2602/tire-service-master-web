@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -49,6 +49,7 @@ import { ServicePoint } from '../../types/models';
 
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { id: partnerId } = useParams<{ id: string }>();
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -160,7 +161,7 @@ const ServicePointsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/service-points/new')}
+          onClick={() => navigate(partnerId ? `/partners/${partnerId}/service-points/new` : '/service-points/new')}
         >
           Добавить сервисную точку
         </Button>
@@ -263,7 +264,9 @@ const ServicePointsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Tooltip title="Редактировать">
                       <IconButton 
-                        onClick={() => navigate(`/service-points/${servicePoint.id}/edit`)}
+                        onClick={() => navigate(partnerId 
+                          ? `/partners/${partnerId}/service-points/${servicePoint.id}/edit`
+                          : `/service-points/${servicePoint.id}/edit`)}
                         size="small"
                       >
                         <EditIcon />

@@ -123,6 +123,7 @@ function App() {
                   <Route path="partners/new" element={<PartnerFormPage />} />
                   <Route path="partners/:id/edit" element={<PartnerFormPage />} />
                   <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
+                  <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPage />} />
                   <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
                   {/* Маршруты для сервисных точек */}
                   <Route path="service-points" element={<ServicePointsPage />} />
