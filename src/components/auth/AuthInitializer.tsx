@@ -1,45 +1,39 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { getCurrentUser } from '../../store/authSlice';
+import { getCurrentUser, setInitialized } from '../../store/authSlice';
 import { apiClient } from '../../api';
-
-const STORAGE_KEY = 'tvoya_shina_token';
-const USER_STORAGE_KEY = 'user';
-
-interface AuthInitializerProps {
-  children: React.ReactNode;
-}
+import config from '../../config';
 
 /**
  * Компонент для инициализации аутентификации при загрузке приложения
  * Проверяет наличие токена и восстанавливает состояние аутентификации
  */
-const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
+const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { token, user, loading } = useSelector((state: RootState) => state.auth);
+  const { token, user, loading, isInitialized } = useSelector((state: RootState) => state.auth);
   const initializationStarted = useRef(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
       // Предотвращаем повторную инициализацию
-      if (initializationStarted.current || loading) {
+      if (initializationStarted.current || loading || isInitialized) {
         console.log('AuthInitializer: Инициализация уже выполнена или в процессе, пропускаем');
         return;
       }
 
       initializationStarted.current = true;
-
-      const storedToken = localStorage.getItem(STORAGE_KEY);
+      const storedToken = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
       
       console.log('AuthInitializer: Начинаем инициализацию', {
         hasStoredToken: !!storedToken,
         hasTokenInState: !!token,
         hasUserInState: !!user,
-        loading
+        loading,
+        isInitialized
       });
       
-      if (storedToken && !user) {
+      if (storedToken) {
         // Устанавливаем токен в заголовки axios
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         
@@ -50,13 +44,12 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
         } catch (error) {
           console.error('AuthInitializer: Ошибка при загрузке данных пользователя:', error);
           // Если не удалось получить данные пользователя, очищаем токен
-          localStorage.removeItem(STORAGE_KEY);
-          localStorage.removeItem(USER_STORAGE_KEY);
+          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
           delete apiClient.defaults.headers.common['Authorization'];
         }
-      } else if (!storedToken) {
-        console.log('AuthInitializer: Токен не найден, очищаем данные');
-        localStorage.removeItem(USER_STORAGE_KEY);
+      } else {
+        console.log('AuthInitializer: Токен не найден, устанавливаем isInitialized');
+        dispatch(setInitialized());
       }
       
       console.log('AuthInitializer: Инициализация завершена');
@@ -64,7 +57,7 @@ const AuthInitializer: React.FC<AuthInitializerProps> = ({ children }) => {
 
     // Запускаем инициализацию
     initializeAuth();
-  }, [dispatch]);
+  }, [dispatch, loading, isInitialized]);
 
   return <>{children}</>;
 };

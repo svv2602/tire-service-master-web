@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User } from '../types/models';
+import config from '../config';
+import { apiClient } from '../api';
 
 interface AuthState {
   user: User | null;
@@ -12,7 +14,7 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: localStorage.getItem('tvoya_shina_token'),
+  token: localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY),
   isAuthenticated: false,
   isInitialized: false,
   loading: false,
@@ -22,40 +24,36 @@ const initialState: AuthState = {
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }) => {
-    const response = await fetch('http://localhost:8000/api/v1/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Ошибка авторизации');
+    try {
+      const response = await apiClient.post(`${config.API_PREFIX}/auth/login`, {
+        email: credentials.email,
+        password: credentials.password
+      });
+      
+      const { auth_token, user } = response.data;
+      localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, auth_token);
+      return { auth_token, user };
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data.error || 'Ошибка авторизации');
+      }
+      throw error;
     }
-    
-    const data = await response.json();
-    localStorage.setItem('tvoya_shina_token', data.auth_token);
-    return data;
   }
 );
 
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
-  async (_, { getState }) => {
-    const state = getState() as { auth: AuthState };
-    const response = await fetch('http://localhost:8000/api/v1/users/me', {
-      headers: {
-        Authorization: `Bearer ${state.auth.token}`,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Ошибка получения данных пользователя');
+  async () => {
+    try {
+      const response = await apiClient.get(`${config.API_PREFIX}/users/me`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response) {
+        throw new Error(error.response.data.error || 'Ошибка получения данных пользователя');
+      }
+      throw error;
     }
-    
-    const data = await response.json();
-    return data;
   }
 );
 
@@ -67,10 +65,13 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('tvoya_shina_token');
+      localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setInitialized: (state) => {
+      state.isInitialized = true;
     },
   },
   extraReducers: (builder) => {
@@ -90,6 +91,7 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Ошибка авторизации';
+        state.isInitialized = true;
       })
       .addCase(getCurrentUser.pending, (state) => {
         state.loading = true;
@@ -107,10 +109,11 @@ const authSlice = createSlice({
         state.error = action.error.message || 'Ошибка получения данных пользователя';
         state.isAuthenticated = false;
         state.token = null;
-        localStorage.removeItem('tvoya_shina_token');
+        state.isInitialized = true;
+        localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
       });
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, setInitialized } = authSlice.actions;
 export const authReducer = authSlice.reducer; 
