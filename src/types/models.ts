@@ -356,12 +356,6 @@ export interface ServicePointFormData {
   latitude?: number | null;
   longitude?: number | null;
   status_id: number;
-  schedule?: Array<{
-    day_of_week: number;
-    start_time: string;
-    end_time: string;
-    is_working_day: boolean;
-  }>;
   services?: Array<{
     service_id: number;
     price: number;
@@ -443,7 +437,33 @@ export interface ServicePointCreateRequest {
   };
 }
 
-export interface ServicePointUpdateRequest {
-  id: string;
-  servicePoint: ServicePointCreateRequest['service_point'];
+export interface ServicePointUpdateRequest extends Omit<ServicePointCreateRequest['service_point'], 'id'> {
+  partner_id: number;
+  name: string;
+  city_id: number;
+  region_id: number;
+  address: string;
+  phone: string;
+  contact_phone: string;
+  email: string;
+  description?: string;
+  is_active: boolean;
+  post_count: number;
+  default_slot_duration: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  status_id?: number;
+  working_hours: WorkingHoursSchedule;
+  services?: Array<{
+    service_id: number;
+    price: number;
+    duration: number;
+    is_available: boolean;
+  }>;
+  photos?: Array<{
+    url: string;
+    description?: string;
+    is_main: boolean;
+    sort_order?: number;
+  }>;
 }
