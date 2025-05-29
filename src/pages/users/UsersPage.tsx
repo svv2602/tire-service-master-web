@@ -142,8 +142,8 @@ const UsersPage: React.FC = () => {
 
   // Мемоизированные параметры запроса
   const queryParams = useMemo(() => ({
-    page: page.toString(),
-    per_page: pageSize.toString(),
+    page,
+    per_page: pageSize,
     query: debouncedSearch || undefined,
   }), [page, pageSize, debouncedSearch]);
 
@@ -193,6 +193,7 @@ const UsersPage: React.FC = () => {
 
   const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+    window.scrollTo(0, 0); // Прокручиваем страницу вверх при смене страницы
   }, []);
 
   const handleAddUser = useCallback(() => {
@@ -307,27 +308,40 @@ const UsersPage: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {users.map((user) => (
-                    <UserRow
-                      key={user.id}
-                      user={user}
-                      onEdit={handleEditUser}
-                      onDelete={handleDeleteClick}
-                      onToggleStatus={handleToggleStatus}
-                      getRoleName={getRoleName}
-                      getRoleColor={getRoleColor}
-                    />
-                  ))}
+                  {users.length > 0 ? (
+                    users.map((user) => (
+                      <UserRow
+                        key={user.id}
+                        user={user}
+                        onEdit={handleEditUser}
+                        onDelete={handleDeleteClick}
+                        onToggleStatus={handleToggleStatus}
+                        getRoleName={getRoleName}
+                        getRoleColor={getRoleColor}
+                      />
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        <Typography variant="body1" color="text.secondary">
+                          {page > 1 ? "На этой странице нет данных" : "Нет данных для отображения"}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              <Pagination
-                count={Math.ceil(totalItems / pageSize)}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
+              {usersData && usersData.totalPages > 0 && (
+                <Pagination
+                  count={usersData.totalPages}
+                  page={Math.min(page, usersData.totalPages)}
+                  onChange={handlePageChange}
+                  color="primary"
+                  disabled={usersData.totalPages <= 1}
+                />
+              )}
             </Box>
           </>
         )}
