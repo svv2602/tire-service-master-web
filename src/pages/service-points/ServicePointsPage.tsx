@@ -268,9 +268,7 @@ const ServicePointsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                     <Tooltip title="Редактировать">
                       <IconButton 
-                        onClick={() => navigate(partnerId 
-                          ? `/partners/${partnerId}/service-points/${servicePoint.id}/edit`
-                          : `/service-points/${servicePoint.id}/edit`)}
+                        onClick={() => navigate(`/partners/${servicePoint.partner_id}/service-points/${servicePoint.id}/edit`)}
                         size="small"
                       >
                         <EditIcon />

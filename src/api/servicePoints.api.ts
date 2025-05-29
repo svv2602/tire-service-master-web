@@ -31,12 +31,20 @@ export const servicePointsApi = baseApi.injectEndpoints({
           : [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
-    // Получение сервисной точки по ID
-    getServicePointById: builder.query<ServicePoint, string>({
+    // Получение базовой информации о сервисной точке
+    getServicePointBasicInfo: builder.query<ServicePoint, string>({
       query: (id) => ({
-        url: `/service_points/${id}`,
+        url: `/service_points/${id}/basic`,
       }),
       providesTags: (_result, _error, id) => [{ type: 'ServicePoint' as const, id }],
+    }),
+
+    // Получение сервисной точки по ID
+    getServicePointById: builder.query<ServicePoint, { partner_id: number; id: string }>({
+      query: ({ partner_id, id }) => ({
+        url: `/partners/${partner_id}/service_points/${id}`,
+      }),
+      providesTags: (_result, _error, { id }) => [{ type: 'ServicePoint' as const, id }],
     }),
 
     // Создание новой сервисной точки
@@ -95,6 +103,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
 
 export const {
   useGetServicePointsQuery,
+  useGetServicePointBasicInfoQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,

@@ -63,6 +63,7 @@ import type {
   Photo
 } from '../../types/models';
 import type { Service, ServicesResponse } from '../../types/service';
+import { useGetServicePointBasicInfoQuery } from '../../api/servicePoints.api';
 
 // Определяем типы для расписания
 interface ScheduleItem {
@@ -238,10 +239,16 @@ const ServicePointFormPage: React.FC = () => {
     { region_id: selectedRegionId || 0 },
     { skip: !selectedRegionId }
   );
+  const { data: basicInfo } = useGetServicePointBasicInfoQuery(id ?? '', {
+    skip: !id
+  });
   const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(
-    id ?? '', 
     { 
-      skip: !id,
+      partner_id: basicInfo?.partner_id || Number(partnerId) || 0,
+      id: id ?? ''
+    },
+    { 
+      skip: !id || (!basicInfo?.partner_id && !partnerId),
       refetchOnMountOrArgChange: true
     }
   );

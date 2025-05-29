@@ -9,6 +9,7 @@ import {
   useGetPartnerByIdQuery,
   useGetCityByIdQuery,
   useGetRegionByIdQuery,
+  useGetServicePointBasicInfoQuery,
 } from '../../api';
 import {
   Box,
@@ -53,7 +54,19 @@ const getDayName = (day: number): string => {
 const ServicePointDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
 
-  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id || '');
+  const { data: basicInfo } = useGetServicePointBasicInfoQuery(id || '', {
+    skip: !id
+  });
+
+  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(
+    { 
+      partner_id: basicInfo?.partner_id || 0,
+      id: id || ''
+    },
+    {
+      skip: !id || !basicInfo?.partner_id
+    }
+  );
 
   const { data: servicePointServices, isLoading: servicesLoading } = useGetServicePointServicesQuery(id || '');
 

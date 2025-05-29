@@ -30,6 +30,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServicePointByIdQuery,
   useGetServicePointServicesQuery,
+  useGetServicePointBasicInfoQuery,
 } from '../../api';
 import { useTranslation } from 'react-i18next';
 import { ServicePoint } from '../../types/models';
@@ -39,13 +40,19 @@ const ServicePointDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const {
-    data: servicePoint,
-    isLoading,
-    error 
-  } = useGetServicePointByIdQuery(id || '', {
+  const { data: basicInfo } = useGetServicePointBasicInfoQuery(id || '', {
     skip: !id
   });
+
+  const { data: servicePoint, isLoading, error } = useGetServicePointByIdQuery(
+    { 
+      partner_id: basicInfo?.partner_id || 0,
+      id: id || ''
+    },
+    {
+      skip: !id || !basicInfo?.partner_id
+    }
+  );
 
   const handleBack = () => {
     navigate('/service-points');
