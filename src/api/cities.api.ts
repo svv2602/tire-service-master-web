@@ -1,17 +1,23 @@
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import type { City, ApiResponse, CityFilter } from '../types/models';
 import { baseApi } from './baseApi';
-import { City } from '../types/models';
-import { ApiResponse, CityFilter } from '../types/api';
 
+// Инжектируем эндпоинты в baseApi
 export const citiesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCities: builder.query<ApiResponse<City>, CityFilter>({
       query: (params) => ({
         url: 'cities',
-        method: 'GET',
-        params,
+        params: {
+          region_id: params.region_id
+        }
       }),
-      providesTags: ['City'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'City' as const, id })),
+              { type: 'City' as const, id: 'LIST' },
+            ]
+          : [{ type: 'City' as const, id: 'LIST' }],
     }),
 
     getCitiesByRegion: builder.query<City[], number>({
@@ -20,7 +26,13 @@ export const citiesApi = baseApi.injectEndpoints({
         method: 'GET',
         params: { regionId },
       }),
-      providesTags: ['City'],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'City' as const, id })),
+              { type: 'City' as const, id: 'LIST' },
+            ]
+          : [{ type: 'City' as const, id: 'LIST' }],
     }),
 
     getCityById: builder.query<City, number>({
@@ -28,7 +40,7 @@ export const citiesApi = baseApi.injectEndpoints({
         url: `cities/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'City', id }],
+      providesTags: (_result, _error, id) => [{ type: 'City' as const, id }],
     }),
 
     createCity: builder.mutation<City, Partial<City>>({
@@ -37,7 +49,7 @@ export const citiesApi = baseApi.injectEndpoints({
         method: 'POST',
         body: city,
       }),
-      invalidatesTags: ['City'],
+      invalidatesTags: [{ type: 'City' as const, id: 'LIST' }],
     }),
 
     updateCity: builder.mutation<City, { id: number; city: Partial<City> }>({
@@ -46,7 +58,10 @@ export const citiesApi = baseApi.injectEndpoints({
         method: 'PUT',
         body: city,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'City', id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'City' as const, id },
+        { type: 'City' as const, id: 'LIST' }
+      ],
     }),
 
     deleteCity: builder.mutation<void, number>({
@@ -54,7 +69,7 @@ export const citiesApi = baseApi.injectEndpoints({
         url: `cities/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['City'],
+      invalidatesTags: [{ type: 'City' as const, id: 'LIST' }],
     }),
   }),
 });
@@ -66,4 +81,4 @@ export const {
   useCreateCityMutation,
   useUpdateCityMutation,
   useDeleteCityMutation,
-} = citiesApi;
+} = citiesApi; 
