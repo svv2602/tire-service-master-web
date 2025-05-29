@@ -28,10 +28,10 @@ export const bookingsApi = baseApi.injectEndpoints({
         if (result && Array.isArray(result)) {
           return [
             ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-            'Booking',
+            { type: 'Booking' as const, id: 'LIST' },
           ];
         }
-        return ['Booking'];
+        return [{ type: 'Booking' as const, id: 'LIST' }];
       },
     }),
 
@@ -41,10 +41,10 @@ export const bookingsApi = baseApi.injectEndpoints({
         if (result && Array.isArray(result)) {
           return [
             ...result.map(({ id }) => ({ type: 'Booking' as const, id })),
-            'Booking',
+            { type: 'Booking' as const, id: 'LIST' },
           ];
         }
-        return ['Booking'];
+        return [{ type: 'Booking' as const, id: 'LIST' }];
       },
     }),
     
@@ -53,7 +53,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         url: `bookings/${id}`,
         method: 'GET',
       }),
-      providesTags: (result, error, id) => [{ type: 'Booking', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Booking' as const, id }],
     }),
     
     createBooking: builder.mutation<Booking, BookingFormData>({
@@ -62,7 +62,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'POST',
         body: booking,
       }),
-      invalidatesTags: ['Booking'],
+      invalidatesTags: [{ type: 'Booking' as const, id: 'LIST' }],
     }),
     
     updateBooking: builder.mutation<Booking, { id: string; booking: Partial<BookingFormData> }>({
@@ -71,7 +71,10 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'PUT',
         body: booking,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Booking' as const, id: 'LIST' },
+        { type: 'Booking' as const, id },
+      ],
     }),
 
     updateBookingStatus: builder.mutation<Booking, { id: string; status: BookingStatus }>({
@@ -80,7 +83,10 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Booking', id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Booking' as const, id: 'LIST' },
+        { type: 'Booking' as const, id },
+      ],
     }),
     
     deleteBooking: builder.mutation<void, string>({
@@ -88,7 +94,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         url: `bookings/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Booking'],
+      invalidatesTags: [{ type: 'Booking' as const, id: 'LIST' }],
     }),
   }),
 });
