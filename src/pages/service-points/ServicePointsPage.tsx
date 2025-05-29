@@ -118,13 +118,17 @@ const ServicePointsPage: React.FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedServicePoint) {
+    if (selectedServicePoint && !isDeleting) {
       try {
-        await deleteServicePoint(selectedServicePoint.id.toString()).unwrap();
-        setDeleteDialogOpen(false);
-        setSelectedServicePoint(null);
+        await deleteServicePoint({
+          partner_id: selectedServicePoint.partner_id,
+          id: selectedServicePoint.id
+        }).unwrap();
       } catch (error) {
         console.error('Ошибка при удалении сервисной точки:', error);
+      } finally {
+        setDeleteDialogOpen(false);
+        setSelectedServicePoint(null);
       }
     }
   };
@@ -299,7 +303,11 @@ const ServicePointsPage: React.FC = () => {
       </TableContainer>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={isDeleting ? undefined : handleCloseDialog}
+        disableEscapeKeyDown={isDeleting}
+      >
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
@@ -308,9 +316,15 @@ const ServicePointsPage: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Удалить
+          <Button onClick={handleCloseDialog} disabled={isDeleting}>Отмена</Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+          >
+            {isDeleting ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>

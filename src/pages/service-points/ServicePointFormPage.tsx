@@ -59,7 +59,8 @@ import type {
   ApiResponse,
   CityFilter,
   ServicePointCreateRequest,
-  ServicePointUpdateRequest
+  ServicePointUpdateRequest,
+  Photo
 } from '../../types/models';
 import type { Service, ServicesResponse } from '../../types/service';
 
@@ -237,7 +238,13 @@ const ServicePointFormPage: React.FC = () => {
     { region_id: selectedRegionId || 0 },
     { skip: !selectedRegionId }
   );
-  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(id ?? '', { skip: !id });
+  const { data: servicePoint, isLoading: servicePointLoading } = useGetServicePointByIdQuery(
+    id ?? '', 
+    { 
+      skip: !id,
+      refetchOnMountOrArgChange: true
+    }
+  );
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
@@ -254,10 +261,10 @@ const ServicePointFormPage: React.FC = () => {
     id ?? '',
     { skip: !isEditMode || !id }
   );
-  const photosQueryResult = useGetServicePointPhotosQuery(
+  const { data: photosData } = useGetServicePointPhotosQuery(
     id ?? '',
     { skip: !isEditMode || !id }
-  );
+  ) as { data: ServicePointPhoto[] | undefined };
 
   // Извлекаем данные из результатов запросов
   const partnersData = partners?.data || [];
@@ -265,7 +272,6 @@ const ServicePointFormPage: React.FC = () => {
   const citiesData = cities?.data || [];
   const scheduleData = scheduleQueryResult.data;
   const servicePointServicesData = servicePointServicesQueryResult.data;
-  const photosData = photosQueryResult.data;
 
   // Преобразуем данные сервисов в нужный формат
   const servicesData = React.useMemo(() => {
@@ -278,9 +284,9 @@ const ServicePointFormPage: React.FC = () => {
 
   const initialValues: FormValues = useMemo(() => ({
     name: servicePoint?.name || '',
-    partner_id: servicePoint?.partner_id || 0,
+    partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
     city_id: servicePoint?.city_id || 0,
-    region_id: selectedRegionId || 0,
+    region_id: selectedRegionId || servicePoint?.city?.region_id || 0,
     address: servicePoint?.address || '',
     phone: servicePoint?.phone || '',
     contact_phone: servicePoint?.contact_phone || '',
@@ -291,130 +297,76 @@ const ServicePointFormPage: React.FC = () => {
     default_slot_duration: servicePoint?.default_slot_duration || 60,
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
-    status_id: servicePoint?.status_id || 1,
+    status_id: servicePoint?.status?.id || 1,
     working_hours: servicePoint?.working_hours || defaultWorkingHours,
-    services: (servicePoint?.services || []).map(service => ({
+    services: (servicePointServicesData || []).map(service => ({
       service_id: service.service_id,
       price: service.price,
       duration: service.duration,
       is_available: service.is_available
     })),
-    photos: (servicePoint?.photos || []).map(photo => ({
+    photos: (photosData || []).map(photo => ({
+      id: typeof photo.id === 'string' ? Number(photo.id) : photo.id,
       url: photo.url,
-      description: photo.description,
+      description: photo.description || '',
       is_main: photo.is_main,
-      sort_order: photo.sort_order
-    })),
-  }), [servicePoint, selectedRegionId]);
+      sort_order: photo.sort_order,
+      created_at: photo.created_at,
+      updated_at: photo.updated_at,
+      service_point_id: typeof photo.service_point_id === 'string' ? 
+        Number(photo.service_point_id) : 
+        photo.service_point_id
+    } as Photo))
+  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData]);
+
+  useEffect(() => {
+    if (servicePoint) {
+      console.log('Loaded service point:', servicePoint);
+      console.log('Services:', servicePointServicesData);
+      console.log('Photos:', photosData);
+      console.log('Initial values:', initialValues);
+    }
+  }, [servicePoint, servicePointServicesData, photosData, initialValues]);
+
+  const handleSubmit = async (values: FormValues) => {
+    try {
+      const servicePointData: ServicePointCreateRequest = {
+        ...values,
+        photos: values.photos.map(photo => ({
+          ...photo,
+          service_point_id: Number(id) || undefined
+        }))
+      };
+
+      if (isEditMode && id) {
+        await updateServicePoint({
+          id,
+          servicePoint: servicePointData as ServicePointFormData
+        }).unwrap();
+        setSuccessMessage('Точка обслуживания успешно обновлена');
+      } else {
+        await createServicePoint({
+          partnerId: partnerId || values.partner_id.toString(),
+          servicePoint: servicePointData
+        }).unwrap();
+        setSuccessMessage('Точка обслуживания успешно создана');
+      }
+      
+      setTimeout(() => {
+        navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
+      }, 1000);
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
+      const errorMessage = error?.data?.message || error?.message || 'Ошибка при сохранении точки обслуживания';
+      setErrorMessage(errorMessage);
+    }
+  };
 
   const formik = useFormik<FormValues>({
     initialValues,
     validationSchema,
-    enableReinitialize: false,
-    validateOnMount: true,
-    validateOnChange: true,
-    validateOnBlur: true,
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-        console.log('Form submission started');
-        console.log('Form validation errors:', formik.errors);
-        console.log('Form values:', values);
-        
-        if (!values.partner_id || !values.city_id || !values.region_id) {
-          setErrorMessage('Пожалуйста, заполните все обязательные поля');
-          console.log('Required fields missing');
-          return;
-        }
-
-        const servicePointData = {
-          name: values.name,
-          partner_id: Number(values.partner_id),
-          city_id: Number(values.city_id),
-          region_id: Number(values.region_id),
-          address: values.address,
-          phone: values.phone,
-          contact_phone: values.contact_phone,
-          email: values.email,
-          description: values.description,
-          is_active: values.is_active,
-          post_count: Number(values.post_count),
-          default_slot_duration: Number(values.default_slot_duration),
-          latitude: values.latitude,
-          longitude: values.longitude,
-          status_id: values.status_id || 1,
-          working_hours: values.working_hours,
-          services: values.services?.map(service => ({
-            service_id: Number(service.service_id),
-            price: Number(service.price),
-            duration: Number(service.duration),
-            is_available: service.is_available
-          })) || [],
-          photos: values.photos?.map(photo => ({
-            url: photo.url,
-            description: photo.description || '',
-            is_main: photo.is_main,
-            sort_order: photo.sort_order
-          })) || []
-        };
-
-        console.log('Prepared data for submission:', servicePointData);
-
-        if (isEditMode && id) {
-          console.log('Updating service point...');
-          try {
-            const currentPartnerId = partnerId || servicePointData.partner_id;
-            if (!currentPartnerId) {
-              throw new Error('Partner ID is required for update');
-            }
-
-            // Отправляем данные формы напрямую, так как они уже имеют правильный тип ServicePointFormData
-            const result = await updateServicePoint({ 
-              id, 
-              servicePoint: {
-                ...servicePointData,
-                partner_id: Number(currentPartnerId),
-                region_id: Number(servicePointData.region_id),
-                city_id: Number(servicePointData.city_id),
-                post_count: Number(servicePointData.post_count),
-                default_slot_duration: Number(servicePointData.default_slot_duration),
-                status_id: Number(servicePointData.status_id)
-              }
-          }).unwrap();
-            
-            console.log('Update response:', result);
-          setSuccessMessage('Точка обслуживания успешно обновлена');
-            setTimeout(() => {
-              navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
-            }, 1000);
-          } catch (error) {
-            console.error('Error updating service point:', error);
-            throw error;
-          }
-        } else {
-          console.log('Creating new service point...');
-          const currentPartnerId = partnerId || servicePointData.partner_id.toString();
-          if (!currentPartnerId) {
-            throw new Error('Partner ID is required');
-          }
-          const result = await createServicePoint({
-            partnerId: currentPartnerId,
-            servicePoint: servicePointData
-          }).unwrap();
-          console.log('Create response:', result);
-          setSuccessMessage('Точка обслуживания успешно создана');
-          setTimeout(() => {
-            navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
-          }, 1000);
-        }
-      } catch (error: any) {
-        console.error('Error submitting form:', error);
-        const errorMessage = error?.data?.message || error?.message || 'Ошибка при сохранении точки обслуживания';
-        setErrorMessage(errorMessage);
-        console.error('Detailed error:', error);
-      } finally {
-        setSubmitting(false);
-      }
-    },
+    enableReinitialize: true,
+    onSubmit: handleSubmit
   });
 
   // Мемоизированные обработчики

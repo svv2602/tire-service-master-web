@@ -165,7 +165,7 @@ const ServicePointDetailPage: React.FC = () => {
                 {servicePoint.photos.slice(0, 4).map((photo) => (
                   <Grid item xs={6} sm={3} key={photo.id}>
                     <img 
-                      src={photo.photo_url} 
+                      src={photo.url} 
                       alt={`Фото ${photo.id}`}
                       style={{ width: '100%', height: 'auto', borderRadius: 4 }}
                     />

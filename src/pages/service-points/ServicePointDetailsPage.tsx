@@ -210,10 +210,10 @@ const ServicePointDetailsPage = () => {
               <TableBody>
                 {schedule.map((workingDay: WorkingHours, index: number) => (
                   <TableRow key={index}>
-                    <TableCell>{getDayName(workingDay.day_of_week)}</TableCell>
+                    <TableCell>{getDayName(index)}</TableCell>
                     <TableCell>
                       {workingDay.is_working_day 
-                        ? `${workingDay.start_time} - ${workingDay.end_time}`
+                        ? `${workingDay.start} - ${workingDay.end}`
                         : 'Выходной'
                       }
                     </TableCell>
@@ -240,7 +240,7 @@ const ServicePointDetailsPage = () => {
           {servicePointServicesData.map((service: ServicePointService) => {
             const serviceDetails: Service | undefined = servicesMap.get(service.service_id);
             return (
-              <Grid item xs={12} sm={6} md={4} key={service.id}>
+              <Grid item xs={12} sm={6} md={4} key={service.service_id}>
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>

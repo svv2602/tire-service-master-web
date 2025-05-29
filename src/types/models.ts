@@ -71,63 +71,82 @@ export interface Partner {
 }
 
 // Модель сервисной точки
-export interface ServicePoint extends BaseModel {
+export interface ServicePoint {
+  id: number;
   name: string;
-  partner_id: number;
   description?: string;
   address: string;
+  city_id: number;
+  partner_id: number;
+  latitude?: number | null;
+  longitude?: number | null;
   phone: string;
   contact_phone: string;
   email: string;
-  working_hours: WorkingHoursSchedule;
-  region_id: number;
-  city_id: number;
   is_active: boolean;
   post_count: number;
   default_slot_duration: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  status_id: number;
-  rating?: number;
-  reviews_count?: number;
-  services_count?: number;
-  photos_count?: number;
-  
-  // Связанные объекты
-  partner?: Partner;
-  region?: Region;
-  city?: City;
-  photos?: ServicePointPhoto[];
-  services?: ServicePointService[];
-  schedule?: WorkingHours[];
-  amenities?: Amenity[];
-  reviews?: Review[];
+  status?: {
+    id: number;
+    name: string;
+    color?: string;
+  };
+  city?: {
+    id: number;
+    name: string;
+    region_id: number;
+  };
+  partner?: {
+    id: number;
+    name: string;
+    company_name: string;
+  };
+  working_hours: WorkingHoursSchedule;
+  services: ServicePointService[];
+  photos: ServicePointPhoto[];
 }
 
 // Тип для рабочих часов
 export interface WorkingHoursSchedule {
-  [key: string]: {
-    start: string;
-    end: string;
-    is_working_day: boolean;
-  };
+  monday: WorkingHours;
+  tuesday: WorkingHours;
+  wednesday: WorkingHours;
+  thursday: WorkingHours;
+  friday: WorkingHours;
+  saturday: WorkingHours;
+  sunday: WorkingHours;
 }
 
-// Модель фотографии сервисной точки
-export interface ServicePointPhoto extends BaseModel {
-  service_point_id: number;
+// Базовый интерфейс для фотографий
+export interface BasePhoto {
   url: string;
-  photo_url?: string;
+  description?: string;
+}
+
+// Интерфейс для фотографий
+export interface Photo {
+  id?: number;
+  url: string;
   description?: string;
   is_main: boolean;
-  sort_order?: number;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+  service_point_id?: number;
+}
+
+// Интерфейс для фотографий сервисной точки
+export interface ServicePointPhoto extends Photo {
+  id: number;
+  service_point_id: number;
+  created_at: string;
+  updated_at: string;
 }
 
 // Модель рабочих часов
 export interface WorkingHours {
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
+  start: string;
+  end: string;
   is_working_day: boolean;
 }
 
@@ -307,15 +326,18 @@ export interface ServicePointStatus extends BaseModel {
 }
 
 export interface ServicePointService {
-  id: number;
-  service_point_id: number;
   service_id: number;
   price: number;
   duration: number;
   is_available: boolean;
-  created_at: string;
-  updated_at: string;
-  service?: Service;
+  service?: {
+    id: number;
+    name: string;
+    category?: {
+      id: number;
+      name: string;
+    };
+  };
 }
 
 // Типы статусов отзывов
@@ -341,33 +363,27 @@ export interface Review {
 
 export interface ServicePointFormData {
   name: string;
-  partner_id: number;
   description?: string;
   address: string;
+  city_id: number;
+  region_id?: number;
+  partner_id: number;
+  latitude?: number | null;
+  longitude?: number | null;
   phone: string;
   contact_phone: string;
   email: string;
-  working_hours: WorkingHoursSchedule;
-  region_id: number;
-  city_id: number;
   is_active: boolean;
   post_count: number;
   default_slot_duration: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  status_id: number;
-  services?: Array<{
-    service_id: number;
-    price: number;
-    duration: number;
-    is_available: boolean;
-  }>;
-  photos?: Array<{
-    url: string;
-    description?: string;
-    is_main: boolean;
-    sort_order?: number;
-  }>;
+  status_id?: number;
+  working_hours: WorkingHoursSchedule;
+  services: ServicePointService[];
+  photos: Photo[];
+}
+
+export interface FormValues extends ServicePointFormData {
+  // Дополнительные поля для формы, если нужны
 }
 
 // Модель удобств
@@ -404,66 +420,10 @@ export interface ReviewUpdateData {
   comment?: string;
 }
 
-export interface ServicePointCreateRequest {
-  service_point: {
-    name: string;
-    partner_id: number;
-    city_id: number;
-    region_id: number;
-    address: string;
-    phone: string;
-    contact_phone: string;
-    email: string;
-    description?: string;
-    is_active: boolean;
-    post_count: number;
-    default_slot_duration: number;
-    latitude?: number | null;
-    longitude?: number | null;
-    status_id?: number;
-    working_hours: WorkingHoursSchedule;
-    services?: Array<{
-      service_id: number;
-      price: number;
-      duration: number;
-      is_available: boolean;
-    }>;
-    photos?: Array<{
-      url: string;
-      description?: string;
-      is_main: boolean;
-      sort_order?: number;
-    }>;
-  };
+export interface ServicePointCreateRequest extends Omit<ServicePointFormData, 'photos'> {
+  photos: Photo[];
 }
 
-export interface ServicePointUpdateRequest extends Omit<ServicePointCreateRequest['service_point'], 'id'> {
-  partner_id: number;
-  name: string;
-  city_id: number;
-  region_id: number;
-  address: string;
-  phone: string;
-  contact_phone: string;
-  email: string;
-  description?: string;
-  is_active: boolean;
-  post_count: number;
-  default_slot_duration: number;
-  latitude?: number | null;
-  longitude?: number | null;
-  status_id?: number;
-  working_hours: WorkingHoursSchedule;
-  services?: Array<{
-    service_id: number;
-    price: number;
-    duration: number;
-    is_available: boolean;
-  }>;
-  photos?: Array<{
-    url: string;
-    description?: string;
-    is_main: boolean;
-    sort_order?: number;
-  }>;
+export interface ServicePointUpdateRequest extends ServicePointCreateRequest {
+  id: number;
 }

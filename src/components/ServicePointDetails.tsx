@@ -24,25 +24,34 @@ import {
   Build as ServiceIcon,
   Photo as PhotoIcon,
 } from '@mui/icons-material';
-import { ServicePoint } from '../types/models';
+import type { ServicePoint, WorkingHoursSchedule, WorkingHours } from '../types/models';
 
 interface ServicePointDetailsProps {
   servicePoint: ServicePoint;
 }
 
+type DaysMap = {
+  [key: string]: string;
+};
+
 // Вспомогательные функции
-const formatWorkingHours = (workingHours: string | Record<string, { start: string; end: string }>): string => {
-  if (typeof workingHours === 'string') {
-    try {
-      const hours = JSON.parse(workingHours);
-      return Object.entries(hours).map(([day, time]) => `${day}: ${time}`).join(', ');
-    } catch {
-      return workingHours;
-    }
-  } else if (typeof workingHours === 'object') {
-    return Object.entries(workingHours).map(([day, time]) => `${day}: ${time.start}-${time.end}`).join(', ');
-  }
-  return 'Не указано';
+const formatWorkingHours = (workingHours: WorkingHoursSchedule): string => {
+  const days: DaysMap = {
+    monday: 'Понедельник',
+    tuesday: 'Вторник',
+    wednesday: 'Среда',
+    thursday: 'Четверг',
+    friday: 'Пятница',
+    saturday: 'Суббота',
+    sunday: 'Воскресенье'
+  };
+
+  const workingDays = Object.entries(workingHours)
+    .filter(([_, hours]: [string, WorkingHours]) => hours.is_working_day)
+    .map(([day, hours]: [string, WorkingHours]) => `${days[day]}: ${hours.start}-${hours.end}`)
+    .join(', ');
+
+  return workingDays || 'График работы не указан';
 };
 
 const formatDate = (date: string): string => {

@@ -40,11 +40,11 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Создание новой сервисной точки
-    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: ServicePointCreateRequest['service_point'] }>({
+    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: ServicePointCreateRequest }>({
       query: ({ partnerId, servicePoint }) => ({
         url: `/partners/${partnerId}/service_points`,
         method: 'POST',
-        body: { service_point: servicePoint },
+        body: { service_point: servicePoint }
       }),
       invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
@@ -63,9 +63,9 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Удаление сервисной точки
-    deleteServicePoint: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/service_points/${id}`,
+    deleteServicePoint: builder.mutation<void, { partner_id: number; id: number }>({
+      query: ({ partner_id, id }) => ({
+        url: `/partners/${partner_id.toString()}/service_points/${id.toString()}`,
         method: 'DELETE',
       }),
       invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
