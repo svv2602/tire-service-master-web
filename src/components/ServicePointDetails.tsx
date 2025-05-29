@@ -24,7 +24,8 @@ import {
   Build as ServiceIcon,
   Photo as PhotoIcon,
 } from '@mui/icons-material';
-import type { ServicePoint, WorkingHoursSchedule, WorkingHours } from '../types/models';
+import type { ServicePoint } from '../types/models';
+import type { WorkingHoursSchedule, WorkingHours } from '../types/working-hours';
 
 interface ServicePointDetailsProps {
   servicePoint: ServicePoint;
@@ -35,8 +36,10 @@ type DaysMap = {
 };
 
 // Вспомогательные функции
-const formatWorkingHours = (workingHours: WorkingHoursSchedule): string => {
-  const days: DaysMap = {
+const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
+  if (!workingHours) return 'График работы не указан';
+
+  const days = {
     monday: 'Понедельник',
     tuesday: 'Вторник',
     wednesday: 'Среда',
@@ -44,11 +47,11 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule): string => {
     friday: 'Пятница',
     saturday: 'Суббота',
     sunday: 'Воскресенье'
-  };
+  } as const;
 
-  const workingDays = Object.entries(workingHours)
-    .filter(([_, hours]: [string, WorkingHours]) => hours.is_working_day)
-    .map(([day, hours]: [string, WorkingHours]) => `${days[day]}: ${hours.start}-${hours.end}`)
+  const workingDays = (Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][])
+    .filter(([_, hours]) => hours.is_working_day)
+    .map(([day, hours]) => `${days[day as keyof typeof days]}: ${hours.start}-${hours.end}`)
     .join(', ');
 
   return workingDays || 'График работы не указан';

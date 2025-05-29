@@ -2,6 +2,7 @@ import { UserRole } from './user-role';
 import { BookingStatus } from './booking';
 import type { Client, ClientCar as ClientCarType, ClientFilter as ClientFilterType } from './client';
 import type { User } from './user';
+import type { WorkingHoursSchedule, WorkingHours } from './working-hours';
 
 // Базовый интерфейс для всех моделей
 export interface BaseModel {
@@ -46,7 +47,9 @@ export type {
   Client,
   ClientCarType as ClientCar,
   UserRole,
-  BookingStatus
+  BookingStatus,
+  WorkingHoursSchedule,
+  WorkingHours
 };
 
 // Модель пользователя
@@ -95,6 +98,11 @@ export interface ServicePoint {
     id: number;
     name: string;
     region_id: number;
+    region?: {
+      id: number;
+      name: string;
+      code: string;
+    };
   };
   partner?: {
     id: number;
@@ -104,50 +112,6 @@ export interface ServicePoint {
   working_hours: WorkingHoursSchedule;
   services: ServicePointService[];
   photos: ServicePointPhoto[];
-}
-
-// Тип для рабочих часов
-export interface WorkingHoursSchedule {
-  monday: WorkingHours;
-  tuesday: WorkingHours;
-  wednesday: WorkingHours;
-  thursday: WorkingHours;
-  friday: WorkingHours;
-  saturday: WorkingHours;
-  sunday: WorkingHours;
-}
-
-// Базовый интерфейс для фотографий
-export interface BasePhoto {
-  url: string;
-  description?: string;
-}
-
-// Интерфейс для фотографий
-export interface Photo {
-  id?: number;
-  url: string;
-  description?: string;
-  is_main: boolean;
-  sort_order: number;
-  created_at?: string;
-  updated_at?: string;
-  service_point_id?: number;
-}
-
-// Интерфейс для фотографий сервисной точки
-export interface ServicePointPhoto extends Photo {
-  id: number;
-  service_point_id: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Модель рабочих часов
-export interface WorkingHours {
-  start: string;
-  end: string;
-  is_working_day: boolean;
 }
 
 // Модель категории услуг
@@ -205,6 +169,7 @@ export interface City {
   id: number;
   name: string;
   region_id: number;
+  region?: Region;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -317,12 +282,15 @@ export interface BookingFilter extends PaginationFilter {
 }
 
 // Статус сервисной точки
-export interface ServicePointStatus extends BaseModel {
+export interface ServicePointStatus {
+  id: number;
   name: string;
   description?: string;
-  color: string;
+  color?: string;
   is_active: boolean;
-  sort_order: number;
+  sort_order?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ServicePointService {
@@ -373,10 +341,9 @@ export interface ServicePointFormData {
   phone: string;
   contact_phone: string;
   email: string;
-  is_active: boolean;
+  status_id: number;
   post_count: number;
   default_slot_duration: number;
-  status_id?: number;
   working_hours: WorkingHoursSchedule;
   services: ServicePointService[];
   photos: Photo[];
@@ -426,4 +393,36 @@ export interface ServicePointCreateRequest extends Omit<ServicePointFormData, 'p
 
 export interface ServicePointUpdateRequest extends ServicePointCreateRequest {
   id: number;
+}
+
+// Базовый интерфейс для фотографий
+export interface BasePhoto {
+  url: string;
+  description?: string;
+}
+
+// Интерфейс для фотографий
+export interface Photo {
+  id?: number;
+  url: string;
+  description?: string;
+  is_main: boolean;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  service_point_id?: number;
+  file?: File;
+}
+
+// Интерфейс для фотографий сервисной точки
+export interface ServicePointPhoto {
+  id: number;
+  service_point_id: number;
+  file?: string;
+  url: string;
+  description?: string;
+  is_main: boolean;
+  sort_order?: number;
+  created_at: string;
+  updated_at: string;
 }

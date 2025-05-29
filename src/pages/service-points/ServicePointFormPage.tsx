@@ -22,12 +22,13 @@ import {
   CardContent,
   CardActions,
   FormHelperText,
+  IconButton,
 } from '@mui/material';
 import { useFormik, FormikTouched, FormikErrors } from 'formik';
 import * as yup from 'yup';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Delete as DeleteIcon, AddPhotoAlternate as AddPhotoIcon } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServiceCategoriesQuery,
@@ -37,10 +38,12 @@ import {
   useGetServicePointPhotosQuery,
 } from '../../api';
 import {
+  useGetServicePointsQuery,
+  useGetServicePointBasicInfoQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,
-  useGetServicePointsQuery,
+  useGetServicePointStatusesQuery,
 } from '../../api/servicePoints.api';
 import { useGetPartnersQuery } from '../../api/partners.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
@@ -54,16 +57,16 @@ import type {
   Region,
   City,
   ServicePointFormData,
-  WorkingHoursSchedule,
-  WorkingHours,
   ApiResponse,
   CityFilter,
   ServicePointCreateRequest,
   ServicePointUpdateRequest,
-  Photo
+  Photo,
+  ServicePointStatus,
 } from '../../types/models';
 import type { Service, ServicesResponse } from '../../types/service';
-import { useGetServicePointBasicInfoQuery } from '../../api/servicePoints.api';
+import { DAYS_OF_WEEK, getDayName } from '../../types/working-hours';
+import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
 
 // Определяем типы для расписания
 interface ScheduleItem {
@@ -72,23 +75,6 @@ interface ScheduleItem {
   end_time: string;
   is_working_day: boolean;
 }
-
-interface WorkingHoursItem {
-  start: string;
-  end: string;
-  is_working_day: boolean;
-}
-
-// Добавляем константы для дней недели
-const DAYS_OF_WEEK = [
-  { id: 1, name: 'Понедельник', key: 'monday' },
-  { id: 2, name: 'Вторник', key: 'tuesday' },
-  { id: 3, name: 'Среда', key: 'wednesday' },
-  { id: 4, name: 'Четверг', key: 'thursday' },
-  { id: 5, name: 'Пятница', key: 'friday' },
-  { id: 6, name: 'Суббота', key: 'saturday' },
-  { id: 0, name: 'Воскресенье', key: 'sunday' },
-] as const;
 
 // Определяем типы для FormikTouched и FormikErrors
 interface ServiceFormData {
@@ -105,105 +91,39 @@ interface ServiceFormErrors {
   is_available?: string;
 }
 
-interface FormValues extends Omit<ServicePointFormData, 'services'> {
+interface FormValues extends Omit<ServicePointFormData, 'services' | 'working_hours'> {
   working_hours: WorkingHoursSchedule;
   services: ServiceFormData[];
 }
 
-type FormikTouchedFields = FormikTouched<FormValues>;
-type FormikErrorFields = FormikErrors<FormValues>;
-
-// Создаем начальное расписание в правильном формате
-const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce((acc, day) => {
-  acc[day.key] = {
-    start: '09:00',
-    end: '18:00',
-    is_working_day: day.id < 6
+interface FormikTouchedFields extends FormikTouched<FormValues> {
+  working_hours?: {
+    [K in keyof WorkingHoursSchedule]?: {
+      start?: boolean;
+      end?: boolean;
+      is_working_day?: boolean;
+    };
   };
-  return acc;
-}, {} as WorkingHoursSchedule);
+}
 
-// Создаем схему валидации для рабочих часов
-const workingHoursShape = DAYS_OF_WEEK.reduce((acc, day) => {
-  acc[day.key] = yup.object().shape({
-    start: yup.string().required('Время начала работы обязательно'),
-    end: yup.string().required('Время окончания работы обязательно'),
-    is_working_day: yup.boolean().required('Укажите, является ли день рабочим')
-  });
-  return acc;
-}, {} as Record<string, yup.ObjectSchema<any>>);
+interface FormikErrorFields extends FormikErrors<FormValues> {
+  working_hours?: {
+    [K in keyof WorkingHoursSchedule]?: {
+      start?: string;
+      end?: string;
+      is_working_day?: string;
+    };
+  };
+}
 
-// Обновляем схему валидации
-const validationSchema = yup.object({
-  name: yup.string().required('Название точки обязательно'),
-  partner_id: yup.number()
-    .required('Партнер обязателен')
-    .min(1, 'Выберите партнера'),
-  description: yup.string(),
-  address: yup.string().required('Адрес обязателен'),
-  phone: yup.string().required('Основной телефон обязателен'),
-  contact_phone: yup.string().required('Контактный телефон обязателен'),
-  email: yup.string().email('Введите корректный email').required('Email обязателен'),
-  city_id: yup.number()
-    .required('Город обязателен')
-    .min(1, 'Пожалуйста, выберите город'),
-  region_id: yup.number()
-    .required('Регион обязателен')
-    .min(1, 'Пожалуйста, выберите регион'),
-  is_active: yup.boolean(),
-  post_count: yup.number()
-    .required('Количество постов обязательно')
-    .min(1, 'Количество постов должно быть не менее 1'),
-  default_slot_duration: yup.number()
-    .required('Длительность слота обязательна')
-    .min(5, 'Длительность слота должна быть не менее 5 минут'),
-  latitude: yup.number().nullable(),
-  longitude: yup.number().nullable(),
-  working_hours: yup.object().shape(workingHoursShape),
-  services: yup.array().of(
-    yup.object().shape({
-      service_id: yup.number()
-        .required('Услуга обязательна')
-        .min(1, 'Выберите услугу'),
-      price: yup.number()
-        .min(0, 'Цена не может быть отрицательной')
-        .required('Цена обязательна'),
-      duration: yup.number()
-        .min(5, 'Длительность должна быть не менее 5 минут')
-        .required('Длительность обязательна'),
-      is_available: yup.boolean()
-        .required('Укажите доступность услуги'),
-    })
-  ),
-  photos: yup.array().of(
-    yup.object({
-      url: yup.string().required('URL фотографии обязателен'),
-      description: yup.string(),
-      is_main: yup.boolean(),
-      sort_order: yup.number().nullable(),
-    })
-  ),
-});
-
-// Статусы точек обслуживания (в будущем можно загружать с сервера)
-const mockServicePointStatuses = [
-  { id: 1, name: 'Активна', color: '#4caf50' },
-  { id: 2, name: 'Приостановлена', color: '#ff9800' },
-  { id: 3, name: 'Заблокирована', color: '#f44336' },
-];
-
-const getDayName = (dayOfWeek: number): string => {
-  const days = [
-    'Воскресенье',
-    'Понедельник',
-    'Вторник',
-    'Среда',
-    'Четверг',
-    'Пятница',
-    'Суббота'
-  ];
-  return days[dayOfWeek % 7];
-};
+// Добавляем интерфейс для загрузки файлов
+interface PhotoUpload {
+  file: File;
+  description?: string;
+  is_main: boolean;
+  sort_order?: number;
+  preview?: string;
+}
 
 // Обновляем интерфейсы для параметров запросов
 interface CitiesQueryParams {
@@ -223,6 +143,34 @@ interface ServicePointPhotosQueryParams {
   service_point_id: string;
 }
 
+// Статусы точек обслуживания (в будущем можно загружать с сервера)
+const SERVICE_POINT_STATUSES = [
+  { id: 1, name: 'Активна', color: '#4caf50' },
+  { id: 2, name: 'Приостановлена', color: '#ff9800' },
+  { id: 3, name: 'Заблокирована', color: '#f44336' },
+] as const;
+
+// Определяем начальное расписание в правильном формате
+const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
+  const workingHours: WorkingHours = {
+    start: '09:00',
+    end: '18:00',
+    is_working_day: day.id < 6
+  };
+  acc[day.key] = workingHours;
+  return acc;
+}, {} as WorkingHoursSchedule);
+
+// Создаем схему валидации для рабочих часов
+const workingHoursShape = DAYS_OF_WEEK.reduce<Record<keyof WorkingHoursSchedule, yup.ObjectSchema<any>>>((acc, day) => {
+  acc[day.key] = yup.object().shape({
+    start: yup.string().required('Время начала работы обязательно'),
+    end: yup.string().required('Время окончания работы обязательно'),
+    is_working_day: yup.boolean().required('Укажите, является ли день рабочим')
+  }) as yup.ObjectSchema<WorkingHours>;
+  return acc;
+}, {} as Record<keyof WorkingHoursSchedule, yup.ObjectSchema<any>>);
+
 const ServicePointFormPage: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
@@ -230,7 +178,9 @@ const ServicePointFormPage: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
-  const [servicePointStatuses] = useState(mockServicePointStatuses);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // RTK Query хуки
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
@@ -252,6 +202,8 @@ const ServicePointFormPage: React.FC = () => {
       refetchOnMountOrArgChange: true
     }
   );
+  const { data: statusesData, isLoading: statusesLoading } = useGetServicePointStatusesQuery();
+  const statuses: ServicePointStatus[] = statusesData?.data || [];
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
@@ -286,7 +238,15 @@ const ServicePointFormPage: React.FC = () => {
     return services.data || [];
   }, [services]);
 
-  const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || isCreating || isUpdating;
+  // Получаем ID статуса "active" из списка статусов
+  const defaultStatusId = useMemo(() => {
+    if (!statuses.length) return undefined;
+    const activeStatus = statuses.find(status => status.name === 'active');
+    return activeStatus ? activeStatus.id : statuses[0].id;
+  }, [statuses]);
+
+  const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || 
+                 isCreating || isUpdating || statusesLoading;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
   const initialValues: FormValues = useMemo(() => ({
@@ -299,12 +259,11 @@ const ServicePointFormPage: React.FC = () => {
     contact_phone: servicePoint?.contact_phone || '',
     email: servicePoint?.email || '',
     description: servicePoint?.description || '',
-    is_active: servicePoint?.is_active ?? true,
+    status_id: servicePoint?.status?.id ? Number(servicePoint.status.id) : (defaultStatusId || 0),
     post_count: servicePoint?.post_count || 1,
     default_slot_duration: servicePoint?.default_slot_duration || 60,
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
-    status_id: servicePoint?.status?.id || 1,
     working_hours: servicePoint?.working_hours || defaultWorkingHours,
     services: (servicePointServicesData || []).map(service => ({
       service_id: service.service_id,
@@ -324,7 +283,7 @@ const ServicePointFormPage: React.FC = () => {
         Number(photo.service_point_id) : 
         photo.service_point_id
     } as Photo))
-  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData]);
+  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData, defaultStatusId]);
 
   useEffect(() => {
     if (servicePoint) {
@@ -337,28 +296,51 @@ const ServicePointFormPage: React.FC = () => {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      const servicePointData: ServicePointCreateRequest = {
-        ...values,
-        photos: values.photos.map(photo => ({
-          ...photo,
-          service_point_id: Number(id) || undefined
-        }))
-      };
+      const formData = new FormData();
+      
+      // Добавляем основные поля
+      Object.entries(values).forEach(([key, value]) => {
+        if (key !== 'photos' && key !== 'services' && key !== 'working_hours') {
+          formData.append(`service_point[${key}]`, value?.toString() || '');
+        }
+      });
+
+      // Добавляем рабочие часы
+      formData.append('service_point[working_hours]', JSON.stringify(values.working_hours));
+
+      // Добавляем услуги
+      values.services.forEach((service, index) => {
+        Object.entries(service).forEach(([key, value]) => {
+          formData.append(`service_point[services_attributes][${index}][${key}]`, value?.toString() || '');
+        });
+      });
+
+      // Добавляем фотографии
+      values.photos.forEach((photo, index) => {
+        if (photo.file) {
+          formData.append(`service_point[photos_attributes][${index}][file]`, photo.file);
+          formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
+          formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
+          if (photo.sort_order !== undefined) {
+            formData.append(`service_point[photos_attributes][${index}][sort_order]`, photo.sort_order.toString());
+          }
+        }
+      });
 
       if (isEditMode && id) {
         await updateServicePoint({
           id,
-          servicePoint: servicePointData as ServicePointFormData
+          servicePoint: formData
         }).unwrap();
         setSuccessMessage('Точка обслуживания успешно обновлена');
       } else {
         await createServicePoint({
           partnerId: partnerId || values.partner_id.toString(),
-          servicePoint: servicePointData
+          servicePoint: formData
         }).unwrap();
         setSuccessMessage('Точка обслуживания успешно создана');
       }
-      
+
       setTimeout(() => {
         navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
       }, 1000);
@@ -369,52 +351,117 @@ const ServicePointFormPage: React.FC = () => {
     }
   };
 
+  const validationSchema = useMemo(() => yup.object({
+    name: yup.string().required('Название точки обязательно'),
+    partner_id: yup.number()
+      .required('Партнер обязателен')
+      .min(1, 'Выберите партнера'),
+    description: yup.string(),
+    address: yup.string().required('Адрес обязателен'),
+    phone: yup.string().required('Основной телефон обязателен'),
+    contact_phone: yup.string().required('Контактный телефон обязателен'),
+    email: yup.string().email('Введите корректный email'),
+    city_id: yup.number()
+      .required('Город обязателен')
+      .min(1, 'Пожалуйста, выберите город'),
+    region_id: yup.number()
+      .required('Регион обязателен')
+      .min(1, 'Пожалуйста, выберите регион'),
+    status_id: yup.number()
+      .required('Статус обязателен')
+      .test('status-exists', 'Выберите корректный статус', function(value) {
+        if (!value) return false;
+        return statuses.some((status: ServicePointStatus) => status.id === value);
+      }),
+    post_count: yup.number()
+      .required('Количество постов обязательно')
+      .min(1, 'Количество постов должно быть не менее 1'),
+    default_slot_duration: yup.number()
+      .required('Длительность слота обязательна')
+      .min(5, 'Длительность слота должна быть не менее 5 минут'),
+    latitude: yup.number().nullable()
+      .test('coordinates', 'Если указана широта, должна быть указана и долгота', function(value) {
+        const { longitude } = this.parent;
+        if (value === null || value === undefined) return longitude === null || longitude === undefined;
+        return longitude !== null && longitude !== undefined;
+      })
+      .test('latitude-range', 'Широта должна быть между -90 и 90', function(value) {
+        if (value === null || value === undefined) return true;
+        return value >= -90 && value <= 90;
+      }),
+    longitude: yup.number().nullable()
+      .test('coordinates', 'Если указана долгота, должна быть указана и широта', function(value) {
+        const { latitude } = this.parent;
+        if (value === null || value === undefined) return latitude === null || latitude === undefined;
+        return latitude !== null && latitude !== undefined;
+      })
+      .test('longitude-range', 'Долгота должна быть между -180 и 180', function(value) {
+        if (value === null || value === undefined) return true;
+        return value >= -180 && value <= 180;
+      }),
+    working_hours: yup.object().shape(workingHoursShape),
+    services: yup.array().of(
+      yup.object().shape({
+        service_id: yup.number()
+          .required('Услуга обязательна')
+          .min(1, 'Выберите услугу'),
+        price: yup.number()
+          .min(0, 'Цена не может быть отрицательной')
+          .required('Цена обязательна'),
+        duration: yup.number()
+          .min(5, 'Длительность должна быть не менее 5 минут')
+          .required('Длительность обязательна'),
+        is_available: yup.boolean()
+          .required('Укажите доступность услуги'),
+      })
+    ),
+    photos: yup.array()
+      .max(10, 'Максимальное количество фотографий - 10')
+      .of(
+        yup.object().shape({
+          file: yup.mixed(),
+          description: yup.string(),
+          is_main: yup.boolean(),
+          sort_order: yup.number().nullable(),
+        })
+      ),
+  }), [statuses]);
+
   const formik = useFormik<FormValues>({
     initialValues,
     validationSchema,
     enableReinitialize: true,
-    onSubmit: handleSubmit
+    onSubmit: handleSubmit,
+    validate: (values) => {
+      const errors: { [key: string]: string } = {};
+      // Проверяем статус
+      if (values.status_id && !statuses.some(status => status.id === values.status_id)) {
+        errors.status_id = 'Выберите корректный статус';
+      }
+      return errors;
+    }
   });
-
-  // Мемоизированные обработчики
-  const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
-    const regionId = Number(event.target.value);
-    setSelectedRegionId(regionId);
-    // Сохраняем текущие значения формы
-    const currentValues = { ...formik.values };
-    // Обновляем только значения региона и города
-    formik.setValues({
-      ...currentValues,
-      region_id: regionId,
-      city_id: 0 // Сбрасываем город при смене региона
-    });
-  }, [formik]);
-
-  const handleCityChange = useCallback((event: SelectChangeEvent<string>) => {
-    const cityId = Number(event.target.value);
-    // Сохраняем текущие значения формы и обновляем только город
-    formik.setValues({
-      ...formik.values,
-      city_id: cityId
-    });
-  }, [formik]);
 
   // Эффект для установки региона при загрузке точки обслуживания
   useEffect(() => {
-    if (servicePoint?.city_id && cities?.data && cities.data.length > 0) {
-      const citiesData = cities.data;
-      const city = citiesData.find((c: City) => c.id === servicePoint.city_id);
-      if (city?.region_id && city.region_id !== selectedRegionId) {
-        setSelectedRegionId(city.region_id);
-        // При начальной загрузке обновляем значения региона и города
-        formik.setValues({
-          ...formik.values,
-          region_id: city.region_id,
-          city_id: servicePoint.city_id
-        });
-      }
+    if (servicePoint?.city?.region_id && !selectedRegionId) {
+      setSelectedRegionId(servicePoint.city.region_id);
+      formik.setFieldValue('region_id', servicePoint.city.region_id);
     }
-  }, [servicePoint?.city_id, cities?.data, selectedRegionId]);
+  }, [servicePoint, selectedRegionId]);
+
+  // Обработчик изменения региона
+  const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
+    const regionId = Number(event.target.value);
+    setSelectedRegionId(regionId);
+    formik.setFieldValue('region_id', regionId);
+  }, [formik]);
+
+  // Обработчик изменения города
+  const handleCityChange = useCallback((event: SelectChangeEvent<string>) => {
+    const cityId = Number(event.target.value);
+    formik.setFieldValue('city_id', cityId);
+  }, [formik]);
 
   const handleCloseSnackbar = useCallback(() => {
     setSuccessMessage(null);
@@ -423,6 +470,50 @@ const ServicePointFormPage: React.FC = () => {
   const handleBack = useCallback(() => {
     navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
   }, [navigate, partnerId]);
+
+  // Добавляем состояние для предпросмотра фотографий
+  const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([]);
+
+  // Обработчик загрузки фотографий
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const newPhotos = Array.from(files).map((file): PhotoUpload => ({
+      file,
+      is_main: false,
+      preview: URL.createObjectURL(file)
+    }));
+
+    if (photoUploads.length + newPhotos.length > 10) {
+      // Показываем ошибку
+      setSnackbarMessage('Максимальное количество фотографий - 10');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setPhotoUploads([...photoUploads, ...newPhotos]);
+  };
+
+  // Обработчик удаления фотографии
+  const handlePhotoDelete = (index: number) => {
+    const newPhotos = [...photoUploads];
+    if (newPhotos[index].preview) {
+      URL.revokeObjectURL(newPhotos[index].preview!);
+    }
+    newPhotos.splice(index, 1);
+    setPhotoUploads(newPhotos);
+  };
+
+  // Обработчик установки главной фотографии
+  const handleSetMainPhoto = (index: number) => {
+    const newPhotos = photoUploads.map((photo, i) => ({
+      ...photo,
+      is_main: i === index
+    }));
+    setPhotoUploads(newPhotos);
+  };
 
   return (
     <Box>
@@ -569,7 +660,7 @@ const ServicePointFormPage: React.FC = () => {
                     onChange={handleCityChange}
                     onBlur={formik.handleBlur}
                     label="Город"
-                    disabled={!selectedRegionId}
+                    disabled={!formik.values.region_id}
                   >
                     <MenuItem value="0" disabled>Выберите город</MenuItem>
                     {citiesData.map((city: City) => (
@@ -581,7 +672,7 @@ const ServicePointFormPage: React.FC = () => {
                   {formik.touched.city_id && formik.errors.city_id && (
                     <FormHelperText error>{formik.errors.city_id as string}</FormHelperText>
                   )}
-                  {!selectedRegionId && (
+                  {!formik.values.region_id && (
                     <FormHelperText>Сначала выберите регион</FormHelperText>
                   )}
                 </FormControl>
@@ -719,11 +810,11 @@ const ServicePointFormPage: React.FC = () => {
                     inputProps: { min: 1 }
                   }}
                 />
-                      </Grid>
+              </Grid>
 
               <Grid item xs={12} md={4}>
-                            <TextField
-                              fullWidth
+                <TextField
+                  fullWidth
                   id="default_slot_duration"
                   name="default_slot_duration"
                   label="Длительность слота (мин.)"
@@ -736,21 +827,41 @@ const ServicePointFormPage: React.FC = () => {
                   InputProps={{
                     inputProps: { min: 5 }
                   }}
-                            />
-                          </Grid>
+                />
+              </Grid>
 
               <Grid item xs={12} md={4}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                      checked={formik.values.is_active}
-                      onChange={formik.handleChange}
-                      name="is_active"
-                    />
-                  }
-                  label="Точка активна"
-                            />
-                          </Grid>
+                <FormControl fullWidth error={formik.touched.status_id && Boolean(formik.errors.status_id)}>
+                  <InputLabel id="status-id-label">Статус</InputLabel>
+                  <Select
+                    labelId="status-id-label"
+                    id="status_id"
+                    name="status_id"
+                    value={formik.values.status_id || ''}
+                    onChange={(e) => {
+                      formik.setFieldValue('status_id', Number(e.target.value));
+                    }}
+                    label="Статус"
+                    disabled={statusesLoading}
+                  >
+                    {statuses.map((status) => (
+                      <MenuItem key={status.id} value={status.id}>
+                        {status.description || status.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {statusesLoading && (
+                    <FormHelperText>
+                      Загрузка статусов...
+                    </FormHelperText>
+                  )}
+                  {formik.touched.status_id && formik.errors.status_id && (
+                    <FormHelperText error>
+                      {formik.errors.status_id as string}
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
@@ -894,101 +1005,79 @@ const ServicePointFormPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              {(formik.values.photos || []).map((photo, index) => (
-                <Grid item xs={12} md={4} key={index}>
-                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <img
-                          src={photo.url}
-                          alt={photo.description || 'Фото сервисной точки'}
-                          style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 4 }}
-                        />
-                      </Grid>
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  Фотографии
+                </Typography>
+                <input
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  id="photo-upload"
+                  multiple
+                  type="file"
+                  onChange={handlePhotoUpload}
+                />
+                <label htmlFor="photo-upload">
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<AddPhotoIcon />}
+                    disabled={photoUploads.length >= 10}
+                  >
+                    Добавить фотографии
+                  </Button>
+                </label>
+                {photoUploads.length >= 10 && (
+                  <FormHelperText error>
+                    Достигнуто максимальное количество фотографий (10)
+                  </FormHelperText>
+                )}
+              </Grid>
 
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="URL фотографии"
-                          value={photo.url}
-                          onChange={(e) => {
-                            formik.setFieldValue(`photos.${index}.url`, e.target.value);
-                          }}
-                        />
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Описание"
-                          value={photo.description || ''}
-                          onChange={(e) => {
-                            formik.setFieldValue(`photos.${index}.description`, e.target.value);
-                          }}
-                        />
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <FormControl fullWidth>
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  {photoUploads.map((photo, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                      <Card>
+                        <CardContent>
+                          <img
+                            src={photo.preview}
+                            alt={`Фото ${index + 1}`}
+                            style={{ width: '100%', height: 200, objectFit: 'cover' }}
+                          />
+                          <TextField
+                            fullWidth
+                            margin="normal"
+                            label="Описание"
+                            value={photo.description || ''}
+                            onChange={(e) => {
+                              const newPhotos = [...photoUploads];
+                              newPhotos[index].description = e.target.value;
+                              setPhotoUploads(newPhotos);
+                            }}
+                          />
+                        </CardContent>
+                        <CardActions>
                           <FormControlLabel
                             control={
                               <Switch
                                 checked={photo.is_main}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    (formik.values.photos || []).forEach((_, i) => {
-                                      if (i !== index) {
-                                        formik.setFieldValue(`photos.${i}.is_main`, false);
-                                      }
-                                    });
-                                  }
-                                  formik.setFieldValue(`photos.${index}.is_main`, e.target.checked);
-                                }}
-                                name={`photos.${index}.is_main`}
+                                onChange={() => handleSetMainPhoto(index)}
                               />
                             }
                             label="Главное фото"
                           />
-                        </FormControl>
-                      </Grid>
-
-                      <Grid item xs={12}>
-                        <Button
-                          color="error"
-                          onClick={() => {
-                            const newPhotos = [...(formik.values.photos || [])];
-                            newPhotos.splice(index, 1);
-                            formik.setFieldValue('photos', newPhotos);
-                          }}
-                        >
-                          Удалить фото
-                        </Button>
-                      </Grid>
+                          <IconButton
+                            color="error"
+                            onClick={() => handlePhotoDelete(index)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </CardActions>
+                      </Card>
                     </Grid>
-                  </Box>
+                  ))}
                 </Grid>
-              ))}
-
-              <Grid item xs={12}>
-                <Button
-                  variant="outlined"
-                  onClick={() => {
-                    formik.setFieldValue('photos', [
-                      ...(formik.values.photos || []),
-                      {
-                        id: '',
-                        service_point_id: 0,
-                        url: '',
-                        description: '',
-                        is_main: (formik.values.photos || []).length === 0,
-                        created_at: '',
-                        updated_at: '',
-                      },
-                    ]);
-                  }}
-                >
-                  Добавить фото
-                </Button>
               </Grid>
 
               <Grid item xs={12}>
@@ -998,7 +1087,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              {DAYS_OF_WEEK.map((day, index) => (
+              {DAYS_OF_WEEK.map((day: DayOfWeek) => (
                 <Grid item xs={12} md={6} key={day.id}>
                   <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Typography variant="subtitle1" gutterBottom>
@@ -1012,7 +1101,10 @@ const ServicePointFormPage: React.FC = () => {
                             <Switch
                               checked={formik.values.working_hours[day.key]?.is_working_day ?? false}
                               onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}.is_working_day`, e.target.checked);
+                                formik.setFieldValue(`working_hours.${day.key}`, {
+                                  ...formik.values.working_hours[day.key],
+                                  is_working_day: e.target.checked
+                                } as WorkingHours);
                               }}
                               name={`working_hours.${day.key}.is_working_day`}
                             />
@@ -1030,16 +1122,19 @@ const ServicePointFormPage: React.FC = () => {
                               label="Начало работы"
                               value={formik.values.working_hours[day.key]?.start ?? '09:00'}
                               onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}.start`, e.target.value);
+                                formik.setFieldValue(`working_hours.${day.key}`, {
+                                  ...formik.values.working_hours[day.key],
+                                  start: e.target.value
+                                } as WorkingHours);
                               }}
                               InputLabelProps={{ shrink: true }}
                               error={Boolean(
-                                (formik.touched as FormikTouchedFields).working_hours?.[day.key]?.start && 
-                                (formik.errors as FormikErrorFields).working_hours?.[day.key]?.start
+                                formik.touched.working_hours?.[day.key]?.start && 
+                                formik.errors.working_hours?.[day.key]?.start
                               )}
                               helperText={
-                                (formik.touched as FormikTouchedFields).working_hours?.[day.key]?.start && 
-                                (formik.errors as FormikErrorFields).working_hours?.[day.key]?.start
+                                formik.touched.working_hours?.[day.key]?.start && 
+                                formik.errors.working_hours?.[day.key]?.start
                               }
                             />
                           </Grid>
@@ -1050,16 +1145,19 @@ const ServicePointFormPage: React.FC = () => {
                               label="Конец работы"
                               value={formik.values.working_hours[day.key]?.end ?? '18:00'}
                               onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}.end`, e.target.value);
+                                formik.setFieldValue(`working_hours.${day.key}`, {
+                                  ...formik.values.working_hours[day.key],
+                                  end: e.target.value
+                                } as WorkingHours);
                               }}
                               InputLabelProps={{ shrink: true }}
                               error={Boolean(
-                                (formik.touched as FormikTouchedFields).working_hours?.[day.key]?.end && 
-                                (formik.errors as FormikErrorFields).working_hours?.[day.key]?.end
+                                formik.touched.working_hours?.[day.key]?.end && 
+                                formik.errors.working_hours?.[day.key]?.end
                               )}
                               helperText={
-                                (formik.touched as FormikTouchedFields).working_hours?.[day.key]?.end && 
-                                (formik.errors as FormikErrorFields).working_hours?.[day.key]?.end
+                                formik.touched.working_hours?.[day.key]?.end && 
+                                formik.errors.working_hours?.[day.key]?.end
                               }
                             />
                           </Grid>

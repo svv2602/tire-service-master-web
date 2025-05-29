@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -37,6 +37,9 @@ import {
   LocationOn as LocationIcon,
   Check as CheckIcon,
   Close as CloseIcon,
+  AccessTime as AccessTimeIcon,
+  Business as BusinessIcon,
+  LocationCity as LocationCityIcon,
 } from '@mui/icons-material';
 import {
   useGetServicePointsQuery,
@@ -45,7 +48,62 @@ import {
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
-import { ServicePoint } from '../../types/models';
+import type { ServicePoint } from '../../types/models';
+import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
+
+// Функция для форматирования рабочих часов
+const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
+  if (!workingHours) return 'График работы не указан';
+
+  const days = {
+    monday: 'Пн',
+    tuesday: 'Вт',
+    wednesday: 'Ср',
+    thursday: 'Чт',
+    friday: 'Пт',
+    saturday: 'Сб',
+    sunday: 'Вс'
+  } as const;
+
+  const schedule: Record<string, string> = {};
+  let currentSchedule = '';
+  let daysWithSameSchedule: string[] = [];
+
+  for (const [day, hours] of Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][]) {
+    if (!hours.is_working_day) continue;
+
+    const timeString = `${hours.start}-${hours.end}`;
+    if (timeString !== currentSchedule) {
+      if (daysWithSameSchedule.length > 0) {
+        schedule[currentSchedule] = daysWithSameSchedule.join(', ');
+      }
+      currentSchedule = timeString;
+      daysWithSameSchedule = [days[day as keyof typeof days]];
+    } else {
+      daysWithSameSchedule.push(days[day as keyof typeof days]);
+    }
+  }
+
+  // Добавляем последнюю группу дней
+  if (daysWithSameSchedule.length > 0) {
+    schedule[currentSchedule] = daysWithSameSchedule.join(', ');
+  }
+
+  // Добавляем выходные дни
+  const weekends = (Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][])
+    .filter(([_, hours]) => !hours.is_working_day)
+    .map(([day]) => days[day as keyof typeof days]);
+
+  let result = Object.entries(schedule)
+    .map(([time, days]) => `${days} ${time}`)
+    .join('; ');
+
+  if (weekends.length > 0) {
+    result += `; Выходные: ${weekends.join(', ')}`;
+  }
+
+  return result || 'График работы не указан';
+};
 
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -73,7 +131,7 @@ const ServicePointsPage: React.FC = () => {
     { skip: !selectedRegionId }
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
-    search,
+    query: search,
     city_id: selectedCityId || undefined,
     region_id: selectedRegionId || undefined,
     page: page + 1,
@@ -232,6 +290,9 @@ const ServicePointsPage: React.FC = () => {
             <TableRow>
               <TableCell>Название</TableCell>
               <TableCell>Адрес</TableCell>
+              <TableCell>Область</TableCell>
+              <TableCell>Город</TableCell>
+              <TableCell>График работы</TableCell>
               <TableCell>Контакты</TableCell>
               <TableCell>Статус</TableCell>
               <TableCell align="right">Действия</TableCell>
@@ -242,27 +303,43 @@ const ServicePointsPage: React.FC = () => {
               <TableRow key={servicePoint.id}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationIcon color="action" />
+                    <BusinessIcon color="action" fontSize="small" />
                     <Typography>{servicePoint.name}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationIcon color="action" />
+                    <LocationIcon color="action" fontSize="small" />
                     <Typography>{servicePoint.address}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationIcon color="action" />
-                    <Typography>{servicePoint.phone || servicePoint.contact_phone || 'Не указан'}</Typography>
+                    <LocationCityIcon color="action" fontSize="small" />
+                    <Typography>{servicePoint.city?.region?.name || 'Не указана'}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationIcon color="action" />
-                    <Typography>{servicePoint.is_active ? 'Активна' : 'Неактивна'}</Typography>
+                    <LocationCityIcon color="action" fontSize="small" />
+                    <Typography>{servicePoint.city?.name || 'Не указан'}</Typography>
                   </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccessTimeIcon color="action" fontSize="small" />
+                    <Typography>{formatWorkingHours(servicePoint.working_hours)}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Typography>{servicePoint.contact_phone || 'Не указан'}</Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
+                    color={servicePoint.is_active ? 'success' : 'error'}
+                    size="small"
+                  />
                 </TableCell>
                 <TableCell align="right">
                   <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>

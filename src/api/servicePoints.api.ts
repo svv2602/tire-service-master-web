@@ -3,7 +3,8 @@ import type {
   ApiResponse, 
   ServicePointCreateRequest,
   ServicePointUpdateRequest,
-  ServicePointFormData
+  ServicePointFormData,
+  ServicePointStatus
 } from '../types/models';
 import { baseApi } from './baseApi';
 
@@ -12,7 +13,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение списка сервисных точек
     getServicePoints: builder.query<ApiResponse<ServicePoint>, { 
-      search?: string;
+      query?: string;
       city_id?: number;
       region_id?: number;
       page?: number;
@@ -20,7 +21,10 @@ export const servicePointsApi = baseApi.injectEndpoints({
     } | void>({
       query: (params) => ({
         url: '/service_points',
-        params: params || undefined
+        params: {
+          ...params,
+          include: 'city.region,working_hours,status'
+        }
       }),
       providesTags: (result) =>
         result
@@ -48,21 +52,23 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Создание новой сервисной точки
-    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: ServicePointCreateRequest }>({
+    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: FormData }>({
       query: ({ partnerId, servicePoint }) => ({
         url: `/partners/${partnerId}/service_points`,
         method: 'POST',
-        body: { service_point: servicePoint }
+        body: servicePoint,
+        formData: true
       }),
       invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
     // Обновление сервисной точки
-    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: ServicePointFormData }>({
+    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: FormData }>({
       query: ({ id, servicePoint }) => ({
-        url: `/partners/${servicePoint.partner_id}/service_points/${id}`,
+        url: `/partners/${servicePoint.get('service_point[partner_id]')}/service_points/${id}`,
         method: 'PATCH',
-        body: { service_point: servicePoint },
+        body: servicePoint,
+        formData: true
       }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'ServicePoint' as const, id },
@@ -98,6 +104,13 @@ export const servicePointsApi = baseApi.injectEndpoints({
         { type: 'ServicePointPhoto' as const, id: 'LIST' }
       ],
     }),
+
+    getServicePointStatuses: builder.query<ApiResponse<ServicePointStatus>, void>({
+      query: () => ({
+        url: '/service_point_statuses',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -109,4 +122,5 @@ export const {
   useUpdateServicePointMutation,
   useDeleteServicePointMutation,
   useUploadServicePointPhotoMutation,
+  useGetServicePointStatusesQuery,
 } = servicePointsApi;
