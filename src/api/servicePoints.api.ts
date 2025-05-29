@@ -1,31 +1,13 @@
-import { createApi, fetchBaseQuery, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import type { 
   ServicePoint, 
   ApiResponse, 
   ServicePointCreateRequest,
   ServicePointUpdateRequest 
 } from '../types/models';
+import { baseApi } from './baseApi';
 
-// Определяем базовый тип запроса
-type CustomBaseQuery = BaseQueryFn<
-  string | FetchArgs,
-  unknown,
-  FetchBaseQueryError
->;
-
-// Расширяем базовый API для работы с сервисными точками
-export const servicePointsApi = createApi({
-  reducerPath: 'servicePointsApi',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: '/api/v1/',
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    }
-  }) as CustomBaseQuery,
+// Инжектируем эндпоинты в baseApi
+export const servicePointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение списка сервисных точек
     getServicePoints: builder.query<ApiResponse<ServicePoint>, { 
@@ -39,6 +21,13 @@ export const servicePointsApi = createApi({
         url: 'service_points',
         params: params || undefined
       }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'ServicePoint' as const, id })),
+              { type: 'ServicePoint' as const, id: 'LIST' },
+            ]
+          : [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
     // Получение сервисной точки по ID
@@ -46,6 +35,7 @@ export const servicePointsApi = createApi({
       query: (id) => ({
         url: `service_points/${id}`,
       }),
+      providesTags: (_result, _error, id) => [{ type: 'ServicePoint' as const, id }],
     }),
 
     // Создание новой сервисной точки
@@ -55,6 +45,7 @@ export const servicePointsApi = createApi({
         method: 'POST',
         body: { service_point: servicePoint },
       }),
+      invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
     // Обновление сервисной точки
@@ -64,6 +55,10 @@ export const servicePointsApi = createApi({
         method: 'PATCH',
         body: { service_point: servicePoint },
       }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'ServicePoint' as const, id },
+        { type: 'ServicePoint' as const, id: 'LIST' }
+      ],
     }),
 
     // Удаление сервисной точки
@@ -72,6 +67,7 @@ export const servicePointsApi = createApi({
         url: `service_points/${id}`,
         method: 'DELETE',
       }),
+      invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
     // Добавление фотографии
@@ -88,6 +84,10 @@ export const servicePointsApi = createApi({
           body: formData,
         };
       },
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'ServicePoint' as const, id },
+        { type: 'ServicePointPhoto' as const, id: 'LIST' }
+      ],
     }),
   }),
 });
