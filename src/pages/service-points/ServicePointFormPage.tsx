@@ -327,21 +327,21 @@ const ServicePointFormPage: React.FC = () => {
         }
       });
 
-      if (isEditMode && id) {
-        await updateServicePoint({
-          id,
+        if (isEditMode && id) {
+          await updateServicePoint({
+            id,
           servicePoint: formData
-        }).unwrap();
-        setSuccessMessage('Точка обслуживания успешно обновлена');
-      } else {
+          }).unwrap();
+          setSuccessMessage('Точка обслуживания успешно обновлена');
+        } else {
         await createServicePoint({
           partnerId: partnerId || values.partner_id.toString(),
           servicePoint: formData
         }).unwrap();
-        setSuccessMessage('Точка обслуживания успешно создана');
+          setSuccessMessage('Точка обслуживания успешно создана');
       }
 
-      setTimeout(() => {
+          setTimeout(() => {
         navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
       }, 1000);
     } catch (error: any) {
@@ -810,11 +810,11 @@ const ServicePointFormPage: React.FC = () => {
                     inputProps: { min: 1 }
                   }}
                 />
-              </Grid>
+                      </Grid>
 
               <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
+                            <TextField
+                              fullWidth
                   id="default_slot_duration"
                   name="default_slot_duration"
                   label="Длительность слота (мин.)"
@@ -827,8 +827,8 @@ const ServicePointFormPage: React.FC = () => {
                   InputProps={{
                     inputProps: { min: 5 }
                   }}
-                />
-              </Grid>
+                            />
+                          </Grid>
 
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth error={formik.touched.status_id && Boolean(formik.errors.status_id)}>
@@ -838,7 +838,7 @@ const ServicePointFormPage: React.FC = () => {
                     id="status_id"
                     name="status_id"
                     value={formik.values.status_id || ''}
-                    onChange={(e) => {
+                              onChange={(e) => {
                       formik.setFieldValue('status_id', Number(e.target.value));
                     }}
                     label="Статус"
@@ -861,7 +861,7 @@ const ServicePointFormPage: React.FC = () => {
                     </FormHelperText>
                   )}
                 </FormControl>
-              </Grid>
+                    </Grid>
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
@@ -1005,7 +1005,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12}>
+                      <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
                   Фотографии
                 </Typography>
@@ -1032,9 +1032,9 @@ const ServicePointFormPage: React.FC = () => {
                     Достигнуто максимальное количество фотографий (10)
                   </FormHelperText>
                 )}
-              </Grid>
+                      </Grid>
 
-              <Grid item xs={12}>
+                      <Grid item xs={12}>
                 <Grid container spacing={2}>
                   {photoUploads.map((photo, index) => (
                     <Grid item xs={12} sm={6} md={4} key={index}>
@@ -1045,12 +1045,12 @@ const ServicePointFormPage: React.FC = () => {
                             alt={`Фото ${index + 1}`}
                             style={{ width: '100%', height: 200, objectFit: 'cover' }}
                           />
-                          <TextField
-                            fullWidth
+                        <TextField
+                          fullWidth
                             margin="normal"
-                            label="Описание"
-                            value={photo.description || ''}
-                            onChange={(e) => {
+                          label="Описание"
+                          value={photo.description || ''}
+                          onChange={(e) => {
                               const newPhotos = [...photoUploads];
                               newPhotos[index].description = e.target.value;
                               setPhotoUploads(newPhotos);
@@ -1078,9 +1078,9 @@ const ServicePointFormPage: React.FC = () => {
                     </Grid>
                   ))}
                 </Grid>
-              </Grid>
+                      </Grid>
 
-              <Grid item xs={12}>
+                      <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom>
                   График работы
@@ -1096,11 +1096,11 @@ const ServicePointFormPage: React.FC = () => {
                     
                     <Grid container spacing={2}>
                       <Grid item xs={12}>
-                        <FormControlLabel
-                          control={
-                            <Switch
+                          <FormControlLabel
+                            control={
+                              <Switch
                               checked={formik.values.working_hours[day.key]?.is_working_day ?? false}
-                              onChange={(e) => {
+                                onChange={(e) => {
                                 formik.setFieldValue(`working_hours.${day.key}`, {
                                   ...formik.values.working_hours[day.key],
                                   is_working_day: e.target.checked
@@ -1137,7 +1137,7 @@ const ServicePointFormPage: React.FC = () => {
                                 formik.errors.working_hours?.[day.key]?.start
                               }
                             />
-                          </Grid>
+                      </Grid>
                           <Grid item xs={6}>
                             <TextField
                               fullWidth
