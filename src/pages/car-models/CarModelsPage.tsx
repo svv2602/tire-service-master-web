@@ -32,10 +32,7 @@ import {
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ToggleOn as ToggleOnIcon,
-  ToggleOff as ToggleOffIcon,
   DirectionsCar as CarIcon,
-  CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -68,15 +65,15 @@ const CarModelsPage: React.FC = () => {
   } = useGetCarModelsQuery({
     query: search || undefined,
     brand_id: brandFilter || undefined,
-    is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
+    is_active: activeFilter !== '' ? activeFilter === "1" : undefined,
     page: page + 1,
     per_page: rowsPerPage,
   });
 
   const { data: brandsData } = useGetCarBrandsQuery({ is_active: true });
 
-  const [deleteModel, { isLoading: deleteLoading }] = useDeleteCarModelMutation();
-  const [toggleActive, { isLoading: toggleActiveLoading }] = useToggleCarModelActiveMutation();
+  const [deleteModel] = useDeleteCarModelMutation();
+  const [toggleActive] = useToggleCarModelActiveMutation();
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,8 +210,8 @@ const CarModelsPage: React.FC = () => {
               label="Статус"
             >
               <MenuItem value="">Все</MenuItem>
-              <MenuItem value="true">Активные</MenuItem>
-              <MenuItem value="false">Неактивные</MenuItem>
+              <MenuItem value="1">Активные</MenuItem>
+              <MenuItem value="0">Неактивные</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -228,7 +225,6 @@ const CarModelsPage: React.FC = () => {
               <TableRow>
                 <TableCell>Модель</TableCell>
                 <TableCell>Бренд</TableCell>
-                <TableCell>Годы выпуска</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>Дата создания</TableCell>
                 <TableCell align="right">Действия</TableCell>
@@ -248,109 +244,56 @@ const CarModelsPage: React.FC = () => {
                   
                   <TableCell>
                     <Typography variant="body2">
-                      {model.brand?.name || 'Не указан'}
+                      {model.brand?.name}
                     </Typography>
                   </TableCell>
-                  
+
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <CalendarIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
-                      <Typography variant="body2">
-                        {model.year_start && model.year_end 
-                          ? `${model.year_start} - ${model.year_end}`
-                          : model.year_start 
-                            ? `с ${model.year_start}`
-                            : 'Не указаны'
-                        }
-                      </Typography>
-                    </Box>
+                    <Chip 
+                      label={model.is_active ? 'Активная' : 'Неактивная'}
+                      color={model.is_active ? 'success' : 'default'}
+                      size="small"
+                    />
                   </TableCell>
-                  
+
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={model.is_active ? 'Активна' : 'Неактивна'}
-                        color={model.is_active ? 'success' : 'default'}
-                        size="small"
-                      />
-                      <Tooltip title={model.is_active ? 'Деактивировать' : 'Активировать'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleToggleActive(model.id, model.is_active)}
-                          disabled={toggleActiveLoading}
-                        >
-                          {model.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    {new Date(model.created_at).toLocaleDateString()}
                   </TableCell>
-                  
-                  <TableCell>
-                    <Typography variant="body2">
-                      {model.created_at 
-                        ? new Date(model.created_at).toLocaleDateString('ru-RU')
-                        : 'Не указана'
-                      }
-                    </Typography>
-                  </TableCell>
-                  
+
                   <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Tooltip title="Редактировать">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/car-models/${model.id}/edit`)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      
-                      <Tooltip title="Удалить">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick({
-                            id: model.id,
-                            name: model.name,
-                            brand_id: model.brand_id
-                          })}
-                          disabled={deleteLoading}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
+                    <Tooltip title="Редактировать">
+                      <IconButton onClick={() => navigate(`/car-models/${model.id}/edit`)} size="small">
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton
+                        onClick={() => handleDeleteClick(model)}
+                        size="small"
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </TableCell>
                 </TableRow>
               ))}
-              
-              {models.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography variant="body1" color="text.secondary">
-                      {search || brandFilter || activeFilter !== '' ? 'Модели не найдены' : 'Нет моделей'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={totalItems}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+            labelRowsPerPage="Строк на странице:"
+            labelDisplayedRows={({ from, to, count }) => 
+              `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
+            }
+          />
         </TableContainer>
-        
-        {/* Пагинация */}
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => 
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
-        />
       </Paper>
 
       {/* Диалог подтверждения удаления */}
@@ -358,19 +301,13 @@ const CarModelsPage: React.FC = () => {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить модель "{selectedModel?.name}"?
-            Это действие нельзя отменить и может повлиять на связанные записи.
+            Вы действительно хотите удалить модель "{selectedModel?.name}"?
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-            disabled={deleteLoading}
-          >
-            {deleteLoading ? 'Удаление...' : 'Удалить'}
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
           </Button>
         </DialogActions>
       </Dialog>

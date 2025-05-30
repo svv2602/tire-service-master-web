@@ -24,6 +24,11 @@ interface ApiCarModelsResponse {
     brand: {
       id: number;
       name: string;
+      logo: string | null;
+      is_active: boolean;
+      models_count: number;
+      created_at: string;
+      updated_at: string;
     };
   }>;
   total_items: number;
@@ -53,23 +58,17 @@ export const carModelsApi = baseApi.injectEndpoints({
           id: model.id,
           brand_id: model.brand_id,
           name: model.name,
-          code: model.name.toLowerCase().replace(/\s+/g, '_'),
           is_active: model.is_active,
-          is_popular: false,
-          year_start: undefined,
-          year_end: undefined,
           created_at: model.created_at,
           updated_at: model.updated_at,
           brand: {
             id: model.brand.id,
             name: model.brand.name,
-            code: model.brand.name.toLowerCase().replace(/\s+/g, '_'),
-            logo_url: undefined,
-            is_active: true,
-            is_popular: false,
-            models_count: 0,
-            created_at: model.created_at, // Используем дату модели
-            updated_at: model.updated_at, // Используем дату модели
+            logo: model.brand.logo,
+            is_active: model.brand.is_active,
+            models_count: model.brand.models_count,
+            created_at: model.brand.created_at,
+            updated_at: model.brand.updated_at,
           },
         }));
       },

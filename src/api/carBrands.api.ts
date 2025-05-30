@@ -7,7 +7,6 @@ import { transformPaginatedResponse } from './apiUtils';
 interface CarBrandFilter {
   query?: string;
   is_active?: boolean;
-  is_popular?: boolean;
   page?: number;
   per_page?: number;
 }
@@ -17,7 +16,7 @@ interface ApiCarBrandsResponse {
   car_brands: Array<{
     id: number;
     name: string;
-    logo?: string;
+    logo: string | null;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -32,7 +31,18 @@ export const carBrandsApi = baseApi.injectEndpoints({
         url: 'car_brands',
         params,
       }),
-      transformResponse: (response: ApiResponse<CarBrand>) => transformPaginatedResponse(response),
+      transformResponse: (response: ApiCarBrandsResponse) => ({
+        data: response.car_brands.map(brand => ({
+          ...brand,
+          models_count: 0, // Это поле будет заполняться бэкендом
+        })),
+        meta: {
+          current_page: 1,
+          total_pages: 1,
+          total_count: response.total_items,
+          per_page: 25
+        }
+      }),
       providesTags: (result) =>
         result?.data
           ? [
@@ -50,20 +60,42 @@ export const carBrandsApi = baseApi.injectEndpoints({
     }),
     
     createCarBrand: build.mutation<CarBrand, CarBrandFormData>({
-      query: (data: CarBrandFormData) => ({
-        url: 'car_brands',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => {
+        const formData = new FormData();
+        formData.append('car_brand[name]', data.name);
+        if (data.logo) {
+          formData.append('car_brand[logo]', data.logo);
+        }
+        if (data.is_active !== undefined) {
+          formData.append('car_brand[is_active]', String(data.is_active));
+        }
+        return {
+          url: 'car_brands',
+          method: 'POST',
+          body: formData,
+        };
+      },
       invalidatesTags: ['CarBrands'],
     }),
     
     updateCarBrand: build.mutation<CarBrand, { id: string; data: Partial<CarBrandFormData> }>({
-      query: ({ id, data }) => ({
-        url: `car_brands/${id}`,
-        method: 'PATCH',
-        body: data,
-      }),
+      query: ({ id, data }) => {
+        const formData = new FormData();
+        if (data.name !== undefined) {
+          formData.append('car_brand[name]', data.name);
+        }
+        if (data.logo) {
+          formData.append('car_brand[logo]', data.logo);
+        }
+        if (data.is_active !== undefined) {
+          formData.append('car_brand[is_active]', String(data.is_active));
+        }
+        return {
+          url: `car_brands/${id}`,
+          method: 'PATCH',
+          body: formData,
+        };
+      },
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'CarBrands' as const, id },
         'CarBrands',
@@ -82,19 +114,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
       query: ({ id, is_active }) => ({
         url: `car_brands/${id}`,
         method: 'PATCH',
-        body: { is_active },
-      }),
-      invalidatesTags: (_result, _err, { id }) => [
-        { type: 'CarBrands' as const, id },
-        'CarBrands',
-      ],
-    }),
-    
-    toggleCarBrandPopular: build.mutation<CarBrand, { id: string; is_popular: boolean }>({
-      query: ({ id, is_popular }) => ({
-        url: `car_brands/${id}`,
-        method: 'PATCH',
-        body: { is_popular },
+        body: { car_brand: { is_active } },
       }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'CarBrands' as const, id },
@@ -112,5 +132,4 @@ export const {
   useUpdateCarBrandMutation,
   useDeleteCarBrandMutation,
   useToggleCarBrandActiveMutation,
-  useToggleCarBrandPopularMutation,
 } = carBrandsApi;

@@ -21,6 +21,8 @@ import {
   DialogActions,
   TablePagination,
   Alert,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -36,11 +38,11 @@ import {
   useUpdateCarBrandMutation,
   useDeleteCarBrandMutation,
 } from '../../api';
-import { CarBrand } from '../../types/car';
+import { CarBrand, CarBrandFormData } from '../../types/car';
 
 const validationSchema = yup.object({
   name: yup.string().required('Название обязательно'),
-  code: yup.string().required('Код обязателен'),
+  is_active: yup.boolean(),
 });
 
 const CarBrandsPage: React.FC = () => {
@@ -65,13 +67,11 @@ const CarBrandsPage: React.FC = () => {
   const brands = brandsData?.data || [];
   const totalItems = brandsData?.pagination?.total_count || 0;
 
-  const formik = useFormik({
+  const formik = useFormik<CarBrandFormData>({
     initialValues: {
       name: '',
-      code: '',
-      logo_url: '',
       is_active: true,
-      is_popular: false,
+      logo: null,
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
@@ -95,10 +95,8 @@ const CarBrandsPage: React.FC = () => {
       setEditingBrand(brand);
       formik.setValues({
         name: brand.name,
-        code: brand.code,
-        logo_url: brand.logo_url || '',
         is_active: brand.is_active,
-        is_popular: brand.is_popular,
+        logo: null, // При редактировании не загружаем старый логотип
       });
     } else {
       setEditingBrand(null);
@@ -181,10 +179,10 @@ const CarBrandsPage: React.FC = () => {
             <TableRow>
               <TableCell>ID</TableCell>
               <TableCell>Название</TableCell>
-              <TableCell>Код</TableCell>
+              <TableCell>Логотип</TableCell>
               <TableCell>Статус</TableCell>
-              <TableCell>Популярный</TableCell>
               <TableCell>Кол-во моделей</TableCell>
+              <TableCell>Дата создания</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -193,10 +191,16 @@ const CarBrandsPage: React.FC = () => {
               <TableRow key={brand.id}>
                 <TableCell>{brand.id}</TableCell>
                 <TableCell>{brand.name}</TableCell>
-                <TableCell>{brand.code}</TableCell>
+                <TableCell>
+                  {brand.logo ? (
+                    <img src={brand.logo} alt={brand.name} style={{ height: 40, width: 'auto' }} />
+                  ) : (
+                    'Нет логотипа'
+                  )}
+                </TableCell>
                 <TableCell>{brand.is_active ? 'Активный' : 'Неактивный'}</TableCell>
-                <TableCell>{brand.is_popular ? 'Да' : 'Нет'}</TableCell>
                 <TableCell>{brand.models_count}</TableCell>
+                <TableCell>{new Date(brand.created_at).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Редактировать">
                     <IconButton onClick={() => handleOpenDialog(brand)} size="small">
@@ -248,28 +252,32 @@ const CarBrandsPage: React.FC = () => {
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
               />
-              <TextField
-                fullWidth
-                name="code"
-                label="Код"
-                value={formik.values.code}
-                onChange={formik.handleChange}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={formik.touched.code && formik.errors.code}
+              
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => {
+                  const file = event.currentTarget.files?.[0];
+                  formik.setFieldValue('logo', file || null);
+                }}
               />
-              <TextField
-                fullWidth
-                name="logo_url"
-                label="URL логотипа"
-                value={formik.values.logo_url}
-                onChange={formik.handleChange}
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
+                label="Активный"
               />
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained">
-              {editingBrand ? 'Сохранить' : 'Добавить'}
+            <Button type="submit" variant="contained" color="primary">
+              {editingBrand ? 'Сохранить' : 'Создать'}
             </Button>
           </DialogActions>
         </form>

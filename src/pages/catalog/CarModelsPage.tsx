@@ -41,23 +41,13 @@ import {
   useUpdateCarModelMutation,
   useDeleteCarModelMutation,
 } from '../../api';
-import { CarModel, CarBrand } from '../../types/car';
+import { CarModel, CarBrand, CarModelFormData } from '../../types/car';
 
 const validationSchema = yup.object({
   name: yup.string().required('Название обязательно'),
-  code: yup.string().required('Код обязателен'),
   brand_id: yup.number().required('Бренд обязателен'),
+  is_active: yup.boolean(),
 });
-
-interface ModelFormValues {
-  name: string;
-  code: string;
-  brand_id: number;
-  is_active: boolean;
-  is_popular: boolean;
-  year_start?: number | null;
-  year_end?: number | null;
-}
 
 const CarModelsPage: React.FC = () => {
   const [page, setPage] = useState(0);
@@ -85,29 +75,19 @@ const CarModelsPage: React.FC = () => {
   const totalItems = modelsData?.pagination?.total_count || 0;
   const brands = brandsData?.data || [];
 
-  const formik = useFormik<ModelFormValues>({
+  const formik = useFormik<CarModelFormData>({
     initialValues: {
       name: '',
-      code: '',
       brand_id: 0,
       is_active: true,
-      is_popular: false,
-      year_start: null,
-      year_end: null,
     },
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
-        const submitData = {
-          ...values,
-          year_start: values.year_start || undefined,
-          year_end: values.year_end || undefined,
-        };
-        
         if (editingModel) {
-          await updateModel({ id: editingModel.id.toString(), data: submitData }).unwrap();
+          await updateModel({ id: editingModel.id.toString(), data: values }).unwrap();
         } else {
-          await createModel(submitData).unwrap();
+          await createModel(values).unwrap();
         }
         resetForm();
         setOpenDialog(false);
@@ -123,12 +103,8 @@ const CarModelsPage: React.FC = () => {
       setEditingModel(model);
       formik.setValues({
         name: model.name,
-        code: model.code,
         brand_id: model.brand_id,
         is_active: model.is_active,
-        is_popular: model.is_popular,
-        year_start: model.year_start,
-        year_end: model.year_end,
       });
     } else {
       setEditingModel(null);
@@ -228,11 +204,9 @@ const CarModelsPage: React.FC = () => {
             <TableRow>
               <TableCell>ID</TableCell>
               <TableCell>Название</TableCell>
-              <TableCell>Код</TableCell>
               <TableCell>Бренд</TableCell>
-              <TableCell>Годы выпуска</TableCell>
               <TableCell>Статус</TableCell>
-              <TableCell>Популярная</TableCell>
+              <TableCell>Дата создания</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -241,15 +215,9 @@ const CarModelsPage: React.FC = () => {
               <TableRow key={model.id}>
                 <TableCell>{model.id}</TableCell>
                 <TableCell>{model.name}</TableCell>
-                <TableCell>{model.code}</TableCell>
                 <TableCell>{model.brand?.name}</TableCell>
-                <TableCell>
-                  {model.year_start && model.year_end
-                    ? `${model.year_start} - ${model.year_end}`
-                    : '—'}
-                </TableCell>
                 <TableCell>{model.is_active ? 'Активная' : 'Неактивная'}</TableCell>
-                <TableCell>{model.is_popular ? 'Да' : 'Нет'}</TableCell>
+                <TableCell>{new Date(model.created_at).toLocaleDateString()}</TableCell>
                 <TableCell align="right">
                   <Tooltip title="Редактировать">
                     <IconButton onClick={() => handleOpenDialog(model)} size="small">
@@ -301,15 +269,7 @@ const CarModelsPage: React.FC = () => {
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
               />
-              <TextField
-                fullWidth
-                name="code"
-                label="Код"
-                value={formik.values.code}
-                onChange={formik.handleChange}
-                error={formik.touched.code && Boolean(formik.errors.code)}
-                helperText={formik.touched.code && formik.errors.code}
-              />
+
               <FormControl fullWidth>
                 <InputLabel>Бренд</InputLabel>
                 <Select
@@ -319,37 +279,32 @@ const CarModelsPage: React.FC = () => {
                   error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
                   label="Бренд"
                 >
-                  {brands.map((brand: CarBrand) => (
+                  {brands.map((brand) => (
                     <MenuItem key={brand.id} value={brand.id}>
                       {brand.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  name="year_start"
-                  label="Год начала выпуска"
-                  type="number"
-                  value={formik.values.year_start || ''}
-                  onChange={formik.handleChange}
-                />
-                <TextField
-                  fullWidth
-                  name="year_end"
-                  label="Год окончания выпуска"
-                  type="number"
-                  value={formik.values.year_end || ''}
-                  onChange={formik.handleChange}
-                />
-              </Box>
+
+              <FormControl>
+                <InputLabel>Статус</InputLabel>
+                <Select
+                  name="is_active"
+                  value={formik.values.is_active ? "1" : "0"}
+                  onChange={(e) => formik.setFieldValue('is_active', e.target.value === "1")}
+                  label="Статус"
+                >
+                  <MenuItem value="1">Активная</MenuItem>
+                  <MenuItem value="0">Неактивная</MenuItem>
+                </Select>
+              </FormControl>
             </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained">
-              {editingModel ? 'Сохранить' : 'Добавить'}
+            <Button type="submit" variant="contained" color="primary">
+              {editingModel ? 'Сохранить' : 'Создать'}
             </Button>
           </DialogActions>
         </form>

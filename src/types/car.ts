@@ -1,10 +1,8 @@
 export interface CarBrand {
   id: number;
   name: string;
-  code: string;
-  logo_url?: string;
+  logo: string | null;
   is_active: boolean;
-  is_popular: boolean;
   models_count: number;
   created_at: string;
   updated_at: string;
@@ -14,32 +12,22 @@ export interface CarModel {
   id: number;
   brand_id: number;
   name: string;
-  code: string;
   is_active: boolean;
-  is_popular: boolean;
-  year_start?: number;
-  year_end?: number;
-  brand?: CarBrand;
   created_at: string;
   updated_at: string;
+  brand?: CarBrand;
 }
 
 export interface CarBrandFormData {
   name: string;
-  code: string;
-  logo_url?: string;
+  logo?: File | null;
   is_active?: boolean;
-  is_popular?: boolean;
 }
 
 export interface CarModelFormData {
   brand_id: number;
   name: string;
-  code: string;
   is_active?: boolean;
-  is_popular?: boolean;
-  year_start?: number;
-  year_end?: number;
 }
 
 export interface Car {
