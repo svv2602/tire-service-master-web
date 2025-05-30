@@ -5,15 +5,13 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: `${config.API_URL}${config.API_PREFIX}`,
-    prepareHeaders: (headers) => {
+    prepareHeaders: (headers, { getState }) => {
       const token = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
 
-      if (!headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json');
-      }
+      // Не устанавливаем Content-Type для FormData, браузер сделает это автоматически
       headers.set('Accept', 'application/json');
 
       headers.set('Access-Control-Allow-Origin', '*');
@@ -30,7 +28,14 @@ export const baseApi = createApi({
           window.location.href = '/login';
           return null;
         }
-        throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
+        
+        // Пытаемся получить детали ошибки из ответа
+        const errorData = isJson ? await response.json() : await response.text();
+        throw {
+          status: response.status,
+          data: errorData,
+          message: `Ошибка ${response.status}: ${response.statusText}`
+        };
       }
 
       return isJson ? response.json() : response.text();

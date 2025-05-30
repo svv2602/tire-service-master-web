@@ -2,7 +2,6 @@ import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/qu
 import { baseApi } from './baseApi';
 import { CarBrand, CarBrandFormData } from '../types/car';
 import { ApiResponse } from '../types/models';
-import { transformPaginatedResponse } from './apiUtils';
 
 interface CarBrandFilter {
   query?: string;
@@ -73,6 +72,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
           url: 'car_brands',
           method: 'POST',
           body: formData,
+          // Не указываем formData: true, так как это не нужно
         };
       },
       invalidatesTags: ['CarBrands'],
@@ -94,6 +94,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
           url: `car_brands/${id}`,
           method: 'PATCH',
           body: formData,
+          // Не указываем formData: true, так как это не нужно
         };
       },
       invalidatesTags: (_result, _err, { id }) => [
@@ -111,11 +112,16 @@ export const carBrandsApi = baseApi.injectEndpoints({
     }),
     
     toggleCarBrandActive: build.mutation<CarBrand, { id: string; is_active: boolean }>({
-      query: ({ id, is_active }) => ({
-        url: `car_brands/${id}`,
-        method: 'PATCH',
-        body: { car_brand: { is_active } },
-      }),
+      query: ({ id, is_active }) => {
+        const formData = new FormData();
+        formData.append('car_brand[is_active]', String(is_active));
+        return {
+          url: `car_brands/${id}`,
+          method: 'PATCH',
+          body: formData,
+          // Не указываем formData: true, так как это не нужно
+        };
+      },
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'CarBrands' as const, id },
         'CarBrands',
