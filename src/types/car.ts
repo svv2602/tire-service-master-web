@@ -30,6 +30,11 @@ export interface CarModelFormData {
   is_active: boolean;
 }
 
+export interface CarModelsResponse {
+  car_models: CarModel[];
+  total_items: number;
+}
+
 export interface Car {
   id: string;
   brand: string;

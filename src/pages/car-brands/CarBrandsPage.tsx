@@ -36,6 +36,8 @@ import {
   DirectionsCar as CarIcon,
   ToggleOn as ToggleOnIcon,
   ToggleOff as ToggleOffIcon,
+  CalendarToday as CalendarTodayIcon,
+  FormatListNumbered as FormatListNumberedIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -245,8 +247,18 @@ const CarBrandsPage: React.FC = () => {
               <TableRow>
                 <TableCell>Бренд</TableCell>
                 <TableCell>Статус</TableCell>
-                <TableCell>Количество моделей</TableCell>
-                <TableCell>Дата создания</TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FormatListNumberedIcon fontSize="small" />
+                    Кол-во моделей
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CalendarTodayIcon fontSize="small" />
+                    Дата создания
+                  </Box>
+                </TableCell>
                 <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
@@ -279,9 +291,21 @@ const CarBrandsPage: React.FC = () => {
                       size="small"
                     />
                   </TableCell>
-                  <TableCell>{brand.models_count}</TableCell>
                   <TableCell>
-                    {new Date(brand.created_at).toLocaleDateString()}
+                    <Tooltip title="Количество моделей">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FormatListNumberedIcon fontSize="small" />
+                        {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} arrow>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CalendarTodayIcon fontSize="small" color="action" />
+                        <Typography>{new Date(brand.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Typography>
+                      </Box>
+                    </Tooltip>
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip title="Редактировать">
@@ -292,22 +316,20 @@ const CarBrandsPage: React.FC = () => {
                         <EditIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={brand.is_active ? 'Деактивировать' : 'Активировать'}>
-                      <IconButton
+                    <Tooltip title="Удалить">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleDeleteClick(brand)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={brand.is_active ? "Деактивировать" : "Активировать"}>
+                      <IconButton 
                         size="small"
                         onClick={() => handleToggleActive(brand.id, brand.is_active)}
                       >
-                        {brand.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleDeleteClick(brand)}
-                        disabled={brand.models_count > 0}
-                      >
-                        <DeleteIcon />
+                        {brand.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
                       </IconButton>
                     </Tooltip>
                   </TableCell>
@@ -316,43 +338,9 @@ const CarBrandsPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
       </Paper>
-
-      {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Вы действительно хотите удалить бренд "{selectedBrand?.name}"?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Уведомления */}
-      <Notification
-        open={notification.open}
-        message={notification.message}
-        severity={notification.severity}
-        onClose={handleCloseNotification}
-      />
     </Box>
   );
 };
 
-export default CarBrandsPage; 
+export default CarBrandsPage;

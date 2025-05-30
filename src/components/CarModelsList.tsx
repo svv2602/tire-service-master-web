@@ -18,6 +18,8 @@ import {
   CircularProgress,
   Alert,
   DialogContentText,
+  Pagination,
+  Stack,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -53,8 +55,21 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [selectedModel, setSelectedModel] = useState<CarModel | null>(null);
   const [modelToDelete, setModelToDelete] = useState<CarModel | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const PER_PAGE = 10;
 
-  const { data: models, isLoading } = useGetCarModelsByBrandIdQuery(brandId);
+  const { data: response, isLoading } = useGetCarModelsByBrandIdQuery({
+    brandId,
+    params: {
+      page,
+      per_page: PER_PAGE,
+      query: searchQuery || undefined,
+    },
+  });
+
+  const models = response?.car_models || [];
+  const totalPages = response?.total_items ? Math.ceil(response.total_items / PER_PAGE) : 0;
   const [createModel] = useCreateCarModelMutation();
   const [updateModel] = useUpdateCarModelMutation();
   const [deleteModel] = useDeleteCarModelMutation();
@@ -159,6 +174,15 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     }
   };
 
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
+  };
+
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+    setPage(1); // Сбрасываем страницу при поиске
+  };
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" p={2}>
@@ -169,16 +193,19 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box mb={2}>
         <Typography variant="h6">Модели</Typography>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog()}
-        >
-          Добавить модель
-        </Button>
+      </Box>
+
+      <Box mb={2}>
+        <TextField
+          fullWidth
+          label="Поиск моделей"
+          variant="outlined"
+          value={searchQuery}
+          onChange={handleSearch}
+          size="small"
+        />
       </Box>
 
       {error && (
@@ -187,8 +214,8 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         </Alert>
       )}
 
-      <List>
-        {models?.map((model) => (
+      <List sx={{ mb: 2 }}>
+        {models.map((model) => (
           <ListItem
             key={model.id}
             sx={{
@@ -222,6 +249,28 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
           </ListItem>
         ))}
       </List>
+
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" mb={2}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+          />
+        </Box>
+      )}
+
+      <Box display="flex" justifyContent="flex-end">
+        <Button
+          startIcon={<AddIcon />}
+          variant="contained"
+          color="primary"
+          onClick={() => handleOpenDialog()}
+        >
+          Добавить модель
+        </Button>
+      </Box>
 
       <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <form onSubmit={formik.handleSubmit}>

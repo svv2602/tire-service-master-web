@@ -19,6 +19,7 @@ interface ApiCarBrandsResponse {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    models_count?: number;
   }>;
   total_items: number;
 }
@@ -33,7 +34,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
       transformResponse: (response: ApiCarBrandsResponse) => ({
         data: response.car_brands.map(brand => ({
           ...brand,
-          models_count: 0, // Это поле будет заполняться бэкендом
+          models_count: brand.models_count ?? 0, // Берём из API, если есть
         })),
         meta: {
           current_page: 1,
