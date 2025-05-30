@@ -52,35 +52,8 @@ export const carModelsApi = baseApi.injectEndpoints({
     }),
 
     getCarModelsByBrandId: build.query<CarModel[], string>({
-      query: (brandId: string) => `car_models?brand_id=${brandId}`,
-      transformResponse: (response: ApiCarModelsResponse): CarModel[] => {
-        return response.car_models.map(model => ({
-          id: model.id,
-          brand_id: model.brand_id,
-          name: model.name,
-          is_active: model.is_active,
-          created_at: model.created_at,
-          updated_at: model.updated_at,
-          brand: {
-            id: model.brand.id,
-            name: model.brand.name,
-            logo: model.brand.logo,
-            is_active: model.brand.is_active,
-            models_count: model.brand.models_count,
-            created_at: model.brand.created_at,
-            updated_at: model.brand.updated_at,
-          },
-        }));
-      },
-      providesTags: (result) => {
-        if (result && Array.isArray(result)) {
-          return [
-            ...result.map(({ id }) => ({ type: 'CarModels' as const, id })),
-            'CarModels',
-          ];
-        }
-        return ['CarModels'];
-      },
+      query: (brandId: string) => `/api/v1/car_brands/${brandId}/car_models`,
+      providesTags: (result, error, brandId) => [{ type: 'CarModels', id: brandId }],
     }),
 
     getCarModelById: build.query<CarModel, string>({
@@ -90,45 +63,39 @@ export const carModelsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    createCarModel: build.mutation<CarModel, CarModelFormData>({
-      query: (data: CarModelFormData) => ({
-        url: 'car_models',
+    createCarModel: build.mutation<CarModel, { brandId: string; data: CarModelFormData }>({
+      query: ({ brandId, data }) => ({
+        url: `/api/v1/car_brands/${brandId}/car_models`,
         method: 'POST',
-        body: data,
+        body: { car_model: data },
       }),
-      invalidatesTags: ['CarModels'],
+      invalidatesTags: (result, error, { brandId }) => [{ type: 'CarModels', id: brandId }],
     }),
 
-    updateCarModel: build.mutation<CarModel, { id: string; data: Partial<CarModelFormData> }>({
-      query: ({ id, data }) => ({
-        url: `car_models/${id}`,
-        method: 'PATCH',
-        body: data,
+    updateCarModel: build.mutation<CarModel, { brandId: string; id: string; data: CarModelFormData }>({
+      query: ({ brandId, id, data }) => ({
+        url: `/api/v1/car_brands/${brandId}/car_models/${id}`,
+        method: 'PUT',
+        body: { car_model: data },
       }),
-      invalidatesTags: (_result, _err, { id }) => [
-        { type: 'CarModels' as const, id },
-        'CarModels',
-      ],
+      invalidatesTags: (result, error, { brandId }) => [{ type: 'CarModels', id: brandId }],
     }),
 
-    deleteCarModel: build.mutation<void, string>({
-      query: (id: string) => ({
-        url: `car_models/${id}`,
+    deleteCarModel: build.mutation<void, { brandId: string; id: string }>({
+      query: ({ brandId, id }) => ({
+        url: `/api/v1/car_brands/${brandId}/car_models/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['CarModels'],
+      invalidatesTags: (result, error, { brandId }) => [{ type: 'CarModels', id: brandId }],
     }),
     
-    toggleCarModelActive: build.mutation<CarModel, { id: string; is_active: boolean }>({
-      query: ({ id, is_active }) => ({
-        url: `car_models/${id}`,
+    toggleCarModelActive: build.mutation<CarModel, { brandId: string; id: string; is_active: boolean }>({
+      query: ({ brandId, id, is_active }) => ({
+        url: `/api/v1/car_brands/${brandId}/car_models/${id}`,
         method: 'PATCH',
-        body: { is_active },
+        body: { car_model: { is_active } },
       }),
-      invalidatesTags: (_result, _err, { id }) => [
-        { type: 'CarModels' as const, id },
-        'CarModels',
-      ],
+      invalidatesTags: (result, error, { brandId }) => [{ type: 'CarModels', id: brandId }],
     }),
   }),
 });

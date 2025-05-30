@@ -25,9 +25,9 @@ export interface CarBrandFormData {
 }
 
 export interface CarModelFormData {
-  brand_id: number;
   name: string;
-  is_active?: boolean;
+  brand_id: number;
+  is_active: boolean;
 }
 
 export interface Car {

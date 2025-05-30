@@ -34,7 +34,6 @@ import RegionsPage from './pages/catalog/RegionsPage';
 import CitiesPage from './pages/catalog/CitiesPage';
 import CarBrandsPage from './pages/car-brands/CarBrandsPage';
 import CarBrandFormPage from './pages/car-brands/CarBrandFormPage';
-import CarModelsPage from './pages/car-models/CarModelsPage';
 import ReviewsPage from './pages/reviews/ReviewsPage';
 import ReviewReplyPage from './pages/reviews/ReviewReplyPage';
 import MyReviewsPage from './pages/reviews/MyReviewsPage';
@@ -154,9 +153,6 @@ function App() {
                   <Route path="car-brands" element={<CarBrandsPage />} />
                   <Route path="car-brands/new" element={<CarBrandFormPage />} />
                   <Route path="car-brands/:id/edit" element={<CarBrandFormPage />} />
-                  <Route path="car-models" element={<CarModelsPage />} />
-                  <Route path="car-models/new" element={<div>Создание модели (в разработке)</div>} />
-                  <Route path="car-models/:id/edit" element={<div>Редактирование модели (в разработке)</div>} />
                   {/* Маршруты для клиентских автомобилей */}
                   <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
                   <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />

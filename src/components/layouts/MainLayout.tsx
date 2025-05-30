@@ -311,13 +311,6 @@ const MainLayout: React.FC = () => {
             description: 'Управление брендами автомобилей',
           },
           {
-            text: 'Модели авто',
-            icon: <DirectionsCar />,
-            path: '/car-models',
-            roles: [UserRole.ADMIN],
-            description: 'Управление моделями автомобилей',
-          },
-          {
             text: 'Автомобили',
             icon: <CarIcon />,
             path: '/cars',
