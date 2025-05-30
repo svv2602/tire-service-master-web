@@ -30,7 +30,8 @@ import UsersPage from './pages/users/UsersPage';
 import UserForm from './pages/users/UserForm';
 import { useSelector } from 'react-redux';
 import { RootState } from './store';
-import RegionsPage from './pages/catalog/RegionsPage';
+import RegionsPage from './pages/regions/RegionsPage';
+import RegionFormPage from './pages/regions/RegionFormPage';
 import CitiesPage from './pages/catalog/CitiesPage';
 import CarBrandsPage from './pages/car-brands/CarBrandsPage';
 import CarBrandFormPage from './pages/car-brands/CarBrandFormPage';
@@ -176,6 +177,8 @@ function App() {
                   <Route path="profile" element={<ProfilePage />} />
                   {/* Справочники */}
                   <Route path="regions" element={<RegionsPage />} />
+                  <Route path="regions/new" element={<RegionFormPage />} />
+                  <Route path="regions/:id/edit" element={<RegionFormPage />} />
                   <Route path="cities" element={<CitiesPage />} />
                 </Route>
                 

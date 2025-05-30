@@ -272,20 +272,7 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                         <ListItemIcon>
                           <MapIcon />
                         </ListItemIcon>
-                        <ListItemText primary="Регионы" />
-                      </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
-                      <ListItemButton
-                        component={Link}
-                        to="/cities"
-                        selected={pathname === '/cities'}
-                        sx={{ pl: 6 }}
-                      >
-                        <ListItemIcon>
-                          <LocationOnIcon />
-                        </ListItemIcon>
-                        <ListItemText primary="Города" />
+                        <ListItemText primary="Области и Города" />
                       </ListItemButton>
                     </ListItem>
                   </List>

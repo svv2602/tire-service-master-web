@@ -160,6 +160,7 @@ export interface Region {
   name: string;
   code: string;
   is_active: boolean;
+  cities_count: number;
   created_at: string;
   updated_at: string;
 }

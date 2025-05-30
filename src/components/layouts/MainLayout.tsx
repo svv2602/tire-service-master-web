@@ -290,18 +290,11 @@ const MainLayout: React.FC = () => {
         title: 'Справочники',
         items: [
           {
-            text: 'Регионы',
+            text: 'Области и Города',
             icon: <MapIcon />,
             path: '/regions',
             roles: [UserRole.ADMIN],
-            description: 'Управление регионами',
-          },
-          {
-            text: 'Города',
-            icon: <LocationOnIcon />,
-            path: '/cities',
-            roles: [UserRole.ADMIN],
-            description: 'Управление городами',
+            description: 'Управление областями и городами',
           },
           {
             text: 'Бренды авто',
