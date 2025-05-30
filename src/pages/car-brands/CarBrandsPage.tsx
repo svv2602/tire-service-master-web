@@ -40,12 +40,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { 
   useGetCarBrandsQuery, 
-  useCreateCarBrandMutation,
-  useUpdateCarBrandMutation,
   useDeleteCarBrandMutation,
   useToggleCarBrandActiveMutation,
 } from '../../api';
 import { CarBrand } from '../../types/car';
+import Notification from '../../components/Notification';
 
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,9 +55,18 @@ const CarBrandsPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
-  // Состояние для диалогов
+  // Состояние для диалогов и уведомлений
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // RTK Query хуки
   const { 
@@ -78,7 +86,7 @@ const CarBrandsPage: React.FC = () => {
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-    setPage(0); // Сбрасываем на первую страницу при поиске
+    setPage(0);
   };
 
   const handleActiveFilterChange = (event: any) => {
@@ -104,10 +112,25 @@ const CarBrandsPage: React.FC = () => {
     if (selectedBrand) {
       try {
         await deleteBrand(selectedBrand.id.toString()).unwrap();
+        setNotification({
+          open: true,
+          message: `Бренд "${selectedBrand.name}" успешно удален`,
+          severity: 'success'
+        });
         setDeleteDialogOpen(false);
         setSelectedBrand(null);
-      } catch (error) {
-        console.error('Ошибка при удалении бренда:', error);
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении бренда';
+        if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          errorMessage = Object.values(error.data.errors).join(', ');
+        }
+        setNotification({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
       }
     }
   };
@@ -120,9 +143,28 @@ const CarBrandsPage: React.FC = () => {
   const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
       await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
-    } catch (error) {
-      console.error('Ошибка при изменении статуса активности:', error);
+      setNotification({
+        open: true,
+        message: `Статус бренда успешно изменен`,
+        severity: 'success'
+      });
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при изменении статуса';
+      if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        errorMessage = Object.values(error.data.errors).join(', ');
+      }
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     }
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   // Отображение состояний загрузки и ошибок
@@ -263,6 +305,7 @@ const CarBrandsPage: React.FC = () => {
                         size="small"
                         color="error"
                         onClick={() => handleDeleteClick(brand)}
+                        disabled={brand.models_count > 0}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -300,6 +343,14 @@ const CarBrandsPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

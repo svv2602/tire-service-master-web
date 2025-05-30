@@ -42,6 +42,7 @@ import {
   useGetCarBrandsQuery
 } from '../../api';
 import { CarModel, CarBrand } from '../../types/car';
+import Notification from '../../components/Notification';
 
 const CarModelsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,9 +54,18 @@ const CarModelsPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
-  // Состояние для диалогов
+  // Состояние для диалогов и уведомлений
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<{ id: number; name: string; brand_id: number } | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // RTK Query хуки
   const { 
@@ -109,10 +119,25 @@ const CarModelsPage: React.FC = () => {
     if (selectedModel) {
       try {
         await deleteModel(selectedModel.id.toString()).unwrap();
+        setNotification({
+          open: true,
+          message: `Модель "${selectedModel.name}" успешно удалена`,
+          severity: 'success'
+        });
         setDeleteDialogOpen(false);
         setSelectedModel(null);
-      } catch (error) {
-        console.error('Ошибка при удалении модели:', error);
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении модели';
+        if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          errorMessage = Object.values(error.data.errors).join(', ');
+        }
+        setNotification({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
       }
     }
   };
@@ -125,9 +150,28 @@ const CarModelsPage: React.FC = () => {
   const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
       await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
-    } catch (error) {
-      console.error('Ошибка при изменении статуса активности:', error);
+      setNotification({
+        open: true,
+        message: `Статус модели успешно изменен`,
+        severity: 'success'
+      });
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при изменении статуса';
+      if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        errorMessage = Object.values(error.data.errors).join(', ');
+      }
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     }
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   // Отображение состояний загрузки и ошибок
@@ -311,6 +355,14 @@ const CarModelsPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };
