@@ -103,22 +103,12 @@ const UserForm: React.FC = () => {
   };
 
   // Обработка изменения полей Select
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    const { name, value } = e.target;
-    if (name) {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-
-      // Сброс ошибки при изменении поля
-      if (formErrors[name]) {
-        setFormErrors({
-          ...formErrors,
-          [name]: ''
-        });
-      }
-    }
+  const handleSelectChange = (event: SelectChangeEvent) => {
+    const { name, value } = event.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: parseInt(value, 10)
+    }));
   };
 
   // Обработка изменения чекбокса
@@ -306,7 +296,7 @@ const UserForm: React.FC = () => {
                   <InputLabel>Роль</InputLabel>
                   <Select
                     name="role_id"
-                    value={formData.role_id}
+                    value={formData.role_id.toString()}
                     onChange={handleSelectChange}
                     label="Роль"
                   >
@@ -388,4 +378,4 @@ const UserForm: React.FC = () => {
   );
 };
 
-export default UserForm; 
+export default UserForm;

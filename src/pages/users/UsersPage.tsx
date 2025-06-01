@@ -5,8 +5,14 @@ import {
   Typography,
   Button,
   TextField,
-  InputAdornment,
-  Paper,
+  InputAdornment    switch (role) {
+      case 'admin': return 'error';
+      case 'manager': return 'warning';
+      case 'partner': return 'primary';
+      case 'operator': return 'success';
+      case 'client': return 'default';
+      default: return 'default';
+    }r,
   CircularProgress,
   Table,
   TableBody,

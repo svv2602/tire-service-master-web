@@ -11,7 +11,9 @@ export interface User {
   phone: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
   role: string;
+  role_id?: number;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
@@ -51,4 +53,4 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-} 
+}

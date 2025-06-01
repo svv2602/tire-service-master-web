@@ -108,7 +108,9 @@ export const usersApi = createApi({
             phone: user.phone || '',
             first_name: user.first_name,
             last_name: user.last_name,
+            middle_name: user.middle_name,
             role: getRoleFromId(user.role_id),
+            role_id: user.role_id,
             is_active: user.is_active,
             email_verified: user.email_verified,
             phone_verified: user.phone_verified,
@@ -128,21 +130,34 @@ export const usersApi = createApi({
         url: `users/${id}`,
         method: 'GET',
       }),
+      transformResponse: (response: { data: ApiUser }): { data: User } => ({
+        data: {
+          ...response.data,
+          role: getRoleFromId(response.data.role_id),
+          phone: response.data.phone || '',
+        }
+      }),
       providesTags: ['User'],
     }),
-    createUser: builder.mutation<{ data: User }, Omit<User, 'id' | 'created_at' | 'updated_at'>>({
+    createUser: builder.mutation<{ data: User }, UserFormData>({
       query: (data) => ({
         url: 'users',
         method: 'POST',
-        body: { user: data },
+        body: { user: {
+          ...data,
+          role: getRoleFromId(data.role_id)
+        }},
       }),
       invalidatesTags: ['User'],
     }),
-    updateUser: builder.mutation<{ data: User }, { id: string; data: Omit<User, 'id' | 'created_at' | 'updated_at'> }>({
+    updateUser: builder.mutation<{ data: User }, { id: string; data: UserFormData }>({
       query: ({ id, data }) => ({
         url: `users/${id}`,
-        method: 'PUT', // Примечание: бэкенд использует PUT метод
-        body: { user: data },
+        method: 'PUT',
+        body: { user: {
+          ...data,
+          role: getRoleFromId(data.role_id)
+        }},
       }),
       invalidatesTags: ['User'],
     }),
@@ -162,4 +177,4 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
-} = usersApi; 
+} = usersApi;
