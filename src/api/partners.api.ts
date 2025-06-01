@@ -30,7 +30,7 @@ export const partnersApi = baseApi.injectEndpoints({
       providesTags: (_result, _err, id) => [{ type: 'Partners' as const, id }],
     }),
     
-    createPartner: build.mutation<Partner, PartnerFormData>({
+    createPartner: build.mutation<Partner, { partner: PartnerFormData }>({
       query: (data) => ({
         url: 'partners',
         method: 'POST',
@@ -61,14 +61,23 @@ export const partnersApi = baseApi.injectEndpoints({
 
     togglePartnerActive: build.mutation<Partner, { id: number; isActive: boolean }>({
       query: ({ id, isActive }) => ({
-        url: `partners/${id}/toggle-active`,
+        url: `partners/${id}/toggle_active`,
         method: 'PATCH',
-        body: { is_active: isActive },
+        body: { active: isActive },
       }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },
         'Partners',
       ],
+    }),
+    
+    // Создание тестового партнера
+    createTestPartner: build.mutation<Partner, void>({
+      query: () => ({
+        url: 'partners/create_test',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Partners'],
     }),
   }),
 });
@@ -80,4 +89,5 @@ export const {
   useUpdatePartnerMutation,
   useDeletePartnerMutation,
   useTogglePartnerActiveMutation,
+  useCreateTestPartnerMutation,
 } = partnersApi; 
