@@ -130,6 +130,7 @@ export interface Service extends BaseModel {
   category_id: number;
   is_active: boolean;
   category?: ServiceCategory;
+  sort_order?: number; // Добавляем поле для сортировки
 }
 
 // Бренд автомобиля
