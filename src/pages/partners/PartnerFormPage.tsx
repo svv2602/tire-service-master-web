@@ -89,12 +89,12 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .nullable(),
   
   tax_number: yup.string()
-    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов')
-    .nullable(),
+    .required('Налоговый номер обязателен')
+    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов'),
   
   legal_address: yup.string()
-    .max(500, 'Адрес должен быть не более 500 символов')
-    .nullable(),
+    .required('Юридический адрес обязателен')
+    .max(500, 'Адрес должен быть не более 500 символов'),
   
   logo_url: yup.string()
     .url('Введите корректный URL логотипа')
@@ -164,6 +164,44 @@ const PartnerFormPage: React.FC = () => {
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
+  // Состояние для управления ошибками API и сообщениями успеха
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Функция для извлечения понятного сообщения об ошибке из API ответа
+  const extractErrorMessage = (error: any): string => {
+    if (!error) return 'Произошла неизвестная ошибка';
+    
+    // Проверяем различные форматы ошибок API
+    if (error.data?.message) return error.data.message;
+    if (error.data?.error) return error.data.error;
+    
+    if (error.data?.errors) {
+      if (typeof error.data.errors === 'string') return error.data.errors;
+      
+      // Обрабатываем ошибки в формате { user: [...], partner: [...] }
+      if (error.data.errors.user || error.data.errors.partner) {
+        let errorMessages: string[] = [];
+        if (error.data.errors.user) {
+          errorMessages = [...errorMessages, ...error.data.errors.user];
+        }
+        if (error.data.errors.partner) {
+          errorMessages = [...errorMessages, ...error.data.errors.partner];
+        }
+        return errorMessages.join('; ');
+      }
+      
+      // Обрабатываем ошибки в формате { field1: [...], field2: [...] }
+      return Object.entries(error.data.errors)
+        .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+        .join('; ');
+    }
+    
+    if (error.message) return error.message;
+    
+    return 'Ошибка при обработке запроса';
+  };
+
   // Мемоизированные начальные значения
   const initialValues = useMemo(() => {
     if (partner && isEdit) {
@@ -187,8 +225,8 @@ const PartnerFormPage: React.FC = () => {
       contact_person: '',
       logo_url: '',
       website: '',
-      tax_number: '',
-      legal_address: '',
+      tax_number: '', // Обязательное поле
+      legal_address: '', // Обязательное поле
       region_id: '',
       city_id: '',
       is_active: true,
@@ -214,6 +252,7 @@ const PartnerFormPage: React.FC = () => {
         console.log('Сохранение партнера:', isEdit ? 'обновление' : 'создание');
         console.log('Исходные значения формы:', values);
         
+        // Подготавливаем данные в формате, ожидаемом API
         const submitData: PartnerFormData = {
           company_name: values.company_name,
           company_description: values.company_description || undefined,
@@ -224,19 +263,24 @@ const PartnerFormPage: React.FC = () => {
           legal_address: values.legal_address || undefined,
           region_id: values.region_id ? Number(values.region_id) : undefined,
           city_id: values.city_id ? Number(values.city_id) : undefined,
-          is_active: values.is_active,
-          user: values.user ? {
+          is_active: values.is_active
+        };
+        
+        // Добавляем пользовательские данные только при создании или если они определены
+        if (values.user && (!isEdit || Object.values(values.user).some(v => v))) {
+          submitData.user = {
             email: values.user.email,
             phone: values.user.phone || '',
             first_name: values.user.first_name,
             last_name: values.user.last_name,
-            role: 'manager',
+            password: values.user.password || undefined,
+            // Добавляем обязательные поля, которых нет в форме
             is_active: true,
+            role: 'operator', // Используем роль оператора для новых пользователей
             email_verified: false,
-            phone_verified: false,
-            password: values.user.password
-          } : undefined
-        };
+            phone_verified: false
+          };
+        }
 
         console.log('Подготовленные данные для отправки:', submitData);
 
@@ -246,13 +290,18 @@ const PartnerFormPage: React.FC = () => {
             partner: submitData 
           }).unwrap();
           console.log('Результат обновления:', result);
+          setSuccessMessage('Партнер успешно обновлен');
+          setTimeout(() => navigate('/partners'), 1500);
         } else {
-          const result = await createPartner(submitData).unwrap();
+          // Оборачиваем данные в объект partner при создании нового партнера
+          const result = await createPartner({ partner: submitData }).unwrap();
           console.log('Результат создания:', result);
+          setSuccessMessage('Партнер успешно создан');
+          setTimeout(() => navigate('/partners'), 1500);
         }
-        navigate('/partners');
       } catch (error) {
         console.error('Ошибка при сохранении партнера:', error);
+        setApiError(extractErrorMessage(error));
       } finally {
         setSubmitting(false);
       }
@@ -457,6 +506,7 @@ const PartnerFormPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                required
                 name="tax_number"
                 label="Налоговый номер"
                 placeholder="12345678"
@@ -471,6 +521,7 @@ const PartnerFormPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                required
                 name="legal_address"
                 label="Юридический адрес"
                 value={formik.values.legal_address}
@@ -667,6 +718,14 @@ const PartnerFormPage: React.FC = () => {
 
             {/* Кнопки действий */}
             <Grid item xs={12}>
+              {apiError && (
+                <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>
+              )}
+              
+              {successMessage && (
+                <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+              )}
+              
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
                 <Button
                   variant="outlined"
