@@ -27,23 +27,16 @@ import {
 } from '../../api';
 import { UserRole } from '../../types';
 
-interface UserFormData {
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  role: UserRole;
-  is_active: boolean;
-  password?: string;
-  password_confirmation?: string;
-}
+import { UserFormData } from '../../types/user';
+import { getRoleId } from '../../api/users.api';
 
 const initialFormData: UserFormData = {
   email: '',
   first_name: '',
   last_name: '',
+  middle_name: '',
   phone: '',
-  role: UserRole.CLIENT,
+  role_id: 5, // По умолчанию клиент (role_id = 5)
   is_active: true,
   password: '',
   password_confirmation: ''
@@ -80,8 +73,9 @@ const UserForm: React.FC = () => {
         email: user.email || '',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
+        middle_name: user.middle_name || '',
         phone: user.phone || '',
-        role: (user.role as UserRole) || UserRole.CLIENT,
+        role_id: getRoleId(user.role),
         is_active: user.is_active === true,
         password: '',
         password_confirmation: ''
@@ -178,15 +172,15 @@ const UserForm: React.FC = () => {
       return;
     }
 
+    // Важно: передаем role_id, а не role строкой
     const userData = {
       email: formData.email,
       first_name: formData.first_name,
       last_name: formData.last_name,
+      middle_name: formData.middle_name || '',
       phone: formData.phone || '',
-      role: formData.role,
+      role_id: formData.role_id,
       is_active: formData.is_active,
-      email_verified: true,
-      phone_verified: false,
       ...(formData.password && { password: formData.password }),
       ...(formData.password_confirmation && { password_confirmation: formData.password_confirmation })
     };
@@ -198,8 +192,22 @@ const UserForm: React.FC = () => {
         await createUser(userData).unwrap();
       }
       navigate('/users');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при сохранении пользователя:', error);
+      // Обработка ошибок API
+      if (error.data?.errors) {
+        const apiErrors: Record<string, string> = {};
+        
+        Object.entries(error.data.errors).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            apiErrors[key] = value.join(', ');
+          } else if (typeof value === 'string') {
+            apiErrors[key] = value;
+          }
+        });
+        
+        setFormErrors({...formErrors, ...apiErrors});
+      }
     }
   };
 
@@ -280,19 +288,33 @@ const UserForm: React.FC = () => {
                   required
                 />
               </div>
+
+              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+                <TextField
+                  fullWidth
+                  label="Отчество"
+                  name="middle_name"
+                  value={formData.middle_name || ''}
+                  onChange={handleInputChange}
+                  error={!!formErrors.middle_name}
+                  helperText={formErrors.middle_name}
+                />
+              </div>
               
               <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
                 <FormControl fullWidth>
                   <InputLabel>Роль</InputLabel>
                   <Select
-                    name="role"
-                    value={formData.role}
+                    name="role_id"
+                    value={formData.role_id}
                     onChange={handleSelectChange}
                     label="Роль"
                   >
-                    <MenuItem value={UserRole.ADMIN}>Администратор</MenuItem>
-                    <MenuItem value={UserRole.MANAGER}>Менеджер</MenuItem>
-                    <MenuItem value={UserRole.CLIENT}>Клиент</MenuItem>
+                    <MenuItem value={1}>Администратор</MenuItem>
+                    <MenuItem value={2}>Менеджер</MenuItem>
+                    <MenuItem value={3}>Партнер</MenuItem>
+                    <MenuItem value={4}>Оператор</MenuItem>
+                    <MenuItem value={5}>Клиент</MenuItem>
                   </Select>
                 </FormControl>
               </div>

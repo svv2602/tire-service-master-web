@@ -21,10 +21,14 @@ export interface User {
 
 export interface UserFormData {
   email: string;
-  phone: string;
+  phone?: string;
   first_name: string;
   last_name: string;
+  middle_name?: string;
+  role_id: number;
+  is_active: boolean;
   password?: string;
+  password_confirmation?: string;
 }
 
 export interface UserCredentials {

@@ -40,8 +40,9 @@ import {
 import { 
   useGetUsersQuery,
   useDeleteUserMutation,
-  useUpdateUserMutation,
+  useUpdateUserMutation
 } from '../../api';
+import { getRoleId } from '../../api/users.api';
 import { User } from '../../types/models';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -168,6 +169,7 @@ const UsersPage: React.FC = () => {
       case 'admin': return 'Администратор';
       case 'manager': return 'Менеджер';
       case 'partner': return 'Партнер';
+      case 'operator': return 'Оператор';
       case 'client': return 'Клиент';
       default: return role;
     }
@@ -180,7 +182,8 @@ const UsersPage: React.FC = () => {
       case 'admin': return 'error';
       case 'manager': return 'warning';
       case 'partner': return 'primary';
-      case 'client': return 'success';
+      case 'operator': return 'success';
+      case 'client': return 'info';
       default: return 'default';
     }
   }, []);
@@ -229,15 +232,15 @@ const UsersPage: React.FC = () => {
 
   const handleToggleStatus = async (user: User) => {
     try {
+      const roleId = getRoleId(user.role);
+      
       const updateData = {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
         phone: user.phone || '',
-        role: user.role,
-        is_active: !user.is_active,
-        email_verified: user.email_verified,
-        phone_verified: user.phone_verified
+        role_id: roleId,
+        is_active: !user.is_active
       };
 
       await updateUser({

@@ -67,8 +67,21 @@ const getRoleFromId = (roleId: number): string => {
     case 1: return 'admin';
     case 2: return 'manager';
     case 3: return 'partner';
-    case 4: return 'client';
+    case 4: return 'operator';
+    case 5: return 'client';
     default: return 'client';
+  }
+};
+
+// Функция для преобразования строки роли в role_id
+export const getRoleId = (role: string): number => {
+  switch (role) {
+    case 'admin': return 1;
+    case 'manager': return 2;
+    case 'partner': return 3;
+    case 'operator': return 4;
+    case 'client': return 5;
+    default: return 5; // По умолчанию - клиент
   }
 };
 
@@ -121,15 +134,15 @@ export const usersApi = createApi({
       query: (data) => ({
         url: 'users',
         method: 'POST',
-        body: data,
+        body: { user: data },
       }),
       invalidatesTags: ['User'],
     }),
     updateUser: builder.mutation<{ data: User }, { id: string; data: Omit<User, 'id' | 'created_at' | 'updated_at'> }>({
       query: ({ id, data }) => ({
         url: `users/${id}`,
-        method: 'PUT',
-        body: data,
+        method: 'PUT', // Примечание: бэкенд использует PUT метод
+        body: { user: data },
       }),
       invalidatesTags: ['User'],
     }),
