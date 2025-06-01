@@ -35,6 +35,8 @@ import {
   useUpdateServiceMutation,
   useDeleteServiceMutation,
 } from '../api/servicesList.api';
+// Импорт функции прямого вызова API для удаления услуги
+import { deleteService as directDeleteService } from '../api/directApi';
 import { Service, ServiceFormData } from '../types/service';
 
 const validationSchema = Yup.object({
@@ -162,20 +164,68 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     setError(null);
   };
 
+  // ВНИМАНИЕ: Импортируем функцию для прямого удаления услуги
+  // В начале файла добавьте: import { deleteService as directDeleteService } from '../api/directApi';
+
+  // Обходное решение без RTK Query - прямое удаление без использования RTK
   const handleDeleteService = async () => {
     if (!serviceToDelete) return;
 
     try {
-      await deleteService({
-        categoryId,
-        id: serviceToDelete.id.toString(),
-      }).unwrap();
+      // Печатаем информацию о попытке удаления
+      console.log('🗑️ ПРЯМОЕ УДАЛЕНИЕ УСЛУГИ БЕЗ RTK:');
+      console.log(`- Категория ID: ${categoryId}`);
+      console.log(`- Услуга ID: ${serviceToDelete.id}`);
+      console.log(`- Название услуги: ${serviceToDelete.name}`);
+      
+      // Попытка прямого удаления через fetch
+      const token = localStorage.getItem('tvoya_shina_token');
+      if (!token) {
+        throw new Error('Отсутствует токен авторизации');
+      }
+      
+      // Явное преобразование ID в строки
+      const catId = String(categoryId);
+      const serviceId = String(serviceToDelete.id);
+      
+      console.log('API вызов:', `http://localhost:8000/api/v1/service_categories/${catId}/services/${serviceId}`);
+      
+      // Выполняем запрос на удаление напрямую через fetch
+      const response = await fetch(`http://localhost:8000/api/v1/service_categories/${catId}/services/${serviceId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Статус ответа:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        let errorText = '';
+        try {
+          const errorData = await response.json();
+          errorText = JSON.stringify(errorData);
+        } catch (e) {
+          errorText = await response.text();
+        }
+        throw new Error(`Ошибка при удалении услуги: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+      
+      console.log('✅ Услуга успешно удалена!');
+      
+      // Закрываем диалог подтверждения
       handleCloseDeleteDialog();
+      
+      // Обновляем список услуг
+      window.location.reload(); // Временное решение для обновления списка
     } catch (error: any) {
-      console.error('Error deleting service:', error);
+      console.error('❌ Ошибка при удалении услуги:', error);
       let errorMessage = 'Произошла ошибка при удалении услуги';
       
-      if (error.data?.message) {
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
         errorMessage = error.data.message;
       } else if (error.message) {
         errorMessage = error.message;

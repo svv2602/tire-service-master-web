@@ -86,11 +86,44 @@ export const servicesApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Полностью переделанный метод для удаления услуг
     deleteService: build.mutation<void, { categoryId: string; id: string }>({
-      query: ({ categoryId, id }) => ({
-        url: `service_categories/${categoryId}/services/${id}`,
-        method: 'DELETE',
-      }),
+      queryFn: async (arg, _queryApi, _extraOptions, baseQuery) => {
+        const { categoryId, id } = arg;
+        
+        console.log('ПОЛНАЯ ОТЛАДКА УДАЛЕНИЯ:');
+        console.log('- categoryId:', categoryId);
+        console.log('- serviceId:', id);
+        
+        // Проверяем, что оба параметра есть и они строки
+        if (typeof categoryId !== 'string' || typeof id !== 'string') {
+          console.error('Неверные типы параметров:', { categoryId, id });
+          return { error: { status: 400, data: 'Неверные параметры запроса', error: 'Bad Request' } };
+        }
+        
+        try {
+          const hardcodedUrl = `service_categories/${categoryId}/services/${id}`;
+          console.log('Используем URL:', hardcodedUrl);
+          
+          // Используем baseQuery для выполнения запроса
+          const result = await baseQuery({
+            url: hardcodedUrl,
+            method: 'DELETE'
+          });
+          
+          console.log('Результат запроса:', result);
+          
+          if (result.error) {
+            return { error: result.error };
+          }
+          
+          return { data: undefined };
+        } catch (error) {
+          console.error('Ошибка при выполнении запроса:', error);
+          return { error: { status: 500, data: 'Ошибка при выполнении запроса', error: String(error) } };
+        }
+      },
+      // Инвалидация кэша по тегам
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Service' as const, id },
         'Service',
