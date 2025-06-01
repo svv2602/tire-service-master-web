@@ -1,0 +1,102 @@
+import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { baseApi } from './baseApi';
+import { ServiceCategoryData, ServiceCategoryFormData, ServiceCategoriesResponse } from '../types/service';
+import { ApiResponse, PaginationFilter } from '../types/models';
+import { transformPaginatedResponse } from './apiUtils';
+
+interface ServiceCategoryFilter extends PaginationFilter {
+  query?: string;
+  active?: boolean;
+  sort?: string;
+}
+
+// Интерфейс для ответа API (как приходит с бэкенда)
+interface ApiServiceCategoriesResponse {
+  service_categories: ServiceCategoryData[];
+  total_items: number;
+}
+
+export const serviceCategoriesApi = baseApi.injectEndpoints({
+  endpoints: (build) => ({
+    getServiceCategories: build.query<ApiResponse<ServiceCategoryData>, ServiceCategoryFilter>({
+      query: (params = {}) => ({
+        url: 'service_categories',
+        params,
+      }),
+      transformResponse: (response: ApiServiceCategoriesResponse) => ({
+        data: response.service_categories,
+        pagination: {
+          current_page: 1,
+          total_pages: Math.ceil(response.total_items / 25),
+          total_count: response.total_items,
+          per_page: 25,
+        },
+      }),
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'ServiceCategory' as const, id })),
+              'ServiceCategory',
+            ]
+          : ['ServiceCategory'],
+    }),
+
+    getServiceCategoryById: build.query<ServiceCategoryData, string>({
+      query: (id) => `service_categories/${id}`,
+      providesTags: (_result, _err, id) => [{ type: 'ServiceCategory' as const, id }],
+    }),
+
+    createServiceCategory: build.mutation<ServiceCategoryData, ServiceCategoryFormData>({
+      query: (data) => ({
+        url: 'service_categories',
+        method: 'POST',
+        body: { service_category: data },
+      }),
+      invalidatesTags: ['ServiceCategory'],
+    }),
+
+    updateServiceCategory: build.mutation<ServiceCategoryData, { id: string; data: Partial<ServiceCategoryFormData> }>({
+      query: ({ id, data }) => ({
+        url: `service_categories/${id}`,
+        method: 'PATCH',
+        body: { service_category: data },
+      }),
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'ServiceCategory' as const, id },
+        'ServiceCategory',
+      ],
+    }),
+
+    deleteServiceCategory: build.mutation<void, string>({
+      query: (id) => ({
+        url: `service_categories/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _err, id) => [
+        { type: 'ServiceCategory' as const, id },
+        'ServiceCategory',
+      ],
+    }),
+
+    toggleServiceCategoryActive: build.mutation<ServiceCategoryData, { id: string; is_active: boolean }>({
+      query: ({ id, is_active }) => ({
+        url: `service_categories/${id}`,
+        method: 'PATCH',
+        body: { service_category: { is_active } },
+      }),
+      invalidatesTags: (_result, _err, { id }) => [
+        { type: 'ServiceCategory' as const, id },
+        'ServiceCategory',
+      ],
+    }),
+  }),
+});
+
+export const {
+  useGetServiceCategoriesQuery,
+  useGetServiceCategoryByIdQuery,
+  useCreateServiceCategoryMutation,
+  useUpdateServiceCategoryMutation,
+  useDeleteServiceCategoryMutation,
+  useToggleServiceCategoryActiveMutation,
+} = serviceCategoriesApi;

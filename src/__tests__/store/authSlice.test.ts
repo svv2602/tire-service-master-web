@@ -17,6 +17,7 @@ describe('authSlice', () => {
   const testUser = {
     id: 1,
     email: 'test@example.com',
+    phone: '+1234567890',
     first_name: 'Тест',
     last_name: 'Пользователь',
     role: 'client',

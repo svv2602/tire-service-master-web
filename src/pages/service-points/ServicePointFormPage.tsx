@@ -32,11 +32,11 @@ import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Delete as DeleteIcon, Add
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServiceCategoriesQuery,
-  useGetServicesQuery,
   useGetScheduleQuery,
   useGetServicePointServicesQuery,
   useGetServicePointPhotosQuery,
 } from '../../api';
+import { useGetServicesQuery } from '../../api/servicesList.api';
 import {
   useGetServicePointsQuery,
   useGetServicePointBasicInfoQuery,
@@ -208,7 +208,7 @@ const ServicePointFormPage: React.FC = () => {
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
 
-  const { data: services } = useGetServicesQuery();
+  const { data: services } = useGetServicesQuery({});
   const scheduleQueryResult = useGetScheduleQuery(
     { 
       service_point_id: id ?? '',
@@ -889,8 +889,8 @@ const ServicePointFormPage: React.FC = () => {
                                 formik.setFieldValue(`services.${index}`, {
                                   ...service,
                                   service_id: Number(e.target.value),
-                                  duration: selectedService.duration || service.duration,
-                                  price: selectedService.price || service.price,
+                                  duration: selectedService.default_duration || service.duration,
+                                  price: service.price, // Service не имеет поля price, используем значение из service
                                 });
                               }
                             }}

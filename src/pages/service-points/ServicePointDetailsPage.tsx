@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServicePointByIdQuery,
   useGetServicePointServicesQuery,
-  useGetServicesQuery,
   useGetServicePointPhotosQuery,
   useGetScheduleQuery,
   useGetPartnerByIdQuery,
@@ -31,6 +30,8 @@ import {
   Alert,
 } from '@mui/material';
 import { ServicePointService, WorkingHours } from '../../types/models';
+import { Service } from '../../types/service';
+import { useGetServicesQuery } from '../../api/servicesList.api';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -44,7 +45,6 @@ import {
 } from '@mui/icons-material';
 import { ServicePoint } from '../../types/models';
 import { Partner } from '../../types/models';
-import { Service } from '../../types/service';
 
 const getDayName = (day: number): string => {
   const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
@@ -70,7 +70,7 @@ const ServicePointDetailsPage = () => {
 
   const { data: servicePointServices, isLoading: servicesLoading } = useGetServicePointServicesQuery(id || '');
 
-  const { data: allServices } = useGetServicesQuery();
+  const { data: allServices } = useGetServicesQuery({});
 
   const { data: photos, isLoading: photosLoading } = useGetServicePointPhotosQuery(id || '');
 
@@ -251,7 +251,7 @@ const ServicePointDetailsPage = () => {
       {servicePointServicesData.length > 0 ? (
         <Grid container spacing={2}>
           {servicePointServicesData.map((service: ServicePointService) => {
-            const serviceDetails: Service | undefined = servicesMap.get(service.service_id);
+            const serviceDetails = servicesMap.get(service.service_id);
             return (
               <Grid item xs={12} sm={6} md={4} key={service.service_id}>
                 <Card>
@@ -265,11 +265,11 @@ const ServicePointDetailsPage = () => {
                       </Typography>
                     )}
                     <Typography variant="body1" color="primary">
-                      {service.price || serviceDetails?.price || 'Цена по запросу'} руб.
+                      {service.price || 'Цена по запросу'} руб.
                     </Typography>
-                    {(service.duration || serviceDetails?.duration) && (
+                    {service.duration && (
                       <Typography variant="body2" color="text.secondary">
-                        Длительность: {service.duration || serviceDetails?.duration} мин.
+                        Длительность: {service.duration} мин.
                       </Typography>
                     )}
                   </CardContent>
@@ -287,4 +287,4 @@ const ServicePointDetailsPage = () => {
   );
 };
 
-export default ServicePointDetailsPage; 
+export default ServicePointDetailsPage;

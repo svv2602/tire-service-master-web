@@ -1,116 +1,202 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
   Button,
-  Chip,
   TextField,
+  InputAdornment,
+  Paper,
+  CircularProgress,
+  Alert,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Card,
+  CardContent,
+  CardActions,
+  Grid,
+  Chip,
   IconButton,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  InputAdornment,
-  CircularProgress,
-  Alert,
-  Tooltip,
+  DialogContentText,
+  Pagination,
 } from '@mui/material';
 import {
   Add as AddIcon,
+  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Search as SearchIcon,
+  Category as CategoryIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  CalendarToday as CalendarTodayIcon,
+  FormatListNumbered as FormatListNumberedIcon,
 } from '@mui/icons-material';
-import { useGetServicesQuery, useDeleteServiceMutation } from '../../api';
-import { Service } from '../../types/service';
+import { useNavigate } from 'react-router-dom';
+import { 
+  useGetServiceCategoriesQuery, 
+  useDeleteServiceCategoryMutation,
+  useToggleServiceCategoryActiveMutation,
+} from '../../api/serviceCategories.api';
+import { ServiceCategoryData } from '../../types/service';
+import Notification from '../../components/Notification';
 
 const ServicesPage: React.FC = () => {
-  // Состояние страницы
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
+  const navigate = useNavigate();
   
+  // Состояние для поиска, фильтрации и пагинации
+  const [search, setSearch] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 12; // Для карточного интерфейса
+  
+  // Состояние для диалогов и уведомлений
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<{ id: number; name: string } | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+
   // RTK Query хуки
-  const { data: servicesResponse, isLoading } = useGetServicesQuery();
-  
-  // const { data: categoriesData } = useGetServiceCategoriesQuery(); // Временно отключено - API не существует
-  const [deleteService] = useDeleteServiceMutation();
-  
-  // Извлекаем массив услуг из ответа API
-  const servicesData = servicesResponse?.data || [];
-  const totalServices = servicesData.length;
-  
+  const { 
+    data: categoriesData, 
+    isLoading, 
+    error 
+  } = useGetServiceCategoriesQuery({
+    query: search || undefined,
+    active: activeFilter !== '' ? activeFilter === 'true' : undefined,
+    page,
+    per_page: PER_PAGE,
+  });
+
+  const [deleteCategory] = useDeleteServiceCategoryMutation();
+  const [toggleActive] = useToggleServiceCategoryActiveMutation();
+
+  const categories = categoriesData?.data || [];
+  const totalPages = categoriesData?.pagination?.total_pages || 0;
+
   // Обработчики событий
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-  
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-  
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setPage(0);
+    setSearch(event.target.value);
+    setPage(1);
   };
-  
-  const handleCategoryFilterChange = (event: React.ChangeEvent<{ value: unknown }> | any) => {
-    setCategoryFilter(event.target.value as number | '');
-    setPage(0);
+
+  const handleActiveFilterChange = (event: any) => {
+    setActiveFilter(event.target.value);
+    setPage(1);
   };
-  
-  const handleOpenDialog = (service: Service | null = null) => {
-    setEditingService(service);
-    setOpenDialog(true);
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setPage(value);
   };
-  
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setEditingService(null);
+
+  const handleDeleteClick = (category: { id: number; name: string }) => {
+    setSelectedCategory(category);
+    setDeleteDialogOpen(true);
   };
-  
-  const handleDeleteClick = async (id: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить эту услугу?')) {
+
+  const handleDeleteConfirm = async () => {
+    if (selectedCategory) {
       try {
-        await deleteService(id).unwrap();
-      } catch (error) {
-        console.error('Ошибка при удалении услуги:', error);
+        await deleteCategory(selectedCategory.id.toString()).unwrap();
+        setNotification({
+          open: true,
+          message: `Категория "${selectedCategory.name}" успешно удалена`,
+          severity: 'success'
+        });
+        setDeleteDialogOpen(false);
+        setSelectedCategory(null);
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении категории';
+        if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          errorMessage = Object.values(error.data.errors).join(', ');
+        }
+        setNotification({
+          open: true,
+          message: errorMessage,
+          severity: 'error'
+        });
       }
     }
   };
-  
-  // Рендер компонента
+
+  const handleCloseDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedCategory(null);
+  };
+
+  const handleToggleActive = async (id: number, currentActive: boolean) => {
+    try {
+      await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
+      setNotification({
+        open: true,
+        message: `Статус категории успешно изменен`,
+        severity: 'success'
+      });
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при изменении статуса';
+      if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        errorMessage = Object.values(error.data.errors).join(', ');
+      }
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Управление услугами
-      </Typography>
-      
-      {/* Фильтры и кнопка добавления */}
-      <Box sx={{ display: 'flex', mb: 2, gap: 2, flexWrap: 'wrap' }}>
-        <Box sx={{ width: { xs: '100%', md: '300px' } }}>
+    <Box sx={{ p: 3 }}>
+      {/* Заголовок */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">Категории услуг</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/services/new')}
+        >
+          Добавить категорию
+        </Button>
+      </Box>
+
+      {/* Фильтры и поиск */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
-            fullWidth
-            label="Поиск по названию"
-            value={searchQuery}
+            placeholder="Поиск по названию категории"
+            variant="outlined"
+            size="small"
+            value={search}
             onChange={handleSearchChange}
+            sx={{ minWidth: 300 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -119,119 +205,207 @@ const ServicesPage: React.FC = () => {
               ),
             }}
           />
-        </Box>
-        
-        {/* Временно отключен фильтр по категориям
-        <Box sx={{ width: { xs: '100%', md: '300px' } }}>
-          <FormControl fullWidth>
-            <InputLabel id="category-filter-label">Категория</InputLabel>
+          
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Статус</InputLabel>
             <Select
-              labelId="category-filter-label"
-              value={categoryFilter}
-              onChange={handleCategoryFilterChange}
-              label="Категория"
+              value={activeFilter}
+              onChange={handleActiveFilterChange}
+              label="Статус"
             >
-              <MenuItem value="">
-                <em>Все категории</em>
-              </MenuItem>
-              {(categoriesData || []).map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                </MenuItem>
-              ))}
+              <MenuItem value="">Все</MenuItem>
+              <MenuItem value="true">Активные</MenuItem>
+              <MenuItem value="false">Неактивные</MenuItem>
             </Select>
           </FormControl>
         </Box>
-        */}
-        
-        <Box sx={{ marginLeft: 'auto' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Добавить услугу
-          </Button>
-        </Box>
-      </Box>
-      
-      {/* Таблица услуг */}
-      <Paper sx={{ width: '100%', mb: 2 }}>
-        <TableContainer>
-          <Table aria-label="Таблица услуг">
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Название</TableCell>
-                <TableCell>Описание</TableCell>
-                <TableCell>Цена (руб.)</TableCell>
-                <TableCell>Длительность (мин)</TableCell>
-                <TableCell>Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : servicesData.map((service: Service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.id}</TableCell>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.description}</TableCell>
-                  <TableCell>{service.price} руб.</TableCell>
-                  <TableCell>{service.duration} мин.</TableCell>
-                  <TableCell>
-                    <IconButton
+      </Paper>
+
+      {/* Сообщения об ошибках */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Произошла ошибка: {error.toString()}
+        </Alert>
+      )}
+
+      {/* Карточки категорий */}
+      <Grid container spacing={3}>
+        {categories.map((category: ServiceCategoryData) => (
+          <Grid item xs={12} sm={6} md={4} key={category.id}>
+            <Card
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                opacity: category.is_active ? 1 : 0.6,
+                position: 'relative',
+              }}
+            >
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                  <CategoryIcon sx={{ mt: 0.5, color: 'primary.main' }} />
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="h6" component="h3" gutterBottom>
+                      {category.name}
+                    </Typography>
+                    {category.description && (
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {category.description}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                  <Chip 
+                    label={category.is_active ? 'Активна' : 'Неактивна'}
+                    color={category.is_active ? 'success' : 'default'}
+                    size="small"
+                  />
+                  {category.services_count !== undefined && (
+                    <Tooltip title="Количество услуг">
+                      <Chip
+                        icon={<FormatListNumberedIcon />}
+                        label={category.services_count}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Tooltip>
+                  )}
+                </Box>
+
+                {category.created_at && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                    <CalendarTodayIcon fontSize="small" color="action" />
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(category.created_at).toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                    </Typography>
+                  </Box>
+                )}
+              </CardContent>
+
+              <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
+                <Box>
+                  <Tooltip title="Редактировать">
+                    <IconButton 
                       size="small"
-                      onClick={() => handleOpenDialog(service)}
+                      onClick={() => navigate(`/services/${category.id}/edit`)}
                     >
                       <EditIcon />
                     </IconButton>
-                    <IconButton
+                  </Tooltip>
+                  <Tooltip title="Удалить">
+                    <IconButton 
                       size="small"
-                      color="error"
-                      onClick={() => handleDeleteClick(service.id)}
+                      onClick={() => handleDeleteClick(category)}
                     >
                       <DeleteIcon />
                     </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalServices}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </Paper>
-      
-      {/* Диалог создания/редактирования услуги */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>
-          {editingService ? 'Редактирование услуги' : 'Создание новой услуги'}
-        </DialogTitle>
+                  </Tooltip>
+                  <Tooltip title={category.is_active ? "Деактивировать" : "Активировать"}>
+                    <IconButton 
+                      size="small"
+                      onClick={() => handleToggleActive(category.id, category.is_active)}
+                    >
+                      {category.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Пустое состояние */}
+      {categories.length === 0 && !isLoading && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          py={8}
+        >
+          <CategoryIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            {search || activeFilter !== '' ? 'Категории не найдены' : 'Нет категорий услуг'}
+          </Typography>
+          <Typography color="textSecondary" paragraph align="center">
+            {search || activeFilter !== '' 
+              ? 'Попробуйте изменить критерии поиска'
+              : 'Создайте первую категорию услуг для начала работы'
+            }
+          </Typography>
+          {!search && activeFilter === '' && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate('/services/new')}
+            >
+              Добавить категорию
+            </Button>
+          )}
+        </Box>
+      )}
+
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+          />
+        </Box>
+      )}
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
-          {/* Форма редактирования/создания */}
+          <DialogContentText>
+            Вы действительно хотите удалить категорию "{selectedCategory?.name}"?
+            Все услуги в этой категории также будут удалены.
+            Это действие нельзя будет отменить.
+          </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button variant="contained" onClick={handleCloseDialog}>
-            Сохранить
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Удалить
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };
 
-export default ServicesPage; 
+export default ServicesPage;

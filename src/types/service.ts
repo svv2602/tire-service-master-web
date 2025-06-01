@@ -4,11 +4,13 @@ export interface Service {
   id: number;
   name: string;
   description?: string;
-  price: number;
-  duration: number;
+  default_duration: number;
+  duration?: number; // для совместимости с некоторыми API
+  price?: number; // для цены услуги
+  category_id: number;
   category?: ServiceCategory;
-  category_id?: number;
   is_active: boolean;
+  sort_order?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -16,32 +18,42 @@ export interface Service {
 export interface ServiceFormData {
   name: string;
   description?: string;
-  price: number;
-  duration: number;
-  category_id: number;
+  default_duration: number;
   is_active: boolean;
+  sort_order?: number;
+}
+
+export interface ServiceCategoryData {
+  id: number;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  sort_order?: number;
+  services_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ServiceCategoryFormData {
   name: string;
   description?: string;
   is_active: boolean;
+  sort_order?: number;
 }
 
-// Тип для связи сервиса с точкой обслуживания
-export interface ServicePointService {
-  id: number;
-  service_point_id: number;
-  service_id: number;
-  price: number;
-  duration: number;
-  is_available: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
+// Ответы API
 export interface ServicesResponse {
   data: Service[];
+  pagination?: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
+}
+
+export interface ServiceCategoriesResponse {
+  data: ServiceCategoryData[];
   pagination?: {
     current_page: number;
     total_pages: number;

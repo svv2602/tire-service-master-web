@@ -18,6 +18,7 @@ import ServicePointDetailPage from './pages/service-points/ServicePointDetailPag
 import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
 import ServicePointServicesPage from './pages/service-points/ServicePointServicesPage';
 import ServicesPage from './pages/services/ServicesPage';
+import ServiceFormPage from './pages/services/ServiceFormPage';
 import ClientsPage from './pages/clients/ClientsPage';
 import ClientFormPage from './pages/clients/ClientFormPage';
 import ClientCarsPage from './pages/clients/ClientCarsPage';
@@ -164,6 +165,8 @@ function App() {
                   {/* Маршруты для справочников */}
                   <Route path="cars" element={<div>Управление автомобилями (в разработке)</div>} />
                   <Route path="services" element={<ServicesPage />} />
+                  <Route path="services/new" element={<ServiceFormPage />} />
+                  <Route path="services/:id/edit" element={<ServiceFormPage />} />
                   {/* Маршруты для отчетов */}
                   <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
                   <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
