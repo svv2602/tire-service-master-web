@@ -38,6 +38,8 @@ import {
   useGetPartnersQuery, 
   useDeletePartnerMutation, 
   useUpdatePartnerMutation,
+  useCreateTestPartnerMutation,
+  useTogglePartnerActiveMutation,
 } from '../../api';
 import { Partner, PartnerFilter, PartnerFormData } from '../../types/models';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -166,8 +168,10 @@ const PartnersPage: React.FC = () => {
 
   const [deletePartner, { isLoading: deleteLoading }] = useDeletePartnerMutation();
   const [updatePartner] = useUpdatePartnerMutation();
+  const [createTestPartner, { isLoading: testPartnerLoading }] = useCreateTestPartnerMutation();
+  const [togglePartnerActive, { isLoading: toggleLoading }] = useTogglePartnerActiveMutation();
 
-  const isLoading = partnersLoading || deleteLoading;
+  const isLoading = partnersLoading || deleteLoading || testPartnerLoading || toggleLoading;
   const error = partnersError as FetchBaseQueryError | SerializedError | undefined;
   const partners = partnersData?.data || [];
   const totalItems = partnersData?.pagination?.total_count || 0;
@@ -211,14 +215,14 @@ const PartnersPage: React.FC = () => {
 
   const handleToggleStatus = useCallback(async (partner: Partner) => {
     try {
-      await updatePartner({
+      await togglePartnerActive({
         id: partner.id,
-        partner: { is_active: !partner.is_active } as Partial<PartnerFormData>
-        }).unwrap();
-      } catch (error) {
+        isActive: !partner.is_active
+      }).unwrap();
+    } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
-  }, [updatePartner]);
+  }, [togglePartnerActive]);
 
   const handleCloseDialog = useCallback(() => {
     setDeleteDialogOpen(false);
@@ -238,6 +242,14 @@ const PartnersPage: React.FC = () => {
   const handleAddPartner = useCallback(() => {
     navigate('/partners/new');
   }, [navigate]);
+  
+  const handleCreateTestPartner = useCallback(async () => {
+    try {
+      await createTestPartner().unwrap();
+    } catch (error) {
+      console.error('Ошибка при создании тестового партнера:', error);
+    }
+  }, [createTestPartner]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -262,14 +274,24 @@ const PartnersPage: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Партнеры</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/partners/create')}
-        >
-          Добавить партнера
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleCreateTestPartner}
+            disabled={testPartnerLoading}
+          >
+            {testPartnerLoading ? 'Создание...' : 'Создать тестового партнера'}
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/partners/create')}
+          >
+            Добавить партнера
+          </Button>
+        </Box>
       </Box>
 
       <Paper sx={{ p: 2, mb: 3 }}>
