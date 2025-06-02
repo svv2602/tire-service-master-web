@@ -153,6 +153,12 @@ export const UsersPage: React.FC = () => {
   // Дебаунс для поиска
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
+  // Отладочная информация
+  React.useEffect(() => {
+    const token = localStorage.getItem('tvoya_shina_token');
+    console.log('UsersPage: проверка токена в localStorage:', token ? `${token.substring(0, 20)}...` : 'не найден');
+  }, []);
+
   // API хуки
   const {
     data: usersData,
@@ -216,9 +222,24 @@ export const UsersPage: React.FC = () => {
         await deleteUser(userToDelete).unwrap();
         enqueueSnackbar('Пользователь успешно удален', { variant: 'success' });
         await refetch();
-      } catch (error) {
-        enqueueSnackbar('Ошибка при удалении пользователя', { variant: 'error' });
+      } catch (error: any) {
         console.error('Ошибка при удалении пользователя:', error);
+        
+        let errorMessage = 'Ошибка при удалении пользователя';
+        
+        if (error.status === 403) {
+          errorMessage = 'У вас нет прав для удаления этого пользователя';
+        } else if (error.status === 404) {
+          errorMessage = 'Пользователь не найден';
+        } else if (error.status === 422) {
+          errorMessage = 'Невозможно удалить пользователя. Возможно, это ваш собственный аккаунт';
+        } else if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        enqueueSnackbar(errorMessage, { variant: 'error' });
       }
     }
     setDeleteDialogOpen(false);

@@ -86,6 +86,13 @@ export const usersApi = createApi({
         pagination: response.pagination,
         totalItems: response.pagination.total_count,
       }),
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('Ошибка получения пользователей:', response);
+        return {
+          status: response.status,
+          data: response.data?.message || response.data?.error || 'Произошла ошибка при получении пользователей'
+        };
+      },
       providesTags: ['User'],
     }),
     getUserById: builder.query<{ data: User }, string>({
@@ -176,6 +183,13 @@ export const usersApi = createApi({
         url: `users/${id}`,
         method: 'DELETE',
       }),
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('Ошибка удаления пользователя:', response);
+        return {
+          status: response.status,
+          data: response.data?.message || response.data?.error || 'Произошла ошибка при удалении пользователя'
+        };
+      },
       invalidatesTags: ['User'],
     }),
   }),
