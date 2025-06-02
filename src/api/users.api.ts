@@ -178,11 +178,15 @@ export const usersApi = createApi({
       },
       invalidatesTags: ['User'],
     }),
-    deleteUser: builder.mutation<void, string>({
+    deleteUser: builder.mutation<{ success: boolean }, string>({
       query: (id) => ({
         url: `users/${id}`,
         method: 'DELETE',
       }),
+      transformResponse: (response: any) => {
+        console.log('Ответ API при удалении:', response);
+        return { success: true };
+      },
       transformErrorResponse: (response: { status: number, data: any }) => {
         console.error('Ошибка удаления пользователя:', response);
         return {

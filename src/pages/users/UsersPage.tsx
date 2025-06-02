@@ -54,7 +54,8 @@ const UserRow = React.memo<{
   onToggleStatus: (user: User) => void;
   getRoleName: (role: string) => string;
   getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
-}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor }) => (
+  isDeleting: boolean;
+}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting }) => (
   <TableRow>
     <TableCell>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -122,6 +123,7 @@ const UserRow = React.memo<{
             onClick={() => onEdit(user.id)}
             size="small"
             color="primary"
+            disabled={isDeleting}
           >
             <EditIcon />
           </IconButton>
@@ -131,6 +133,7 @@ const UserRow = React.memo<{
             onClick={() => onDelete(user.id)}
             size="small"
             color="error"
+            disabled={isDeleting}
           >
             <DeleteIcon />
           </IconButton>
@@ -219,9 +222,16 @@ export const UsersPage: React.FC = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (userToDelete) {
       try {
+        console.log('Начинаем удаление пользователя:', userToDelete);
         await deleteUser(userToDelete).unwrap();
+        console.log('Пользователь успешно удален');
         enqueueSnackbar('Пользователь успешно удален', { variant: 'success' });
+        
+        // Принудительно обновляем данные
+        console.log('Обновляем список пользователей...');
         await refetch();
+        console.log('Список пользователей обновлен');
+        
       } catch (error: any) {
         console.error('Ошибка при удалении пользователя:', error);
         
@@ -358,6 +368,7 @@ export const UsersPage: React.FC = () => {
                       onToggleStatus={handleToggleStatus}
                       getRoleName={getRoleName}
                       getRoleColor={getRoleColor}
+                      isDeleting={isDeleting}
                     />
                   ))
                 )}
@@ -382,7 +393,7 @@ export const UsersPage: React.FC = () => {
       {/* Диалог подтверждения удаления */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
+        onClose={!isDeleting ? handleDeleteCancel : undefined}
         maxWidth="sm"
         fullWidth
       >
@@ -393,7 +404,7 @@ export const UsersPage: React.FC = () => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel}>
+          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
             Отмена
           </Button>
           <Button
@@ -401,6 +412,7 @@ export const UsersPage: React.FC = () => {
             color="error"
             variant="contained"
             disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={16} /> : null}
           >
             {isDeleting ? 'Удаление...' : 'Удалить'}
           </Button>
