@@ -165,6 +165,7 @@ export const UsersPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
   // Дебаунс для поиска
@@ -185,7 +186,8 @@ export const UsersPage: React.FC = () => {
   } = useGetUsersQuery({
     page,
     per_page: 25,
-    query: debouncedSearchQuery || undefined
+    query: debouncedSearchQuery || undefined,
+    active: showInactive ? undefined : true
   });
 
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
@@ -321,10 +323,9 @@ export const UsersPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Поиск */}
-      <Box sx={{ mb: 3 }}>
+      {/* Поиск и фильтры */}
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
         <TextField
-          fullWidth
           placeholder="Поиск по email, имени или фамилии..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -335,13 +336,25 @@ export const UsersPage: React.FC = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ maxWidth: 400 }}
+          sx={{ maxWidth: 400, flexGrow: 1 }}
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Показать деактивированных"
         />
       </Box>
 
       {/* Статистика */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Найдено пользователей: {totalItems}
+        {!showInactive && ' (только активные)'}
+        {showInactive && ' (включая деактивированных)'}
       </Typography>
 
       {/* Контент */}
