@@ -56,15 +56,16 @@ const UserRow = React.memo<{
   getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
   isDeleting: boolean;
 }>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting }) => (
-  <TableRow>
+  <TableRow sx={{ opacity: user.is_active ? 1 : 0.6 }}>
     <TableCell>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Avatar sx={{ width: 32, height: 32 }}>
+        <Avatar sx={{ width: 32, height: 32, opacity: user.is_active ? 1 : 0.5 }}>
           <PersonIcon />
         </Avatar>
         <Box>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" fontWeight="medium" color={user.is_active ? 'text.primary' : 'text.secondary'}>
             {user.first_name} {user.last_name}
+            {!user.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             ID: {user.id}
@@ -128,16 +129,29 @@ const UserRow = React.memo<{
             <EditIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Удалить">
-          <IconButton
-            onClick={() => onDelete(user.id)}
-            size="small"
-            color="error"
-            disabled={isDeleting}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
+        {user.is_active ? (
+          <Tooltip title="Деактивировать">
+            <IconButton
+              onClick={() => onDelete(user.id)}
+              size="small"
+              color="error"
+              disabled={isDeleting}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Tooltip title="Реактивировать">
+            <IconButton
+              onClick={() => onToggleStatus(user)}
+              size="small"
+              color="success"
+              disabled={isDeleting}
+            >
+              <CheckIcon />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
     </TableCell>
   </TableRow>
@@ -225,7 +239,7 @@ export const UsersPage: React.FC = () => {
         console.log('Начинаем удаление пользователя:', userToDelete);
         await deleteUser(userToDelete).unwrap();
         console.log('Пользователь успешно удален');
-        enqueueSnackbar('Пользователь успешно удален', { variant: 'success' });
+        enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
         
         // Принудительно обновляем данные
         console.log('Обновляем список пользователей...');
@@ -262,6 +276,9 @@ export const UsersPage: React.FC = () => {
   }, []);
 
   const handleToggleStatus = useCallback(async (user: User) => {
+    const newStatus = !user.is_active;
+    const action = newStatus ? 'активирован' : 'деактивирован';
+    
     try {
       const updateData = {
         email: user.email,
@@ -270,7 +287,7 @@ export const UsersPage: React.FC = () => {
         middle_name: user.middle_name || '',
         phone: user.phone || '',
         role_id: user.role_id,
-        is_active: !user.is_active
+        is_active: newStatus
       };
 
       await updateUser({
@@ -278,24 +295,27 @@ export const UsersPage: React.FC = () => {
         data: updateData
       }).unwrap();
       
-      enqueueSnackbar('Статус пользователя успешно обновлен', { variant: 'success' });
+      enqueueSnackbar(`Пользователь ${action}`, { variant: 'success' });
+      await refetch(); // Обновляем список
     } catch (error) {
-      enqueueSnackbar('Ошибка при обновлении статуса пользователя', { variant: 'error' });
-      console.error('Ошибка при обновлении статуса:', error);
+      enqueueSnackbar(`Ошибка при ${newStatus ? 'активации' : 'деактивации'} пользователя`, { variant: 'error' });
+      console.error('Ошибка при изменении статуса:', error);
     }
-  }, [updateUser, enqueueSnackbar]);
+  }, [updateUser, enqueueSnackbar, refetch]);
 
   return (
     <Box>
       {/* Заголовок и кнопка создания */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
-          Пользователи
+          Управление пользователями
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleCreate}
+          color="primary"
+          size="large"
         >
           Создать пользователя
         </Button>
@@ -397,10 +417,10 @@ export const UsersPage: React.FC = () => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle>Подтверждение деактивации</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить этого пользователя? Это действие нельзя отменить.
+            Вы уверены, что хотите деактивировать этого пользователя? Пользователь будет исключен из активных операций, но его данные сохранятся в системе.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -414,7 +434,7 @@ export const UsersPage: React.FC = () => {
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={16} /> : null}
           >
-            {isDeleting ? 'Удаление...' : 'Удалить'}
+            {isDeleting ? 'Деактивация...' : 'Деактивировать'}
           </Button>
         </DialogActions>
       </Dialog>
