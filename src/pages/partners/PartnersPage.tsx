@@ -239,10 +239,6 @@ const PartnersPage: React.FC = () => {
     navigate(`/partners/${id}/edit`);
   }, [navigate]);
 
-  const handleAddPartner = useCallback(() => {
-    navigate('/partners/new');
-  }, [navigate]);
-  
   const handleCreateTestPartner = useCallback(async () => {
     try {
       await createTestPartner().unwrap();
@@ -287,7 +283,7 @@ const PartnersPage: React.FC = () => {
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/partners/create')}
+            onClick={() => navigate('/partners/new')}
           >
             Добавить партнера
           </Button>

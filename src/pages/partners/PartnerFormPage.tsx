@@ -90,8 +90,11 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .nullable(),
   
   tax_number: yup.string()
-    .required('Налоговый номер обязателен')
-    .matches(/^[0-9\-]{8,15}$/, 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов'),
+    .nullable()
+    .test('tax-number-format', 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов', function(value) {
+      if (!value) return true; // Если поле пустое, то валидация проходит
+      return /^[0-9\-]{8,15}$/.test(value);
+    }),
   
   legal_address: yup.string()
     .required('Юридический адрес обязателен')
@@ -102,10 +105,10 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .nullable(),
   
   region_id: yup.string()
-    .nullable(),
+    .required('Выберите регион'),
   
   city_id: yup.string()
-    .nullable(),
+    .required('Выберите город'),
   
   is_active: yup.boolean(),
   
@@ -173,34 +176,66 @@ const PartnerFormPage: React.FC = () => {
   const extractErrorMessage = (error: any): string => {
     if (!error) return 'Произошла неизвестная ошибка';
     
+    console.log('Полная информация об ошибке:', error);
+    
+    // Обрабатываем ошибки парсинга
+    if (error.status === 'PARSING_ERROR' && error.data) {
+      try {
+        // Пытаемся извлечь JSON из строки
+        const jsonMatch = error.data.match(/\{.*\}/);
+        if (jsonMatch) {
+          const parsedError = JSON.parse(jsonMatch[0]);
+          if (parsedError.errors) {
+            return extractErrorsFromObject(parsedError.errors);
+          }
+        }
+      } catch (parseError) {
+        console.error('Ошибка парсинга JSON:', parseError);
+      }
+      
+      // Если не удалось распарсить, пытаемся извлечь читаемое сообщение
+      if (typeof error.data === 'string') {
+        // Ищем сообщения об ошибках в строке
+        if (error.data.includes('Email has already')) {
+          return 'Пользователь с таким email уже существует. Используйте другой email или войдите под существующим аккаунтом.';
+        }
+        return 'Ошибка обработки данных на сервере. Проверьте правильность заполнения формы.';
+      }
+    }
+    
     // Проверяем различные форматы ошибок API
     if (error.data?.message) return error.data.message;
     if (error.data?.error) return error.data.error;
     
     if (error.data?.errors) {
-      if (typeof error.data.errors === 'string') return error.data.errors;
-      
-      // Обрабатываем ошибки в формате { user: [...], partner: [...] }
-      if (error.data.errors.user || error.data.errors.partner) {
-        let errorMessages: string[] = [];
-        if (error.data.errors.user) {
-          errorMessages = [...errorMessages, ...error.data.errors.user];
-        }
-        if (error.data.errors.partner) {
-          errorMessages = [...errorMessages, ...error.data.errors.partner];
-        }
-        return errorMessages.join('; ');
-      }
-      
-      // Обрабатываем ошибки в формате { field1: [...], field2: [...] }
-      return Object.entries(error.data.errors)
-        .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-        .join('; ');
+      return extractErrorsFromObject(error.data.errors);
     }
     
     if (error.message) return error.message;
     
     return 'Ошибка при обработке запроса';
+  };
+
+  // Вспомогательная функция для извлечения ошибок из объекта
+  const extractErrorsFromObject = (errors: any): string => {
+    if (typeof errors === 'string') return errors;
+    
+    // Обрабатываем ошибки в формате { user: [...], partner: [...] }
+    if (errors.user || errors.partner) {
+      let errorMessages: string[] = [];
+      if (errors.user) {
+        errorMessages = [...errorMessages, ...errors.user];
+      }
+      if (errors.partner) {
+        errorMessages = [...errorMessages, ...errors.partner];
+      }
+      return errorMessages.join('; ');
+    }
+    
+    // Обрабатываем ошибки в формате { field1: [...], field2: [...] }
+    return Object.entries(errors)
+      .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+      .join('; ');
   };
 
   // Мемоизированные начальные значения
@@ -226,7 +261,7 @@ const PartnerFormPage: React.FC = () => {
       contact_person: '',
       logo_url: '',
       website: '',
-      tax_number: '', // Обязательное поле
+      tax_number: '', // Необязательное поле
       legal_address: '', // Обязательное поле
       region_id: '',
       city_id: '',
@@ -508,9 +543,8 @@ const PartnerFormPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                required
                 name="tax_number"
-                label="Налоговый номер"
+                label="Налоговый номер (необязательно)"
                 placeholder="12345678"
                 value={formik.values.tax_number}
                 onChange={formik.handleChange}
@@ -543,8 +577,8 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Регион</InputLabel>
+              <FormControl fullWidth required error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
+                <InputLabel>Регион *</InputLabel>
                 <Select
                   name="region_id"
                   value={formik.values.region_id?.toString() || ''}
@@ -559,12 +593,17 @@ const PartnerFormPage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
+                {formik.touched.region_id && formik.errors.region_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.region_id}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Город</InputLabel>
+              <FormControl fullWidth required error={formik.touched.city_id && Boolean(formik.errors.city_id)}>
+                <InputLabel>Город *</InputLabel>
                 <Select
                   name="city_id"
                   value={formik.values.city_id?.toString() || ''}
@@ -580,6 +619,11 @@ const PartnerFormPage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
+                {formik.touched.city_id && formik.errors.city_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.city_id}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
