@@ -11,7 +11,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  SelectChangeEvent,
   FormControlLabel,
   Checkbox,
   CircularProgress,
@@ -25,22 +24,9 @@ import {
   useCreateUserMutation,
   useUpdateUserMutation,
 } from '../../api';
-import { UserRole } from '../../types';
 
 import { UserFormData } from '../../types/user';
-import { getRoleId } from '../../api/users.api';
-
-const initialFormData: UserFormData = {
-  email: '',
-  first_name: '',
-  last_name: '',
-  middle_name: '',
-  phone: '',
-  role_id: 5, // По умолчанию клиент (role_id = 5)
-  is_active: true,
-  password: '',
-  password_confirmation: ''
-};
+import { getRoleId } from '../../utils/roles.utils';
 
 const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,13 +34,11 @@ const UserForm: React.FC = () => {
   const userId = isEditMode ? parseInt(id, 10) : 0;
 
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<UserFormData>(initialFormData);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const { 
     data: userData,
     isLoading: isLoadingUser,
-    error: userError 
   } = useGetUserByIdQuery(userId.toString(), {
     skip: !isEditMode
   });
@@ -63,242 +47,233 @@ const UserForm: React.FC = () => {
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
   const isLoading = isLoadingUser || isCreating || isUpdating;
-  const error = userError;
 
-  // Заполнение формы данными пользователя
+  // Схема валидации с Yup
+  const validationSchema = yup.object({
+    email: yup
+      .string()
+      .email('Введите корректный email')
+      .required('Email обязателен'),
+    first_name: yup
+      .string()
+      .required('Имя обязательно'),
+    last_name: yup
+      .string()
+      .required('Фамилия обязательна'),
+    role_id: yup
+      .number()
+      .required('Роль обязательна'),
+    is_active: yup
+      .boolean(),
+    password: isEditMode
+      ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов')
+      : yup.string().min(6, 'Пароль должен содержать минимум 6 символов').required('Пароль обязателен'),
+    password_confirmation: yup
+      .string()
+      .oneOf([yup.ref('password')], 'Пароли не совпадают')
+  });
+
+  // Начальные значения формы
+  const initialFormValues: UserFormData = {
+    email: '',
+    first_name: '',
+    last_name: '',
+    middle_name: '',
+    phone: '',
+    role_id: 5, // По умолчанию клиент (role_id = 5)
+    is_active: true,
+    password: '',
+    password_confirmation: ''
+  };
+  
+  // Formik хук для управления формой
+  const formik = useFormik({
+    initialValues: initialFormValues,
+    validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      try {
+        setApiError(null);
+        
+        // Подготавливаем данные для API
+        const userData = {
+          email: values.email,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          middle_name: values.middle_name || '',
+          phone: values.phone || '',
+          role_id: values.role_id,
+          is_active: values.is_active,
+          ...(values.password && { password: values.password }),
+          ...(values.password_confirmation && { password_confirmation: values.password_confirmation })
+        };
+
+        if (isEditMode) {
+          await updateUser({ id: userId.toString(), data: userData }).unwrap();
+        } else {
+          await createUser(userData).unwrap();
+        }
+        navigate('/users');
+      } catch (error: any) {
+        console.error('Ошибка при сохранении пользователя:', error);
+        if (error.data?.errors) {
+          const apiErrors: Record<string, string> = {};
+          
+          // Преобразование ошибок API в формат, который можно использовать с Formik
+          Object.entries(error.data.errors).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              apiErrors[key] = value.join(', ');
+            } else if (typeof value === 'string') {
+              apiErrors[key] = value as string;
+            } else if (value && typeof value === 'object') {
+              apiErrors[key] = JSON.stringify(value);
+            }
+          });
+          
+          // Устанавливаем ошибки для полей формы
+          Object.keys(apiErrors).forEach(key => {
+            formik.setFieldError(key, apiErrors[key]);
+          });
+          
+          setApiError('Пожалуйста, исправьте ошибки в форме');
+        } else if (error.message) {
+          setApiError(error.message);
+        } else {
+          setApiError('Произошла ошибка при сохранении пользователя');
+        }
+      }
+    },
+  });
+  
+  // Обновление значений формы при получении данных пользователя
   useEffect(() => {
     if (isEditMode && userData?.data) {
       const user = userData.data;
-      setFormData({
+      formik.setValues({
         email: user.email || '',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
         middle_name: user.middle_name || '',
         phone: user.phone || '',
-        role_id: getRoleId(user.role),
+        role_id: user.role_id,
         is_active: user.is_active === true,
         password: '',
         password_confirmation: ''
       });
     }
   }, [isEditMode, userData]);
-
-  // Обработка изменения полей формы
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    if (name) {
-      setFormData({
-        ...formData,
-        [name]: value
-      });
-
-      // Сброс ошибки при изменении поля
-      if (formErrors[name]) {
-        setFormErrors({
-          ...formErrors,
-          [name]: ''
-        });
-      }
-    }
-  };
-
-  // Обработка изменения полей Select
-  const handleSelectChange = (event: SelectChangeEvent) => {
-    const { name, value } = event.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: parseInt(value, 10)
-    }));
-  };
-
-  // Обработка изменения чекбокса
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: checked
-    });
-  };
-
-  // Валидация формы
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.email) {
-      errors.email = 'Email обязателен';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Некорректный формат email';
-    }
-
-    if (!formData.first_name) {
-      errors.first_name = 'Имя обязательно';
-    }
-
-    if (!formData.last_name) {
-      errors.last_name = 'Фамилия обязательна';
-    }
-
-    if (!isEditMode && !formData.password) {
-      errors.password = 'Пароль обязателен для нового пользователя';
-    }
-
-    if (formData.password && formData.password.length < 6) {
-      errors.password = 'Пароль должен содержать минимум 6 символов';
-    }
-
-    if (formData.password !== formData.password_confirmation) {
-      errors.password_confirmation = 'Пароли не совпадают';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  // Отправка формы
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    // Важно: передаем role_id, а не role строкой
-    const userData = {
-      email: formData.email,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      middle_name: formData.middle_name || '',
-      phone: formData.phone || '',
-      role_id: formData.role_id,
-      is_active: formData.is_active,
-      ...(formData.password && { password: formData.password }),
-      ...(formData.password_confirmation && { password_confirmation: formData.password_confirmation })
-    };
-
-    try {
-      if (isEditMode) {
-        await updateUser({ id: userId.toString(), data: userData }).unwrap();
-      } else {
-        await createUser(userData).unwrap();
-      }
-      navigate('/users');
-    } catch (error: any) {
-      console.error('Ошибка при сохранении пользователя:', error);
-      // Обработка ошибок API
-      if (error.data?.errors) {
-        const apiErrors: Record<string, string> = {};
-        
-        Object.entries(error.data.errors).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            apiErrors[key] = value.join(', ');
-          } else if (typeof value === 'string') {
-            apiErrors[key] = value;
-          }
-        });
-        
-        setFormErrors({...formErrors, ...apiErrors});
-      }
-    }
-  };
-
-  // Отмена и возврат к списку
+  
+  // Функция для отмены редактирования
   const handleCancel = () => {
     navigate('/users');
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, mb: 4 }}>
+      <Paper sx={{ p: 4 }}>
+        <Typography variant="h5" component="h1" gutterBottom>
           {isEditMode ? 'Редактирование пользователя' : 'Создание пользователя'}
         </Typography>
-      </Box>
 
-      <Paper sx={{ p: 3 }}>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        {isLoadingUser ? (
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
           </Box>
         ) : (
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error.toString()}
+          <form onSubmit={formik.handleSubmit}>
+            {apiError && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {apiError}
               </Alert>
             )}
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Email"
+                  id="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  error={!!formErrors.email}
-                  helperText={formErrors.email}
+                  label="Email"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.email && Boolean(formik.errors.email)}
+                  helperText={formik.touched.email && formik.errors.email}
                   required
                 />
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Телефон"
+                  id="phone"
                   name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  error={!!formErrors.phone}
-                  helperText={formErrors.phone}
+                  label="Телефон"
+                  value={formik.values.phone}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.phone && Boolean(formik.errors.phone)}
+                  helperText={formik.touched.phone && formik.errors.phone}
                 />
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Имя"
+                  id="first_name"
                   name="first_name"
-                  value={formData.first_name}
-                  onChange={handleInputChange}
-                  error={!!formErrors.first_name}
-                  helperText={formErrors.first_name}
+                  label="Имя"
+                  value={formik.values.first_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.first_name && Boolean(formik.errors.first_name)}
+                  helperText={formik.touched.first_name && formik.errors.first_name}
                   required
                 />
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Фамилия"
+                  id="last_name"
                   name="last_name"
-                  value={formData.last_name}
-                  onChange={handleInputChange}
-                  error={!!formErrors.last_name}
-                  helperText={formErrors.last_name}
+                  label="Фамилия"
+                  value={formik.values.last_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.last_name && Boolean(formik.errors.last_name)}
+                  helperText={formik.touched.last_name && formik.errors.last_name}
                   required
                 />
-              </div>
+              </Grid>
 
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Отчество"
+                  id="middle_name"
                   name="middle_name"
-                  value={formData.middle_name || ''}
-                  onChange={handleInputChange}
-                  error={!!formErrors.middle_name}
-                  helperText={formErrors.middle_name}
+                  label="Отчество"
+                  value={formik.values.middle_name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
+                  helperText={formik.touched.middle_name && formik.errors.middle_name}
                 />
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Роль</InputLabel>
+                  <InputLabel id="role-label">Роль</InputLabel>
                   <Select
+                    labelId="role-label"
+                    id="role_id"
                     name="role_id"
-                    value={formData.role_id.toString()}
-                    onChange={handleSelectChange}
+                    value={formik.values.role_id}
                     label="Роль"
+                    onChange={formik.handleChange}
+                    error={formik.touched.role_id && Boolean(formik.errors.role_id)}
                   >
                     <MenuItem value={1}>Администратор</MenuItem>
                     <MenuItem value={2}>Менеджер</MenuItem>
@@ -307,21 +282,22 @@ const UserForm: React.FC = () => {
                     <MenuItem value={5}>Клиент</MenuItem>
                   </Select>
                 </FormControl>
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12}>
                 <FormControlLabel
                   control={
                     <Checkbox
+                      id="is_active"
                       name="is_active"
-                      checked={formData.is_active}
-                      onChange={handleCheckboxChange}
+                      checked={formik.values.is_active}
+                      onChange={formik.handleChange}
                     />
                   }
                   label="Активен"
                 />
-              </div>
-            </div>
+              </Grid>
+            </Grid>
 
             <Divider sx={{ my: 3 }} />
 
@@ -329,38 +305,45 @@ const UserForm: React.FC = () => {
               {isEditMode ? 'Изменить пароль' : 'Пароль'}
             </Typography>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
+                  id="password"
+                  name="password"
                   type="password"
                   label="Пароль"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  error={!!formErrors.password}
-                  helperText={formErrors.password}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.password && Boolean(formik.errors.password)}
+                  helperText={formik.touched.password && formik.errors.password}
                   required={!isEditMode}
                 />
-              </div>
+              </Grid>
               
-              <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
+                  id="password_confirmation"
+                  name="password_confirmation"
                   type="password"
                   label="Подтверждение пароля"
-                  name="password_confirmation"
-                  value={formData.password_confirmation}
-                  onChange={handleInputChange}
-                  error={!!formErrors.password_confirmation}
-                  helperText={formErrors.password_confirmation}
+                  value={formik.values.password_confirmation}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
+                  helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
                   required={!isEditMode}
                 />
-              </div>
-            </div>
+              </Grid>
+            </Grid>
 
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-              <Button onClick={handleCancel}>
+              <Button 
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
                 Отмена
               </Button>
               <Button
@@ -368,7 +351,10 @@ const UserForm: React.FC = () => {
                 variant="contained"
                 disabled={isLoading}
               >
-                {isEditMode ? 'Сохранить' : 'Создать'}
+                {isLoading 
+                  ? 'Сохранение...' 
+                  : (isEditMode ? 'Сохранить' : 'Создать')
+                }
               </Button>
             </Box>
           </form>

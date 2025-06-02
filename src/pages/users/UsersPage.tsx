@@ -5,14 +5,7 @@ import {
   Typography,
   Button,
   TextField,
-  InputAdornment    switch (role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'partner': return 'primary';
-      case 'operator': return 'success';
-      case 'client': return 'default';
-      default: return 'default';
-    }r,
+  InputAdornment,
   CircularProgress,
   Table,
   TableBody,
@@ -20,19 +13,19 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Paper,
   IconButton,
-  Tooltip,
   Chip,
   Alert,
   Dialog,
-  FormControlLabel,
-  Switch,
-  Pagination,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
+  Pagination,
   Avatar,
+  FormControlLabel,
+  Switch,
+  Tooltip
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -41,15 +34,15 @@ import {
   Add as AddIcon,
   Person as PersonIcon,
   Check as CheckIcon,
-  Close as CloseIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
-import { 
+import {
   useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserMutation
-} from '../../api';
-import { getRoleId } from '../../api/users.api';
-import { User } from '../../types/models';
+} from '../../api/users.api';
+import { getRoleId } from '../../utils/roles.utils';
+import type { User } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
 
@@ -59,8 +52,8 @@ const UserRow = React.memo<{
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (user: User) => void;
-  getRoleName: (role?: string) => string;
-  getRoleColor: (role?: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
+  getRoleName: (role: string) => string;
+  getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
 }>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor }) => (
   <TableRow>
     <TableCell>
@@ -135,7 +128,7 @@ const UserRow = React.memo<{
 
 UserRow.displayName = 'UserRow';
 
-const UsersPage: React.FC = () => {
+export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -168,28 +161,24 @@ const UsersPage: React.FC = () => {
   const totalItems = usersData?.totalItems || 0;
 
   // Мемоизированные вспомогательные функции
-  const getRoleName = useCallback((role?: string): string => {
-    if (!role) return 'Неизвестно';
-    
+  const getRoleName = useCallback((role: string): string => {    
     switch(role) {
       case 'admin': return 'Администратор';
       case 'manager': return 'Менеджер';
       case 'partner': return 'Партнер';
       case 'operator': return 'Оператор';
       case 'client': return 'Клиент';
-      default: return role;
+      default: return 'Неизвестно';
     }
   }, []);
   
-  const getRoleColor = useCallback((role?: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
-    if (!role) return 'default';
-    
+  const getRoleColor = useCallback((role: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
     switch(role) {
       case 'admin': return 'error';
       case 'manager': return 'warning';
       case 'partner': return 'primary';
       case 'operator': return 'success';
-      case 'client': return 'info';
+      case 'client': return 'default';
       default: return 'default';
     }
   }, []);
@@ -222,30 +211,31 @@ const UsersPage: React.FC = () => {
     if (userToDelete) {
       try {
         await deleteUser(userToDelete).unwrap();
+        enqueueSnackbar('Пользователь успешно удален', { variant: 'success' });
         await refetch();
       } catch (error) {
+        enqueueSnackbar('Ошибка при удалении пользователя', { variant: 'error' });
         console.error('Ошибка при удалении пользователя:', error);
       }
     }
     setDeleteDialogOpen(false);
     setUserToDelete(null);
-  }, [userToDelete, deleteUser, refetch]);
+  }, [userToDelete, deleteUser, refetch, enqueueSnackbar]);
 
   const handleDeleteCancel = useCallback(() => {
     setDeleteDialogOpen(false);
     setUserToDelete(null);
   }, []);
 
-  const handleToggleStatus = async (user: User) => {
+  const handleToggleStatus = useCallback(async (user: User) => {
     try {
-      const roleId = getRoleId(user.role);
-      
       const updateData = {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        phone: user.phone || '',
-        role_id: roleId,
+        middle_name: user.middle_name,
+        phone: user.phone,
+        role_id: user.role_id,
         is_active: !user.is_active
       };
 
@@ -253,11 +243,13 @@ const UsersPage: React.FC = () => {
         id: user.id.toString(),
         data: updateData
       }).unwrap();
+      
       enqueueSnackbar('Статус пользователя успешно обновлен', { variant: 'success' });
     } catch (error) {
       enqueueSnackbar('Ошибка при обновлении статуса пользователя', { variant: 'error' });
+      console.error('Ошибка при обновлении статуса:', error);
     }
-  };
+  }, [updateUser, enqueueSnackbar]);
 
   return (
     <Box>
@@ -376,4 +368,4 @@ const UsersPage: React.FC = () => {
   );
 };
 
-export default UsersPage; 
+export default UsersPage;

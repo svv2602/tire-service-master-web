@@ -1,6 +1,7 @@
 export enum UserRole {
   ADMIN = 'admin',
   MANAGER = 'manager',
+  PARTNER = 'partner',
   OPERATOR = 'operator',
   CLIENT = 'client',
 }
@@ -13,7 +14,7 @@ export interface User {
   last_name: string;
   middle_name?: string;
   role: string;
-  role_id?: number;
+  role_id: number;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
@@ -45,6 +46,7 @@ export interface PasswordReset {
 export interface PasswordResetConfirm {
   token: string;
   password: string;
+  password_confirmation: string;
 }
 
 export interface AuthState {

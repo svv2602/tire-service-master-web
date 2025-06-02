@@ -32,7 +32,6 @@ export {
   useDeleteUserMutation,
   type UsersResponse,
   type UsersQueryParams,
-  type UserProfile,
 } from './users.api';
 
 export {

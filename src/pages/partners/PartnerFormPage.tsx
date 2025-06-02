@@ -28,6 +28,7 @@ import {
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
+import { getRoleId } from '../../utils/roles.utils';
 import { Partner, PartnerFormData } from '../../types/models';
 import type { User } from '../../types/user';
 import { RootState } from '../../store/store';
@@ -272,6 +273,7 @@ const PartnerFormPage: React.FC = () => {
             email: values.user.email,
             phone: values.user.phone || '',
             first_name: values.user.first_name,
+            role_id: getRoleId('partner'),
             last_name: values.user.last_name,
             password: values.user.password || undefined,
             // Добавляем обязательные поля, которых нет в форме
@@ -594,7 +596,7 @@ const PartnerFormPage: React.FC = () => {
                 control={
                   <Switch
                     checked={formik.values.is_active}
-                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
                     name="is_active"
                   />
                 }

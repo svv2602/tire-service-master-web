@@ -1,22 +1,38 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseQuery';
-import type { User } from '../types/models';
+import type { User } from '../types/user';
+import { getRoleFromId, getRoleId } from '../utils/roles.utils';
+
+export interface ApiUser {
+  id: number;
+  email: string;
+  phone?: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  role_id: number;
+  is_active: boolean;
+  email_verified: boolean;
+  phone_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserFormData {
+  email: string;
+  phone?: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  role_id: number;
+  is_active: boolean;
+  password?: string;
+  password_confirmation?: string;
+}
 
 // Интерфейс для ответа API (как приходит с бэкенда)
 export interface ApiUsersResponse {
-  data: Array<{
-    id: number;
-    email: string;
-    phone?: string;
-    first_name: string;
-    last_name: string;
-    role_id: number;
-    is_active: boolean;
-    email_verified: boolean;
-    phone_verified: boolean;
-    created_at: string;
-    updated_at: string;
-  }>;
+  data: Array<ApiUser>;
   pagination: {
     current_page: number;
     total_pages: number;
@@ -42,48 +58,7 @@ export interface UsersQueryParams {
   active?: boolean;
 }
 
-export interface UserProfile {
-  id: string;
-  user_id: string;
-  position?: string;
-  preferred_notification_method?: string;
-  marketing_consent?: boolean;
-  access_level?: number;
-  partner_id?: string;
-}
-
-export interface UserCredentials {
-  email: string;
-  password: string;
-}
-
-export interface PasswordReset {
-  email: string;
-}
-
-// Функция для преобразования role_id в строку роли
-const getRoleFromId = (roleId: number): string => {
-  switch (roleId) {
-    case 1: return 'admin';
-    case 2: return 'manager';
-    case 3: return 'partner';
-    case 4: return 'operator';
-    case 5: return 'client';
-    default: return 'client';
-  }
-};
-
-// Функция для преобразования строки роли в role_id
-export const getRoleId = (role: string): number => {
-  switch (role) {
-    case 'admin': return 1;
-    case 'manager': return 2;
-    case 'partner': return 3;
-    case 'operator': return 4;
-    case 'client': return 5;
-    default: return 5; // По умолчанию - клиент
-  }
-};
+// Функция перенесена в utils/roles.utils.ts
 
 export const usersApi = createApi({
   reducerPath: 'usersApi',
@@ -133,8 +108,9 @@ export const usersApi = createApi({
       transformResponse: (response: { data: ApiUser }): { data: User } => ({
         data: {
           ...response.data,
-          role: getRoleFromId(response.data.role_id),
           phone: response.data.phone || '',
+          role: getRoleFromId(response.data.role_id),
+          role_id: response.data.role_id,
         }
       }),
       providesTags: ['User'],
@@ -143,22 +119,28 @@ export const usersApi = createApi({
       query: (data) => ({
         url: 'users',
         method: 'POST',
-        body: { user: {
-          ...data,
-          role: getRoleFromId(data.role_id)
-        }},
+        body: { user: data },
       }),
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        return {
+          status: response.status,
+          data: response.data?.errors || 'Произошла ошибка при создании пользователя'
+        };
+      },
       invalidatesTags: ['User'],
     }),
     updateUser: builder.mutation<{ data: User }, { id: string; data: UserFormData }>({
       query: ({ id, data }) => ({
         url: `users/${id}`,
         method: 'PUT',
-        body: { user: {
-          ...data,
-          role: getRoleFromId(data.role_id)
-        }},
+        body: { user: data },
       }),
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        return {
+          status: response.status,
+          data: response.data?.errors || 'Произошла ошибка при обновлении пользователя'
+        };
+      },
       invalidatesTags: ['User'],
     }),
     deleteUser: builder.mutation<void, string>({
