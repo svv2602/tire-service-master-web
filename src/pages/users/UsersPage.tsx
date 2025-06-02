@@ -175,7 +175,14 @@ export const UsersPage: React.FC = () => {
   React.useEffect(() => {
     const token = localStorage.getItem('tvoya_shina_token');
     console.log('UsersPage: проверка токена в localStorage:', token ? `${token.substring(0, 20)}...` : 'не найден');
-  }, []);
+    console.log('UsersPage: фильтр showInactive:', showInactive);
+    console.log('UsersPage: параметр active для API:', showInactive ? undefined : true);
+  }, [showInactive]);
+
+  // Сброс страницы при изменении фильтра
+  React.useEffect(() => {
+    setPage(1);
+  }, [showInactive, debouncedSearchQuery]);
 
   // API хуки
   const {
@@ -197,6 +204,10 @@ export const UsersPage: React.FC = () => {
   const users = usersData?.data || [];
   const totalPages = usersData?.pagination?.total_pages || 1;
   const totalItems = usersData?.totalItems || 0;
+  
+  // Подсчет активных и неактивных пользователей
+  const activeUsersCount = users.filter(user => user.is_active).length;
+  const inactiveUsersCount = users.filter(user => !user.is_active).length;
 
   // Мемоизированные вспомогательные функции
   const getRoleName = useCallback((role: string): string => {    
@@ -346,16 +357,41 @@ export const UsersPage: React.FC = () => {
               color="primary"
             />
           }
-          label="Показать деактивированных"
+          label={
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="body2">
+                Показать деактивированных
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {showInactive ? 'Показаны все пользователи' : 'Показаны только активные'}
+              </Typography>
+            </Box>
+          }
         />
       </Box>
 
       {/* Статистика */}
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Найдено пользователей: {totalItems}
-        {!showInactive && ' (только активные)'}
-        {showInactive && ' (включая деактивированных)'}
-      </Typography>
+      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Найдено пользователей: <strong>{totalItems}</strong>
+        </Typography>
+        {users.length > 0 && (
+          <>
+            <Typography variant="body2" color="success.main">
+              Активных: <strong>{activeUsersCount}</strong>
+            </Typography>
+            {inactiveUsersCount > 0 && (
+              <Typography variant="body2" color="error.main">
+                Деактивированных: <strong>{inactiveUsersCount}</strong>
+              </Typography>
+            )}
+          </>
+        )}
+        <Typography variant="caption" color="text.secondary">
+          {!showInactive && '(только активные)'}
+          {showInactive && '(включая деактивированных)'}
+        </Typography>
+      </Box>
 
       {/* Контент */}
       {isLoading ? (
