@@ -23,6 +23,8 @@ import {
   DialogActions,
   TablePagination,
   Avatar,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -31,6 +33,7 @@ import {
   Add as AddIcon,
   Check as CheckIcon,
   Close as CloseIcon,
+  ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -53,6 +56,10 @@ const BookingsPage: React.FC = () => {
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  
+  // Состояние для меню создания бронирования
+  const [createMenuAnchor, setCreateMenuAnchor] = useState<null | HTMLElement>(null);
+  const createMenuOpen = Boolean(createMenuAnchor);
 
   // RTK Query хуки
   const { 
@@ -124,6 +131,20 @@ const BookingsPage: React.FC = () => {
     setSelectedBooking(null);
   };
 
+  const handleCreateMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setCreateMenuAnchor(event.currentTarget);
+  };
+
+  const handleCreateMenuClose = () => {
+    setCreateMenuAnchor(null);
+  };
+
+  const handleCreateBooking = (withAvailability: boolean) => {
+    const path = withAvailability ? '/bookings/new-with-availability' : '/bookings/new';
+    navigate(path);
+    handleCreateMenuClose();
+  };
+
   // Вспомогательные функции
   const getStatusLabel = (statusId: number): string => {
     switch (statusId) {
@@ -167,13 +188,36 @@ const BookingsPage: React.FC = () => {
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Бронирования</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/bookings/new')}
-        >
-          Новое бронирование
-        </Button>
+        <Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            endIcon={<ArrowDropDownIcon />}
+            onClick={handleCreateMenuOpen}
+          >
+            Новое бронирование
+          </Button>
+          <Menu
+            anchorEl={createMenuAnchor}
+            open={createMenuOpen}
+            onClose={handleCreateMenuClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <MenuItem onClick={() => handleCreateBooking(false)}>
+              Простая форма
+            </MenuItem>
+            <MenuItem onClick={() => handleCreateBooking(true)}>
+              С системой доступности
+            </MenuItem>
+          </Menu>
+        </Box>
       </Box>
 
       {/* Поиск */}

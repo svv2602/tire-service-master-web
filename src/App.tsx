@@ -25,6 +25,7 @@ import ClientCarsPage from './pages/clients/ClientCarsPage';
 import ClientCarFormPage from './pages/clients/ClientCarFormPage';
 import BookingsPage from './pages/bookings/BookingsPage';
 import BookingFormPage from './pages/bookings/BookingFormPage';
+import BookingFormPageWithAvailability from './pages/bookings/BookingFormPageWithAvailability';
 import SettingsPage from './pages/settings/SettingsPage';
 import ProfilePage from './pages/profile/ProfilePage';
 import UsersPage from './pages/users/UsersPage';
@@ -144,7 +145,9 @@ function App() {
                   {/* Маршруты для бронирований */}
                   <Route path="bookings" element={<BookingsPage />} />
                   <Route path="bookings/new" element={<BookingFormPage />} />
+                  <Route path="bookings/new-with-availability" element={<BookingFormPageWithAvailability />} />
                   <Route path="bookings/:id/edit" element={<BookingFormPage />} />
+                  <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
                   <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
                   {/* Маршруты для отзывов */}
                   <Route path="reviews" element={<ReviewsPage />} />
