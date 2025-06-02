@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseQuery';
-import type { User } from '../types/user';
+import type { User, UserFormData } from '../types/user';
 import { getRoleFromId, getRoleId } from '../utils/roles.utils';
 
 export interface ApiUser {
@@ -18,18 +18,6 @@ export interface ApiUser {
   updated_at: string;
 }
 
-export interface UserFormData {
-  email: string;
-  phone?: string;
-  first_name: string;
-  last_name: string;
-  middle_name?: string;
-  role_id: number;
-  is_active: boolean;
-  password?: string;
-  password_confirmation?: string;
-}
-
 // Интерфейс для ответа API (как приходит с бэкенда)
 export interface ApiUsersResponse {
   data: Array<ApiUser>;
@@ -41,13 +29,16 @@ export interface ApiUsersResponse {
   };
 }
 
-// Интерфейс для фронтенда (преобразованный)
+// Интерфейс для фронтенда (как используем во фронтенде)
 export interface UsersResponse {
-  users: User[];
+  data: Array<User>;
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
   totalItems: number;
-  currentPage: number;
-  totalPages: number;
-  itemsPerPage: number;
 }
 
 export interface UsersQueryParams {
@@ -66,51 +57,54 @@ export const usersApi = createApi({
   tagTypes: ['User'],
   endpoints: (builder) => ({
     getUsers: builder.query<UsersResponse, UsersQueryParams>({
-      query: (params) => ({
+      query: (params = {}) => ({
         url: 'users',
-        method: 'GET',
         params: {
-          ...params,
-          page: params.page,
-          per_page: params.per_page
+          page: params.page || 1,
+          per_page: params.per_page || 25,
+          ...(params.query && { query: params.query }),
+          ...(params.role && { role: params.role }),
+          ...(params.active !== undefined && { active: params.active })
         },
       }),
-      transformResponse: (response: ApiUsersResponse): UsersResponse => {
-        return {
-          users: response.data.map(user => ({
-            id: user.id,
-            email: user.email,
-            phone: user.phone || '',
-            first_name: user.first_name,
-            last_name: user.last_name,
-            middle_name: user.middle_name,
-            role: getRoleFromId(user.role_id),
-            role_id: user.role_id,
-            is_active: user.is_active,
-            email_verified: user.email_verified,
-            phone_verified: user.phone_verified,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-          })),
-          totalItems: response.pagination.total_count,
-          currentPage: Number(response.pagination.current_page),
-          totalPages: Number(response.pagination.total_pages),
-          itemsPerPage: Number(response.pagination.per_page),
-        };
-      },
+      transformResponse: (response: ApiUsersResponse): UsersResponse => ({
+        data: response.data.map(user => ({
+          id: user.id.toString(),
+          email: user.email,
+          phone: user.phone || '',
+          first_name: user.first_name,
+          last_name: user.last_name,
+          middle_name: user.middle_name || '',
+          role: getRoleFromId(user.role_id),
+          role_id: user.role_id,
+          is_active: user.is_active,
+          email_verified: user.email_verified,
+          phone_verified: user.phone_verified,
+          created_at: user.created_at,
+          updated_at: user.updated_at,
+        })),
+        pagination: response.pagination,
+        totalItems: response.pagination.total_count,
+      }),
       providesTags: ['User'],
     }),
     getUserById: builder.query<{ data: User }, string>({
-      query: (id) => ({
-        url: `users/${id}`,
-        method: 'GET',
-      }),
+      query: (id) => `users/${id}`,
       transformResponse: (response: { data: ApiUser }): { data: User } => ({
         data: {
-          ...response.data,
+          id: response.data.id.toString(),
+          email: response.data.email,
           phone: response.data.phone || '',
+          first_name: response.data.first_name,
+          last_name: response.data.last_name,
+          middle_name: response.data.middle_name || '',
           role: getRoleFromId(response.data.role_id),
           role_id: response.data.role_id,
+          is_active: response.data.is_active,
+          email_verified: response.data.email_verified,
+          phone_verified: response.data.phone_verified,
+          created_at: response.data.created_at,
+          updated_at: response.data.updated_at,
         }
       }),
       providesTags: ['User'],
@@ -120,6 +114,23 @@ export const usersApi = createApi({
         url: 'users',
         method: 'POST',
         body: { user: data },
+      }),
+      transformResponse: (response: { data: ApiUser }): { data: User } => ({
+        data: {
+          id: response.data.id.toString(),
+          email: response.data.email,
+          phone: response.data.phone || '',
+          first_name: response.data.first_name,
+          last_name: response.data.last_name,
+          middle_name: response.data.middle_name || '',
+          role: getRoleFromId(response.data.role_id),
+          role_id: response.data.role_id,
+          is_active: response.data.is_active,
+          email_verified: response.data.email_verified,
+          phone_verified: response.data.phone_verified,
+          created_at: response.data.created_at,
+          updated_at: response.data.updated_at,
+        }
       }),
       transformErrorResponse: (response: { status: number, data: any }) => {
         return {
@@ -134,6 +145,23 @@ export const usersApi = createApi({
         url: `users/${id}`,
         method: 'PUT',
         body: { user: data },
+      }),
+      transformResponse: (response: { data: ApiUser }): { data: User } => ({
+        data: {
+          id: response.data.id.toString(),
+          email: response.data.email,
+          phone: response.data.phone || '',
+          first_name: response.data.first_name,
+          last_name: response.data.last_name,
+          middle_name: response.data.middle_name || '',
+          role: getRoleFromId(response.data.role_id),
+          role_id: response.data.role_id,
+          is_active: response.data.is_active,
+          email_verified: response.data.email_verified,
+          phone_verified: response.data.phone_verified,
+          created_at: response.data.created_at,
+          updated_at: response.data.updated_at,
+        }
       }),
       transformErrorResponse: (response: { status: number, data: any }) => {
         return {

@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import {
   Box,
+  Paper,
   Typography,
   TextField,
   Button,
-  Paper,
-  MenuItem,
+  Grid,
+  Divider,
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   FormControlLabel,
   Checkbox,
   CircularProgress,
   Alert,
-  Divider,
-  Grid
 } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
-import { 
+import {
   useGetUserByIdQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
@@ -30,11 +30,11 @@ import { getRoleId } from '../../utils/roles.utils';
 
 const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const isEditMode = !!id;
-  const userId = isEditMode ? parseInt(id, 10) : 0;
+  const isEditMode = Boolean(id);
+  const userId = isEditMode ? parseInt(id!, 10) : 0;
 
   const navigate = useNavigate();
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = React.useState<string | null>(null);
 
   const { 
     data: userData,
@@ -98,7 +98,7 @@ const UserForm: React.FC = () => {
         setApiError(null);
         
         // Подготавливаем данные для API
-        const userData = {
+        const userData: UserFormData = {
           email: values.email,
           first_name: values.first_name,
           last_name: values.last_name,

@@ -7,7 +7,7 @@ export enum UserRole {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   phone: string;
   first_name: string;
@@ -52,7 +52,8 @@ export interface PasswordResetConfirm {
 export interface AuthState {
   user: User | null;
   token: string | null;
-  loading: boolean;
-  error: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
 }

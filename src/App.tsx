@@ -172,7 +172,7 @@ function App() {
                   <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
                   {/* Маршрут для пользователей */}
                   <Route path="users" element={<UsersPage />} />
-                  <Route path="users/create" element={<UserForm />} />
+                  <Route path="users/new" element={<UserForm />} />
                   <Route path="users/:id/edit" element={<UserForm />} />
                   <Route path="users/:id" element={<div>Информация о пользователе (в разработке)</div>} />
                   {/* Другие маршруты */}

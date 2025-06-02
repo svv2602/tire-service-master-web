@@ -57,8 +57,8 @@ const UserRow = React.memo<{
 }>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor }) => (
   <TableRow>
     <TableCell>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Avatar sx={{ width: 32, height: 32 }}>
           <PersonIcon />
         </Avatar>
         <Box>
@@ -66,11 +66,13 @@ const UserRow = React.memo<{
             {user.first_name} {user.last_name}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {user.email}
+            ID: {user.id}
           </Typography>
         </Box>
       </Box>
     </TableCell>
+    <TableCell>{user.email}</TableCell>
+    <TableCell>{user.phone}</TableCell>
     <TableCell>
       <Chip
         label={getRoleName(user.role)}
@@ -87,34 +89,46 @@ const UserRow = React.memo<{
             size="small"
           />
         }
-        label={user.is_active ? 'Активен' : 'Неактивен'}
+        label=""
+        sx={{ m: 0 }}
       />
     </TableCell>
     <TableCell>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {user.email_verified ? (
-          <CheckIcon color="success" fontSize="small" />
+          <Tooltip title="Email подтвержден">
+            <CheckIcon color="success" fontSize="small" />
+          </Tooltip>
         ) : (
-          <CloseIcon color="error" fontSize="small" />
+          <Tooltip title="Email не подтвержден">
+            <CloseIcon color="error" fontSize="small" />
+          </Tooltip>
         )}
-        <Typography variant="body2">
-          {user.email_verified ? 'Подтвержден' : 'Не подтвержден'}
-        </Typography>
+        {user.phone_verified ? (
+          <Tooltip title="Телефон подтвержден">
+            <CheckIcon color="success" fontSize="small" />
+          </Tooltip>
+        ) : (
+          <Tooltip title="Телефон не подтвержден">
+            <CloseIcon color="error" fontSize="small" />
+          </Tooltip>
+        )}
       </Box>
     </TableCell>
-    <TableCell align="right">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+    <TableCell>
+      <Box sx={{ display: 'flex', gap: 1 }}>
         <Tooltip title="Редактировать">
           <IconButton
-            onClick={() => onEdit(user.id.toString())}
+            onClick={() => onEdit(user.id)}
             size="small"
+            color="primary"
           >
             <EditIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title="Удалить">
           <IconButton
-            onClick={() => onDelete(user.id.toString())}
+            onClick={() => onDelete(user.id)}
             size="small"
             color="error"
           >
@@ -132,32 +146,31 @@ export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const { enqueueSnackbar } = useSnackbar();
 
-  // Дебаунсированный поиск
-  const debouncedSearch = useDebounce(searchQuery, 300);
+  // Дебаунс для поиска
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  // Мемоизированные параметры запроса
-  const queryParams = useMemo(() => ({
-    page,
-    per_page: pageSize,
-    query: debouncedSearch || undefined,
-  }), [page, pageSize, debouncedSearch]);
-
-  const { 
+  // API хуки
+  const {
     data: usersData,
     isLoading,
     error,
     refetch
-  } = useGetUsersQuery(queryParams);
+  } = useGetUsersQuery({
+    page,
+    per_page: 25,
+    query: debouncedSearchQuery || undefined
+  });
 
-  const [deleteUser] = useDeleteUserMutation();
+  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [updateUser] = useUpdateUserMutation();
 
-  const users = (usersData?.users || []) as User[];
+  // Вычисляемые значения
+  const users = usersData?.data || [];
+  const totalPages = usersData?.pagination?.total_pages || 1;
   const totalItems = usersData?.totalItems || 0;
 
   // Мемоизированные вспомогательные функции
@@ -183,22 +196,12 @@ export const UsersPage: React.FC = () => {
     }
   }, []);
 
-  // Мемоизированные обработчики событий
-  const handleSearchInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-    setPage(1); // Сбрасываем страницу при поиске
-  }, []);
-
-  const handlePageChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
-    window.scrollTo(0, 0); // Прокручиваем страницу вверх при смене страницы
-  }, []);
-
-  const handleAddUser = useCallback(() => {
-    navigate('/users/create');
+  // Обработчики событий
+  const handleCreate = useCallback(() => {
+    navigate('/users/new');
   }, [navigate]);
 
-  const handleEditUser = useCallback((id: string) => {
+  const handleEdit = useCallback((id: string) => {
     navigate(`/users/${id}/edit`);
   }, [navigate]);
 
@@ -233,8 +236,8 @@ export const UsersPage: React.FC = () => {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        middle_name: user.middle_name,
-        phone: user.phone,
+        middle_name: user.middle_name || '',
+        phone: user.phone || '',
         role_id: user.role_id,
         is_active: !user.is_active
       };
@@ -253,114 +256,132 @@ export const UsersPage: React.FC = () => {
 
   return (
     <Box>
+      {/* Заголовок и кнопка создания */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Пользователи</Typography>
+        <Typography variant="h4" component="h1">
+          Пользователи
+        </Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
-          onClick={handleAddUser}
+          onClick={handleCreate}
         >
-          Добавить пользователя
+          Создать пользователя
         </Button>
       </Box>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <TextField
-            label="Поиск"
-            variant="outlined"
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-      </Paper>
+      {/* Поиск */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Поиск по email, имени или фамилии..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
 
-      <Paper>
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Box sx={{ p: 3 }}>
-            <Alert severity="error">
-              Ошибка при загрузке пользователей: {error.toString()}
-            </Alert>
-          </Box>
-        ) : (
-          <>
-            <TableContainer>
-              <Table sx={{ minWidth: 650 }} aria-label="table of users">
-                <TableHead>
+      {/* Статистика */}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Найдено пользователей: {totalItems}
+      </Typography>
+
+      {/* Контент */}
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          Ошибка при загрузке пользователей: {error.toString()}
+        </Alert>
+      ) : (
+        <>
+          {/* Таблица пользователей */}
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Пользователь</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Телефон</TableCell>
+                  <TableCell>Роль</TableCell>
+                  <TableCell>Активен</TableCell>
+                  <TableCell>Подтверждения</TableCell>
+                  <TableCell>Действия</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {users.length === 0 ? (
                   <TableRow>
-                    <TableCell>Пользователь</TableCell>
-                    <TableCell>Роль</TableCell>
-                    <TableCell>Статус</TableCell>
-                    <TableCell>Email подтвержден</TableCell>
-                    <TableCell align="right">Действия</TableCell>
+                    <TableCell colSpan={7} align="center">
+                      <Typography color="text.secondary">
+                        Пользователи не найдены
+                      </Typography>
+                    </TableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <UserRow
-                        key={user.id}
-                        user={user}
-                        onEdit={handleEditUser}
-                        onDelete={handleDeleteClick}
-                        onToggleStatus={handleToggleStatus}
-                        getRoleName={getRoleName}
-                        getRoleColor={getRoleColor}
-                      />
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        <Typography variant="body1" color="text.secondary">
-                          {page > 1 ? "На этой странице нет данных" : "Нет данных для отображения"}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-              {usersData && usersData.totalPages > 0 && (
-                <Pagination
-                  count={usersData.totalPages}
-                  page={Math.min(page, usersData.totalPages)}
-                  onChange={handlePageChange}
-                  color="primary"
-                  disabled={usersData.totalPages <= 1}
-                />
-              )}
+                ) : (
+                  users.map((user) => (
+                    <UserRow
+                      key={user.id}
+                      user={user}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteClick}
+                      onToggleStatus={handleToggleStatus}
+                      getRoleName={getRoleName}
+                      getRoleColor={getRoleColor}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Пагинация */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+              />
             </Box>
-          </>
-        )}
-      </Paper>
+          )}
+        </>
+      )}
 
       {/* Диалог подтверждения удаления */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
+        maxWidth="sm"
+        fullWidth
       >
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
-          Вы действительно хотите удалить этого пользователя? Это действие нельзя будет отменить.
+          <Typography>
+            Вы уверены, что хотите удалить этого пользователя? Это действие нельзя отменить.
+          </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Удалить
+          <Button onClick={handleDeleteCancel}>
+            Отмена
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
