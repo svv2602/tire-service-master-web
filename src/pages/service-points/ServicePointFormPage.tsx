@@ -62,6 +62,7 @@ import {
   useUpdateServicePointMutation,
   useGetWorkStatusesQuery,
   useGetServicePostsQuery,
+  useUploadServicePointPhotoMutation,
   type WorkStatus,
   type ServicePost,
 } from '../../api/servicePoints.api';
@@ -245,6 +246,7 @@ const ServicePointFormPage: React.FC = () => {
   const servicePosts: ServicePost[] = servicePostsData || [];
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
+  const [uploadServicePointPhoto] = useUploadServicePointPhotoMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
 
   const { data: services } = useGetServicesQuery({});
@@ -365,21 +367,47 @@ const ServicePointFormPage: React.FC = () => {
 
       console.log('Отправляемые данные:', JSON.stringify({ servicePoint: servicePointData }, null, 2));
       console.log('Values.working_hours:', values.working_hours);
+      console.log('Working hours в servicePointData:', servicePointData.working_hours);
       console.log('Values.service_posts:', values.service_posts);
+      console.log('PhotoUploads для загрузки:', photoUploads);
+
+      let servicePointResult: ServicePoint;
 
       if (isEditMode && id) {
-        await updateServicePoint({
+        servicePointResult = await updateServicePoint({
           id,
           servicePoint: servicePointData
         }).unwrap();
         
         setSuccessMessage('Точка обслуживания успешно обновлена');
       } else {
-        await createServicePoint({
+        servicePointResult = await createServicePoint({
           partnerId: partnerId || values.partner_id.toString(),
           servicePoint: servicePointData
         }).unwrap();
         setSuccessMessage('Точка обслуживания успешно создана');
+      }
+
+      // Загружаем фотографии после успешного сохранения точки обслуживания
+      if (photoUploads.length > 0) {
+        console.log('Начинаем загрузку фотографий...');
+        try {
+          for (let i = 0; i < photoUploads.length; i++) {
+            const photo = photoUploads[i];
+            console.log(`Загружаем фото ${i + 1}/${photoUploads.length}:`, photo.file.name);
+            
+            await uploadServicePointPhoto({
+              id: servicePointResult.id.toString(),
+              file: photo.file,
+              is_main: photo.is_main
+            }).unwrap();
+          }
+          console.log('Все фотографии успешно загружены');
+          setPhotoUploads([]); // Очищаем загруженные фотографии
+        } catch (photoError) {
+          console.error('Ошибка при загрузке фотографий:', photoError);
+          setErrorMessage('Данные сохранены, но произошла ошибка при загрузке фотографий');
+        }
       }
 
       setTimeout(() => {
