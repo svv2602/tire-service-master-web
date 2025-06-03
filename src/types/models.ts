@@ -111,6 +111,7 @@ export interface ServicePoint {
   working_hours: WorkingHoursSchedule;
   services: ServicePointService[];
   photos: ServicePointPhoto[];
+  service_posts?: ServicePost[];
 }
 
 // Модель категории услуг
@@ -295,10 +296,12 @@ export interface ServicePointStatus {
 }
 
 export interface ServicePointService {
+  id?: number;
   service_id: number;
   price: number;
   duration: number;
   is_available: boolean;
+  _destroy?: boolean;
   service?: {
     id: number;
     name: string;
@@ -424,4 +427,36 @@ export interface ServicePointPhoto {
   sort_order?: number;
   created_at: string;
   updated_at: string;
+}
+
+// Интерфейс для постов обслуживания
+export interface ServicePost {
+  id?: number;
+  service_point_id?: number; // Для обратной совместимости
+  name: string;
+  description?: string;
+  slot_duration: number;
+  is_active: boolean;
+  post_number: number;
+  _destroy?: boolean;
+  created_at?: string; // Для обратной совместимости
+  updated_at?: string; // Для обратной совместимости
+}
+
+// Расширенный интерфейс для новой формы сервисной точки
+export interface ServicePointFormDataNew {
+  name: string;
+  description?: string;
+  address: string;
+  city_id: number;
+  partner_id: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  contact_phone: string;
+  is_active: boolean;
+  work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
+  working_hours: WorkingHoursSchedule;
+  services?: ServicePointService[];
+  photos?: ServicePointPhoto[];
+  service_posts?: ServicePost[];
 }
