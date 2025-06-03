@@ -4,7 +4,8 @@ import type {
   ServicePointCreateRequest,
   ServicePointUpdateRequest,
   ServicePointFormData,
-  ServicePointStatus
+  ServicePointStatus,
+  ServicePost
 } from '../types/models';
 import { baseApi } from './baseApi';
 
@@ -13,20 +14,6 @@ export interface WorkStatus {
   value: string;
   label: string;
   description: string;
-}
-
-// Добавляем тип для service post
-export interface ServicePost {
-  id: number;
-  service_point_id: number;
-  post_number: number;
-  name: string;
-  description?: string;
-  slot_duration: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  _destroy?: boolean; // Для пометки постов на удаление
 }
 
 // Инжектируем эндпоинты в baseApi
@@ -166,6 +153,36 @@ export const servicePointsApi = baseApi.injectEndpoints({
         { type: 'ServicePost' as const, id: `LIST_${servicePointId}` },
       ],
     }),
+
+    // Новый endpoint для получения услуг сервисной точки
+    getServicePointServices: builder.query<any[], string>({
+      query: (servicePointId) => ({
+        url: `/service_points/${servicePointId}/services`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, servicePointId) =>
+        result
+          ? [
+              ...result.map((_, index) => ({ type: 'ServicePointService' as const, id: `${servicePointId}_${index}` })),
+              { type: 'ServicePointService' as const, id: `LIST_${servicePointId}` },
+            ]
+          : [{ type: 'ServicePointService' as const, id: `LIST_${servicePointId}` }],
+    }),
+
+    // Новый endpoint для получения фотографий сервисной точки
+    getServicePointPhotos: builder.query<any[], string>({
+      query: (servicePointId) => ({
+        url: `/service_points/${servicePointId}/photos`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, servicePointId) =>
+        result
+          ? [
+              ...result.map((_, index) => ({ type: 'ServicePointPhoto' as const, id: `${servicePointId}_${index}` })),
+              { type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` },
+            ]
+          : [{ type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` }],
+    }),
   }),
 });
 
@@ -181,4 +198,6 @@ export const {
   useGetWorkStatusesQuery,
   useGetServicePostsQuery,
   useUpdateServicePostMutation,
+  useGetServicePointServicesQuery,
+  useGetServicePointPhotosQuery,
 } = servicePointsApi;

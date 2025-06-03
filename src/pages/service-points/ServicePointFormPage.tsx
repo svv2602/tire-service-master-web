@@ -50,8 +50,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServiceCategoriesQuery,
   useGetScheduleQuery,
-  useGetServicePointServicesQuery,
-  useGetServicePointPhotosQuery,
 } from '../../api';
 import { useGetServicesQuery } from '../../api/servicesList.api';
 import {
@@ -62,10 +60,11 @@ import {
   useUpdateServicePointMutation,
   useGetWorkStatusesQuery,
   useGetServicePostsQuery,
-  useUploadServicePointPhotoMutation,
+  useGetServicePointServicesQuery,
+  useGetServicePointPhotosQuery,
   type WorkStatus,
-  type ServicePost,
 } from '../../api/servicePoints.api';
+import { useUploadServicePointPhotoMutation } from '../../api/service-point-photos.api';
 import { useGetPartnersQuery } from '../../api/partners.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
@@ -84,6 +83,7 @@ import type {
   ServicePointUpdateRequest,
   Photo,
   ServicePointStatus,
+  ServicePost,
 } from '../../types/models';
 import type { Service, ServicesResponse } from '../../types/service';
 import { DAYS_OF_WEEK, getDayName } from '../../types/working-hours';
@@ -99,10 +99,12 @@ interface ScheduleItem {
 
 // Определяем типы для FormikTouched и FormikErrors
 interface ServiceFormData {
+  id?: number; // ID записи ServicePointService для обновления существующих
   service_id: number;
   price: number;
   duration: number;
   is_available: boolean;
+  _destroy?: boolean; // Поле для помечения услуги для удаления
 }
 
 interface ServiceFormErrors {
@@ -220,10 +222,8 @@ const ServicePointFormPage: React.FC = () => {
   // RTK Query хуки
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery({});
-  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
-    { region_id: selectedRegionId || 0 },
-    { skip: !selectedRegionId }
-  );
+  
+  // Сначала получаем информацию о сервисной точке чтобы узнать region_id
   const { data: basicInfo } = useGetServicePointBasicInfoQuery(id ?? '', {
     skip: !id
   });
@@ -235,6 +235,16 @@ const ServicePointFormPage: React.FC = () => {
     { 
       skip: !id || (!basicInfo?.partner_id && !partnerId),
       refetchOnMountOrArgChange: true
+    }
+  );
+
+  // Определяем region_id для загрузки городов: из selectedRegionId, servicePoint или 0
+  const regionIdForCities = selectedRegionId || servicePoint?.city?.region_id || 0;
+  
+  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
+    { region_id: regionIdForCities },
+    { 
+      skip: !regionIdForCities // Загружаем города если есть region_id
     }
   );
   const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
@@ -295,10 +305,11 @@ const ServicePointFormPage: React.FC = () => {
     longitude: servicePoint?.longitude || null,
     working_hours: servicePoint?.working_hours || defaultWorkingHours,
     services: (servicePointServicesData || []).map(service => ({
+      id: service.id,
       service_id: service.service_id,
-      price: service.price,
-      duration: service.duration,
-      is_available: service.is_available
+      price: service.price || service.current_price || 0,
+      duration: service.duration || service.default_duration || 60,
+      is_available: service.is_available !== undefined ? service.is_available : true
     })),
     photos: (photosData || []).map(photo => ({
       id: typeof photo.id === 'string' ? Number(photo.id) : photo.id,
@@ -349,10 +360,12 @@ const ServicePointFormPage: React.FC = () => {
         longitude: values.longitude,
         working_hours: values.working_hours,
         services_attributes: values.services.map(service => ({
+          id: service.id,
           service_id: service.service_id,
           price: service.price,
           duration: service.duration,
-          is_available: service.is_available
+          is_available: service.is_available,
+          _destroy: service._destroy || false
         })),
         service_posts_attributes: values.service_posts.map(post => ({
           id: post.id && post.id < 1000000000000 ? post.id : undefined, // Если ID меньше временного ID (Date.now()), то это реальный ID
@@ -397,9 +410,9 @@ const ServicePointFormPage: React.FC = () => {
             console.log(`Загружаем фото ${i + 1}/${photoUploads.length}:`, photo.file.name);
             
             await uploadServicePointPhoto({
-              id: servicePointResult.id.toString(),
+              servicePointId: servicePointResult.id.toString(),
               file: photo.file,
-              is_main: photo.is_main
+              description: photo.description
             }).unwrap();
           }
           console.log('Все фотографии успешно загружены');
@@ -473,7 +486,11 @@ const ServicePointFormPage: React.FC = () => {
         is_available: yup.boolean()
           .required('Укажите доступность услуги'),
       })
-    ),
+    ).test('unique-service-ids', 'Каждая услуга может быть добавлена только один раз', function(services) {
+      if (!services) return true;
+      const serviceIds = services.map(service => service.service_id).filter(id => id > 0);
+      return serviceIds.length === new Set(serviceIds).size;
+    }),
     photos: yup.array()
       .max(10, 'Максимальное количество фотографий - 10')
       .of(
@@ -516,7 +533,7 @@ const ServicePointFormPage: React.FC = () => {
       setSelectedRegionId(servicePoint.city.region_id);
       formik.setFieldValue('region_id', servicePoint.city.region_id);
     }
-  }, [servicePoint, selectedRegionId]);
+  }, [servicePoint]);
 
   // Обработчик изменения региона
   const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -648,10 +665,10 @@ const ServicePointFormPage: React.FC = () => {
   };
 
   const isServicesComplete = () => {
-    return formik.values.services && formik.values.services.length > 0 && 
-           formik.values.services.every(service => 
-             service.service_id > 0 && service.price >= 0 && service.duration > 0
-           );
+    const activeServices = formik.values.services?.filter(service => !service._destroy) || [];
+    return activeServices.length > 0 && activeServices.every(service => 
+      service.service_id > 0 && service.price >= 0 && service.duration > 0
+    );
   };
 
   const isPhotosComplete = () => {
@@ -677,6 +694,23 @@ const ServicePointFormPage: React.FC = () => {
       }} 
     />
   );
+
+  // Функция для получения доступных услуг для конкретного индекса
+  const getAvailableServices = useCallback((currentIndex: number) => {
+    if (!servicesData) return [];
+    
+    // Получаем уже выбранные service_id, исключая текущий индекс и удаленные услуги
+    const selectedServiceIds = formik.values.services
+      ?.filter((service, index) => index !== currentIndex && !service._destroy)
+      ?.map(service => service.service_id)
+      ?.filter(id => id && id > 0) || [];
+    
+    // Возвращаем все услуги с информацией о том, доступны ли они
+    return servicesData.map((service: Service) => ({
+      ...service,
+      isDisabled: selectedServiceIds.includes(service.id)
+    }));
+  }, [servicesData, formik.values.services]);
 
   return (
     <Box>
@@ -1174,6 +1208,21 @@ const ServicePointFormPage: React.FC = () => {
                     variant="outlined"
                     onClick={(e) => {
                       e.stopPropagation(); // Предотвращаем свертывание аккордеона
+                      
+                      // Проверяем, есть ли еще доступные услуги
+                      const activeServices = formik.values.services?.filter(s => !s._destroy) || [];
+                      const selectedServiceIds = activeServices.map(s => s.service_id);
+                      const availableServices = servicesData?.filter((service: Service) => 
+                        !selectedServiceIds.includes(service.id)
+                      ) || [];
+                      
+                      if (availableServices.length === 0) {
+                        setSnackbarMessage('Все доступные услуги уже добавлены');
+                        setSnackbarSeverity('error');
+                        setSnackbarOpen(true);
+                        return;
+                      }
+                      
                       formik.setFieldValue('services', [
                         ...(formik.values.services || []),
                         {
@@ -1192,114 +1241,137 @@ const ServicePointFormPage: React.FC = () => {
                 </Box>
               </AccordionSummary>
               <AccordionDetails>
-                {formik.values.services && formik.values.services.length > 0 ? (
+                {formik.values.services && formik.values.services.filter(service => !service._destroy).length > 0 ? (
                   <Grid container spacing={3}>
-                    {formik.values.services.map((service, index) => (
-                      <Grid item xs={12} md={6} key={index}>
-                        <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                          <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                              <FormControl fullWidth error={Boolean(
-                                formik.touched.services?.[index]?.service_id && 
-                                typeof formik.errors.services?.[index] === 'object' &&
-                                (formik.errors.services[index] as ServiceFormErrors)?.service_id
-                              )}>
-                                <InputLabel>Услуга</InputLabel>
-                                <Select
-                                  value={service.service_id ? String(service.service_id) : '0'}
-                                  onChange={(e) => {
-                                    const selectedService = servicesData?.find((s: Service) => String(s.id) === e.target.value);
-                                    if (selectedService) {
-                                      formik.setFieldValue(`services.${index}`, {
-                                        ...service,
-                                        service_id: Number(e.target.value),
-                                        duration: selectedService.default_duration || service.duration,
-                                        price: service.price,
-                                      });
-                                    }
-                                  }}
-                                  label="Услуга"
-                                >
-                                  <MenuItem value="0" disabled>Выберите услугу</MenuItem>
-                                  {servicesData?.map((serviceItem: Service) => (
-                                    <MenuItem key={serviceItem.id} value={String(serviceItem.id)}>
-                                      {serviceItem.name} ({serviceItem.category?.name || 'Без категории'})
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                                {formik.touched.services?.[index]?.service_id && 
-                                 typeof formik.errors.services?.[index] === 'object' &&
-                                 (formik.errors.services[index] as ServiceFormErrors)?.service_id && (
-                                  <FormHelperText>
-                                    {(formik.errors.services[index] as ServiceFormErrors).service_id}
-                                  </FormHelperText>
-                                )}
-                              </FormControl>
-                            </Grid>
-
-                            <Grid item xs={6}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                label="Цена"
-                                value={service.price}
-                                onChange={(e) => {
-                                  formik.setFieldValue(`services.${index}.price`, Number(e.target.value));
-                                }}
-                                InputProps={{
-                                  endAdornment: <InputAdornment position="end">₽</InputAdornment>,
-                                  inputProps: { min: 0 }
-                                }}
-                              />
-                            </Grid>
-
-                            <Grid item xs={6}>
-                              <TextField
-                                fullWidth
-                                type="number"
-                                label="Длительность"
-                                value={service.duration}
-                                onChange={(e) => {
-                                  formik.setFieldValue(`services.${index}.duration`, Number(e.target.value));
-                                }}
-                                InputProps={{
-                                  endAdornment: <InputAdornment position="end">мин</InputAdornment>,
-                                  inputProps: { min: 5 }
-                                }}
-                              />
-                            </Grid>
-
-                            <Grid item xs={12}>
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      checked={service.is_available}
+                    {formik.values.services
+                      .filter(service => !service._destroy) // Фильтруем услуги помеченные для удаления
+                      .map((service, filteredIndex) => {
+                        // Находим оригинальный индекс в полном массиве для правильного обновления
+                        const originalIndex = formik.values.services.findIndex(s => 
+                          s.id === service.id && s.service_id === service.service_id
+                        );
+                        return (
+                          <Grid item xs={12} md={6} key={service.id}>
+                            <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                              <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                  <FormControl fullWidth error={Boolean(
+                                    formik.touched.services?.[originalIndex]?.service_id && 
+                                    typeof formik.errors.services?.[originalIndex] === 'object' &&
+                                    (formik.errors.services[originalIndex] as ServiceFormErrors)?.service_id
+                                  )}>
+                                    <InputLabel>Услуга</InputLabel>
+                                    <Select
+                                      value={service.service_id ? String(service.service_id) : '0'}
                                       onChange={(e) => {
-                                        formik.setFieldValue(`services.${index}.is_available`, e.target.checked);
+                                        const selectedServiceId = Number(e.target.value);
+                                        const selectedService = servicesData?.find((s: Service) => s.id === selectedServiceId);
+                                        if (selectedService) {
+                                          formik.setFieldValue(`services.${originalIndex}`, {
+                                            ...service,
+                                            service_id: selectedServiceId,
+                                            duration: selectedService.default_duration || service.duration,
+                                            price: service.price,
+                                          });
+                                        }
                                       }}
-                                      name={`services.${index}.is_available`}
+                                      label="Услуга"
+                                    >
+                                      <MenuItem value="0" disabled>Выберите услугу</MenuItem>
+                                      {getAvailableServices(filteredIndex).map((serviceItem: any) => (
+                                        <MenuItem 
+                                          key={serviceItem.id} 
+                                          value={String(serviceItem.id)}
+                                          disabled={serviceItem.isDisabled}
+                                        >
+                                          {serviceItem.name} ({serviceItem.category?.name || 'Без категории'})
+                                          {serviceItem.isDisabled && ' (уже выбрана)'}
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+                                    {formik.touched.services?.[originalIndex]?.service_id && 
+                                     typeof formik.errors.services?.[originalIndex] === 'object' &&
+                                     (formik.errors.services[originalIndex] as ServiceFormErrors)?.service_id && (
+                                      <FormHelperText>
+                                        {(formik.errors.services[originalIndex] as ServiceFormErrors).service_id}
+                                      </FormHelperText>
+                                    )}
+                                  </FormControl>
+                                </Grid>
+
+                                <Grid item xs={6}>
+                                  <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Цена"
+                                    value={service.price}
+                                    onChange={(e) => {
+                                      formik.setFieldValue(`services.${originalIndex}.price`, Number(e.target.value));
+                                    }}
+                                    InputProps={{
+                                      endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+                                      inputProps: { min: 0 }
+                                    }}
+                                  />
+                                </Grid>
+
+                                <Grid item xs={6}>
+                                  <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Длительность"
+                                    value={service.duration}
+                                    onChange={(e) => {
+                                      formik.setFieldValue(`services.${originalIndex}.duration`, Number(e.target.value));
+                                    }}
+                                    InputProps={{
+                                      endAdornment: <InputAdornment position="end">мин</InputAdornment>,
+                                      inputProps: { min: 5 }
+                                    }}
+                                  />
+                                </Grid>
+
+                                <Grid item xs={12}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <FormControlLabel
+                                      control={
+                                        <Switch
+                                          checked={service.is_available}
+                                          onChange={(e) => {
+                                            formik.setFieldValue(`services.${originalIndex}.is_available`, e.target.checked);
+                                          }}
+                                          name={`services.${originalIndex}.is_available`}
+                                        />
+                                      }
+                                      label="Услуга доступна"
                                     />
-                                  }
-                                  label="Услуга доступна"
-                                />
-                                <Button
-                                  color="error"
-                                  onClick={() => {
-                                    const newServices = [...(formik.values.services || [])];
-                                    newServices.splice(index, 1);
-                                    formik.setFieldValue('services', newServices);
-                                  }}
-                                  size="small"
-                                >
-                                  Удалить
-                                </Button>
-                              </Box>
-                            </Grid>
+                                    <Button
+                                      color="error"
+                                      onClick={() => {
+                                        const newServices = [...(formik.values.services || [])];
+                                        const serviceToRemove = newServices[originalIndex];
+                                        
+                                        // Если услуга имеет реальный ID (существует в БД), помечаем для удаления
+                                        if (serviceToRemove.id && serviceToRemove.id > 0) {
+                                          newServices[originalIndex] = { ...serviceToRemove, _destroy: true };
+                                        } else {
+                                          // Если это новая услуга без ID, просто удаляем из массива
+                                          newServices.splice(originalIndex, 1);
+                                        }
+                                        
+                                        formik.setFieldValue('services', newServices);
+                                      }}
+                                      size="small"
+                                    >
+                                      Удалить
+                                    </Button>
+                                  </Box>
+                                </Grid>
+                              </Grid>
+                            </Box>
                           </Grid>
-                        </Box>
-                      </Grid>
-                    ))}
+                        );
+                      })}
                   </Grid>
                 ) : (
                   <Alert severity="info">
@@ -1570,6 +1642,17 @@ const ServicePointFormPage: React.FC = () => {
       >
         <Alert severity="error" onClose={() => setErrorMessage(null)}>
           {errorMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)}>
+          {snackbarMessage}
         </Alert>
       </Snackbar>
     </Box>

@@ -14,6 +14,7 @@ import PartnersPage from './pages/partners/PartnersPage';
 import PartnerFormPage from './pages/partners/PartnerFormPage';
 import ServicePointsPage from './pages/service-points/ServicePointsPage';
 import ServicePointFormPage from './pages/service-points/ServicePointFormPage';
+import ServicePointFormPageNew from './pages/service-points/ServicePointFormPageNew';
 import ServicePointDetailPage from './pages/service-points/ServicePointDetailPage';
 import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
 import ServicePointServicesPage from './pages/service-points/ServicePointServicesPage';
@@ -131,13 +132,13 @@ function App() {
                   <Route path="partners/new" element={<PartnerFormPage />} />
                   <Route path="partners/:id/edit" element={<PartnerFormPage />} />
                   <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
-                  <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPage />} />
-                  <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
+                  <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
+                  <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
                   {/* Маршруты для сервисных точек */}
                   <Route path="service-points" element={<ServicePointsPage />} />
-                  <Route path="service-points/new" element={<ServicePointFormPage />} />
+                  <Route path="service-points/new" element={<ServicePointFormPageNew />} />
                   <Route path="service-points/:id" element={<ServicePointDetailPage />} />
-                  <Route path="service-points/:id/edit" element={<ServicePointFormPage />} />
+                  <Route path="service-points/:id/edit" element={<ServicePointFormPageNew />} />
                   <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
                   <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
                   {/* Маршруты для клиентов */}

@@ -11,7 +11,7 @@ export const scheduleApi = baseApi.injectEndpoints({
       providesTags: ['Schedule'],
     }),
 
-    getServicePointServices: builder.query<ServicePointService[], string>({
+    getServicePointServicesForSchedule: builder.query<ServicePointService[], string>({
       query: (service_point_id) => ({
         url: `service_points/${service_point_id}/services`,
       }),
@@ -64,7 +64,7 @@ export const scheduleApi = baseApi.injectEndpoints({
 
 export const {
   useGetScheduleQuery,
-  useGetServicePointServicesQuery,
+  useGetServicePointServicesForScheduleQuery,
   useUpdateScheduleMutation,
   useGenerateScheduleMutation,
   useGetAvailableSlotsQuery,
