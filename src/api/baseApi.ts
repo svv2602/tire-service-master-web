@@ -1,6 +1,39 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import config from '../config';
 
+// Функция для попытки обновления токена
+const refreshToken = async () => {
+  const refreshTokenValue = localStorage.getItem('tvoya_shina_refresh_token');
+  if (!refreshTokenValue) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${config.API_URL}${config.API_PREFIX}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        refresh_token: refreshTokenValue
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.auth_token);
+      if (data.refresh_token) {
+        localStorage.setItem('tvoya_shina_refresh_token', data.refresh_token);
+      }
+      return data.auth_token;
+    }
+  } catch (error) {
+    console.error('Ошибка обновления токена:', error);
+  }
+
+  return null;
+};
+
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
@@ -24,9 +57,24 @@ export const baseApi = createApi({
 
       if (!response.ok) {
         if (response.status === 401) {
-          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
-          window.location.href = '/login';
-          return null;
+          console.log('🔄 Токен истек, пытаемся обновить...');
+          
+          // Пытаемся обновить токен
+          const newToken = await refreshToken();
+          
+          if (newToken) {
+            console.log('✅ Токен успешно обновлен');
+            // Перезагружаем страницу чтобы повторить запрос с новым токеном
+            window.location.reload();
+            return null;
+          } else {
+            console.log('❌ Не удалось обновить токен, перенаправляем на логин');
+            localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
+            localStorage.removeItem('tvoya_shina_refresh_token');
+            localStorage.removeItem('tvoya_shina_user');
+            window.location.href = '/login';
+            return null;
+          }
         }
         
         // Пытаемся получить детали ошибки из ответа

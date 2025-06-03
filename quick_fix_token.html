@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Быстрое исправление токена</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: #4CAF50; background: #f0f8f0; padding: 10px; border-radius: 5px; }
+        .error { color: #f44336; background: #fff0f0; padding: 10px; border-radius: 5px; }
+        .info { color: #2196F3; background: #f0f8ff; padding: 10px; border-radius: 5px; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #45a049; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Быстрое исправление токена</h1>
+    <p>Эта страница поможет быстро исправить проблему с истекшим токеном аутентификации.</p>
+    
+    <div>
+        <button onclick="checkCurrentState()">🔍 Проверить текущее состояние</button>
+        <button onclick="getNewToken()">🔑 Получить новый токен</button>
+        <button onclick="openFrontend()">🚀 Открыть фронтенд</button>
+        <button onclick="clearAll()">🗑️ Очистить все данные</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const TOKEN_KEY = 'tvoya_shina_token';
+        const USER_KEY = 'tvoya_shina_user';
+        const REFRESH_KEY = 'tvoya_shina_refresh_token';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="${type}"><pre>${JSON.stringify(message, null, 2)}</pre></div>`;
+        }
+
+        function checkCurrentState() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            const refreshToken = localStorage.getItem(REFRESH_KEY);
+            
+            const state = {
+                токен: token ? token.substring(0, 30) + '...' : 'НЕТ',
+                пользователь: user ? JSON.parse(user).first_name + ' ' + JSON.parse(user).last_name : 'НЕТ',
+                refresh_токен: refreshToken ? refreshToken.substring(0, 30) + '...' : 'НЕТ',
+                все_ключи: Object.keys(localStorage).filter(key => key.includes('tvoya_shina')),
+                статус: (token && user) ? 'ГОТОВ К РАБОТЕ' : 'ТРЕБУЕТСЯ ВХОД'
+            };
+            
+            showResult(state, token && user ? 'success' : 'error');
+        }
+
+        async function getNewToken() {
+            showResult('🔄 Получаем новый токен...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: { email: 'admin@test.com', password: 'admin' }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Сохраняем все данные
+                    localStorage.setItem(TOKEN_KEY, data.auth_token);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    if (data.refresh_token) {
+                        localStorage.setItem(REFRESH_KEY, data.refresh_token);
+                    }
+                    
+                    showResult({
+                        статус: 'УСПЕХ',
+                        сообщение: 'Токен получен и сохранен!',
+                        пользователь: data.user.first_name + ' ' + data.user.last_name,
+                        роль: data.user.role,
+                        токен_сохранен: true,
+                        refresh_токен_сохранен: !!data.refresh_token,
+                        действие: 'Теперь можете обновить страницу фронтенда'
+                    }, 'success');
+                    
+                } else {
+                    showResult({ 
+                        статус: 'ОШИБКА',
+                        детали: data 
+                    }, 'error');
+                }
+            } catch (error) {
+                showResult({ 
+                    статус: 'ОШИБКА СЕТИ',
+                    сообщение: error.message 
+                }, 'error');
+            }
+        }
+
+        function openFrontend() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                showResult({
+                    статус: 'ОШИБКА',
+                    сообщение: 'Сначала получите новый токен!'
+                }, 'error');
+                return;
+            }
+            
+            window.open('http://localhost:3008/users', '_blank');
+            showResult({
+                статус: 'УСПЕХ',
+                сообщение: 'Фронтенд открыт в новой вкладке',
+                ссылка: 'http://localhost:3008/users'
+            }, 'success');
+        }
+
+        function clearAll() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem(REFRESH_KEY);
+            
+            showResult({
+                статус: 'ОЧИЩЕНО',
+                сообщение: 'Все данные аутентификации удалены',
+                оставшиеся_ключи: Object.keys(localStorage).filter(key => key.includes('tvoya_shina'))
+            }, 'info');
+        }
+
+        // Проверяем состояние при загрузке
+        window.onload = function() {
+            checkCurrentState();
+        };
+    </script>
+</body>
+</html> 

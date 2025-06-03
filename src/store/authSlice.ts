@@ -65,7 +65,15 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      state.isInitialized = true;
+      
       localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
+      localStorage.removeItem('tvoya_shina_user');
+      localStorage.removeItem('tvoya_shina_refresh_token');
+      
+      delete apiClient.defaults.headers.common['Authorization'];
+      
+      console.log('AuthSlice: Выход выполнен, все данные очищены');
     },
     clearError: (state) => {
       state.error = null;
@@ -103,6 +111,10 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
+        
+        // Сохраняем данные пользователя в localStorage для синхронизации
+        localStorage.setItem('tvoya_shina_user', JSON.stringify(action.payload));
+        console.log('AuthSlice: Данные пользователя сохранены в localStorage');
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = false;

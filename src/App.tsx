@@ -48,17 +48,12 @@ const ProtectedRoute: React.FC<{
 }> = ({ children }) => {
   const { isAuthenticated, token, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   
-  const storedToken = localStorage.getItem('tvoya_shina_token');
-  const storedUser = localStorage.getItem('user');
-  
   console.log('ProtectedRoute check:', { 
     isAuthenticated, 
     hasToken: !!token,
     hasUser: !!user,
     isInitialized,
     loading,
-    hasStoredToken: !!storedToken,
-    hasStoredUser: !!storedUser,
     tokenValue: token ? token.substring(0, 20) + '...' : 'null',
     userEmail: user?.email || 'null'
   });
@@ -66,14 +61,24 @@ const ProtectedRoute: React.FC<{
   // Если идет загрузка или инициализация не завершена, показываем загрузку
   if (loading || !isInitialized) {
     console.log('ProtectedRoute: Ожидание завершения инициализации...');
-    return <div>Загрузка...</div>; // Можно заменить на красивый спиннер
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        🔄 Проверка аутентификации...
+      </div>
+    );
   }
   
-  // Проверяем аутентификацию: достаточно иметь токен и пользователя
-  const hasValidAuth = (isAuthenticated && token && user) || (storedToken && storedUser);
-  
-  if (!hasValidAuth) {
-    console.log('ProtectedRoute: Перенаправление на /login - нет валидной аутентификации');
+  // После завершения инициализации проверяем аутентификацию
+  // Полагаемся только на состояние Redux, а не на localStorage
+  if (!isAuthenticated || !token || !user) {
+    console.log('ProtectedRoute: Перенаправление на /login - пользователь не аутентифицирован');
     return <Navigate to="/login" replace />;
   }
 
