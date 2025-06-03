@@ -83,12 +83,7 @@ const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint 
             
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
               <PhoneIcon color="action" />
-              <Typography>{servicePoint.phone}</Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-              <EmailIcon color="action" />
-              <Typography>{servicePoint.email}</Typography>
+              <Typography>{servicePoint.contact_phone}</Typography>
             </Box>
           </Grid>
           

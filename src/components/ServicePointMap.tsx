@@ -36,7 +36,7 @@ const ServicePointMap: React.FC<ServicePointMapProps> = ({ servicePoints }) => {
                   {point.address}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Телефон: {point.phone}
+                  Телефон: {point.contact_phone}
                 </Typography>
                 <Chip
                   label="Активна"

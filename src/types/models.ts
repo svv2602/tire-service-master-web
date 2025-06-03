@@ -83,9 +83,7 @@ export interface ServicePoint {
   partner_id: number;
   latitude?: number | null;
   longitude?: number | null;
-  phone: string;
   contact_phone: string;
-  email: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
   post_count: number;
@@ -341,9 +339,7 @@ export interface ServicePointFormData {
   partner_id: number;
   latitude?: number | null;
   longitude?: number | null;
-  phone: string;
   contact_phone: string;
-  email: string;
   status_id: number;
   post_count: number;
   default_slot_duration: number;

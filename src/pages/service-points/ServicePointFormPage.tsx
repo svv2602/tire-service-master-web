@@ -256,12 +256,10 @@ const ServicePointFormPage: React.FC = () => {
   const initialValues: FormValues = useMemo(() => ({
     name: servicePoint?.name || '',
     partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
-    city_id: servicePoint?.city_id || 0,
+    city_id: servicePoint?.city?.id || 0,
     region_id: selectedRegionId || servicePoint?.city?.region_id || 0,
     address: servicePoint?.address || '',
-    phone: servicePoint?.phone || '',
     contact_phone: servicePoint?.contact_phone || '',
-    email: servicePoint?.email || '',
     description: servicePoint?.description || '',
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
@@ -316,9 +314,7 @@ const ServicePointFormPage: React.FC = () => {
         partner_id: values.partner_id,
         is_active: values.is_active,
         work_status: values.work_status,
-        phone: values.phone,
         contact_phone: values.contact_phone,
-        email: values.email,
         latitude: values.latitude,
         longitude: values.longitude,
         working_hours: values.working_hours,
@@ -329,7 +325,7 @@ const ServicePointFormPage: React.FC = () => {
           is_available: service.is_available
         })),
         service_posts_attributes: values.service_posts.map(post => ({
-          id: post.id && post.id > 0 && post.created_at !== post.updated_at ? post.id : undefined,
+          id: post.id && post.id < 1000000000000 ? post.id : undefined,
           name: post.name,
           description: post.description,
           slot_duration: post.slot_duration,
@@ -370,9 +366,7 @@ const ServicePointFormPage: React.FC = () => {
       .min(1, 'Выберите партнера'),
     description: yup.string(),
     address: yup.string().required('Адрес обязателен'),
-    phone: yup.string().required('Основной телефон обязателен'),
     contact_phone: yup.string().required('Контактный телефон обязателен'),
-    email: yup.string().email('Введите корректный email'),
     city_id: yup.number()
       .required('Город обязателен')
       .min(1, 'Пожалуйста, выберите город'),
@@ -786,20 +780,6 @@ const ServicePointFormPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  id="phone"
-                  name="phone"
-                  label="Основной телефон"
-                  value={formik.values.phone}
-                  onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  error={formik.touched.phone && Boolean(formik.errors.phone)}
-                  helperText={formik.touched.phone && formik.errors.phone}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
                   id="contact_phone"
                   name="contact_phone"
                   label="Контактный телефон"
@@ -808,21 +788,6 @@ const ServicePointFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.contact_phone && Boolean(formik.errors.contact_phone)}
                   helperText={formik.touched.contact_phone && formik.errors.contact_phone}
-                />
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="email"
-                  name="email"
-                  label="Email"
-                  type="email"
-                  value={formik.values.email}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
                 />
               </Grid>
 
