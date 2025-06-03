@@ -28,7 +28,7 @@ import { useFormik, FormikTouched, FormikErrors } from 'formik';
 import * as yup from 'yup';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Delete as DeleteIcon, AddPhotoAlternate as AddPhotoIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, Delete as DeleteIcon, AddPhotoAlternate as AddPhotoIcon, Add as AddIcon } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetServiceCategoriesQuery,
@@ -43,10 +43,8 @@ import {
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,
-  useGetServicePointStatusesQuery,
   useGetWorkStatusesQuery,
   useGetServicePostsQuery,
-  useUpdateServicePostMutation,
   type WorkStatus,
   type ServicePost,
 } from '../../api/servicePoints.api';
@@ -96,7 +94,7 @@ interface ServiceFormErrors {
   is_available?: string;
 }
 
-interface FormValues extends Omit<ServicePointFormData, 'services' | 'working_hours'> {
+interface FormValues extends Omit<ServicePointFormData, 'services' | 'working_hours' | 'status_id' | 'post_count' | 'default_slot_duration'> {
   is_active: boolean;
   work_status: string;
   working_hours: WorkingHoursSchedule;
@@ -210,18 +208,15 @@ const ServicePointFormPage: React.FC = () => {
       refetchOnMountOrArgChange: true
     }
   );
-  const { data: statusesData, isLoading: statusesLoading } = useGetServicePointStatusesQuery();
   const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
   const { data: servicePostsData, isLoading: servicePostsLoading } = useGetServicePostsQuery(
     id ?? '',
     { skip: !isEditMode || !id }
   );
-  const statuses: ServicePointStatus[] = statusesData?.data || [];
   const workStatuses: WorkStatus[] = workStatusesData || [];
   const servicePosts: ServicePost[] = servicePostsData || [];
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
-  const [updateServicePost] = useUpdateServicePostMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
 
   const { data: services } = useGetServicesQuery({});
@@ -254,15 +249,8 @@ const ServicePointFormPage: React.FC = () => {
     return services.data || [];
   }, [services]);
 
-  // Получаем ID статуса "active" из списка статусов
-  const defaultStatusId = useMemo(() => {
-    if (!statuses.length) return undefined;
-    const activeStatus = statuses.find(status => status.name === 'active');
-    return activeStatus ? activeStatus.id : statuses[0].id;
-  }, [statuses]);
-
   const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || 
-                 isCreating || isUpdating || statusesLoading || workStatusesLoading || servicePostsLoading;
+                 isCreating || isUpdating || workStatusesLoading || servicePostsLoading;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
   const initialValues: FormValues = useMemo(() => ({
@@ -275,9 +263,6 @@ const ServicePointFormPage: React.FC = () => {
     contact_phone: servicePoint?.contact_phone || '',
     email: servicePoint?.email || '',
     description: servicePoint?.description || '',
-    status_id: servicePoint?.status?.id ? Number(servicePoint.status.id) : (defaultStatusId || 0),
-    post_count: servicePoint?.post_count || 1,
-    default_slot_duration: servicePoint?.default_slot_duration || 60,
     latitude: servicePoint?.latitude || null,
     longitude: servicePoint?.longitude || null,
     working_hours: servicePoint?.working_hours || defaultWorkingHours,
@@ -302,7 +287,7 @@ const ServicePointFormPage: React.FC = () => {
     is_active: servicePoint?.is_active ?? true,
     work_status: servicePoint?.work_status || 'working',
     service_posts: servicePosts || [],
-  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData, defaultStatusId, servicePosts]);
+  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData, servicePosts]);
 
   useEffect(() => {
     if (servicePoint) {
@@ -313,73 +298,62 @@ const ServicePointFormPage: React.FC = () => {
     }
   }, [servicePoint, servicePointServicesData, photosData, initialValues]);
 
+  // Автоматически добавляем первый пост при создании новой сервисной точки
+  useEffect(() => {
+    if (!isEditMode && (!formik.values.service_posts || formik.values.service_posts.length === 0)) {
+      addNewPost();
+    }
+  }, [isEditMode]);
+
   const handleSubmit = async (values: FormValues) => {
     try {
-      const formData = new FormData();
-      
-      // Добавляем основные поля
-      Object.entries(values).forEach(([key, value]) => {
-        if (key !== 'photos' && key !== 'services' && key !== 'working_hours') {
-          formData.append(`service_point[${key}]`, value?.toString() || '');
-        }
-      });
+      // Создаем объект данных вместо FormData
+      const servicePointData = {
+        name: values.name,
+        description: values.description,
+        address: values.address,
+        city_id: values.city_id,
+        partner_id: values.partner_id,
+        is_active: values.is_active,
+        work_status: values.work_status,
+        phone: values.phone,
+        contact_phone: values.contact_phone,
+        email: values.email,
+        latitude: values.latitude,
+        longitude: values.longitude,
+        working_hours: values.working_hours,
+        services_attributes: values.services.map(service => ({
+          service_id: service.service_id,
+          price: service.price,
+          duration: service.duration,
+          is_available: service.is_available
+        })),
+        service_posts_attributes: values.service_posts.map(post => ({
+          id: post.id && post.id > 0 && post.created_at !== post.updated_at ? post.id : undefined,
+          name: post.name,
+          description: post.description,
+          slot_duration: post.slot_duration,
+          is_active: post.is_active,
+          post_number: post.post_number
+        }))
+      };
 
-      // Добавляем рабочие часы
-      formData.append('service_point[working_hours]', JSON.stringify(values.working_hours));
-
-      // Добавляем услуги
-      values.services.forEach((service, index) => {
-        Object.entries(service).forEach(([key, value]) => {
-          formData.append(`service_point[services_attributes][${index}][${key}]`, value?.toString() || '');
-        });
-      });
-
-      // Добавляем фотографии
-      values.photos.forEach((photo, index) => {
-        if (photo.file) {
-          formData.append(`service_point[photos_attributes][${index}][file]`, photo.file);
-          formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
-          formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
-          if (photo.sort_order !== undefined) {
-            formData.append(`service_point[photos_attributes][${index}][sort_order]`, photo.sort_order.toString());
-          }
-        }
-      });
-
-        if (isEditMode && id) {
-          await updateServicePoint({
-            id,
-          servicePoint: formData
-          }).unwrap();
-          
-          // Обновляем service posts если они изменились
-          if (values.service_posts && values.service_posts.length > 0) {
-            for (const post of values.service_posts) {
-              if (post.id) {
-                await updateServicePost({
-                  servicePointId: id,
-                  id: post.id,
-                  data: {
-                    name: post.name,
-                    description: post.description,
-                    slot_duration: post.slot_duration,
-                    is_active: post.is_active
-                  }
-                }).unwrap();
-              }
-            }
-          }
-          
-          setSuccessMessage('Точка обслуживания успешно обновлена');
-        } else {
+      if (isEditMode && id) {
+        await updateServicePoint({
+          id,
+          servicePoint: servicePointData
+        }).unwrap();
+        
+        setSuccessMessage('Точка обслуживания успешно обновлена');
+      } else {
         await createServicePoint({
           partnerId: partnerId || values.partner_id.toString(),
-          servicePoint: formData
+          servicePoint: servicePointData
         }).unwrap();
-          setSuccessMessage('Точка обслуживания успешно создана');
+        setSuccessMessage('Точка обслуживания успешно создана');
       }
 
-          setTimeout(() => {
+      setTimeout(() => {
         navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
       }, 1000);
     } catch (error: any) {
@@ -405,18 +379,6 @@ const ServicePointFormPage: React.FC = () => {
     region_id: yup.number()
       .required('Регион обязателен')
       .min(1, 'Пожалуйста, выберите регион'),
-    status_id: yup.number()
-      .required('Статус обязателен')
-      .test('status-exists', 'Выберите корректный статус', function(value) {
-        if (!value) return false;
-        return statuses.some((status: ServicePointStatus) => status.id === value);
-      }),
-    post_count: yup.number()
-      .required('Количество постов обязательно')
-      .min(1, 'Количество постов должно быть не менее 1'),
-    default_slot_duration: yup.number()
-      .required('Длительность слота обязательна')
-      .min(5, 'Длительность слота должна быть не менее 5 минут'),
     is_active: yup.boolean().required('Статус активности обязателен'),
     work_status: yup.string()
       .required('Статус работы обязателен')
@@ -467,21 +429,26 @@ const ServicePointFormPage: React.FC = () => {
           sort_order: yup.number().nullable(),
         })
       ),
-  }), [statuses]);
+    service_posts: yup.array()
+      .min(1, 'Необходимо добавить хотя бы один пост обслуживания')
+      .of(
+        yup.object().shape({
+          name: yup.string().required('Название поста обязательно'),
+          description: yup.string(),
+          slot_duration: yup.number()
+            .min(5, 'Длительность слота должна быть не менее 5 минут')
+            .max(480, 'Длительность слота должна быть не более 480 минут')
+            .required('Длительность слота обязательна'),
+          is_active: yup.boolean().required('Укажите активность поста'),
+        })
+      ),
+  }), []);
 
   const formik = useFormik<FormValues>({
     initialValues,
     validationSchema,
     enableReinitialize: true,
     onSubmit: handleSubmit,
-    validate: (values) => {
-      const errors: { [key: string]: string } = {};
-      // Проверяем статус
-      if (values.status_id && !statuses.some(status => status.id === values.status_id)) {
-        errors.status_id = 'Выберите корректный статус';
-      }
-      return errors;
-    }
   });
 
   // Эффект для установки региона при загрузке точки обслуживания
@@ -555,6 +522,36 @@ const ServicePointFormPage: React.FC = () => {
       is_main: i === index
     }));
     setPhotoUploads(newPhotos);
+  };
+
+  // Функции для управления постами
+  const addNewPost = () => {
+    const newPost: ServicePost = {
+      id: Date.now(), // Временный ID для новых постов
+      service_point_id: Number(id) || 0,
+      post_number: (formik.values.service_posts?.length || 0) + 1,
+      name: `Пост ${(formik.values.service_posts?.length || 0) + 1}`,
+      description: '',
+      slot_duration: 30,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    formik.setFieldValue('service_posts', [...(formik.values.service_posts || []), newPost]);
+  };
+
+  const removePost = (index: number) => {
+    const updatedPosts = [...(formik.values.service_posts || [])];
+    updatedPosts.splice(index, 1);
+    
+    // Перенумеруем посты
+    const renumberedPosts = updatedPosts.map((post, i) => ({
+      ...post,
+      post_number: i + 1,
+      name: post.name.replace(/Пост \d+/, `Пост ${i + 1}`)
+    }));
+    
+    formik.setFieldValue('service_posts', renumberedPosts);
   };
 
   return (
@@ -836,75 +833,6 @@ const ServicePointFormPage: React.FC = () => {
                 </Typography>
               </Grid>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  id="post_count"
-                  name="post_count"
-                  label="Количество постов"
-                  type="number"
-                  value={formik.values.post_count}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.post_count && Boolean(formik.errors.post_count)}
-                  helperText={formik.touched.post_count && formik.errors.post_count}
-                  InputProps={{
-                    inputProps: { min: 1 }
-                  }}
-                />
-                      </Grid>
-
-              <Grid item xs={12} md={4}>
-                            <TextField
-                              fullWidth
-                  id="default_slot_duration"
-                  name="default_slot_duration"
-                  label="Длительность слота (мин.)"
-                  type="number"
-                  value={formik.values.default_slot_duration}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.default_slot_duration && Boolean(formik.errors.default_slot_duration)}
-                  helperText={formik.touched.default_slot_duration && formik.errors.default_slot_duration}
-                  InputProps={{
-                    inputProps: { min: 5 }
-                  }}
-                            />
-                          </Grid>
-
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth error={formik.touched.status_id && Boolean(formik.errors.status_id)}>
-                  <InputLabel id="status-id-label">Статус</InputLabel>
-                  <Select
-                    labelId="status-id-label"
-                    id="status_id"
-                    name="status_id"
-                    value={formik.values.status_id || ''}
-                              onChange={(e) => {
-                      formik.setFieldValue('status_id', Number(e.target.value));
-                    }}
-                    label="Статус"
-                    disabled={statusesLoading}
-                  >
-                    {statuses.map((status) => (
-                      <MenuItem key={status.id} value={status.id}>
-                        {status.description || status.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {statusesLoading && (
-                    <FormHelperText>
-                      Загрузка статусов...
-                    </FormHelperText>
-                  )}
-                  {formik.touched.status_id && formik.errors.status_id && (
-                    <FormHelperText error>
-                      {formik.errors.status_id as string}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                    </Grid>
-
               <Grid item xs={12} md={6}>
                 <FormControlLabel
                   control={
@@ -955,20 +883,40 @@ const ServicePointFormPage: React.FC = () => {
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Посты обслуживания
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">
+                    Посты обслуживания
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={addNewPost}
+                    startIcon={<AddIcon />}
+                    size="small"
+                  >
+                    Добавить пост
+                  </Button>
+                </Box>
               </Grid>
 
-              {isEditMode && servicePosts.length > 0 && (
+              {formik.values.service_posts && formik.values.service_posts.length > 0 && (
                 <>
-                  {servicePosts.map((post, index) => (
+                  {formik.values.service_posts.map((post, index) => (
                     <Grid item xs={12} md={6} key={post.id}>
                       <Card sx={{ p: 2 }}>
                         <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            Пост {post.post_number}: {post.name}
-                          </Typography>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6">
+                              Пост {post.post_number}
+                            </Typography>
+                            <IconButton
+                              color="error"
+                              onClick={() => removePost(index)}
+                              size="small"
+                              disabled={formik.values.service_posts.length === 1}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
                           
                           <TextField
                             fullWidth
@@ -1034,10 +982,13 @@ const ServicePointFormPage: React.FC = () => {
                 </>
               )}
 
-              {!isEditMode && (
+              {(!formik.values.service_posts || formik.values.service_posts.length === 0) && (
                 <Grid item xs={12}>
                   <Alert severity="info">
-                    Посты обслуживания будут созданы автоматически после сохранения сервисной точки на основе указанного количества постов.
+                    {isEditMode 
+                      ? "У данной сервисной точки пока нет постов обслуживания. Нажмите 'Добавить пост' для создания первого поста." 
+                      : "Посты обслуживания будут созданы после сохранения сервисной точки. Добавьте хотя бы один пост."
+                    }
                   </Alert>
                 </Grid>
               )}
