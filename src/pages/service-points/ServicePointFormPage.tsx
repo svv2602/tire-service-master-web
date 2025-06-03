@@ -557,24 +557,8 @@ const ServicePointFormPage: React.FC = () => {
       updatedPosts.splice(index, 1);
     }
     
-    // Перенумеруем только активные посты (не помеченные на удаление)
-    const activePosts = updatedPosts.filter(post => !post._destroy);
-    let postNumber = 1;
-    
-    const renumberedPosts = updatedPosts.map(post => {
-      if (post._destroy) {
-        return post; // Не меняем посты помеченные на удаление
-      }
-      const updatedPost = {
-        ...post,
-        post_number: postNumber,
-        name: post.name.replace(/Пост \d+/, `Пост ${postNumber}`)
-      };
-      postNumber++;
-      return updatedPost;
-    });
-    
-    formik.setFieldValue('service_posts', renumberedPosts);
+    // НЕ перенумеровываем посты - это будет сделано на бэкенде после сохранения
+    formik.setFieldValue('service_posts', updatedPosts);
   };
 
   return (
