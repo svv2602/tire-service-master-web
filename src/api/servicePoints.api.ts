@@ -8,6 +8,26 @@ import type {
 } from '../types/models';
 import { baseApi } from './baseApi';
 
+// Добавляем тип для work status
+export interface WorkStatus {
+  value: string;
+  label: string;
+  description: string;
+}
+
+// Добавляем тип для service post
+export interface ServicePost {
+  id: number;
+  service_point_id: number;
+  post_number: number;
+  name: string;
+  description?: string;
+  slot_duration: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Инжектируем эндпоинты в baseApi
 export const servicePointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -111,6 +131,42 @@ export const servicePointsApi = baseApi.injectEndpoints({
         method: 'GET',
       }),
     }),
+    
+    // Новый endpoint для получения work statuses
+    getWorkStatuses: builder.query<WorkStatus[], void>({
+      query: () => ({
+        url: '/service_points/work_statuses',
+        method: 'GET',
+      }),
+    }),
+
+    // Новый endpoint для получения service posts
+    getServicePosts: builder.query<ServicePost[], string>({
+      query: (servicePointId) => ({
+        url: `/service_points/${servicePointId}/service_posts`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, servicePointId) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'ServicePost' as const, id })),
+              { type: 'ServicePost' as const, id: `LIST_${servicePointId}` },
+            ]
+          : [{ type: 'ServicePost' as const, id: `LIST_${servicePointId}` }],
+    }),
+
+    // Новый endpoint для обновления service post
+    updateServicePost: builder.mutation<ServicePost, { servicePointId: string; id: number; data: Partial<ServicePost> }>({
+      query: ({ servicePointId, id, data }) => ({
+        url: `/service_points/${servicePointId}/service_posts/${id}`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { servicePointId, id }) => [
+        { type: 'ServicePost' as const, id },
+        { type: 'ServicePost' as const, id: `LIST_${servicePointId}` },
+      ],
+    }),
   }),
 });
 
@@ -123,4 +179,7 @@ export const {
   useDeleteServicePointMutation,
   useUploadServicePointPhotoMutation,
   useGetServicePointStatusesQuery,
+  useGetWorkStatusesQuery,
+  useGetServicePostsQuery,
+  useUpdateServicePostMutation,
 } = servicePointsApi;

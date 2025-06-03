@@ -87,6 +87,7 @@ export interface ServicePoint {
   contact_phone: string;
   email: string;
   is_active: boolean;
+  work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
   post_count: number;
   default_slot_duration: number;
   status?: {

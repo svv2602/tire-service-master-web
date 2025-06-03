@@ -44,6 +44,11 @@ import {
   useCreateServicePointMutation,
   useUpdateServicePointMutation,
   useGetServicePointStatusesQuery,
+  useGetWorkStatusesQuery,
+  useGetServicePostsQuery,
+  useUpdateServicePostMutation,
+  type WorkStatus,
+  type ServicePost,
 } from '../../api/servicePoints.api';
 import { useGetPartnersQuery } from '../../api/partners.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
@@ -92,8 +97,11 @@ interface ServiceFormErrors {
 }
 
 interface FormValues extends Omit<ServicePointFormData, 'services' | 'working_hours'> {
+  is_active: boolean;
+  work_status: string;
   working_hours: WorkingHoursSchedule;
   services: ServiceFormData[];
+  service_posts: ServicePost[];
 }
 
 interface FormikTouchedFields extends FormikTouched<FormValues> {
@@ -203,9 +211,17 @@ const ServicePointFormPage: React.FC = () => {
     }
   );
   const { data: statusesData, isLoading: statusesLoading } = useGetServicePointStatusesQuery();
+  const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
+  const { data: servicePostsData, isLoading: servicePostsLoading } = useGetServicePostsQuery(
+    id ?? '',
+    { skip: !isEditMode || !id }
+  );
   const statuses: ServicePointStatus[] = statusesData?.data || [];
+  const workStatuses: WorkStatus[] = workStatusesData || [];
+  const servicePosts: ServicePost[] = servicePostsData || [];
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
+  const [updateServicePost] = useUpdateServicePostMutation();
   const { data: servicePointsData } = useGetServicePointsQuery({});
 
   const { data: services } = useGetServicesQuery({});
@@ -246,7 +262,7 @@ const ServicePointFormPage: React.FC = () => {
   }, [statuses]);
 
   const loading = partnersLoading || regionsLoading || citiesLoading || servicePointLoading || 
-                 isCreating || isUpdating || statusesLoading;
+                 isCreating || isUpdating || statusesLoading || workStatusesLoading || servicePostsLoading;
   const error = null; // Ошибки теперь обрабатываются в каждом хуке отдельно
 
   const initialValues: FormValues = useMemo(() => ({
@@ -282,8 +298,11 @@ const ServicePointFormPage: React.FC = () => {
       service_point_id: typeof photo.service_point_id === 'string' ? 
         Number(photo.service_point_id) : 
         photo.service_point_id
-    } as Photo))
-  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData, defaultStatusId]);
+    } as Photo)),
+    is_active: servicePoint?.is_active ?? true,
+    work_status: servicePoint?.work_status || 'working',
+    service_posts: servicePosts || [],
+  }), [servicePoint, selectedRegionId, partnerId, servicePointServicesData, photosData, defaultStatusId, servicePosts]);
 
   useEffect(() => {
     if (servicePoint) {
@@ -332,6 +351,25 @@ const ServicePointFormPage: React.FC = () => {
             id,
           servicePoint: formData
           }).unwrap();
+          
+          // Обновляем service posts если они изменились
+          if (values.service_posts && values.service_posts.length > 0) {
+            for (const post of values.service_posts) {
+              if (post.id) {
+                await updateServicePost({
+                  servicePointId: id,
+                  id: post.id,
+                  data: {
+                    name: post.name,
+                    description: post.description,
+                    slot_duration: post.slot_duration,
+                    is_active: post.is_active
+                  }
+                }).unwrap();
+              }
+            }
+          }
+          
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
         await createServicePoint({
@@ -379,6 +417,10 @@ const ServicePointFormPage: React.FC = () => {
     default_slot_duration: yup.number()
       .required('Длительность слота обязательна')
       .min(5, 'Длительность слота должна быть не менее 5 минут'),
+    is_active: yup.boolean().required('Статус активности обязателен'),
+    work_status: yup.string()
+      .required('Статус работы обязателен')
+      .oneOf(['working', 'temporarily_closed', 'maintenance', 'suspended'], 'Выберите корректный статус работы'),
     latitude: yup.number().nullable()
       .test('coordinates', 'Если указана широта, должна быть указана и долгота', function(value) {
         const { longitude } = this.parent;
@@ -862,6 +904,143 @@ const ServicePointFormPage: React.FC = () => {
                   )}
                 </FormControl>
                     </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.is_active}
+                      onChange={(e) => {
+                        formik.setFieldValue('is_active', e.target.checked);
+                      }}
+                      name="is_active"
+                    />
+                  }
+                  label="Точка активна"
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth error={formik.touched.work_status && Boolean(formik.errors.work_status)}>
+                  <InputLabel id="work-status-label">Статус работы</InputLabel>
+                  <Select
+                    labelId="work-status-label"
+                    id="work_status"
+                    name="work_status"
+                    value={formik.values.work_status || 'working'}
+                    onChange={(e) => {
+                      formik.setFieldValue('work_status', e.target.value);
+                    }}
+                    label="Статус работы"
+                    disabled={workStatusesLoading}
+                  >
+                    {workStatuses.map((status) => (
+                      <MenuItem key={status.value} value={status.value}>
+                        {status.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {workStatusesLoading && (
+                    <FormHelperText>
+                      Загрузка статусов работы...
+                    </FormHelperText>
+                  )}
+                  {formik.touched.work_status && formik.errors.work_status && (
+                    <FormHelperText error>
+                      {formik.errors.work_status as string}
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="h6" gutterBottom>
+                  Посты обслуживания
+                </Typography>
+              </Grid>
+
+              {isEditMode && servicePosts.length > 0 && (
+                <>
+                  {servicePosts.map((post, index) => (
+                    <Grid item xs={12} md={6} key={post.id}>
+                      <Card sx={{ p: 2 }}>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Пост {post.post_number}: {post.name}
+                          </Typography>
+                          
+                          <TextField
+                            fullWidth
+                            label="Название поста"
+                            value={post.name}
+                            onChange={(e) => {
+                              const updatedPosts = [...formik.values.service_posts];
+                              updatedPosts[index] = { ...post, name: e.target.value };
+                              formik.setFieldValue('service_posts', updatedPosts);
+                            }}
+                            margin="normal"
+                          />
+                          
+                          <TextField
+                            fullWidth
+                            label="Описание"
+                            value={post.description || ''}
+                            onChange={(e) => {
+                              const updatedPosts = [...formik.values.service_posts];
+                              updatedPosts[index] = { ...post, description: e.target.value };
+                              formik.setFieldValue('service_posts', updatedPosts);
+                            }}
+                            multiline
+                            rows={2}
+                            margin="normal"
+                          />
+                          
+                          <TextField
+                            fullWidth
+                            type="number"
+                            label="Длительность слота (мин)"
+                            value={post.slot_duration}
+                            onChange={(e) => {
+                              const updatedPosts = [...formik.values.service_posts];
+                              updatedPosts[index] = { ...post, slot_duration: Number(e.target.value) };
+                              formik.setFieldValue('service_posts', updatedPosts);
+                            }}
+                            InputProps={{
+                              inputProps: { min: 5, max: 480 },
+                              endAdornment: <InputAdornment position="end">мин</InputAdornment>
+                            }}
+                            margin="normal"
+                          />
+                          
+                          <FormControlLabel
+                            control={
+                              <Switch
+                                checked={post.is_active}
+                                onChange={(e) => {
+                                  const updatedPosts = [...formik.values.service_posts];
+                                  updatedPosts[index] = { ...post, is_active: e.target.checked };
+                                  formik.setFieldValue('service_posts', updatedPosts);
+                                }}
+                              />
+                            }
+                            label="Пост активен"
+                            sx={{ mt: 1 }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </>
+              )}
+
+              {!isEditMode && (
+                <Grid item xs={12}>
+                  <Alert severity="info">
+                    Посты обслуживания будут созданы автоматически после сохранения сервисной точки на основе указанного количества постов.
+                  </Alert>
+                </Grid>
+              )}
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />

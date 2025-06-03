@@ -95,6 +95,7 @@ export const baseApi = createApi({
     'CarBrands',
     'CarModels',
     'ServicePoint',
+    'ServicePost',
     'City',
     'Client',
     'Review',
