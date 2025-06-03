@@ -325,14 +325,19 @@ const ServicePointFormPage: React.FC = () => {
           is_available: service.is_available
         })),
         service_posts_attributes: values.service_posts.map(post => ({
-          id: post.id && post.id < 1000000000000 ? post.id : undefined,
+          id: post.id && post.id < 1000000000000 ? post.id : undefined, // Если ID меньше временного ID (Date.now()), то это реальный ID
           name: post.name,
           description: post.description,
           slot_duration: post.slot_duration,
           is_active: post.is_active,
-          post_number: post.post_number
+          post_number: post.post_number,
+          _destroy: post._destroy || false // Добавляем поле _destroy
         }))
       };
+
+      console.log('Отправляемые данные:', JSON.stringify({ servicePoint: servicePointData }, null, 2));
+      console.log('Values.working_hours:', values.working_hours);
+      console.log('Values.service_posts:', values.service_posts);
 
       if (isEditMode && id) {
         await updateServicePoint({
@@ -424,7 +429,11 @@ const ServicePointFormPage: React.FC = () => {
         })
       ),
     service_posts: yup.array()
-      .min(1, 'Необходимо добавить хотя бы один пост обслуживания')
+      .test('min-active-posts', 'Необходимо добавить хотя бы один пост обслуживания', function(value) {
+        if (!value) return false;
+        const activePosts = value.filter((post: any) => !post._destroy);
+        return activePosts.length >= 1;
+      })
       .of(
         yup.object().shape({
           name: yup.string().required('Название поста обязательно'),
@@ -520,11 +529,12 @@ const ServicePointFormPage: React.FC = () => {
 
   // Функции для управления постами
   const addNewPost = () => {
+    const activePosts = (formik.values.service_posts || []).filter(post => !post._destroy);
     const newPost: ServicePost = {
       id: Date.now(), // Временный ID для новых постов
       service_point_id: Number(id) || 0,
-      post_number: (formik.values.service_posts?.length || 0) + 1,
-      name: `Пост ${(formik.values.service_posts?.length || 0) + 1}`,
+      post_number: activePosts.length + 1,
+      name: `Пост ${activePosts.length + 1}`,
       description: '',
       slot_duration: 30,
       is_active: true,
@@ -536,14 +546,33 @@ const ServicePointFormPage: React.FC = () => {
 
   const removePost = (index: number) => {
     const updatedPosts = [...(formik.values.service_posts || [])];
-    updatedPosts.splice(index, 1);
+    const postToRemove = updatedPosts[index];
     
-    // Перенумеруем посты
-    const renumberedPosts = updatedPosts.map((post, i) => ({
-      ...post,
-      post_number: i + 1,
-      name: post.name.replace(/Пост \d+/, `Пост ${i + 1}`)
-    }));
+    // Если пост имеет реальный ID (не временный), помечаем его для удаления
+    if (postToRemove.id && postToRemove.id < 1000000000000) {
+      // Добавляем _destroy: true к существующему посту
+      updatedPosts[index] = { ...postToRemove, _destroy: true };
+    } else {
+      // Для новых постов с временными ID просто удаляем из массива
+      updatedPosts.splice(index, 1);
+    }
+    
+    // Перенумеруем только активные посты (не помеченные на удаление)
+    const activePosts = updatedPosts.filter(post => !post._destroy);
+    let postNumber = 1;
+    
+    const renumberedPosts = updatedPosts.map(post => {
+      if (post._destroy) {
+        return post; // Не меняем посты помеченные на удаление
+      }
+      const updatedPost = {
+        ...post,
+        post_number: postNumber,
+        name: post.name.replace(/Пост \d+/, `Пост ${postNumber}`)
+      };
+      postNumber++;
+      return updatedPost;
+    });
     
     formik.setFieldValue('service_posts', renumberedPosts);
   };
@@ -865,7 +894,12 @@ const ServicePointFormPage: React.FC = () => {
 
               {formik.values.service_posts && formik.values.service_posts.length > 0 && (
                 <>
-                  {formik.values.service_posts.map((post, index) => (
+                  {formik.values.service_posts
+                    .filter(post => !post._destroy) // Фильтруем посты помеченные для удаления
+                    .map((post, index) => {
+                      // Находим оригинальный индекс в полном массиве для правильного обновления
+                      const originalIndex = formik.values.service_posts.findIndex(p => p.id === post.id);
+                      return (
                     <Grid item xs={12} md={6} key={post.id}>
                       <Card sx={{ p: 2 }}>
                         <CardContent>
@@ -875,9 +909,9 @@ const ServicePointFormPage: React.FC = () => {
                             </Typography>
                             <IconButton
                               color="error"
-                              onClick={() => removePost(index)}
+                              onClick={() => removePost(originalIndex)}
                               size="small"
-                              disabled={formik.values.service_posts.length === 1}
+                              disabled={formik.values.service_posts.filter(p => !p._destroy).length === 1}
                             >
                               <DeleteIcon />
                             </IconButton>
@@ -889,7 +923,7 @@ const ServicePointFormPage: React.FC = () => {
                             value={post.name}
                             onChange={(e) => {
                               const updatedPosts = [...formik.values.service_posts];
-                              updatedPosts[index] = { ...post, name: e.target.value };
+                              updatedPosts[originalIndex] = { ...post, name: e.target.value };
                               formik.setFieldValue('service_posts', updatedPosts);
                             }}
                             margin="normal"
@@ -901,7 +935,7 @@ const ServicePointFormPage: React.FC = () => {
                             value={post.description || ''}
                             onChange={(e) => {
                               const updatedPosts = [...formik.values.service_posts];
-                              updatedPosts[index] = { ...post, description: e.target.value };
+                              updatedPosts[originalIndex] = { ...post, description: e.target.value };
                               formik.setFieldValue('service_posts', updatedPosts);
                             }}
                             multiline
@@ -916,7 +950,7 @@ const ServicePointFormPage: React.FC = () => {
                             value={post.slot_duration}
                             onChange={(e) => {
                               const updatedPosts = [...formik.values.service_posts];
-                              updatedPosts[index] = { ...post, slot_duration: Number(e.target.value) };
+                              updatedPosts[originalIndex] = { ...post, slot_duration: Number(e.target.value) };
                               formik.setFieldValue('service_posts', updatedPosts);
                             }}
                             InputProps={{
@@ -932,7 +966,7 @@ const ServicePointFormPage: React.FC = () => {
                                 checked={post.is_active}
                                 onChange={(e) => {
                                   const updatedPosts = [...formik.values.service_posts];
-                                  updatedPosts[index] = { ...post, is_active: e.target.checked };
+                                  updatedPosts[originalIndex] = { ...post, is_active: e.target.checked };
                                   formik.setFieldValue('service_posts', updatedPosts);
                                 }}
                               />
@@ -943,11 +977,12 @@ const ServicePointFormPage: React.FC = () => {
                         </CardContent>
                       </Card>
                     </Grid>
-                  ))}
+                      );
+                    })}
                 </>
               )}
 
-              {(!formik.values.service_posts || formik.values.service_posts.length === 0) && (
+              {(!formik.values.service_posts || formik.values.service_posts.filter(post => !post._destroy).length === 0) && (
                 <Grid item xs={12}>
                   <Alert severity="info">
                     {isEditMode 

@@ -26,6 +26,7 @@ export interface ServicePost {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  _destroy?: boolean; // Для пометки постов на удаление
 }
 
 // Инжектируем эндпоинты в baseApi
