@@ -127,13 +127,22 @@ const ServicePointFormPageNew: React.FC = () => {
           is_active: values.is_active,
           work_status: values.work_status,
           working_hours: values.working_hours,
-          services_attributes: values.services?.map(service => ({
-            service_id: service.service_id,
-            price: service.price,
-            duration: service.duration,
-            is_available: service.is_available,
-            _destroy: service._destroy || false
-          })) || [],
+          services_attributes: values.services?.map(service => {
+            const serviceData: any = {
+              service_id: service.service_id,
+              price: service.price,
+              duration: service.duration,
+              is_available: service.is_available,
+              _destroy: service._destroy || false
+            };
+            
+            // Если услуга имеет реальный ID (существует в БД), добавляем его
+            if ((service as any).id && typeof (service as any).id === 'number' && (service as any).id > 0) {
+              serviceData.id = (service as any).id;
+            }
+            
+            return serviceData;
+          }) || [],
           service_posts_attributes: values.service_posts?.map(post => {
             const postData: any = {
               name: post.name,
@@ -207,6 +216,17 @@ const ServicePointFormPageNew: React.FC = () => {
       }
     }
   }, [isEditMode, servicePoint?.service_posts]);
+
+  // Загружаем существующие услуги при редактировании
+  useEffect(() => {
+    if (isEditMode && servicePoint?.services && servicePoint.services.length > 0) {
+      // Проверяем, что услуги еще не загружены в форму
+      const currentServices = formik.values.services || [];
+      if (currentServices.length === 0 || currentServices[0]?.service_id !== servicePoint.services[0]?.service_id) {
+        formik.setFieldValue('services', servicePoint.services);
+      }
+    }
+  }, [isEditMode, servicePoint?.services]);
 
   // Обработчики
   const handleNext = () => {

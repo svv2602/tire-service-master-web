@@ -17,9 +17,7 @@ import {
   InputAdornment,
   Alert,
   Chip,
-  FormHelperText,
   Tooltip,
-  Autocomplete,
   Paper,
   List,
   ListItem,
@@ -33,16 +31,13 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   MonetizationOn as PriceIcon,
-  AccessTime as TimeIcon,
   Search as SearchIcon,
-  Edit as EditIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import { useGetServicesQuery } from '../../../api/servicesList.api';
 import type { ServicePointFormDataNew, ServicePointService, ServicePoint } from '../../../types/models';
-import type { Service } from '../../../types/service';
 
 interface ServicesStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -58,10 +53,16 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
   // Загружаем список всех доступных услуг
   const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({});
-  const availableServices = servicesResponse?.data || [];
+  
+  // Мемоизируем availableServices для оптимизации
+  const availableServices = useMemo(() => {
+    return servicesResponse?.data || [];
+  }, [servicesResponse?.data]);
 
   // Получаем услуги из формы (исключая помеченные для удаления)
-  const activeServices = formik.values.services?.filter(service => !service._destroy) || [];
+  const activeServices = useMemo(() => {
+    return formik.values.services?.filter(service => !service._destroy) || [];
+  }, [formik.values.services]);
 
   // Получаем уникальные категории
   const categories = useMemo(() => {
@@ -102,7 +103,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
     const newService: ServicePointService = {
       service_id: serviceId,
-      price: service.price, // Используем базовую цену как стартовую
+      price: service.price || 0, // Используем базовую цену или 0 если не указана
       duration: service.duration || 30,
       is_available: true,
     };
@@ -265,7 +266,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                           secondary={
                             <Box>
                               <Typography variant="caption" display="block">
-                                {service.category?.name} • {service.price}₽ • {service.duration}мин
+                                {service.category?.name} • {service.price || 0}₽ • {service.duration || 30}мин
                               </Typography>
                               {service.description && (
                                 <Typography variant="caption" color="text.secondary">
@@ -292,7 +293,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
               </Paper>
             ) : (
               <Alert severity="info">
-                {searchQuery || selectedCategory 
+                {(searchQuery || selectedCategory) 
                   ? 'Услуги не найдены по заданным критериям'
                   : 'Все доступные услуги уже добавлены'
                 }
@@ -391,8 +392,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         onBlur={() => formik.setFieldTouched(`services.${originalIndex}.price`, true)}
                         error={isServiceTouched(originalIndex, 'price') && Boolean(getServiceError(originalIndex, 'price'))}
                         helperText={
-                          isServiceTouched(originalIndex, 'price') && getServiceError(originalIndex, 'price') ||
-                          (serviceInfo ? `Базовая цена: ${serviceInfo.price}₽` : '')
+                          (isServiceTouched(originalIndex, 'price') && getServiceError(originalIndex, 'price')) ||
+                          (serviceInfo ? `Базовая цена: ${serviceInfo.price || 0}₽` : '')
                         }
                         InputProps={{
                           endAdornment: <InputAdornment position="end">₽</InputAdornment>,
@@ -412,8 +413,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         onBlur={() => formik.setFieldTouched(`services.${originalIndex}.duration`, true)}
                         error={isServiceTouched(originalIndex, 'duration') && Boolean(getServiceError(originalIndex, 'duration'))}
                         helperText={
-                          isServiceTouched(originalIndex, 'duration') && getServiceError(originalIndex, 'duration') ||
-                          (serviceInfo ? `Стандартное время: ${serviceInfo.duration}мин` : 'Ожидаемое время выполнения')
+                          (isServiceTouched(originalIndex, 'duration') && getServiceError(originalIndex, 'duration')) ||
+                          (serviceInfo ? `Стандартное время: ${serviceInfo.duration || 30}мин` : 'Ожидаемое время выполнения')
                         }
                         InputProps={{
                           endAdornment: <InputAdornment position="end">мин</InputAdornment>,
