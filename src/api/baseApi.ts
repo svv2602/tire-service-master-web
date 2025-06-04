@@ -107,7 +107,8 @@ export const baseApi = createApi({
     'Schedule',
     'ServicePointPhoto',
     'ServicePointService',
-    'Availability'
+    'Availability',
+    'SchedulePreview'
   ],
   endpoints: () => ({}),
 }); 

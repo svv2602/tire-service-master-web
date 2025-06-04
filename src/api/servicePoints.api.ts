@@ -16,6 +16,30 @@ export interface WorkStatus {
   description: string;
 }
 
+// Типы для предварительного просмотра слотов
+export interface SchedulePreviewSlot {
+  time: string;
+  available_posts: number;
+  total_posts: number;
+  is_available: boolean;
+  post_details: {
+    name: string;
+    number: number;
+    duration_minutes: number;
+    end_time: string;
+  }[];
+}
+
+export interface SchedulePreviewResponse {
+  service_point_id: number;
+  date: string;
+  day_key: string;
+  is_working_day: boolean;
+  preview_slots: SchedulePreviewSlot[];
+  total_active_posts: number;
+  raw_available_slots: any[]; // Оригинальные слоты
+}
+
 // Инжектируем эндпоинты в baseApi
 export const servicePointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -209,6 +233,18 @@ export const servicePointsApi = baseApi.injectEndpoints({
             ]
           : [{ type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` }],
     }),
+
+    // Новый endpoint для предварительного просмотра слотов
+    getSchedulePreview: builder.query<SchedulePreviewResponse, { servicePointId: string; date: string }>({
+      query: ({ servicePointId, date }) => ({
+        url: `/service_points/${servicePointId}/schedule_preview`,
+        method: 'GET',
+        params: { date },
+      }),
+      providesTags: (result, error, { servicePointId }) => [
+        { type: 'SchedulePreview' as const, id: servicePointId },
+      ],
+    }),
   }),
 });
 
@@ -226,4 +262,5 @@ export const {
   useUpdateServicePostMutation,
   useGetServicePointServicesQuery,
   useGetServicePointPhotosQuery,
+  useGetSchedulePreviewQuery,
 } = servicePointsApi;

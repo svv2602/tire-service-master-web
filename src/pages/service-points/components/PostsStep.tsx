@@ -44,6 +44,7 @@ import type { ServicePointFormDataNew, ServicePost, ServicePoint } from '../../.
 import type { WorkingHours } from '../../../types/working-hours';
 import { DAYS_OF_WEEK } from '../../../types/working-hours';
 import PostScheduleDialog from './PostScheduleDialog';
+import { useGetSchedulePreviewQuery } from '../../../api/servicePoints.api';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -427,6 +428,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         <SlotSchedulePreview 
           workingHours={formik.values.working_hours}
           activePosts={activePosts}
+          servicePointId={servicePoint?.id?.toString()}
         />
       )}
 
@@ -443,14 +445,50 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   );
 };
 
-// Компонент для предварительного просмотра расписания слотов
+// Компонент для предварительного просмотра расписания слотов (обновленная версия с API)
 interface SlotSchedulePreviewProps {
   workingHours: any;
   activePosts: ServicePost[];
+  servicePointId?: string;
 }
 
-const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours, activePosts }) => {
+const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours, activePosts, servicePointId }) => {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
+  
+  // Используем API для получения предварительного просмотра
+  const {
+    data: schedulePreview,
+    isLoading,
+    error
+  } = useGetSchedulePreviewQuery(
+    { 
+      servicePointId: servicePointId || '', 
+      date: getCurrentDateForDay(selectedDay) 
+    },
+    { 
+      skip: !servicePointId || !workingHours 
+    }
+  );
+  
+  // Вспомогательная функция для получения даты для выбранного дня недели
+  function getCurrentDateForDay(dayKey: string): string {
+    const today = new Date();
+    const currentDayIndex = today.getDay(); // 0 = воскресенье, 1 = понедельник, ...
+    
+    const dayIndexMap = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+      'thursday': 4, 'friday': 5, 'saturday': 6
+    };
+    
+    const targetDayIndex = dayIndexMap[dayKey as keyof typeof dayIndexMap] || 1;
+    
+    // Вычисляем следующую дату с выбранным днем недели
+    const daysUntilTarget = (targetDayIndex - currentDayIndex + 7) % 7;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + (daysUntilTarget === 0 ? 7 : daysUntilTarget));
+    
+    return targetDate.toISOString().split('T')[0];
+  }
 
   // Генерируем временные слоты для выбранного дня
   const generateTimeSlots = (dayKey: string) => {
@@ -545,7 +583,58 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
   });
 
   const selectedDayInfo = DAYS_OF_WEEK.find(day => day.key === selectedDay);
-  const timeSlots = generateTimeSlots(selectedDay);
+  
+  // Отображение состояний загрузки и ошибки
+  if (isLoading && servicePointId) {
+    return (
+      <Accordion sx={{ mt: 3 }}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="schedule-preview-content"
+          id="schedule-preview-header"
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6">
+              Предварительный просмотр расписания слотов
+            </Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography>Загрузка...</Typography>
+        </AccordionDetails>
+      </Accordion>
+    );
+  }
+
+  if (error && servicePointId) {
+    return (
+      <Accordion sx={{ mt: 3 }}>
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          aria-controls="schedule-preview-content"
+          id="schedule-preview-header"
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6">
+              Предварительный просмотр расписания слотов
+            </Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Alert severity="error">
+            Ошибка загрузки предварительного просмотра
+          </Alert>
+        </AccordionDetails>
+      </Accordion>
+    );
+  }
+
+  // Если нет servicePointId, используем fallback логику
+  const timeSlots = servicePointId && schedulePreview
+    ? schedulePreview.preview_slots
+    : generateTimeSlots(selectedDay);
 
   if (workingDays.length === 0) {
     return null;
@@ -627,21 +716,35 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {slot.availablePosts} из {slot.totalPosts}
+                          {/* Используем данные из API или fallback */}
+                          {schedulePreview && servicePointId 
+                            ? `${slot.available_posts} из ${slot.total_posts}`
+                            : `${slot.availablePosts} из ${slot.totalPosts}`
+                          }
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {slot.postDetails?.map((post) => (
+                          {/* Отображаем детали постов */}
+                          {(schedulePreview && servicePointId 
+                            ? slot.post_details 
+                            : slot.postDetails
+                          )?.map((post, idx) => (
                             <Chip
-                              key={post.number}
-                              label={`${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`}
+                              key={schedulePreview && servicePointId ? post.number : post.number}
+                              label={schedulePreview && servicePointId
+                                ? `${post.name} (${post.duration_minutes}мин)`
+                                : `${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`
+                              }
                               size="small"
                               variant="outlined"
                               color={post.hasCustomSchedule ? 'secondary' : 'default'}
                             />
                           ))}
-                          {slot.availablePosts === 0 && (
+                          {(schedulePreview && servicePointId
+                            ? slot.available_posts === 0
+                            : slot.availablePosts === 0
+                          ) && (
                             <Typography variant="caption" color="text.secondary">
                               Нет доступных постов
                             </Typography>
@@ -650,8 +753,14 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={slot.isAvailable ? 'Доступно' : 'Недоступно'}
-                          color={slot.isAvailable ? 'success' : 'default'}
+                          label={(schedulePreview && servicePointId 
+                            ? slot.is_available 
+                            : slot.isAvailable
+                          ) ? 'Доступно' : 'Недоступно'}
+                          color={(schedulePreview && servicePointId 
+                            ? slot.is_available 
+                            : slot.isAvailable
+                          ) ? 'success' : 'default'}
                           size="small"
                         />
                       </TableCell>
@@ -663,7 +772,10 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
 
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                📅 Слоты генерируются с учетом индивидуальной длительности слота каждого поста в рамках рабочего времени. 
+                📅 Слоты генерируются {servicePointId && schedulePreview
+                  ? 'с помощью API с учетом индивидуальной длительности слота каждого поста'
+                  : 'с учетом индивидуальной длительности слота каждого поста (предварительно)'
+                } в рамках рабочего времени. 
                 Количество доступных постов зависит от активных постов обслуживания и их индивидуальных расписаний.
                 <br />
                 💡 Посты с пометкой "(инд.)" работают по индивидуальному расписанию, которое может отличаться от графика точки обслуживания.
