@@ -58,6 +58,16 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
 
   // Отладка данных постов (упрощенная)
   console.log('PostsStep: количество постов в форме:', activePosts.length);
+  if (activePosts.length > 0) {
+    activePosts.forEach((post, index) => {
+      console.log(`Post ${index}:`, {
+        name: post.name,
+        has_custom_schedule: post.has_custom_schedule,
+        working_days: post.working_days,
+        custom_hours: post.custom_hours
+      });
+    });
+  }
 
   // Функция добавления нового поста
   const addNewPost = () => {
@@ -117,10 +127,8 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
     
     updatedPosts[index] = updatedPost;
     
-    formik.setValues({
-      ...formik.values,
-      service_posts: updatedPosts
-    });
+    // Используем setFieldValue для обновления конкретного поста
+    formik.setFieldValue('service_posts', updatedPosts);
     
     // Принудительно обновляем компонент
     forceUpdate({});
@@ -179,202 +187,202 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       {/* Список постов */}
       {activePosts.length > 0 ? (
         <Grid container spacing={3}>
-          {formik.values.service_posts
-            ?.filter(post => !post._destroy) // Показываем только не удаленные посты
-            ?.map((post, filteredIndex) => {
-              // Находим оригинальный индекс в полном массиве
-              const originalIndex = formik.values.service_posts?.findIndex(p => p.id === post.id) ?? -1;
-              
-              return (
-                <Grid item xs={12} md={6} key={post.id}>
-                  <Card sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6" color="primary">
-                          Пост №{post.post_number}
-                        </Typography>
-                        <Tooltip title="Удалить пост">
-                          <IconButton
-                            color="error"
-                            onClick={() => removePost(originalIndex)}
-                            size="small"
-                            disabled={activePosts.length === 1} // Не позволяем удалить последний пост
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                      
-                      <TextField
-                        fullWidth
-                        label="Название поста"
-                        value={post.name}
-                        onChange={(e) => updatePost(originalIndex, 'name', e.target.value)}
-                        onBlur={() => formik.setFieldTouched(`service_posts.${originalIndex}.name`, true)}
-                        error={isPostTouched(originalIndex, 'name') && Boolean(getPostError(originalIndex, 'name'))}
-                        helperText={isPostTouched(originalIndex, 'name') && getPostError(originalIndex, 'name')}
-                        margin="normal"
-                        required
-                      />
-                      
-                      <TextField
-                        fullWidth
-                        label="Описание"
-                        value={post.description || ''}
-                        onChange={(e) => updatePost(originalIndex, 'description', e.target.value)}
-                        multiline
-                        rows={2}
-                        margin="normal"
-                        placeholder="Краткое описание поста обслуживания"
-                      />
-                      
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="Длительность слота"
-                        value={post.slot_duration}
-                        onChange={(e) => updatePost(originalIndex, 'slot_duration', Number(e.target.value))}
-                        onBlur={() => formik.setFieldTouched(`service_posts.${originalIndex}.slot_duration`, true)}
-                        error={isPostTouched(originalIndex, 'slot_duration') && Boolean(getPostError(originalIndex, 'slot_duration'))}
-                        helperText={
-                          isPostTouched(originalIndex, 'slot_duration') && getPostError(originalIndex, 'slot_duration') ||
-                          'Стандартная продолжительность одного слота записи'
-                        }
-                        InputProps={{
-                          inputProps: { min: 5, max: 480 },
-                          endAdornment: <InputAdornment position="end">мин</InputAdornment>
-                        }}
-                        margin="normal"
-                        required
-                      />
-                      
+          {formik.values.service_posts?.map((post, index) => {
+            // Пропускаем посты, помеченные для удаления
+            if (post._destroy) {
+              return null;
+            }
+            
+            return (
+              <Grid item xs={12} md={6} key={post.id || index}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h6" color="primary">
+                        Пост №{post.post_number}
+                      </Typography>
+                      <Tooltip title="Удалить пост">
+                        <IconButton
+                          color="error"
+                          onClick={() => removePost(index)}
+                          size="small"
+                          disabled={activePosts.length === 1} // Не позволяем удалить последний пост
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                    
+                    <TextField
+                      fullWidth
+                      label="Название поста"
+                      value={post.name}
+                      onChange={(e) => updatePost(index, 'name', e.target.value)}
+                      onBlur={() => formik.setFieldTouched(`service_posts.${index}.name`, true)}
+                      error={isPostTouched(index, 'name') && Boolean(getPostError(index, 'name'))}
+                      helperText={isPostTouched(index, 'name') && getPostError(index, 'name')}
+                      margin="normal"
+                      required
+                    />
+                    
+                    <TextField
+                      fullWidth
+                      label="Описание"
+                      value={post.description || ''}
+                      onChange={(e) => updatePost(index, 'description', e.target.value)}
+                      multiline
+                      rows={2}
+                      margin="normal"
+                      placeholder="Краткое описание поста обслуживания"
+                    />
+                    
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Длительность слота"
+                      value={post.slot_duration}
+                      onChange={(e) => updatePost(index, 'slot_duration', Number(e.target.value))}
+                      onBlur={() => formik.setFieldTouched(`service_posts.${index}.slot_duration`, true)}
+                      error={isPostTouched(index, 'slot_duration') && Boolean(getPostError(index, 'slot_duration'))}
+                      helperText={
+                        isPostTouched(index, 'slot_duration') && getPostError(index, 'slot_duration') ||
+                        'Стандартная продолжительность одного слота записи'
+                      }
+                      InputProps={{
+                        inputProps: { min: 5, max: 480 },
+                        endAdornment: <InputAdornment position="end">мин</InputAdornment>
+                      }}
+                      margin="normal"
+                      required
+                    />
+                    
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={post.is_active}
+                          onChange={(e) => updatePost(index, 'is_active', e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label="Пост активен"
+                      sx={{ mt: 1 }}
+                    />
+
+                    {/* Настройки индивидуального расписания */}
+                    <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
                       <FormControlLabel
                         control={
                           <Switch
-                            checked={post.is_active}
-                            onChange={(e) => updatePost(originalIndex, 'is_active', e.target.checked)}
-                            color="primary"
+                            checked={post.has_custom_schedule || false}
+                            onChange={(e) => {
+                              console.log('Переключение индивидуального расписания для поста', post.name, ':', e.target.checked);
+                              
+                              updatePost(index, 'has_custom_schedule', e.target.checked);
+                              // При включении собственного расписания устанавливаем значения по умолчанию
+                              if (e.target.checked && !post.working_days) {
+                                updatePost(index, 'working_days', {
+                                  monday: true,
+                                  tuesday: true,
+                                  wednesday: true,
+                                  thursday: true,
+                                  friday: true,
+                                  saturday: false,
+                                  sunday: false,
+                                });
+                                updatePost(index, 'custom_hours', {
+                                  start: '09:00',
+                                  end: '18:00',
+                                });
+                              }
+                            }}
+                            color="secondary"
                           />
                         }
-                        label="Пост активен"
-                        sx={{ mt: 1 }}
+                        label="Индивидуальное расписание"
                       />
-
-                      {/* Настройки индивидуального расписания */}
-                      <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={post.has_custom_schedule || false}
-                              onChange={(e) => {
-                                console.log('Переключение индивидуального расписания для поста', post.name, ':', e.target.checked);
-                                
-                                updatePost(originalIndex, 'has_custom_schedule', e.target.checked);
-                                // При включении собственного расписания устанавливаем значения по умолчанию
-                                if (e.target.checked && !post.working_days) {
-                                  updatePost(originalIndex, 'working_days', {
-                                    monday: true,
-                                    tuesday: true,
-                                    wednesday: true,
-                                    thursday: true,
-                                    friday: true,
-                                    saturday: false,
-                                    sunday: false,
-                                  });
-                                  updatePost(originalIndex, 'custom_hours', {
-                                    start: '09:00',
-                                    end: '18:00',
-                                  });
-                                }
-                              }}
-                              color="secondary"
-                            />
-                          }
-                          label="Индивидуальное расписание"
-                        />
-                        
-                        {post.has_custom_schedule && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                              Рабочие дни:
-                            </Typography>
-                            
-                            <Grid container spacing={1} sx={{ mb: 2 }}>
-                              {Object.entries({
-                                monday: 'Пн',
-                                tuesday: 'Вт', 
-                                wednesday: 'Ср',
-                                thursday: 'Чт',
-                                friday: 'Пт',
-                                saturday: 'Сб',
-                                sunday: 'Вс'
-                              }).map(([day, label]) => (
-                                <Grid item key={day}>
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        size="small"
-                                        checked={post.working_days?.[day as keyof typeof post.working_days] || false}
-                                        onChange={(e) => {
-                                          const updatedWorkingDays = {
-                                            ...post.working_days,
-                                            [day]: e.target.checked
-                                          };
-                                          updatePost(originalIndex, 'working_days', updatedWorkingDays);
-                                        }}
-                                      />
-                                    }
-                                    label={label}
-                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
-                                  />
-                                </Grid>
-                              ))}
-                            </Grid>
-
-                            <Grid container spacing={2}>
-                              <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="time"
-                                  label="Начало работы"
-                                  value={post.custom_hours?.start || '09:00'}
-                                  onChange={(e) => {
-                                    const updatedHours = {
-                                      ...post.custom_hours,
-                                      start: e.target.value
-                                    };
-                                    updatePost(originalIndex, 'custom_hours', updatedHours);
-                                  }}
-                                  size="small"
-                                  InputLabelProps={{ shrink: true }}
+                      
+                      {post.has_custom_schedule && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="subtitle2" gutterBottom>
+                            Рабочие дни:
+                          </Typography>
+                          
+                          <Grid container spacing={1} sx={{ mb: 2 }}>
+                            {Object.entries({
+                              monday: 'Пн',
+                              tuesday: 'Вт', 
+                              wednesday: 'Ср',
+                              thursday: 'Чт',
+                              friday: 'Пт',
+                              saturday: 'Сб',
+                              sunday: 'Вс'
+                            }).map(([day, label]) => (
+                              <Grid item key={day}>
+                                <FormControlLabel
+                                  control={
+                                    <Switch
+                                      size="small"
+                                      checked={post.working_days?.[day as keyof typeof post.working_days] || false}
+                                      onChange={(e) => {
+                                        const updatedWorkingDays = {
+                                          ...post.working_days,
+                                          [day]: e.target.checked
+                                        };
+                                        updatePost(index, 'working_days', updatedWorkingDays);
+                                      }}
+                                    />
+                                  }
+                                  label={label}
+                                  sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
                                 />
                               </Grid>
-                              <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="time"
-                                  label="Конец работы"
-                                  value={post.custom_hours?.end || '18:00'}
-                                  onChange={(e) => {
-                                    const updatedHours = {
-                                      ...post.custom_hours,
-                                      end: e.target.value
-                                    };
-                                    updatePost(originalIndex, 'custom_hours', updatedHours);
-                                  }}
-                                  size="small"
-                                  InputLabelProps={{ shrink: true }}
-                                />
-                              </Grid>
+                            ))}
+                          </Grid>
+
+                          <Grid container spacing={2}>
+                            <Grid item xs={6}>
+                              <TextField
+                                fullWidth
+                                type="time"
+                                label="Начало работы"
+                                value={post.custom_hours?.start || '09:00'}
+                                onChange={(e) => {
+                                  const updatedHours = {
+                                    ...post.custom_hours,
+                                    start: e.target.value
+                                  };
+                                  updatePost(index, 'custom_hours', updatedHours);
+                                }}
+                                size="small"
+                                InputLabelProps={{ shrink: true }}
+                              />
                             </Grid>
-                          </Box>
-                        )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
+                            <Grid item xs={6}>
+                              <TextField
+                                fullWidth
+                                type="time"
+                                label="Конец работы"
+                                value={post.custom_hours?.end || '18:00'}
+                                onChange={(e) => {
+                                  const updatedHours = {
+                                    ...post.custom_hours,
+                                    end: e.target.value
+                                  };
+                                  updatePost(index, 'custom_hours', updatedHours);
+                                }}
+                                size="small"
+                                InputLabelProps={{ shrink: true }}
+                              />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            );
+          })}
         </Grid>
       ) : (
         <Alert severity="info" sx={{ mt: 2 }}>
