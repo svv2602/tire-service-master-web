@@ -442,6 +442,22 @@ export interface ServicePost {
   _destroy?: boolean;
   created_at?: string; // Для обратной совместимости
   updated_at?: string; // Для обратной совместимости
+  
+  // Индивидуальное расписание поста
+  has_custom_schedule?: boolean; // Использует ли пост собственное расписание
+  working_days?: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  custom_hours?: {
+    start: string; // Время начала работы поста (может отличаться от времени точки)
+    end: string;   // Время окончания работы поста (может отличаться от времени точки)
+  };
 }
 
 // Расширенный интерфейс для новой формы сервисной точки

@@ -194,6 +194,20 @@ const ServicePointFormPageNew: React.FC = () => {
           formData.append(`service_point[service_posts_attributes][${index}][post_number]`, post.post_number.toString());
           formData.append(`service_point[service_posts_attributes][${index}][_destroy]`, post._destroy.toString());
           
+          // Добавляем поля индивидуального расписания
+          formData.append(`service_point[service_posts_attributes][${index}][has_custom_schedule]`, (post.has_custom_schedule || false).toString());
+          
+          if (post.has_custom_schedule && post.working_days) {
+            Object.entries(post.working_days).forEach(([day, isWorking]) => {
+              formData.append(`service_point[service_posts_attributes][${index}][working_days][${day}]`, (isWorking as boolean).toString());
+            });
+          }
+          
+          if (post.has_custom_schedule && post.custom_hours) {
+            formData.append(`service_point[service_posts_attributes][${index}][custom_hours][start]`, post.custom_hours.start);
+            formData.append(`service_point[service_posts_attributes][${index}][custom_hours][end]`, post.custom_hours.end);
+          }
+          
           if (post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000) {
             formData.append(`service_point[service_posts_attributes][${index}][id]`, post.id.toString());
           }

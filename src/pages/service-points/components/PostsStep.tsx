@@ -62,6 +62,20 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       description: '',
       slot_duration: 30,
       is_active: true,
+      has_custom_schedule: false,
+      working_days: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false,
+      },
+      custom_hours: {
+        start: '09:00',
+        end: '18:00',
+      },
     };
     
     formik.setFieldValue('service_posts', [
@@ -224,6 +238,115 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                         label="Пост активен"
                         sx={{ mt: 1 }}
                       />
+
+                      {/* Настройки индивидуального расписания */}
+                      <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={post.has_custom_schedule || false}
+                              onChange={(e) => {
+                                updatePost(originalIndex, 'has_custom_schedule', e.target.checked);
+                                // При включении собственного расписания устанавливаем значения по умолчанию
+                                if (e.target.checked && !post.working_days) {
+                                  updatePost(originalIndex, 'working_days', {
+                                    monday: true,
+                                    tuesday: true,
+                                    wednesday: true,
+                                    thursday: true,
+                                    friday: true,
+                                    saturday: false,
+                                    sunday: false,
+                                  });
+                                  updatePost(originalIndex, 'custom_hours', {
+                                    start: '09:00',
+                                    end: '18:00',
+                                  });
+                                }
+                              }}
+                              color="secondary"
+                            />
+                          }
+                          label="Индивидуальное расписание"
+                        />
+                        
+                        {post.has_custom_schedule && (
+                          <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>
+                              Рабочие дни:
+                            </Typography>
+                            
+                            <Grid container spacing={1} sx={{ mb: 2 }}>
+                              {Object.entries({
+                                monday: 'Пн',
+                                tuesday: 'Вт', 
+                                wednesday: 'Ср',
+                                thursday: 'Чт',
+                                friday: 'Пт',
+                                saturday: 'Сб',
+                                sunday: 'Вс'
+                              }).map(([day, label]) => (
+                                <Grid item key={day}>
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={post.working_days?.[day as keyof typeof post.working_days] || false}
+                                        onChange={(e) => {
+                                          const updatedWorkingDays = {
+                                            ...post.working_days,
+                                            [day]: e.target.checked
+                                          };
+                                          updatePost(originalIndex, 'working_days', updatedWorkingDays);
+                                        }}
+                                      />
+                                    }
+                                    label={label}
+                                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
+                                  />
+                                </Grid>
+                              ))}
+                            </Grid>
+
+                            <Grid container spacing={2}>
+                              <Grid item xs={6}>
+                                <TextField
+                                  fullWidth
+                                  type="time"
+                                  label="Начало работы"
+                                  value={post.custom_hours?.start || '09:00'}
+                                  onChange={(e) => {
+                                    const updatedHours = {
+                                      ...post.custom_hours,
+                                      start: e.target.value
+                                    };
+                                    updatePost(originalIndex, 'custom_hours', updatedHours);
+                                  }}
+                                  size="small"
+                                  InputLabelProps={{ shrink: true }}
+                                />
+                              </Grid>
+                              <Grid item xs={6}>
+                                <TextField
+                                  fullWidth
+                                  type="time"
+                                  label="Конец работы"
+                                  value={post.custom_hours?.end || '18:00'}
+                                  onChange={(e) => {
+                                    const updatedHours = {
+                                      ...post.custom_hours,
+                                      end: e.target.value
+                                    };
+                                    updatePost(originalIndex, 'custom_hours', updatedHours);
+                                  }}
+                                  size="small"
+                                  InputLabelProps={{ shrink: true }}
+                                />
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        )}
+                      </Box>
                     </CardContent>
                   </Card>
                 </Grid>
@@ -284,23 +407,78 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
       return [];
     }
 
+    // Получаем посты, которые работают в этот день
+    const availablePostsForDay = activePosts.filter(post => {
+      if (!post.is_active) return false;
+      
+      // Если у поста есть индивидуальное расписание, проверяем его рабочие дни
+      if (post.has_custom_schedule && post.working_days) {
+        return post.working_days[dayKey as keyof typeof post.working_days];
+      }
+      
+      // Если нет индивидуального расписания, используем расписание точки
+      return true;
+    });
+
+    if (availablePostsForDay.length === 0) {
+      return [];
+    }
+
     const slots = [];
-    const startTime = new Date(`2024-01-01 ${dayHours.start}:00`);
-    const endTime = new Date(`2024-01-01 ${dayHours.end}:00`);
+    
+    // Определяем общее время работы для дня (берем пересечение всех рабочих времен)
+    let earliestStart = new Date(`2024-01-01 ${dayHours.start}:00`);
+    let latestEnd = new Date(`2024-01-01 ${dayHours.end}:00`);
+    
+    // Корректируем время с учетом индивидуальных расписаний постов
+    availablePostsForDay.forEach(post => {
+      if (post.has_custom_schedule && post.custom_hours) {
+        const postStart = new Date(`2024-01-01 ${post.custom_hours.start}:00`);
+        const postEnd = new Date(`2024-01-01 ${post.custom_hours.end}:00`);
+        
+        // Начало - максимальное из всех начал (пересечение)
+        if (postStart > earliestStart) {
+          earliestStart = postStart;
+        }
+        // Конец - минимальное из всех концов (пересечение)
+        if (postEnd < latestEnd) {
+          latestEnd = postEnd;
+        }
+      }
+    });
     
     // Генерируем слоты с интервалом 15 минут
-    const current = new Date(startTime);
-    while (current < endTime) {
+    const current = new Date(earliestStart);
+    while (current < latestEnd) {
       const timeString = current.toTimeString().substring(0, 5);
       
       // Подсчитываем доступные посты на это время
-      const availablePosts = activePosts.filter(post => post.is_active).length;
+      const availablePostsAtTime = availablePostsForDay.filter(post => {
+        if (!post.is_active) return false;
+        
+        // Проверяем, работает ли пост в это время
+        if (post.has_custom_schedule && post.custom_hours) {
+          const postStart = new Date(`2024-01-01 ${post.custom_hours.start}:00`);
+          const postEnd = new Date(`2024-01-01 ${post.custom_hours.end}:00`);
+          return current >= postStart && current < postEnd;
+        }
+        
+        // Если нет индивидуального расписания, используем расписание точки
+        const pointStart = new Date(`2024-01-01 ${dayHours.start}:00`);
+        const pointEnd = new Date(`2024-01-01 ${dayHours.end}:00`);
+        return current >= pointStart && current < pointEnd;
+      });
       
       slots.push({
         time: timeString,
-        availablePosts,
+        availablePosts: availablePostsAtTime.length,
         totalPosts: activePosts.length,
-        isAvailable: availablePosts > 0
+        isAvailable: availablePostsAtTime.length > 0,
+        postDetails: availablePostsAtTime.map(post => ({
+          name: post.name,
+          number: post.post_number,
+          hasCustomSchedule: post.has_custom_schedule || false
+        }))
       });
       
       current.setMinutes(current.getMinutes() + 15);
@@ -377,6 +555,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                   <TableRow>
                     <TableCell><strong>Время</strong></TableCell>
                     <TableCell><strong>Доступные посты</strong></TableCell>
+                    <TableCell><strong>Детали постов</strong></TableCell>
                     <TableCell><strong>Статус</strong></TableCell>
                   </TableRow>
                 </TableHead>
@@ -400,6 +579,24 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                         </Typography>
                       </TableCell>
                       <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {slot.postDetails?.map((post) => (
+                            <Chip
+                              key={post.number}
+                              label={`${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`}
+                              size="small"
+                              variant="outlined"
+                              color={post.hasCustomSchedule ? 'secondary' : 'default'}
+                            />
+                          ))}
+                          {slot.availablePosts === 0 && (
+                            <Typography variant="caption" color="text.secondary">
+                              Нет доступных постов
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
                         <Chip
                           label={slot.isAvailable ? 'Доступно' : 'Недоступно'}
                           color={slot.isAvailable ? 'success' : 'default'}
@@ -415,7 +612,9 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 📅 Слоты генерируются с интервалом 15 минут в рамках рабочего времени. 
-                Количество доступных постов зависит от активных постов обслуживания.
+                Количество доступных постов зависит от активных постов обслуживания и их индивидуальных расписаний.
+                <br />
+                💡 Посты с пометкой "(инд.)" работают по индивидуальному расписанию, которое может отличаться от графика точки обслуживания.
               </Typography>
             </Alert>
           </>
