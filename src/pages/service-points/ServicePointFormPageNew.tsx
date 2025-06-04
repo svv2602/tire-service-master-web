@@ -174,39 +174,63 @@ const ServicePointFormPageNew: React.FC = () => {
     validationSchema,
     onSubmit: async (values: ServicePointFormDataNew) => {
       try {
-        const servicePointData: any = {
+        // Подготавливаем данные для отправки
+        const servicePointData = {
           name: values.name,
-          description: values.description,
-          address: values.address,
-          city_id: values.city_id,
           partner_id: values.partner_id,
+          city_id: values.city_id,
+          address: values.address,
+          contact_phone: values.contact_phone,
+          description: values.description,
           latitude: values.latitude,
           longitude: values.longitude,
-          contact_phone: values.contact_phone,
           is_active: values.is_active,
           work_status: values.work_status,
           working_hours: values.working_hours,
-          service_posts_attributes: values.service_posts?.map(post => {
-            const postData: any = {
-              name: post.name,
-              description: post.description,
-              slot_duration: post.slot_duration,
-              is_active: post.is_active,
-              post_number: post.post_number,
-              _destroy: post._destroy || false,
-              has_custom_schedule: post.has_custom_schedule || false,
-              working_days: post.working_days || null,
-              custom_hours: post.custom_hours || null
-            };
-            
-            // Если пост имеет реальный ID (существует в БД), добавляем его
-            if (post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000) {
-              postData.id = post.id;
-            }
-            
-            return postData;
-          }) || []
+          service_posts_attributes: (values.service_posts || []).map(post => ({
+            id: post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000 ? post.id : undefined,
+            name: post.name,
+            description: post.description || '',
+            slot_duration: post.slot_duration,
+            is_active: post.is_active,
+            post_number: post.post_number,
+            _destroy: post._destroy || false,
+            has_custom_schedule: post.has_custom_schedule || false,
+            working_days: post.has_custom_schedule ? post.working_days : undefined,
+            custom_hours: post.has_custom_schedule ? post.custom_hours : undefined,
+          })),
+          services_attributes: (values.services || []).map(service => ({
+            id: service.id && typeof service.id === 'number' && service.id > 0 ? service.id : undefined,
+            service_id: service.service_id,
+            price: service.price,
+            duration: service.duration,
+            is_available: service.is_available,
+            _destroy: service._destroy || false,
+          })),
+          photos_attributes: (values.photos || []).map(photo => ({
+            id: photo.id && typeof photo.id === 'number' && photo.id > 0 ? photo.id : undefined,
+            description: photo.description || '',
+            is_main: photo.is_main,
+            sort_order: photo.sort_order || 0,
+            _destroy: (photo as any)._destroy || false,
+            file: (photo as any).file instanceof File ? (photo as any).file : undefined,
+          })),
         };
+
+        console.log('=== Подготовленные данные servicePointData ===');
+        console.log('servicePointData:', servicePointData);
+        console.log('service_posts_attributes:', servicePointData.service_posts_attributes);
+        
+        // Проверяем каждый пост отдельно
+        servicePointData.service_posts_attributes.forEach((post, index) => {
+          console.log(`Пост ${index}:`, {
+            name: post.name,
+            has_custom_schedule: post.has_custom_schedule,
+            working_days: post.working_days,
+            custom_hours: post.custom_hours,
+            working_days_count: post.working_days ? Object.values(post.working_days).filter(Boolean).length : 0
+          });
+        });
 
         // Создаем FormData для отправки файлов
         const formData = new FormData();
@@ -248,10 +272,20 @@ const ServicePointFormPageNew: React.FC = () => {
           // Добавляем поля индивидуального расписания
           formData.append(`service_point[service_posts_attributes][${index}][has_custom_schedule]`, (post.has_custom_schedule || false).toString());
           
+          // Отправляем working_days и custom_hours только если включено индивидуальное расписание
           if (post.has_custom_schedule && post.working_days) {
-            Object.entries(post.working_days).forEach(([day, isWorking]) => {
-              formData.append(`service_point[service_posts_attributes][${index}][working_days][${day}]`, (isWorking as boolean).toString());
-            });
+            // Проверяем что есть хотя бы один рабочий день
+            const hasWorkingDays = Object.values(post.working_days).some((isWorking: any) => isWorking === true);
+            
+            if (hasWorkingDays) {
+              Object.entries(post.working_days).forEach(([day, isWorking]) => {
+                formData.append(`service_point[service_posts_attributes][${index}][working_days][${day}]`, (isWorking as boolean).toString());
+              });
+            } else {
+              // Если нет рабочих дней, отключаем индивидуальное расписание
+              formData.set(`service_point[service_posts_attributes][${index}][has_custom_schedule]`, 'false');
+              console.warn(`Пост ${post.name}: отключено индивидуальное расписание из-за отсутствия рабочих дней`);
+            }
           }
           
           if (post.has_custom_schedule && post.custom_hours) {

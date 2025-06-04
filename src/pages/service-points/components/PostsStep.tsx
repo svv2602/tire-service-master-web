@@ -37,11 +37,13 @@ import {
   ExpandMore as ExpandMoreIcon,
   Schedule as ScheduleIcon,
   AccessTime as AccessTimeIcon,
+  Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePost, ServicePoint } from '../../../types/models';
 import type { WorkingHours } from '../../../types/working-hours';
 import { DAYS_OF_WEEK } from '../../../types/working-hours';
+import PostScheduleDialog from './PostScheduleDialog';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -52,6 +54,15 @@ interface PostsStepProps {
 const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint }) => {
   // Принудительное обновление компонента
   const [, forceUpdate] = useState({});
+  
+  // Состояние для диалога индивидуальных настроек
+  const [scheduleDialog, setScheduleDialog] = useState<{
+    open: boolean;
+    postIndex: number | null;
+  }>({
+    open: false,
+    postIndex: null,
+  });
   
   // Получаем посты из формы (исключая помеченные для удаления)
   const activePosts = formik.values.service_posts?.filter(post => !post._destroy) || [];
@@ -118,8 +129,13 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
 
   // Функция обновления поста
   const updatePost = (index: number, field: keyof ServicePost, value: any) => {
+    console.log(`updatePost: обновляем пост ${index}, поле ${String(field)}, значение:`, value);
+    
     const updatedPosts = [...(formik.values.service_posts || [])];
     const currentPost = updatedPosts[index];
+    
+    console.log(`updatePost: текущий пост ${index} до изменений:`, currentPost);
+    
     const updatedPost = {
       ...currentPost,
       [field]: value
@@ -127,13 +143,64 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
     
     updatedPosts[index] = updatedPost;
     
+    console.log(`updatePost: обновленный пост ${index}:`, updatedPost);
+    
     // Используем setFieldValue для обновления конкретного поста
     formik.setFieldValue('service_posts', updatedPosts);
     
     // Принудительно обновляем компонент
     forceUpdate({});
     
-    console.log(`Post ${index} updated: ${String(field)} = ${JSON.stringify(value)}`);
+    console.log(`updatePost: все посты после обновления:`, formik.values.service_posts);
+  };
+
+  // Функции для работы с диалогом расписания
+  const openScheduleDialog = (postIndex: number) => {
+    setScheduleDialog({
+      open: true,
+      postIndex,
+    });
+  };
+
+  const closeScheduleDialog = () => {
+    setScheduleDialog({
+      open: false,
+      postIndex: null,
+    });
+  };
+
+  const savePostSchedule = (updatedSchedule: Partial<ServicePost>) => {
+    if (scheduleDialog.postIndex !== null) {
+      console.log('savePostSchedule: начинаем сохранение для индекса', scheduleDialog.postIndex);
+      console.log('savePostSchedule: данные для сохранения:', updatedSchedule);
+      
+      const updatedPosts = [...(formik.values.service_posts || [])];
+      const currentPost = updatedPosts[scheduleDialog.postIndex];
+      
+      // Обновляем весь пост за один раз
+      const updatedPost = {
+        ...currentPost,
+        ...updatedSchedule
+      };
+      
+      // Если индивидуальное расписание отключено, обнуляем связанные поля
+      if (!updatedSchedule.has_custom_schedule) {
+        updatedPost.working_days = undefined;
+        updatedPost.custom_hours = undefined;
+      }
+      
+      updatedPosts[scheduleDialog.postIndex] = updatedPost;
+      
+      console.log('savePostSchedule: обновленный пост:', updatedPost);
+      
+      // Обновляем всю форму за один раз
+      formik.setFieldValue('service_posts', updatedPosts);
+      
+      // Принудительно обновляем компонент
+      forceUpdate({});
+      
+      console.log('savePostSchedule: сохранение завершено');
+    }
   };
 
   // Функция получения ошибок валидации для конкретного поста
@@ -270,111 +337,55 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
 
                     {/* Настройки индивидуального расписания */}
                     <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={post.has_custom_schedule || false}
-                            onChange={(e) => {
-                              console.log('Переключение индивидуального расписания для поста', post.name, ':', e.target.checked);
-                              
-                              updatePost(index, 'has_custom_schedule', e.target.checked);
-                              // При включении собственного расписания устанавливаем значения по умолчанию
-                              if (e.target.checked && !post.working_days) {
-                                updatePost(index, 'working_days', {
-                                  monday: true,
-                                  tuesday: true,
-                                  wednesday: true,
-                                  thursday: true,
-                                  friday: true,
-                                  saturday: false,
-                                  sunday: false,
-                                });
-                                updatePost(index, 'custom_hours', {
-                                  start: '09:00',
-                                  end: '18:00',
-                                });
-                              }
-                            }}
-                            color="secondary"
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <ScheduleIcon fontSize="small" color={post.has_custom_schedule ? 'primary' : 'disabled'} />
+                          <Typography variant="subtitle2">
+                            Индивидуальное расписание
+                          </Typography>
+                          <Chip 
+                            label={post.has_custom_schedule ? 'Включено' : 'Выключено'}
+                            color={post.has_custom_schedule ? 'primary' : 'default'}
+                            size="small"
+                            variant="outlined"
                           />
-                        }
-                        label="Индивидуальное расписание"
-                      />
+                        </Box>
+                        
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<SettingsIcon />}
+                          onClick={() => openScheduleDialog(index)}
+                        >
+                          Настроить
+                        </Button>
+                      </Box>
                       
                       {post.has_custom_schedule && (
-                        <Box sx={{ mt: 2 }}>
-                          <Typography variant="subtitle2" gutterBottom>
-                            Рабочие дни:
+                        <Box sx={{ mt: 1 }}>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>Рабочие дни:</strong> {
+                              post.working_days 
+                                ? Object.entries(post.working_days)
+                                    .filter(([_, isWorking]) => isWorking)
+                                    .map(([day]) => {
+                                      const dayNames: { [key: string]: string } = {
+                                        monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср',
+                                        thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс'
+                                      };
+                                      return dayNames[day];
+                                    })
+                                    .join(', ')
+                                : 'Не настроены'
+                            }
                           </Typography>
-                          
-                          <Grid container spacing={1} sx={{ mb: 2 }}>
-                            {Object.entries({
-                              monday: 'Пн',
-                              tuesday: 'Вт', 
-                              wednesday: 'Ср',
-                              thursday: 'Чт',
-                              friday: 'Пт',
-                              saturday: 'Сб',
-                              sunday: 'Вс'
-                            }).map(([day, label]) => (
-                              <Grid item key={day}>
-                                <FormControlLabel
-                                  control={
-                                    <Switch
-                                      size="small"
-                                      checked={post.working_days?.[day as keyof typeof post.working_days] || false}
-                                      onChange={(e) => {
-                                        const updatedWorkingDays = {
-                                          ...post.working_days,
-                                          [day]: e.target.checked
-                                        };
-                                        updatePost(index, 'working_days', updatedWorkingDays);
-                                      }}
-                                    />
-                                  }
-                                  label={label}
-                                  sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
-                                />
-                              </Grid>
-                            ))}
-                          </Grid>
-
-                          <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                              <TextField
-                                fullWidth
-                                type="time"
-                                label="Начало работы"
-                                value={post.custom_hours?.start || '09:00'}
-                                onChange={(e) => {
-                                  const updatedHours = {
-                                    ...post.custom_hours,
-                                    start: e.target.value
-                                  };
-                                  updatePost(index, 'custom_hours', updatedHours);
-                                }}
-                                size="small"
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            </Grid>
-                            <Grid item xs={6}>
-                              <TextField
-                                fullWidth
-                                type="time"
-                                label="Конец работы"
-                                value={post.custom_hours?.end || '18:00'}
-                                onChange={(e) => {
-                                  const updatedHours = {
-                                    ...post.custom_hours,
-                                    end: e.target.value
-                                  };
-                                  updatePost(index, 'custom_hours', updatedHours);
-                                }}
-                                size="small"
-                                InputLabelProps={{ shrink: true }}
-                              />
-                            </Grid>
-                          </Grid>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            <strong>Время работы:</strong> {
+                              post.custom_hours 
+                                ? `${post.custom_hours.start} - ${post.custom_hours.end}`
+                                : 'Не настроено'
+                            }
+                          </Typography>
                         </Box>
                       )}
                     </Box>
@@ -416,6 +427,16 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         <SlotSchedulePreview 
           workingHours={formik.values.working_hours}
           activePosts={activePosts}
+        />
+      )}
+
+      {/* Диалог настройки индивидуального расписания */}
+      {scheduleDialog.open && scheduleDialog.postIndex !== null && (
+        <PostScheduleDialog
+          open={scheduleDialog.open}
+          onClose={closeScheduleDialog}
+          post={formik.values.service_posts![scheduleDialog.postIndex]}
+          onSave={savePostSchedule}
         />
       )}
     </Box>
