@@ -171,7 +171,6 @@ const ServicePointFormPageNew: React.FC = () => {
   // Formik
   const formik = useFormik({
     initialValues,
-    enableReinitialize: true, // Важно! Позволяет formik обновлять значения при изменении initialValues
     validationSchema,
     onSubmit: async (values: ServicePointFormDataNew) => {
       try {
@@ -349,6 +348,32 @@ const ServicePointFormPageNew: React.FC = () => {
       formik.setFieldValue('service_posts', [defaultPost]);
     }
   }, [isEditMode, formik.values.service_posts?.length]); // Добавляем зависимость чтобы избежать повторных вызовов
+
+  // Инициализируем форму данными с сервера при первой загрузке
+  useEffect(() => {
+    if (isEditMode && servicePoint && !formik.dirty) {
+      console.log('=== Инициализация формы данными с сервера ===');
+      console.log('servicePoint данные:', servicePoint);
+      
+      // Обновляем все поля формы
+      formik.setValues({
+        name: servicePoint.name || '',
+        partner_id: servicePoint.partner_id || (partnerId ? Number(partnerId) : 0),
+        city_id: servicePoint.city?.id || 0,
+        address: servicePoint.address || '',
+        contact_phone: servicePoint.contact_phone || '',
+        description: servicePoint.description || '',
+        latitude: servicePoint.latitude || null,
+        longitude: servicePoint.longitude || null,
+        is_active: servicePoint.is_active ?? true,
+        work_status: servicePoint.work_status || 'working',
+        working_hours: normalizedWorkingHours,
+        services: servicePoint.services || [],
+        photos: servicePoint.photos || [],
+        service_posts: servicePoint.service_posts || [],
+      });
+    }
+  }, [servicePoint?.id, isEditMode]); // Выполняем только при изменении ID точки
 
   // Обработчики
   const handleNext = () => {
