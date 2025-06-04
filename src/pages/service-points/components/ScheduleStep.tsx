@@ -20,7 +20,18 @@ interface ScheduleStepProps {
   servicePoint?: ServicePoint;
 }
 
-// Начальное расписание
+// Пустое расписание для новых точек
+const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
+  const workingHours: WorkingHours = {
+    start: '09:00',
+    end: '18:00',
+    is_working_day: false // Все дни изначально выключены
+  };
+  acc[day.key] = workingHours;
+  return acc;
+}, {} as WorkingHoursSchedule);
+
+// Стандартное расписание для быстрого заполнения
 const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
   const workingHours: WorkingHours = {
     start: '09:00',
@@ -32,14 +43,18 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
 }, {} as WorkingHoursSchedule);
 
 const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, servicePoint }) => {
-  // Инициализируем расписание если оно пустое
+  // Инициализируем расписание пустым шаблоном для новых точек
   React.useEffect(() => {
     if (!formik.values.working_hours || Object.keys(formik.values.working_hours).length === 0) {
-      formik.setFieldValue('working_hours', defaultWorkingHours);
+      // Для новых точек - пустое расписание, для редактирования - данные из servicePoint
+      const initialSchedule = isEditMode && servicePoint?.working_hours 
+        ? servicePoint.working_hours 
+        : emptyWorkingHours;
+      formik.setFieldValue('working_hours', initialSchedule);
     }
-  }, [formik]);
+  }, [formik, isEditMode, servicePoint]);
 
-  const workingHours = formik.values.working_hours as WorkingHoursSchedule || defaultWorkingHours;
+  const workingHours = formik.values.working_hours as WorkingHoursSchedule || emptyWorkingHours;
 
   // Проверяем есть ли хотя бы один рабочий день
   const hasWorkingDays = DAYS_OF_WEEK.some(day => 

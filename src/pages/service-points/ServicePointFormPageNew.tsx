@@ -42,19 +42,30 @@ const FORM_STEPS = [
   { id: 'basic', label: 'Основная информация', component: BasicInfoStep },
   { id: 'location', label: 'Местоположение', component: LocationStep },
   { id: 'contact', label: 'Контакты', component: ContactStep },
-  { id: 'settings', label: 'Настройки', component: SettingsStep },
+  { id: 'schedule', label: 'Расписание', component: ScheduleStep },
   { id: 'posts', label: 'Посты обслуживания', component: PostsStep },
   { id: 'services', label: 'Услуги', component: ServicesStep },
   { id: 'photos', label: 'Фотографии', component: PhotosStep },
-  { id: 'schedule', label: 'Расписание', component: ScheduleStep },
+  { id: 'settings', label: 'Настройки', component: SettingsStep },
 ];
 
-// Начальное расписание
+// Начальное расписание для быстрого заполнения
 const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
   const workingHours: WorkingHours = {
     start: '09:00',
     end: '18:00',
     is_working_day: day.id < 6
+  };
+  acc[day.key] = workingHours;
+  return acc;
+}, {} as WorkingHoursSchedule);
+
+// Пустое расписание для новых точек
+const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
+  const workingHours: WorkingHours = {
+    start: '09:00',
+    end: '18:00',
+    is_working_day: false // Все дни изначально выключены
   };
   acc[day.key] = workingHours;
   return acc;
@@ -102,7 +113,7 @@ const ServicePointFormPageNew: React.FC = () => {
     longitude: servicePoint?.longitude || null,
     is_active: servicePoint?.is_active ?? true,
     work_status: servicePoint?.work_status || 'working',
-    working_hours: servicePoint?.working_hours || defaultWorkingHours,
+    working_hours: isEditMode && servicePoint?.working_hours ? servicePoint.working_hours : emptyWorkingHours,
     services: servicePoint?.services || [],
     photos: servicePoint?.photos || [],
     service_posts: servicePoint?.service_posts || [],
