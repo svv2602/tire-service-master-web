@@ -54,7 +54,7 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
   const workingHours: WorkingHours = {
     start: '09:00',
     end: '18:00',
-    is_working_day: day.id < 6
+    is_working_day: day.id >= 1 && day.id <= 5 // Пн-Пт рабочие дни (id: 1-5)
   };
   acc[day.key] = workingHours;
   return acc;

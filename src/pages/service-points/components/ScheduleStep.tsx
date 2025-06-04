@@ -175,13 +175,13 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
           onClick={() => {
             const newWorkingHours = { ...workingHours };
             DAYS_OF_WEEK.forEach(day => {
-              if (day.id <= 5) { // Пн-Пт
+              if (day.id >= 1 && day.id <= 5) { // Пн-Пт (id: 1-5)
                 newWorkingHours[day.key] = {
                   start: '09:00',
                   end: '18:00',
                   is_working_day: true
                 };
-              } else { // Сб-Вс
+              } else { // Сб-Вс (id: 0, 6)
                 newWorkingHours[day.key] = {
                   start: '09:00',
                   end: '18:00',

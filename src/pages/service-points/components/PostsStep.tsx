@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,14 +14,34 @@ import {
   InputAdornment,
   Alert,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Build as BuildIcon,
+  ExpandMore as ExpandMoreIcon,
+  Schedule as ScheduleIcon,
+  AccessTime as AccessTimeIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePost, ServicePoint } from '../../../types/models';
+import type { WorkingHours } from '../../../types/working-hours';
+import { DAYS_OF_WEEK } from '../../../types/working-hours';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -236,7 +256,178 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
           Рекомендуется создавать посты с разной специализацией (например, "Легковые автомобили", "Грузовые автомобили").
         </Typography>
       </Alert>
+
+      {/* Предварительный просмотр расписания слотов */}
+      {activePosts.length > 0 && formik.values.working_hours && (
+        <SlotSchedulePreview 
+          workingHours={formik.values.working_hours}
+          activePosts={activePosts}
+        />
+      )}
     </Box>
+  );
+};
+
+// Компонент для предварительного просмотра расписания слотов
+interface SlotSchedulePreviewProps {
+  workingHours: any;
+  activePosts: ServicePost[];
+}
+
+const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours, activePosts }) => {
+  const [selectedDay, setSelectedDay] = useState<string>('monday');
+
+  // Генерируем временные слоты для выбранного дня
+  const generateTimeSlots = (dayKey: string) => {
+    const dayHours = workingHours[dayKey] as WorkingHours;
+    if (!dayHours.is_working_day) {
+      return [];
+    }
+
+    const slots = [];
+    const startTime = new Date(`2024-01-01 ${dayHours.start}:00`);
+    const endTime = new Date(`2024-01-01 ${dayHours.end}:00`);
+    
+    // Генерируем слоты с интервалом 15 минут
+    const current = new Date(startTime);
+    while (current < endTime) {
+      const timeString = current.toTimeString().substring(0, 5);
+      
+      // Подсчитываем доступные посты на это время
+      const availablePosts = activePosts.filter(post => post.is_active).length;
+      
+      slots.push({
+        time: timeString,
+        availablePosts,
+        totalPosts: activePosts.length,
+        isAvailable: availablePosts > 0
+      });
+      
+      current.setMinutes(current.getMinutes() + 15);
+    }
+    
+    return slots;
+  };
+
+  const workingDays = DAYS_OF_WEEK.filter(day => {
+    const dayHours = workingHours[day.key] as WorkingHours;
+    return dayHours.is_working_day;
+  });
+
+  const selectedDayInfo = DAYS_OF_WEEK.find(day => day.key === selectedDay);
+  const timeSlots = generateTimeSlots(selectedDay);
+
+  if (workingDays.length === 0) {
+    return null;
+  }
+
+  return (
+    <Accordion sx={{ mt: 3 }}>
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        aria-controls="schedule-preview-content"
+        id="schedule-preview-header"
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <Typography variant="h6">
+            Предварительный просмотр расписания слотов
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          Здесь показано как будет выглядеть расписание доступности постов обслуживания на основе 
+          настроенного графика работы и количества активных постов.
+        </Typography>
+
+        {/* Выбор дня недели */}
+        <FormControl sx={{ mb: 3, minWidth: 200 }}>
+          <InputLabel>День недели</InputLabel>
+          <Select
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+            label="День недели"
+          >
+            {workingDays.map((day) => (
+              <MenuItem key={day.key} value={day.key}>
+                {day.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {timeSlots.length > 0 ? (
+          <>
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <AccessTimeIcon color="primary" />
+              <Typography variant="h6">
+                {selectedDayInfo?.name} - Доступность постов
+              </Typography>
+              <Chip 
+                label={`${activePosts.filter(p => p.is_active).length} активных постов`} 
+                color="primary" 
+                variant="outlined" 
+              />
+            </Box>
+
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Время</strong></TableCell>
+                    <TableCell><strong>Доступные посты</strong></TableCell>
+                    <TableCell><strong>Статус</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {timeSlots.map((slot, index) => (
+                    <TableRow 
+                      key={slot.time}
+                      sx={{ 
+                        backgroundColor: index % 2 === 0 ? 'grey.50' : 'transparent',
+                        '&:hover': { backgroundColor: 'grey.100' }
+                      }}
+                    >
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="medium">
+                          {slot.time}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {slot.availablePosts} из {slot.totalPosts}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={slot.isAvailable ? 'Доступно' : 'Недоступно'}
+                          color={slot.isAvailable ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                📅 Слоты генерируются с интервалом 15 минут в рамках рабочего времени. 
+                Количество доступных постов зависит от активных постов обслуживания.
+              </Typography>
+            </Alert>
+          </>
+        ) : (
+          <Alert severity="warning">
+            <Typography variant="body2">
+              {selectedDayInfo?.name} - выходной день. Выберите рабочий день для просмотра расписания.
+            </Typography>
+          </Alert>
+        )}
+      </AccordionDetails>
+    </Accordion>
   );
 };
 
