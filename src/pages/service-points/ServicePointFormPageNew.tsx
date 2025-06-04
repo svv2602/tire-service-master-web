@@ -101,6 +101,35 @@ const ServicePointFormPageNew: React.FC = () => {
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
 
+  // Нормализуем данные расписания (конвертируем строки в булевы значения)
+  const normalizedWorkingHours = useMemo(() => {
+    if (!isEditMode || !servicePoint?.working_hours) {
+      return emptyWorkingHours;
+    }
+
+    const normalized: WorkingHoursSchedule = {} as WorkingHoursSchedule;
+    
+    // Проходим по каждому дню недели
+    DAYS_OF_WEEK.forEach(day => {
+      const hours = servicePoint.working_hours[day.key];
+      if (hours) {
+        normalized[day.key] = {
+          start: hours.start || '09:00',
+          end: hours.end || '18:00',
+          is_working_day: hours.is_working_day === true || (hours.is_working_day as any) === 'true'
+        };
+      } else {
+        normalized[day.key] = {
+          start: '09:00',
+          end: '18:00',
+          is_working_day: false
+        };
+      }
+    });
+
+    return normalized;
+  }, [servicePoint?.working_hours, isEditMode]);
+
   // Начальные значения формы (мемоизированные)
   const initialValues: ServicePointFormDataNew = useMemo(() => ({
     name: servicePoint?.name || '',
@@ -113,11 +142,11 @@ const ServicePointFormPageNew: React.FC = () => {
     longitude: servicePoint?.longitude || null,
     is_active: servicePoint?.is_active ?? true,
     work_status: servicePoint?.work_status || 'working',
-    working_hours: isEditMode && servicePoint?.working_hours ? servicePoint.working_hours : emptyWorkingHours,
+    working_hours: normalizedWorkingHours,
     services: servicePoint?.services || [],
     photos: servicePoint?.photos || [],
     service_posts: servicePoint?.service_posts || [],
-  }), [servicePoint?.id, isEditMode]); // Пересчитываем только при изменении ID точки или режима
+  }), [servicePoint, partnerId, normalizedWorkingHours]); // Правильные зависимости
 
   // Отладка загруженных данных
   useEffect(() => {
@@ -142,6 +171,7 @@ const ServicePointFormPageNew: React.FC = () => {
   // Formik
   const formik = useFormik({
     initialValues,
+    enableReinitialize: true, // Важно! Позволяет formik обновлять значения при изменении initialValues
     validationSchema,
     onSubmit: async (values: ServicePointFormDataNew) => {
       try {
@@ -318,59 +348,7 @@ const ServicePointFormPageNew: React.FC = () => {
       };
       formik.setFieldValue('service_posts', [defaultPost]);
     }
-  }, [isEditMode]);
-
-  // Загружаем существующие посты при редактировании
-  useEffect(() => {
-    console.log('=== useEffect для загрузки постов ===');
-    console.log('isEditMode:', isEditMode);
-    console.log('servicePoint?.service_posts?.length:', servicePoint?.service_posts?.length);
-    console.log('formik.values.service_posts?.length:', formik.values.service_posts?.length);
-    
-    if (isEditMode && servicePoint?.service_posts && servicePoint.service_posts.length > 0) {
-      // Проверяем, что посты еще не загружены в форму
-      const currentPosts = formik.values.service_posts || [];
-      
-      // Загружаем посты только если форма пустая или если изменился состав постов (добавлены/удалены)
-      const shouldLoadPosts = currentPosts.length === 0 || 
-                             currentPosts.length !== servicePoint.service_posts.length ||
-                             !currentPosts.every(post => servicePoint.service_posts?.some(sp => sp.id === post.id));
-      
-      console.log('shouldLoadPosts:', shouldLoadPosts);
-      console.log('currentPosts.length:', currentPosts.length);
-      console.log('servicePoint.service_posts.length:', servicePoint.service_posts.length);
-      
-      if (shouldLoadPosts) {
-        console.log('=== Загружаем посты из API ===');
-        console.log('servicePoint.service_posts:', servicePoint.service_posts);
-        formik.setFieldValue('service_posts', servicePoint.service_posts);
-      } else {
-        console.log('=== Посты уже загружены, пропускаем перезагрузку ===');
-      }
-    }
-  }, [isEditMode, servicePoint?.service_posts?.length]); // Убираем servicePoint?.service_posts из зависимостей
-
-  // Загружаем существующие услуги при редактировании
-  useEffect(() => {
-    if (isEditMode && servicePoint?.services && servicePoint.services.length > 0) {
-      // Проверяем, что услуги еще не загружены в форму
-      const currentServices = formik.values.services || [];
-      if (currentServices.length === 0 || currentServices[0]?.service_id !== servicePoint.services[0]?.service_id) {
-        formik.setFieldValue('services', servicePoint.services);
-      }
-    }
-  }, [isEditMode, servicePoint?.services]);
-
-  // Загружаем существующие фотографии при редактировании
-  useEffect(() => {
-    if (isEditMode && servicePoint?.photos && servicePoint.photos.length > 0) {
-      // Проверяем, что фотографии еще не загружены в форму
-      const currentPhotos = formik.values.photos || [];
-      if (currentPhotos.length === 0 || currentPhotos[0]?.id !== servicePoint.photos[0]?.id) {
-        formik.setFieldValue('photos', servicePoint.photos);
-      }
-    }
-  }, [isEditMode, servicePoint?.photos]);
+  }, [isEditMode, formik.values.service_posts?.length]); // Добавляем зависимость чтобы избежать повторных вызовов
 
   // Обработчики
   const handleNext = () => {
