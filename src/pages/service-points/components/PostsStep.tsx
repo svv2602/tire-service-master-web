@@ -50,8 +50,14 @@ interface PostsStepProps {
 }
 
 const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  // Принудительное обновление компонента
+  const [, forceUpdate] = useState({});
+  
   // Получаем посты из формы (исключая помеченные для удаления)
   const activePosts = formik.values.service_posts?.filter(post => !post._destroy) || [];
+
+  // Отладка данных постов (упрощенная)
+  console.log('PostsStep: количество постов в форме:', activePosts.length);
 
   // Функция добавления нового поста
   const addNewPost = () => {
@@ -103,8 +109,23 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   // Функция обновления поста
   const updatePost = (index: number, field: keyof ServicePost, value: any) => {
     const updatedPosts = [...(formik.values.service_posts || [])];
-    updatedPosts[index] = { ...updatedPosts[index], [field]: value };
-    formik.setFieldValue('service_posts', updatedPosts);
+    const currentPost = updatedPosts[index];
+    const updatedPost = {
+      ...currentPost,
+      [field]: value
+    };
+    
+    updatedPosts[index] = updatedPost;
+    
+    formik.setValues({
+      ...formik.values,
+      service_posts: updatedPosts
+    });
+    
+    // Принудительно обновляем компонент
+    forceUpdate({});
+    
+    console.log(`Post ${index} updated: ${String(field)} = ${JSON.stringify(value)}`);
   };
 
   // Функция получения ошибок валидации для конкретного поста
@@ -246,6 +267,8 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                             <Switch
                               checked={post.has_custom_schedule || false}
                               onChange={(e) => {
+                                console.log('Переключение индивидуального расписания для поста', post.name, ':', e.target.checked);
+                                
                                 updatePost(originalIndex, 'has_custom_schedule', e.target.checked);
                                 // При включении собственного расписания устанавливаем значения по умолчанию
                                 if (e.target.checked && !post.working_days) {

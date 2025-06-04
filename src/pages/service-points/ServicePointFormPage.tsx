@@ -1170,6 +1170,142 @@ const ServicePointFormPage: React.FC = () => {
                                   label="Пост активен"
                                   sx={{ mt: 1 }}
                                 />
+
+                                {/* Настройки индивидуального расписания */}
+                                <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        checked={post.has_custom_schedule || false}
+                                        onChange={(e) => {
+                                          const updatedPosts = [...formik.values.service_posts];
+                                          const updatedPost = { ...post, has_custom_schedule: e.target.checked };
+                                          
+                                          // При включении собственного расписания устанавливаем значения по умолчанию
+                                          if (e.target.checked && !post.working_days) {
+                                            updatedPost.working_days = {
+                                              monday: true,
+                                              tuesday: true,
+                                              wednesday: true,
+                                              thursday: true,
+                                              friday: true,
+                                              saturday: false,
+                                              sunday: false,
+                                            };
+                                            updatedPost.custom_hours = {
+                                              start: '09:00',
+                                              end: '18:00',
+                                            };
+                                          }
+                                          
+                                          updatedPosts[originalIndex] = updatedPost;
+                                          formik.setFieldValue('service_posts', updatedPosts);
+                                        }}
+                                        color="secondary"
+                                      />
+                                    }
+                                    label="Индивидуальное расписание"
+                                  />
+                                  
+                                  {post.has_custom_schedule && (
+                                    <Box sx={{ mt: 2 }}>
+                                      <Typography variant="subtitle2" gutterBottom>
+                                        Рабочие дни:
+                                      </Typography>
+                                      
+                                      <Grid container spacing={1} sx={{ mb: 2 }}>
+                                        {Object.entries({
+                                          monday: 'Пн',
+                                          tuesday: 'Вт', 
+                                          wednesday: 'Ср',
+                                          thursday: 'Чт',
+                                          friday: 'Пт',
+                                          saturday: 'Сб',
+                                          sunday: 'Вс'
+                                        }).map(([day, label]) => (
+                                          <Grid item key={day}>
+                                            <FormControlLabel
+                                              control={
+                                                <Switch
+                                                  size="small"
+                                                  checked={post.working_days?.[day as keyof typeof post.working_days] || false}
+                                                  onChange={(e) => {
+                                                    const updatedPosts = [...formik.values.service_posts];
+                                                    const updatedWorkingDays = {
+                                                      monday: false,
+                                                      tuesday: false,
+                                                      wednesday: false,
+                                                      thursday: false,
+                                                      friday: false,
+                                                      saturday: false,
+                                                      sunday: false,
+                                                      ...post.working_days,
+                                                      [day]: e.target.checked
+                                                    };
+                                                    updatedPosts[originalIndex] = { 
+                                                      ...post, 
+                                                      working_days: updatedWorkingDays 
+                                                    };
+                                                    formik.setFieldValue('service_posts', updatedPosts);
+                                                  }}
+                                                />
+                                              }
+                                              label={label}
+                                              sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
+                                            />
+                                          </Grid>
+                                        ))}
+                                      </Grid>
+
+                                      <Grid container spacing={2}>
+                                        <Grid item xs={6}>
+                                          <TextField
+                                            fullWidth
+                                            type="time"
+                                            label="Начало работы"
+                                            value={post.custom_hours?.start || '09:00'}
+                                            onChange={(e) => {
+                                              const updatedPosts = [...formik.values.service_posts];
+                                              const updatedHours = {
+                                                start: e.target.value,
+                                                end: post.custom_hours?.end || '18:00'
+                                              };
+                                              updatedPosts[originalIndex] = { 
+                                                ...post, 
+                                                custom_hours: updatedHours 
+                                              };
+                                              formik.setFieldValue('service_posts', updatedPosts);
+                                            }}
+                                            size="small"
+                                            InputLabelProps={{ shrink: true }}
+                                          />
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                          <TextField
+                                            fullWidth
+                                            type="time"
+                                            label="Конец работы"
+                                            value={post.custom_hours?.end || '18:00'}
+                                            onChange={(e) => {
+                                              const updatedPosts = [...formik.values.service_posts];
+                                              const updatedHours = {
+                                                start: post.custom_hours?.start || '09:00',
+                                                end: e.target.value
+                                              };
+                                              updatedPosts[originalIndex] = { 
+                                                ...post, 
+                                                custom_hours: updatedHours 
+                                              };
+                                              formik.setFieldValue('service_posts', updatedPosts);
+                                            }}
+                                            size="small"
+                                            InputLabelProps={{ shrink: true }}
+                                          />
+                                        </Grid>
+                                      </Grid>
+                                    </Box>
+                                  )}
+                                </Box>
                               </CardContent>
                             </Card>
                           </Grid>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -101,8 +101,8 @@ const ServicePointFormPageNew: React.FC = () => {
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
 
-  // Начальные значения формы
-  const initialValues: ServicePointFormDataNew = {
+  // Начальные значения формы (мемоизированные)
+  const initialValues: ServicePointFormDataNew = useMemo(() => ({
     name: servicePoint?.name || '',
     partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
     city_id: servicePoint?.city?.id || 0,
@@ -117,13 +117,32 @@ const ServicePointFormPageNew: React.FC = () => {
     services: servicePoint?.services || [],
     photos: servicePoint?.photos || [],
     service_posts: servicePoint?.service_posts || [],
-  };
+  }), [servicePoint?.id, isEditMode]); // Пересчитываем только при изменении ID точки или режима
+
+  // Отладка загруженных данных
+  useEffect(() => {
+    if (servicePoint && isEditMode) {
+      console.log('=== Загруженные данные сервисной точки ===');
+      console.log('servicePoint:', servicePoint);
+      console.log('service_posts:', servicePoint.service_posts);
+      if (servicePoint.service_posts) {
+        servicePoint.service_posts.forEach((post, index) => {
+          console.log(`Post ${index + 1}:`, {
+            id: post.id,
+            name: post.name,
+            has_custom_schedule: post.has_custom_schedule,
+            working_days: post.working_days,
+            custom_hours: post.custom_hours
+          });
+        });
+      }
+    }
+  }, [servicePoint, isEditMode]);
 
   // Formik
   const formik = useFormik({
     initialValues,
     validationSchema,
-    enableReinitialize: true,
     onSubmit: async (values: ServicePointFormDataNew) => {
       try {
         const servicePointData: any = {
@@ -145,7 +164,10 @@ const ServicePointFormPageNew: React.FC = () => {
               slot_duration: post.slot_duration,
               is_active: post.is_active,
               post_number: post.post_number,
-              _destroy: post._destroy || false
+              _destroy: post._destroy || false,
+              has_custom_schedule: post.has_custom_schedule || false,
+              working_days: post.working_days || null,
+              custom_hours: post.custom_hours || null
             };
             
             // Если пост имеет реальный ID (существует в БД), добавляем его
@@ -300,14 +322,33 @@ const ServicePointFormPageNew: React.FC = () => {
 
   // Загружаем существующие посты при редактировании
   useEffect(() => {
+    console.log('=== useEffect для загрузки постов ===');
+    console.log('isEditMode:', isEditMode);
+    console.log('servicePoint?.service_posts?.length:', servicePoint?.service_posts?.length);
+    console.log('formik.values.service_posts?.length:', formik.values.service_posts?.length);
+    
     if (isEditMode && servicePoint?.service_posts && servicePoint.service_posts.length > 0) {
       // Проверяем, что посты еще не загружены в форму
       const currentPosts = formik.values.service_posts || [];
-      if (currentPosts.length === 0 || currentPosts[0]?.id !== servicePoint.service_posts[0]?.id) {
+      
+      // Загружаем посты только если форма пустая или если изменился состав постов (добавлены/удалены)
+      const shouldLoadPosts = currentPosts.length === 0 || 
+                             currentPosts.length !== servicePoint.service_posts.length ||
+                             !currentPosts.every(post => servicePoint.service_posts?.some(sp => sp.id === post.id));
+      
+      console.log('shouldLoadPosts:', shouldLoadPosts);
+      console.log('currentPosts.length:', currentPosts.length);
+      console.log('servicePoint.service_posts.length:', servicePoint.service_posts.length);
+      
+      if (shouldLoadPosts) {
+        console.log('=== Загружаем посты из API ===');
+        console.log('servicePoint.service_posts:', servicePoint.service_posts);
         formik.setFieldValue('service_posts', servicePoint.service_posts);
+      } else {
+        console.log('=== Посты уже загружены, пропускаем перезагрузку ===');
       }
     }
-  }, [isEditMode, servicePoint?.service_posts]);
+  }, [isEditMode, servicePoint?.service_posts?.length]); // Убираем servicePoint?.service_posts из зависимостей
 
   // Загружаем существующие услуги при редактировании
   useEffect(() => {

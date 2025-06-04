@@ -43,22 +43,55 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
 }, {} as WorkingHoursSchedule);
 
 const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  // Отладочная информация
+  console.log('=== ScheduleStep Debug ===');
+  console.log('isEditMode:', isEditMode);
+  console.log('servicePoint?.working_hours:', servicePoint?.working_hours);
+  console.log('formik.values.working_hours:', formik.values.working_hours);
+  
   // Инициализируем расписание пустым шаблоном для новых точек
   React.useEffect(() => {
+    console.log('=== ScheduleStep useEffect ===');
+    console.log('formik.values.working_hours:', formik.values.working_hours);
+    console.log('Object.keys(formik.values.working_hours || {}).length:', Object.keys(formik.values.working_hours || {}).length);
+    
     if (!formik.values.working_hours || Object.keys(formik.values.working_hours).length === 0) {
       // Для новых точек - пустое расписание, для редактирования - данные из servicePoint
       const initialSchedule = isEditMode && servicePoint?.working_hours 
         ? servicePoint.working_hours 
         : emptyWorkingHours;
+      console.log('Устанавливаем начальное расписание:', initialSchedule);
       formik.setFieldValue('working_hours', initialSchedule);
     }
   }, [formik, isEditMode, servicePoint]);
 
   const workingHours = formik.values.working_hours as WorkingHoursSchedule || emptyWorkingHours;
 
+  // Нормализуем working_hours - преобразуем строковые is_working_day в boolean
+  const normalizedWorkingHours: WorkingHoursSchedule = React.useMemo(() => {
+    const normalized = {} as WorkingHoursSchedule;
+    DAYS_OF_WEEK.forEach(day => {
+      const dayHours = workingHours[day.key];
+      if (dayHours) {
+        normalized[day.key] = {
+          start: dayHours.start,
+          end: dayHours.end,
+          is_working_day: dayHours.is_working_day === true || (dayHours.is_working_day as any) === 'true'
+        };
+      } else {
+        normalized[day.key] = {
+          start: '09:00',
+          end: '18:00',
+          is_working_day: false
+        };
+      }
+    });
+    return normalized;
+  }, [workingHours]);
+
   // Проверяем есть ли хотя бы один рабочий день
   const hasWorkingDays = DAYS_OF_WEEK.some(day => 
-    workingHours[day.key]?.is_working_day
+    normalizedWorkingHours[day.key]?.is_working_day
   );
 
   return (
@@ -75,7 +108,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
       
       <Grid container spacing={3}>
         {DAYS_OF_WEEK.map((day: DayOfWeek) => {
-          const dayHours = workingHours[day.key] || {
+          const dayHours = normalizedWorkingHours[day.key] || {
             start: '09:00',
             end: '18:00',
             is_working_day: false
@@ -95,13 +128,15 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                         <Switch
                           checked={dayHours.is_working_day}
                           onChange={(e) => {
+                            console.log(`Изменение рабочего дня ${day.name}: ${dayHours.is_working_day} -> ${e.target.checked}`);
                             const newWorkingHours = {
-                              ...workingHours,
+                              ...normalizedWorkingHours,
                               [day.key]: {
                                 ...dayHours,
                                 is_working_day: e.target.checked
                               }
                             };
+                            console.log('Новое расписание:', newWorkingHours);
                             formik.setFieldValue('working_hours', newWorkingHours);
                           }}
                           name={`working_hours.${day.key}.is_working_day`}
@@ -121,7 +156,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                           value={dayHours.start}
                           onChange={(e) => {
                             const newWorkingHours = {
-                              ...workingHours,
+                              ...normalizedWorkingHours,
                               [day.key]: {
                                 ...dayHours,
                                 start: e.target.value
@@ -141,7 +176,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                           value={dayHours.end}
                           onChange={(e) => {
                             const newWorkingHours = {
-                              ...workingHours,
+                              ...normalizedWorkingHours,
                               [day.key]: {
                                 ...dayHours,
                                 end: e.target.value
@@ -173,7 +208,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
           color="primary" 
           sx={{ cursor: 'pointer', textDecoration: 'underline' }}
           onClick={() => {
-            const newWorkingHours = { ...workingHours };
+            const newWorkingHours = { ...normalizedWorkingHours };
             DAYS_OF_WEEK.forEach(day => {
               if (day.id >= 1 && day.id <= 5) { // Пн-Пт (id: 1-5)
                 newWorkingHours[day.key] = {
@@ -200,7 +235,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
           color="primary" 
           sx={{ cursor: 'pointer', textDecoration: 'underline' }}
           onClick={() => {
-            const newWorkingHours = { ...workingHours };
+            const newWorkingHours = { ...normalizedWorkingHours };
             DAYS_OF_WEEK.forEach(day => {
               newWorkingHours[day.key] = {
                 start: '08:00',
@@ -219,7 +254,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
           color="primary" 
           sx={{ cursor: 'pointer', textDecoration: 'underline' }}
           onClick={() => {
-            const newWorkingHours = { ...workingHours };
+            const newWorkingHours = { ...normalizedWorkingHours };
             DAYS_OF_WEEK.forEach(day => {
               newWorkingHours[day.key] = {
                 start: '09:00',
