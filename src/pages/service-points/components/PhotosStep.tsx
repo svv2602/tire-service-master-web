@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -9,13 +9,13 @@ import {
   CardActions,
   CardMedia,
   TextField,
-  FormControlLabel,
-  Switch,
   IconButton,
   Alert,
   LinearProgress,
   Chip,
   Tooltip,
+  Paper,
+  Divider,
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoIcon,
@@ -23,6 +23,7 @@ import {
   Photo as PhotoIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
+  CloudUpload as UploadIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePointPhoto, ServicePoint } from '../../../types/models';
@@ -33,46 +34,32 @@ interface PhotosStepProps {
   servicePoint?: ServicePoint;
 }
 
-// Интерфейс для загружаемых фотографий
-interface PhotoUpload {
-  id?: string; // Временный ID для новых фотографий
-  file?: File;
-  url?: string;
+// Интерфейс для новых фотографий с файлами
+interface NewPhotoData {
+  tempId: string;
+  file: File;
+  preview: string;
   description: string;
   is_main: boolean;
   sort_order: number;
-  preview?: string; // URL для предпросмотра
 }
 
 const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoint }) => {
-  // Состояние для загружаемых фотографий (новых)
-  const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([]);
+  // Состояние для новых загружаемых фотографий
+  const [newPhotos, setNewPhotos] = useState<NewPhotoData[]>([]);
   
-  // Получаем существующие фотографии из формы
-  const existingPhotos = formik.values.photos || [];
-  
-  // Объединяем существующие и новые фотографии для отображения
-  const allPhotos = [
-    ...existingPhotos.map(photo => ({
-      id: photo.id?.toString() || 'existing',
-      url: photo.url,
-      description: photo.description || '',
-      is_main: photo.is_main,
-      sort_order: photo.sort_order || 0,
-      isExisting: true,
-      preview: undefined as string | undefined, // Добавляем preview для совместимости типов
-    })),
-    ...photoUploads.map(upload => ({
-      ...upload,
-      id: upload.id || 'new',
-      isExisting: false,
-    }))
-  ];
-
   // Максимальное количество фотографий
   const MAX_PHOTOS = 10;
 
-  // Обработчик загрузки фотографий
+  // Получаем существующие фотографии из формы
+  const existingPhotos = useMemo(() => {
+    return formik.values.photos?.filter(photo => !photo._destroy && photo.id && photo.id > 0) || [];
+  }, [formik.values.photos]);
+
+  // Общее количество фотографий
+  const totalPhotosCount = existingPhotos.length + newPhotos.length;
+
+  // Обработчик загрузки новых фотографий
   const handlePhotoUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -80,106 +67,158 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
     const filesArray = Array.from(files);
     
     // Проверяем лимит фотографий
-    if (allPhotos.length + filesArray.length > MAX_PHOTOS) {
-      // Показываем ошибку через formik или alert
+    if (totalPhotosCount + filesArray.length > MAX_PHOTOS) {
       alert(`Максимальное количество фотографий: ${MAX_PHOTOS}`);
       return;
     }
 
     // Создаем объекты для новых фотографий
-    const newPhotoUploads: PhotoUpload[] = filesArray.map((file, index) => ({
-      id: `new-${Date.now()}-${index}`,
+    const newPhotoData: NewPhotoData[] = filesArray.map((file, index) => ({
+      tempId: `temp-${Date.now()}-${index}`,
       file,
-      description: '',
-      is_main: allPhotos.length === 0 && index === 0, // Первая фотография становится главной, если других нет
-      sort_order: allPhotos.length + index,
       preview: URL.createObjectURL(file),
+      description: '',
+      is_main: totalPhotosCount === 0 && index === 0, // Первая фотография становится главной, если других нет
+      sort_order: totalPhotosCount + index,
     }));
 
-    setPhotoUploads(prev => [...prev, ...newPhotoUploads]);
+    setNewPhotos(prev => [...prev, ...newPhotoData]);
     
     // Очищаем input для повторной загрузки
     event.target.value = '';
-  }, [allPhotos.length]);
+  }, [totalPhotosCount]);
 
-  // Обработчик удаления фотографии
-  const handleDeletePhoto = useCallback((photoId: string, isExisting: boolean) => {
-    if (isExisting) {
-      // Удаляем из существующих фотографий в formik
-      const updatedPhotos = existingPhotos.filter(photo => photo.id?.toString() !== photoId);
-      formik.setFieldValue('photos', updatedPhotos);
+  // Обработчик удаления существующей фотографии
+  const handleDeleteExistingPhoto = useCallback((photoIndex: number) => {
+    const updatedPhotos = [...(formik.values.photos || [])];
+    const photoToDelete = updatedPhotos[photoIndex];
+    
+    // Если фотография имеет ID (существует в БД), помечаем для удаления
+    if (photoToDelete.id) {
+      updatedPhotos[photoIndex] = { ...photoToDelete, _destroy: true };
     } else {
-      // Удаляем из новых загрузок
-      const photoToDelete = photoUploads.find(p => p.id === photoId);
+      // Удаляем из массива если это новая фотография без ID
+      updatedPhotos.splice(photoIndex, 1);
+    }
+    
+    formik.setFieldValue('photos', updatedPhotos);
+  }, [formik]);
+
+  // Обработчик удаления новой фотографии
+  const handleDeleteNewPhoto = useCallback((tempId: string) => {
+    setNewPhotos(prev => {
+      const photoToDelete = prev.find(p => p.tempId === tempId);
       if (photoToDelete?.preview) {
         URL.revokeObjectURL(photoToDelete.preview);
       }
-      setPhotoUploads(prev => prev.filter(p => p.id !== photoId));
-    }
-  }, [existingPhotos, photoUploads, formik]);
+      return prev.filter(p => p.tempId !== tempId);
+    });
+  }, []);
 
-  // Обработчик установки главной фотографии
-  const handleSetMainPhoto = useCallback((photoId: string, isExisting: boolean) => {
-    if (isExisting) {
-      // Обновляем существующие фотографии
-      const updatedPhotos = existingPhotos.map(photo => ({
-        ...photo,
-        is_main: photo.id?.toString() === photoId
-      }));
-      formik.setFieldValue('photos', updatedPhotos);
-    } else {
-      // Обновляем новые загрузки
-      setPhotoUploads(prev => prev.map(upload => ({
-        ...upload,
-        is_main: upload.id === photoId
-      })));
-    }
+  // Обработчик установки главной фотографии среди существующих
+  const handleSetMainExistingPhoto = useCallback((photoIndex: number) => {
+    const updatedPhotos = [...(formik.values.photos || [])];
     
-    // Убираем флаг is_main у всех остальных фотографий
-    if (isExisting) {
-      setPhotoUploads(prev => prev.map(upload => ({ ...upload, is_main: false })));
-    } else {
-      const updatedPhotos = existingPhotos.map(photo => ({ ...photo, is_main: false }));
-      formik.setFieldValue('photos', updatedPhotos);
-    }
-  }, [existingPhotos, formik]);
+    // Убираем флаг главной у всех фотографий
+    updatedPhotos.forEach((photo, index) => {
+      updatedPhotos[index] = { ...photo, is_main: index === photoIndex };
+    });
+    
+    formik.setFieldValue('photos', updatedPhotos);
+    
+    // Убираем флаг главной у новых фотографий
+    setNewPhotos(prev => prev.map(photo => ({ ...photo, is_main: false })));
+  }, [formik]);
 
-  // Обработчик изменения описания фотографии
-  const handleDescriptionChange = useCallback((photoId: string, description: string, isExisting: boolean) => {
-    if (isExisting) {
-      const updatedPhotos = existingPhotos.map(photo => 
-        photo.id?.toString() === photoId ? { ...photo, description } : photo
-      );
-      formik.setFieldValue('photos', updatedPhotos);
-    } else {
-      setPhotoUploads(prev => prev.map(upload => 
-        upload.id === photoId ? { ...upload, description } : upload
-      ));
-    }
-  }, [existingPhotos, formik]);
+  // Обработчик установки главной фотографии среди новых
+  const handleSetMainNewPhoto = useCallback((tempId: string) => {
+    setNewPhotos(prev => prev.map(photo => ({
+      ...photo,
+      is_main: photo.tempId === tempId
+    })));
+    
+    // Убираем флаг главной у существующих фотографий
+    const updatedPhotos = [...(formik.values.photos || [])];
+    updatedPhotos.forEach((photo, index) => {
+      updatedPhotos[index] = { ...photo, is_main: false };
+    });
+    formik.setFieldValue('photos', updatedPhotos);
+  }, [formik]);
 
-  // Получаем массив новых фотографий для передачи в родительский компонент
+  // Обработчик изменения описания существующей фотографии
+  const handleUpdateExistingPhotoDescription = useCallback((photoIndex: number, description: string) => {
+    const updatedPhotos = [...(formik.values.photos || [])];
+    updatedPhotos[photoIndex] = { ...updatedPhotos[photoIndex], description };
+    formik.setFieldValue('photos', updatedPhotos);
+  }, [formik]);
+
+  // Обработчик изменения описания новой фотографии
+  const handleUpdateNewPhotoDescription = useCallback((tempId: string, description: string) => {
+    setNewPhotos(prev => prev.map(photo => 
+      photo.tempId === tempId ? { ...photo, description } : photo
+    ));
+  }, []);
+
+  // Сохранение новых фотографий в формик при изменении
   React.useEffect(() => {
-    // Можно добавить логику для передачи photoUploads в родительский компонент
-    // Например, через callback prop или context
-  }, [photoUploads]);
+    if (newPhotos.length === 0) return; // Не обновляем, если нет новых фотографий
+
+    // Преобразуем новые фотографии в формат для отправки на сервер
+    const newPhotosData: ServicePointPhoto[] = newPhotos.map(photo => ({
+      id: 0, // Временный ID для новых фотографий
+      service_point_id: 0,
+      url: photo.preview,
+      description: photo.description,
+      is_main: photo.is_main,
+      sort_order: photo.sort_order,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      file: photo.file as any // Добавляем файл для загрузки
+    }));
+
+    // Получаем только существующие фотографии (без временных)
+    const existingPhotosOnly = (formik.values.photos || []).filter(photo => photo.id > 0 || photo._destroy);
+    
+    // Объединяем существующие и новые фотографии
+    const allPhotos = [...existingPhotosOnly, ...newPhotosData];
+    
+    formik.setFieldValue('photos', allPhotos);
+  }, [newPhotos]); // Убираем formik из зависимостей чтобы избежать бесконечного цикла
+
+  // Проверка имеет ли точка главную фотографию
+  const hasMainPhoto = useMemo(() => {
+    const existingMain = existingPhotos.some(photo => photo.is_main);
+    const newMain = newPhotos.some(photo => photo.is_main);
+    return existingMain || newMain;
+  }, [existingPhotos, newPhotos]);
+
+  // Очистка URL preview при размонтировании
+  React.useEffect(() => {
+    return () => {
+      newPhotos.forEach(photo => {
+        if (photo.preview) {
+          URL.revokeObjectURL(photo.preview);
+        }
+      });
+    };
+  }, []); // Пустой массив зависимостей - выполняется только при размонтировании
 
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <PhotoIcon sx={{ mr: 1, color: 'primary.main' }} />
         <Typography variant="h6">
-          Фотографии
+          Фотографии сервисной точки
         </Typography>
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Добавьте фотографии сервисной точки для привлечения клиентов. 
-        Рекомендуется загрузить фотографии рабочих мест, оборудования и общего вида.
+        Добавьте качественные фотографии сервисной точки. Хорошие фотографии помогают привлечь больше клиентов.
+        Первая фотография или фотография с флагом "Главная" будет отображаться как основная.
       </Typography>
 
-      {/* Кнопка загрузки фотографий */}
-      <Box sx={{ mb: 3 }}>
+      {/* Блок загрузки фотографий */}
+      <Paper sx={{ p: 3, mb: 3, border: '2px dashed', borderColor: 'primary.main', textAlign: 'center' }}>
         <input
           accept="image/jpeg,image/jpg,image/png,image/webp"
           style={{ display: 'none' }}
@@ -189,122 +228,258 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           onChange={handlePhotoUpload}
         />
         <label htmlFor="photo-upload-input">
-          <Button
-            variant="outlined"
-            component="span"
-            startIcon={<AddPhotoIcon />}
-            disabled={allPhotos.length >= MAX_PHOTOS}
-          >
-            Добавить фотографии
-          </Button>
+          <Box>
+            <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+            <Typography variant="h6" gutterBottom>
+              Перетащите фотографии сюда или нажмите для выбора
+            </Typography>
+            <Button
+              variant="contained"
+              component="span"
+              startIcon={<AddPhotoIcon />}
+              disabled={totalPhotosCount >= MAX_PHOTOS}
+              sx={{ mt: 2 }}
+            >
+              Выбрать фотографии
+            </Button>
+          </Box>
         </label>
-        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 1 }}>
-          Поддерживаемые форматы: JPEG, PNG, WebP. Максимум {MAX_PHOTOS} фотографий.
+        <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 2 }}>
+          Поддерживаемые форматы: JPEG, PNG, WebP. Максимум {MAX_PHOTOS} фотографий. Максимальный размер файла: 5MB.
         </Typography>
-      </Box>
+      </Paper>
 
-      {/* Индикатор количества фотографий */}
+      {/* Индикатор прогресса загрузки */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2">
-            Загружено фотографий: {allPhotos.length} из {MAX_PHOTOS}
+            Загружено фотографий: {totalPhotosCount} из {MAX_PHOTOS}
           </Typography>
+          {!hasMainPhoto && totalPhotosCount > 0 && (
+            <Chip 
+              label="Нет главной фотографии" 
+              color="warning" 
+              size="small"
+              icon={<StarBorderIcon />}
+            />
+          )}
         </Box>
         <LinearProgress 
           variant="determinate" 
-          value={(allPhotos.length / MAX_PHOTOS) * 100} 
+          value={(totalPhotosCount / MAX_PHOTOS) * 100} 
           sx={{ height: 8, borderRadius: 4 }}
+          color={totalPhotosCount >= MAX_PHOTOS ? 'warning' : 'primary'}
         />
       </Box>
 
-      {allPhotos.length >= MAX_PHOTOS && (
+      {/* Предупреждения */}
+      {totalPhotosCount >= MAX_PHOTOS && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Достигнуто максимальное количество фотографий ({MAX_PHOTOS})
+          Достигнуто максимальное количество фотографий ({MAX_PHOTOS}). 
+          Удалите некоторые фотографии, чтобы добавить новые.
+        </Alert>
+      )}
+
+      {!hasMainPhoto && totalPhotosCount > 0 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Рекомендуется установить одну из фотографий как главную. Главная фотография будет отображаться в списке сервисных точек.
         </Alert>
       )}
 
       {/* Сетка фотографий */}
-      {allPhotos.length > 0 ? (
-        <Grid container spacing={3}>
-          {allPhotos.map((photo) => (
-            <Grid item xs={12} sm={6} md={4} key={photo.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ position: 'relative' }}>
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={photo.preview || photo.url}
-                    alt={photo.description || 'Фотография сервисной точки'}
-                    sx={{ objectFit: 'cover' }}
-                  />
-                  
-                  {/* Индикатор главной фотографии */}
-                  {photo.is_main && (
+      {totalPhotosCount > 0 ? (
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Фотографии ({totalPhotosCount})
+          </Typography>
+          <Grid container spacing={3}>
+            {/* Существующие фотографии */}
+            {existingPhotos.map((photo, index) => (
+              <Grid item xs={12} sm={6} md={4} key={`existing-${photo.id || index}`}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ position: 'relative' }}>
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={photo.url}
+                      alt={photo.description || 'Фотография сервисной точки'}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    
+                    {/* Индикатор главной фотографии */}
+                    {photo.is_main && (
+                      <Chip
+                        icon={<StarIcon />}
+                        label="Главная"
+                        color="primary"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          left: 8,
+                        }}
+                      />
+                    )}
+                    
+                    {/* Индикатор существующей фотографии */}
                     <Chip
-                      icon={<StarIcon />}
-                      label="Главная"
-                      color="primary"
+                      label="Загружена"
+                      color="success"
                       size="small"
                       sx={{
                         position: 'absolute',
                         top: 8,
-                        left: 8,
+                        right: 48,
                       }}
                     />
-                  )}
+                    
+                    {/* Кнопка удаления */}
+                    <Tooltip title="Удалить фотографию">
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteExistingPhoto(index)}
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 1)',
+                          },
+                        }}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                   
-                  {/* Кнопка удаления */}
-                  <Tooltip title="Удалить фотографию">
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDeletePhoto(photo.id, photo.isExisting)}
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Описание фотографии"
+                      value={photo.description || ''}
+                      onChange={(e) => handleUpdateExistingPhotoDescription(index, e.target.value)}
+                      multiline
+                      rows={2}
+                      size="small"
+                      placeholder="Краткое описание фотографии"
+                    />
+                  </CardContent>
+                  
+                  <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                    <Button
+                      startIcon={photo.is_main ? <StarIcon /> : <StarBorderIcon />}
+                      onClick={() => handleSetMainExistingPhoto(index)}
+                      color={photo.is_main ? 'primary' : 'inherit'}
+                      size="small"
+                      disabled={photo.is_main}
+                    >
+                      {photo.is_main ? 'Главная' : 'Сделать главной'}
+                    </Button>
+                    
+                    <Typography variant="caption" color="text.secondary">
+                      #{photo.sort_order || index + 1}
+                    </Typography>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+
+            {/* Новые фотографии */}
+            {newPhotos.map((photo) => (
+              <Grid item xs={12} sm={6} md={4} key={`new-${photo.tempId}`}>
+                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ position: 'relative' }}>
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={photo.preview}
+                      alt={photo.description || 'Новая фотография'}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    
+                    {/* Индикатор главной фотографии */}
+                    {photo.is_main && (
+                      <Chip
+                        icon={<StarIcon />}
+                        label="Главная"
+                        color="primary"
+                        size="small"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          left: 8,
+                        }}
+                      />
+                    )}
+                    
+                    {/* Индикатор новой фотографии */}
+                    <Chip
+                      label="Новая"
+                      color="info"
+                      size="small"
                       sx={{
                         position: 'absolute',
                         top: 8,
-                        right: 8,
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                        '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        },
+                        right: 48,
                       }}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <TextField
-                    fullWidth
-                    label="Описание фотографии"
-                    value={photo.description}
-                    onChange={(e) => handleDescriptionChange(photo.id, e.target.value, photo.isExisting)}
-                    multiline
-                    rows={2}
-                    size="small"
-                    placeholder="Краткое описание того, что изображено на фотографии"
-                  />
-                </CardContent>
-                
-                <CardActions sx={{ justifyContent: 'space-between' }}>
-                  <Button
-                    startIcon={photo.is_main ? <StarIcon /> : <StarBorderIcon />}
-                    onClick={() => handleSetMainPhoto(photo.id, photo.isExisting)}
-                    color={photo.is_main ? 'primary' : 'inherit'}
-                    size="small"
-                  >
-                    {photo.is_main ? 'Главная' : 'Сделать главной'}
-                  </Button>
+                    />
+                    
+                    {/* Кнопка удаления */}
+                    <Tooltip title="Удалить фотографию">
+                      <IconButton
+                        color="error"
+                        onClick={() => handleDeleteNewPhoto(photo.tempId)}
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 1)',
+                          },
+                        }}
+                        size="small"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                   
-                  <Typography variant="caption" color="text.secondary">
-                    #{photo.sort_order + 1}
-                  </Typography>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Описание фотографии"
+                      value={photo.description}
+                      onChange={(e) => handleUpdateNewPhotoDescription(photo.tempId, e.target.value)}
+                      multiline
+                      rows={2}
+                      size="small"
+                      placeholder="Краткое описание фотографии"
+                    />
+                  </CardContent>
+                  
+                  <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                    <Button
+                      startIcon={photo.is_main ? <StarIcon /> : <StarBorderIcon />}
+                      onClick={() => handleSetMainNewPhoto(photo.tempId)}
+                      color={photo.is_main ? 'primary' : 'inherit'}
+                      size="small"
+                      disabled={photo.is_main}
+                    >
+                      {photo.is_main ? 'Главная' : 'Сделать главной'}
+                    </Button>
+                    
+                    <Typography variant="caption" color="text.secondary">
+                      #{photo.sort_order + 1}
+                    </Typography>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
       ) : (
         <Alert severity="info" sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
@@ -317,27 +492,46 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
         </Alert>
       )}
 
-      {/* Сохранение новых фотографий для передачи в родительский компонент */}
-      {photoUploads.length > 0 && (
+      {/* Информация о новых фотографиях */}
+      {newPhotos.length > 0 && (
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            📸 Новые фотографии ({photoUploads.length}) будут загружены после сохранения сервисной точки.
+            📸 Новые фотографии ({newPhotos.length}) будут загружены при сохранении сервисной точки.
           </Typography>
         </Alert>
       )}
 
-      {/* Информационная подсказка */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        <Typography variant="body2">
-          💡 <strong>Советы по фотографиям:</strong>
+      {/* Советы */}
+      <Box sx={{ mt: 4 }}>
+        <Divider sx={{ mb: 3 }} />
+        <Typography variant="h6" gutterBottom>
+          💡 Советы для лучших фотографий
         </Typography>
-        <Typography variant="body2" component="div" sx={{ mt: 1 }}>
-          • Загружайте качественные фотографии хорошего разрешения<br/>
-          • Первая фотография автоматически становится главной<br/>
-          • Главная фотография отображается в списке сервисных точек<br/>
-          • Добавьте описания для лучшего понимания контента
-        </Typography>
-      </Alert>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="body2" component="div">
+              <strong>Что фотографировать:</strong>
+              <ul style={{ marginTop: 8, paddingLeft: 20 }}>
+                <li>Общий вид сервисного центра</li>
+                <li>Рабочие места и оборудование</li>
+                <li>Зону ожидания клиентов</li>
+                <li>Парковку и въезд</li>
+              </ul>
+            </Typography>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Typography variant="body2" component="div">
+              <strong>Качество фотографий:</strong>
+              <ul style={{ marginTop: 8, paddingLeft: 20 }}>
+                <li>Хорошее освещение</li>
+                <li>Высокое разрешение</li>
+                <li>Четкие, не размытые снимки</li>
+                <li>Привлекательные ракурсы</li>
+              </ul>
+            </Typography>
+          </Grid>
+        </Grid>
+      </Box>
     </Box>
   );
 };

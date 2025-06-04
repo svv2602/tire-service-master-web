@@ -427,6 +427,7 @@ export interface ServicePointPhoto {
   sort_order?: number;
   created_at: string;
   updated_at: string;
+  _destroy?: boolean;
 }
 
 // Интерфейс для постов обслуживания

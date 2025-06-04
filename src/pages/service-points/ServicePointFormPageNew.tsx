@@ -113,9 +113,9 @@ const ServicePointFormPageNew: React.FC = () => {
     initialValues,
     validationSchema,
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: async (values: ServicePointFormDataNew) => {
       try {
-        const servicePointData = {
+        const servicePointData: any = {
           name: values.name,
           description: values.description,
           address: values.address,
@@ -127,22 +127,6 @@ const ServicePointFormPageNew: React.FC = () => {
           is_active: values.is_active,
           work_status: values.work_status,
           working_hours: values.working_hours,
-          services_attributes: values.services?.map(service => {
-            const serviceData: any = {
-              service_id: service.service_id,
-              price: service.price,
-              duration: service.duration,
-              is_available: service.is_available,
-              _destroy: service._destroy || false
-            };
-            
-            // Если услуга имеет реальный ID (существует в БД), добавляем его
-            if ((service as any).id && typeof (service as any).id === 'number' && (service as any).id > 0) {
-              serviceData.id = (service as any).id;
-            }
-            
-            return serviceData;
-          }) || [],
           service_posts_attributes: values.service_posts?.map(post => {
             const postData: any = {
               name: post.name,
@@ -162,21 +146,104 @@ const ServicePointFormPageNew: React.FC = () => {
           }) || []
         };
 
+        // Создаем FormData для отправки файлов
+        const formData = new FormData();
+        
+        // Добавляем основные поля напрямую в FormData (не как JSON)
+        formData.append('service_point[name]', servicePointData.name);
+        formData.append('service_point[description]', servicePointData.description || '');
+        formData.append('service_point[address]', servicePointData.address);
+        formData.append('service_point[city_id]', servicePointData.city_id.toString());
+        formData.append('service_point[partner_id]', servicePointData.partner_id.toString());
+        formData.append('service_point[contact_phone]', servicePointData.contact_phone);
+        formData.append('service_point[is_active]', servicePointData.is_active.toString());
+        formData.append('service_point[work_status]', servicePointData.work_status);
+        
+        if (servicePointData.latitude) {
+          formData.append('service_point[latitude]', servicePointData.latitude.toString());
+        }
+        if (servicePointData.longitude) {
+          formData.append('service_point[longitude]', servicePointData.longitude.toString());
+        }
+        
+        // Добавляем расписание работы
+        Object.entries(servicePointData.working_hours).forEach(([day, hours]) => {
+          const workingHours = hours as WorkingHours;
+          formData.append(`service_point[working_hours][${day}][start]`, workingHours.start);
+          formData.append(`service_point[working_hours][${day}][end]`, workingHours.end);
+          formData.append(`service_point[working_hours][${day}][is_working_day]`, workingHours.is_working_day.toString());
+        });
+        
+        // Добавляем посты обслуживания
+        servicePointData.service_posts_attributes.forEach((post: any, index: number) => {
+          formData.append(`service_point[service_posts_attributes][${index}][name]`, post.name);
+          formData.append(`service_point[service_posts_attributes][${index}][description]`, post.description || '');
+          formData.append(`service_point[service_posts_attributes][${index}][slot_duration]`, post.slot_duration.toString());
+          formData.append(`service_point[service_posts_attributes][${index}][is_active]`, post.is_active.toString());
+          formData.append(`service_point[service_posts_attributes][${index}][post_number]`, post.post_number.toString());
+          formData.append(`service_point[service_posts_attributes][${index}][_destroy]`, post._destroy.toString());
+          
+          if (post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000) {
+            formData.append(`service_point[service_posts_attributes][${index}][id]`, post.id.toString());
+          }
+        });
+
+        // Добавляем существующие услуги в FormData
+        if (values.services && values.services.length > 0) {
+          values.services.forEach((service, index) => {
+            formData.append(`service_point[services_attributes][${index}][service_id]`, service.service_id.toString());
+            formData.append(`service_point[services_attributes][${index}][price]`, service.price.toString());
+            formData.append(`service_point[services_attributes][${index}][duration]`, service.duration.toString());
+            formData.append(`service_point[services_attributes][${index}][is_available]`, service.is_available.toString());
+            formData.append(`service_point[services_attributes][${index}][_destroy]`, (service._destroy || false).toString());
+            
+            if (service.id && typeof service.id === 'number' && service.id > 0) {
+              formData.append(`service_point[services_attributes][${index}][id]`, service.id.toString());
+            }
+          });
+        }
+
+        // Добавляем фотографии в FormData
+        if (values.photos && values.photos.length > 0) {
+          values.photos.forEach((photo, index) => {
+            // Если фотография имеет реальный ID (существует в БД), добавляем его
+            if (photo.id && typeof photo.id === 'number' && photo.id > 0) {
+              formData.append(`service_point[photos_attributes][${index}][id]`, photo.id.toString());
+              formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
+              formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
+              formData.append(`service_point[photos_attributes][${index}][sort_order]`, (photo.sort_order || 0).toString());
+              formData.append(`service_point[photos_attributes][${index}][_destroy]`, ((photo as any)._destroy || false).toString());
+            } else if ((photo as any).file && (photo as any).file instanceof File) {
+              // Для новых фотографий отправляем файл и метаданные
+              formData.append(`service_point[photos_attributes][${index}][file]`, (photo as any).file);
+              formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
+              formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
+              formData.append(`service_point[photos_attributes][${index}][sort_order]`, (photo.sort_order || 0).toString());
+            }
+          });
+        }
+
         // Отладочная информация
         console.log('=== Отправляемые данные ===');
-        console.log('service_posts_attributes:', servicePointData.service_posts_attributes);
-        console.log('Полные данные:', servicePointData);
+        console.log('servicePointData object:', servicePointData);
+        console.log('FormData содержимое:');
+        // Используем более совместимый способ итерации FormData
+        const entries: string[] = [];
+        formData.forEach((value, key) => {
+          entries.push(`${key}: ${value instanceof File ? `[File: ${value.name}]` : value}`);
+        });
+        console.log(entries.join('\n'));
 
         if (isEditMode && id) {
           await updateServicePoint({
             id,
-            servicePoint: servicePointData
+            servicePoint: formData
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
           await createServicePoint({
             partnerId: partnerId || values.partner_id.toString(),
-            servicePoint: servicePointData
+            servicePoint: formData
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно создана');
         }
@@ -227,6 +294,17 @@ const ServicePointFormPageNew: React.FC = () => {
       }
     }
   }, [isEditMode, servicePoint?.services]);
+
+  // Загружаем существующие фотографии при редактировании
+  useEffect(() => {
+    if (isEditMode && servicePoint?.photos && servicePoint.photos.length > 0) {
+      // Проверяем, что фотографии еще не загружены в форму
+      const currentPhotos = formik.values.photos || [];
+      if (currentPhotos.length === 0 || currentPhotos[0]?.id !== servicePoint.photos[0]?.id) {
+        formik.setFieldValue('photos', servicePoint.photos);
+      }
+    }
+  }, [isEditMode, servicePoint?.photos]);
 
   // Обработчики
   const handleNext = () => {

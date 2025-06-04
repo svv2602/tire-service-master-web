@@ -60,22 +60,48 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Создание новой сервисной точки
-    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: any }>({
-      query: ({ partnerId, servicePoint }) => ({
-        url: `/partners/${partnerId}/service_points`,
-        method: 'POST',
-        body: { service_point: servicePoint },
-      }),
+    createServicePoint: builder.mutation<ServicePoint, { partnerId: string | number; servicePoint: FormData | any }>({
+      query: ({ partnerId, servicePoint }) => {
+        if (servicePoint instanceof FormData) {
+          return {
+            url: `/partners/${partnerId}/service_points`,
+            method: 'POST',
+            body: servicePoint,
+          };
+        } else {
+          return {
+            url: `/partners/${partnerId}/service_points`,
+            method: 'POST',
+            body: { service_point: servicePoint },
+          };
+        }
+      },
       invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
     }),
 
     // Обновление сервисной точки
-    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: any }>({
-      query: ({ id, servicePoint }) => ({
-        url: `/partners/${servicePoint.partner_id}/service_points/${id}`,
-        method: 'PATCH',
-        body: { service_point: servicePoint },
-      }),
+    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: FormData | any }>({
+      query: ({ id, servicePoint }) => {
+        // Извлекаем partner_id из FormData или объекта
+        let partnerId;
+        if (servicePoint instanceof FormData) {
+          // Для FormData partner_id теперь в основных полях
+          partnerId = servicePoint.get('service_point[partner_id]');
+          console.log('partner_id from FormData:', partnerId);
+          
+          return {
+            url: `/partners/${partnerId}/service_points/${id}`,
+            method: 'PATCH',
+            body: servicePoint,
+          };
+        } else {
+          return {
+            url: `/partners/${servicePoint.partner_id}/service_points/${id}`,
+            method: 'PATCH',
+            body: { service_point: servicePoint },
+          };
+        }
+      },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'ServicePoint' as const, id },
         { type: 'ServicePoint' as const, id: 'LIST' }
