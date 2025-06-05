@@ -29,6 +29,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -44,7 +45,7 @@ import type { ServicePointFormDataNew, ServicePost, ServicePoint } from '../../.
 import type { WorkingHours } from '../../../types/working-hours';
 import { DAYS_OF_WEEK } from '../../../types/working-hours';
 import PostScheduleDialog from './PostScheduleDialog';
-import { useGetSchedulePreviewQuery } from '../../../api/servicePoints.api';
+import { useGetSchedulePreviewQuery, useCalculateSchedulePreviewMutation } from '../../../api/servicePoints.api';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -429,6 +430,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
           workingHours={formik.values.working_hours}
           activePosts={activePosts}
           servicePointId={servicePoint?.id?.toString()}
+          formData={formik.values}
         />
       )}
 
@@ -450,12 +452,20 @@ interface SlotSchedulePreviewProps {
   workingHours: any;
   activePosts: ServicePost[];
   servicePointId?: string;
+  formData?: any; // Данные формы для live preview
 }
 
-const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours, activePosts, servicePointId }) => {
+const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ 
+  workingHours, 
+  activePosts, 
+  servicePointId,
+  formData 
+}) => {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [livePreviewData, setLivePreviewData] = useState<any>(null);
   
-  // Используем API для получения предварительного просмотра
+  // Хуки для API
   const {
     data: schedulePreview,
     isLoading,
@@ -466,9 +476,26 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
       date: getCurrentDateForDay(selectedDay) 
     },
     { 
-      skip: !servicePointId || !workingHours 
+      skip: !servicePointId || !workingHours || !!livePreviewData // Пропускаем если есть live preview 
     }
   );
+
+  const [calculatePreview, { 
+    data: livePreview, 
+    isLoading: isLiveLoading, 
+    error: liveError 
+  }] = useCalculateSchedulePreviewMutation();
+
+  // Отладочная информация
+  console.log('SlotSchedulePreview: render with', {
+    servicePointId,
+    selectedDay,
+    activePosts: activePosts?.length,
+    workingHours: workingHours ? Object.keys(workingHours) : 'null',
+    hasFormData: !!formData,
+    hasLivePreview: !!livePreviewData,
+    isExpanded
+  });
   
   // Вспомогательная функция для получения даты для выбранного дня недели
   function getCurrentDateForDay(dayKey: string): string {
@@ -490,25 +517,103 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
     return targetDate.toISOString().split('T')[0];
   }
 
+  // Функция для расчета live preview с данными формы
+  const handleLivePreview = async () => {
+    if (!servicePointId || !formData) return;
+
+    try {
+      const result = await calculatePreview({
+        servicePointId,
+        date: getCurrentDateForDay(selectedDay),
+        formData: {
+          working_hours: workingHours,
+          service_posts_attributes: activePosts.map(post => ({
+            id: post.id,
+            name: post.name,
+            slot_duration: post.slot_duration,
+            is_active: post.is_active,
+            post_number: post.post_number,
+            has_custom_schedule: post.has_custom_schedule,
+            working_days: post.working_days,
+            custom_hours: post.custom_hours
+          }))
+        }
+      });
+
+      if (result.data) {
+        setLivePreviewData(result.data);
+        console.log('Live preview data received:', result.data);
+      }
+    } catch (error) {
+      console.error('Error calculating live preview:', error);
+    }
+  };
+
+  // Сброс live preview данных
+  const clearLivePreview = () => {
+    setLivePreviewData(null);
+  };
+
+  // Обработчик открытия/закрытия аккордеона
+  const handleAccordionChange = (event: React.SyntheticEvent, expanded: boolean) => {
+    setIsExpanded(expanded);
+    
+    if (expanded && formData && servicePointId) {
+      // При открытии рассчитываем live preview
+      handleLivePreview();
+    } else if (!expanded) {
+      // При закрытии очищаем live preview
+      clearLivePreview();
+    }
+  };
+
+  // Эффект для пересчета при изменении дня
+  React.useEffect(() => {
+    if (isExpanded && livePreviewData) {
+      handleLivePreview();
+    }
+  }, [selectedDay]);
+
+  // Эффект для пересчета при изменении данных формы
+  React.useEffect(() => {
+    if (isExpanded && formData) {
+      const timeoutId = setTimeout(() => {
+        handleLivePreview();
+      }, 500); // Дебаунс для избежания частых запросов
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formData, workingHours, activePosts]);
+
   // Генерируем временные слоты для выбранного дня
   const generateTimeSlots = (dayKey: string) => {
     const dayHours = workingHours[dayKey] as WorkingHours;
+    console.log('generateTimeSlots: dayKey=', dayKey, 'dayHours=', dayHours);
+    
     if (!dayHours.is_working_day) {
+      console.log('generateTimeSlots: не рабочий день');
       return [];
     }
 
     // Получаем посты, которые работают в этот день
     const availablePostsForDay = activePosts.filter(post => {
+      console.log('generateTimeSlots: проверяем пост', post.name, 'is_active=', post.is_active);
+      
       if (!post.is_active) return false;
       
       // Если у поста есть индивидуальное расписание, проверяем его рабочие дни
       if (post.has_custom_schedule && post.working_days) {
-        return post.working_days[dayKey as keyof typeof post.working_days];
+        const isWorking = post.working_days[dayKey as keyof typeof post.working_days];
+        console.log('generateTimeSlots: пост', post.name, 'с инд. расписанием, работает в', dayKey, '=', isWorking);
+        return isWorking;
       }
       
       // Если нет индивидуального расписания, используем расписание точки
+      console.log('generateTimeSlots: пост', post.name, 'без инд. расписания - работает');
       return true;
     });
+    
+    console.log('generateTimeSlots: availablePostsForDay.length=', availablePostsForDay.length);
 
     if (availablePostsForDay.length === 0) {
       return [];
@@ -516,7 +621,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
 
     const slots = [];
     
-    // Определяем общее время работы для дня (берем пересечение всех рабочих времен)
+    // Определяем общее время работы для дня (берем объединение времени работы всех постов)
     let earliestStart = new Date(`2024-01-01 ${dayHours.start}:00`);
     let latestEnd = new Date(`2024-01-01 ${dayHours.end}:00`);
     
@@ -526,12 +631,12 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
         const postStart = new Date(`2024-01-01 ${post.custom_hours.start}:00`);
         const postEnd = new Date(`2024-01-01 ${post.custom_hours.end}:00`);
         
-        // Начало - максимальное из всех начал (пересечение)
-        if (postStart > earliestStart) {
+        // Начало - минимальное из всех начал (объединение)
+        if (postStart < earliestStart) {
           earliestStart = postStart;
         }
-        // Конец - минимальное из всех концов (пересечение)
-        if (postEnd < latestEnd) {
+        // Конец - максимальное из всех концов (объединение)
+        if (postEnd > latestEnd) {
           latestEnd = postEnd;
         }
       }
@@ -574,6 +679,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
       current.setMinutes(current.getMinutes() + 15);
     }
     
+    console.log('generateTimeSlots: возвращаем', slots.length, 'слотов. Первые несколько:', slots.slice(0, 3));
     return slots;
   };
 
@@ -584,74 +690,71 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
 
   const selectedDayInfo = DAYS_OF_WEEK.find(day => day.key === selectedDay);
   
-  // Отображение состояний загрузки и ошибки
-  if (isLoading && servicePointId) {
-    return (
-      <Accordion sx={{ mt: 3 }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="schedule-preview-content"
-          id="schedule-preview-header"
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
-            <Typography variant="h6">
-              Предварительный просмотр расписания слотов
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Typography>Загрузка...</Typography>
-        </AccordionDetails>
-      </Accordion>
-    );
-  }
-
-  if (error && servicePointId) {
-    return (
-      <Accordion sx={{ mt: 3 }}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="schedule-preview-content"
-          id="schedule-preview-header"
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
-            <Typography variant="h6">
-              Предварительный просмотр расписания слотов
-            </Typography>
-          </Box>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Alert severity="error">
-            Ошибка загрузки предварительного просмотра
-          </Alert>
-        </AccordionDetails>
-      </Accordion>
-    );
-  }
-
   // Если нет servicePointId, используем fallback логику
-  const timeSlots = servicePointId && schedulePreview
-    ? schedulePreview.preview_slots
-    : generateTimeSlots(selectedDay);
+  const timeSlots = livePreviewData
+    ? livePreviewData.preview_slots
+    : (servicePointId && schedulePreview
+      ? schedulePreview.preview_slots
+      : generateTimeSlots(selectedDay));
+    
+  // Определяем, используем ли данные из API
+  const isUsingApiData = !!(livePreviewData || (servicePointId && schedulePreview));
+  const isUsingLivePreview = !!livePreviewData;
+  
+  console.log('SlotSchedulePreview: состояние перед генерацией слотов:', {
+    isUsingApiData,
+    isUsingLivePreview,
+    hasSchedulePreview: !!schedulePreview,
+    hasLivePreview: !!livePreviewData,
+    timeSlotsLength: timeSlots?.length,
+    workingHoursForSelectedDay: workingHours?.[selectedDay]
+  });
+  
+  const activePreviewData = livePreviewData || schedulePreview;
+  
+  if (activePreviewData) {
+    console.log('SlotSchedulePreview: данные из API:', {
+      preview_slots_count: activePreviewData.preview_slots?.length,
+      first_few_slots: activePreviewData.preview_slots?.slice(0, 5)?.map((s: any) => ({
+        time: s.time,
+        available_posts: s.available_posts,
+        total_posts: s.total_posts,
+        is_available: s.is_available
+      })),
+      service_point_id: activePreviewData.service_point_id,
+      date: activePreviewData.date,
+      is_preview_calculation: activePreviewData.is_preview_calculation,
+      form_data_applied: activePreviewData.form_data_applied
+    });
+  }
 
   if (workingDays.length === 0) {
     return null;
   }
 
   return (
-    <Accordion sx={{ mt: 3 }}>
+    <Accordion sx={{ mt: 3 }} expanded={isExpanded} onChange={handleAccordionChange}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="schedule-preview-content"
         id="schedule-preview-header"
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
           <Typography variant="h6">
             Предварительный просмотр расписания слотов
           </Typography>
+          {isUsingLivePreview && (
+            <Chip 
+              label="Live Preview" 
+              color="success" 
+              size="small" 
+              variant="outlined" 
+            />
+          )}
+          {(isLiveLoading || isLoading) && (
+            <CircularProgress size={16} />
+          )}
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -701,7 +804,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {timeSlots.map((slot, index) => (
+                  {timeSlots.map((slot: any, index: number) => (
                     <TableRow 
                       key={slot.time}
                       sx={{ 
@@ -717,22 +820,22 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                       <TableCell>
                         <Typography variant="body2">
                           {/* Используем данные из API или fallback */}
-                          {schedulePreview && servicePointId 
-                            ? `${slot.available_posts} из ${slot.total_posts}`
-                            : `${slot.availablePosts} из ${slot.totalPosts}`
+                          {isUsingApiData 
+                            ? `${(slot as any).available_posts} из ${(slot as any).total_posts}`
+                            : `${(slot as any).availablePosts} из ${(slot as any).totalPosts}`
                           }
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {/* Отображаем детали постов */}
-                          {(schedulePreview && servicePointId 
-                            ? slot.post_details 
-                            : slot.postDetails
-                          )?.map((post, idx) => (
+                          {(isUsingApiData 
+                            ? (slot as any).post_details 
+                            : (slot as any).postDetails
+                          )?.map((post: any, idx: number) => (
                             <Chip
-                              key={schedulePreview && servicePointId ? post.number : post.number}
-                              label={schedulePreview && servicePointId
+                              key={isUsingApiData ? post.number : post.number}
+                              label={isUsingApiData
                                 ? `${post.name} (${post.duration_minutes}мин)`
                                 : `${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`
                               }
@@ -741,9 +844,9 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                               color={post.hasCustomSchedule ? 'secondary' : 'default'}
                             />
                           ))}
-                          {(schedulePreview && servicePointId
-                            ? slot.available_posts === 0
-                            : slot.availablePosts === 0
+                          {(isUsingApiData
+                            ? (slot as any).available_posts === 0
+                            : (slot as any).availablePosts === 0
                           ) && (
                             <Typography variant="caption" color="text.secondary">
                               Нет доступных постов
@@ -753,13 +856,13 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={(schedulePreview && servicePointId 
-                            ? slot.is_available 
-                            : slot.isAvailable
+                          label={(isUsingApiData 
+                            ? (slot as any).is_available 
+                            : (slot as any).isAvailable
                           ) ? 'Доступно' : 'Недоступно'}
-                          color={(schedulePreview && servicePointId 
-                            ? slot.is_available 
-                            : slot.isAvailable
+                          color={(isUsingApiData 
+                            ? (slot as any).is_available 
+                            : (slot as any).isAvailable
                           ) ? 'success' : 'default'}
                           size="small"
                         />
@@ -772,13 +875,21 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({ workingHours,
 
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                📅 Слоты генерируются {servicePointId && schedulePreview
-                  ? 'с помощью API с учетом индивидуальной длительности слота каждого поста'
-                  : 'с учетом индивидуальной длительности слота каждого поста (предварительно)'
+                📅 Слоты генерируются {isUsingLivePreview
+                  ? 'в режиме live preview с текущими данными формы'
+                  : isUsingApiData
+                    ? 'с помощью API с учетом индивидуальной длительности слота каждого поста'
+                    : 'с учетом индивидуальной длительности слота каждого поста (предварительно)'
                 } в рамках рабочего времени. 
                 Количество доступных постов зависит от активных постов обслуживания и их индивидуальных расписаний.
                 <br />
                 💡 Посты с пометкой "(инд.)" работают по индивидуальному расписанию, которое может отличаться от графика точки обслуживания.
+                {isUsingLivePreview && (
+                  <>
+                    <br />
+                    🔄 <strong>Live Preview:</strong> Изменения в форме автоматически отражаются в расписании без сохранения данных.
+                  </>
+                )}
               </Typography>
             </Alert>
           </>

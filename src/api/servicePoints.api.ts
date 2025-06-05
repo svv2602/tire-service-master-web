@@ -245,6 +245,21 @@ export const servicePointsApi = baseApi.injectEndpoints({
         { type: 'SchedulePreview' as const, id: servicePointId },
       ],
     }),
+
+    // Новый endpoint для расчета предварительного просмотра с данными формы
+    calculateSchedulePreview: builder.mutation<SchedulePreviewResponse, { 
+      servicePointId: string; 
+      date: string; 
+      formData: any 
+    }>({
+      query: ({ servicePointId, date, formData }) => ({
+        url: `/service_points/${servicePointId}/calculate_schedule_preview`,
+        method: 'POST',
+        params: { date },
+        body: { service_point: formData },
+      }),
+      // Не кешируем мутацию, так как это предварительный просмотр
+    }),
   }),
 });
 
@@ -263,4 +278,5 @@ export const {
   useGetServicePointServicesQuery,
   useGetServicePointPhotosQuery,
   useGetSchedulePreviewQuery,
+  useCalculateSchedulePreviewMutation,
 } = servicePointsApi;
