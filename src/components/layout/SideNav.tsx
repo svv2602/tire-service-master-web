@@ -33,6 +33,9 @@ import {
   ExpandLess,
   ExpandMore,
   PlaceOutlined as PlaceOutlinedIcon,
+  Article as ArticleIcon,
+  MenuBook as MenuBookIcon,
+  Create as CreateIcon,
 } from '@mui/icons-material';
 
 interface SideNavProps {
@@ -54,6 +57,7 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   const [openCatalogs, setOpenCatalogs] = useState(false);
   const [openLocations, setOpenLocations] = useState(false);
   const [openCars, setOpenCars] = useState(false);
+  const [openArticles, setOpenArticles] = useState(false);
 
   // Проверки ролей пользователей
   const isAdmin = userRole === 'admin';
@@ -79,6 +83,10 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
 
   const handleCarsClick = () => {
     setOpenCars(!openCars);
+  };
+
+  const handleArticlesClick = () => {
+    setOpenArticles(!openArticles);
   };
 
   return (
@@ -138,6 +146,65 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
             <ListItemText primary="Клиенты" />
           </StyledListItemButton>
         </ListItem>
+
+        {/* База знаний (доступно всем для просмотра) */}
+        <ListItem disablePadding>
+          <StyledListItemButton
+            component={Link}
+            to="/knowledge-base"
+            selected={pathname === '/knowledge-base'}
+          >
+            <ListItemIcon>
+              <MenuBookIcon />
+            </ListItemIcon>
+            <ListItemText primary="База знаний" />
+          </StyledListItemButton>
+        </ListItem>
+
+        {/* Управление статьями (доступно админам и партнерам) */}
+        {(isAdmin || isPartner) && (
+          <>
+            <ListItem disablePadding>
+              <StyledListItemButton onClick={handleArticlesClick}>
+                <ListItemIcon>
+                  <ArticleIcon />
+                </ListItemIcon>
+                <ListItemText primary="Статьи" />
+                {openArticles ? <ExpandLess /> : <ExpandMore />}
+              </StyledListItemButton>
+            </ListItem>
+            <Collapse in={openArticles} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <StyledListItemButton
+                    component={Link}
+                    to="/articles"
+                    selected={pathname === '/articles'}
+                    nested={1}
+                  >
+                    <ListItemIcon>
+                      <ArticleIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Все статьи" />
+                  </StyledListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <StyledListItemButton
+                    component={Link}
+                    to="/articles/new"
+                    selected={pathname === '/articles/new'}
+                    nested={1}
+                  >
+                    <ListItemIcon>
+                      <CreateIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Создать статью" />
+                  </StyledListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
+          </>
+        )}
 
         {/* Пользователи (доступно админам) */}
         {isAdmin && (

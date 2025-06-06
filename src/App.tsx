@@ -46,6 +46,16 @@ import ReviewReplyPage from './pages/reviews/ReviewReplyPage';
 import MyReviewsPage from './pages/reviews/MyReviewsPage';
 import ReviewFormPage from './pages/reviews/ReviewFormPage';
 
+// Импорты для системы статей (админка)
+import ArticlesPage from './pages/articles/ArticlesPage';
+import CreateArticlePage from './pages/articles/CreateArticlePage';
+import EditArticlePage from './pages/articles/EditArticlePage';
+import ArticleViewPage from './pages/articles/ArticleViewPage';
+
+// Импорты для клиентской базы знаний
+import KnowledgeBasePage from './pages/knowledge-base/KnowledgeBasePage';
+import ArticleDetailPage from './pages/knowledge-base/ArticleDetailPage';
+
 // Компонент для тем
 const ThemeContext = React.createContext<{
   toggleTheme: () => void;
@@ -203,6 +213,14 @@ function App() {
                   <Route path="regions/new" element={<RegionFormPage />} />
                   <Route path="regions/:id/edit" element={<RegionFormPage />} />
                   <Route path="cities" element={<CitiesPage />} />
+                  {/* Маршруты для статей */}
+                  <Route path="articles" element={<ArticlesPage />} />
+                  <Route path="articles/new" element={<CreateArticlePage />} />
+                  <Route path="articles/:id/edit" element={<EditArticlePage />} />
+                  <Route path="articles/:id" element={<ArticleViewPage />} />
+                  {/* Маршруты для клиентской базы знаний */}
+                  <Route path="knowledge-base" element={<KnowledgeBasePage />} />
+                  <Route path="knowledge-base/:id" element={<ArticleDetailPage />} />
                 </Route>
                 
                 {/* Маршрут по умолчанию */}
