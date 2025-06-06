@@ -31,10 +31,10 @@ import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import {
   SIZES,
+  ANIMATIONS,
   getCardStyles,
   getButtonStyles,
   getTextFieldStyles,
-  getTabStyles,
   getFormStyles,
 } from '../../styles';
 
@@ -43,13 +43,11 @@ interface SystemSettings {
   systemName: string;
   contactEmail: string;
   supportPhone: string;
-  defaultCityId: number;
+  defaultCityId: string;
   dateFormat: string;
   timeFormat: string;
   emailNotifications: boolean;
   smsNotifications: boolean;
-  twoFactorAuth: boolean;
-  sessionTimeout: number;
 }
 
 // Интерфейс для панелей настроек
@@ -93,7 +91,6 @@ const SettingsPage: React.FC = () => {
   const cardStyles = getCardStyles(theme);
   const buttonStyles = getButtonStyles(theme, 'primary');
   const textFieldStyles = getTextFieldStyles(theme);
-  const tabStyles = getTabStyles(theme);
   const formStyles = getFormStyles(theme);
 
   // Получение данных
@@ -109,13 +106,11 @@ const SettingsPage: React.FC = () => {
     systemName: '',
     contactEmail: '',
     supportPhone: '',
-    defaultCityId: 0,
+    defaultCityId: '',
     dateFormat: 'DD.MM.YYYY',
     timeFormat: '24h',
     emailNotifications: false,
     smsNotifications: false,
-    twoFactorAuth: false,
-    sessionTimeout: 30,
   }));
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +118,17 @@ const SettingsPage: React.FC = () => {
   // Обновление настроек при загрузке данных
   useEffect(() => {
     if (settingsData) {
-      setSettings(settingsData);
+      const settingsToSet: SystemSettings = {
+        systemName: settingsData.systemName,
+        contactEmail: settingsData.contactEmail,
+        supportPhone: settingsData.supportPhone,
+        defaultCityId: String(settingsData.defaultCityId),
+        dateFormat: settingsData.dateFormat,
+        timeFormat: settingsData.timeFormat,
+        emailNotifications: settingsData.emailNotifications,
+        smsNotifications: settingsData.smsNotifications,
+      };
+      setSettings(settingsToSet);
     }
   }, [settingsData]);
 
@@ -205,31 +210,75 @@ const SettingsPage: React.FC = () => {
             aria-label="settings tabs"
             variant="scrollable"
             scrollButtons="auto"
-            sx={tabStyles.tabs}
+            TabIndicatorProps={{
+              sx: {
+                height: 3,
+                borderRadius: SIZES.borderRadius.sm,
+              }
+            }}
+            sx={{
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            }}
           >
             <Tab 
               icon={<SettingsIcon />} 
               label="Общие" 
               {...a11yProps(0)}
-              sx={tabStyles.tab} 
+              sx={{
+                minHeight: 48,
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: SIZES.fontSize.md,
+                transition: ANIMATIONS.transition.fast,
+                '&.Mui-selected': {
+                  color: theme.palette.primary.main,
+                },
+              }}
             />
             <Tab 
               icon={<NotificationsIcon />} 
               label="Уведомления" 
               {...a11yProps(1)}
-              sx={tabStyles.tab} 
+              sx={{
+                minHeight: 48,
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: SIZES.fontSize.md,
+                transition: ANIMATIONS.transition.fast,
+                '&.Mui-selected': {
+                  color: theme.palette.primary.main,
+                },
+              }}
             />
             <Tab 
               icon={<SecurityIcon />} 
               label="Безопасность" 
               {...a11yProps(2)}
-              sx={tabStyles.tab} 
+              sx={{
+                minHeight: 48,
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: SIZES.fontSize.md,
+                transition: ANIMATIONS.transition.fast,
+                '&.Mui-selected': {
+                  color: theme.palette.primary.main,
+                },
+              }}
             />
             <Tab 
               icon={<DevicesIcon />} 
               label="Интеграции" 
               {...a11yProps(3)}
-              sx={tabStyles.tab} 
+              sx={{
+                minHeight: 48,
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: SIZES.fontSize.md,
+                transition: ANIMATIONS.transition.fast,
+                '&.Mui-selected': {
+                  color: theme.palette.primary.main,
+                },
+              }}
             />
           </Tabs>
         </Box>
@@ -439,26 +488,9 @@ const SettingsPage: React.FC = () => {
                 </Typography>
                 <Divider />
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.twoFactorAuth}
-                      onChange={(e) => handleToggleChange(e, 'twoFactorAuth')}
-                      name="twoFactorAuth"
-                    />
-                  }
-                  label="Двухфакторная аутентификация"
-                />
-
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Время сессии (минуты)"
-                  name="sessionTimeout"
-                  value={settings.sessionTimeout}
-                  onChange={handleTextChange}
-                  sx={textFieldStyles}
-                />
+                <Typography variant="body2" color="textSecondary">
+                  Функции безопасности будут доступны в следующем обновлении.
+                </Typography>
 
                 <Box sx={{ mt: SIZES.spacing.lg }}>
                   <Button

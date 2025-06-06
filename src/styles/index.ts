@@ -22,6 +22,7 @@ export {
   getFormStyles,
   getModalStyles,
   getNavigationStyles,
+  getTabStyles,
   type CardVariant,
   type ButtonVariant,
   type ChipVariant,

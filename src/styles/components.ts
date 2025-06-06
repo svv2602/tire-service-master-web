@@ -10,6 +10,9 @@ import {
   getThemeColors,
   getGradient
 } from './theme';
+import { getTabStyles as getTabStylesInternal } from './components/tabStyles';
+
+export { getTabStylesInternal as getTabStyles };
 
 // Типы для стилей компонентов
 export type CardVariant = 'primary' | 'secondary' | 'glass' | 'success' | 'error' | 'warning' | 'info' | 'alert';

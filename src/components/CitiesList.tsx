@@ -19,16 +19,15 @@ import {
   Alert,
   DialogContentText,
   Pagination,
-  Stack,
   Chip,
   useTheme,
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
-  getCardStyles, 
   getButtonStyles, 
   getTextFieldStyles, 
-  getChipStyles 
+  getChipStyles,
+  getCardStyles
 } from '../styles/components';
 import {
   Edit as EditIcon,
@@ -68,7 +67,6 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const dangerButtonStyles = getButtonStyles(theme, 'error');
   const textFieldStyles = getTextFieldStyles(theme);
-  const chipStyles = getChipStyles(theme);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -256,12 +254,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
                     label={city.is_active ? 'Активен' : 'Неактивен'}
                     color={city.is_active ? 'success' : 'error'}
                     size="small"
-                    sx={{
-                      ...chipStyles,
-                      ...(city.is_active 
-                        ? getChipStyles(theme, 'success') 
-                        : getChipStyles(theme, 'error'))
-                    }}
+                    sx={city.is_active ? getChipStyles(theme, 'success') : getChipStyles(theme, 'error')}
                   />
                 </Box>
               }
