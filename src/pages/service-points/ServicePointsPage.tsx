@@ -27,6 +27,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -51,10 +53,9 @@ import {
   getCardStyles, 
   getButtonStyles, 
   getTextFieldStyles, 
-  getTableStyles, 
+  getAdaptiveTableStyles, 
   getChipStyles 
 } from '../../styles';
-import { useTheme } from '@mui/material/styles';
 
 // Функция для форматирования рабочих часов
 const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
@@ -123,11 +124,16 @@ const ServicePointsPage: React.FC = () => {
   // Хук темы для использования централизованных стилей
   const theme = useTheme();
   
+  // Адаптивность
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
+  
   // Получаем стили из централизованной системы
   const cardStyles = getCardStyles(theme);
   const buttonStyles = getButtonStyles(theme);
   const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
+  const tableStyles = getAdaptiveTableStyles(theme, isMobile, isTablet);
   const chipStyles = getChipStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
@@ -270,14 +276,15 @@ const ServicePointsPage: React.FC = () => {
       {/* Фильтры и поиск */}
       <Paper sx={{ 
         ...cardStyles, 
-        p: SIZES.spacing.lg, 
+        p: isMobile ? SIZES.spacing.md : SIZES.spacing.lg, 
         mb: SIZES.spacing.lg 
       }}>
         <Box sx={{ 
           display: 'flex', 
           gap: SIZES.spacing.md, 
-          alignItems: 'center', 
-          flexWrap: 'wrap' 
+          alignItems: isMobile ? 'stretch' : 'center', 
+          flexDirection: isMobile ? 'column' : 'row',
+          flexWrap: isMobile ? 'nowrap' : 'wrap'
         }}>
           <TextField
             placeholder="Поиск по названию или адресу"
@@ -287,7 +294,8 @@ const ServicePointsPage: React.FC = () => {
             onChange={handleSearchChange}
             sx={{ 
               ...textFieldStyles,
-              minWidth: 300,
+              minWidth: isMobile ? '100%' : 300,
+              width: isMobile ? '100%' : 'auto',
               '& .MuiOutlinedInput-root': {
                 borderRadius: SIZES.borderRadius.sm
               }
@@ -301,62 +309,74 @@ const ServicePointsPage: React.FC = () => {
             }}
           />
           
-          <FormControl 
-            size="small" 
-            sx={{ 
-              ...textFieldStyles,
-              minWidth: 150,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
-          >
-            <InputLabel>Регион</InputLabel>
-            <Select
-              value={selectedRegionId}
-              onChange={handleRegionChange}
-              label="Регион"
+          <Box sx={{
+            display: 'flex',
+            gap: SIZES.spacing.md,
+            flexDirection: isMobile ? 'column' : 'row',
+            width: isMobile ? '100%' : 'auto',
+          }}>
+            <FormControl 
+              size="small" 
+              sx={{ 
+                ...textFieldStyles,
+                minWidth: isMobile ? '100%' : 150,
+                width: isMobile ? '100%' : 150,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}
             >
-              <MenuItem value="">Все регионы</MenuItem>
-              {regionsData?.data?.map((region) => (
-                <MenuItem key={region.id} value={region.id}>
-                  {region.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel>Регион</InputLabel>
+              <Select
+                value={selectedRegionId}
+                onChange={handleRegionChange}
+                label="Регион"
+              >
+                <MenuItem value="">Все регионы</MenuItem>
+                {regionsData?.data?.map((region) => (
+                  <MenuItem key={region.id} value={region.id}>
+                    {region.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <FormControl 
-            size="small" 
-            sx={{ 
-              ...textFieldStyles,
-              minWidth: 150,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
-          >
-            <InputLabel>Город</InputLabel>
-            <Select
-              value={selectedCityId}
-              onChange={handleCityChange}
-              label="Город"
-              disabled={!selectedRegionId}
+            <FormControl 
+              size="small" 
+              sx={{ 
+                ...textFieldStyles,
+                minWidth: isMobile ? '100%' : 150,
+                width: isMobile ? '100%' : 150,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}
             >
-              <MenuItem value="">Все города</MenuItem>
-              {citiesData?.data?.map((city) => (
-                <MenuItem key={city.id} value={city.id}>
-                  {city.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <InputLabel>Город</InputLabel>
+              <Select
+                value={selectedCityId}
+                onChange={handleCityChange}
+                label="Город"
+                disabled={!selectedRegionId}
+              >
+                <MenuItem value="">Все города</MenuItem>
+                {citiesData?.data?.map((city) => (
+                  <MenuItem key={city.id} value={city.id}>
+                    {city.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
       </Paper>
 
       {/* Таблица сервисных точек */}
-      <TableContainer component={Paper} sx={tableStyles.tableContainer}>
-        <Table>
+      <TableContainer 
+        component={Paper} 
+        sx={tableStyles.tableContainer}
+      >
+        <Table sx={tableStyles.table}>
           <TableHead sx={tableStyles.tableHead}>
             <TableRow>
               <TableCell sx={{ 
@@ -539,15 +559,7 @@ const ServicePointsPage: React.FC = () => {
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
-          sx={{
-            borderTop: `1px solid ${theme.palette.divider}`,
-            '& .MuiTablePagination-select': {
-              fontSize: SIZES.fontSize.sm
-            },
-            '& .MuiTablePagination-displayedRows': {
-              fontSize: SIZES.fontSize.sm
-            }
-          }}
+          sx={tableStyles.pagination}
         />
       </TableContainer>
 

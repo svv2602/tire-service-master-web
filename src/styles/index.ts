@@ -7,10 +7,17 @@ export {
   SIZES,
   ANIMATIONS,
   GRADIENTS,
+  TYPOGRAPHY,
+  SHADOWS,
   getThemeColors,
   getGradient,
   getButtonStyles,
   type GradientType,
+  getNavigationStyles,
+  getUserButtonStyles,
+  getInteractiveStyles,
+  getTableStyles,
+  getAdaptiveTableStyles,
 } from './theme';
 
 // Экспорт стилей компонентов
@@ -18,10 +25,8 @@ export {
   getCardStyles,
   getTextFieldStyles,
   getChipStyles,
-  getTableStyles,
   getFormStyles,
   getModalStyles,
-  getNavigationStyles,
   getTabStyles,
   type CardVariant,
   type ButtonVariant,

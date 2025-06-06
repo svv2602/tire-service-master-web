@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CssBaseline, ThemeProvider, createTheme, useMediaQuery, Box } from '@mui/material';
+import { CssBaseline, ThemeProvider, Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
@@ -8,6 +8,9 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import MainLayout from './components/layouts/MainLayout';
 import AuthInitializer from './components/auth/AuthInitializer';
+import { GlobalUIStyles } from './components/styled/CommonComponents';
+import { createAppTheme } from './styles/theme';
+import { useThemeMode } from './hooks/useTheme';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import PartnersPage from './pages/partners/PartnersPage';
@@ -42,6 +45,33 @@ import ReviewsPage from './pages/reviews/ReviewsPage';
 import ReviewReplyPage from './pages/reviews/ReviewReplyPage';
 import MyReviewsPage from './pages/reviews/MyReviewsPage';
 import ReviewFormPage from './pages/reviews/ReviewFormPage';
+
+// Компонент для тем
+const ThemeContext = React.createContext<{
+  toggleTheme: () => void;
+  isDarkMode: boolean;
+}>({
+  toggleTheme: () => {},
+  isDarkMode: false,
+});
+
+export const useAppTheme = () => React.useContext(ThemeContext);
+
+// Компонент провайдера темы
+const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { themeMode, toggleTheme, isDarkMode } = useThemeMode();
+  const theme = React.useMemo(() => createAppTheme(themeMode), [themeMode]);
+
+  return (
+    <ThemeContext.Provider value={{ toggleTheme, isDarkMode }}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <GlobalUIStyles />
+        {children}
+      </ThemeProvider>
+    </ThemeContext.Provider>
+  );
+};
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -90,32 +120,9 @@ const ProtectedRoute: React.FC<{
 };
 
 function App() {
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-
-  const theme = React.useMemo(() => createTheme({
-    palette: {
-      mode: prefersDarkMode ? 'dark' : 'light',
-      primary: {
-        main: '#1976d2',
-      },
-      secondary: {
-        main: '#f50057',
-      },
-    },
-    typography: {
-      fontFamily: [
-        'Roboto',
-        '"Helvetica Neue"',
-        'Arial',
-        'sans-serif',
-      ].join(','),
-    },
-  }), [prefersDarkMode]);
-
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <AppThemeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
           <AuthInitializer>
             <Router>
@@ -204,7 +211,7 @@ function App() {
             </Router>
           </AuthInitializer>
         </LocalizationProvider>
-      </ThemeProvider>
+      </AppThemeProvider>
     </Provider>
   );
 }

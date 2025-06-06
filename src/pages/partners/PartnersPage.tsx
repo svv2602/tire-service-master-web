@@ -24,6 +24,7 @@ import {
   Pagination,
   Avatar,
   useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -45,8 +46,8 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
 // Импорты централизованной системы стилей
-import { getCardStyles, getButtonStyles, getTextFieldStyles, getTableStyles, getChipStyles } from '../../styles/components';
-import { SIZES } from '../../styles';
+import { getCardStyles, getButtonStyles, getTextFieldStyles, getChipStyles } from '../../styles/components';
+import { SIZES, getAdaptiveTableStyles } from '../../styles';
 
 /**
  * Страница управления партнерами
@@ -201,6 +202,10 @@ const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme(); // Инициализация темы для централизованных стилей
   
+  // Адаптивность
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px
+  
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -215,7 +220,7 @@ const PartnersPage: React.FC = () => {
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
+  const tableStyles = getAdaptiveTableStyles(theme, isMobile, isTablet);
 
   // Debounce для поиска
   const debouncedSearch = useDebounce(search, 300);
@@ -404,11 +409,8 @@ const PartnersPage: React.FC = () => {
           </Box>
         ) : (
           <>
-            <TableContainer>
-              <Table sx={{
-                ...tableStyles,
-                minWidth: 650 
-              }} aria-label="table of partners">
+            <TableContainer sx={tableStyles.tableContainer}>
+              <Table sx={tableStyles.table} aria-label="table of partners">
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>

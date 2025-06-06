@@ -148,13 +148,13 @@ const MyCarsList: React.FC = () => {
           </Typography>
           <Typography>{error}</Typography>
         </StyledAlert>
-        <Button 
-          variant="outlined" 
-          color="primary" 
-          onClick={fetchCars} 
-        >
-          Попробовать снова
-        </Button>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={fetchCars} 
+          >
+            Попробовать снова
+          </Button>
       </Box>
     );
   }

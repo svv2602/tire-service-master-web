@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+// Таблица пользователей обновлена для использования единых адаптивных стилей
+// с минимальными закруглениями (2px) и горизонтальными скроллбарами
 import {
   Box,
   Typography,
@@ -25,7 +27,9 @@ import {
   Avatar,
   FormControlLabel,
   Switch,
-  Tooltip
+  Tooltip,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -45,6 +49,7 @@ import { getRoleId } from '../../utils/roles.utils';
 import type { User } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
+import { getAdaptiveTableStyles } from '../../styles';
 
 // Мемоизированный компонент строки пользователя
 const UserRow = React.memo<{
@@ -55,9 +60,10 @@ const UserRow = React.memo<{
   getRoleName: (role: string) => string;
   getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
   isDeleting: boolean;
-}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting }) => (
-  <TableRow sx={{ opacity: user.is_active ? 1 : 0.6 }}>
-    <TableCell>
+  tableStyles: any;
+}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting, tableStyles }) => (
+  <TableRow sx={{ ...tableStyles.tableRow, opacity: user.is_active ? 1 : 0.6 }}>
+    <TableCell sx={tableStyles.tableCell}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Avatar sx={{ width: 32, height: 32, opacity: user.is_active ? 1 : 0.5 }}>
           <PersonIcon />
@@ -73,16 +79,16 @@ const UserRow = React.memo<{
         </Box>
       </Box>
     </TableCell>
-    <TableCell>{user.email}</TableCell>
-    <TableCell>{user.phone}</TableCell>
-    <TableCell>
+    <TableCell sx={tableStyles.tableCell}>{user.email}</TableCell>
+    <TableCell sx={tableStyles.tableCell}>{user.phone}</TableCell>
+    <TableCell sx={tableStyles.tableCell}>
       <Chip
         label={getRoleName(user.role)}
         color={getRoleColor(user.role)}
         size="small"
       />
     </TableCell>
-    <TableCell>
+    <TableCell sx={tableStyles.tableCell}>
       <FormControlLabel
         control={
           <Switch
@@ -95,7 +101,7 @@ const UserRow = React.memo<{
         sx={{ m: 0 }}
       />
     </TableCell>
-    <TableCell>
+    <TableCell sx={tableStyles.tableCell}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {user.email_verified ? (
           <Tooltip title="Email подтвержден">
@@ -117,7 +123,7 @@ const UserRow = React.memo<{
         )}
       </Box>
     </TableCell>
-    <TableCell>
+    <TableCell sx={tableStyles.tableCell}>
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Tooltip title="Редактировать">
           <IconButton
@@ -161,6 +167,13 @@ UserRow.displayName = 'UserRow';
 
 export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  
+  // Получаем адаптивные стили таблицы
+  const tableStyles = getAdaptiveTableStyles(theme, isMobile, isTablet);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -335,7 +348,17 @@ export const UsersPage: React.FC = () => {
       </Box>
 
       {/* Поиск и фильтры */}
-      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Box sx={{ 
+        mb: 3, 
+        display: 'flex', 
+        gap: 2, 
+        alignItems: 'center', 
+        flexWrap: 'wrap',
+        ...(isMobile && {
+          flexDirection: 'column',
+          alignItems: 'stretch',
+        })
+      }}>
         <TextField
           placeholder="Поиск по email, имени или фамилии..."
           value={searchQuery}
@@ -347,7 +370,10 @@ export const UsersPage: React.FC = () => {
               </InputAdornment>
             ),
           }}
-          sx={{ maxWidth: 400, flexGrow: 1 }}
+          sx={{ 
+            maxWidth: isMobile ? '100%' : 400, 
+            flexGrow: 1 
+          }}
         />
         <FormControlLabel
           control={
@@ -405,23 +431,26 @@ export const UsersPage: React.FC = () => {
       ) : (
         <>
           {/* Таблица пользователей */}
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
+          <TableContainer 
+            component={Paper}
+            sx={tableStyles.tableContainer}
+          >
+            <Table sx={tableStyles.table}>
+              <TableHead sx={tableStyles.tableHead}>
                 <TableRow>
-                  <TableCell>Пользователь</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Телефон</TableCell>
-                  <TableCell>Роль</TableCell>
-                  <TableCell>Активен</TableCell>
-                  <TableCell>Подтверждения</TableCell>
-                  <TableCell>Действия</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Пользователь</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Email</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Телефон</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Роль</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Активен</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Подтверждения</TableCell>
+                  <TableCell sx={tableStyles.tableCell}>Действия</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
+                  <TableRow sx={tableStyles.tableRow}>
+                    <TableCell colSpan={7} align="center" sx={tableStyles.tableCell}>
                       <Typography color="text.secondary">
                         Пользователи не найдены
                       </Typography>
@@ -438,6 +467,7 @@ export const UsersPage: React.FC = () => {
                       getRoleName={getRoleName}
                       getRoleColor={getRoleColor}
                       isDeleting={isDeleting}
+                      tableStyles={tableStyles}
                     />
                   ))
                 )}
@@ -447,7 +477,12 @@ export const UsersPage: React.FC = () => {
 
           {/* Пагинация */}
           {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mt: 3,
+              ...tableStyles.pagination
+            }}>
               <Pagination
                 count={totalPages}
                 page={page}

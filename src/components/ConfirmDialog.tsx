@@ -67,16 +67,16 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <FlexBox gap={SIZES.spacing.sm}>
           <StyledButton 
             styleVariant="secondary"
-            onClick={onCancel} 
-          >
-            {cancelText}
+          onClick={onCancel} 
+        >
+          {cancelText}
           </StyledButton>
           <StyledButton 
             styleVariant="primary"
-            onClick={onConfirm} 
-            autoFocus
-          >
-            {confirmText}
+          onClick={onConfirm} 
+          autoFocus
+        >
+          {confirmText}
           </StyledButton>
         </FlexBox>
       </DialogActions>

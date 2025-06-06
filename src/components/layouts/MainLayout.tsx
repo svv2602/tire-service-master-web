@@ -21,12 +21,14 @@ import {
   Collapse,
   useTheme,
 } from '@mui/material';
-// Импорт централизованной системы стилей
+// Импорт улучшенной централизованной системы стилей
 import { 
   SIZES, 
   getButtonStyles,
   getNavigationStyles,
-  getFormStyles
+  getFormStyles,
+  getUserButtonStyles,
+  getInteractiveStyles
 } from '../../styles';
 import {
   Menu as MenuIcon,
@@ -54,6 +56,7 @@ import { getCurrentUser, logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { User } from '../../types/user';
+import ThemeToggle from '../ThemeToggle';
 
 const drawerWidth = 240;
 
@@ -76,6 +79,8 @@ const MainLayout: React.FC = () => {
   const navigationStyles = getNavigationStyles(theme); // Стили для навигационных элементов
   const buttonStyles = getButtonStyles(theme); // Централизованные стили кнопок
   const formStyles = getFormStyles(theme); // Стили для форм и контейнеров
+  const userButtonStyles = getUserButtonStyles(theme); // Новые стили для кнопок пользователя
+  const interactiveStyles = getInteractiveStyles(theme); // Новые стили для интерактивных элементов
   
   // Состояние компонента
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -522,12 +527,22 @@ const MainLayout: React.FC = () => {
                 display: 'flex', 
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`, // Тематический фон
-                color: theme.palette.primary.main,
-                borderRadius: SIZES.borderRadius.sm, // Консистентный border radius
-                margin: `${SIZES.spacing.xs}px 0`, // Унифицированные отступы
-                fontWeight: 'bold',
-                fontSize: SIZES.fontSize.sm // Унифицированный размер шрифта
+                fontSize: SIZES.fontSize.lg, // Увеличиваем шрифт как просил пользователь
+                fontWeight: 700,
+                height: SIZES.navigation?.sectionTitleHeight || 44,
+                backgroundColor: theme.palette.mode === 'dark' 
+                  ? 'rgba(255, 255, 255, 0.03)'
+                  : 'rgba(0, 0, 0, 0.03)',
+                color: theme.palette.text.primary, // Убираем синий цвет как просил пользователь
+                borderRadius: 0,
+                margin: 0,
+                padding: `${theme.spacing(SIZES.spacing.sm)} ${theme.spacing(SIZES.spacing.md)}`,
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.05)',
+                },
+                ...interactiveStyles.pressEffect,
               }}
             >
               <Box component="span">{section.title}</Box>
@@ -549,15 +564,19 @@ const MainLayout: React.FC = () => {
                         ...navigationStyles.listItem,
                         backgroundColor: isActive ? `rgba(${theme.palette.primary.main.replace('#', '')}, 0.12)` : 'transparent',
                         mb: SIZES.spacing.xs,
+                        borderRadius: 0,
+                        margin: 0,
                         '&:hover': {
-                          backgroundColor: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`
+                          backgroundColor: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`,
+                          borderRadius: 0,
                         }
                       }}
                     >
                       <ListItemButton 
                         onClick={() => handleNavigate(item.path)}
                         sx={{ 
-                          borderRadius: SIZES.borderRadius.sm,
+                          borderRadius: 0,
+                          margin: 0,
                           pl: SIZES.spacing.md
                         }}
                       >
@@ -630,13 +649,8 @@ const MainLayout: React.FC = () => {
                 onClick={handleUserMenuOpen} 
                 endIcon={<AccountIcon />}
                 sx={{
-                  ...buttonStyles,
-                  color: 'inherit',
-                  borderColor: 'currentColor',
-                  '&:hover': {
-                    borderColor: 'currentColor',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  }
+                  ...userButtonStyles.primary,
+                  ...interactiveStyles.pressEffect,
                 }}
               >
                 {(user as User).first_name
@@ -655,6 +669,7 @@ const MainLayout: React.FC = () => {
                   vertical: 'top',
                   horizontal: 'right',
                 }}
+                sx={userButtonStyles.menu}
               >
                 <MenuItem onClick={() => { handleUserMenuClose(); navigate('/profile'); }}>
                   <ListItemIcon>
@@ -675,7 +690,7 @@ const MainLayout: React.FC = () => {
               color="inherit"
               onClick={() => navigate('/login')}
               sx={{
-                ...buttonStyles,
+                ...userButtonStyles.primary,
                 color: 'inherit',
                 borderColor: 'currentColor',
                 '&:hover': {
@@ -687,6 +702,7 @@ const MainLayout: React.FC = () => {
               Войти
             </Button>
           )}
+          <ThemeToggle />
         </Toolbar>
       </AppBar>
       <Box

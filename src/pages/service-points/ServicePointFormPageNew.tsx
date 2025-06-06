@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -9,11 +9,19 @@ import {
   StepLabel,
   Alert,
   Snackbar,
+  useMediaQuery,
+  useTheme,
+  StepContent,
+  Chip,
+  Stack,
 } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+
+// Импорты стилей
+import { SIZES, getButtonStyles, getCardStyles } from '../../styles';
 
 // Компоненты шагов
 import BasicInfoStep from './components/BasicInfoStep';
@@ -87,10 +95,22 @@ const ServicePointFormPageNew: React.FC = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   
+  // Хуки для темы и адаптивности
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px - Мобильные устройства
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px - Планшеты  
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px - Маленькие мобильные
+  const isVerySmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
+  const isMediumMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px
+  const isLargeTablet = useMediaQuery(theme.breakpoints.down('xl')); // < 1536px - Большие планшеты
+  
   // Состояние
   const [activeStep, setActiveStep] = useState(0);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Ref для контейнера чипов степпера
+  const chipContainerRef = useRef<HTMLDivElement>(null);
 
   // API хуки
   const { data: servicePoint, isLoading } = useGetServicePointByIdQuery(
@@ -424,6 +444,31 @@ const ServicePointFormPageNew: React.FC = () => {
 
   const handleStepClick = (stepIndex: number) => {
     setActiveStep(stepIndex);
+    
+    // Автопрокрутка к выбранному чипу в мобильной версии
+    if (chipContainerRef.current && (isMediumMobile || isTablet)) {
+      const container = chipContainerRef.current;
+      const chips = container.querySelectorAll('[data-chip-index]');
+      const targetChip = chips[stepIndex] as HTMLElement;
+      
+      if (targetChip) {
+        const containerRect = container.getBoundingClientRect();
+        const chipRect = targetChip.getBoundingClientRect();
+        
+        // Вычисляем позицию для прокрутки так, чтобы выбранный чип и следующий были видны
+        const chipWidth = chipRect.width;
+        const gap = 8; // Размер gap между чипами
+        const padding = 16; // Отступ от края
+        
+        // Позиция для центрирования текущего чипа с учетом следующего
+        const scrollPosition = targetChip.offsetLeft - padding - (chipWidth + gap);
+        
+        container.scrollTo({
+          left: Math.max(0, scrollPosition),
+          behavior: 'smooth'
+        });
+      }
+    }
   };
 
   // Функции для проверки заполненности разделов
@@ -506,6 +551,209 @@ const ServicePointFormPageNew: React.FC = () => {
     );
   };
 
+  // Адаптивный рендер степпера
+  const renderAdaptiveStepper = () => {
+    // Определяем какую версию степпера показывать
+    // Мобильную версию показываем для экранов меньше 1200px (lg)
+    const shouldUseMobileVersion = isTablet; // < 1200px
+    
+    if (shouldUseMobileVersion) {
+      // Мобильная/планшетная версия - компактный индикатор прогресса
+      return (
+        <Box sx={{ mb: 3 }}>
+          {/* Компактный индикатор прогресса */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            mb: 2,
+            p: isVerySmallMobile ? 1.5 : 2,
+            backgroundColor: theme.palette.background.default,
+            borderRadius: SIZES.borderRadius.md,
+            border: `1px solid ${theme.palette.divider}`,
+          }}>
+            <Typography variant="body2" sx={{ 
+              color: theme.palette.text.secondary,
+              fontSize: isVerySmallMobile ? SIZES.fontSize.xs : SIZES.fontSize.sm,
+              mr: 1,
+              flexShrink: 0, // Не сжимаем текст
+            }}>
+              Шаг {activeStep + 1} из {FORM_STEPS.length}:
+            </Typography>
+            <Typography variant="subtitle2" sx={{ 
+              fontWeight: 600,
+              fontSize: isVerySmallMobile ? SIZES.fontSize.sm : SIZES.fontSize.md,
+              color: theme.palette.primary.main,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
+              {FORM_STEPS[activeStep].label}
+            </Typography>
+          </Box>
+
+          {/* Прогресс-бар */}
+          <Box sx={{ 
+            width: '100%', 
+            height: isVerySmallMobile ? 3 : 4, 
+            backgroundColor: theme.palette.divider,
+            borderRadius: 2,
+            mb: 2,
+            overflow: 'hidden',
+          }}>
+            <Box sx={{
+              width: `${((activeStep + 1) / FORM_STEPS.length) * 100}%`,
+              height: '100%',
+              backgroundColor: theme.palette.primary.main,
+              borderRadius: 2,
+              transition: theme.transitions.create('width', {
+                duration: theme.transitions.duration.standard,
+              }),
+            }} />
+          </Box>
+
+          {/* Мини-навигация по шагам */}
+          <Box sx={{
+            position: 'relative',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 20,
+              height: '100%',
+              background: `linear-gradient(to left, ${theme.palette.background.paper}, transparent)`,
+              pointerEvents: 'none',
+              zIndex: 1,
+            },
+          }}>
+            <Stack direction="row" spacing={1} sx={{ 
+              overflowX: 'auto',
+              pb: 1,
+              pr: 3, // Увеличиваем отступ справа
+              pl: 0.5, // Небольшой отступ слева
+              '&::-webkit-scrollbar': {
+                height: 3,
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: theme.palette.mode === 'dark' 
+                  ? 'rgba(255, 255, 255, 0.3)' 
+                  : 'rgba(0, 0, 0, 0.3)',
+                borderRadius: 2,
+              },
+            }}
+            ref={chipContainerRef}
+            >
+              {FORM_STEPS.map((step, index) => (
+                <Chip
+                  key={step.id}
+                  label={isVerySmallMobile ? `${index + 1}` : 
+                    (step.label.length > 8 ? `${step.label.substring(0, 8)}...` : step.label)}
+                  onClick={() => handleStepClick(index)}
+                  color={index === activeStep ? 'primary' : 'default'}
+                  variant={index === activeStep ? 'filled' : 'outlined'}
+                  size={isVerySmallMobile ? 'small' : 'medium'}
+                  icon={isStepValid(index) && index < activeStep ? <CheckCircleIcon /> : undefined}
+                  data-chip-index={index}
+                  sx={{
+                    minWidth: isVerySmallMobile ? 36 : 48,
+                    fontSize: isVerySmallMobile ? SIZES.fontSize.xs : SIZES.fontSize.sm,
+                    cursor: 'pointer',
+                    flexShrink: 0, // Не сжимаем чипы
+                    transition: theme.transitions.create(['background-color', 'transform', 'box-shadow'], {
+                      duration: theme.transitions.duration.short,
+                    }),
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: theme.shadows[2],
+                    },
+                    // Особые стили для активного и завершенных шагов
+                    ...(index === activeStep && {
+                      boxShadow: theme.shadows[3],
+                      fontWeight: 600,
+                    }),
+                    ...(isStepValid(index) && index < activeStep && {
+                      backgroundColor: theme.palette.success.light,
+                      color: theme.palette.success.contrastText,
+                    }),
+                  }}
+                />
+              ))}
+            </Stack>
+          </Box>
+        </Box>
+      );
+    } else {
+      // Десктопная версия - горизонтальный степпер с улучшенной адаптивностью
+      return (
+        <Stepper 
+          activeStep={activeStep} 
+          sx={{ 
+            mb: 4,
+            '& .MuiStepLabel-root': {
+              cursor: 'pointer',
+            },
+            '& .MuiStepLabel-label': {
+              fontSize: SIZES.fontSize.md,
+              fontWeight: 500,
+              transition: theme.transitions.create('color', {
+                duration: theme.transitions.duration.short,
+              }),
+            },
+            '& .MuiStep-root': {
+              transition: theme.transitions.create('transform', {
+                duration: theme.transitions.duration.short,
+              }),
+              '&:hover': {
+                transform: 'translateY(-1px)',
+              },
+              // Адаптивная ширина шагов
+              flex: '1 1 auto',
+              minWidth: 0,
+            },
+            '& .MuiStepLabel-labelContainer': {
+              overflow: 'visible', // Показываем полный текст
+            },
+            '& .MuiStepIcon-root': {
+              fontSize: '1.5rem',
+            },
+          }}
+        >
+          {FORM_STEPS.map((step, index) => (
+            <Step 
+              key={step.id} 
+              completed={index < activeStep || isStepValid(index)}
+              onClick={() => handleStepClick(index)}
+            >
+              <StepLabel 
+                error={index <= activeStep && !isStepValid(index)}
+                sx={{
+                  '& .MuiStepLabel-labelContainer': {
+                    width: '100%',
+                    overflow: 'visible',
+                  },
+                  '& .MuiStepLabel-label': {
+                    // Делаем текст адаптивным
+                    fontSize: SIZES.fontSize.sm,
+                    lineHeight: 1.2,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                  },
+                }}
+              >
+                {step.label}
+              </StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+      );
+    }
+  };
+
   const isLastStep = activeStep === FORM_STEPS.length - 1;
   const isFirstStep = activeStep === 0;
 
@@ -518,57 +766,125 @@ const ServicePointFormPageNew: React.FC = () => {
   }
 
   return (
-    <Box>
-      {/* Заголовок */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
+    <Box sx={{ 
+      padding: isMobile ? 1.5 : 3,
+      paddingRight: isMobile ? 2 : 3, // Увеличиваем отступ справа на мобильных
+      maxWidth: '100%',
+      overflow: 'hidden',
+    }}>
+      {/* Адаптивный заголовок */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: isMobile ? 'column' : 'row',
+        justifyContent: 'space-between', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        mb: isMobile ? 2.5 : 3,
+        gap: isMobile ? 1.5 : 0,
+        pr: isMobile ? 1 : 0, // Добавляем отступ справа на мобильных
+      }}>
+        <Typography 
+          variant={isMobile ? "h5" : "h4"}
+          sx={{
+            fontSize: isMobile ? SIZES.fontSize.xl : SIZES.fontSize.xxl,
+            fontWeight: 600,
+            color: theme.palette.text.primary,
+            lineHeight: 1.2,
+            maxWidth: isMobile ? '100%' : '70%', // Ограничиваем ширину заголовка
+          }}
+        >
           {isEditMode ? 'Редактирование точки обслуживания' : 'Создание точки обслуживания'}
         </Typography>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleGoBack}>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          onClick={handleGoBack}
+          variant={isMobile ? 'outlined' : 'text'}
+          size={isMobile ? 'medium' : 'large'}
+          sx={{
+            ...getButtonStyles(theme, 'secondary'),
+            minWidth: isMobile ? '100%' : 'auto',
+            justifyContent: isMobile ? 'center' : 'flex-start',
+            px: isMobile ? 2.5 : 2, // Увеличиваем padding
+            flexShrink: 0, // Не сжимаем кнопку
+          }}
+        >
           Назад к списку
         </Button>
       </Box>
 
-      <Paper sx={{ p: 3 }}>
-        {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {FORM_STEPS.map((step, index) => (
-            <Step 
-              key={step.id} 
-              completed={index < activeStep || isStepValid(index)}
-              onClick={() => handleStepClick(index)}
-              sx={{ cursor: 'pointer' }}
-            >
-              <StepLabel 
-                error={index <= activeStep && !isStepValid(index)}
-              >
-                {step.label}
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+      <Paper sx={{ 
+        ...getCardStyles(theme),
+        p: isMobile ? 1.5 : 3,
+        pr: isMobile ? 2 : 3, // Увеличиваем отступ справа
+        borderRadius: SIZES.borderRadius.lg,
+      }}>
+        {renderAdaptiveStepper()}
 
         {/* Содержимое шага */}
         <form onSubmit={formik.handleSubmit}>
-          <Box sx={{ minHeight: 400, mb: 3 }}>
+          <Box sx={{ 
+            minHeight: isMobile ? 'auto' : 400, 
+            mb: 3,
+            // Для мобильных устройств убираем фиксированную высоту
+            // чтобы контент естественно растягивался
+          }}>
             {getCurrentStepComponent()}
           </Box>
 
-          {/* Навигация */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          {/* Адаптивная навигация */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: isMobile ? 'column' : 'row',
+            justifyContent: 'space-between',
+            gap: isMobile ? 2.5 : 2, // Увеличиваем gap между кнопками
+            alignItems: isMobile ? 'stretch' : 'center',
+            mt: 4, // Увеличиваем отступ сверху
+            pt: 2, // Добавляем внутренний отступ сверху
+            borderTop: `1px solid ${theme.palette.divider}`, // Добавляем разделитель
+            pl: isMobile ? 0 : 0, // Убираем отступ слева
+            pr: isMobile ? 0 : 0, // Убираем отступ справа
+          }}>
             <Button
               onClick={handleBack}
               disabled={isFirstStep}
+              variant={isMobile ? 'outlined' : 'text'}
+              size={isMobile ? 'large' : 'medium'}
+              sx={{
+                ...getButtonStyles(theme, 'secondary'),
+                order: isMobile ? 2 : 1,
+                minHeight: isMobile ? 48 : 42,
+                px: isMobile ? 3 : 2, // Уменьшаем горизонтальный padding
+                mr: isMobile ? 0 : 3, // Увеличиваем отступ справа на десктопе
+                minWidth: isMobile ? '100%' : 100,
+                // Уменьшаем отступ слева на мобильных
+                ml: isMobile ? 0 : 0,
+              }}
             >
               Назад
             </Button>
 
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: isMobile ? 2 : 2.5, // Увеличиваем gap между кнопками
+              order: isMobile ? 1 : 2,
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'stretch' : 'center',
+              // Убираем отступы по краям
+              ml: isMobile ? 0 : 0,
+              mr: isMobile ? 0 : 0,
+            }}>
               {!isLastStep ? (
                 <Button
                   variant="contained"
                   onClick={handleNext}
                   disabled={!isStepValid(activeStep)}
+                  size={isMobile ? 'large' : 'medium'}
+                  sx={{
+                    ...getButtonStyles(theme, 'primary'),
+                    minHeight: isMobile ? 48 : 42,
+                    minWidth: isMobile ? '100%' : 140,
+                    px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
+                    mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
+                  }}
                 >
                   Далее
                 </Button>
@@ -579,6 +895,14 @@ const ServicePointFormPageNew: React.FC = () => {
                   color="primary"
                   startIcon={<SaveIcon />}
                   disabled={formik.isSubmitting || !formik.isValid}
+                  size={isMobile ? 'large' : 'medium'}
+                  sx={{
+                    ...getButtonStyles(theme, 'primary'),
+                    minHeight: isMobile ? 48 : 42,
+                    minWidth: isMobile ? '100%' : 160,
+                    px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
+                    mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
+                  }}
                 >
                   {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
                 </Button>
@@ -588,14 +912,30 @@ const ServicePointFormPageNew: React.FC = () => {
         </form>
       </Paper>
 
-      {/* Уведомления */}
+      {/* Адаптивные уведомления */}
       <Snackbar
         open={Boolean(successMessage)}
         autoHideDuration={3000}
         onClose={() => setSuccessMessage(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ 
+          vertical: isMobile ? 'bottom' : 'top', 
+          horizontal: 'center' 
+        }}
+        sx={{
+          '& .MuiAlert-root': {
+            width: isMobile ? '90vw' : 'auto',
+            maxWidth: isMobile ? 400 : 600,
+            fontSize: SIZES.fontSize.md,
+          },
+        }}
       >
-        <Alert severity="success" onClose={() => setSuccessMessage(null)}>
+        <Alert 
+          severity="success" 
+          onClose={() => setSuccessMessage(null)}
+          sx={{
+            borderRadius: SIZES.borderRadius.md,
+          }}
+        >
           {successMessage}
         </Alert>
       </Snackbar>
@@ -604,9 +944,25 @@ const ServicePointFormPageNew: React.FC = () => {
         open={Boolean(errorMessage)}
         autoHideDuration={5000}
         onClose={() => setErrorMessage(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ 
+          vertical: isMobile ? 'bottom' : 'top', 
+          horizontal: 'center' 
+        }}
+        sx={{
+          '& .MuiAlert-root': {
+            width: isMobile ? '90vw' : 'auto',
+            maxWidth: isMobile ? 400 : 600,
+            fontSize: SIZES.fontSize.md,
+          },
+        }}
       >
-        <Alert severity="error" onClose={() => setErrorMessage(null)}>
+        <Alert 
+          severity="error" 
+          onClose={() => setErrorMessage(null)}
+          sx={{
+            borderRadius: SIZES.borderRadius.md,
+          }}
+        >
           {errorMessage}
         </Alert>
       </Snackbar>
