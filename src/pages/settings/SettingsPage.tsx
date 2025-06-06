@@ -17,6 +17,8 @@ import {
   Alert,
   Snackbar,
   CircularProgress,
+  SelectChangeEvent,
+  useTheme,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -25,7 +27,30 @@ import {
   Security as SecurityIcon,
   Devices as DevicesIcon,
 } from '@mui/icons-material';
-import { SystemSettings, useGetSettingsQuery, useUpdateSettingsMutation, settingsApi } from '../../api';
+import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../api';
+import { useGetCitiesQuery } from '../../api/cities.api';
+import {
+  SIZES,
+  getCardStyles,
+  getButtonStyles,
+  getTextFieldStyles,
+  getTabStyles,
+  getFormStyles,
+} from '../../styles';
+
+// Интерфейс для настроек системы
+interface SystemSettings {
+  systemName: string;
+  contactEmail: string;
+  supportPhone: string;
+  defaultCityId: number;
+  dateFormat: string;
+  timeFormat: string;
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  twoFactorAuth: boolean;
+  sessionTimeout: number;
+}
 
 // Интерфейс для панелей настроек
 interface TabPanelProps {
@@ -34,28 +59,27 @@ interface TabPanelProps {
   value: number;
 }
 
-// Компонент для содержимого вкладки
+// Панель с контентом вкладки
 const TabPanel = (props: TabPanelProps) => {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`settings-tabpanel-${index}`}
       aria-labelledby={`settings-tab-${index}`}
       {...other}
+      sx={{
+        py: SIZES.spacing.lg,
+        px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
+      }}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
+      {value === index && children}
+    </Box>
   );
 };
 
-// Вспомогательная функция для атрибутов вкладки
 const a11yProps = (index: number) => {
   return {
     id: `settings-tab-${index}`,
@@ -64,77 +88,39 @@ const a11yProps = (index: number) => {
 };
 
 const SettingsPage: React.FC = () => {
-  // Состояние для вкладок
+  // Получение темы и централизованных стилей
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tabStyles = getTabStyles(theme);
+  const formStyles = getFormStyles(theme);
+
+  // Получение данных
+  const { data: settingsData, isLoading: loading } = useGetSettingsQuery();
+  const { data: citiesData } = useGetCitiesQuery({});
+  const [updateSettings, { isLoading: updating }] = useUpdateSettingsMutation();
+  
+  const cities = citiesData?.data || [];
+  
+  // Состояния
   const [tabValue, setTabValue] = useState(0);
-  
-  // Состояние для сообщения об успешном сохранении
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  
-  // Состояние для загрузки данных
-  const [loading, setLoading] = useState(false);
-  
-  // Состояние для ошибок
-  const [error, setError] = useState<string | null>(null);
-  
-  // Состояние для списка городов
-  const [cities, setCities] = useState<{id: number; name: string}[]>([]);
-  
-  // Состояние для настроек системы
-  const [settings, setSettings] = useState<SystemSettings>({
-    systemName: 'Твоя шина',
-    contactEmail: 'admin@tvoya-shina.ua',
-    supportPhone: '+380 67 000 00 00',
-    defaultCityId: '1',
+  const [settings, setSettings] = useState<SystemSettings>(() => ({
+    systemName: '',
+    contactEmail: '',
+    supportPhone: '',
+    defaultCityId: 0,
     dateFormat: 'DD.MM.YYYY',
     timeFormat: '24h',
-    slotDuration: 30,
-    enableNotifications: true,
-    enableSmsNotifications: false,
-    emailNotifications: true,
+    emailNotifications: false,
     smsNotifications: false,
-    maxBookingsPerDay: 50,
-    workdayStart: '09:00',
-    workdayEnd: '18:00'
-  });
+    twoFactorAuth: false,
+    sessionTimeout: 30,
+  }));
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Загрузка настроек при первом рендере компонента
-  // Используем RTK Query для загрузки данных
-  const { data: settingsData, isLoading: isSettingsLoading, error: settingsError } = useGetSettingsQuery();
-  const [updateSettings, { isLoading: isUpdating }] = useUpdateSettingsMutation();
-  
-  // Загружаем данные при первом рендере
-  useEffect(() => {
-    const loadSettings = async () => {
-      setLoading(true);
-      try {
-        // Загрузка списка городов из обычного API
-        // Этот код можно будет заменить на RTK Query endpoint
-        const citiesResponse = await fetch('http://localhost:8000/api/v1/cities');
-        const citiesData = await citiesResponse.json();
-        
-        // Проверяем формат ответа API
-        if (citiesData.cities && Array.isArray(citiesData.cities)) {
-          setCities(citiesData.cities);
-        } else if (Array.isArray(citiesData)) {
-          setCities(citiesData);
-        } else {
-          console.warn('Неожиданный формат данных для городов:', citiesData);
-          setCities([]);
-        }
-        
-        setError(null);
-      } catch (err) {
-        console.error('Ошибка при загрузке городов:', err);
-        setError('Не удалось загрузить города. Пожалуйста, попробуйте позже.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadSettings();
-  }, []);
-  
-  // Обновляем локальное состояние при получении данных с сервера
+  // Обновление настроек при загрузке данных
   useEffect(() => {
     if (settingsData) {
       setSettings(settingsData);
@@ -142,54 +128,35 @@ const SettingsPage: React.FC = () => {
   }, [settingsData]);
 
   // Обработчик изменения вкладки
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   // Обработчик изменения текстовых полей
-  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setSettings({
-      ...settings,
-      [name]: value,
-    });
-  };
-
-  // Обработчик изменения переключателей
-  const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    setSettings({
-      ...settings,
-      [name]: checked,
-    });
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({ ...prev, [name]: value }));
   };
 
   // Обработчик изменения выпадающих списков
-  const handleSelectChange = (event: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-    const name = event.target.name as string;
-    const value = event.target.value;
-    setSettings({
-      ...settings,
-      [name]: value,
-    });
+  const handleSelectChange = (e: SelectChangeEvent<string | number>) => {
+    const { name, value } = e.target;
+    setSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Обработчик изменения переключателей
+  const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof SystemSettings) => {
+    const { checked } = e.target;
+    setSettings(prev => ({ ...prev, [field]: checked }));
   };
 
   // Обработчик сохранения настроек
-  const handleSaveSettings = async () => {
-    setLoading(true);
-    setError(null);
-    
+  const handleSave = async () => {
     try {
-      // Отправка данных на сервер с использованием RTK Query
       await updateSettings(settings).unwrap();
-      
-      // Показываем сообщение об успешном сохранении
       setSaveSuccess(true);
     } catch (err) {
-      console.error('Ошибка при сохранении настроек:', err);
-      setError('Не удалось сохранить настройки. Пожалуйста, попробуйте позже.');
-    } finally {
-      setLoading(false);
+      setError('Произошла ошибка при сохранении настроек');
     }
   };
 
@@ -203,19 +170,34 @@ const SettingsPage: React.FC = () => {
     setError(null);
   };
 
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        height: '100vh',
+        width: '100%'
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Настройки системы
-      </Typography>
-
-      {error && (
-        <Alert severity="error" onClose={handleCloseError} sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      <Paper sx={{ mb: 3 }}>
+    <Box sx={{ 
+      width: '100%',
+      maxWidth: 1200,
+      mx: 'auto',
+      px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg },
+    }}>
+      <Paper 
+        elevation={0}
+        sx={{
+          ...cardStyles,
+          overflow: 'hidden'
+        }}
+      >
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs 
             value={tabValue} 
@@ -223,37 +205,76 @@ const SettingsPage: React.FC = () => {
             aria-label="settings tabs"
             variant="scrollable"
             scrollButtons="auto"
+            sx={tabStyles.tabs}
           >
-            <Tab icon={<SettingsIcon />} label="Общие" {...a11yProps(0)} />
-            <Tab icon={<NotificationsIcon />} label="Уведомления" {...a11yProps(1)} />
-            <Tab icon={<SecurityIcon />} label="Безопасность" {...a11yProps(2)} />
-            <Tab icon={<DevicesIcon />} label="Интеграции" {...a11yProps(3)} />
+            <Tab 
+              icon={<SettingsIcon />} 
+              label="Общие" 
+              {...a11yProps(0)}
+              sx={tabStyles.tab} 
+            />
+            <Tab 
+              icon={<NotificationsIcon />} 
+              label="Уведомления" 
+              {...a11yProps(1)}
+              sx={tabStyles.tab} 
+            />
+            <Tab 
+              icon={<SecurityIcon />} 
+              label="Безопасность" 
+              {...a11yProps(2)}
+              sx={tabStyles.tab} 
+            />
+            <Tab 
+              icon={<DevicesIcon />} 
+              label="Интеграции" 
+              {...a11yProps(3)}
+              sx={tabStyles.tab} 
+            />
           </Tabs>
         </Box>
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            p: SIZES.spacing.xl 
+          }}>
             <CircularProgress />
           </Box>
         ) : (
           <>
             {/* Вкладка общих настроек */}
             <TabPanel value={tabValue} index={0}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: SIZES.spacing.lg,
+                ...formStyles.container
+              }}>
                 <Box>
-                  <Typography variant="h6" gutterBottom>
+                  <Typography variant="h6" sx={{ 
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600,
+                    mb: SIZES.spacing.sm
+                  }}>
                     Основные настройки
                   </Typography>
-                  <Divider sx={{ mb: 2 }} />
+                  <Divider />
                 </Box>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                  gap: SIZES.spacing.md 
+                }}>
                   <TextField
                     fullWidth
                     label="Название системы"
                     name="systemName"
                     value={settings.systemName}
                     onChange={handleTextChange}
+                    sx={textFieldStyles}
                   />
 
                   <TextField
@@ -262,6 +283,7 @@ const SettingsPage: React.FC = () => {
                     name="contactEmail"
                     value={settings.contactEmail}
                     onChange={handleTextChange}
+                    sx={textFieldStyles}
                   />
 
                   <TextField
@@ -270,118 +292,48 @@ const SettingsPage: React.FC = () => {
                     name="supportPhone"
                     value={settings.supportPhone}
                     onChange={handleTextChange}
+                    sx={textFieldStyles}
                   />
 
-                  <FormControl fullWidth>
+                  <FormControl fullWidth sx={textFieldStyles}>
                     <InputLabel>Город по умолчанию</InputLabel>
                     <Select
                       name="defaultCityId"
                       value={settings.defaultCityId}
                       label="Город по умолчанию"
-                      onChange={handleSelectChange as any}
+                      onChange={handleSelectChange}
                     >
                       {Array.isArray(cities) ? cities.map(city => (
                         <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>
-                      )) : (
-                        <MenuItem value="">Загрузка городов...</MenuItem>
-                      )}
+                      )) : null}
                     </Select>
                   </FormControl>
                 </Box>
 
                 <Box>
-                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                    Параметры бронирования
+                  <Typography variant="h6" sx={{ 
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600,
+                    mb: SIZES.spacing.sm,
+                    mt: SIZES.spacing.lg
+                  }}>
+                    Настройки отображения
                   </Typography>
-                  <Divider sx={{ mb: 2 }} />
+                  <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Box>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Длительность слота (мин.)"
-                    name="slotDuration"
-                    type="number"
-                    value={settings.slotDuration}
-                    onChange={handleTextChange}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Максимум бронирований в день"
-                    name="maxBookingsPerDay"
-                    type="number"
-                    value={settings.maxBookingsPerDay}
-                    onChange={handleTextChange}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Начало рабочего дня"
-                    name="workdayStart"
-                    type="time"
-                    value={settings.workdayStart}
-                    onChange={handleTextChange}
-                  />
-
-                  <TextField
-                    fullWidth
-                    label="Конец рабочего дня"
-                    name="workdayEnd"
-                    type="time"
-                    value={settings.workdayEnd}
-                    onChange={handleTextChange}
-                  />
-                </Box>
-              </Box>
-            </TabPanel>
-
-            {/* Вкладка уведомлений */}
-            <TabPanel value={tabValue} index={1}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <Box>
-                  <Typography variant="h6" gutterBottom>
-                    Настройки уведомлений
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                </Box>
-
-                <Box>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.enableNotifications}
-                        onChange={handleSwitchChange}
-                        name="enableNotifications"
-                        color="primary"
-                      />
-                    }
-                    label="Включить уведомления по email"
-                  />
-                </Box>
-
-                <Box>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={settings.enableSmsNotifications}
-                        onChange={handleSwitchChange}
-                        name="enableSmsNotifications"
-                        color="primary"
-                      />
-                    }
-                    label="Включить SMS-уведомления"
-                  />
-                </Box>
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-                  <FormControl fullWidth>
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                  gap: SIZES.spacing.md 
+                }}>
+                  <FormControl fullWidth sx={textFieldStyles}>
                     <InputLabel>Формат даты</InputLabel>
                     <Select
                       name="dateFormat"
                       value={settings.dateFormat}
                       label="Формат даты"
-                      onChange={handleSelectChange as any}
+                      onChange={handleSelectChange}
                     >
                       <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
                       <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
@@ -389,57 +341,159 @@ const SettingsPage: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl fullWidth>
+                  <FormControl fullWidth sx={textFieldStyles}>
                     <InputLabel>Формат времени</InputLabel>
                     <Select
                       name="timeFormat"
                       value={settings.timeFormat}
                       label="Формат времени"
-                      onChange={handleSelectChange as any}
+                      onChange={handleSelectChange}
                     >
                       <MenuItem value="24h">24-часовой (14:30)</MenuItem>
                       <MenuItem value="12h">12-часовой (2:30 PM)</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
+
+                <Box sx={{ mt: SIZES.spacing.xl }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSave}
+                    disabled={loading || updating}
+                    sx={buttonStyles}
+                  >
+                    Сохранить изменения
+                  </Button>
+                </Box>
+              </Box>
+            </TabPanel>
+
+            {/* Вкладка уведомлений */}
+            <TabPanel value={tabValue} index={1}>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: SIZES.spacing.lg,
+                ...formStyles.container
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontSize: SIZES.fontSize.lg,
+                  fontWeight: 600,
+                  mb: SIZES.spacing.sm
+                }}>
+                  Настройки уведомлений
+                </Typography>
+                <Divider />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.emailNotifications}
+                      onChange={(e) => handleToggleChange(e, 'emailNotifications')}
+                      name="emailNotifications"
+                    />
+                  }
+                  label="Получать уведомления по email"
+                />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.smsNotifications}
+                      onChange={(e) => handleToggleChange(e, 'smsNotifications')}
+                      name="smsNotifications"
+                    />
+                  }
+                  label="Получать SMS уведомления"
+                />
+
+                <Box sx={{ mt: SIZES.spacing.lg }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSave}
+                    disabled={loading || updating}
+                    sx={buttonStyles}
+                  >
+                    Сохранить изменения
+                  </Button>
+                </Box>
               </Box>
             </TabPanel>
 
             {/* Вкладка безопасности */}
             <TabPanel value={tabValue} index={2}>
-              <Alert severity="info" sx={{ mb: 3 }}>
-                Настройки безопасности доступны только администраторам с полными правами.
-              </Alert>
-              
-              <Typography>
-                В разделе безопасности вы можете настроить политики паролей, доступа и другие параметры безопасности системы.
-                В данный момент эта функциональность находится в разработке.
-              </Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: SIZES.spacing.lg,
+                ...formStyles.container
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontSize: SIZES.fontSize.lg,
+                  fontWeight: 600,
+                  mb: SIZES.spacing.sm
+                }}>
+                  Настройки безопасности
+                </Typography>
+                <Divider />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={settings.twoFactorAuth}
+                      onChange={(e) => handleToggleChange(e, 'twoFactorAuth')}
+                      name="twoFactorAuth"
+                    />
+                  }
+                  label="Двухфакторная аутентификация"
+                />
+
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Время сессии (минуты)"
+                  name="sessionTimeout"
+                  value={settings.sessionTimeout}
+                  onChange={handleTextChange}
+                  sx={textFieldStyles}
+                />
+
+                <Box sx={{ mt: SIZES.spacing.lg }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSave}
+                    disabled={loading || updating}
+                    sx={buttonStyles}
+                  >
+                    Сохранить изменения
+                  </Button>
+                </Box>
+              </Box>
             </TabPanel>
 
             {/* Вкладка интеграций */}
             <TabPanel value={tabValue} index={3}>
-              <Alert severity="info" sx={{ mb: 3 }}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mb: SIZES.spacing.lg,
+                  borderRadius: SIZES.borderRadius.sm 
+                }}
+              >
                 Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
               </Alert>
               
-              <Typography>
+              <Typography variant="body1" sx={{ 
+                color: theme.palette.text.secondary,
+                fontSize: SIZES.fontSize.md
+              }}>
                 В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
                 платежные сервисы и мессенджеры.
               </Typography>
             </TabPanel>
-
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                onClick={handleSaveSettings}
-                disabled={loading}
-              >
-                Сохранить настройки
-              </Button>
-            </Box>
           </>
         )}
       </Paper>
@@ -451,12 +505,40 @@ const SettingsPage: React.FC = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
-          Настройки успешно сохранены!
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity="success"
+          sx={{ 
+            borderRadius: SIZES.borderRadius.sm,
+            width: '100%' 
+          }}
+        >
+          Настройки успешно сохранены
         </Alert>
       </Snackbar>
+
+      {/* Уведомление об ошибке */}
+      {error && (
+        <Snackbar
+          open={Boolean(error)}
+          autoHideDuration={6000}
+          onClose={handleCloseError}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert 
+            onClose={handleCloseError} 
+            severity="error"
+            sx={{ 
+              borderRadius: SIZES.borderRadius.sm,
+              width: '100%' 
+            }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Box>
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;
