@@ -1,12 +1,63 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Paper,
+  Chip,
+  Divider,
+  Grid,
+  Card,
+  CardContent,
+  CardMedia,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Tooltip,
+  Fade,
+  useTheme
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  Edit as EditIcon,
+  Visibility as VisibilityIcon,
+  Schedule as ScheduleIcon,
+  Person as PersonIcon,
+  CalendarToday as CalendarIcon,
+  Category as CategoryIcon,
+  Star as StarIcon,
+  Tag as TagIcon,
+  Share as ShareIcon,
+  Print as PrintIcon
+} from '@mui/icons-material';
+
 import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
 import { ARTICLE_STATUS_LABELS } from '../../types/articles';
 
+// Импорт централизованной системы стилей
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getChipStyles,
+  SIZES,
+  getThemeColors
+} from '../../styles';
+
 const ArticleViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  
   const { article, loading, error } = useArticle(id || null);
   const { articles: relatedArticles } = useRelatedArticles(article?.id || null);
+
+  // Получаем централизованные стили
+  const cardStyles = getCardStyles(theme, 'primary');
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
 
   // Форматирование даты
   const formatDate = (dateString: string | null) => {
@@ -22,228 +73,406 @@ const ArticleViewPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
-        return 'text-green-600 bg-green-100';
+        return 'success';
       case 'draft':
-        return 'text-yellow-600 bg-yellow-100';
+        return 'warning';
       case 'archived':
-        return 'text-gray-600 bg-gray-100';
+        return 'default';
       default:
-        return 'text-gray-600 bg-gray-100';
+        return 'default';
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Загрузка статьи...</p>
-        </div>
-      </div>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center',
+          py: 8
+        }}>
+          <CircularProgress size={48} sx={{ mb: 2 }} />
+          <Typography variant="body1" sx={{ color: colors.textSecondary }}>
+            Загрузка статьи...
+          </Typography>
+        </Box>
+      </Container>
     );
   }
 
   if (error || !article) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center py-12">
-          <div className="text-red-600 mb-2">❌ Ошибка</div>
-          <p className="text-gray-600">
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Alert severity="error" sx={{ mb: 3, display: 'inline-block' }}>
             {error || 'Статья не найдена'}
-          </p>
-          <Link
-            to="/articles"
-            className="inline-block mt-4 text-blue-600 hover:text-blue-700"
-          >
-            ← Вернуться к списку статей
-          </Link>
-        </div>
-      </div>
+          </Alert>
+          <Box>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/articles')}
+              sx={secondaryButtonStyles}
+            >
+              Вернуться к списку статей
+            </Button>
+          </Box>
+        </Box>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <Container maxWidth="xl" sx={{ py: 3 }}>
       {/* Навигация */}
-      <div className="mb-6">
-        <Link
-          to="/articles"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Назад к списку статей
-        </Link>
-      </div>
+      <Fade in timeout={300}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
+          <Button
+            variant="outlined"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/articles')}
+            sx={secondaryButtonStyles}
+          >
+            Назад к списку статей
+          </Button>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title="Поделиться">
+              <IconButton size="small" sx={{ color: colors.textSecondary }}>
+                <ShareIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Печать">
+              <IconButton size="small" sx={{ color: colors.textSecondary }}>
+                <PrintIcon />
+              </IconButton>
+            </Tooltip>
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => navigate(`/articles/${article.id}/edit`)}
+              sx={buttonStyles}
+              size="small"
+            >
+              Редактировать
+            </Button>
+          </Box>
+        </Box>
+      </Fade>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <Grid container spacing={4}>
         {/* Основное содержимое */}
-        <div className="lg:col-span-3">
-          {/* Заголовок статьи */}
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(article.status)}`}>
-                    {ARTICLE_STATUS_LABELS[article.status as keyof typeof ARTICLE_STATUS_LABELS]}
-                  </span>
-                  <span className="text-sm text-gray-500">{article.category_name}</span>
+        <Grid item xs={12} lg={8}>
+          <Fade in timeout={500}>
+            <Box>
+              {/* Заголовок статьи */}
+              <Paper sx={{ ...cardStyles, mb: 3 }}>
+                {/* Статусы и метки */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  <Chip
+                    label={ARTICLE_STATUS_LABELS[article.status as keyof typeof ARTICLE_STATUS_LABELS]}
+                    color={getStatusColor(article.status) as any}
+                    variant="filled"
+                    size="small"
+                  />
+                  <Chip
+                    icon={<CategoryIcon />}
+                    label={article.category_name}
+                    variant="outlined"
+                    size="small"
+                  />
                   {article.featured && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                      ⭐ Рекомендуется
-                    </span>
+                    <Chip
+                      icon={<StarIcon />}
+                      label="Рекомендуется"
+                      sx={getChipStyles(theme, 'warning')}
+                      size="small"
+                    />
                   )}
-                </div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                </Box>
+
+                {/* Заголовок */}
+                <Typography variant="h3" component="h1" sx={{ 
+                  fontWeight: 700,
+                  color: colors.textPrimary,
+                  mb: 3,
+                  lineHeight: 1.2
+                }}>
                   {article.title}
-                </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
+                </Typography>
+
+                {/* Описание */}
+                <Typography variant="h6" component="p" sx={{ 
+                  color: colors.textSecondary,
+                  fontWeight: 400,
+                  lineHeight: 1.6,
+                  mb: 4
+                }}>
                   {article.excerpt}
-                </p>
-              </div>
-              <div className="flex space-x-2 ml-4">
-                <Link
-                  to={`/articles/${article.id}/edit`}
-                  className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg text-sm transition-colors"
-                >
-                  ✏️ Редактировать
-                </Link>
-              </div>
-            </div>
+                </Typography>
 
-            {/* Метаинформация */}
-            <div className="flex items-center space-x-6 text-sm text-gray-500 border-t pt-4">
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>{article.author.name}</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>{formatDate(article.published_at)}</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span>{article.reading_time} мин чтения</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>{article.views_count.toLocaleString()} просмотров</span>
-              </div>
-            </div>
-          </div>
+                <Divider sx={{ mb: 3 }} />
 
-          {/* Главное изображение */}
-          {article.featured_image && (
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden mb-6">
-              <img
-                src={article.featured_image}
-                alt={article.title}
-                className="w-full h-96 object-cover"
-              />
-            </div>
-          )}
+                {/* Метаинформация */}
+                <Grid container spacing={3} sx={{ color: colors.textSecondary }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <PersonIcon sx={{ fontSize: 18 }} />
+                      <Typography variant="body2">{article.author.name}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CalendarIcon sx={{ fontSize: 18 }} />
+                      <Typography variant="body2">{formatDate(article.published_at)}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <ScheduleIcon sx={{ fontSize: 18 }} />
+                      <Typography variant="body2">{article.reading_time} мин чтения</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <VisibilityIcon sx={{ fontSize: 18 }} />
+                      <Typography variant="body2">{article.views_count.toLocaleString()} просмотров</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
 
-          {/* Содержимое статьи */}
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-6">
-            <div 
-              className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
-          </div>
+              {/* Главное изображение */}
+              {article.featured_image && (
+                <Fade in timeout={700}>
+                  <Paper sx={{ ...cardStyles, mb: 3, overflow: 'hidden', p: 0 }}>
+                    <Box
+                      component="img"
+                      src={article.featured_image}
+                      alt={article.title}
+                      sx={{
+                        width: '100%',
+                        height: 400,
+                        objectFit: 'cover',
+                        borderRadius: SIZES.borderRadius.md
+                      }}
+                    />
+                  </Paper>
+                </Fade>
+              )}
 
-          {/* Теги */}
-          {article.tags && article.tags.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Теги</h3>
-              <div className="flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+              {/* Содержимое статьи */}
+              <Fade in timeout={900}>
+                <Paper sx={{ ...cardStyles, mb: 3 }}>
+                  <Box
+                    sx={{
+                      '& h1, & h2, & h3, & h4, & h5, & h6': {
+                        color: colors.textPrimary,
+                        fontWeight: 600,
+                        mt: 3,
+                        mb: 2,
+                        '&:first-of-type': { mt: 0 }
+                      },
+                      '& p': {
+                        color: colors.textPrimary,
+                        lineHeight: 1.8,
+                        mb: 2,
+                        fontSize: '1.1rem'
+                      },
+                      '& ul, & ol': {
+                        color: colors.textPrimary,
+                        mb: 2,
+                        pl: 3,
+                        '& li': { mb: 1 }
+                      },
+                      '& blockquote': {
+                        borderLeft: 4,
+                        borderColor: colors.primary,
+                        pl: 3,
+                        py: 1,
+                        my: 3,
+                        bgcolor: colors.backgroundField,
+                        fontStyle: 'italic',
+                        color: colors.textSecondary
+                      },
+                      '& a': {
+                        color: colors.primary,
+                        textDecoration: 'none',
+                        '&:hover': { textDecoration: 'underline' }
+                      },
+                      '& img': {
+                        maxWidth: '100%',
+                        height: 'auto',
+                        borderRadius: SIZES.borderRadius.sm,
+                        my: 2
+                      },
+                      '& code': {
+                        bgcolor: colors.backgroundField,
+                        color: colors.primary,
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: SIZES.borderRadius.sm,
+                        fontFamily: 'monospace'
+                      },
+                      '& pre': {
+                        bgcolor: colors.backgroundField,
+                        p: 2,
+                        borderRadius: SIZES.borderRadius.sm,
+                        overflow: 'auto',
+                        '& code': { bgcolor: 'transparent', p: 0 }
+                      }
+                    }}
+                    dangerouslySetInnerHTML={{ __html: article.content }}
+                  />
+                </Paper>
+              </Fade>
+
+              {/* Теги */}
+              {article.tags && article.tags.length > 0 && (
+                <Fade in timeout={1100}>
+                  <Paper sx={{ ...cardStyles, mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <TagIcon sx={{ color: colors.textSecondary }} />
+                      <Typography variant="h6" sx={{ color: colors.textPrimary }}>
+                        Теги
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {article.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={`#${tag}`}
+                          variant="outlined"
+                          size="small"
+                          sx={{ color: colors.textSecondary }}
+                        />
+                      ))}
+                    </Box>
+                  </Paper>
+                </Fade>
+              )}
+            </Box>
+          </Fade>
+        </Grid>
 
         {/* Боковая панель */}
-        <div className="lg:col-span-1">
-          {/* Информация о статье */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">О статье</h3>
-            <div className="space-y-3 text-sm">
-              <div>
-                <span className="text-gray-500">Категория:</span>
-                <div className="font-medium">{article.category_name}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Автор:</span>
-                <div className="font-medium">{article.author.name}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Опубликовано:</span>
-                <div className="font-medium">{formatDate(article.published_at)}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Обновлено:</span>
-                <div className="font-medium">{formatDate(article.updated_at)}</div>
-              </div>
-              <div>
-                <span className="text-gray-500">Просмотры:</span>
-                <div className="font-medium">{article.views_count.toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
+        <Grid item xs={12} lg={4}>
+          <Fade in timeout={600}>
+            <Box>
+              {/* Информация о статье */}
+              <Paper sx={{ ...cardStyles, mb: 3 }}>
+                <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
+                  О статье
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                      Категория:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
+                      {article.category_name}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                      Автор:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
+                      {article.author.name}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                      Опубликовано:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
+                      {formatDate(article.published_at)}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                      Время чтения:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
+                      {article.reading_time} минут
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                      Просмотры:
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
+                      {article.views_count.toLocaleString()}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Paper>
 
-          {/* Связанные статьи */}
-          {relatedArticles.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Похожие статьи</h3>
-              <div className="space-y-4">
-                {relatedArticles.map((relatedArticle) => (
-                  <Link
-                    key={relatedArticle.id}
-                    to={`/articles/${relatedArticle.id}`}
-                    className="block group"
-                  >
-                    <div className="flex space-x-3">
-                      {relatedArticle.featured_image && (
-                        <img
-                          src={relatedArticle.featured_image}
-                          alt=""
-                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 line-clamp-2">
-                          {relatedArticle.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {relatedArticle.reading_time} мин чтения • {relatedArticle.views_count} просмотров
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+              {/* Связанные статьи */}
+              {relatedArticles && relatedArticles.length > 0 && (
+                <Paper sx={{ ...cardStyles }}>
+                  <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
+                    Похожие статьи
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {relatedArticles.slice(0, 3).map((relatedArticle) => (
+                      <Card 
+                        key={relatedArticle.id}
+                        sx={{ 
+                          cursor: 'pointer',
+                          transition: SIZES.transitions.medium,
+                          '&:hover': { 
+                            transform: 'translateY(-2px)',
+                            boxShadow: 2
+                          }
+                        }}
+                        onClick={() => navigate(`/articles/${relatedArticle.id}`)}
+                      >
+                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                          <Typography 
+                            variant="subtitle2" 
+                            sx={{ 
+                              fontWeight: 600,
+                              color: colors.textPrimary,
+                              mb: 1,
+                              lineHeight: 1.3
+                            }}
+                          >
+                            {relatedArticle.title}
+                          </Typography>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: colors.textSecondary,
+                              display: 'block',
+                              mb: 1
+                            }}
+                          >
+                            {relatedArticle.excerpt}
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ScheduleIcon sx={{ fontSize: 14, color: colors.textSecondary }} />
+                            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                              {relatedArticle.reading_time} мин
+                            </Typography>
+                            <VisibilityIcon sx={{ fontSize: 14, color: colors.textSecondary, ml: 1 }} />
+                            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                              {relatedArticle.views_count}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
+                </Paper>
+              )}
+            </Box>
+          </Fade>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

@@ -48,6 +48,8 @@ import {
   Person as UserIcon,
   Map as MapIcon,
   Star as StarIcon,
+  Article as ArticleIcon,
+  Web as WebIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -335,6 +337,20 @@ const MainLayout: React.FC = () => {
             path: '/services',
             roles: [UserRole.ADMIN, UserRole.PARTNER],
             description: 'Управление каталогом услуг',
+          },
+          {
+            text: 'База знаний',
+            icon: <ArticleIcon />,
+            path: '/articles',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Управление статьями и базой знаний',
+          },
+          {
+            text: 'Контент страниц',
+            icon: <WebIcon />,
+            path: '/page-content',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: 'Управление контентом клиентских страниц',
           },
         ],
       },

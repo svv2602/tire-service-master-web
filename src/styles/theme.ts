@@ -146,6 +146,12 @@ export const SIZES = {
   scrollbar: {
     width: 8,
     borderRadius: 4,
+  },
+  transitions: {
+    fast: '0.2s ease-in-out',
+    medium: '0.3s ease-in-out', 
+    slow: '0.5s ease-in-out',
+    cubic: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   }
 };
 

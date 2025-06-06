@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { CssBaseline, ThemeProvider, Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -47,14 +47,22 @@ import MyReviewsPage from './pages/reviews/MyReviewsPage';
 import ReviewFormPage from './pages/reviews/ReviewFormPage';
 
 // Импорты для системы статей (админка)
-import ArticlesPage from './pages/articles/ArticlesPage';
-import CreateArticlePage from './pages/articles/CreateArticlePage';
-import EditArticlePage from './pages/articles/EditArticlePage';
-import ArticleViewPage from './pages/articles/ArticleViewPage';
+import { ArticlesPage, CreateArticlePage, EditArticlePage, ArticleViewPage } from './pages/articles';
 
 // Импорты для клиентской базы знаний
 import KnowledgeBasePage from './pages/knowledge-base/KnowledgeBasePage';
 import ArticleDetailPage from './pages/knowledge-base/ArticleDetailPage';
+
+// Импорты для клиентских страниц
+import ClientMainPage from './pages/client/ClientMainPage';
+import ClientServicesPage from './pages/client/ClientServicesPage';
+import ClientSearchPage from './pages/client/ClientSearchPage';
+import ClientBookingPage from './pages/client/ClientBookingPage';
+import ClientProfilePage from './pages/client/ClientProfilePage';
+
+// Импорты для управления контентом страниц
+import PageContentPage from './pages/page-content/PageContentPage';
+import PageContentFormPage from './pages/page-content/PageContentFormPage';
 
 // Компонент для тем
 const ThemeContext = React.createContext<{
@@ -140,6 +148,21 @@ function App() {
                 {/* Публичные маршруты */}
                 <Route path="/login" element={<LoginPage />} />
                 
+                {/* Главная страница для клиентов (без авторизации) */}
+                <Route path="/client" element={
+                  <ClientMainPage />
+                } />
+                
+                {/* Клиентские маршруты */}
+                <Route path="/client/services" element={<ClientServicesPage />} />
+                <Route path="/client/search" element={<ClientSearchPage />} />
+                <Route path="/client/booking" element={<ClientBookingPage />} />
+                <Route path="/client/profile" element={<ClientProfilePage />} />
+                
+                {/* Публичная база знаний (без авторизации) */}
+                <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
+                <Route path="/knowledge-base/:id" element={<ArticleDetailPage />} />
+                
                 {/* Защищенные маршруты в главном лейауте */}
                 <Route path="/" element={
                   <ProtectedRoute>
@@ -218,9 +241,10 @@ function App() {
                   <Route path="articles/new" element={<CreateArticlePage />} />
                   <Route path="articles/:id/edit" element={<EditArticlePage />} />
                   <Route path="articles/:id" element={<ArticleViewPage />} />
-                  {/* Маршруты для клиентской базы знаний */}
-                  <Route path="knowledge-base" element={<KnowledgeBasePage />} />
-                  <Route path="knowledge-base/:id" element={<ArticleDetailPage />} />
+                  {/* Маршруты для управления контентом страниц */}
+                  <Route path="page-content" element={<PageContentPage />} />
+                  <Route path="page-content/new" element={<PageContentFormPage />} />
+                  <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
                 </Route>
                 
                 {/* Маршрут по умолчанию */}

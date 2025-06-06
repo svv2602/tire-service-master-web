@@ -1,258 +1,135 @@
-import { useState, useEffect, useCallback } from 'react';
-import articlesApi from '../api/articles.api';
-import type {
-  Article,
-  ArticleSummary,
-  ArticlesListResponse,
+import { useState, useEffect } from 'react';
+import { 
+  useGetPublishedArticlesQuery,
+  useGetArticleQuery,
+  useGetCategoriesQuery,
+  useCreateArticleMutation,
+  useUpdateArticleMutation,
+  useDeleteArticleMutation,
+  useGetPopularArticlesQuery,
+  useGetRelatedArticlesQuery,
+} from '../api/articles.api';
+import { 
+  Article, 
+  ArticleSummary, 
+  ArticlesFilters, 
   ArticleCategory,
-  CreateArticleRequest,
-  ArticlesFilters,
+  CreateArticleRequest 
 } from '../types/articles';
 
-export const useArticles = (initialFilters: ArticlesFilters = {}) => {
-  const [articles, setArticles] = useState<ArticleSummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    total_pages: 1,
-    total_count: 0,
-    per_page: 12,
-  });
-
-  const fetchArticles = useCallback(async (filters: ArticlesFilters = {}) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response: ArticlesListResponse = await articlesApi.getArticles(filters);
-      setArticles(response.data);
-      setPagination(response.meta);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке статей');
-      console.error('Ошибка загрузки статей:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchArticles(initialFilters);
-  }, [fetchArticles, initialFilters]);
-
-  const refetch = () => fetchArticles(initialFilters);
-
+// Хук для получения списка статей с фильтрацией и пагинацией
+export const useArticles = (filters: ArticlesFilters = {}) => {
+  const { data, error, isLoading, refetch } = useGetPublishedArticlesQuery(filters);
+  
   return {
-    articles,
-    loading,
-    error,
-    pagination,
-    fetchArticles,
-    refetch,
+    articles: data?.data || [],
+    pagination: data?.meta || {
+      current_page: 1,
+      per_page: 10,
+      total_pages: 0,
+      total_count: 0,
+    },
+    loading: isLoading,
+    error: error ? (error as any)?.data?.message || 'Ошибка загрузки статей' : null,
+    fetchArticles: () => refetch(),
   };
 };
 
+// Хук для получения отдельной статьи
 export const useArticle = (id: string | number | null) => {
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchArticle = useCallback(async (articleId: string | number) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await articlesApi.getArticle(articleId);
-      setArticle(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке статьи');
-      console.error('Ошибка загрузки статьи:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (id) {
-      fetchArticle(id);
-    }
-  }, [id, fetchArticle]);
-
-  const refetch = () => {
-    if (id) {
-      fetchArticle(id);
-    }
-  };
-
+  const { data, error, isLoading } = useGetArticleQuery(id!, { 
+    skip: !id 
+  });
+  
   return {
-    article,
-    loading,
-    error,
-    refetch,
+    article: data || null,
+    loading: isLoading,
+    error: error ? (error as any)?.data?.message || 'Ошибка загрузки статьи' : null,
   };
 };
 
+// Хук для получения категорий статей
 export const useArticleCategories = () => {
-  const [categories, setCategories] = useState<ArticleCategory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await articlesApi.getCategories();
-      setCategories(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке категорий');
-      console.error('Ошибка загрузки категорий:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
+  const { data, error, isLoading } = useGetCategoriesQuery();
+  
   return {
-    categories,
-    loading,
-    error,
-    refetch: fetchCategories,
+    categories: data || [],
+    loading: isLoading,
+    error: error ? (error as any)?.data?.message || 'Ошибка загрузки категорий' : null,
   };
 };
 
+// Хук для операций CRUD со статьями
 export const useArticleActions = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [createArticle, { isLoading: creating }] = useCreateArticleMutation();
+  const [updateArticle, { isLoading: updating }] = useUpdateArticleMutation();
+  const [deleteArticle, { isLoading: deleting }] = useDeleteArticleMutation();
 
-  const createArticle = async (articleData: CreateArticleRequest): Promise<Article | null> => {
-    setLoading(true);
-    setError(null);
-    
+  const handleCreate = async (articleData: CreateArticleRequest) => {
     try {
-      const article = await articlesApi.createArticle(articleData);
-      return article;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при создании статьи');
-      console.error('Ошибка создания статьи:', err);
-      return null;
-    } finally {
-      setLoading(false);
+      const result = await createArticle(articleData).unwrap();
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error?.data?.message || 'Ошибка создания статьи' 
+      };
     }
   };
 
-  const updateArticle = async (id: number, articleData: Partial<CreateArticleRequest>): Promise<Article | null> => {
-    setLoading(true);
-    setError(null);
-    
+  const handleUpdate = async (id: number, articleData: Partial<CreateArticleRequest>) => {
     try {
-      const article = await articlesApi.updateArticle(id, articleData);
-      return article;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при обновлении статьи');
-      console.error('Ошибка обновления статьи:', err);
-      return null;
-    } finally {
-      setLoading(false);
+      const result = await updateArticle({ id, article: articleData }).unwrap();
+      return { success: true, data: result };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error?.data?.message || 'Ошибка обновления статьи' 
+      };
     }
   };
 
-  const deleteArticle = async (id: number): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    
+  const handleDelete = async (id: number) => {
     try {
-      await articlesApi.deleteArticle(id);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при удалении статьи');
-      console.error('Ошибка удаления статьи:', err);
-      return false;
-    } finally {
-      setLoading(false);
+      await deleteArticle(id).unwrap();
+      return { success: true };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        error: error?.data?.message || 'Ошибка удаления статьи' 
+      };
     }
   };
 
   return {
-    loading,
-    error,
-    createArticle,
-    updateArticle,
-    deleteArticle,
+    createArticle: handleCreate,
+    updateArticle: handleUpdate,
+    deleteArticle: handleDelete,
+    loading: creating || updating || deleting,
   };
 };
 
+// Хук для получения популярных статей
 export const usePopularArticles = (limit: number = 5) => {
-  const [articles, setArticles] = useState<ArticleSummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPopularArticles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await articlesApi.getPopularArticles(limit);
-      setArticles(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке популярных статей');
-      console.error('Ошибка загрузки популярных статей:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [limit]);
-
-  useEffect(() => {
-    fetchPopularArticles();
-  }, [fetchPopularArticles]);
-
+  const { data, error, isLoading } = useGetPopularArticlesQuery(limit);
+  
   return {
-    articles,
-    loading,
-    error,
-    refetch: fetchPopularArticles,
+    articles: data || [],
+    loading: isLoading,
+    error: error ? (error as any)?.data?.message || 'Ошибка загрузки популярных статей' : null,
   };
 };
 
+// Хук для получения связанных статей
 export const useRelatedArticles = (articleId: number | null, limit: number = 3) => {
-  const [articles, setArticles] = useState<ArticleSummary[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchRelatedArticles = useCallback(async (id: number) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await articlesApi.getRelatedArticles(id, limit);
-      setArticles(response);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка при загрузке связанных статей');
-      console.error('Ошибка загрузки связанных статей:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [limit]);
-
-  useEffect(() => {
-    if (articleId) {
-      fetchRelatedArticles(articleId);
-    }
-  }, [articleId, fetchRelatedArticles]);
-
-  const refetch = () => {
-    if (articleId) {
-      fetchRelatedArticles(articleId);
-    }
-  };
-
+  const { data, error, isLoading } = useGetRelatedArticlesQuery(
+    { articleId: articleId!, limit },
+    { skip: !articleId }
+  );
+  
   return {
-    articles,
-    loading,
-    error,
-    refetch,
+    articles: data || [],
+    loading: isLoading,
+    error: error ? (error as any)?.data?.message || 'Ошибка загрузки связанных статей' : null,
   };
 }; 

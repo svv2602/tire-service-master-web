@@ -1,12 +1,22 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
+import { useArticle, useRelatedArticles, useArticleCategories } from '../../hooks/useArticles';
 import ArticleCard from '../../components/client-articles/ArticleCard';
 
 const ArticleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { article, loading, error } = useArticle(id || null);
-  const { articles: relatedArticles, loading: relatedLoading } = useRelatedArticles(article?.id || null, 4);
+  const { article, loading, error } = useArticle(id ? parseInt(id) : null);
+  const { articles: relatedArticles, loading: relatedLoading } = useRelatedArticles(
+    article?.id || null, 
+    3
+  );
+  const { categories } = useArticleCategories();
+
+  // Состояние для шаринга
+  const [shareMessage, setShareMessage] = useState('');
+
+  // Получаем информацию о категории
+  const categoryInfo = categories.find(cat => cat.key === article?.category);
 
   // Увеличиваем счетчик просмотров при загрузке статьи
   useEffect(() => {
@@ -16,13 +26,44 @@ const ArticleDetailPage: React.FC = () => {
     }
   }, [article]);
 
+  // Обработчики
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = article?.title || 'Статья';
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          url,
+        });
+      } catch (err) {
+        console.log('Ошибка при шаринге:', err);
+      }
+    } else {
+      // Fallback - копируем ссылку в буфер обмена
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareMessage('Ссылка скопирована в буфер обмена!');
+        setTimeout(() => setShareMessage(''), 3000);
+      } catch (err) {
+        console.log('Ошибка при копировании:', err);
+        setShareMessage('Не удалось скопировать ссылку');
+        setTimeout(() => setShareMessage(''), 3000);
+      }
+    }
+  };
+
   // Форматирование даты
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '';
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: 'numeric',
-      month: 'long',
       year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -36,16 +77,44 @@ const ArticleDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Простая навигация для клиентов */}
+        <nav className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-8">
+                <Link to="/knowledge-base" className="text-xl font-bold text-blue-600">
+                  🚗 База знаний о шинах
+                </Link>
+                <div className="hidden md:flex space-x-6">
+                  <Link to="/knowledge-base" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Статьи
+                  </Link>
+                  <a href="mailto:info@tvoya-shina.ru" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Связаться с нами
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <a 
+                  href="/" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Войти в систему
+                </a>
+              </div>
+            </div>
+          </div>
+        </nav>
+
         <div className="container mx-auto px-4 py-12">
           <div className="max-w-4xl mx-auto">
-            {/* Скелет загрузки */}
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded mb-4 w-3/4"></div>
-              <div className="h-64 bg-gray-200 rounded-lg mb-8"></div>
+              <div className="h-8 bg-gray-200 rounded mb-4"></div>
+              <div className="h-64 bg-gray-200 rounded mb-8"></div>
               <div className="space-y-4">
-                <div className="h-4 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                ))}
               </div>
             </div>
           </div>
@@ -57,21 +126,47 @@ const ArticleDetailPage: React.FC = () => {
   if (error || !article) {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Простая навигация для клиентов */}
+        <nav className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-8">
+                <Link to="/knowledge-base" className="text-xl font-bold text-blue-600">
+                  🚗 База знаний о шинах
+                </Link>
+                <div className="hidden md:flex space-x-6">
+                  <Link to="/knowledge-base" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Статьи
+                  </Link>
+                  <a href="mailto:info@tvoya-shina.ru" className="text-gray-600 hover:text-blue-600 transition-colors">
+                    Связаться с нами
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <a 
+                  href="/" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Войти в систему
+                </a>
+              </div>
+            </div>
+          </div>
+        </nav>
+
         <div className="container mx-auto px-4 py-12">
           <div className="text-center py-16">
-            <div className="text-6xl mb-6">😞</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Статья не найдена</h1>
-            <p className="text-gray-600 mb-8">
-              {error || 'Возможно, статья была удалена или перемещена'}
+            <div className="text-6xl mb-4">❌</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Статья не найдена</h1>
+            <p className="text-gray-600 mb-6">
+              {error || 'Запрошенная статья не существует или была удалена'}
             </p>
             <Link
               to="/knowledge-base"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              К списку статей
+              Вернуться к статьям
             </Link>
           </div>
         </div>
@@ -137,14 +232,20 @@ const ArticleDetailPage: React.FC = () => {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <span>{article.author.name}</span>
+                  <div className="text-lg text-gray-900 font-medium">{article.author.name}</div>
+                  <div className="text-sm text-gray-500">Автор</div>
                 </div>
                 
                 <div className="flex items-center">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>{formatDate(article.published_at)}</span>
+                  <div className="text-center">
+                    <div className="text-lg text-gray-900 font-medium">
+                      {article.published_at ? formatDate(article.published_at) : formatDate(article.created_at)}
+                    </div>
+                    <div className="text-sm text-gray-500">Дата публикации</div>
+                  </div>
                 </div>
 
                 <div className="flex items-center">
@@ -215,7 +316,7 @@ const ArticleDetailPage: React.FC = () => {
                 
                 <div className="flex space-x-3">
                   <button
-                    onClick={() => window.print()}
+                    onClick={handlePrint}
                     className="inline-flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
                     title="Печать"
                   >
@@ -226,18 +327,7 @@ const ArticleDetailPage: React.FC = () => {
                   </button>
                   
                   <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: article.title,
-                          text: article.excerpt,
-                          url: window.location.href,
-                        });
-                      } else {
-                        navigator.clipboard.writeText(window.location.href);
-                        alert('Ссылка скопирована в буфер обмена');
-                      }
-                    }}
+                    onClick={handleShare}
                     className="inline-flex items-center px-3 py-2 text-gray-600 hover:text-gray-900 transition-colors"
                     title="Поделиться"
                   >

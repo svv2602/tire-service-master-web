@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useArticles, useArticleCategories, usePopularArticles } from '../../hooks/useArticles';
 import ArticleCard from '../../components/client-articles/ArticleCard';
 import ArticleFilters from '../../components/client-articles/ArticleFilters';
@@ -50,6 +51,35 @@ const KnowledgeBasePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Простая навигация для клиентов */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-8">
+              <Link to="/knowledge-base" className="text-xl font-bold text-blue-600">
+                🚗 База знаний о шинах
+              </Link>
+              <div className="hidden md:flex space-x-6">
+                <Link to="/knowledge-base" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  Статьи
+                </Link>
+                <a href="mailto:info@tvoya-shina.ru" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  Связаться с нами
+                </a>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <a 
+                href="/" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Войти в систему
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero секция */}
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white">
         <div className="container mx-auto px-4 py-16">
@@ -166,7 +196,7 @@ const KnowledgeBasePage: React.FC = () => {
               <div className="text-red-600 mb-4">❌ Ошибка загрузки</div>
               <p className="text-gray-600 mb-6">{error}</p>
               <button
-                onClick={() => fetchArticles(filters)}
+                onClick={() => fetchArticles()}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
               >
                 Попробовать снова

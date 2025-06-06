@@ -451,3 +451,71 @@ export interface DashboardState {
   loading: boolean;
   error: string | null;
 }
+
+// Типы для управления контентом клиентских страниц
+export interface PageContentBlock {
+  id: string;
+  type: 'hero' | 'services' | 'cta' | 'text' | 'features' | 'testimonials';
+  title: string;
+  subtitle?: string;
+  content: any; // Гибкая структура для разных типов контента
+  isActive: boolean;
+  order: number;
+  settings: {
+    backgroundColor?: string;
+    textColor?: string;
+    showIcon?: boolean;
+    itemsPerRow?: number;
+    maxItems?: number;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PageContent {
+  id: string;
+  pageName: string; // 'main', 'services', 'about', etc.
+  pageTitle: string;
+  pageDescription: string;
+  blocks: PageContentBlock[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ServiceItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: string; // Можно хранить название иконки или emoji
+  price: {
+    min: number;
+    max: number;
+  };
+  duration: string;
+  features: string[];
+  isPopular: boolean;
+  category: string;
+  isActive: boolean;
+  order: number;
+}
+
+export interface HeroContent {
+  title: string;
+  subtitle: string;
+  backgroundImage?: string;
+  backgroundColor?: string;
+  buttonText: string;
+  buttonLink: string;
+  showSearch: boolean;
+}
+
+export interface CTAContent {
+  title: string;
+  subtitle: string;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  secondaryButtonText?: string;
+  secondaryButtonLink?: string;
+  backgroundColor?: string;
+}
