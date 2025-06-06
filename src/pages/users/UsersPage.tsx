@@ -360,7 +360,7 @@ export const UsersPage: React.FC = () => {
         })
       }}>
         <TextField
-          placeholder="Поиск по email, имени или фамилии..."
+          placeholder="Поиск по email, имени, фамилии или номеру телефона..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{

@@ -223,7 +223,7 @@ const BookingsPage: React.FC = () => {
       {/* Поиск */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <TextField
-          placeholder="Поиск по клиенту или точке обслуживания"
+          placeholder="Поиск по имени, фамилии, email или номеру телефона клиента"
           variant="outlined"
           size="small"
           value={search}

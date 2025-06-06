@@ -376,6 +376,7 @@ const PartnersPage: React.FC = () => {
         <Box sx={{ display: 'flex', gap: SIZES.spacing.md }}>
           <TextField
             label="Поиск"
+            placeholder="Поиск по названию компании, контактному лицу или номеру телефона..."
             variant="outlined"
             value={search}
             onChange={handleSearchChange}
