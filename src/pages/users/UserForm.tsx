@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useTheme } from '@mui/material';
 import {
   Box,
   Paper,
@@ -26,15 +27,41 @@ import {
 } from '../../api';
 
 import { UserFormData } from '../../types/user';
-import { getRoleId } from '../../utils/roles.utils';
 
+// Импорт централизованной системы стилей
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles,
+  SIZES 
+} from '../../styles';
+
+/**
+ * Компонент формы создания/редактирования пользователя
+ * Поддерживает создание новых пользователей и редактирование существующих
+ * Использует централизованную систему стилей для консистентности UI
+ * 
+ * Особенности:
+ * - Формат валидации с помощью Yup
+ * - Интеграция с Formik для управления состоянием формы
+ * - Поддержка ролевой системы доступа
+ * - Обработка ошибок API с отображением в форме
+ * - Централизованные стили для всех элементов интерфейса
+ */
 const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const isEditMode = Boolean(id);
+  const isEditMode = Boolean(id); // Определяем режим: создание или редактирование
   const userId = isEditMode ? parseInt(id!, 10) : 0;
 
   const navigate = useNavigate();
+  const theme = useTheme(); // Получаем тему MUI для стилей
   const [apiError, setApiError] = React.useState<string | null>(null);
+
+  // Получаем стили из централизованной системы для консистентности UI
+  const cardStyles = getCardStyles(theme, 'primary'); // Стили основной карточки
+  const primaryButtonStyles = getButtonStyles(theme, 'primary'); // Стили основной кнопки
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary'); // Стили вторичной кнопки  
+  const textFieldStyles = getTextFieldStyles(theme, 'filled'); // Стили полей ввода
 
   const { 
     data: userData,
@@ -163,7 +190,8 @@ const UserForm: React.FC = () => {
         password_confirmation: ''
       });
     }
-  }, [isEditMode, userData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, userData]); // Игнорируем formik в зависимостях, так как это может вызвать бесконечные перерендеры
   
   // Функция для отмены редактирования
   const handleCancel = () => {
@@ -171,25 +199,52 @@ const UserForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, mb: 4 }}>
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h5" component="h1" gutterBottom>
+    <Box sx={{ 
+      maxWidth: 800, 
+      mx: 'auto', 
+      mt: SIZES.spacing.lg, 
+      mb: SIZES.spacing.lg 
+    }}>
+      <Paper sx={cardStyles}>
+        <Typography 
+          variant="h5" 
+          component="h1" 
+          gutterBottom
+          sx={{ 
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+            mb: SIZES.spacing.lg
+          }}
+        >
           {isEditMode ? 'Редактирование пользователя' : 'Создание пользователя'}
         </Typography>
 
         {isLoadingUser ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+          <Box 
+            display="flex" 
+            justifyContent="center" 
+            alignItems="center" 
+            minHeight="200px"
+            sx={{ p: SIZES.spacing.lg }}
+          >
             <CircularProgress />
           </Box>
         ) : (
           <form onSubmit={formik.handleSubmit}>
             {apiError && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: SIZES.spacing.lg,
+                  borderRadius: SIZES.borderRadius.md 
+                }}
+              >
                 {apiError}
               </Alert>
             )}
 
-            <Grid container spacing={3}>
+            {/* Основные поля пользователя */}
+            <Grid container spacing={SIZES.spacing.lg}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -202,6 +257,7 @@ const UserForm: React.FC = () => {
                   error={formik.touched.email && Boolean(formik.errors.email)}
                   helperText={formik.touched.email && formik.errors.email}
                   required
+                  sx={textFieldStyles}
                 />
               </Grid>
               
@@ -216,6 +272,7 @@ const UserForm: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.phone && Boolean(formik.errors.phone)}
                   helperText={formik.touched.phone && formik.errors.phone}
+                  sx={textFieldStyles}
                 />
               </Grid>
               
@@ -231,6 +288,7 @@ const UserForm: React.FC = () => {
                   error={formik.touched.first_name && Boolean(formik.errors.first_name)}
                   helperText={formik.touched.first_name && formik.errors.first_name}
                   required
+                  sx={textFieldStyles}
                 />
               </Grid>
               
@@ -246,6 +304,7 @@ const UserForm: React.FC = () => {
                   error={formik.touched.last_name && Boolean(formik.errors.last_name)}
                   helperText={formik.touched.last_name && formik.errors.last_name}
                   required
+                  sx={textFieldStyles}
                 />
               </Grid>
 
@@ -260,10 +319,12 @@ const UserForm: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
                   helperText={formik.touched.middle_name && formik.errors.middle_name}
+                  sx={textFieldStyles}
                 />
               </Grid>
               
               <Grid item xs={12} md={6}>
+                {/* Выпадающий список ролей с централизованными стилями */}
                 <FormControl fullWidth>
                   <InputLabel id="role-label">Роль</InputLabel>
                   <Select
@@ -274,6 +335,7 @@ const UserForm: React.FC = () => {
                     label="Роль"
                     onChange={formik.handleChange}
                     error={formik.touched.role_id && Boolean(formik.errors.role_id)}
+                    sx={{ borderRadius: SIZES.borderRadius.md }}
                   >
                     <MenuItem value={1}>Администратор</MenuItem>
                     <MenuItem value={2}>Менеджер</MenuItem>
@@ -285,6 +347,7 @@ const UserForm: React.FC = () => {
               </Grid>
               
               <Grid item xs={12}>
+                {/* Переключатель активности пользователя */}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -299,13 +362,25 @@ const UserForm: React.FC = () => {
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{ 
+              my: SIZES.spacing.lg,
+              borderColor: theme.palette.divider 
+            }} />
 
-            <Typography variant="h6" gutterBottom>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                fontSize: SIZES.fontSize.lg,
+                fontWeight: 600,
+                mb: SIZES.spacing.md
+              }}
+            >
               {isEditMode ? 'Изменить пароль' : 'Пароль'}
             </Typography>
 
-            <Grid container spacing={3}>
+            {/* Секция настройки пароля */}
+            <Grid container spacing={SIZES.spacing.lg}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -319,6 +394,7 @@ const UserForm: React.FC = () => {
                   error={formik.touched.password && Boolean(formik.errors.password)}
                   helperText={formik.touched.password && formik.errors.password}
                   required={!isEditMode}
+                  sx={textFieldStyles}
                 />
               </Grid>
               
@@ -335,14 +411,22 @@ const UserForm: React.FC = () => {
                   error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
                   helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
                   required={!isEditMode}
+                  sx={textFieldStyles}
                 />
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+            {/* Блок действий с централизованными стилями кнопок */}
+            <Box sx={{ 
+              mt: SIZES.spacing.lg, 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: SIZES.spacing.md 
+            }}>
               <Button 
                 onClick={handleCancel}
                 disabled={isLoading}
+                sx={secondaryButtonStyles}
               >
                 Отмена
               </Button>
@@ -350,6 +434,7 @@ const UserForm: React.FC = () => {
                 type="submit"
                 variant="contained"
                 disabled={isLoading}
+                sx={primaryButtonStyles}
               >
                 {isLoading 
                   ? 'Сохранение...' 

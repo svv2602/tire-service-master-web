@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -15,11 +15,11 @@ import {
   Grid,
   FormControlLabel,
   Switch,
+  useTheme,
 } from '@mui/material';
-import { useFormik, FormikHelpers, FormikProps } from 'formik';
+import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { 
   useGetPartnerByIdQuery, 
@@ -29,10 +29,29 @@ import {
   useGetCitiesQuery,
 } from '../../api';
 import { getRoleId } from '../../utils/roles.utils';
-import { Partner, PartnerFormData } from '../../types/models';
-import type { User } from '../../types/user';
-import { RootState } from '../../store/store';
+import { PartnerFormData } from '../../types/models';
 import { SelectChangeEvent } from '@mui/material';
+// Импорт централизованной системы стилей
+import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES } from '../../styles';
+
+/**
+ * Страница формы партнера - создание и редактирование партнеров
+ * 
+ * Функциональность:
+ * - Создание нового партнера с данными пользователя
+ * - Редактирование существующего партнера
+ * - Валидация полей формы с помощью Yup
+ * - Управление регионами и городами с каскадной загрузкой
+ * - Интеграция с RTK Query для API операций
+ * - Централизованная система стилей для консистентного UI
+ * 
+ * Разделы формы:
+ * - Основная информация о компании (название, описание, контактное лицо, сайт, логотип)
+ * - Юридическая информация (налоговый номер, юридический адрес)
+ * - Местоположение (регион и город с каскадной загрузкой)
+ * - Статус (активность партнера)
+ * - Данные пользователя (только при создании - имя, фамилия, email, телефон, пароль)
+ */
 
 // Определяем локальный интерфейс для формы пользователя
 interface FormUserData {
@@ -57,18 +76,7 @@ interface FormValues {
   user: FormUserData | null;
 }
 
-// Обновляем типы для Formik
-type FormikTouched<T> = {
-  [K in keyof T]?: T[K] extends object | null
-    ? FormikTouched<NonNullable<T[K]>>
-    : boolean;
-};
-
-type FormikErrors<T> = {
-  [K in keyof T]?: T[K] extends object | null
-    ? FormikErrors<NonNullable<T[K]>>
-    : string;
-};
+// Создаем типизированные версии touched и errors для пользователя (используются в полях формы)
 
 // Функция для создания схемы валидации в зависимости от режима
 const createValidationSchema = (isEdit: boolean) => yup.object({
@@ -93,7 +101,7 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .nullable()
     .test('tax-number-format', 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов', function(value) {
       if (!value) return true; // Если поле пустое, то валидация проходит
-      return /^[0-9\-]{8,15}$/.test(value);
+      return /^[0-9-]{8,15}$/.test(value);
     }),
   
   legal_address: yup.string()
@@ -138,10 +146,14 @@ const PartnerFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
-
-  // Проверяем состояние аутентификации
-  const { token, user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   
+  // Централизованная система стилей
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+
   // RTK Query хуки
   const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id ? parseInt(id) : 0, {
     skip: !id,
@@ -386,11 +398,7 @@ const PartnerFormPage: React.FC = () => {
 
   const isLoading = createLoading || updateLoading;
 
-  // Создаем типизированные версии touched и errors
-  const touched = formik.touched as FormikTouched<FormValues>;
-  const errors = formik.errors as FormikErrors<FormValues>;
-
-  // Создаем типизированные версии touched и errors для пользователя
+  // Создаем типизированные версии touched и errors для пользователя (используются в полях формы)
   type FormikTouchedUser = {
     first_name?: boolean;
     last_name?: boolean;
@@ -436,24 +444,38 @@ const PartnerFormPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1000, mx: 'auto', p: 3 }}>
+    <Box sx={{ 
+      maxWidth: 1000, 
+      mx: 'auto', 
+      p: SIZES.spacing.lg 
+    }}>
       {/* Заголовок и навигация */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/partners')}
-          sx={{ mr: 2 }}
+          sx={{ 
+            ...secondaryButtonStyles,
+            mr: SIZES.spacing.md 
+          }}
         >
           Назад
         </Button>
-        <Typography variant="h4">
+        <Typography 
+          variant="h4" 
+          sx={{ fontSize: SIZES.fontSize.xl }}
+        >
           {isEdit ? 'Редактировать партнера' : 'Создать партнера'}
         </Typography>
       </Box>
           
       <form onSubmit={formik.handleSubmit}>
-        <Paper sx={{ p: 3 }}>
-          <Grid container spacing={3}>
+        <Paper sx={cardStyles}>
+          <Grid container spacing={SIZES.spacing.lg}>
             {/* Основная информация о компании */}
             <Grid item xs={12}>
               <Typography variant="h6" gutterBottom>
@@ -473,6 +495,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.company_name && Boolean(formik.errors.company_name)}
                 helperText={formik.touched.company_name && formik.errors.company_name}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -486,6 +509,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
                 helperText={formik.touched.contact_person && formik.errors.contact_person}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -501,6 +525,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.company_description && Boolean(formik.errors.company_description)}
                 helperText={formik.touched.company_description && formik.errors.company_description}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -515,6 +540,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.website && Boolean(formik.errors.website)}
                 helperText={formik.touched.website && formik.errors.website}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -529,15 +555,23 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
                 helperText={formik.touched.logo_url && formik.errors.logo_url}
+                sx={textFieldStyles}
               />
             </Grid>
 
             {/* Юридическая информация */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  mt: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg 
+                }}
+              >
                 Юридическая информация
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -551,6 +585,7 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
                 helperText={formik.touched.tax_number && formik.errors.tax_number}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -565,15 +600,23 @@ const PartnerFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.legal_address && Boolean(formik.errors.legal_address)}
                 helperText={formik.touched.legal_address && formik.errors.legal_address}
+                sx={textFieldStyles}
               />
             </Grid>
 
             {/* Местоположение */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  mt: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg 
+                }}
+              >
                 Местоположение
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -629,10 +672,17 @@ const PartnerFormPage: React.FC = () => {
 
             {/* Статус */}
             <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  mt: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg 
+                }}
+              >
                 Статус
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -652,10 +702,17 @@ const PartnerFormPage: React.FC = () => {
             {!isEdit && (
               <>
                 <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      mt: SIZES.spacing.md,
+                      fontSize: SIZES.fontSize.lg 
+                    }}
+                  >
                     Данные пользователя
                   </Typography>
-                  <Divider sx={{ mb: 2 }} />
+                  <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Grid>
 
                 <Grid item xs={12} md={6}>
@@ -672,9 +729,10 @@ const PartnerFormPage: React.FC = () => {
                       (formik.errors as FormikErrorsValues).user?.first_name
                     )}
                     helperText={
-                      (formik.touched as FormikTouchedValues).user?.first_name && 
-                      (formik.errors as FormikErrorsValues).user?.first_name || ''
+                      ((formik.touched as FormikTouchedValues).user?.first_name && 
+                      (formik.errors as FormikErrorsValues).user?.first_name) || ''
                     }
+                    sx={textFieldStyles}
                   />
                 </Grid>
 
@@ -692,9 +750,10 @@ const PartnerFormPage: React.FC = () => {
                       (formik.errors as FormikErrorsValues).user?.last_name
                     )}
                     helperText={
-                      (formik.touched as FormikTouchedValues).user?.last_name && 
-                      (formik.errors as FormikErrorsValues).user?.last_name || ''
+                      ((formik.touched as FormikTouchedValues).user?.last_name && 
+                      (formik.errors as FormikErrorsValues).user?.last_name) || ''
                     }
+                    sx={textFieldStyles}
                   />
                 </Grid>
 
@@ -713,9 +772,10 @@ const PartnerFormPage: React.FC = () => {
                       (formik.errors as FormikErrorsValues).user?.email
                     )}
                     helperText={
-                      (formik.touched as FormikTouchedValues).user?.email && 
-                      (formik.errors as FormikErrorsValues).user?.email || ''
+                      ((formik.touched as FormikTouchedValues).user?.email && 
+                      (formik.errors as FormikErrorsValues).user?.email) || ''
                     }
+                    sx={textFieldStyles}
                   />
                 </Grid>
 
@@ -734,9 +794,10 @@ const PartnerFormPage: React.FC = () => {
                       (formik.errors as FormikErrorsValues).user?.phone
                     )}
                     helperText={
-                      (formik.touched as FormikTouchedValues).user?.phone && 
-                      (formik.errors as FormikErrorsValues).user?.phone || ''
+                      ((formik.touched as FormikTouchedValues).user?.phone && 
+                      (formik.errors as FormikErrorsValues).user?.phone) || ''
                     }
+                    sx={textFieldStyles}
                   />
                 </Grid>
 
@@ -754,9 +815,10 @@ const PartnerFormPage: React.FC = () => {
                       (formik.errors as FormikErrorsValues).user?.password
                     )}
                     helperText={
-                      (formik.touched as FormikTouchedValues).user?.password && 
-                      (formik.errors as FormikErrorsValues).user?.password || ''
+                      ((formik.touched as FormikTouchedValues).user?.password && 
+                      (formik.errors as FormikErrorsValues).user?.password) || ''
                     }
+                    sx={textFieldStyles}
                   />
                 </Grid>
               </>
@@ -772,11 +834,17 @@ const PartnerFormPage: React.FC = () => {
                 <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
               )}
               
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: SIZES.spacing.md, 
+                justifyContent: 'flex-end', 
+                mt: SIZES.spacing.lg 
+              }}>
                 <Button
                   variant="outlined"
                   onClick={() => navigate('/partners')}
                   disabled={isLoading}
+                  sx={secondaryButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -785,30 +853,61 @@ const PartnerFormPage: React.FC = () => {
                   variant="contained"
                   startIcon={<SaveIcon />}
                   disabled={isLoading || !formik.isValid}
+                  sx={primaryButtonStyles}
                 >
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
                 </Button>
               </Box>
               {/* Временная отладочная информация для создания партнера */}
               {!isEdit && process.env.NODE_ENV === 'development' && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-                  <Typography variant="caption" display="block">
+                <Box sx={{ 
+                  mt: SIZES.spacing.md, 
+                  p: SIZES.spacing.md, 
+                  bgcolor: 'grey.100', 
+                  borderRadius: SIZES.borderRadius.md 
+                }}>
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     Отладка создания партнера:
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isValid: {formik.isValid.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isLoading: {isLoading.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isEdit: {isEdit.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     user данные: {JSON.stringify(formik.values.user, null, 2)}
                   </Typography>
                   {Object.keys(formik.errors).length > 0 && (
-                    <Typography variant="caption" display="block" color="error">
+                    <Typography 
+                      variant="caption" 
+                      display="block" 
+                      color="error"
+                      sx={{ fontSize: SIZES.fontSize.sm }}
+                    >
                       Ошибки: {JSON.stringify(formik.errors, null, 2)}
                     </Typography>
                   )}
@@ -816,39 +915,89 @@ const PartnerFormPage: React.FC = () => {
               )}
               {/* Отладочная информация для редактирования партнера */}
               {isEdit && process.env.NODE_ENV === 'development' && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: 'blue.50', borderRadius: 1 }}>
-                  <Typography variant="caption" display="block">
+                <Box sx={{ 
+                  mt: SIZES.spacing.md, 
+                  p: SIZES.spacing.md, 
+                  bgcolor: 'blue.50', 
+                  borderRadius: SIZES.borderRadius.md 
+                }}>
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     Отладка редактирования партнера:
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isValid: {formik.isValid.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isLoading: {isLoading.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     isEdit: {isEdit.toString()}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     partner ID: {id}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     region_id: {formik.values.region_id || 'пусто'}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     city_id: {formik.values.city_id || 'пусто'}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     selectedRegionId: {selectedRegionId || 'не выбран'}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     доступно городов: {citiesData?.data?.length || 0}
                   </Typography>
-                  <Typography variant="caption" display="block">
+                  <Typography 
+                    variant="caption" 
+                    display="block"
+                    sx={{ fontSize: SIZES.fontSize.sm }}
+                  >
                     user данные: {JSON.stringify(formik.values.user, null, 2)}
                   </Typography>
                   {Object.keys(formik.errors).length > 0 && (
-                    <Typography variant="caption" display="block" color="error">
+                    <Typography 
+                      variant="caption" 
+                      display="block" 
+                      color="error"
+                      sx={{ fontSize: SIZES.fontSize.sm }}
+                    >
                       Ошибки: {JSON.stringify(formik.errors, null, 2)}
                     </Typography>
                   )}

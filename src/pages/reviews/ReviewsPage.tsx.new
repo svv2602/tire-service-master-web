@@ -1,0 +1,555 @@
+// filepath: /home/snisar/mobi_tz/tire-service-master-web/src/pages/reviews/ReviewsPage.tsx
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  InputAdornment,
+  Paper,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TablePagination,
+  Avatar,
+  Rating,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  useTheme, // Добавлен импорт темы
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Reply as ReplyIcon,
+  Star as StarIcon,
+  Business as BusinessIcon,
+  DirectionsCar as CarIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { 
+  useGetReviewsQuery, 
+  useDeleteReviewMutation,
+  useUpdateReviewMutation,
+  useGetServicePointsQuery,
+} from '../../api';
+import { Review, ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
+import { ServicePoint } from '../../types/models';
+import { SelectChangeEvent } from '@mui/material/Select';
+// Импорты централизованной системы стилей
+import { SIZES } from '../../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getTableStyles, 
+  getChipStyles 
+} from '../../styles/components';
+
+// Расширяем интерфейс Review для отображения
+interface ReviewWithClient extends Review {
+  client?: {
+    first_name: string;
+    last_name: string;
+  };
+  text?: string; // Альтернативное поле для comment
+  booking?: {
+    id: number;
+    scheduled_at: string;
+    clientCar?: {
+      carBrand?: { name: string };
+      carModel?: { name: string };
+    };
+  };
+}
+
+// Статусы отзывов с типизацией
+const REVIEW_STATUSES: Record<ReviewStatus, {
+  label: string;
+  color: 'error' | 'info' | 'success' | 'warning';
+  icon: React.ReactNode;
+}> = {
+  pending: { label: 'На модерации', color: 'warning', icon: <StarIcon /> },
+  published: { label: 'Опубликован', color: 'success', icon: <CheckIcon /> },
+  rejected: { label: 'Отклонен', color: 'error', icon: <CloseIcon /> },
+};
+
+const ReviewsPage: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // Получение темы и централизованных стилей
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tableStyles = getTableStyles(theme);
+  const chipStyles = getChipStyles(theme);
+  
+  // Состояние для поиска, фильтрации и пагинации
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ReviewStatus | ''>('');
+  const [servicePointId, setServicePointId] = useState<string>('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  
+  // Состояние для диалогов
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<ReviewWithClient | null>(null);
+
+  // RTK Query хуки
+  const { 
+    data: reviewsData, 
+    isLoading: reviewsLoading, 
+    error: reviewsError 
+  } = useGetReviewsQuery({
+    search: search || undefined,
+    status: statusFilter || undefined,
+    service_point_id: servicePointId ? Number(servicePointId) : undefined,
+    page: page + 1,
+    per_page: rowsPerPage,
+  } as ReviewFilter);
+
+  const { data: servicePointsData } = useGetServicePointsQuery({} as any);
+  const [deleteReview, { isLoading: deleteLoading }] = useDeleteReviewMutation();
+  const [updateReview] = useUpdateReviewMutation();
+
+  const isLoading = reviewsLoading || deleteLoading;
+  const error = reviewsError;
+  const reviews = (reviewsData as unknown as ReviewWithClient[]) || [];
+  const totalItems = reviews.length;
+  const servicePoints = (servicePointsData as unknown as ServicePoint[]) || [];
+
+  // Обработчики событий
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+    setPage(0);
+  };
+
+  const handleStatusFilterChange = (event: SelectChangeEvent<ReviewStatus | ''>) => {
+    setStatusFilter(event.target.value as ReviewStatus | '');
+    setPage(0);
+  };
+
+  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
+    setServicePointId(event.target.value);
+    setPage(0);
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDeleteClick = (review: ReviewWithClient) => {
+    setSelectedReview(review);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedReview) {
+      try {
+        await deleteReview(selectedReview.id.toString()).unwrap();
+        setDeleteDialogOpen(false);
+        setSelectedReview(null);
+      } catch (error) {
+        console.error('Ошибка при удалении отзыва:', error);
+      }
+    }
+  };
+
+  const handleStatusChange = async (review: ReviewWithClient, status: ReviewStatus) => {
+    try {
+      await updateReview({
+        id: review.id.toString(),
+        data: { status } as Partial<ReviewFormData>
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedReview(null);
+  };
+
+  // Вспомогательные функции
+  const getClientInitials = (review: ReviewWithClient) => {
+    const firstName = review.client?.first_name || review.user?.first_name || '';
+    const lastName = review.client?.last_name || review.user?.last_name || '';
+    return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // Отображение состояний загрузки и ошибок
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: SIZES.spacing.lg }}>
+        <Alert severity="error" sx={{ ...cardStyles, p: SIZES.spacing.md }}>
+          Ошибка при загрузке отзывов: {error.toString()}
+        </Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: SIZES.spacing.lg }}>
+      {/* Заголовок */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.md 
+      }}>
+        <Typography
+          sx={{ 
+            fontSize: SIZES.fontSize.xl, 
+            fontWeight: 600,
+            color: theme.palette.text.primary
+          }}
+        >
+          Отзывы
+        </Typography>
+      </Box>
+
+      {/* Фильтры и поиск */}
+      <Paper sx={{ ...cardStyles, p: SIZES.spacing.md, mb: SIZES.spacing.md }}>
+        <Box sx={{ display: 'flex', gap: SIZES.spacing.md, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TextField
+            placeholder="Поиск по тексту отзыва"
+            variant="outlined"
+            size="small"
+            value={search}
+            onChange={handleSearchChange}
+            sx={{ ...textFieldStyles, minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <FormControl size="small" sx={{ ...textFieldStyles, minWidth: 150 }}>
+            <InputLabel>Статус</InputLabel>
+            <Select
+              value={statusFilter}
+              onChange={handleStatusFilterChange}
+              label="Статус"
+            >
+              <MenuItem value="">Все статусы</MenuItem>
+              {Object.entries(REVIEW_STATUSES).map(([value, { label }]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ ...textFieldStyles, minWidth: 200 }}>
+            <InputLabel>Сервисная точка</InputLabel>
+            <Select
+              value={servicePointId}
+              onChange={handleServicePointChange}
+              label="Сервисная точка"
+            >
+              <MenuItem value="">Все точки</MenuItem>
+              {servicePoints.map((point) => (
+                <MenuItem key={point.id} value={point.id.toString()}>
+                  {point.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Paper>
+
+      {/* Таблица отзывов */}
+      <TableContainer component={Paper} sx={tableStyles.tableContainer}>
+        <Table>
+          <TableHead sx={tableStyles.tableHead}>
+            <TableRow>
+              <TableCell sx={tableStyles.tableCell}>Клиент</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Сервисная точка</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Отзыв</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Оценка</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Статус</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Дата</TableCell>
+              <TableCell sx={tableStyles.tableCell} align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {reviews.map((review) => (
+              <TableRow key={review.id} sx={tableStyles.tableRow}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                    <Avatar sx={{ 
+                      bgcolor: theme.palette.primary.main,
+                      width: 36,
+                      height: 36,
+                      fontSize: SIZES.fontSize.md
+                    }}>
+                      {getClientInitials(review)}
+                    </Avatar>
+                    <Box>
+                      <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
+                        {review.client?.first_name || review.user?.first_name} {review.client?.last_name || review.user?.last_name}
+                      </Typography>
+                      <Typography 
+                        sx={{ 
+                          fontSize: SIZES.fontSize.sm, 
+                          color: theme.palette.text.secondary 
+                        }}
+                      >
+                        {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                    <BusinessIcon color="action" />
+                    <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                      {review.service_point?.name}
+                    </Typography>
+                  </Box>
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Typography
+                    sx={{
+                      fontSize: SIZES.fontSize.md,
+                      maxWidth: 300,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {review.text || review.comment}
+                  </Typography>
+                  {review.response && (
+                    <Box sx={{ mt: SIZES.spacing.xs, display: 'flex', alignItems: 'flex-start', gap: SIZES.spacing.xs }}>
+                      <ReplyIcon color="action" sx={{ fontSize: '1rem' }} />
+                      <Typography
+                        sx={{
+                          fontSize: SIZES.fontSize.sm,
+                          color: theme.palette.text.secondary,
+                          maxWidth: 280,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                        }}
+                      >
+                        {review.response}
+                      </Typography>
+                    </Box>
+                  )}
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Rating 
+                    value={review.rating} 
+                    readOnly 
+                    size="small" 
+                    sx={{
+                      '& .MuiRating-iconFilled': {
+                        color: theme.palette.warning.main
+                      }
+                    }} 
+                  />
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Chip
+                    icon={REVIEW_STATUSES[review.status as ReviewStatus].icon as React.ReactElement}
+                    label={REVIEW_STATUSES[review.status as ReviewStatus].label}
+                    size="small"
+                    sx={
+                      review.status === 'published' ? chipStyles.success :
+                      review.status === 'pending' ? chipStyles.warning :
+                      chipStyles.error
+                    }
+                  />
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                    {formatDate(review.created_at)}
+                  </Typography>
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell} align="right">
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+                    {review.status === 'pending' && (
+                      <>
+                        <Tooltip title="Одобрить">
+                          <IconButton
+                            onClick={() => handleStatusChange(review, 'published')}
+                            size="small"
+                            sx={{
+                              '&:hover': {
+                                backgroundColor: `${theme.palette.success.main}15`
+                              }
+                            }}
+                          >
+                            <CheckIcon color="success" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Отклонить">
+                          <IconButton
+                            onClick={() => handleStatusChange(review, 'rejected')}
+                            size="small"
+                            sx={{
+                              '&:hover': {
+                                backgroundColor: `${theme.palette.error.main}15`
+                              }
+                            }}
+                          >
+                            <CloseIcon color="error" />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
+                    <Tooltip title="Ответить">
+                      <IconButton 
+                        onClick={() => navigate(`/reviews/${review.id}/reply`)}
+                        size="small"
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.primary.main}15`
+                          }
+                        }}
+                      >
+                        <ReplyIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton
+                        onClick={() => handleDeleteClick(review)}
+                        size="small"
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.error.main}15`
+                          }
+                        }}
+                      >
+                        <DeleteIcon color="error" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          sx={{
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontSize: SIZES.fontSize.sm,
+              margin: 0
+            },
+            '.MuiTablePagination-select': {
+              ...textFieldStyles
+            }
+          }}
+        />
+      </TableContainer>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleCloseDialog}
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontSize: SIZES.fontSize.lg, fontWeight: 600, pt: SIZES.spacing.md }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.sm }}>
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            Вы действительно хотите удалить отзыв клиента{' '}
+            {selectedReview?.client?.first_name || selectedReview?.user?.first_name} {selectedReview?.client?.last_name || selectedReview?.user?.last_name}?
+            Это действие нельзя будет отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: SIZES.spacing.md, pt: SIZES.spacing.sm }}>
+          <Button 
+            onClick={handleCloseDialog}
+            sx={{
+              ...getButtonStyles(theme, 'secondary'),
+              fontSize: SIZES.fontSize.md
+            }}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            sx={{
+              ...getButtonStyles(theme, 'error'),
+              fontSize: SIZES.fontSize.md
+            }}
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default ReviewsPage;

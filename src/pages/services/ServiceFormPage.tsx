@@ -1,3 +1,14 @@
+/**
+ * ServiceFormPage - Страница формы создания/редактирования категории услуг
+ * 
+ * Основные функции:
+ * - Создание новой категории услуг
+ * - Редактирование существующей категории услуг  
+ * - Валидация данных формы
+ * - Отображение списка услуг в категории (только при редактировании)
+ * - Использование централизованной системы стилей для консистентного дизайна
+ */
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
@@ -14,6 +25,7 @@ import {
   Grid,
   Alert,
   Divider,
+  useTheme,
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import {
@@ -24,6 +36,18 @@ import {
 import { ServiceCategoryFormData } from '../../types/service';
 import ServicesList from '../../components/ServicesList';
 
+// Импорт централизованной системы стилей для консистентного дизайна
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles,
+  SIZES 
+} from '../../styles';
+
+/**
+ * Схема валидации формы категории услуг
+ * Определяет правила валидации для всех полей формы
+ */
 const validationSchema = Yup.object({
   name: Yup.string().required('Название обязательно'),
   description: Yup.string(),
@@ -31,12 +55,26 @@ const validationSchema = Yup.object({
   sort_order: Yup.number().min(0, 'Порядок сортировки должен быть неотрицательным'),
 });
 
+/**
+ * ServiceFormPage - Основной компонент страницы формы категории услуг
+ * Поддерживает создание новых категорий и редактирование существующих
+ */
 export const ServiceFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
 
+  // Хук темы для использования централизованных стилей
+  const theme = useTheme();
+  
+  // Получаем стили из централизованной системы для консистентного дизайна
+  const cardStyles = getCardStyles(theme, 'primary'); // Стили для основных карточек
+  const primaryButtonStyles = getButtonStyles(theme, 'primary'); // Стили для основных кнопок  
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary'); // Стили для вторичных кнопок
+  const textFieldStyles = getTextFieldStyles(theme, 'filled'); // Стили для полей ввода
+
+  // RTK Query хуки для работы с API категорий услуг
   const { data: category, isLoading } = useGetServiceCategoryByIdQuery(id!, {
     skip: !isEditing,
   });
@@ -44,6 +82,10 @@ export const ServiceFormPage: React.FC = () => {
   const [createCategory] = useCreateServiceCategoryMutation();
   const [updateCategory] = useUpdateServiceCategoryMutation();
 
+  /**
+   * Конфигурация Formik для управления состоянием формы
+   * Включает валидацию, обработку отправки и начальные значения
+   */
   const formik = useFormik<ServiceCategoryFormData>({
     initialValues: {
       name: '',
@@ -67,6 +109,10 @@ export const ServiceFormPage: React.FC = () => {
     },
   });
 
+  /**
+   * Эффект для заполнения формы данными при редактировании
+   * Срабатывает при загрузке данных категории
+   */
   useEffect(() => {
     if (category) {
       formik.setValues({
@@ -76,48 +122,78 @@ export const ServiceFormPage: React.FC = () => {
         sort_order: category.sort_order || 0,
       });
     }
-  }, [category]);
+  }, [category, formik]);
 
+  // Состояние загрузки для режима редактирования
   if (isEditing && isLoading) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ padding: SIZES.spacing.xl }}>
         <Typography>Загрузка...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Заголовок */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+    <Box sx={{ padding: SIZES.spacing.xl }}>
+      {/* Заголовок страницы с кнопкой "Назад" */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        marginBottom: SIZES.spacing.xl 
+      }}>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/services')}
-          sx={{ mr: 2 }}
+          sx={{
+            ...secondaryButtonStyles,
+            marginRight: SIZES.spacing.md,
+          }}
         >
           Назад
         </Button>
-        <Typography variant="h4" component="h1">
+        <Typography 
+          variant="h4" 
+          component="h1"
+          sx={{
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 700,
+          }}
+        >
           {isEditing ? 'Редактировать категорию услуг' : 'Новая категория услуг'}
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* Форма категории */}
+      <Grid container spacing={SIZES.spacing.xl}>
+        {/* Основная форма категории */}
         <Grid item xs={12} md={isEditing ? 6 : 12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card sx={cardStyles}>
+            <CardContent sx={{ padding: SIZES.spacing.xl }}>
+              <Typography 
+                variant="h6" 
+                sx={{
+                  marginBottom: SIZES.spacing.lg,
+                  fontSize: SIZES.fontSize.lg,
+                  fontWeight: 600,
+                }}
+              >
                 Информация о категории
               </Typography>
 
+              {/* Отображение ошибок отправки формы */}
               {submitError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    marginBottom: SIZES.spacing.md,
+                    borderRadius: SIZES.borderRadius.md,
+                  }}
+                >
                   {submitError}
                 </Alert>
               )}
 
               <Box component="form" onSubmit={formik.handleSubmit}>
+                {/* Поле ввода названия категории */}
                 <TextField
                   fullWidth
                   name="name"
@@ -127,9 +203,13 @@ export const ServiceFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
-                  margin="normal"
+                  sx={{
+                    ...textFieldStyles,
+                    marginBottom: SIZES.spacing.md,
+                  }}
                 />
 
+                {/* Поле ввода описания категории */}
                 <TextField
                   fullWidth
                   name="description"
@@ -141,9 +221,13 @@ export const ServiceFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.description && Boolean(formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
-                  margin="normal"
+                  sx={{
+                    ...textFieldStyles,
+                    marginBottom: SIZES.spacing.md,
+                  }}
                 />
 
+                {/* Поле ввода порядка сортировки */}
                 <TextField
                   fullWidth
                   name="sort_order"
@@ -154,9 +238,13 @@ export const ServiceFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
                   helperText={formik.touched.sort_order && formik.errors.sort_order}
-                  margin="normal"
+                  sx={{
+                    ...textFieldStyles,
+                    marginBottom: SIZES.spacing.md,
+                  }}
                 />
 
+                {/* Переключатель активности категории */}
                 <FormControlLabel
                   control={
                     <Switch
@@ -166,15 +254,20 @@ export const ServiceFormPage: React.FC = () => {
                     />
                   }
                   label="Активна"
-                  sx={{ mt: 2 }}
+                  sx={{ 
+                    marginTop: SIZES.spacing.md,
+                    marginBottom: SIZES.spacing.lg,
+                  }}
                 />
 
-                <Box sx={{ mt: 3 }}>
+                {/* Кнопка сохранения формы */}
+                <Box>
                   <Button
                     type="submit"
                     variant="contained"
                     startIcon={<SaveIcon />}
                     disabled={formik.isSubmitting}
+                    sx={primaryButtonStyles}
                   >
                     {isEditing ? 'Сохранить' : 'Создать'}
                   </Button>
@@ -184,15 +277,25 @@ export const ServiceFormPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Список услуг (только при редактировании) */}
+        {/* Список услуг в категории (только при редактировании) */}
         {isEditing && id && (
           <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
+            <Card sx={cardStyles}>
+              <CardContent sx={{ padding: SIZES.spacing.xl }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{
+                    marginBottom: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600,
+                  }}
+                >
                   Услуги в категории
                 </Typography>
-                <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ 
+                  marginBottom: SIZES.spacing.md,
+                  borderColor: theme.palette.divider,
+                }} />
                 <ServicesList categoryId={id} />
               </CardContent>
             </Card>

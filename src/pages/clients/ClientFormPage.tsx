@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -10,12 +10,20 @@ import {
   Button,
   Grid,
   CircularProgress,
-  Alert,
+  useTheme,
 } from '@mui/material';
 import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation } from '../../api/clients.api';
 import { ClientFormData } from '../../types/client';
+import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
-// Схема валидации
+/**
+ * Схема валидации для формы клиента
+ * Определяет правила валидации полей клиента:
+ * - Имя и фамилия: обязательные поля
+ * - Телефон: проверка формата (10-15 цифр с возможным +)
+ * - Email: проверка формата email
+ */
 const validationSchema = Yup.object({
   first_name: Yup.string().required('Обязательное поле'),
   last_name: Yup.string().required('Обязательное поле'),
@@ -25,10 +33,26 @@ const validationSchema = Yup.object({
     .email('Неверный формат email'),
 });
 
+/**
+ * Компонент формы создания/редактирования клиента
+ * Поддерживает два режима работы:
+ * - Создание нового клиента (без ID в URL)
+ * - Редактирование существующего клиента (с ID в URL)
+ * 
+ * Использует централизованную систему стилей для консистентного UI
+ */
+
 const ClientFormPage: React.FC = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
+
+  // Централизованные стили
+  const cardStyles = getCardStyles(theme);
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme);
 
   // RTK Query хуки
   const { data: client, isLoading: isLoadingClient } = useGetClientByIdQuery(id || '', {
@@ -95,14 +119,21 @@ const ClientFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+    <Box sx={{ padding: SIZES.spacing.xl }}>
+      <Paper sx={cardStyles}>
+        <Typography 
+          variant="h5" 
+          sx={{ 
+            marginBottom: SIZES.spacing.lg,
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+          }}
+        >
           {isEditMode ? 'Редактирование клиента' : 'Новый клиент'}
         </Typography>
 
         <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={3}>
+          <Grid container spacing={SIZES.spacing.lg}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -112,6 +143,7 @@ const ClientFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.first_name && Boolean(formik.errors.first_name)}
                 helperText={formik.touched.first_name && formik.errors.first_name}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -124,6 +156,7 @@ const ClientFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.last_name && Boolean(formik.errors.last_name)}
                 helperText={formik.touched.last_name && formik.errors.last_name}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -136,6 +169,7 @@ const ClientFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
                 helperText={formik.touched.middle_name && formik.errors.middle_name}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -148,6 +182,7 @@ const ClientFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.phone && Boolean(formik.errors.phone)}
                 helperText={formik.touched.phone && formik.errors.phone}
+                sx={textFieldStyles}
               />
             </Grid>
 
@@ -160,14 +195,21 @@ const ClientFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.email && Boolean(formik.errors.email)}
                 helperText={formik.touched.email && formik.errors.email}
+                sx={textFieldStyles}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: SIZES.spacing.md, 
+                justifyContent: 'flex-end',
+                marginTop: SIZES.spacing.lg,
+              }}>
                 <Button
                   variant="outlined"
                   onClick={handleCancel}
+                  sx={secondaryButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -175,6 +217,7 @@ const ClientFormPage: React.FC = () => {
                   type="submit"
                   variant="contained"
                   disabled={isLoading}
+                  sx={primaryButtonStyles}
                 >
                   {isEditMode ? 'Сохранить' : 'Создать'}
                 </Button>

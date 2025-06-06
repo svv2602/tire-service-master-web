@@ -27,6 +27,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -47,9 +48,25 @@ import {
 } from '../../api';
 import { CarBrand } from '../../types/car';
 import Notification from '../../components/Notification';
+import { SIZES } from '../../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getTableStyles, 
+  getChipStyles 
+} from '../../styles/components';
 
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
+  
+  // Получение темы и централизованных стилей
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tableStyles = getTableStyles(theme);
+  const chipStyles = getChipStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -172,7 +189,13 @@ const CarBrandsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="400px" 
+        sx={{ p: SIZES.spacing.lg }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -180,8 +203,14 @@ const CarBrandsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+      <Box sx={{ p: SIZES.spacing.lg }}>
+        <Alert 
+          severity="error"
+          sx={{
+            borderRadius: SIZES.borderRadius.sm,
+            fontSize: SIZES.fontSize.md
+          }}
+        >
           Ошибка при загрузке брендов: {error.toString()}
         </Alert>
       </Box>
@@ -192,29 +221,49 @@ const CarBrandsPage: React.FC = () => {
   const totalItems = brandsData?.pagination?.total_count || 0;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: SIZES.spacing.lg }}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Бренды автомобилей</Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
+          Бренды автомобилей
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/car-brands/new')}
+          sx={buttonStyles}
         >
           Добавить бренд
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Paper sx={{ 
+        ...cardStyles,
+        p: SIZES.spacing.md,
+        mb: SIZES.spacing.lg
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: SIZES.spacing.md, 
+          alignItems: 'center', 
+          flexWrap: 'wrap' 
+        }}>
           <TextField
             placeholder="Поиск по названию бренда"
             variant="outlined"
             size="small"
             value={search}
             onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
+            sx={{ 
+              ...textFieldStyles, 
+              minWidth: 300 
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -230,6 +279,7 @@ const CarBrandsPage: React.FC = () => {
               value={activeFilter}
               onChange={handleActiveFilterChange}
               label="Статус"
+              sx={textFieldStyles}
             >
               <MenuItem value="">Все</MenuItem>
               <MenuItem value="true">Активные</MenuItem>
@@ -240,21 +290,21 @@ const CarBrandsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица брендов */}
-      <Paper>
-        <TableContainer>
+      <Paper sx={cardStyles}>
+        <TableContainer sx={tableStyles.tableContainer}>
           <Table>
-            <TableHead>
+            <TableHead sx={tableStyles.tableHead}>
               <TableRow>
                 <TableCell>Бренд</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <FormatListNumberedIcon fontSize="small" />
                     Кол-во моделей
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <CalendarTodayIcon fontSize="small" />
                     Дата создания
                   </Box>
@@ -264,81 +314,200 @@ const CarBrandsPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {brands.map((brand: CarBrand) => (
-                <TableRow key={brand.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TableRow key={brand.id} hover sx={tableStyles.tableRow}>
+                  <TableCell sx={tableStyles.tableCell}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.md }}>
                       {brand.logo ? (
                         <Avatar 
                           src={brand.logo} 
                           alt={brand.name}
                           variant="rounded"
-                          sx={{ width: 40, height: 40 }}
+                          sx={{ 
+                            width: SIZES.icon.medium * 1.5, 
+                            height: SIZES.icon.medium * 1.5,
+                            borderRadius: SIZES.borderRadius.xs
+                          }}
                         >
                           <CarIcon />
                         </Avatar>
                       ) : (
-                        <Avatar variant="rounded" sx={{ width: 40, height: 40 }}>
+                        <Avatar 
+                          variant="rounded" 
+                          sx={{ 
+                            width: SIZES.icon.medium * 1.5, 
+                            height: SIZES.icon.medium * 1.5,
+                            borderRadius: SIZES.borderRadius.xs
+                          }}
+                        >
                           <CarIcon />
                         </Avatar>
                       )}
-                      <Typography>{brand.name}</Typography>
+                      <Typography sx={{ fontSize: SIZES.fontSize.md }}>{brand.name}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={tableStyles.tableCell}>
                     <Chip 
                       label={brand.is_active ? 'Активен' : 'Неактивен'}
                       color={brand.is_active ? 'success' : 'default'}
                       size="small"
+                      sx={chipStyles}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={tableStyles.tableCell}>
                     <Tooltip title="Количество моделей">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <FormatListNumberedIcon fontSize="small" />
-                        {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
+                        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                          {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
+                        </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={tableStyles.tableCell}>
                     <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} arrow>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <CalendarTodayIcon fontSize="small" color="action" />
-                        <Typography>{new Date(brand.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}</Typography>
+                        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                          {new Date(brand.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                        </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Редактировать">
-                      <IconButton 
-                        size="small"
-                        onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleDeleteClick(brand)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={brand.is_active ? "Деактивировать" : "Активировать"}>
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleToggleActive(brand.id, brand.is_active)}
-                      >
-                        {brand.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
-                      </IconButton>
-                    </Tooltip>
+                  <TableCell align="right" sx={tableStyles.tableCell}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+                      <Tooltip title="Редактировать">
+                        <IconButton 
+                          size="small"
+                          onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
+                          sx={{ 
+                            color: theme.palette.primary.main,
+                            '&:hover': {
+                              backgroundColor: `${theme.palette.primary.main}15`
+                            }
+                          }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Удалить">
+                        <IconButton 
+                          size="small"
+                          onClick={() => handleDeleteClick(brand)}
+                          color="error"
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: `${theme.palette.error.main}15`
+                            }
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={brand.is_active ? "Деактивировать" : "Активировать"}>
+                        <IconButton 
+                          size="small"
+                          onClick={() => handleToggleActive(brand.id, brand.is_active)}
+                          color={brand.is_active ? "default" : "success"}
+                          sx={{
+                            '&:hover': {
+                              backgroundColor: brand.is_active 
+                                ? `${theme.palette.action.hover}` 
+                                : `${theme.palette.success.main}15`
+                            }
+                          }}
+                        >
+                          {brand.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          sx={{
+            borderTop: `1px solid ${theme.palette.divider}`,
+            '& .MuiTablePagination-select': {
+              fontSize: SIZES.fontSize.sm
+            },
+            '& .MuiTablePagination-displayedRows': {
+              fontSize: SIZES.fontSize.sm
+            }
+          }}
+        />
       </Paper>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={handleCloseDialog}
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontSize: SIZES.fontSize.lg, 
+          fontWeight: 600,
+          pb: SIZES.spacing.sm
+        }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pb: SIZES.spacing.md }}>
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            Вы действительно хотите удалить бренд "{selectedBrand?.name}"?
+            Это действие нельзя будет отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ 
+          p: SIZES.spacing.lg, 
+          gap: SIZES.spacing.sm 
+        }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            sx={{
+              ...buttonStyles,
+              variant: 'outlined',
+              borderRadius: SIZES.borderRadius.sm
+            }}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            sx={{
+              borderRadius: SIZES.borderRadius.sm,
+              '&:hover': {
+                backgroundColor: theme.palette.error.dark
+              }
+            }}
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

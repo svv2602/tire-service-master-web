@@ -21,7 +21,15 @@ import {
   Pagination,
   Stack,
   Chip,
+  useTheme,
 } from '@mui/material';
+import { SIZES } from '../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getChipStyles 
+} from '../styles/components';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -54,6 +62,14 @@ interface CitiesListProps {
 }
 
 const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const dangerButtonStyles = getButtonStyles(theme, 'error');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const chipStyles = getChipStyles(theme);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
@@ -160,21 +176,39 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+      <Box display="flex" justifyContent="center" alignItems="center" p={SIZES.spacing.lg}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box sx={cardStyles}>
+      <Typography 
+        variant="h6" 
+        gutterBottom 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: SIZES.spacing.sm,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          mb: SIZES.spacing.md
+        }}
+      >
         <LocationCityIcon />
         Города в регионе
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm 
+          }} 
+          onClose={() => setError(null)}
+        >
           {error}
         </Alert>
       )}
@@ -185,32 +219,72 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         placeholder="Поиск городов..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ mb: 2 }}
+        sx={{
+          ...textFieldStyles,
+          mb: SIZES.spacing.md
+        }}
       />
 
-      <List>
+      <List sx={{ 
+          bgcolor: theme.palette.background.paper,
+          borderRadius: SIZES.borderRadius.md,
+          border: `1px solid ${theme.palette.divider}`,
+          overflow: 'hidden'
+        }}>
         {cities.map((city) => (
-          <ListItem key={city.id} divider>
+          <ListItem 
+            key={city.id} 
+            divider 
+            sx={{
+              transition: '0.2s',
+              '&:hover': {
+                bgcolor: theme.palette.action.hover
+              }
+            }}
+          >
             <ListItemText
               primary={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="subtitle1">{city.name}</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.sm }}>
+                  <Typography 
+                    variant="subtitle1"
+                    sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}
+                  >
+                    {city.name}
+                  </Typography>
                   <Chip 
                     icon={city.is_active ? <CheckIcon /> : <CloseIcon />}
                     label={city.is_active ? 'Активен' : 'Неактивен'}
                     color={city.is_active ? 'success' : 'error'}
                     size="small"
+                    sx={{
+                      ...chipStyles,
+                      ...(city.is_active 
+                        ? getChipStyles(theme, 'success') 
+                        : getChipStyles(theme, 'error'))
+                    }}
                   />
                 </Box>
               }
-              secondary={`ID: ${city.id}`}
+              secondary={
+                <Typography 
+                  variant="body2" 
+                  sx={{ fontSize: SIZES.fontSize.sm, color: theme.palette.text.secondary }}
+                >
+                  ID: {city.id}
+                </Typography>
+              }
             />
             <ListItemSecondaryAction>
               <IconButton
                 edge="end"
                 aria-label="edit"
                 onClick={() => handleOpenDialog(city)}
-                sx={{ mr: 1 }}
+                sx={{ 
+                  mr: SIZES.spacing.sm,
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.primary.main}15` 
+                  }
+                }}
               >
                 <EditIcon />
               </IconButton>
@@ -219,6 +293,11 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
                 aria-label="delete"
                 onClick={() => handleOpenDeleteDialog(city)}
                 color="error"
+                sx={{ 
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.error.main}15` 
+                  }
+                }}
               >
                 <DeleteIcon />
               </IconButton>
@@ -229,29 +308,47 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         {cities.length === 0 && (
           <ListItem>
             <ListItemText
-              primary="Города не найдены"
-              secondary="В этом регионе пока нет городов"
+              primary={
+                <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
+                  Города не найдены
+                </Typography>
+              }
+              secondary={
+                <Typography sx={{ fontSize: SIZES.fontSize.sm, color: theme.palette.text.secondary }}>
+                  В этом регионе пока нет городов
+                </Typography>
+              }
             />
           </ListItem>
         )}
       </List>
 
       {totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mb={2}>
+        <Box 
+          display="flex" 
+          justifyContent="center" 
+          mb={SIZES.spacing.md}
+          mt={SIZES.spacing.md}
+        >
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
           />
         </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.md}>
         <Button
           startIcon={<AddIcon />}
           variant="contained"
-          color="primary"
+          sx={buttonStyles}
           onClick={() => handleOpenDialog()}
         >
           Добавить город
@@ -259,13 +356,30 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       </Box>
 
       {/* Диалог создания/редактирования города */}
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={isDialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            p: 0
+          }
+        }}
+      >
         <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
+          <DialogTitle sx={{ 
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600,
+            pb: SIZES.spacing.md 
+          }}>
             {selectedCity ? 'Редактировать город' : 'Добавить город'}
           </DialogTitle>
-          <DialogContent>
-            <Box pt={1}>
+          <DialogContent sx={{ pt: SIZES.spacing.md }}>
+            <Box pt={SIZES.spacing.sm}>
               <TextField
                 fullWidth
                 id="name"
@@ -275,7 +389,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
                 onChange={formik.handleChange}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
               <FormControlLabel
                 control={
@@ -284,15 +398,16 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
                     name="is_active"
                     checked={formik.values.is_active}
                     onChange={formik.handleChange}
+                    color="primary"
                   />
                 }
                 label="Активен"
               />
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained">
+          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
+            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
+            <Button type="submit" variant="contained" sx={buttonStyles}>
               {selectedCity ? 'Сохранить' : 'Создать'}
             </Button>
           </DialogActions>
@@ -300,17 +415,35 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       </Dialog>
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+      <Dialog 
+        open={isDeleteDialogOpen} 
+        onClose={handleCloseDeleteDialog}
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400,
+            p: 0
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.error.main
+        }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.md }}>
+          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
             Вы действительно хотите удалить город "{cityToDelete?.name}"?
             Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+        <DialogActions sx={{ p: SIZES.spacing.md }}>
+          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
+          <Button onClick={handleConfirmDelete} sx={dangerButtonStyles}>
             Удалить
           </Button>
         </DialogActions>

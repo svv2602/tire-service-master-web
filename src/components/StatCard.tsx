@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
+import { getCardStyles, SIZES } from '../styles';
 
 interface StatCardProps {
   title: string;
@@ -10,17 +11,19 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, description }) => {
+  const theme = useTheme();
+  
   return (
-    <Card sx={{ height: '100%' }}>
+    <Card sx={getCardStyles(theme, 'primary')}>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: SIZES.spacing.md }}>
           <Box
             sx={{
-              p: 1,
-              borderRadius: 1,
+              p: SIZES.spacing.sm,
+              borderRadius: SIZES.borderRadius.sm,
               backgroundColor: `${color}20`,
               color: color,
-              mr: 2,
+              mr: SIZES.spacing.md,
             }}
           >
             {icon}
@@ -30,7 +33,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, descript
           </Typography>
         </Box>
         
-        <Typography variant="h3" component="div" sx={{ mb: 1, color: color, fontWeight: 'bold' }}>
+        <Typography variant="h3" component="div" sx={{ mb: SIZES.spacing.sm, color: color, fontWeight: 'bold' }}>
           {value.toLocaleString('ru-RU')}
         </Typography>
         

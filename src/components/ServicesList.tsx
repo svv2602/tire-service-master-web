@@ -20,7 +20,15 @@ import {
   DialogContentText,
   Pagination,
   Chip,
+  useTheme,
 } from '@mui/material';
+import { SIZES } from '../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getChipStyles 
+} from '../styles/components';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -59,6 +67,14 @@ interface ServicesListProps {
 }
 
 export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const dangerButtonStyles = getButtonStyles(theme, 'error');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const chipStyles = getChipStyles(theme);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -258,15 +274,15 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={2}>
+      <Box display="flex" justifyContent="center" p={SIZES.spacing.lg}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box mb={2}>
+    <Box sx={cardStyles}>
+      <Box mb={SIZES.spacing.md}>
         <TextField
           fullWidth
           label="Поиск услуг"
@@ -274,39 +290,68 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
           value={searchQuery}
           onChange={handleSearch}
           size="small"
+          sx={textFieldStyles}
         />
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm 
+          }} 
+          onClose={() => setError(null)}
+        >
           {error}
         </Alert>
       )}
 
-      <List sx={{ mb: 2 }}>
+      <List sx={{ 
+        mb: SIZES.spacing.md,
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: SIZES.borderRadius.md,
+        overflow: 'hidden'
+      }}>
         {services.map((service: Service) => (
           <ListItem
             key={service.id}
             sx={{
-              bgcolor: 'background.paper',
-              mb: 1,
-              borderRadius: 1,
-              opacity: service.is_active ? 1 : 0.6,
-              border: '1px solid',
-              borderColor: 'divider',
+              bgcolor: theme.palette.background.paper,
+              mb: SIZES.spacing.xs,
+              opacity: service.is_active ? 1 : 0.7,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              transition: '0.2s',
+              '&:hover': {
+                bgcolor: theme.palette.action.hover
+              },
+              '&:last-child': {
+                borderBottom: 'none',
+                mb: 0
+              }
             }}
           >
             <ListItemText
               primary={
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="body1" component="span">
+                <Box display="flex" alignItems="center" gap={SIZES.spacing.sm}>
+                  <Typography 
+                    variant="body1" 
+                    component="span" 
+                    sx={{ 
+                      fontSize: SIZES.fontSize.md,
+                      fontWeight: 500
+                    }}
+                  >
                     {service.name}
                   </Typography>
                   <Chip
                     icon={<ScheduleIcon />}
                     label={formatDuration(service.default_duration)}
                     size="small"
-                    variant="outlined"
+                    sx={{
+                      ...chipStyles,
+                      borderRadius: SIZES.borderRadius.sm
+                    }}
                   />
                 </Box>
               }
@@ -315,13 +360,24 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                   {service.description && (
                     <Typography
                       variant="body2"
-                      color="text.secondary"
-                      sx={{ mb: 0.5 }}
+                      sx={{ 
+                        mb: SIZES.spacing.xs, 
+                        fontSize: SIZES.fontSize.sm,
+                        color: theme.palette.text.secondary
+                      }}
                     >
                       {service.description}
                     </Typography>
                   )}
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: service.is_active 
+                        ? theme.palette.success.main 
+                        : theme.palette.text.disabled,
+                      fontSize: SIZES.fontSize.xs
+                    }}
+                  >
                     {service.is_active ? 'Активна' : 'Неактивна'}
                   </Typography>
                 </Box>
@@ -332,7 +388,12 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 edge="end"
                 aria-label="edit"
                 onClick={() => handleOpenDialog(service)}
-                sx={{ mr: 1 }}
+                sx={{ 
+                  mr: SIZES.spacing.sm,
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.primary.main}15` 
+                  }
+                }}
               >
                 <EditIcon />
               </IconButton>
@@ -340,6 +401,11 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 edge="end"
                 aria-label="delete"
                 onClick={() => handleOpenDeleteDialog(service)}
+                sx={{ 
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.error.main}15` 
+                  }
+                }}
               >
                 <DeleteIcon />
               </IconButton>
@@ -354,30 +420,51 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
           flexDirection="column"
           alignItems="center"
           justifyContent="center"
-          py={4}
+          py={SIZES.spacing.xl}
+          sx={{
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: SIZES.borderRadius.md,
+            backgroundColor: theme.palette.action.hover,
+          }}
         >
-          <Typography variant="body2" color="text.secondary" align="center">
+          <Typography 
+            variant="body2" 
+            align="center"
+            sx={{ 
+              color: theme.palette.text.secondary,
+              fontSize: SIZES.fontSize.md
+            }}
+          >
             {searchQuery ? 'Услуги не найдены' : 'В данной категории пока нет услуг'}
           </Typography>
         </Box>
       )}
 
       {totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mb={2}>
+        <Box 
+          display="flex" 
+          justifyContent="center" 
+          my={SIZES.spacing.md}
+        >
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
           />
         </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.md}>
         <Button
           startIcon={<AddIcon />}
           variant="contained"
-          color="primary"
+          sx={buttonStyles}
           onClick={() => handleOpenDialog()}
         >
           Добавить услугу
@@ -385,13 +472,30 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       </Box>
 
       {/* Диалог создания/редактирования услуги */}
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={isDialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            p: 0
+          }
+        }}
+      >
         <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
+          <DialogTitle sx={{ 
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600,
+            pb: SIZES.spacing.md 
+          }}>
             {selectedService ? 'Редактировать услугу' : 'Добавить услугу'}
           </DialogTitle>
-          <DialogContent>
-            <Box pt={1}>
+          <DialogContent sx={{ pt: SIZES.spacing.md }}>
+            <Box pt={SIZES.spacing.sm}>
               <TextField
                 fullWidth
                 id="name"
@@ -402,7 +506,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
               
               <TextField
@@ -417,7 +521,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.description && Boolean(formik.errors.description)}
                 helperText={formik.touched.description && formik.errors.description}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
 
               <TextField
@@ -431,7 +535,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.default_duration && Boolean(formik.errors.default_duration)}
                 helperText={formik.touched.default_duration && formik.errors.default_duration}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
                 inputProps={{ min: 1, max: 1440 }}
               />
 
@@ -446,7 +550,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
                 helperText={formik.touched.sort_order && formik.errors.sort_order}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
                 inputProps={{ min: 0 }}
               />
 
@@ -456,15 +560,16 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                     checked={formik.values.is_active}
                     onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
                     name="is_active"
+                    color="primary"
                   />
                 }
                 label="Активна"
               />
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained" color="primary">
+          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
+            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
+            <Button type="submit" variant="contained" sx={buttonStyles}>
               {selectedService ? 'Сохранить' : 'Добавить'}
             </Button>
           </DialogActions>
@@ -477,17 +582,32 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         onClose={handleCloseDeleteDialog}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400,
+            p: 0
+          }
+        }}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+        <DialogTitle sx={{ 
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.error.main
+        }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.md }}>
+          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
             Вы действительно хотите удалить услугу "{serviceToDelete?.name}"?
             Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
-          <Button onClick={handleDeleteService} color="error" variant="contained">
+        <DialogActions sx={{ p: SIZES.spacing.md }}>
+          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
+          <Button onClick={handleDeleteService} sx={dangerButtonStyles}>
             Удалить
           </Button>
         </DialogActions>

@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+/**
+ * Страница формы автомобиля клиента
+ * Обеспечивает создание и редактирование автомобилей клиента с валидацией
+ */
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -11,12 +15,18 @@ import {
   Grid,
   CircularProgress,
   Alert,
+  useTheme,
 } from '@mui/material';
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarByIdQuery, useCreateClientCarMutation, useUpdateClientCarMutation } from '../../api/clients.api';
-import { ClientCar, ClientCarFormData } from '../../types/client';
+import { ClientCarFormData } from '../../types/client';
+import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
-// Схема валидации
+/**
+ * Схема валидации полей формы автомобиля
+ * Проверяет обязательность полей и форматы данных
+ */
 const validationSchema = Yup.object({
   brand: Yup.string().required('Обязательное поле'),
   model: Yup.string().required('Обязательное поле'),
@@ -30,24 +40,46 @@ const validationSchema = Yup.object({
     .required('Обязательное поле'),
 });
 
+/**
+ * Компонент формы создания/редактирования автомобиля клиента
+ * Поддерживает два режима: создание нового автомобиля и редактирование существующего
+ */
+
 const ClientCarFormPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const { clientId, carId } = useParams<{ clientId: string; carId: string }>();
   const isEditMode = Boolean(carId);
 
-  // RTK Query хуки
+  /**
+   * Получаем централизованные стили для консистентного дизайна
+   */
+  const cardStyles = getCardStyles(theme, 'primary');
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
+
+  /**
+   * RTK Query хуки для загрузки данных клиента и автомобиля
+   */
   const { data: client, isLoading: isLoadingClient } = useGetClientByIdQuery(clientId || '');
   const { data: car, isLoading: isLoadingCar } = useGetClientCarByIdQuery(
     { clientId: clientId || '', carId: carId || '' },
     { skip: !isEditMode }
   );
 
+  /**
+   * Мутации для создания и обновления автомобиля
+   */
   const [createCar, { isLoading: isCreating }] = useCreateClientCarMutation();
   const [updateCar, { isLoading: isUpdating }] = useUpdateClientCarMutation();
 
   const isLoading = isLoadingClient || isLoadingCar || isCreating || isUpdating;
 
-  // Мемоизированные начальные значения
+  /**
+   * Мемоизированные начальные значения формы
+   * В режиме редактирования используются данные автомобиля, иначе пустые значения
+   */
   const initialValues = useMemo(() => {
     if (car && isEditMode) {
       return {
@@ -67,7 +99,10 @@ const ClientCarFormPage: React.FC = () => {
     };
   }, [car, isEditMode]);
 
-  // Инициализация формы
+  /**
+   * Инициализация формы с Formik
+   * Поддерживает валидацию и автоматическую переинициализацию
+   */
   const formik = useFormik<ClientCarFormData>({
     initialValues,
     enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
@@ -86,22 +121,35 @@ const ClientCarFormPage: React.FC = () => {
     },
   });
 
-  // Мемоизированный обработчик навигации
+  /**
+   * Мемоизированный обработчик отмены операции
+   */
   const handleCancel = useCallback(() => {
     navigate(`/clients/${clientId}/cars`);
   }, [navigate, clientId]);
 
+  /**
+   * Индикатор загрузки с центрированным размещением
+   */
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
+  /**
+   * Сообщение об ошибке если клиент не найден
+   */
   if (!client) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: SIZES.spacing.xl }}>
         <Alert severity="error">
           Клиент не найден
         </Alert>
@@ -110,14 +158,23 @@ const ClientCarFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+    <Box sx={{ p: SIZES.spacing.xl }}>
+      <Paper sx={cardStyles}>
+        <Typography 
+          variant="h5" 
+          gutterBottom
+          sx={{ 
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+            mb: SIZES.spacing.lg 
+          }}
+        >
           {isEditMode ? 'Редактирование автомобиля' : 'Новый автомобиль'}
         </Typography>
 
         <form onSubmit={formik.handleSubmit}>
-          <Grid container spacing={3}>
+          <Grid container spacing={SIZES.spacing.lg}>
+            {/* Поле марки автомобиля */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -127,9 +184,11 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.brand && Boolean(formik.errors.brand)}
                 helperText={formik.touched.brand && formik.errors.brand}
+                sx={textFieldStyles}
               />
             </Grid>
 
+            {/* Поле модели автомобиля */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -139,9 +198,11 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.model && Boolean(formik.errors.model)}
                 helperText={formik.touched.model && formik.errors.model}
+                sx={textFieldStyles}
               />
             </Grid>
 
+            {/* Поле года выпуска */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -152,9 +213,11 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.year && Boolean(formik.errors.year)}
                 helperText={formik.touched.year && formik.errors.year}
+                sx={textFieldStyles}
               />
             </Grid>
 
+            {/* Поле VIN номера */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -164,9 +227,11 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.vin && Boolean(formik.errors.vin)}
                 helperText={formik.touched.vin && formik.errors.vin}
+                sx={textFieldStyles}
               />
             </Grid>
 
+            {/* Поле государственного номера */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -176,14 +241,22 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
                 helperText={formik.touched.license_plate && formik.errors.license_plate}
+                sx={textFieldStyles}
               />
             </Grid>
 
+            {/* Контейнер с кнопками управления формой */}
             <Grid item xs={12}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: SIZES.spacing.md, 
+                justifyContent: 'flex-end',
+                mt: SIZES.spacing.lg
+              }}>
                 <Button
                   variant="outlined"
                   onClick={handleCancel}
+                  sx={secondaryButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -191,6 +264,7 @@ const ClientCarFormPage: React.FC = () => {
                   type="submit"
                   variant="contained"
                   disabled={isLoading}
+                  sx={primaryButtonStyles}
                 >
                   {isEditMode ? 'Сохранить' : 'Создать'}
                 </Button>

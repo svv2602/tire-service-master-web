@@ -10,9 +10,14 @@ import {
   ListItemText,
   ListItemButton,
   Collapse,
-  Typography,
   useTheme,
 } from '@mui/material';
+// Импорт централизованной системы стилей
+import { 
+  SIZES, 
+  getNavigationStyles,
+  ANIMATIONS
+} from '../../styles';
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -27,10 +32,6 @@ import {
   ExpandLess,
   ExpandMore,
   PlaceOutlined as PlaceOutlinedIcon,
-  Store as StoreIcon,
-  Schedule as ScheduleIcon,
-  Group as GroupIcon,
-  Engineering as EngineeringIcon,
 } from '@mui/icons-material';
 
 interface SideNavProps {
@@ -38,20 +39,27 @@ interface SideNavProps {
 }
 
 const SideNav: React.FC<SideNavProps> = ({ open }) => {
+  // Хуки для централизованной системы стилей - обеспечивают консистентность навигации
+  const theme = useTheme();
+  const navigationStyles = getNavigationStyles(theme); // Централизованные стили навигации
+  
   const { pathname } = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
   const userRole = user?.role || '';
   
+  // Состояние раскрытия разделов меню - логика остается прежней
   const [openServicePoints, setOpenServicePoints] = useState(false);
   const [openBookings, setOpenBookings] = useState(false);
   const [openCatalogs, setOpenCatalogs] = useState(false);
   const [openLocations, setOpenLocations] = useState(false);
   const [openCars, setOpenCars] = useState(false);
 
+  // Проверки ролей пользователей
   const isAdmin = userRole === 'admin';
   const isPartner = userRole === 'partner';
   const isManager = userRole === 'manager';
 
+  // Обработчики для переключения состояния разделов меню
   const handleServicePointsClick = () => {
     setOpenServicePoints(!openServicePoints);
   };
@@ -77,20 +85,28 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
       sx={{ 
         width: open ? 280 : 72,
         overflow: 'hidden',
-        transition: 'width 0.3s',
+        transition: ANIMATIONS.transition.medium, // Централизованная анимация
         whiteSpace: 'nowrap',
         display: 'flex',
         flexDirection: 'column',
+        background: theme.palette.background.paper, // Тематический фон
+        borderRight: `1px solid ${theme.palette.divider}`, // Тематическая граница
       }}
     >
       <List component="nav">
+        {/* Главная страница - дашборд */}
         <ListItem disablePadding>
           <ListItemButton 
             component={Link} 
             to="/" 
             selected={pathname === '/'}
+            sx={{
+              ...navigationStyles.listItem,
+              borderRadius: SIZES.borderRadius.sm,
+              margin: SIZES.spacing.xs,
+            }}
           >
-            <ListItemIcon>
+            <ListItemIcon sx={navigationStyles.listItemIcon}>
               <DashboardIcon />
             </ListItemIcon>
             <ListItemText primary="Дашборд" />
@@ -104,8 +120,13 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
               component={Link} 
               to="/partners" 
               selected={pathname === '/partners'}
+              sx={{
+                ...navigationStyles.listItem,
+                borderRadius: SIZES.borderRadius.sm,
+                margin: SIZES.spacing.xs,
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={navigationStyles.listItemIcon}>
                 <BusinessIcon />
               </ListItemIcon>
               <ListItemText primary="Партнеры" />
@@ -119,8 +140,13 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
             component={Link}
             to="/clients"
             selected={pathname === '/clients'}
+            sx={{
+              ...navigationStyles.listItem,
+              borderRadius: SIZES.borderRadius.sm,
+              margin: SIZES.spacing.xs,
+            }}
           >
-            <ListItemIcon>
+            <ListItemIcon sx={navigationStyles.listItemIcon}>
               <PeopleIcon />
             </ListItemIcon>
             <ListItemText primary="Клиенты" />
@@ -134,8 +160,13 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
               component={Link}
               to="/users"
               selected={pathname === '/users'}
+              sx={{
+                ...navigationStyles.listItem,
+                borderRadius: SIZES.borderRadius.sm,
+                margin: SIZES.spacing.xs,
+              }}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={navigationStyles.listItemIcon}>
                 <PersonIcon />
               </ListItemIcon>
               <ListItemText primary="Пользователи" />
@@ -147,8 +178,15 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         {(isAdmin || isPartner || isManager) && (
           <>
             <ListItem disablePadding>
-              <ListItemButton onClick={handleServicePointsClick}>
-                <ListItemIcon>
+              <ListItemButton 
+                onClick={handleServicePointsClick}
+                sx={{
+                  ...navigationStyles.listItem,
+                  borderRadius: SIZES.borderRadius.sm,
+                  margin: SIZES.spacing.xs,
+                }}
+              >
+                <ListItemIcon sx={navigationStyles.listItemIcon}>
                   <LocationOnIcon />
                 </ListItemIcon>
                 <ListItemText primary="Сервисные точки" />
@@ -162,9 +200,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                     component={Link}
                     to="/service-points"
                     selected={pathname === '/service-points'}
-                    sx={{ pl: 4 }}
+                    sx={{ 
+                      ...navigationStyles.listItem,
+                      pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
+                      borderRadius: SIZES.borderRadius.sm,
+                      margin: SIZES.spacing.xs,
+                    }}
                   >
-                    <ListItemIcon>
+                    <ListItemIcon sx={navigationStyles.listItemIcon}>
                       <LocationOnIcon />
                     </ListItemIcon>
                     <ListItemText primary="Все точки" />
@@ -176,9 +219,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                       component={Link}
                       to="/my-service-points"
                       selected={pathname === '/my-service-points'}
-                      sx={{ pl: 4 }}
+                      sx={{ 
+                        ...navigationStyles.listItem,
+                        pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
+                        borderRadius: SIZES.borderRadius.sm,
+                        margin: SIZES.spacing.xs,
+                      }}
                     >
-                      <ListItemIcon>
+                      <ListItemIcon sx={navigationStyles.listItemIcon}>
                         <LocationOnIcon />
                       </ListItemIcon>
                       <ListItemText primary="Мои точки" />
@@ -192,8 +240,15 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         
         {/* Бронирования */}
         <ListItem disablePadding>
-          <ListItemButton onClick={handleBookingsClick}>
-            <ListItemIcon>
+          <ListItemButton 
+            onClick={handleBookingsClick}
+            sx={{
+              ...navigationStyles.listItem,
+              borderRadius: SIZES.borderRadius.sm,
+              margin: SIZES.spacing.xs,
+            }}
+          >
+            <ListItemIcon sx={navigationStyles.listItemIcon}>
               <CalendarMonthIcon />
             </ListItemIcon>
             <ListItemText primary="Бронирования" />
@@ -207,9 +262,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 component={Link}
                 to="/bookings"
                 selected={pathname === '/bookings'}
-                sx={{ pl: 4 }}
+                sx={{ 
+                  ...navigationStyles.listItem,
+                  pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
+                  borderRadius: SIZES.borderRadius.sm,
+                  margin: SIZES.spacing.xs,
+                }}
               >
-                <ListItemIcon>
+                <ListItemIcon sx={navigationStyles.listItemIcon}>
                   <CalendarMonthIcon />
                 </ListItemIcon>
                 <ListItemText primary="Все бронирования" />
@@ -221,9 +281,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                   component={Link}
                   to="/my-bookings"
                   selected={pathname === '/my-bookings'}
-                  sx={{ pl: 4 }}
+                  sx={{ 
+                    ...navigationStyles.listItem,
+                    pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
+                    borderRadius: SIZES.borderRadius.sm,
+                    margin: SIZES.spacing.xs,
+                  }}
                 >
-                  <ListItemIcon>
+                  <ListItemIcon sx={navigationStyles.listItemIcon}>
                     <CalendarMonthIcon />
                   </ListItemIcon>
                   <ListItemText primary="Бронирования моих точек" />
@@ -237,8 +302,15 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         {isAdmin && (
           <>
             <ListItem disablePadding>
-              <ListItemButton onClick={handleCatalogsClick}>
-                <ListItemIcon>
+              <ListItemButton 
+                onClick={handleCatalogsClick}
+                sx={{
+                  ...navigationStyles.listItem,
+                  borderRadius: SIZES.borderRadius.sm,
+                  margin: SIZES.spacing.xs,
+                }}
+              >
+                <ListItemIcon sx={navigationStyles.listItemIcon}>
                   <ListAltIcon />
                 </ListItemIcon>
                 <ListItemText primary="Справочники" />
@@ -251,9 +323,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <ListItemButton
                     onClick={handleLocationsClick}
-                    sx={{ pl: 4 }}
+                    sx={{ 
+                      ...navigationStyles.listItem,
+                      pl: SIZES.spacing.xl, // Первый уровень вложенности
+                      borderRadius: SIZES.borderRadius.sm,
+                      margin: SIZES.spacing.xs,
+                    }}
                   >
-                    <ListItemIcon>
+                    <ListItemIcon sx={navigationStyles.listItemIcon}>
                       <PlaceOutlinedIcon />
                     </ListItemIcon>
                     <ListItemText primary="Местоположения" />
@@ -267,9 +344,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                         component={Link}
                         to="/regions"
                         selected={pathname === '/regions'}
-                        sx={{ pl: 6 }}
+                        sx={{ 
+                          ...navigationStyles.listItem,
+                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
+                          borderRadius: SIZES.borderRadius.sm,
+                          margin: SIZES.spacing.xs,
+                        }}
                       >
-                        <ListItemIcon>
+                        <ListItemIcon sx={navigationStyles.listItemIcon}>
                           <MapIcon />
                         </ListItemIcon>
                         <ListItemText primary="Области и Города" />
@@ -282,9 +364,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <ListItemButton
                     onClick={handleCarsClick}
-                    sx={{ pl: 4 }}
+                    sx={{ 
+                      ...navigationStyles.listItem,
+                      pl: SIZES.spacing.xl, // Первый уровень вложенности
+                      borderRadius: SIZES.borderRadius.sm,
+                      margin: SIZES.spacing.xs,
+                    }}
                   >
-                    <ListItemIcon>
+                    <ListItemIcon sx={navigationStyles.listItemIcon}>
                       <DirectionsCarIcon />
                     </ListItemIcon>
                     <ListItemText primary="Автомобили" />
@@ -298,9 +385,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                         component={Link}
                         to="/car-brands"
                         selected={pathname === '/car-brands'}
-                        sx={{ pl: 6 }}
+                        sx={{ 
+                          ...navigationStyles.listItem,
+                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
+                          borderRadius: SIZES.borderRadius.sm,
+                          margin: SIZES.spacing.xs,
+                        }}
                       >
-                        <ListItemIcon>
+                        <ListItemIcon sx={navigationStyles.listItemIcon}>
                           <DirectionsCarIcon />
                         </ListItemIcon>
                         <ListItemText primary="Бренды авто" />
@@ -311,9 +403,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                         component={Link}
                         to="/car-models"
                         selected={pathname === '/car-models'}
-                        sx={{ pl: 6 }}
+                        sx={{ 
+                          ...navigationStyles.listItem,
+                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
+                          borderRadius: SIZES.borderRadius.sm,
+                          margin: SIZES.spacing.xs,
+                        }}
                       >
-                        <ListItemIcon>
+                        <ListItemIcon sx={navigationStyles.listItemIcon}>
                           <DirectionsCarIcon />
                         </ListItemIcon>
                         <ListItemText primary="Модели авто" />
@@ -332,8 +429,13 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
             component={Link}
             to="/settings"
             selected={pathname === '/settings'}
+            sx={{
+              ...navigationStyles.listItem,
+              borderRadius: SIZES.borderRadius.sm,
+              margin: SIZES.spacing.xs,
+            }}
           >
-            <ListItemIcon>
+            <ListItemIcon sx={navigationStyles.listItemIcon}>
               <SettingsIcon />
             </ListItemIcon>
             <ListItemText primary="Настройки" />
@@ -344,4 +446,4 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   );
 };
 
-export default SideNav; 
+export default SideNav;

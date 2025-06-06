@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 import {
   Box,
   Paper,
@@ -14,37 +12,28 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Card,
-  CardContent,
-  FormHelperText,
   Grid,
-  Autocomplete,
+  useTheme,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ru } from 'date-fns/locale';
 import { 
-  Save as SaveIcon, 
-  ArrowBack as ArrowBackIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import { format } from 'date-fns';
 import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
-import { User, UserRole } from '../../types';
 import { 
   BookingStatusEnum, 
-  BookingFormData as BookingFormDataType,
   BookingService
 } from '../../types/booking';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { useGetCarsQuery } from '../../api/cars.api';
-import { ServicePoint, Car, ApiResponse } from '../../types/models';
+import { ServicePoint, ApiResponse } from '../../types/models';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { SelectChangeEvent } from '@mui/material';
+
+// Импорты централизованной системы стилей
+import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { SIZES } from '../../styles';
 
 // Типы для формы бронирования
 interface ServiceSelection {
@@ -54,14 +43,7 @@ interface ServiceSelection {
   quantity: number;
 }
 
-interface TimeSlot {
-  id: number;
-  start_time: string;
-  end_time: string;
-  available: boolean;
-}
-
-// Схема валидации
+// Схема валидации для формы бронирования
 const validationSchema = yup.object({
   service_point_id: yup.number().required('Выберите точку обслуживания'),
   car_id: yup.number().required('Выберите автомобиль'),
@@ -70,10 +52,15 @@ const validationSchema = yup.object({
   notes: yup.string(),
 });
 
+/**
+ * Компонент формы создания/редактирования бронирования
+ * Использует централизованную систему стилей для консистентного UI
+ */
+
 const BookingFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme(); // Инициализация темы для централизованных стилей
   
   const [createBooking] = useCreateBookingMutation();
   const [updateBooking] = useUpdateBookingMutation();
@@ -82,223 +69,18 @@ const BookingFormPage: React.FC = () => {
   
   // Состояния формы
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Данные бронирования
-  const [clientId, setClientId] = useState<number | null>(null);
-  const [servicePointId, setServicePointId] = useState<number | null>(null);
-  const [carId, setCarId] = useState<number | null>(null);
-  const [carTypeId, setCarTypeId] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
-  const [notes, setNotes] = useState('');
+  // Данные бронирования для обработки услуг (пока не используется в форме, но может понадобиться)
   const [services, setServices] = useState<ServiceSelection[]>([]);
-  const [totalPrice, setTotalPrice] = useState(0);
-  
-  // Справочные данные
-  const [clients, setClients] = useState<any[]>([]);
-  const [servicePoints, setServicePoints] = useState<any[]>([]);
-  const [cars, setCars] = useState<any[]>([]);
-  const [carTypes, setCarTypes] = useState<any[]>([]);
-  const [availableServices, setAvailableServices] = useState<any[]>([]);
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
   const { data: carsData, isLoading: carsLoading } = useGetCarsQuery({} as any);
   
-  const isLoading = servicePointsLoading || carsLoading || loading || saving;
-  
-  // Мемоизированные данные
-  const mockClients = useMemo(() => [
-          { id: 1, name: 'Иван Петренко', phone: '+380 67 123 45 67' },
-          { id: 2, name: 'Мария Коваленко', phone: '+380 50 222 33 44' },
-          { id: 3, name: 'Алексей Шевченко', phone: '+380 63 555 66 77' },
-  ], []);
-        
-  const mockServicePoints = useMemo(() => [
-          { id: 1, name: 'ШиноСервис Экспресс - Киев', address: 'ул. Киевская, 1' },
-          { id: 2, name: 'АвтоШина Плюс - Львов', address: 'ул. Львовская, 10' },
-          { id: 3, name: 'ШинМайстер - Одесса', address: 'ул. Одесская, 5' },
-  ], []);
-        
-  const mockCars = useMemo(() => [
-          { id: 1, brand: 'Toyota', model: 'Camry', number: 'АА1234КК', client_id: 1 },
-          { id: 2, brand: 'Honda', model: 'Civic', number: 'ВН5678ІК', client_id: 2 },
-          { id: 3, brand: 'BMW', model: 'X5', number: 'КА9999ХХ', client_id: 3 },
-  ], []);
-        
-  const mockCarTypes = useMemo(() => [
-          { id: 1, name: 'Легковой' },
-          { id: 2, name: 'Кроссовер/SUV' },
-          { id: 3, name: 'Внедорожник' },
-  ], []);
-        
-  const mockAvailableServices = useMemo(() => [
-          { id: 1, name: 'Замена шин', price: 400 },
-          { id: 2, name: 'Балансировка', price: 200 },
-          { id: 3, name: 'Ремонт диска', price: 600 },
-          { id: 4, name: 'Подкачка шин', price: 100 },
-  ], []);
+  const isLoading = servicePointsLoading || carsLoading || loading;
 
-  // Мемоизированная функция обновления цены
-  const updateTotalPrice = useCallback((servicesList: ServiceSelection[]) => {
-    const total = servicesList.reduce((sum, service) => {
-      return sum + (service.price * service.quantity);
-    }, 0);
-    setTotalPrice(total);
-  }, []);
-
-  // Загрузка справочных данных при монтировании компонента
-  useEffect(() => {
-    const fetchReferenceData = async () => {
-      setLoading(true);
-      try {
-        // Устанавливаем моковые данные
-        setClients(mockClients);
-        setServicePoints(mockServicePoints);
-        setCars(mockCars);
-        setCarTypes(mockCarTypes);
-        setAvailableServices(mockAvailableServices);
-        
-        // Загружаем данные о существующем бронировании при редактировании
-        if (isEditMode && id) {
-          // Здесь должен быть запрос к API для загрузки данных бронирования
-          // Временно используем моковые данные
-          const mockBooking = {
-            id: parseInt(id),
-            client_id: 1,
-            service_point_id: 1,
-            car_id: 1,
-            car_type_id: 1,
-            booking_date: '2023-07-15',
-            start_time: '14:30',
-            end_time: '15:30',
-            notes: 'Примечание к бронированию',
-            services: [
-              { service_id: 1, name: 'Замена шин', price: 400, quantity: 4 },
-              { service_id: 2, name: 'Балансировка', price: 200, quantity: 4 },
-            ],
-          };
-          
-          // Заполняем форму данными
-          setClientId(mockBooking.client_id);
-          setServicePointId(mockBooking.service_point_id);
-          setCarId(mockBooking.car_id);
-          setCarTypeId(mockBooking.car_type_id);
-          setSelectedDate(new Date(mockBooking.booking_date));
-          setSelectedTimeSlot({
-            id: 1,
-            start_time: mockBooking.start_time,
-            end_time: mockBooking.end_time,
-            available: true,
-          });
-          setNotes(mockBooking.notes);
-          setServices(mockBooking.services);
-          
-          // Обновляем общую стоимость
-          updateTotalPrice(mockBooking.services);
-        }
-      } catch (error) {
-        console.error('Error fetching reference data:', error);
-        setError('Не удалось загрузить данные. Пожалуйста, попробуйте снова позже.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchReferenceData();
-  }, [id, isEditMode, mockClients, mockServicePoints, mockCars, mockCarTypes, mockAvailableServices, updateTotalPrice]);
-  
-  // Загрузка временных слотов при выборе даты и сервисной точки
-  useEffect(() => {
-    const fetchTimeSlots = async () => {
-      if (!selectedDate || !servicePointId) return;
-      
-      try {
-        // Здесь должен быть запрос к API для загрузки доступных слотов
-        // Временно используем моковые данные
-        const mockSlots: TimeSlot[] = [
-          { id: 1, start_time: '10:00', end_time: '11:00', available: true },
-          { id: 2, start_time: '11:00', end_time: '12:00', available: true },
-          { id: 3, start_time: '12:00', end_time: '13:00', available: false },
-          { id: 4, start_time: '13:00', end_time: '14:00', available: true },
-          { id: 5, start_time: '14:00', end_time: '15:00', available: true },
-          { id: 6, start_time: '15:00', end_time: '16:00', available: false },
-          { id: 7, start_time: '16:00', end_time: '17:00', available: true },
-        ];
-        
-        setTimeSlots(mockSlots);
-      } catch (error) {
-        console.error('Error fetching time slots:', error);
-        setError('Не удалось загрузить доступные временные слоты.');
-      }
-    };
-    
-    fetchTimeSlots();
-  }, [selectedDate, servicePointId]);
-  
-  // Добавление услуги
-  const handleAddService = useCallback(() => {
-    // Добавляем первую доступную услугу, которой еще нет в списке
-    const unusedServices = availableServices.filter(
-      service => !services.some(s => s.service_id === service.id)
-    );
-    
-    if (unusedServices.length > 0) {
-      const newService: ServiceSelection = {
-        service_id: unusedServices[0].id,
-        name: unusedServices[0].name,
-        price: unusedServices[0].price,
-        quantity: 1,
-      };
-      
-      const updatedServices = [...services, newService];
-      setServices(updatedServices);
-      updateTotalPrice(updatedServices);
-    }
-  }, [availableServices, services, updateTotalPrice]);
-  
-  // Удаление услуги
-  const handleRemoveService = useCallback((index: number) => {
-    const updatedServices = [...services];
-    updatedServices.splice(index, 1);
-    setServices(updatedServices);
-    updateTotalPrice(updatedServices);
-  }, [services, updateTotalPrice]);
-  
-  // Изменение услуги
-  const handleServiceChange = useCallback((index: number, field: string, value: any) => {
-    const updatedServices = [...services];
-    
-    if (field === 'service_id') {
-      // Если меняется сама услуга, обновляем название и цену
-      const serviceInfo = availableServices.find(s => s.id === value);
-      if (serviceInfo) {
-        updatedServices[index] = {
-          ...updatedServices[index],
-          service_id: value,
-          name: serviceInfo.name,
-          price: serviceInfo.price,
-        };
-      }
-    } else {
-      // Иначе просто обновляем поле
-      (updatedServices[index] as any)[field] = value;
-    }
-    
-    setServices(updatedServices);
-    updateTotalPrice(updatedServices);
-  }, [services, availableServices, updateTotalPrice]);
-  
-  // Фильтрация автомобилей по выбранному клиенту
-  const getFilteredCars = useCallback(() => {
-    if (!clientId) return [];
-    return cars.filter(car => car.client_id === clientId);
-  }, [clientId, cars]);
-  
   // Мемоизированные начальные значения
   const initialValues = useMemo(() => ({
     service_point_id: '',
@@ -361,6 +143,55 @@ const BookingFormPage: React.FC = () => {
     },
   });
 
+  // Загрузка справочных данных при монтировании компонента
+  useEffect(() => {
+    const fetchReferenceData = async () => {
+      setLoading(true);
+      try {
+        // Загружаем данные о существующем бронировании при редактировании
+        if (isEditMode && id) {
+          // Здесь должен быть запрос к API для загрузки данных бронирования
+          // Временно используем моковые данные
+          const mockBooking = {
+            id: parseInt(id),
+            client_id: 1,
+            service_point_id: 1,
+            car_id: 1,
+            car_type_id: 1,
+            booking_date: '2023-07-15',
+            start_time: '14:30',
+            end_time: '15:30',
+            notes: 'Примечание к бронированию',
+            services: [
+              { service_id: 1, name: 'Замена шин', price: 400, quantity: 4 },
+              { service_id: 2, name: 'Балансировка', price: 200, quantity: 4 },
+            ],
+          };
+          
+          // Заполняем форму данными
+          formik.setFieldValue('service_point_id', mockBooking.service_point_id);
+          formik.setFieldValue('car_id', mockBooking.car_id);
+          formik.setFieldValue('scheduled_at', new Date(mockBooking.booking_date));
+          formik.setFieldValue('notes', mockBooking.notes);
+          setServices(mockBooking.services);
+        }
+      } catch (error) {
+        console.error('Error fetching reference data:', error);
+        setError('Не удалось загрузить данные. Пожалуйста, попробуйте снова позже.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchReferenceData();
+  }, [id, isEditMode, formik]);
+  
+  // Загрузка временных слотов при выборе даты и сервисной точки (упрощенная версия)
+  useEffect(() => {
+    // Этот useEffect можно расширить для загрузки реальных временных слотов
+    // когда будет добавлена соответствующая функциональность
+  }, []);
+
   // Мемоизированные обработчики
   const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('service_point_id', event.target.value);
@@ -388,6 +219,13 @@ const BookingFormPage: React.FC = () => {
     navigate('/bookings');
   }, [navigate]);
   
+  // Получение централизованных стилей для консистентного дизайна
+  const cardStyles = getCardStyles(theme, 'primary');
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const outlinedButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
+  
+  // Показать индикатор загрузки при получении данных
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -398,7 +236,12 @@ const BookingFormPage: React.FC = () => {
   
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
         <Typography variant="h4">
           {isEditMode ? 'Редактирование бронирования' : 'Новое бронирование'}
         </Typography>
@@ -406,32 +249,37 @@ const BookingFormPage: React.FC = () => {
           variant="outlined" 
           startIcon={<ArrowBackIcon />}
           onClick={handleBack}
+          sx={outlinedButtonStyles}
         >
           Назад к списку
         </Button>
       </Box>
       
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
           {error}
         </Alert>
       )}
       
       {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
+        <Alert severity="success" sx={{ mb: SIZES.spacing.md }}>
           {success}
         </Alert>
       )}
       
       <form onSubmit={formik.handleSubmit}>
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
+        <Paper sx={cardStyles}>
+          <Typography variant="h6" sx={{ mb: SIZES.spacing.md }}>
             Основная информация
           </Typography>
           
-          <Grid container spacing={3}>
+          <Grid container spacing={SIZES.spacing.lg}>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth error={formik.touched.service_point_id && Boolean(formik.errors.service_point_id)}>
+              <FormControl 
+                fullWidth 
+                error={formik.touched.service_point_id && Boolean(formik.errors.service_point_id)}
+                sx={textFieldStyles}
+              >
                 <InputLabel id="service-point-label">Точка обслуживания</InputLabel>
                 <Select
                   labelId="service-point-label"
@@ -449,7 +297,11 @@ const BookingFormPage: React.FC = () => {
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth error={formik.touched.car_id && Boolean(formik.errors.car_id)}>
+              <FormControl 
+                fullWidth 
+                error={formik.touched.car_id && Boolean(formik.errors.car_id)}
+                sx={textFieldStyles}
+              >
                 <InputLabel id="car-label">Автомобиль</InputLabel>
                 <Select
                   labelId="car-label"
@@ -471,11 +323,12 @@ const BookingFormPage: React.FC = () => {
                 label="Дата и время"
                 value={formik.values.scheduled_at}
                 onChange={handleDateTimeChange}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
                     error: formik.touched.scheduled_at && Boolean(formik.errors.scheduled_at),
                     helperText: formik.touched.scheduled_at && formik.errors.scheduled_at ? String(formik.errors.scheduled_at) : '',
+                    sx: textFieldStyles,
                   },
                 }}
               />
@@ -491,22 +344,30 @@ const BookingFormPage: React.FC = () => {
                 onChange={handleNotesChange}
                 error={formik.touched.notes && Boolean(formik.errors.notes)}
                 helperText={formik.touched.notes && formik.errors.notes}
+                sx={textFieldStyles}
               />
             </Grid>
           </Grid>
         </Paper>
         
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              variant="outlined"
+        <Box sx={{ 
+          display: 'flex', 
+          gap: SIZES.spacing.md, 
+          justifyContent: 'flex-end',
+          mt: SIZES.spacing.lg
+        }}>
+          <Button
+            variant="outlined"
             onClick={handleCancel}
+            sx={outlinedButtonStyles}
           >
             Отмена
-                        </Button>
+          </Button>
           <Button
             type="submit"
             variant="contained"
             disabled={formik.isSubmitting}
+            sx={buttonStyles}
           >
             {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
           </Button>

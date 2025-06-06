@@ -26,6 +26,7 @@ import {
   Divider,
   Stack,
   Badge,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -38,6 +39,14 @@ import {
 import { FormikProps } from 'formik';
 import { useGetServicesQuery } from '../../../api/servicesList.api';
 import type { ServicePointFormDataNew, ServicePointService, ServicePoint } from '../../../types/models';
+import { 
+  SIZES, 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getChipStyles, 
+  getFormStyles,
+} from '../../../styles';
 
 interface ServicesStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -46,6 +55,16 @@ interface ServicesStepProps {
 }
 
 const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  // Хук темы для использования централизованных стилей
+  const theme = useTheme();
+  
+  // Получаем стили из централизованной системы
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme);
+  const textFieldStyles = getTextFieldStyles(theme);
+  const chipStyles = getChipStyles(theme);
+  const formStyles = getFormStyles(theme);
+
   // Состояние для поиска услуг
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -177,31 +196,62 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <PriceIcon sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="h6">
+    <Box sx={formStyles.container}>
+      {/* Заголовок секции с иконкой и счетчиком */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: SIZES.spacing.lg }}>
+        <PriceIcon sx={{ mr: SIZES.spacing.sm, color: 'primary.main' }} />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 'bold',
+            color: theme.palette.text.primary 
+          }}
+        >
           Услуги и цены
         </Typography>
-        <Badge badgeContent={activeServices.length} color="primary" sx={{ ml: 2 }}>
+        <Badge badgeContent={activeServices.length} color="primary" sx={{ ml: SIZES.spacing.md }}>
           <Chip 
             label={`${activeServices.length} услуг`} 
             size="small" 
             color={activeServices.length > 0 ? 'success' : 'default'}
+            sx={chipStyles}
           />
         </Badge>
       </Box>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      {/* Описание секции */}
+      <Typography 
+        variant="body2" 
+        color="text.secondary" 
+        sx={{ 
+          mb: SIZES.spacing.lg,
+          fontSize: SIZES.fontSize.sm
+        }}
+      >
         Настройте список услуг, которые предоставляет данная сервисная точка, 
         с индивидуальными ценами и временем выполнения.
       </Typography>
 
       {/* Блок добавления новой услуги */}
-      <Paper sx={{ p: 2, mb: 3, border: '1px dashed', borderColor: 'primary.main' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AddIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="subtitle1" color="primary">
+      <Paper sx={{ 
+        ...cardStyles,
+        p: SIZES.spacing.md, 
+        mb: SIZES.spacing.lg, 
+        border: '1px dashed', 
+        borderColor: 'primary.main',
+        borderRadius: SIZES.borderRadius.md
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: SIZES.spacing.md }}>
+          <AddIcon sx={{ mr: SIZES.spacing.sm, color: 'primary.main' }} />
+          <Typography 
+            variant="subtitle1" 
+            color="primary"
+            sx={{ 
+              fontSize: SIZES.fontSize.md,
+              fontWeight: 'bold'
+            }}
+          >
             Добавить услугу
           </Typography>
         </Box>
@@ -213,19 +263,25 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
             startIcon={<SearchIcon />}
             disabled={servicesLoading}
             fullWidth
+            sx={{
+              ...buttonStyles,
+              borderRadius: SIZES.borderRadius.sm,
+              py: SIZES.spacing.md
+            }}
           >
             Выбрать из каталога услуг
           </Button>
         ) : (
-          <Stack spacing={2}>
+          <Stack spacing={SIZES.spacing.md}>
             {/* Поиск и фильтры */}
-            <Grid container spacing={2}>
+            <Grid container spacing={SIZES.spacing.md}>
               <Grid item xs={12} md={8}>
                 <TextField
                   fullWidth
                   placeholder="Поиск услуг..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={textFieldStyles}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -236,12 +292,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                 />
               </Grid>
               <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
+                <FormControl fullWidth sx={formStyles.field}>
                   <InputLabel>Категория</InputLabel>
                   <Select
                     value={selectedCategory || ''}
                     onChange={(e) => setSelectedCategory(Number(e.target.value) || null)}
                     label="Категория"
+                    sx={{
+                      borderRadius: SIZES.borderRadius.sm
+                    }}
                   >
                     <MenuItem value="">Все категории</MenuItem>
                     {categories.map((category) => (
@@ -256,7 +315,12 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
             {/* Список доступных услуг */}
             {getFilteredAvailableServices.length > 0 ? (
-              <Paper sx={{ maxHeight: 300, overflow: 'auto' }}>
+              <Paper sx={{ 
+                maxHeight: 300, 
+                overflow: 'auto',
+                borderRadius: SIZES.borderRadius.sm,
+                border: `1px solid ${theme.palette.divider}`
+              }}>
                 <List>
                   {getFilteredAvailableServices.map((service, index) => (
                     <React.Fragment key={service.id}>
@@ -265,11 +329,19 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                           primary={service.name}
                           secondary={
                             <Box>
-                              <Typography variant="caption" display="block">
+                              <Typography 
+                                variant="caption" 
+                                display="block"
+                                sx={{ fontSize: SIZES.fontSize.xs }}
+                              >
                                 {service.category?.name} • {service.price || 0}₽ • {service.duration || 30}мин
                               </Typography>
                               {service.description && (
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography 
+                                  variant="caption" 
+                                  color="text.secondary"
+                                  sx={{ fontSize: SIZES.fontSize.xs }}
+                                >
                                   {service.description}
                                 </Typography>
                               )}
@@ -281,6 +353,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                             variant="contained"
                             size="small"
                             onClick={() => addServiceById(service.id)}
+                            sx={{
+                              ...buttonStyles,
+                              fontSize: SIZES.fontSize.sm,
+                              px: SIZES.spacing.md
+                            }}
                           >
                             Добавить
                           </Button>
@@ -292,7 +369,13 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                 </List>
               </Paper>
             ) : (
-              <Alert severity="info">
+              <Alert 
+                severity="info"
+                sx={{
+                  borderRadius: SIZES.borderRadius.sm,
+                  fontSize: SIZES.fontSize.sm
+                }}
+              >
                 {(searchQuery || selectedCategory) 
                   ? 'Услуги не найдены по заданным критериям'
                   : 'Все доступные услуги уже добавлены'
@@ -307,6 +390,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                 setSearchQuery('');
                 setSelectedCategory(null);
               }}
+              sx={{
+                fontSize: SIZES.fontSize.sm,
+                color: theme.palette.text.secondary,
+                borderRadius: SIZES.borderRadius.sm
+              }}
             >
               Свернуть
             </Button>
@@ -314,15 +402,23 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         )}
       </Paper>
 
+      {/* Индикатор загрузки */}
       {servicesLoading && (
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mb: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm,
+            fontSize: SIZES.fontSize.sm
+          }}
+        >
           Загрузка списка услуг...
         </Alert>
       )}
 
       {/* Список добавленных услуг */}
       {activeServices.length > 0 ? (
-        <Grid container spacing={3}>
+        <Grid container spacing={SIZES.spacing.lg}>
           {formik.values.services
             ?.map((service, originalIndex) => ({ service, originalIndex }))
             .filter(({ service }) => !service._destroy) // Показываем только не удаленные услуги
@@ -332,20 +428,44 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
               return (
                 <Grid item xs={12} md={6} key={`${service.service_id}-${originalIndex}`}>
                   <Card sx={{ 
+                    ...cardStyles,
                     height: '100%',
-                    border: service.is_available ? '1px solid #e0e0e0' : '1px solid #f44336',
-                    opacity: service.is_available ? 1 : 0.7
+                    border: service.is_available 
+                      ? `1px solid ${theme.palette.divider}` 
+                      : `1px solid ${theme.palette.error.main}`,
+                    opacity: service.is_available ? 1 : 0.7,
+                    borderRadius: SIZES.borderRadius.md
                   }}>
-                    <CardContent>
+                    <CardContent sx={{ p: SIZES.spacing.lg }}>
                       {/* Заголовок карточки услуги */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        mb: SIZES.spacing.md 
+                      }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                           {service.is_available ? (
-                            <VisibilityIcon sx={{ mr: 1, color: 'success.main' }} />
+                            <VisibilityIcon sx={{ 
+                              mr: SIZES.spacing.sm, 
+                              color: 'success.main',
+                              fontSize: SIZES.fontSize.md
+                            }} />
                           ) : (
-                            <VisibilityOffIcon sx={{ mr: 1, color: 'error.main' }} />
+                            <VisibilityOffIcon sx={{ 
+                              mr: SIZES.spacing.sm, 
+                              color: 'error.main',
+                              fontSize: SIZES.fontSize.md
+                            }} />
                           )}
-                          <Typography variant="h6" color="primary">
+                          <Typography 
+                            variant="h6" 
+                            color="primary"
+                            sx={{
+                              fontSize: SIZES.fontSize.md,
+                              fontWeight: 'bold'
+                            }}
+                          >
                             {serviceInfo?.name || `Услуга ${displayIndex + 1}`}
                           </Typography>
                         </Box>
@@ -355,7 +475,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                               color="primary"
                               onClick={() => duplicateService(originalIndex)}
                               size="small"
-                              sx={{ mr: 1 }}
+                              sx={{ 
+                                mr: SIZES.spacing.sm,
+                                borderRadius: SIZES.borderRadius.sm
+                              }}
                             >
                               <AddIcon />
                             </IconButton>
@@ -365,6 +488,9 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                               color="error"
                               onClick={() => removeService(originalIndex)}
                               size="small"
+                              sx={{
+                                borderRadius: SIZES.borderRadius.sm
+                              }}
                             >
                               <DeleteIcon />
                             </IconButton>
@@ -378,7 +504,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                           label={serviceInfo.category.name} 
                           size="small" 
                           color="secondary" 
-                          sx={{ mb: 2 }}
+                          sx={{ 
+                            ...chipStyles,
+                            mb: SIZES.spacing.md,
+                            fontSize: SIZES.fontSize.xs
+                          }}
                         />
                       )}
                       
@@ -401,6 +531,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         }}
                         margin="normal"
                         required
+                        sx={textFieldStyles}
                       />
                       
                       {/* Длительность услуги */}
@@ -422,6 +553,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         }}
                         margin="normal"
                         required
+                        sx={textFieldStyles}
                       />
                       
                       {/* Доступность услуги */}
@@ -435,7 +567,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         }
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Typography variant="body2">
+                            <Typography 
+                              variant="body2"
+                              sx={{ fontSize: SIZES.fontSize.sm }}
+                            >
                               Услуга доступна
                             </Typography>
                             {!service.is_available && (
@@ -443,18 +578,33 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                                 label="Отключена" 
                                 size="small" 
                                 color="error" 
-                                sx={{ ml: 1 }}
+                                sx={{ 
+                                  ...chipStyles,
+                                  ml: SIZES.spacing.sm,
+                                  fontSize: SIZES.fontSize.xs
+                                }}
                               />
                             )}
                           </Box>
                         }
-                        sx={{ mt: 1 }}
+                        sx={{ mt: SIZES.spacing.sm }}
                       />
 
                       {/* Базовая информация об услуге */}
                       {serviceInfo && (
-                        <Box sx={{ mt: 2, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-                          <Typography variant="caption" color="text.secondary">
+                        <Box sx={{ 
+                          mt: SIZES.spacing.md, 
+                          p: SIZES.spacing.sm, 
+                          bgcolor: theme.palette.mode === 'dark' 
+                            ? 'rgba(255, 255, 255, 0.02)'
+                            : 'rgba(0, 0, 0, 0.02)', 
+                          borderRadius: SIZES.borderRadius.sm
+                        }}>
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary"
+                            sx={{ fontSize: SIZES.fontSize.xs }}
+                          >
                             📋 {serviceInfo.description || 'Описание отсутствует'}
                           </Typography>
                         </Box>
@@ -466,11 +616,25 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
             })}
         </Grid>
       ) : (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          <Typography variant="body1" gutterBottom>
+        <Alert 
+          severity="info" 
+          sx={{ 
+            mt: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm
+          }}
+        >
+          <Typography 
+            variant="body1" 
+            gutterBottom
+            sx={{ fontSize: SIZES.fontSize.md }}
+          >
             Пока не добавлено ни одной услуги
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ fontSize: SIZES.fontSize.sm }}
+          >
             Добавьте услуги, которые предоставляет данная сервисная точка. 
             Вы можете установить индивидуальные цены и время выполнения для каждой услуги.
           </Typography>
@@ -479,37 +643,72 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
       {/* Валидационные ошибки на уровне всего массива */}
       {formik.touched.services && typeof formik.errors.services === 'string' && (
-        <Alert severity="error" sx={{ mt: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mt: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm,
+            fontSize: SIZES.fontSize.sm
+          }}
+        >
           {formik.errors.services}
         </Alert>
       )}
 
       {/* Краткая статистика */}
       {activeServices.length > 0 && (
-        <Paper sx={{ p: 2, mt: 3, bgcolor: 'primary.50' }}>
-          <Typography variant="subtitle2" gutterBottom>
+        <Paper sx={{ 
+          ...cardStyles,
+          p: SIZES.spacing.md, 
+          mt: SIZES.spacing.lg, 
+          bgcolor: theme.palette.mode === 'dark'
+            ? 'rgba(25, 118, 210, 0.08)'
+            : 'rgba(25, 118, 210, 0.04)',
+          borderRadius: SIZES.borderRadius.md
+        }}>
+          <Typography 
+            variant="subtitle2" 
+            gutterBottom
+            sx={{
+              fontSize: SIZES.fontSize.md,
+              fontWeight: 'bold',
+              color: theme.palette.text.primary
+            }}
+          >
             📊 Статистика услуг
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={SIZES.spacing.md}>
             <Grid item xs={6}>
-              <Typography variant="body2">
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: SIZES.fontSize.sm }}
+              >
                 Всего услуг: <strong>{activeServices.length}</strong>
               </Typography>
             </Grid>
             <Grid item xs={6}>
-              <Typography variant="body2">
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: SIZES.fontSize.sm }}
+              >
                 Активных: <strong>{activeServices.filter(s => s.is_available).length}</strong>
               </Typography>
             </Grid>
             <Grid item xs={6}>
-              <Typography variant="body2">
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: SIZES.fontSize.sm }}
+              >
                 Средняя цена: <strong>
                   {Math.round(activeServices.reduce((sum, s) => sum + s.price, 0) / activeServices.length)}₽
                 </strong>
               </Typography>
             </Grid>
             <Grid item xs={6}>
-              <Typography variant="body2">
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: SIZES.fontSize.sm }}
+              >
                 Среднее время: <strong>
                   {Math.round(activeServices.reduce((sum, s) => sum + s.duration, 0) / activeServices.length)}мин
                 </strong>
@@ -520,8 +719,17 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       )}
 
       {/* Информационная подсказка */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        <Typography variant="body2">
+      <Alert 
+        severity="info" 
+        sx={{ 
+          mt: SIZES.spacing.lg,
+          borderRadius: SIZES.borderRadius.sm
+        }}
+      >
+        <Typography 
+          variant="body2"
+          sx={{ fontSize: SIZES.fontSize.sm }}
+        >
           💡 <strong>Совет:</strong> Цены могут отличаться от базовых цен услуг. 
           Установите конкурентные цены с учетом местоположения и специфики вашей сервисной точки.
           Отключенные услуги не будут доступны для бронирования клиентами.

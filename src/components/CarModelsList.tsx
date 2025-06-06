@@ -20,7 +20,15 @@ import {
   DialogContentText,
   Pagination,
   Stack,
+  useTheme,
 } from '@mui/material';
+import { SIZES } from '../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles,
+  getChipStyles
+} from '../styles/components';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -50,6 +58,13 @@ interface CarModelsListProps {
 }
 
 const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const dangerButtonStyles = getButtonStyles(theme, 'error');
+  const textFieldStyles = getTextFieldStyles(theme);
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<CarModel | null>(null);
@@ -185,19 +200,27 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={2}>
+      <Box display="flex" justifyContent="center" p={SIZES.spacing.lg}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box mb={2}>
-        <Typography variant="h6">Модели</Typography>
+    <Box sx={cardStyles}>
+      <Box mb={SIZES.spacing.md}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600
+          }}
+        >
+          Модели
+        </Typography>
       </Box>
 
-      <Box mb={2}>
+      <Box mb={SIZES.spacing.md}>
         <TextField
           fullWidth
           label="Поиск моделей"
@@ -205,36 +228,73 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
           value={searchQuery}
           onChange={handleSearch}
           size="small"
+          sx={textFieldStyles}
         />
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm
+          }}
+          onClose={() => setError(null)}
+        >
           {error}
         </Alert>
       )}
 
-      <List sx={{ mb: 2 }}>
+      <List sx={{ 
+        mb: SIZES.spacing.md, 
+        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: SIZES.borderRadius.md,
+        overflow: 'hidden'
+      }}>
         {models.map((model) => (
           <ListItem
             key={model.id}
             sx={{
-              bgcolor: 'background.paper',
-              mb: 1,
-              borderRadius: 1,
-              opacity: model.is_active ? 1 : 0.6,
+              bgcolor: theme.palette.background.paper,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+              opacity: model.is_active ? 1 : 0.7,
+              transition: '0.2s',
+              '&:hover': {
+                bgcolor: theme.palette.action.hover
+              },
+              '&:last-child': {
+                borderBottom: 'none'
+              }
             }}
           >
             <ListItemText
-              primary={model.name}
-              secondary={model.is_active ? 'Активна' : 'Неактивна'}
+              primary={
+                <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
+                  {model.name}
+                </Typography>
+              }
+              secondary={
+                <Typography 
+                  sx={{ 
+                    fontSize: SIZES.fontSize.sm,
+                    color: model.is_active ? theme.palette.success.main : theme.palette.text.disabled 
+                  }}
+                >
+                  {model.is_active ? 'Активна' : 'Неактивна'}
+                </Typography>
+              }
             />
             <ListItemSecondaryAction>
               <IconButton
                 edge="end"
                 aria-label="edit"
                 onClick={() => handleOpenDialog(model)}
-                sx={{ mr: 1 }}
+                sx={{ 
+                  mr: SIZES.spacing.sm,
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.primary.main}15` 
+                  }
+                }}
               >
                 <EditIcon />
               </IconButton>
@@ -242,6 +302,11 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
                 edge="end"
                 aria-label="delete"
                 onClick={() => handleOpenDeleteDialog(model)}
+                sx={{ 
+                  '&:hover': { 
+                    backgroundColor: `${theme.palette.error.main}15` 
+                  }
+                }}
               >
                 <DeleteIcon />
               </IconButton>
@@ -251,34 +316,56 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       </List>
 
       {totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mb={2}>
+        <Box display="flex" justifyContent="center" mb={SIZES.spacing.md}>
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
           />
         </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end">
+      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.lg}>
         <Button
           startIcon={<AddIcon />}
           variant="contained"
-          color="primary"
+          sx={buttonStyles}
           onClick={() => handleOpenDialog()}
         >
           Добавить модель
         </Button>
       </Box>
 
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={isDialogOpen} 
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            p: 0
+          }
+        }}
+      >
         <form onSubmit={formik.handleSubmit}>
-          <DialogTitle>
+          <DialogTitle sx={{ 
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600,
+            pb: SIZES.spacing.md
+          }}>
             {selectedModel ? 'Редактировать модель' : 'Добавить модель'}
           </DialogTitle>
-          <DialogContent>
-            <Box pt={1}>
+          <DialogContent sx={{ pt: SIZES.spacing.md }}>
+            <Box pt={SIZES.spacing.sm}>
               <TextField
                 fullWidth
                 id="name"
@@ -288,7 +375,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
                 onChange={formik.handleChange}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-                sx={{ mb: 2 }}
+                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
               <FormControlLabel
                 control={
@@ -296,15 +383,16 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
                     checked={formik.values.is_active}
                     onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
                     name="is_active"
+                    color="primary"
                   />
                 }
                 label="Активна"
               />
             </Box>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button type="submit" variant="contained" color="primary">
+          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
+            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
+            <Button type="submit" variant="contained" sx={buttonStyles}>
               {selectedModel ? 'Сохранить' : 'Добавить'}
             </Button>
           </DialogActions>
@@ -316,17 +404,32 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         onClose={handleCloseDeleteDialog}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400,
+            p: 0
+          }
+        }}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
+        <DialogTitle sx={{ 
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.error.main
+        }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.md }}>
+          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
             Вы действительно хотите удалить модель "{modelToDelete?.name}"?
             Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
-          <Button onClick={handleDeleteModel} color="error" variant="contained">
+        <DialogActions sx={{ p: SIZES.spacing.md }}>
+          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
+          <Button onClick={handleDeleteModel} sx={dangerButtonStyles}>
             Удалить
           </Button>
         </DialogActions>

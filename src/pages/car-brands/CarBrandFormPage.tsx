@@ -1,3 +1,6 @@
+// Форма создания и редактирования брендов автомобилей
+// Использует централизованную систему стилей для единообразия интерфейса
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -7,13 +10,12 @@ import {
   TextField,
   Button,
   CircularProgress,
-  Alert,
   FormControlLabel,
   Switch,
   IconButton,
   Avatar,
-  Tooltip,
   Divider,
+  Grid,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -22,6 +24,7 @@ import {
   Delete as DeleteIcon,
   BrokenImage as BrokenImageIcon,
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -33,6 +36,13 @@ import { CarBrandFormData } from '../../types/car';
 import Notification from '../../components/Notification';
 import CarModelsList from '../../components/CarModelsList';
 import config from '../../config';
+// Импорты централизованной системы стилей
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles 
+} from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -47,10 +57,34 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 // Допустимые типы файлов
 const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
+/**
+ * Страница формы бренда автомобиля - создание и редактирование брендов
+ * 
+ * Функциональность:
+ * - Создание нового бренда автомобиля
+ * - Редактирование существующего бренда
+ * - Загрузка и управление логотипом бренда  
+ * - Валидация полей формы с помощью Yup
+ * - Интеграция с RTK Query для API операций
+ * - Централизованная система стилей для консистентного UI
+ * 
+ * Разделы формы:
+ * - Основная информация (название бренда)
+ * - Загрузка логотипа с предпросмотром
+ * - Настройки активности бренда
+ * - Список моделей автомобилей (только при редактировании)
+ */
 const CarBrandFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
   const isEditMode = Boolean(id);
+
+  // Формируем стили с помощью централизованной системы
+  const cardStyles = getCardStyles(theme, 'primary');
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const outlinedButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
 
   // Состояние для уведомлений
   const [notification, setNotification] = useState<{
@@ -167,7 +201,8 @@ const CarBrandFormPage: React.FC = () => {
         setImageError(null);
       }
     }
-  }, [brandData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandData]); // Не включаем formik в зависимости, так как это приведет к бесконечной перерисовке
 
   // Обработчик ошибки загрузки изображения
   const handleImageError = () => {
@@ -239,148 +274,301 @@ const CarBrandFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box display="flex" alignItems="center" mb={3}>
-        <IconButton onClick={() => navigate('/car-brands')} sx={{ mr: 2 }}>
+    <Box sx={{ 
+      maxWidth: 1000, 
+      mx: 'auto', 
+      p: SIZES.spacing.lg 
+    }}>
+      {/* Заголовок и навигация */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <IconButton 
+          onClick={() => navigate('/car-brands')} 
+          sx={{ 
+            mr: SIZES.spacing.md,
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          }}
+        >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h5">
+        <Typography 
+          variant="h4"
+          sx={{
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+            color: theme.palette.text.primary,
+          }}
+        >
           {isEditMode ? 'Редактирование бренда' : 'Создание бренда'}
         </Typography>
       </Box>
 
+      {/* Показать индикатор загрузки при получении данных */}
       {isLoadingBrand ? (
-        <Box display="flex" justifyContent="center" p={3}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
           <CircularProgress />
         </Box>
       ) : (
-        <Paper sx={{ p: 3 }}>
+        <Paper sx={cardStyles}>
           <form onSubmit={formik.handleSubmit}>
-            <Box display="flex" flexDirection="column" gap={2}>
-              <TextField
-                fullWidth
-                id="name"
-                name="name"
-                label="Название бренда"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-              />
-
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Логотип
+            <Grid container spacing={SIZES.spacing.lg}>
+              {/* Основная информация */}
+              <Grid item xs={12}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ 
+                    mb: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  Основная информация
                 </Typography>
-                <Box display="flex" alignItems="center" gap={2}>
-                  {logoPreview ? (
-                    <Box position="relative">
-                      <Avatar
-                        src={logoPreview}
-                        alt="Brand logo"
-                        variant="rounded"
-                        sx={{ width: 100, height: 100 }}
-                        onError={handleImageError}
+              </Grid>
+              
+              {/* Название бренда */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  id="name"
+                  name="name"
+                  label="Название бренда"
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.name && Boolean(formik.errors.name)}
+                  helperText={formik.touched.name && formik.errors.name}
+                  required
+                  sx={textFieldStyles}
+                />
+              </Grid>
+
+              {/* Статус активности */}
+              <Grid item xs={12} md={6}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  height: '100%' 
+                }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.is_active}
+                        onChange={(e) =>
+                          formik.setFieldValue('is_active', e.target.checked)
+                        }
+                        name="is_active"
                       />
-                      {logoError && (
-                        <Box
-                          position="absolute"
-                          top={0}
-                          left={0}
-                          width="100%"
-                          height="100%"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          bgcolor="rgba(0, 0, 0, 0.5)"
+                    }
+                    label="Активный бренд"
+                    sx={{
+                      '& .MuiFormControlLabel-label': {
+                        fontSize: SIZES.fontSize.md,
+                        color: theme.palette.text.primary,
+                      },
+                    }}
+                  />
+                </Box>
+              </Grid>
+
+              {/* Управление логотипом */}
+              <Grid item xs={12}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ 
+                    mt: SIZES.spacing.md,
+                    mb: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  Логотип бренда
+                </Typography>
+                
+                <Grid container spacing={SIZES.spacing.md} alignItems="center">
+                  {/* Предпросмотр логотипа */}
+                  <Grid item>
+                    {logoPreview ? (
+                      <Box sx={{ position: 'relative' }}>
+                        <Avatar
+                          src={logoPreview}
+                          alt="Логотип бренда"
+                          variant="rounded"
+                          sx={{ 
+                            width: 100, 
+                            height: 100,
+                            border: `2px solid ${theme.palette.divider}`,
+                          }}
+                          onError={handleImageError}
+                        />
+                        {logoError && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              bgcolor: 'rgba(0, 0, 0, 0.5)',
+                              borderRadius: SIZES.borderRadius.md,
+                            }}
+                          >
+                            <BrokenImageIcon sx={{ color: 'white' }} />
+                          </Box>
+                        )}
+                      </Box>
+                    ) : (
+                      <Avatar
+                        variant="rounded"
+                        sx={{ 
+                          width: 100, 
+                          height: 100, 
+                          bgcolor: theme.palette.grey[200],
+                          border: `2px solid ${theme.palette.divider}`,
+                        }}
+                      >
+                        <BrokenImageIcon sx={{ color: theme.palette.grey[400] }} />
+                      </Avatar>
+                    )}
+                  </Grid>
+                  
+                  {/* Кнопки управления логотипом */}
+                  <Grid item>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      gap: SIZES.spacing.sm 
+                    }}>
+                      <input
+                        accept="image/*"
+                        id="logo-upload"
+                        type="file"
+                        onChange={handleLogoChange}
+                        hidden
+                      />
+                      <label htmlFor="logo-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          startIcon={<UploadIcon />}
+                          sx={outlinedButtonStyles}
                         >
-                          <BrokenImageIcon sx={{ color: 'white' }} />
-                        </Box>
+                          Загрузить логотип
+                        </Button>
+                      </label>
+                      {logoPreview && (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={handleLogoDelete}
+                          sx={{
+                            ...outlinedButtonStyles,
+                            borderColor: theme.palette.error.main,
+                            color: theme.palette.error.main,
+                            '&:hover': {
+                              backgroundColor: theme.palette.error.main,
+                              color: theme.palette.error.contrastText,
+                            },
+                          }}
+                        >
+                          Удалить
+                        </Button>
                       )}
                     </Box>
-                  ) : (
-                    <Avatar
-                      variant="rounded"
-                      sx={{ width: 100, height: 100, bgcolor: 'grey.200' }}
-                    >
-                      <BrokenImageIcon sx={{ color: 'grey.400' }} />
-                    </Avatar>
-                  )}
-                  <Box>
-                    <input
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      id="logo-upload"
-                      type="file"
-                      onChange={handleLogoChange}
-                    />
-                    <label htmlFor="logo-upload">
-                      <Button
-                        variant="outlined"
-                        component="span"
-                        startIcon={<UploadIcon />}
-                      >
-                        Загрузить
-                      </Button>
-                    </label>
-                    {logoPreview && (
-                      <IconButton
-                        color="error"
-                        onClick={handleLogoDelete}
-                        sx={{ ml: 1 }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    )}
-                  </Box>
-                </Box>
+                  </Grid>
+                </Grid>
+                
+                {/* Информация об ограничениях файла */}
+                <Typography 
+                  variant="caption" 
+                  color="textSecondary" 
+                  sx={{ 
+                    mt: SIZES.spacing.sm,
+                    display: 'block',
+                    fontSize: SIZES.fontSize.sm,
+                  }}
+                >
+                  Допустимые форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5 МБ
+                </Typography>
+                
+                {/* Отображение ошибки загрузки */}
                 {imageError && (
-                  <Typography color="error" variant="caption" sx={{ mt: 1 }}>
+                  <Typography 
+                    color="error" 
+                    variant="caption" 
+                    sx={{ 
+                      mt: SIZES.spacing.sm,
+                      display: 'block',
+                      fontSize: SIZES.fontSize.sm,
+                    }}
+                  >
                     {imageError}
                   </Typography>
                 )}
-              </Box>
+              </Grid>
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e) =>
-                      formik.setFieldValue('is_active', e.target.checked)
-                    }
-                    name="is_active"
-                  />
-                }
-                label="Активен"
-              />
-
-              <Box display="flex" justifyContent="flex-end">
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<SaveIcon />}
-                  disabled={isCreating || isUpdating}
-                >
-                  {isCreating || isUpdating ? (
-                    <CircularProgress size={24} />
-                  ) : (
-                    'Сохранить'
-                  )}
-                </Button>
-              </Box>
-            </Box>
+              {/* Кнопки действий */}
+              <Grid item xs={12}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  gap: SIZES.spacing.md,
+                  mt: SIZES.spacing.lg,
+                }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/car-brands')}
+                    disabled={isCreating || isUpdating}
+                    sx={outlinedButtonStyles}
+                  >
+                    Отмена
+                  </Button>
+                  
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    startIcon={isCreating || isUpdating ? undefined : <SaveIcon />}
+                    disabled={isCreating || isUpdating}
+                    sx={buttonStyles}
+                  >
+                    {isCreating || isUpdating ? (
+                      <CircularProgress size={24} color="inherit" />
+                    ) : (
+                      isEditMode ? 'Сохранить изменения' : 'Создать бренд'
+                    )}
+                  </Button>
+                </Box>
+              </Grid>
+            </Grid>
           </form>
 
+          {/* Список моделей автомобилей (только при редактировании) */}
           {isEditMode && id && (
             <>
-              <Divider sx={{ my: 3 }} />
+              <Divider sx={{ 
+                my: SIZES.spacing.xl,
+                borderColor: theme.palette.divider,
+              }} />
               <CarModelsList brandId={id} />
             </>
           )}
         </Paper>
       )}
 
+      {/* Компонент уведомлений */}
       <Notification
         open={notification.open}
         message={notification.message}

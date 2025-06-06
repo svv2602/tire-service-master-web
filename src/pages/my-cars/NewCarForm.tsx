@@ -1,3 +1,6 @@
+// Форма добавления нового автомобиля
+// Использует централизованную систему стилей для единообразия интерфейса
+
 import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
@@ -12,13 +15,22 @@ import {
   FormControlLabel,
   Checkbox,
   CircularProgress,
-  Alert
+  Alert,
+  Grid,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTheme } from '@mui/material/styles';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles 
+} from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
+// Интерфейсы для типов данных
 interface CarBrand {
   id: number;
   name: string;
@@ -38,7 +50,15 @@ interface CarType {
 const NewCarForm: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
   
+  // Формируем стили с помощью централизованной системы
+  const cardStyles = getCardStyles(theme, 'primary');
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const outlinedButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
+  
+  // Состояние формы
   const [formData, setFormData] = useState({
     make: '',
     model: '',
@@ -51,17 +71,17 @@ const NewCarForm: React.FC = () => {
     car_model_id: 0 as number | null
   });
   
+  // Справочные данные
   const [carBrands, setCarBrands] = useState<CarBrand[]>([]);
   const [carModels, setCarModels] = useState<CarModel[]>([]);
   const [carTypes, setCarTypes] = useState<CarType[]>([]);
   const [filteredModels, setFilteredModels] = useState<CarModel[]>([]);
   
+  // Состояния загрузки и ошибок
   const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   
-  // Загрузка необходимых справочников
+  // Загрузка справочных данных при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -96,7 +116,7 @@ const NewCarForm: React.FC = () => {
     fetchData();
   }, []);
   
-  // Фильтруем модели при изменении марки
+  // Фильтрация моделей при изменении марки
   useEffect(() => {
     if (formData.car_brand_id) {
       const filtered = carModels.filter(model => model.car_brand_id === formData.car_brand_id);
@@ -106,11 +126,13 @@ const NewCarForm: React.FC = () => {
     }
   }, [formData.car_brand_id, carModels]);
   
+  // Обработчик изменения текстовых полей
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
+  // Обработчик изменения селектов
   const handleSelectChange = (e: any) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -136,11 +158,13 @@ const NewCarForm: React.FC = () => {
     }
   };
   
+  // Обработчик изменения чекбокса
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
   
+  // Обработчик отправки формы
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
@@ -180,35 +204,30 @@ const NewCarForm: React.FC = () => {
   
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
+      <Box display="flex" justifyContent="center" sx={{ my: SIZES.spacing.xl }}>
         <CircularProgress />
       </Box>
     );
   }
   
   return (
-    <Box my={3}>
+    <Box sx={{ my: SIZES.spacing.lg }}>
       <Typography variant="h5" component="h1" gutterBottom>
         Добавление нового автомобиля
       </Typography>
       
-      <Paper sx={{ p: 3, mt: 3 }}>
+      <Paper sx={cardStyles}>
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert severity="error" sx={{ mb: SIZES.spacing.lg }}>
             {error}
           </Alert>
         )}
         
-        {success && (
-          <Alert severity="success" sx={{ mb: 3 }}>
-            Автомобиль успешно добавлен! Перенаправление на список автомобилей...
-          </Alert>
-        )}
-        
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
-              <FormControl fullWidth>
+          <Grid container spacing={SIZES.spacing.lg}>
+            {/* Марка автомобиля */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={textFieldStyles}>
                 <InputLabel id="car-brand-label">Марка автомобиля</InputLabel>
                 <Select
                   labelId="car-brand-label"
@@ -225,10 +244,11 @@ const NewCarForm: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-            </div>
+            </Grid>
             
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
-              <FormControl fullWidth disabled={!formData.car_brand_id}>
+            {/* Модель автомобиля */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={!formData.car_brand_id} sx={textFieldStyles}>
                 <InputLabel id="car-model-label">Модель автомобиля</InputLabel>
                 <Select
                   labelId="car-model-label"
@@ -245,9 +265,10 @@ const NewCarForm: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-            </div>
+            </Grid>
             
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Марка (если нет в списке) */}
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Марка (если нет в списке)"
@@ -255,10 +276,12 @@ const NewCarForm: React.FC = () => {
                 value={formData.make}
                 onChange={handleInputChange}
                 disabled={!!formData.car_brand_id}
+                sx={textFieldStyles}
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Модель (если нет в списке) */}
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Модель (если нет в списке)"
@@ -266,10 +289,12 @@ const NewCarForm: React.FC = () => {
                 value={formData.model}
                 onChange={handleInputChange}
                 disabled={!!formData.car_model_id}
+                sx={textFieldStyles}
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '33.33%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Год выпуска */}
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Год выпуска"
@@ -279,10 +304,12 @@ const NewCarForm: React.FC = () => {
                 onChange={handleInputChange}
                 inputProps={{ min: 1900, max: new Date().getFullYear() }}
                 required
+                sx={textFieldStyles}
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '33.33%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Гос. номер */}
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Гос. номер"
@@ -290,10 +317,12 @@ const NewCarForm: React.FC = () => {
                 value={formData.license_plate}
                 onChange={handleInputChange}
                 required
+                sx={textFieldStyles}
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '33.33%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Цвет */}
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 label="Цвет"
@@ -301,11 +330,13 @@ const NewCarForm: React.FC = () => {
                 value={formData.color}
                 onChange={handleInputChange}
                 required
+                sx={textFieldStyles}
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
-              <FormControl fullWidth>
+            {/* Тип автомобиля */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth sx={textFieldStyles}>
                 <InputLabel id="car-type-label">Тип автомобиля</InputLabel>
                 <Select
                   labelId="car-type-label"
@@ -322,9 +353,10 @@ const NewCarForm: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
-            </div>
+            </Grid>
             
-            <div style={{ width: '100%', padding: '12px', boxSizing: 'border-box' }}>
+            {/* Основной автомобиль */}
+            <Grid item xs={12} md={6}>
               <FormControlLabel 
                 control={
                   <Checkbox 
@@ -335,14 +367,20 @@ const NewCarForm: React.FC = () => {
                 } 
                 label="Сделать основным автомобилем"
               />
-            </div>
+            </Grid>
             
-            <div style={{ width: '100%', padding: '12px', boxSizing: 'border-box' }}>
-              <Box display="flex" justifyContent="space-between">
+            {/* Кнопки */}
+            <Grid item xs={12}>
+              <Box 
+                display="flex" 
+                justifyContent="space-between"
+                sx={{ mt: SIZES.spacing.md }}
+              >
                 <Button 
                   variant="outlined" 
                   onClick={() => navigate('/my-cars')}
-                  disabled={submitting}
+                  disabled={loading}
+                  sx={outlinedButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -350,13 +388,14 @@ const NewCarForm: React.FC = () => {
                   type="submit" 
                   variant="contained" 
                   color="primary"
-                  disabled={submitting}
+                  disabled={loading}
+                  sx={buttonStyles}
                 >
-                  {submitting ? <CircularProgress size={24} /> : 'Добавить автомобиль'}
+                  {loading ? <CircularProgress size={24} /> : 'Добавить автомобиль'}
                 </Button>
               </Box>
-            </div>
-          </div>
+            </Grid>
+          </Grid>
         </form>
       </Paper>
     </Box>

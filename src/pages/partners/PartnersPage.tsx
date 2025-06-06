@@ -23,13 +23,13 @@ import {
   DialogActions,
   Pagination,
   Avatar,
+  useTheme,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Business as BusinessIcon,
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -37,15 +37,38 @@ import { useNavigate } from 'react-router-dom';
 import { 
   useGetPartnersQuery, 
   useDeletePartnerMutation, 
-  useUpdatePartnerMutation,
   useCreateTestPartnerMutation,
   useTogglePartnerActiveMutation,
 } from '../../api';
-import { Partner, PartnerFilter, PartnerFormData } from '../../types/models';
+import { Partner } from '../../types/models';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
-// Хук для debounce
+// Импорты централизованной системы стилей
+import { getCardStyles, getButtonStyles, getTextFieldStyles, getTableStyles, getChipStyles } from '../../styles/components';
+import { SIZES } from '../../styles';
+
+/**
+ * Страница управления партнерами
+ * 
+ * Функциональность:
+ * - Отображение списка партнеров в табличном формате
+ * - Поиск партнеров по названию компании
+ * - Пагинация результатов
+ * - Редактирование партнеров (переход к форме редактирования)
+ * - Удаление партнеров с подтверждением
+ * - Изменение статуса активности партнеров
+ * - Создание тестовых партнеров для разработки
+ * - Централизованная система стилей для консистентного UI
+ * 
+ * Особенности:
+ * - Debounce поиска для оптимизации запросов к API
+ * - Мемоизация компонентов и обработчиков для производительности
+ * - Обработка ошибок загрузки и состояний
+ * - Responsive дизайн с SIZES константами
+ */
+
+// Хук для debounce поиска партнеров
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -62,7 +85,7 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
-// Мемоизированный компонент строки партнера
+// Мемоизированный компонент строки партнера с централизованными стилями
 const PartnerRow = React.memo(({ 
   partner, 
   onEdit, 
@@ -75,70 +98,108 @@ const PartnerRow = React.memo(({
   onToggleStatus: (partner: Partner) => void;
   onDelete: (partner: Partner) => void;
   getInitials: (partner: Partner) => string;
-}) => (
-  <TableRow key={partner.id}>
-    <TableCell>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar sx={{ bgcolor: 'primary.main' }}>
-          {getInitials(partner)}
-        </Avatar>
-        <Box>
-          <Typography>{partner.company_name}</Typography>
-          <Typography variant="body2" color="textSecondary">
-            {partner.company_description}
-          </Typography>
+}) => {
+  const theme = useTheme();
+  const chipStyles = getChipStyles(theme);
+
+  return (
+    <TableRow key={partner.id}>
+      <TableCell>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: SIZES.spacing.sm 
+        }}>
+          <Avatar sx={{ bgcolor: 'primary.main' }}>
+            {getInitials(partner)}
+          </Avatar>
+          <Box>
+            <Typography 
+              sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}
+            >
+              {partner.company_name}
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="textSecondary"
+              sx={{ fontSize: SIZES.fontSize.sm }}
+            >
+              {partner.company_description}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-    </TableCell>
+      </TableCell>
 
-    <TableCell>{partner.contact_person}</TableCell>
-    <TableCell>{partner.user?.phone}</TableCell>
-    <TableCell>{partner.user?.email}</TableCell>
+      <TableCell>
+        <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+          {partner.contact_person}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+          {partner.user?.phone}
+        </Typography>
+      </TableCell>
+      <TableCell>
+        <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+          {partner.user?.email}
+        </Typography>
+      </TableCell>
 
-    <TableCell>
-      <Chip
-        icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
-        label={partner.is_active ? 'Активен' : 'Неактивен'}
-        color={partner.is_active ? 'success' : 'error'}
-        size="small"
-      />
-    </TableCell>
+      <TableCell>
+        <Chip
+          icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
+          label={partner.is_active ? 'Активен' : 'Неактивен'}
+          color={partner.is_active ? 'success' : 'error'}
+          size="small"
+          sx={{
+            ...chipStyles,
+            fontSize: SIZES.fontSize.xs,
+          }}
+        />
+      </TableCell>
 
-    <TableCell align="right">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Tooltip title="Редактировать">
-          <IconButton
-            onClick={() => onEdit(partner.id)}
-            size="small"
-          >
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
-          <IconButton
-            onClick={() => onToggleStatus(partner)}
-            size="small"
-            color={partner.is_active ? 'error' : 'success'}
-          >
-            {partner.is_active ? <CloseIcon /> : <CheckIcon />}
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Удалить">
-          <IconButton
-            onClick={() => onDelete(partner)}
-            size="small"
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </TableCell>
-  </TableRow>
-));
+      <TableCell align="right">
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          gap: SIZES.spacing.xs 
+        }}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => onEdit(partner.id)}
+              size="small"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
+            <IconButton
+              onClick={() => onToggleStatus(partner)}
+              size="small"
+              color={partner.is_active ? 'error' : 'success'}
+            >
+              {partner.is_active ? <CloseIcon /> : <CheckIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => onDelete(partner)}
+              size="small"
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </TableCell>
+    </TableRow>
+  );
+});
 
 const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme(); // Инициализация темы для централизованных стилей
   
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
@@ -148,6 +209,13 @@ const PartnersPage: React.FC = () => {
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+
+  // Централизованные стили
+  const cardStyles = getCardStyles(theme);
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tableStyles = getTableStyles(theme);
 
   // Debounce для поиска
   const debouncedSearch = useDebounce(search, 300);
@@ -167,14 +235,12 @@ const PartnersPage: React.FC = () => {
   } = useGetPartnersQuery(queryParams);
 
   const [deletePartner, { isLoading: deleteLoading }] = useDeletePartnerMutation();
-  const [updatePartner] = useUpdatePartnerMutation();
   const [createTestPartner, { isLoading: testPartnerLoading }] = useCreateTestPartnerMutation();
   const [togglePartnerActive, { isLoading: toggleLoading }] = useTogglePartnerActiveMutation();
 
   const isLoading = partnersLoading || deleteLoading || testPartnerLoading || toggleLoading;
   const error = partnersError as FetchBaseQueryError | SerializedError | undefined;
   const partners = partnersData?.data || [];
-  const totalItems = partnersData?.pagination?.total_count || 0;
 
   // Вспомогательная функция для получения текста ошибки
   const getErrorMessage = (error: FetchBaseQueryError | SerializedError): string => {
@@ -224,11 +290,6 @@ const PartnersPage: React.FC = () => {
     }
   }, [togglePartnerActive]);
 
-  const handleCloseDialog = useCallback(() => {
-    setDeleteDialogOpen(false);
-    setSelectedPartner(null);
-  }, []);
-
   // Мемоизированная функция для получения инициалов
   const getPartnerInitials = useCallback((partner: Partner) => {
     return partner.company_name.charAt(0).toUpperCase() || 'П';
@@ -268,14 +329,25 @@ const PartnersPage: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Партнеры</Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography 
+          variant="h4"
+          sx={{ fontSize: SIZES.fontSize.xl }}
+        >
+          Партнеры
+        </Typography>
+        <Box sx={{ display: 'flex', gap: SIZES.spacing.md }}>
           <Button
             variant="outlined"
             color="secondary"
             onClick={handleCreateTestPartner}
             disabled={testPartnerLoading}
+            sx={secondaryButtonStyles}
           >
             {testPartnerLoading ? 'Создание...' : 'Создать тестового партнера'}
           </Button>
@@ -284,20 +356,26 @@ const PartnersPage: React.FC = () => {
             color="primary"
             startIcon={<AddIcon />}
             onClick={() => navigate('/partners/new')}
+            sx={primaryButtonStyles}
           >
             Добавить партнера
           </Button>
         </Box>
       </Box>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+      <Paper sx={{ 
+        ...cardStyles, 
+        p: SIZES.spacing.md, 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Box sx={{ display: 'flex', gap: SIZES.spacing.md }}>
           <TextField
             label="Поиск"
             variant="outlined"
             value={search}
             onChange={handleSearchChange}
             fullWidth
+            sx={textFieldStyles}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -309,13 +387,17 @@ const PartnersPage: React.FC = () => {
         </Box>
       </Paper>
 
-      <Paper>
+      <Paper sx={cardStyles}>
         {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            p: SIZES.spacing.xl 
+          }}>
             <CircularProgress />
           </Box>
         ) : error ? (
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ p: SIZES.spacing.lg }}>
             <Alert severity="error">
               Ошибка при загрузке партнеров: {getErrorMessage(error)}
             </Alert>
@@ -323,15 +405,30 @@ const PartnersPage: React.FC = () => {
         ) : (
           <>
             <TableContainer>
-              <Table sx={{ minWidth: 650 }} aria-label="table of partners">
+              <Table sx={{
+                ...tableStyles,
+                minWidth: 650 
+              }} aria-label="table of partners">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Партнер</TableCell>
-                    <TableCell>Контактное лицо</TableCell>
-                    <TableCell>Телефон</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Статус</TableCell>
-                    <TableCell align="right">Действия</TableCell>
+                    <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Партнер
+                    </TableCell>
+                    <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Контактное лицо
+                    </TableCell>
+                    <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Телефон
+                    </TableCell>
+                    <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Email
+                    </TableCell>
+                    <TableCell sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Статус
+                    </TableCell>
+                    <TableCell align="right" sx={{ fontSize: SIZES.fontSize.md, fontWeight: 600 }}>
+                      Действия
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -358,7 +455,11 @@ const PartnersPage: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              p: SIZES.spacing.md 
+            }}>
               {partnersData?.pagination && partnersData.pagination.total_pages > 0 && (
                 <Pagination
                   count={partnersData.pagination.total_pages}
@@ -378,13 +479,27 @@ const PartnersPage: React.FC = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle sx={{ fontSize: SIZES.fontSize.lg }}>
+          Подтверждение удаления
+        </DialogTitle>
         <DialogContent>
-          Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+        <DialogActions sx={{ gap: SIZES.spacing.sm, p: SIZES.spacing.md }}>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={secondaryButtonStyles}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            sx={primaryButtonStyles}
+          >
             Удалить
           </Button>
         </DialogActions>

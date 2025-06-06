@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -7,12 +7,12 @@ import {
   TextField,
   Button,
   CircularProgress,
-  Alert,
   FormControlLabel,
   Switch,
   IconButton,
   Divider,
   Grid,
+  useTheme,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -28,7 +28,16 @@ import {
 import { RegionFormData } from '../../types/models';
 import Notification from '../../components/Notification';
 import CitiesList from '../../components/CitiesList';
+import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
+/**
+ * Схема валидации для формы региона
+ * Определяет правила валидации полей региона:
+ * - Название: от 2 до 100 символов (обязательно)
+ * - Код: от 2 до 10 символов (обязательно)
+ * - Статус активности: булево значение
+ */
 const validationSchema = Yup.object({
   name: Yup.string()
     .required('Название региона обязательно')
@@ -41,10 +50,31 @@ const validationSchema = Yup.object({
   is_active: Yup.boolean(),
 });
 
+/**
+ * Компонент формы создания/редактирования региона
+ * Поддерживает два режима работы:
+ * - Создание нового региона (без ID в URL)
+ * - Редактирование существующего региона (с ID в URL + список городов)
+ * 
+ * Особенности:
+ * - В режиме редактирования показывает список городов региона
+ * - Уведомления об успешном сохранении/ошибках
+ * - Валидация полей с помощью Yup
+ * 
+ * Использует централизованную систему стилей для консистентного UI
+ */
+
 const RegionFormPage: React.FC = () => {
+  const theme = useTheme();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
+
+  // Централизованные стили
+  const cardStyles = getCardStyles(theme);
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme);
 
   // Состояние для уведомлений
   const [notification, setNotification] = useState<{
@@ -67,10 +97,11 @@ const RegionFormPage: React.FC = () => {
   // Formik
   const formik = useFormik<RegionFormData>({
     initialValues: {
-      name: '',
-      code: '',
-      is_active: true,
+      name: regionData?.name || '',
+      code: regionData?.code || '',
+      is_active: regionData?.is_active ?? true,
     },
+    enableReinitialize: true, // Позволяет переинициализировать форму при изменении regionData
     validationSchema,
     onSubmit: async (values) => {
       try {
@@ -124,17 +155,6 @@ const RegionFormPage: React.FC = () => {
     },
   });
 
-  // Эффект для установки начальных значений при редактировании
-  useEffect(() => {
-    if (regionData) {
-      formik.setValues({
-        name: regionData.name,
-        code: regionData.code,
-        is_active: regionData.is_active,
-      });
-    }
-  }, [regionData]);
-
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
@@ -155,29 +175,49 @@ const RegionFormPage: React.FC = () => {
   const isSaving = isCreating || isUpdating;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ padding: SIZES.spacing.xl }}>
       {/* Заголовок и кнопка назад */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        marginBottom: SIZES.spacing.xl 
+      }}>
         <IconButton
           onClick={handleBack}
-          sx={{ mr: 1 }}
+          sx={{ 
+            marginRight: SIZES.spacing.sm,
+            ...secondaryButtonStyles,
+          }}
         >
           <ArrowBackIcon />
         </IconButton>
-        <Typography variant="h4">
+        <Typography 
+          variant="h4"
+          sx={{
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+          }}
+        >
           {isEditMode ? 'Редактирование региона' : 'Создание региона'}
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={SIZES.spacing.xl}>
         {/* Форма региона */}
         <Grid item xs={12} md={isEditMode ? 6 : 12}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={cardStyles}>
+            <Typography 
+              variant="h6" 
+              sx={{
+                marginBottom: SIZES.spacing.lg,
+                fontSize: SIZES.fontSize.lg,
+                fontWeight: 600,
+              }}
+            >
               Информация о регионе
             </Typography>
             
-            <Box component="form" onSubmit={formik.handleSubmit} sx={{ mt: 2 }}>
+            <Box component="form" onSubmit={formik.handleSubmit} sx={{ marginTop: SIZES.spacing.lg }}>
               <TextField
                 fullWidth
                 id="name"
@@ -190,6 +230,7 @@ const RegionFormPage: React.FC = () => {
                 helperText={formik.touched.name && formik.errors.name}
                 margin="normal"
                 required
+                sx={textFieldStyles}
               />
 
               <TextField
@@ -204,6 +245,7 @@ const RegionFormPage: React.FC = () => {
                 helperText={formik.touched.code && formik.errors.code}
                 margin="normal"
                 required
+                sx={textFieldStyles}
               />
 
               <FormControlLabel
@@ -216,15 +258,20 @@ const RegionFormPage: React.FC = () => {
                   />
                 }
                 label="Активен"
-                sx={{ mt: 2 }}
+                sx={{ marginTop: SIZES.spacing.lg }}
               />
 
-              <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+              <Box sx={{ 
+                marginTop: SIZES.spacing.xl, 
+                display: 'flex', 
+                gap: SIZES.spacing.md 
+              }}>
                 <Button
                   type="submit"
                   variant="contained"
                   startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
                   disabled={isSaving}
+                  sx={primaryButtonStyles}
                 >
                   {isSaving ? 'Сохранение...' : 'Сохранить'}
                 </Button>
@@ -232,6 +279,7 @@ const RegionFormPage: React.FC = () => {
                   variant="outlined"
                   onClick={handleBack}
                   disabled={isSaving}
+                  sx={secondaryButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -243,11 +291,18 @@ const RegionFormPage: React.FC = () => {
         {/* Список городов (только при редактировании) */}
         {isEditMode && id && (
           <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
+            <Paper sx={cardStyles}>
+              <Typography 
+                variant="h6" 
+                sx={{
+                  marginBottom: SIZES.spacing.lg,
+                  fontSize: SIZES.fontSize.lg,
+                  fontWeight: 600,
+                }}
+              >
                 Города региона
               </Typography>
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ marginBottom: SIZES.spacing.lg }} />
               <CitiesList regionId={id} />
             </Paper>
           </Grid>

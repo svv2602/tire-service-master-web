@@ -30,6 +30,7 @@ import {
   FormControl,
   InputLabel,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -46,6 +47,15 @@ import type { WorkingHours } from '../../../types/working-hours';
 import { DAYS_OF_WEEK } from '../../../types/working-hours';
 import PostScheduleDialog from './PostScheduleDialog';
 import { useGetSchedulePreviewQuery, useCalculateSchedulePreviewMutation } from '../../../api/servicePoints.api';
+import { 
+  SIZES, 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getChipStyles, 
+  getFormStyles,
+  getTableStyles 
+} from '../../../styles';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -54,6 +64,17 @@ interface PostsStepProps {
 }
 
 const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  // Хук темы для использования централизованных стилей
+  const theme = useTheme();
+  
+  // Получаем стили из централизованной системы
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme);
+  const textFieldStyles = getTextFieldStyles(theme);
+  const chipStyles = getChipStyles(theme);
+  const formStyles = getFormStyles(theme);
+  const tableStyles = getTableStyles(theme);
+
   // Принудительное обновление компонента
   const [, forceUpdate] = useState({});
   
@@ -223,15 +244,31 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   };
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <BuildIcon sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="h6">
+    <Box sx={formStyles.container}>
+      {/* Заголовок секции с иконкой */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: SIZES.spacing.lg }}>
+        <BuildIcon sx={{ mr: SIZES.spacing.sm, color: 'primary.main' }} />
+        <Typography 
+          variant="h6"
+          sx={{
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 'bold',
+            color: theme.palette.text.primary
+          }}
+        >
           Посты обслуживания
         </Typography>
       </Box>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      {/* Описание секции */}
+      <Typography 
+        variant="body2" 
+        color="text.secondary" 
+        sx={{ 
+          mb: SIZES.spacing.lg,
+          fontSize: SIZES.fontSize.sm
+        }}
+      >
         Посты обслуживания определяют количество одновременных рабочих мест в сервисной точке. 
         Каждый пост может обслуживать одного клиента в заданное время.
       </Typography>
@@ -241,21 +278,33 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         variant="outlined"
         onClick={addNewPost}
         startIcon={<AddIcon />}
-        sx={{ mb: 3 }}
+        sx={{ 
+          ...buttonStyles,
+          mb: SIZES.spacing.lg,
+          borderRadius: SIZES.borderRadius.sm
+        }}
         disabled={activePosts.length >= 10} // Ограничиваем максимальное количество постов
       >
         Добавить пост
       </Button>
 
+      {/* Предупреждение о максимальном количестве постов */}
       {activePosts.length >= 10 && (
-        <Alert severity="warning" sx={{ mb: 2 }}>
+        <Alert 
+          severity="warning" 
+          sx={{ 
+            mb: SIZES.spacing.md,
+            borderRadius: SIZES.borderRadius.sm,
+            fontSize: SIZES.fontSize.sm
+          }}
+        >
           Достигнуто максимальное количество постов (10)
         </Alert>
       )}
 
       {/* Список постов */}
       {activePosts.length > 0 ? (
-        <Grid container spacing={3}>
+        <Grid container spacing={SIZES.spacing.lg}>
           {formik.values.service_posts?.map((post, index) => {
             // Пропускаем посты, помеченные для удаления
             if (post._destroy) {
@@ -264,10 +313,27 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
             
             return (
               <Grid item xs={12} md={6} key={post.id || index}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Typography variant="h6" color="primary">
+                <Card sx={{ 
+                  ...cardStyles,
+                  height: '100%',
+                  borderRadius: SIZES.borderRadius.md
+                }}>
+                  <CardContent sx={{ p: SIZES.spacing.lg }}>
+                    {/* Заголовок карточки поста */}
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      mb: SIZES.spacing.md 
+                    }}>
+                      <Typography 
+                        variant="h6" 
+                        color="primary"
+                        sx={{
+                          fontSize: SIZES.fontSize.md,
+                          fontWeight: 'bold'
+                        }}
+                      >
                         Пост №{post.post_number}
                       </Typography>
                       <Tooltip title="Удалить пост">
@@ -276,12 +342,16 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                           onClick={() => removePost(index)}
                           size="small"
                           disabled={activePosts.length === 1} // Не позволяем удалить последний пост
+                          sx={{
+                            borderRadius: SIZES.borderRadius.sm
+                          }}
                         >
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
                     </Box>
                     
+                    {/* Название поста */}
                     <TextField
                       fullWidth
                       label="Название поста"
@@ -292,8 +362,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       helperText={isPostTouched(index, 'name') && getPostError(index, 'name')}
                       margin="normal"
                       required
+                      sx={textFieldStyles}
                     />
                     
+                    {/* Описание поста */}
                     <TextField
                       fullWidth
                       label="Описание"
@@ -303,8 +375,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       rows={2}
                       margin="normal"
                       placeholder="Краткое описание поста обслуживания"
+                      sx={textFieldStyles}
                     />
                     
+                    {/* Длительность слота */}
                     <TextField
                       fullWidth
                       type="number"
@@ -314,7 +388,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       onBlur={() => formik.setFieldTouched(`service_posts.${index}.slot_duration`, true)}
                       error={isPostTouched(index, 'slot_duration') && Boolean(getPostError(index, 'slot_duration'))}
                       helperText={
-                        isPostTouched(index, 'slot_duration') && getPostError(index, 'slot_duration') ||
+                        (isPostTouched(index, 'slot_duration') && getPostError(index, 'slot_duration')) ||
                         'Стандартная продолжительность одного слота записи'
                       }
                       InputProps={{
@@ -323,8 +397,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       }}
                       margin="normal"
                       required
+                      sx={textFieldStyles}
                     />
                     
+                    {/* Переключатель активности поста */}
                     <FormControlLabel
                       control={
                         <Switch
@@ -333,16 +409,42 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                           color="primary"
                         />
                       }
-                      label="Пост активен"
-                      sx={{ mt: 1 }}
+                      label={
+                        <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                          Пост активен
+                        </Typography>
+                      }
+                      sx={{ mt: SIZES.spacing.sm }}
                     />
 
                     {/* Настройки индивидуального расписания */}
-                    <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <ScheduleIcon fontSize="small" color={post.has_custom_schedule ? 'primary' : 'disabled'} />
-                          <Typography variant="subtitle2">
+                    <Box sx={{ 
+                      mt: SIZES.spacing.lg, 
+                      p: SIZES.spacing.md, 
+                      border: `1px solid ${theme.palette.divider}`, 
+                      borderRadius: SIZES.borderRadius.sm, 
+                      backgroundColor: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.02)'
+                        : 'rgba(0, 0, 0, 0.02)'
+                    }}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between', 
+                        mb: SIZES.spacing.sm 
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.sm }}>
+                          <ScheduleIcon 
+                            fontSize="small" 
+                            color={post.has_custom_schedule ? 'primary' : 'disabled'} 
+                          />
+                          <Typography 
+                            variant="subtitle2"
+                            sx={{
+                              fontSize: SIZES.fontSize.sm,
+                              fontWeight: 'bold'
+                            }}
+                          >
                             Индивидуальное расписание
                           </Typography>
                           <Chip 

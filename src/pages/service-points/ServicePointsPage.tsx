@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -23,7 +23,6 @@ import {
   DialogContent,
   DialogActions,
   TablePagination,
-  Avatar,
   FormControl,
   InputLabel,
   Select,
@@ -35,8 +34,6 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   LocationOn as LocationIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
   AccessTime as AccessTimeIcon,
   Business as BusinessIcon,
   LocationCity as LocationCityIcon,
@@ -44,12 +41,20 @@ import {
 import {
   useGetServicePointsQuery,
   useDeleteServicePointMutation,
-  useUpdateServicePointMutation,
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
 import type { ServicePoint } from '../../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
+import { 
+  SIZES, 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles, 
+  getTableStyles, 
+  getChipStyles 
+} from '../../styles';
+import { useTheme } from '@mui/material/styles';
 
 // Функция для форматирования рабочих часов
 const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
@@ -105,9 +110,25 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
   return result || 'График работы не указан';
 };
 
+/**
+ * Компонент страницы списка сервисных точек
+ * Отображает таблицу всех сервисных точек с возможностями поиска, фильтрации и управления
+ * Поддерживает пагинацию, удаление записей и навигацию к формам редактирования
+ * Включает фильтры по регионам и городам для удобного поиска
+ */
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: partnerId } = useParams<{ id: string }>();
+  
+  // Хук темы для использования централизованных стилей
+  const theme = useTheme();
+  
+  // Получаем стили из централизованной системы
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme);
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tableStyles = getTableStyles(theme);
+  const chipStyles = getChipStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -216,29 +237,61 @@ const ServicePointsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: SIZES.spacing.lg }}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Сервисные точки</Typography>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography 
+          variant="h4"
+          sx={{ 
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600 
+          }}
+        >
+          Сервисные точки
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate(partnerId ? `/partners/${partnerId}/service-points/new` : '/service-points/new')}
+          sx={{
+            ...buttonStyles,
+            borderRadius: SIZES.borderRadius.sm
+          }}
         >
           Добавить сервисную точку
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Paper sx={{ 
+        ...cardStyles, 
+        p: SIZES.spacing.lg, 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: SIZES.spacing.md, 
+          alignItems: 'center', 
+          flexWrap: 'wrap' 
+        }}>
           <TextField
             placeholder="Поиск по названию или адресу"
             variant="outlined"
             size="small"
             value={search}
             onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
+            sx={{ 
+              ...textFieldStyles,
+              minWidth: 300,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -248,7 +301,16 @@ const ServicePointsPage: React.FC = () => {
             }}
           />
           
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl 
+            size="small" 
+            sx={{ 
+              ...textFieldStyles,
+              minWidth: 150,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
+          >
             <InputLabel>Регион</InputLabel>
             <Select
               value={selectedRegionId}
@@ -264,7 +326,16 @@ const ServicePointsPage: React.FC = () => {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
+          <FormControl 
+            size="small" 
+            sx={{ 
+              ...textFieldStyles,
+              minWidth: 150,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm
+              }
+            }}
+          >
             <InputLabel>Город</InputLabel>
             <Select
               value={selectedCityId}
@@ -284,69 +355,158 @@ const ServicePointsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица сервисных точек */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={tableStyles.tableContainer}>
         <Table>
-          <TableHead>
+          <TableHead sx={tableStyles.tableHead}>
             <TableRow>
-              <TableCell>Название</TableCell>
-              <TableCell>Адрес</TableCell>
-              <TableCell>Область</TableCell>
-              <TableCell>Город</TableCell>
-              <TableCell>График работы</TableCell>
-              <TableCell>Контакты</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Название
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Адрес
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Область
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Город
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                График работы
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Контакты
+              </TableCell>
+              <TableCell sx={{ 
+                fontSize: SIZES.fontSize.md, 
+                fontWeight: 600 
+              }}>
+                Статус
+              </TableCell>
+              <TableCell 
+                align="right" 
+                sx={{ 
+                  fontSize: SIZES.fontSize.md, 
+                  fontWeight: 600 
+                }}
+              >
+                Действия
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {servicePoints.map((servicePoint) => (
-              <TableRow key={servicePoint.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TableRow key={servicePoint.id} sx={tableStyles.tableRow}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <BusinessIcon color="action" fontSize="small" />
-                    <Typography>{servicePoint.name}</Typography>
+                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                      {servicePoint.name}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <LocationIcon color="action" fontSize="small" />
-                    <Typography>{servicePoint.address}</Typography>
+                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                      {servicePoint.address}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <LocationCityIcon color="action" fontSize="small" />
-                    <Typography>{servicePoint.city?.region?.name || 'Не указана'}</Typography>
+                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                      {servicePoint.city?.region?.name || 'Не указана'}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <LocationCityIcon color="action" fontSize="small" />
-                    <Typography>{servicePoint.city?.name || 'Не указан'}</Typography>
+                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                      {servicePoint.city?.name || 'Не указан'}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <AccessTimeIcon color="action" fontSize="small" />
-                    <Typography>{formatWorkingHours(servicePoint.working_hours)}</Typography>
+                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                      {formatWorkingHours(servicePoint.working_hours)}
+                    </Typography>
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Typography>{servicePoint.contact_phone || 'Не указан'}</Typography>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    {servicePoint.contact_phone || 'Не указан'}
+                  </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={tableStyles.tableCell}>
                   <Chip
                     label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
                     color={servicePoint.is_active ? 'success' : 'error'}
                     size="small"
+                    sx={{
+                      ...chipStyles,
+                      fontSize: SIZES.fontSize.xs
+                    }}
                   />
                 </TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                <TableCell align="right" sx={tableStyles.tableCell}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    gap: SIZES.spacing.xs 
+                  }}>
                     <Tooltip title="Редактировать">
                       <IconButton 
                         onClick={() => navigate(`/partners/${servicePoint.partner_id}/service-points/${servicePoint.id}/edit`)}
                         size="small"
+                        sx={{ 
+                          color: theme.palette.primary.main,
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.primary.main}15`
+                          }
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
@@ -356,6 +516,11 @@ const ServicePointsPage: React.FC = () => {
                         onClick={() => handleDeleteClick(servicePoint)}
                         size="small"
                         color="error"
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.error.main}15`
+                          }
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -374,6 +539,15 @@ const ServicePointsPage: React.FC = () => {
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[10, 25, 50, 100]}
+          sx={{
+            borderTop: `1px solid ${theme.palette.divider}`,
+            '& .MuiTablePagination-select': {
+              fontSize: SIZES.fontSize.sm
+            },
+            '& .MuiTablePagination-displayedRows': {
+              fontSize: SIZES.fontSize.sm
+            }
+          }}
         />
       </TableContainer>
 
@@ -382,22 +556,54 @@ const ServicePointsPage: React.FC = () => {
         open={deleteDialogOpen} 
         onClose={isDeleting ? undefined : handleCloseDialog}
         disableEscapeKeyDown={isDeleting}
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400
+          }
+        }}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <Typography>
+        <DialogTitle sx={{ 
+          fontSize: SIZES.fontSize.lg, 
+          fontWeight: 600,
+          pb: SIZES.spacing.sm
+        }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pb: SIZES.spacing.md }}>
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
             Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
             Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} disabled={isDeleting}>Отмена</Button>
+        <DialogActions sx={{ 
+          p: SIZES.spacing.lg, 
+          gap: SIZES.spacing.sm 
+        }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            disabled={isDeleting}
+            sx={{
+              ...buttonStyles,
+              variant: 'outlined',
+              borderRadius: SIZES.borderRadius.sm
+            }}
+          >
+            Отмена
+          </Button>
           <Button 
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+            sx={{
+              borderRadius: SIZES.borderRadius.sm,
+              '&:hover': {
+                backgroundColor: theme.palette.error.dark
+              }
+            }}
           >
             {isDeleting ? 'Удаление...' : 'Удалить'}
           </Button>

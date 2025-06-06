@@ -10,9 +10,11 @@ import {
   FormHelperText,
   FormControlLabel,
   Switch,
+  useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
 import { useGetWorkStatusesQuery } from '../../../api/servicePoints.api';
+import { SIZES, getFormStyles } from '../../../styles';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
 
 interface SettingsStepProps {
@@ -24,14 +26,25 @@ interface SettingsStepProps {
 const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
   const workStatuses = workStatusesData || [];
+  const theme = useTheme();
+  const formStyles = getFormStyles(theme);
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+    <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom 
+        sx={{ 
+          mb: SIZES.spacing.lg,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+        }}
+      >
         Параметры работы
       </Typography>
       
-      <Grid container spacing={3}>
+      <Grid container spacing={SIZES.spacing.lg}>
         <Grid item xs={12} md={6}>
           <FormControlLabel
             control={
@@ -52,6 +65,12 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
             fullWidth 
             error={formik.touched.work_status && Boolean(formik.errors.work_status)}
             required
+            sx={{
+              ...formStyles.field,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           >
             <InputLabel id="work-status-label">Статус работы</InputLabel>
             <Select

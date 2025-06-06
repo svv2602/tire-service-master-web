@@ -1,0 +1,378 @@
+// filepath: /home/snisar/mobi_tz/tire-service-master-web/src/pages/cities/CitiesPage.tsx
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  InputAdornment,
+  Paper,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  useTheme,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  LocationCity as LocationCityIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { 
+  useGetCitiesQuery, 
+  useDeleteCityMutation,
+  useUpdateCityMutation,
+} from '../../api/cities.api';
+import { 
+  useGetRegionsQuery 
+} from '../../api/regions.api';
+import { City, CityFilter, Region } from '../../types/models';
+import { SIZES } from '../../styles/theme';
+import { 
+  getCardStyles, 
+  getButtonStyles,
+  getTextFieldStyles,
+  getTableStyles,
+  getChipStyles 
+} from '../../styles/components';
+
+const CitiesPage: React.FC = () => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Инициализация стилей из централизованной системы
+  const cardStyles = getCardStyles(theme);
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const tableStyles = getTableStyles(theme);
+  const chipStyles = getChipStyles(theme);
+  
+  // Состояние для поиска и пагинации
+  const [search, setSearch] = useState('');
+  const [regionId, setRegionId] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+  
+  // Состояние для диалогов
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // RTK Query хуки
+  const { 
+    data: citiesData, 
+    isLoading: citiesLoading, 
+    error: citiesError 
+  } = useGetCitiesQuery({
+    query: search || undefined,
+    region_id: regionId ? Number(regionId) : undefined,
+    page: page + 1,
+    per_page: rowsPerPage,
+  } as CityFilter);
+
+  const { data: regionsData } = useGetRegionsQuery({} as any);
+  const [deleteCity, { isLoading: deleteLoading }] = useDeleteCityMutation();
+  const [updateCity] = useUpdateCityMutation();
+
+  const isLoading = citiesLoading || deleteLoading;
+  const error = citiesError;
+  const cities = citiesData?.data || [];
+  const totalItems = citiesData?.pagination?.total_count || 0;
+  const regions = regionsData?.data || [];
+
+  // Обработчики событий
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(event.target.value);
+    setPage(0);
+  };
+
+  const handleRegionChange = (event: SelectChangeEvent<string>) => {
+    setRegionId(event.target.value);
+    setPage(0);
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const handleDeleteClick = (city: City) => {
+    setSelectedCity(city);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedCity) {
+      try {
+        await deleteCity(Number(selectedCity.id)).unwrap();
+        setSuccessMessage('Город успешно удален');
+        setDeleteDialogOpen(false);
+        setSelectedCity(null);
+      } catch (error) {
+        console.error('Ошибка при удалении города:', error);
+        setErrorMessage('Не удалось удалить город');
+      }
+    }
+  };
+
+  const handleToggleStatus = async (city: City) => {
+    try {
+      await updateCity({
+        id: Number(city.id),
+        city: { is_active: !city.is_active }
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDeleteDialogOpen(false);
+    setSelectedCity(null);
+  };
+
+  // Отображение состояний загрузки и ошибок
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: SIZES.spacing.lg }}>
+        <Alert severity="error" sx={{ ...cardStyles, p: SIZES.spacing.md }}>
+          Ошибка при загрузке городов: {error.toString()}
+        </Alert>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: SIZES.spacing.lg }}>
+      {/* Заголовок */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.md 
+      }}>
+        <Typography sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>Города</Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/cities/new')}
+          sx={buttonStyles}
+        >
+          Добавить город
+        </Button>
+      </Box>
+
+      {/* Фильтры и поиск */}
+      <Paper sx={{ ...cardStyles, p: SIZES.spacing.md, mb: SIZES.spacing.md }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <TextField
+            placeholder="Поиск по названию города"
+            variant="outlined"
+            size="small"
+            value={search}
+            onChange={handleSearchChange}
+            sx={{ ...textFieldStyles, minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <FormControl size="small" sx={{ ...textFieldStyles, minWidth: 200 }}>
+            <InputLabel>Регион</InputLabel>
+            <Select
+              value={regionId}
+              onChange={handleRegionChange}
+              label="Регион"
+            >
+              <MenuItem value="">Все регионы</MenuItem>
+              {regions.map((region: Region) => (
+                <MenuItem key={region.id} value={region.id}>
+                  {region.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Paper>
+
+      {/* Таблица городов */}
+      <TableContainer component={Paper} sx={tableStyles.tableContainer}>
+        <Table>
+          <TableHead sx={tableStyles.tableHead}>
+            <TableRow>
+              <TableCell sx={tableStyles.tableCell}>Название</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Регион</TableCell>
+              <TableCell sx={tableStyles.tableCell}>Статус</TableCell>
+              <TableCell sx={tableStyles.tableCell} align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {cities.map((city: City) => (
+              <TableRow key={city.id} sx={tableStyles.tableRow}>
+                <TableCell sx={tableStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationCityIcon color="action" />
+                    <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                      {city.name}
+                    </Typography>
+                  </Box>
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  {regions.find(r => r.id === city.region_id)?.name}
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell}>
+                  <Chip
+                    icon={city.is_active ? <CheckIcon /> : <CloseIcon />}
+                    label={city.is_active ? 'Активен' : 'Неактивен'}
+                    color={city.is_active ? 'success' : 'error'}
+                    size="small"
+                    sx={city.is_active ? chipStyles.success : chipStyles.error}
+                  />
+                </TableCell>
+
+                <TableCell sx={tableStyles.tableCell} align="right">
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <Tooltip title="Редактировать">
+                      <IconButton
+                        onClick={() => navigate(`/cities/${city.id}/edit`)}
+                        size="small"
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.primary.main}15`
+                          }
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton
+                        onClick={() => handleDeleteClick(city)}
+                        size="small"
+                        color="error"
+                        sx={{
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.error.main}15`
+                          }
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        <TablePagination
+          component="div"
+          count={totalItems}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[10, 25, 50]}
+          sx={{
+            '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+              fontSize: SIZES.fontSize.sm,
+              margin: 0
+            },
+            '.MuiTablePagination-select': {
+              ...textFieldStyles
+            }
+          }}
+        />
+      </TableContainer>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDialog}
+        PaperProps={{
+          sx: {
+            ...cardStyles,
+            borderRadius: SIZES.borderRadius.md,
+            minWidth: 400
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontSize: SIZES.fontSize.lg, fontWeight: 600, pt: SIZES.spacing.md }}>
+          Подтверждение удаления
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.sm }}>
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            Вы действительно хотите удалить город {selectedCity?.name}?
+            Это действие нельзя будет отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: SIZES.spacing.md, pt: SIZES.spacing.sm }}>
+          <Button 
+            onClick={handleCloseDialog}
+            sx={{
+              ...getButtonStyles(theme, 'secondary'),
+              fontSize: SIZES.fontSize.md
+            }}
+          >
+            Отмена
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            sx={{
+              ...getButtonStyles(theme, 'error'),
+              fontSize: SIZES.fontSize.md
+            }}
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
+
+export default CitiesPage;

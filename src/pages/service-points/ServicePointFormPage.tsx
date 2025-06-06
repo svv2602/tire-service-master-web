@@ -7,7 +7,6 @@ import {
   Paper,
   Grid,
   CircularProgress,
-  Divider,
   Alert,
   Snackbar,
   FormControl,
@@ -26,11 +25,10 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  useTheme,
 } from '@mui/material';
-import { useFormik, FormikTouched, FormikErrors } from 'formik';
+import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 import { 
   ArrowBack as ArrowBackIcon, 
   Save as SaveIcon, 
@@ -47,13 +45,8 @@ import {
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  useGetServiceCategoriesQuery,
-  useGetScheduleQuery,
-} from '../../api';
 import { useGetServicesQuery } from '../../api/servicesList.api';
 import {
-  useGetServicePointsQuery,
   useGetServicePointBasicInfoQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
@@ -70,32 +63,25 @@ import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import type { 
   ServicePoint, 
-  ServiceCategory, 
-  ServicePointService, 
   ServicePointPhoto,
   Partner,
   Region,
   City,
   ServicePointFormData,
-  ApiResponse,
-  CityFilter,
-  ServicePointCreateRequest,
-  ServicePointUpdateRequest,
   Photo,
-  ServicePointStatus,
   ServicePost,
 } from '../../types/models';
-import type { Service, ServicesResponse } from '../../types/service';
-import { DAYS_OF_WEEK, getDayName } from '../../types/working-hours';
+import type { Service } from '../../types/service';
+import { DAYS_OF_WEEK } from '../../types/working-hours';
 import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
 
-// Определяем типы для расписания
-interface ScheduleItem {
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_working_day: boolean;
-}
+// Импорты централизованной системы стилей для консистентного дизайна
+import { 
+  getCardStyles, 
+  getButtonStyles, 
+  getTextFieldStyles
+} from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
 // Определяем типы для FormikTouched и FormikErrors
 interface ServiceFormData {
@@ -122,26 +108,6 @@ interface FormValues extends Omit<ServicePointFormData, 'services' | 'working_ho
   service_posts: ServicePost[];
 }
 
-interface FormikTouchedFields extends FormikTouched<FormValues> {
-  working_hours?: {
-    [K in keyof WorkingHoursSchedule]?: {
-      start?: boolean;
-      end?: boolean;
-      is_working_day?: boolean;
-    };
-  };
-}
-
-interface FormikErrorFields extends FormikErrors<FormValues> {
-  working_hours?: {
-    [K in keyof WorkingHoursSchedule]?: {
-      start?: string;
-      end?: string;
-      is_working_day?: string;
-    };
-  };
-}
-
 // Добавляем интерфейс для загрузки файлов
 interface PhotoUpload {
   file: File;
@@ -150,31 +116,6 @@ interface PhotoUpload {
   sort_order?: number;
   preview?: string;
 }
-
-// Обновляем интерфейсы для параметров запросов
-interface CitiesQueryParams {
-  region_id?: number;
-}
-
-interface ServicePointQueryParams {
-  service_point_id: string;
-  date?: string;
-}
-
-interface ServicePointServicesQueryParams {
-  service_point_id: string;
-}
-
-interface ServicePointPhotosQueryParams {
-  service_point_id: string;
-}
-
-// Статусы точек обслуживания (в будущем можно загружать с сервера)
-const SERVICE_POINT_STATUSES = [
-  { id: 1, name: 'Активна', color: '#4caf50' },
-  { id: 2, name: 'Приостановлена', color: '#ff9800' },
-  { id: 3, name: 'Заблокирована', color: '#f44336' },
-] as const;
 
 // Определяем начальное расписание в правильном формате
 const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHoursSchedule>((acc, day) => {
@@ -197,16 +138,31 @@ const workingHoursShape = DAYS_OF_WEEK.reduce<Record<keyof WorkingHoursSchedule,
   return acc;
 }, {} as Record<keyof WorkingHoursSchedule, yup.ObjectSchema<any>>);
 
+/**
+ * Компонент формы создания и редактирования точек обслуживания
+ * Поддерживает создание новых точек и редактирование существующих
+ * Включает разделы: основная информация, местоположение, контакты, настройки, 
+ * посты обслуживания, услуги, фотографии и расписание работы
+ */
 const ServicePointFormPage: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
+  const theme = useTheme();
+
+  // Состояние для уведомлений и UI
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  // Получаем стили из централизованной системы для консистентного дизайна
+  const cardStyles = getCardStyles(theme, 'primary');
+  const buttonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
 
   // Состояние для управления аккордеонами
   const [expandedAccordions, setExpandedAccordions] = useState<Record<string, boolean>>({
@@ -253,20 +209,14 @@ const ServicePointFormPage: React.FC = () => {
     { skip: !isEditMode || !id }
   );
   const workStatuses: WorkStatus[] = workStatusesData || [];
-  const servicePosts: ServicePost[] = servicePostsData || [];
+  // Мемоизируем servicePosts для оптимизации производительности
+  const servicePosts: ServicePost[] = useMemo(() => servicePostsData || [], [servicePostsData]);
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
   const [uploadServicePointPhoto] = useUploadServicePointPhotoMutation();
-  const { data: servicePointsData } = useGetServicePointsQuery({});
+
 
   const { data: services } = useGetServicesQuery({});
-  const scheduleQueryResult = useGetScheduleQuery(
-    { 
-      service_point_id: id ?? '',
-      date: new Date().toISOString().split('T')[0]
-    },
-    { skip: !isEditMode || !id }
-  );
   const servicePointServicesQueryResult = useGetServicePointServicesQuery(
     id ?? '',
     { skip: !isEditMode || !id }
@@ -280,7 +230,7 @@ const ServicePointFormPage: React.FC = () => {
   const partnersData = partners?.data || [];
   const regionsData = regions?.data || [];
   const citiesData = cities?.data || [];
-  const scheduleData = scheduleQueryResult.data;
+
   const servicePointServicesData = servicePointServicesQueryResult.data;
 
   // Преобразуем данные сервисов в нужный формат
@@ -336,13 +286,6 @@ const ServicePointFormPage: React.FC = () => {
       console.log('Initial values:', initialValues);
     }
   }, [servicePoint, servicePointServicesData, photosData, initialValues]);
-
-  // Автоматически добавляем первый пост при создании новой сервисной точки
-  useEffect(() => {
-    if (!isEditMode && (!formik.values.service_posts || formik.values.service_posts.length === 0)) {
-      addNewPost();
-    }
-  }, [isEditMode]);
 
   const handleSubmit = async (values: FormValues) => {
     try {
@@ -533,7 +476,7 @@ const ServicePointFormPage: React.FC = () => {
       setSelectedRegionId(servicePoint.city.region_id);
       formik.setFieldValue('region_id', servicePoint.city.region_id);
     }
-  }, [servicePoint]);
+  }, [servicePoint, formik, selectedRegionId]);
 
   // Обработчик изменения региона
   const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -601,7 +544,7 @@ const ServicePointFormPage: React.FC = () => {
   };
 
   // Функции для управления постами
-  const addNewPost = () => {
+  const addNewPost = useCallback(() => {
     const activePosts = (formik.values.service_posts || []).filter(post => !post._destroy);
     const newPost: ServicePost = {
       id: Date.now(), // Временный ID для новых постов
@@ -615,7 +558,14 @@ const ServicePointFormPage: React.FC = () => {
       updated_at: new Date().toISOString(),
     };
     formik.setFieldValue('service_posts', [...(formik.values.service_posts || []), newPost]);
-  };
+  }, [formik, id]);
+
+  // Автоматически добавляем первый пост при создании новой сервисной точки
+  useEffect(() => {
+    if (!isEditMode && (!formik.values.service_posts || formik.values.service_posts.length === 0)) {
+      addNewPost();
+    }
+  }, [isEditMode, formik.values.service_posts, addNewPost]);
 
   const removePost = (index: number) => {
     const updatedPosts = [...(formik.values.service_posts || [])];
@@ -714,24 +664,47 @@ const ServicePointFormPage: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
+      {/* Заголовок страницы с кнопкой возврата */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography 
+          variant="h4"
+          sx={{
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+            color: theme.palette.text.primary,
+          }}
+        >
           {isEditMode ? 'Редактирование точки обслуживания' : 'Создание точки обслуживания'}
         </Typography>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          onClick={handleBack}
+          sx={secondaryButtonStyles}
+        >
           Назад к списку
         </Button>
       </Box>
 
+      {/* Отображение ошибок */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
           {error}
         </Alert>
       )}
 
-      <Paper sx={{ p: 3 }}>
+      {/* Основная форма с централизованными стилями */}
+      <Paper sx={cardStyles}>
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            p: SIZES.spacing.xl 
+          }}>
             <CircularProgress />
           </Box>
         ) : (
@@ -742,30 +715,49 @@ const ServicePointFormPage: React.FC = () => {
             console.log('Form errors:', formik.errors);
             formik.handleSubmit(e);
           }}>
-            {/* Основная информация - остается без аккордеона */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-                  Основная информация
-                </Typography>
-              <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="name"
-                  name="name"
-                  label="Название точки"
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
-                />
-              </Grid>
+            {/* Основная информация - остается без аккордеона для быстрого доступа */}
+            <Box sx={{ mb: SIZES.spacing.lg }}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  mb: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg,
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                }}
+              >
+                Основная информация
+              </Typography>
+              <Grid container spacing={SIZES.spacing.lg}>
+                <Grid item xs={12} md={6}>                  <TextField
+                    fullWidth
+                    id="name"
+                    name="name"
+                    label="Название точки"
+                    value={formik.values.name}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.name && Boolean(formik.errors.name)}
+                    helperText={formik.touched.name && formik.errors.name}
+                    required
+                    sx={textFieldStyles}
+                  />
+                </Grid>
 
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}>
-                  <InputLabel id="partner-id-label">Партнер</InputLabel>
-                  <Select
+                <Grid item xs={12} md={6}>
+                  <FormControl 
+                    fullWidth 
+                    error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  >
+                    <InputLabel id="partner-id-label">Партнер</InputLabel>
+                    <Select
                     labelId="partner-id-label"
                     id="partner_id"
                     name="partner_id"
@@ -790,28 +782,29 @@ const ServicePointFormPage: React.FC = () => {
               </Grid>
 
                 <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  id="description"
-                  name="description"
-                  label="Описание"
-                  multiline
+                  <TextField
+                    fullWidth
+                    id="description"
+                    name="description"
+                    label="Описание"
+                    multiline
                     rows={3}
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
+                    value={formik.values.description}
+                    onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                  error={formik.touched.description && Boolean(formik.errors.description)}
-                  helperText={formik.touched.description && formik.errors.description}
-                />
-              </Grid>
+                    error={formik.touched.description && Boolean(formik.errors.description)}
+                    helperText={formik.touched.description && formik.errors.description}
+                    sx={textFieldStyles}
+                  />
+                </Grid>
               </Grid>
             </Box>
 
-            {/* Адрес и местоположение */}
+            {/* Аккордеон: Адрес и местоположение */}
             <Accordion 
               expanded={expandedAccordions.location} 
               onChange={handleAccordionChange('location')}
-              sx={{ mb: 2 }}
+              sx={{ mb: SIZES.spacing.md }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
@@ -819,20 +812,37 @@ const ServicePointFormPage: React.FC = () => {
                 id="location-header"
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <LocationIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6">Адрес и местоположение</Typography>
+                  <LocationIcon sx={{ 
+                    mr: SIZES.spacing.xs, 
+                    color: 'primary.main' 
+                  }} />
+                  <Typography 
+                    variant="h6"
+                    sx={{
+                      fontSize: SIZES.fontSize.lg,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Адрес и местоположение
+                  </Typography>
                   <CompletionIndicator isComplete={isLocationComplete()} />
                 </Box>
               </AccordionSummary>
               <AccordionDetails>
-                <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <FormControl 
-                  fullWidth 
-                  error={formik.touched.region_id && Boolean(formik.errors.region_id)}
-                  required
-                >
-                  <InputLabel id="region-id-label">Регион</InputLabel>
+                <Grid container spacing={SIZES.spacing.lg}>
+                  <Grid item xs={12} md={6}>
+                    <FormControl 
+                      fullWidth 
+                      error={formik.touched.region_id && Boolean(formik.errors.region_id)}
+                      required
+                      sx={{
+                        ...textFieldStyles,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: SIZES.borderRadius.sm,
+                        },
+                      }}
+                    >
+                      <InputLabel id="region-id-label">Регион</InputLabel>
                   <Select
                     labelId="region-id-label"
                     id="region_id"
@@ -900,6 +910,8 @@ const ServicePointFormPage: React.FC = () => {
                   error={formik.touched.address && Boolean(formik.errors.address)}
                   helperText={formik.touched.address && formik.errors.address}
                   placeholder="Введите полный адрес сервисной точки"
+                  required
+                  sx={textFieldStyles}
                 />
               </Grid>
 
@@ -915,6 +927,7 @@ const ServicePointFormPage: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={formik.touched.latitude && Boolean(formik.errors.latitude)}
                   helperText={formik.touched.latitude && formik.errors.latitude}
+                  placeholder="Например: 55.7558"
                   InputProps={{
                     inputProps: { 
                       step: "0.000001",
@@ -922,6 +935,7 @@ const ServicePointFormPage: React.FC = () => {
                       max: 90
                     }
                   }}
+                  sx={textFieldStyles}
                 />
               </Grid>
 
@@ -950,61 +964,96 @@ const ServicePointFormPage: React.FC = () => {
               </AccordionDetails>
             </Accordion>
 
-            {/* Контактная информация */}
+            {/* Контактная информация - раздел для указания телефонов и других контактов */}
             <Accordion 
               expanded={expandedAccordions.contact} 
               onChange={handleAccordionChange('contact')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="contact-content"
                 id="contact-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PhoneIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6">Контактная информация</Typography>
+                  <PhoneIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                    Контактная информация
+                  </Typography>
                   <CompletionIndicator isComplete={isContactComplete()} />
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="contact_phone"
-                  name="contact_phone"
-                  label="Контактный телефон"
-                  value={formik.values.contact_phone}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.contact_phone && Boolean(formik.errors.contact_phone)}
-                  helperText={formik.touched.contact_phone && formik.errors.contact_phone}
-                />
-              </Grid>
-              </Grid>
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
+                <Grid container spacing={SIZES.spacing.md}>
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth sx={textFieldStyles}>
+                      <TextField
+                        fullWidth
+                        id="contact_phone"
+                        name="contact_phone"
+                        label="Контактный телефон"
+                        value={formik.values.contact_phone}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.contact_phone && Boolean(formik.errors.contact_phone)}
+                        helperText={formik.touched.contact_phone && formik.errors.contact_phone}
+                        placeholder="Например: +7 (999) 123-45-67"
+                        sx={{
+                          ...textFieldStyles,
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: SIZES.borderRadius.sm
+                          }
+                        }}
+                      />
+                    </FormControl>
+                  </Grid>
+                </Grid>
               </AccordionDetails>
             </Accordion>
 
-            {/* Параметры работы */}
+            {/* Параметры работы - настройки активности и статуса точки обслуживания */}
             <Accordion 
               expanded={expandedAccordions.settings} 
               onChange={handleAccordionChange('settings')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="settings-content"
                 id="settings-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <SettingsIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6">Параметры работы</Typography>
+                  <SettingsIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                    Параметры работы
+                  </Typography>
                   <CompletionIndicator isComplete={isSettingsComplete()} />
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={3}>
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
+                <Grid container spacing={SIZES.spacing.md}>
                   <Grid item xs={12} md={6}>
                     <FormControlLabel
                       control={
@@ -1017,18 +1066,28 @@ const ServicePointFormPage: React.FC = () => {
                         />
                       }
                       label="Точка активна"
-                            />
-                          </Grid>
+                      sx={{ fontSize: SIZES.fontSize.md }}
+                    />
+                  </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth error={formik.touched.work_status && Boolean(formik.errors.work_status)}>
+                    <FormControl 
+                      fullWidth 
+                      error={formik.touched.work_status && Boolean(formik.errors.work_status)}
+                      sx={{
+                        ...textFieldStyles,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: SIZES.borderRadius.sm
+                        }
+                      }}
+                    >
                       <InputLabel id="work-status-label">Статус работы</InputLabel>
-                  <Select
+                      <Select
                         labelId="work-status-label"
                         id="work_status"
                         name="work_status"
                         value={formik.values.work_status || 'working'}
-                              onChange={(e) => {
+                        onChange={(e) => {
                           formik.setFieldValue('work_status', e.target.value);
                         }}
                         label="Статус работы"
@@ -1037,40 +1096,58 @@ const ServicePointFormPage: React.FC = () => {
                         {workStatuses.map((status) => (
                           <MenuItem key={status.value} value={status.value}>
                             {status.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                          </MenuItem>
+                        ))}
+                      </Select>
                       {workStatusesLoading && (
-                    <FormHelperText>
+                        <FormHelperText>
                           Загрузка статусов работы...
-                    </FormHelperText>
-                  )}
+                        </FormHelperText>
+                      )}
                       {formik.touched.work_status && formik.errors.work_status && (
-                    <FormHelperText error>
+                        <FormHelperText error>
                           {formik.errors.work_status as string}
-                    </FormHelperText>
-                  )}
-                </FormControl>
-                    </Grid>
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
                 </Grid>
               </AccordionDetails>
             </Accordion>
 
-            {/* Посты обслуживания */}
+            {/* Посты обслуживания - управление рабочими постами точки обслуживания */}
             <Accordion 
               expanded={expandedAccordions.posts} 
               onChange={handleAccordionChange('posts')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="posts-content"
                 id="posts-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  width: '100%' 
+                }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <BuildIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6">Посты обслуживания</Typography>
+                    <BuildIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                    <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                      Посты обслуживания
+                    </Typography>
                     <CompletionIndicator isComplete={isPostsComplete()} />
                   </Box>
                   <Button
@@ -1081,15 +1158,19 @@ const ServicePointFormPage: React.FC = () => {
                     }}
                     startIcon={<AddIcon />}
                     size="small"
-                    sx={{ mr: 2 }}
+                    sx={{ 
+                      ...secondaryButtonStyles,
+                      mr: SIZES.spacing.md,
+                      borderRadius: SIZES.borderRadius.sm
+                    }}
                   >
                     Добавить пост
                   </Button>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
                 {formik.values.service_posts && formik.values.service_posts.length > 0 ? (
-                  <Grid container spacing={3}>
+                  <Grid container spacing={SIZES.spacing.md}>
                     {formik.values.service_posts
                       .filter(post => !post._destroy) // Фильтруем посты помеченные для удаления
                       .map((post, index) => {
@@ -1097,12 +1178,21 @@ const ServicePointFormPage: React.FC = () => {
                         const originalIndex = formik.values.service_posts.findIndex(p => p.id === post.id);
                         return (
                           <Grid item xs={12} md={6} key={post.id}>
-                            <Card sx={{ p: 2 }}>
+                            <Card sx={{ 
+                              ...cardStyles,
+                              p: SIZES.spacing.md,
+                              borderRadius: SIZES.borderRadius.sm
+                            }}>
                               <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                  <Typography variant="h6">
+                                <Box sx={{ 
+                                  display: 'flex', 
+                                  justifyContent: 'space-between', 
+                                  alignItems: 'center', 
+                                  mb: SIZES.spacing.md 
+                                }}>
+                                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
                                     Пост {post.post_number}
-                </Typography>
+                                  </Typography>
                                   <IconButton
                                     color="error"
                                     onClick={() => removePost(originalIndex)}
@@ -1123,6 +1213,12 @@ const ServicePointFormPage: React.FC = () => {
                                     formik.setFieldValue('service_posts', updatedPosts);
                                   }}
                                   margin="normal"
+                                  sx={{
+                                    ...textFieldStyles,
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: SIZES.borderRadius.sm
+                                    }
+                                  }}
                                 />
                                 
                                 <TextField
@@ -1137,6 +1233,12 @@ const ServicePointFormPage: React.FC = () => {
                                   multiline
                                   rows={2}
                                   margin="normal"
+                                  sx={{
+                                    ...textFieldStyles,
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: SIZES.borderRadius.sm
+                                    }
+                                  }}
                                 />
                                 
                                 <TextField
@@ -1154,6 +1256,12 @@ const ServicePointFormPage: React.FC = () => {
                                     endAdornment: <InputAdornment position="end">мин</InputAdornment>
                                   }}
                                   margin="normal"
+                                  sx={{
+                                    ...textFieldStyles,
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: SIZES.borderRadius.sm
+                                    }
+                                  }}
                                 />
                                 
                                 <FormControlLabel
@@ -1168,11 +1276,20 @@ const ServicePointFormPage: React.FC = () => {
                                     />
                                   }
                                   label="Пост активен"
-                                  sx={{ mt: 1 }}
+                                  sx={{ 
+                                    mt: SIZES.spacing.xs,
+                                    fontSize: SIZES.fontSize.md
+                                  }}
                                 />
 
                                 {/* Настройки индивидуального расписания */}
-                                <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1, backgroundColor: 'grey.50' }}>
+                                <Box sx={{ 
+                                  mt: SIZES.spacing.md, 
+                                  p: SIZES.spacing.md, 
+                                  border: '1px solid #e0e0e0', 
+                                  borderRadius: SIZES.borderRadius.sm, 
+                                  backgroundColor: 'grey.50' 
+                                }}>
                                   <FormControlLabel
                                     control={
                                       <Switch
@@ -1208,12 +1325,12 @@ const ServicePointFormPage: React.FC = () => {
                                   />
                                   
                                   {post.has_custom_schedule && (
-                                    <Box sx={{ mt: 2 }}>
-                                      <Typography variant="subtitle2" gutterBottom>
+                                    <Box sx={{ mt: SIZES.spacing.md }}>
+                                      <Typography variant="subtitle2" gutterBottom sx={{ fontSize: SIZES.fontSize.md }}>
                                         Рабочие дни:
                                       </Typography>
                                       
-                                      <Grid container spacing={1} sx={{ mb: 2 }}>
+                                      <Grid container spacing={SIZES.spacing.xs} sx={{ mb: SIZES.spacing.md }}>
                                         {Object.entries({
                                           monday: 'Пн',
                                           tuesday: 'Вт', 
@@ -1255,9 +1372,9 @@ const ServicePointFormPage: React.FC = () => {
                                             />
                                           </Grid>
                                         ))}
-              </Grid>
+                                      </Grid>
 
-                                      <Grid container spacing={2}>
+                                      <Grid container spacing={SIZES.spacing.md}>
                                         <Grid item xs={6}>
                                           <TextField
                                             fullWidth
@@ -1278,6 +1395,12 @@ const ServicePointFormPage: React.FC = () => {
                                             }}
                                             size="small"
                                             InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                              ...textFieldStyles,
+                                              '& .MuiOutlinedInput-root': {
+                                                borderRadius: SIZES.borderRadius.sm
+                                              }
+                                            }}
                                           />
                                         </Grid>
                                         <Grid item xs={6}>
@@ -1300,6 +1423,12 @@ const ServicePointFormPage: React.FC = () => {
                                             }}
                                             size="small"
                                             InputLabelProps={{ shrink: true }}
+                                            sx={{
+                                              ...textFieldStyles,
+                                              '& .MuiOutlinedInput-root': {
+                                                borderRadius: SIZES.borderRadius.sm
+                                              }
+                                            }}
                                           />
                                         </Grid>
                                       </Grid>
@@ -1323,21 +1452,39 @@ const ServicePointFormPage: React.FC = () => {
               </AccordionDetails>
             </Accordion>
 
-            {/* Услуги и цены */}
+            {/* Услуги и цены - управление доступными услугами и их стоимостью */}
             <Accordion 
               expanded={expandedAccordions.services} 
               onChange={handleAccordionChange('services')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="services-content"
                 id="services-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  width: '100%' 
+                }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <PriceIcon sx={{ mr: 1, color: 'primary.main' }} />
-                    <Typography variant="h6">Услуги и цены</Typography>
+                    <PriceIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                    <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                      Услуги и цены
+                    </Typography>
                     <CompletionIndicator isComplete={isServicesComplete()} />
                   </Box>
                   <Button
@@ -1370,15 +1517,19 @@ const ServicePointFormPage: React.FC = () => {
                       ]);
                     }}
                     size="small"
-                    sx={{ mr: 2 }}
+                    sx={{ 
+                      ...secondaryButtonStyles,
+                      mr: SIZES.spacing.md,
+                      borderRadius: SIZES.borderRadius.sm
+                    }}
                   >
                     Добавить услугу
                   </Button>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
                 {formik.values.services && formik.values.services.filter(service => !service._destroy).length > 0 ? (
-                  <Grid container spacing={3}>
+                  <Grid container spacing={SIZES.spacing.md}>
                     {formik.values.services
                       .filter(service => !service._destroy) // Фильтруем услуги помеченные для удаления
                       .map((service, filteredIndex) => {
@@ -1388,103 +1539,133 @@ const ServicePointFormPage: React.FC = () => {
                         );
                         return (
                           <Grid item xs={12} md={6} key={service.id}>
-                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                        <FormControl fullWidth error={Boolean(
-                                    formik.touched.services?.[originalIndex]?.service_id && 
-                                    typeof formik.errors.services?.[originalIndex] === 'object' &&
-                                    (formik.errors.services[originalIndex] as ServiceFormErrors)?.service_id
-                        )}>
-                          <InputLabel>Услуга</InputLabel>
-                          <Select
-                            value={service.service_id ? String(service.service_id) : '0'}
-                            onChange={(e) => {
+                            <Box sx={{ 
+                              ...cardStyles,
+                              p: SIZES.spacing.md, 
+                              border: '1px solid #e0e0e0', 
+                              borderRadius: SIZES.borderRadius.sm 
+                            }}>
+                              <Grid container spacing={SIZES.spacing.md}>
+                                <Grid item xs={12}>
+                                  <FormControl 
+                                    fullWidth 
+                                    error={Boolean(
+                                      formik.touched.services?.[originalIndex]?.service_id && 
+                                      typeof formik.errors.services?.[originalIndex] === 'object' &&
+                                      (formik.errors.services[originalIndex] as ServiceFormErrors)?.service_id
+                                    )}
+                                    sx={{
+                                      ...textFieldStyles,
+                                      '& .MuiOutlinedInput-root': {
+                                        borderRadius: SIZES.borderRadius.sm
+                                      }
+                                    }}
+                                  >
+                                    <InputLabel>Услуга</InputLabel>
+                                    <Select
+                                      value={service.service_id ? String(service.service_id) : '0'}
+                                      onChange={(e) => {
                                         const selectedServiceId = Number(e.target.value);
                                         const selectedService = servicesData?.find((s: Service) => s.id === selectedServiceId);
-                              if (selectedService) {
+                                        if (selectedService) {
                                           formik.setFieldValue(`services.${originalIndex}`, {
-                                  ...service,
+                                            ...service,
                                             service_id: selectedServiceId,
-                                  duration: selectedService.default_duration || service.duration,
+                                            duration: selectedService.default_duration || service.duration,
                                             price: service.price,
-                                });
-                              }
-                            }}
-                            label="Услуга"
-                          >
-                            <MenuItem value="0" disabled>Выберите услугу</MenuItem>
+                                          });
+                                        }
+                                      }}
+                                      label="Услуга"
+                                    >
+                                      <MenuItem value="0" disabled>Выберите услугу</MenuItem>
                                       {getAvailableServices(filteredIndex).map((serviceItem: any) => (
                                         <MenuItem 
                                           key={serviceItem.id} 
                                           value={String(serviceItem.id)}
                                           disabled={serviceItem.isDisabled}
                                         >
-                                {serviceItem.name} ({serviceItem.category?.name || 'Без категории'})
+                                          {serviceItem.name} ({serviceItem.category?.name || 'Без категории'})
                                           {serviceItem.isDisabled && ' (уже выбрана)'}
-                              </MenuItem>
-                            ))}
-                          </Select>
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
                                     {formik.touched.services?.[originalIndex]?.service_id && 
                                      typeof formik.errors.services?.[originalIndex] === 'object' &&
                                      (formik.errors.services[originalIndex] as ServiceFormErrors)?.service_id && (
-                            <FormHelperText>
+                                      <FormHelperText>
                                         {(formik.errors.services[originalIndex] as ServiceFormErrors).service_id}
-                            </FormHelperText>
-                          )}
-                        </FormControl>
-                      </Grid>
+                                      </FormHelperText>
+                                    )}
+                                  </FormControl>
+                                </Grid>
 
-                      <Grid item xs={6}>
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Цена"
-                          value={service.price}
-                          onChange={(e) => {
+                                <Grid item xs={6}>
+                                  <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Цена"
+                                    value={service.price}
+                                    onChange={(e) => {
                                       formik.setFieldValue(`services.${originalIndex}.price`, Number(e.target.value));
-                          }}
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">₽</InputAdornment>,
-                            inputProps: { min: 0 }
-                          }}
-                        />
-                      </Grid>
+                                    }}
+                                    InputProps={{
+                                      endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+                                      inputProps: { min: 0 }
+                                    }}
+                                    sx={{
+                                      ...textFieldStyles,
+                                      '& .MuiOutlinedInput-root': {
+                                        borderRadius: SIZES.borderRadius.sm
+                                      }
+                                    }}
+                                  />
+                                </Grid>
 
-                      <Grid item xs={6}>
-                        <TextField
-                          fullWidth
-                          type="number"
-                          label="Длительность"
-                          value={service.duration}
-                          onChange={(e) => {
+                                <Grid item xs={6}>
+                                  <TextField
+                                    fullWidth
+                                    type="number"
+                                    label="Длительность"
+                                    value={service.duration}
+                                    onChange={(e) => {
                                       formik.setFieldValue(`services.${originalIndex}.duration`, Number(e.target.value));
-                          }}
-                          InputProps={{
-                            endAdornment: <InputAdornment position="end">мин</InputAdornment>,
-                            inputProps: { min: 5 }
-                          }}
-                        />
-                      </Grid>
+                                    }}
+                                    InputProps={{
+                                      endAdornment: <InputAdornment position="end">мин</InputAdornment>,
+                                      inputProps: { min: 5 }
+                                    }}
+                                    sx={{
+                                      ...textFieldStyles,
+                                      '& .MuiOutlinedInput-root': {
+                                        borderRadius: SIZES.borderRadius.sm
+                                      }
+                                    }}
+                                  />
+                                </Grid>
 
-                      <Grid item xs={12}>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={service.is_available}
-                                onChange={(e) => {
+                                <Grid item xs={12}>
+                                  <Box sx={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'space-between', 
+                                    alignItems: 'center' 
+                                  }}>
+                                    <FormControlLabel
+                                      control={
+                                        <Switch
+                                          checked={service.is_available}
+                                          onChange={(e) => {
                                             formik.setFieldValue(`services.${originalIndex}.is_available`, e.target.checked);
-                                }}
+                                          }}
                                           name={`services.${originalIndex}.is_available`}
-                              />
-                            }
-                            label="Услуга доступна"
-                          />
-                        <Button
-                          color="error"
-                          onClick={() => {
-                            const newServices = [...(formik.values.services || [])];
+                                        />
+                                      }
+                                      label="Услуга доступна"
+                                    />
+                                    <Button
+                                      color="error"
+                                      onClick={() => {
+                                        const newServices = [...(formik.values.services || [])];
                                         const serviceToRemove = newServices[originalIndex];
                                         
                                         // Если услуга имеет реальный ID (существует в БД), помечаем для удаления
@@ -1495,20 +1676,24 @@ const ServicePointFormPage: React.FC = () => {
                                           newServices.splice(originalIndex, 1);
                                         }
                                         
-                            formik.setFieldValue('services', newServices);
-                          }}
+                                        formik.setFieldValue('services', newServices);
+                                      }}
                                       size="small"
-                        >
+                                      sx={{
+                                        ...secondaryButtonStyles,
+                                        borderRadius: SIZES.borderRadius.sm
+                                      }}
+                                    >
                                       Удалить
-                        </Button>
+                                    </Button>
                                   </Box>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Grid>
+                                </Grid>
+                              </Grid>
+                            </Box>
+                          </Grid>
                         );
                       })}
-              </Grid>
+                  </Grid>
                 ) : (
                   <Alert severity="info">
                     Нажмите "Добавить услугу" для создания первой услуги.
@@ -1517,94 +1702,127 @@ const ServicePointFormPage: React.FC = () => {
               </AccordionDetails>
             </Accordion>
 
-            {/* Фотографии */}
+            {/* Фотографии - управление галереей изображений точки обслуживания */}
             <Accordion 
               expanded={expandedAccordions.photos} 
               onChange={handleAccordionChange('photos')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="photos-content"
                 id="photos-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PhotoIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6">Фотографии</Typography>
+                  <PhotoIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                    Фотографии
+                  </Typography>
                   <CompletionIndicator isComplete={isPhotosComplete()} />
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
-                <Box sx={{ mb: 2 }}>
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="photo-upload"
-                  multiple
-                  type="file"
-                  onChange={handlePhotoUpload}
-                />
-                <label htmlFor="photo-upload">
-                  <Button
-                    variant="outlined"
-                    component="span"
-                    startIcon={<AddPhotoIcon />}
-                    disabled={photoUploads.length >= 10}
-                  >
-                    Добавить фотографии
-                  </Button>
-                </label>
-                {photoUploads.length >= 10 && (
-                  <FormHelperText error>
-                    Достигнуто максимальное количество фотографий (10)
-                  </FormHelperText>
-                )}
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
+                <Box sx={{ mb: SIZES.spacing.md }}>
+                  <Box
+                    component="input"
+                    sx={{ display: 'none' }}
+                    accept="image/*"
+                    id="photo-upload"
+                    multiple
+                    type="file"
+                    onChange={handlePhotoUpload}
+                  />
+                  <label htmlFor="photo-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<AddPhotoIcon />}
+                      disabled={photoUploads.length >= 10}
+                      sx={{ 
+                        ...secondaryButtonStyles,
+                        borderRadius: SIZES.borderRadius.sm
+                      }}
+                    >
+                      Добавить фотографии
+                    </Button>
+                  </label>
+                  {photoUploads.length >= 10 && (
+                    <FormHelperText error>
+                      Достигнуто максимальное количество фотографий (10)
+                    </FormHelperText>
+                  )}
                 </Box>
 
                 {photoUploads.length > 0 ? (
-                <Grid container spacing={2}>
-                  {photoUploads.map((photo, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <Card>
-                        <CardContent>
-                          <img
-                            src={photo.preview}
-                            alt={`Фото ${index + 1}`}
-                            style={{ width: '100%', height: 200, objectFit: 'cover' }}
-                          />
-                        <TextField
-                          fullWidth
-                            margin="normal"
-                          label="Описание"
-                          value={photo.description || ''}
-                          onChange={(e) => {
-                              const newPhotos = [...photoUploads];
-                              newPhotos[index].description = e.target.value;
-                              setPhotoUploads(newPhotos);
-                            }}
-                          />
-                        </CardContent>
-                        <CardActions>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={photo.is_main}
-                                onChange={() => handleSetMainPhoto(index)}
-                              />
-                            }
-                            label="Главное фото"
-                          />
-                          <IconButton
-                            color="error"
-                            onClick={() => handlePhotoDelete(index)}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
+                  <Grid container spacing={SIZES.spacing.md}>
+                    {photoUploads.map((photo, index) => (
+                      <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Card sx={{ 
+                          ...cardStyles,
+                          borderRadius: SIZES.borderRadius.sm 
+                        }}>
+                          <CardContent>
+                            <Box
+                              component="img"
+                              src={photo.preview}
+                              alt={`Фото ${index + 1}`}
+                              sx={{
+                                width: '100%',
+                                height: 200,
+                                objectFit: 'cover',
+                                borderRadius: SIZES.borderRadius.sm
+                              }}
+                            />
+                            <TextField
+                              fullWidth
+                              margin="normal"
+                              label="Описание"
+                              value={photo.description || ''}
+                              onChange={(e) => {
+                                const newPhotos = [...photoUploads];
+                                newPhotos[index].description = e.target.value;
+                                setPhotoUploads(newPhotos);
+                              }}
+                              sx={{
+                                ...textFieldStyles,
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: SIZES.borderRadius.sm
+                                }
+                              }}
+                            />
+                          </CardContent>
+                          <CardActions>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={photo.is_main}
+                                  onChange={() => handleSetMainPhoto(index)}
+                                />
+                              }
+                              label="Главное фото"
+                            />
+                            <IconButton
+                              color="error"
+                              onClick={() => handlePhotoDelete(index)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </CardActions>
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
                 ) : (
                   <Alert severity="info">
                     Загрузите фотографии сервисной точки для лучшего представления.
@@ -1613,124 +1831,169 @@ const ServicePointFormPage: React.FC = () => {
               </AccordionDetails>
             </Accordion>
 
-            {/* График работы */}
+            {/* График работы - настройка расписания работы по дням недели */}
             <Accordion 
               expanded={expandedAccordions.schedule} 
               onChange={handleAccordionChange('schedule')}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: SIZES.spacing.md,
+                borderRadius: SIZES.borderRadius.sm,
+                '&:before': { display: 'none' }
+              }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="schedule-content"
                 id="schedule-header"
+                sx={{ 
+                  py: SIZES.spacing.xs,
+                  px: SIZES.spacing.lg,
+                  '& .MuiAccordionSummary-content': {
+                    my: SIZES.spacing.xs
+                  }
+                }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
-                  <Typography variant="h6">График работы</Typography>
+                  <ScheduleIcon sx={{ mr: SIZES.spacing.xs, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                    График работы
+                  </Typography>
                   <CompletionIndicator isComplete={isScheduleComplete()} />
                 </Box>
               </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={3}>
-              {DAYS_OF_WEEK.map((day: DayOfWeek) => (
-                <Grid item xs={12} md={6} key={day.id}>
-                  <Box sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                    <Typography variant="subtitle1" gutterBottom>
-                      {day.name}
-                    </Typography>
-                    
-                    <Grid container spacing={2}>
-                      <Grid item xs={12}>
-                          <FormControlLabel
-                            control={
-                              <Switch
-                              checked={formik.values.working_hours[day.key]?.is_working_day ?? false}
-                                onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}`, {
-                                  ...formik.values.working_hours[day.key],
-                                  is_working_day: e.target.checked
-                                } as WorkingHours);
-                              }}
-                              name={`working_hours.${day.key}.is_working_day`}
-                            />
-                          }
-                          label="Рабочий день"
-                        />
-                      </Grid>
-
-                      {formik.values.working_hours[day.key]?.is_working_day && (
-                        <>
-                          <Grid item xs={6}>
-                            <TextField
-                              fullWidth
-                              type="time"
-                              label="Начало работы"
-                              value={formik.values.working_hours[day.key]?.start ?? '09:00'}
-                              onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}`, {
-                                  ...formik.values.working_hours[day.key],
-                                  start: e.target.value
-                                } as WorkingHours);
-                              }}
-                              InputLabelProps={{ shrink: true }}
-                              error={Boolean(
-                                formik.touched.working_hours?.[day.key]?.start && 
-                                formik.errors.working_hours?.[day.key]?.start
-                              )}
-                              helperText={
-                                formik.touched.working_hours?.[day.key]?.start && 
-                                formik.errors.working_hours?.[day.key]?.start
+              <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
+                <Grid container spacing={SIZES.spacing.md}>
+                  {DAYS_OF_WEEK.map((day: DayOfWeek) => (
+                    <Grid item xs={12} md={6} key={day.id}>
+                      <Box sx={{ 
+                        ...cardStyles,
+                        p: SIZES.spacing.md, 
+                        border: '1px solid #e0e0e0', 
+                        borderRadius: SIZES.borderRadius.sm 
+                      }}>
+                        <Typography variant="subtitle1" gutterBottom sx={{ fontSize: SIZES.fontSize.lg }}>
+                          {day.name}
+                        </Typography>
+                        
+                        <Grid container spacing={SIZES.spacing.md}>
+                          <Grid item xs={12}>
+                            <FormControlLabel
+                              control={
+                                <Switch
+                                  checked={formik.values.working_hours[day.key]?.is_working_day ?? false}
+                                  onChange={(e) => {
+                                    formik.setFieldValue(`working_hours.${day.key}`, {
+                                      ...formik.values.working_hours[day.key],
+                                      is_working_day: e.target.checked
+                                    } as WorkingHours);
+                                  }}
+                                  name={`working_hours.${day.key}.is_working_day`}
+                                />
                               }
-                            />
-                      </Grid>
-                          <Grid item xs={6}>
-                            <TextField
-                              fullWidth
-                              type="time"
-                              label="Конец работы"
-                              value={formik.values.working_hours[day.key]?.end ?? '18:00'}
-                              onChange={(e) => {
-                                formik.setFieldValue(`working_hours.${day.key}`, {
-                                  ...formik.values.working_hours[day.key],
-                                  end: e.target.value
-                                } as WorkingHours);
-                              }}
-                              InputLabelProps={{ shrink: true }}
-                              error={Boolean(
-                                formik.touched.working_hours?.[day.key]?.end && 
-                                formik.errors.working_hours?.[day.key]?.end
-                              )}
-                              helperText={
-                                formik.touched.working_hours?.[day.key]?.end && 
-                                formik.errors.working_hours?.[day.key]?.end
-                              }
+                              label="Рабочий день"
                             />
                           </Grid>
-                        </>
-                      )}
+
+                          {formik.values.working_hours[day.key]?.is_working_day && (
+                            <>
+                              <Grid item xs={6}>
+                                <TextField
+                                  fullWidth
+                                  type="time"
+                                  label="Начало работы"
+                                  value={formik.values.working_hours[day.key]?.start ?? '09:00'}
+                                  onChange={(e) => {
+                                    formik.setFieldValue(`working_hours.${day.key}`, {
+                                      ...formik.values.working_hours[day.key],
+                                      start: e.target.value
+                                    } as WorkingHours);
+                                  }}
+                                  InputLabelProps={{ shrink: true }}
+                                  error={Boolean(
+                                    formik.touched.working_hours?.[day.key]?.start && 
+                                    formik.errors.working_hours?.[day.key]?.start
+                                  )}
+                                  helperText={
+                                    formik.touched.working_hours?.[day.key]?.start && 
+                                    formik.errors.working_hours?.[day.key]?.start
+                                  }
+                                  sx={{
+                                    ...textFieldStyles,
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: SIZES.borderRadius.sm
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                              <Grid item xs={6}>
+                                <TextField
+                                  fullWidth
+                                  type="time"
+                                  label="Конец работы"
+                                  value={formik.values.working_hours[day.key]?.end ?? '18:00'}
+                                  onChange={(e) => {
+                                    formik.setFieldValue(`working_hours.${day.key}`, {
+                                      ...formik.values.working_hours[day.key],
+                                      end: e.target.value
+                                    } as WorkingHours);
+                                  }}
+                                  InputLabelProps={{ shrink: true }}
+                                  error={Boolean(
+                                    formik.touched.working_hours?.[day.key]?.end && 
+                                    formik.errors.working_hours?.[day.key]?.end
+                                  )}
+                                  helperText={
+                                    formik.touched.working_hours?.[day.key]?.end && 
+                                    formik.errors.working_hours?.[day.key]?.end
+                                  }
+                                  sx={{
+                                    ...textFieldStyles,
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: SIZES.borderRadius.sm
+                                    }
+                                  }}
+                                />
+                              </Grid>
+                            </>
+                          )}
+                        </Grid>
+                      </Box>
                     </Grid>
-                  </Box>
-                </Grid>
-              ))}
+                  ))}
                 </Grid>
               </AccordionDetails>
             </Accordion>
 
-            {/* Кнопки управления формой */}
-            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-                  <Button onClick={handleBack}>
-                    Отмена
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    startIcon={<SaveIcon />}
-                    disabled={formik.isSubmitting || !formik.isValid}
-                  >
-                    {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
-                  </Button>
-                </Box>
+            {/* Кнопки управления формой - применение централизованных стилей для кнопок */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: SIZES.spacing.md, 
+              justifyContent: 'flex-end', 
+              mt: SIZES.spacing.xl 
+            }}>
+              <Button 
+                onClick={handleBack}
+                sx={{
+                  ...secondaryButtonStyles,
+                  borderRadius: SIZES.borderRadius.sm
+                }}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                startIcon={<SaveIcon />}
+                disabled={formik.isSubmitting || !formik.isValid}
+                sx={{
+                  ...buttonStyles,
+                  borderRadius: SIZES.borderRadius.sm
+                }}
+              >
+                {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
+              </Button>
+            </Box>
 
             {/* Отображение ошибок валидации */}
               {Object.keys(formik.errors).length > 0 && (
@@ -1795,4 +2058,4 @@ const ServicePointFormPage: React.FC = () => {
   );
 };
 
-export default ServicePointFormPage; 
+export default ServicePointFormPage;

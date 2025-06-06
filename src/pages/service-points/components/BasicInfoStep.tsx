@@ -9,9 +9,11 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
 import { useGetPartnersQuery } from '../../../api/partners.api';
+import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Partner, ServicePoint } from '../../../types/models';
 
 interface BasicInfoStepProps {
@@ -23,14 +25,26 @@ interface BasicInfoStepProps {
 const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
   const partnersData = partners?.data || [];
+  const theme = useTheme();
+  const formStyles = getFormStyles(theme);
+  const textFieldStyles = getTextFieldStyles(theme);
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+    <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom 
+        sx={{ 
+          mb: SIZES.spacing.lg,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+        }}
+      >
         Основная информация
       </Typography>
       
-      <Grid container spacing={3}>
+      <Grid container spacing={SIZES.spacing.lg}>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -43,6 +57,12 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             error={formik.touched.name && Boolean(formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}
             required
+            sx={{
+              ...textFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           />
         </Grid>
 
@@ -51,6 +71,12 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             fullWidth 
             error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}
             required
+            sx={{
+              ...formStyles.field,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           >
             <InputLabel id="partner-id-label">Партнер</InputLabel>
             <Select
@@ -94,6 +120,12 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             error={formik.touched.description && Boolean(formik.errors.description)}
             helperText={formik.touched.description && formik.errors.description}
             placeholder="Введите описание сервисной точки"
+            sx={{
+              ...textFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           />
         </Grid>
       </Grid>

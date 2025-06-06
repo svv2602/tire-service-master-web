@@ -17,6 +17,7 @@ import {
   ListItemText,
   ListItemIcon,
   Chip,
+  useTheme,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -30,6 +31,14 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
+import {
+  SIZES,
+  getCardStyles,
+  getButtonStyles,
+  getTextFieldStyles,
+  getChipStyles,
+  getFormStyles,
+} from '../../styles';
 
 // Интерфейс для данных формы
 interface UserFormData {
@@ -49,14 +58,14 @@ const ProfilePage: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changePassword, setChangePassword] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   
   // Вывод данных пользователя в консоль для отладки
   useEffect(() => {
-    console.log('=== Данные пользователя в ProfilePage ===');
-    console.log('user:', user);
-    console.log('JSON.stringify(user):', JSON.stringify(user, null, 2));
-    console.log('Данные формы:', formData);
+    if (user) {
+      console.log('=== Данные пользователя в ProfilePage ===');
+      console.log('user:', user);
+      console.log('JSON.stringify(user):', JSON.stringify(user, null, 2));
+    }
   }, [user]);
 
   // Инициализация данных формы
@@ -65,7 +74,7 @@ const ProfilePage: React.FC = () => {
     lastName: user?.last_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    position: getRoleLabel(user?.role),
+    position: user ? getRoleLabel(user.role) : 'Користувач',
     oldPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -76,25 +85,16 @@ const ProfilePage: React.FC = () => {
     if (user) {
       setFormData(prevData => ({
         ...prevData,
-        first_name: user.first_name,
-        last_name: user.last_name,
+        firstName: user.first_name,
+        lastName: user.last_name,
         email: user.email,
         phone: user.phone || '',
+        position: getRoleLabel(user.role),
       }));
     }
   }, [user]);
 
-  useEffect(() => {
-    if (isEditing && user) {
-      setFormData(prevData => ({
-        ...prevData,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-        phone: user.phone || '',
-      }));
-    }
-  }, [isEditing, user]);
+
 
   // Получение инициалов для аватара
   const getInitials = () => {
@@ -204,29 +204,60 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  // Инициализация темы и стилей
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
+  const formCardStyles = getCardStyles(theme, 'secondary');
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme);
+  const chipStyles = getChipStyles(theme);
+  const formStyles = getFormStyles(theme);
+
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ mb: SIZES.spacing.lg }}>
         Профіль користувача
       </Typography>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 3fr' }, gap: 3 }}>
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', md: '1fr 3fr' }, 
+        gap: SIZES.spacing.lg 
+      }}>
         {/* Карточка с информацией о профиле */}
         <Box>
-          <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 3 }}>
+          <Card sx={{ 
+            mb: SIZES.spacing.lg, 
+            ...cardStyles,
+          }}>
+            <CardContent sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              pt: SIZES.spacing.lg 
+            }}>
               {/* Аватар пользователя */}
               <Avatar 
-                sx={{ width: 100, height: 100, mb: 2, bgcolor: 'primary.main', fontSize: '2rem' }}
+                sx={{ 
+                  width: 100, 
+                  height: 100, 
+                  mb: SIZES.spacing.md, 
+                  bgcolor: theme.palette.primary.main, 
+                  fontSize: SIZES.fontSize.xl 
+                }}
               >
                 {getInitials()}
               </Avatar>
               
-              <Typography variant="h6">
+              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
                 {user?.first_name} {user?.last_name}
               </Typography>
               
-              <Typography color="textSecondary" gutterBottom>
+              <Typography 
+                color="textSecondary" 
+                gutterBottom 
+                sx={{ mb: SIZES.spacing.xs }}
+              >
                 {formData.position}
               </Typography>
               
@@ -234,49 +265,94 @@ const ProfilePage: React.FC = () => {
                 icon={<RoleIcon />} 
                 label={getRoleLabel(user?.role)}
                 color={getRoleColor(user?.role) as 'default' | 'primary' | 'success' | 'error'} 
-                sx={{ mt: 1 }}
+                sx={{ 
+                  mt: SIZES.spacing.xs,
+                  ...chipStyles
+                }}
               />
               
-              <Divider sx={{ width: '100%', my: 2 }} />
+              <Divider sx={{ width: '100%', my: SIZES.spacing.md }} />
               
               <List sx={{ width: '100%' }}>
-                <ListItem>
+                <ListItem sx={{ 
+                  py: SIZES.spacing.sm,
+                  '&:hover': { 
+                    bgcolor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: SIZES.borderRadius.sm
+                  }
+                }}>
                   <ListItemIcon>
-                    <EmailIcon />
+                    <EmailIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Email" 
-                    secondary={user?.email} 
+                    primary={<Typography variant="body2" color="textSecondary">Email</Typography>}
+                    secondary={<Typography variant="body1">{user?.email}</Typography>}
                   />
                 </ListItem>
                 
-                <ListItem>
+                <ListItem sx={{ 
+                  py: SIZES.spacing.sm,
+                  '&:hover': { 
+                    bgcolor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: SIZES.borderRadius.sm
+                  }
+                }}>
                   <ListItemIcon>
-                    <PhoneIcon />
+                    <PhoneIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Телефон" 
-                    secondary={user?.phone} 
+                    primary={<Typography variant="body2" color="textSecondary">Телефон</Typography>}
+                    secondary={<Typography variant="body1">{user?.phone}</Typography>}
                   />
                 </ListItem>
                 
-                <ListItem>
+                <ListItem sx={{ 
+                  py: SIZES.spacing.sm,
+                  '&:hover': { 
+                    bgcolor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: SIZES.borderRadius.sm
+                  }
+                }}>
                   <ListItemIcon>
-                    <BusinessIcon />
+                    <BusinessIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Організація" 
-                    secondary="Твоя шина" 
+                    primary={<Typography variant="body2" color="textSecondary">Організація</Typography>}
+                    secondary={<Typography variant="body1">Твоя шина</Typography>}
                   />
                 </ListItem>
                 
-                <ListItem>
+                <ListItem sx={{ 
+                  py: SIZES.spacing.sm,
+                  '&:hover': { 
+                    bgcolor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: SIZES.borderRadius.sm
+                  }
+                }}>
                   <ListItemIcon>
-                    <CalendarIcon />
+                    <CalendarIcon color="primary" />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Статус користувача" 
-                    secondary={user?.is_active ? 'Активний' : 'Неактивний'} 
+                    primary={<Typography variant="body2" color="textSecondary">Статус користувача</Typography>}
+                    secondary={
+                      <Chip 
+                        size="small"
+                        label={user?.is_active ? 'Активний' : 'Неактивний'} 
+                        color={user?.is_active ? 'success' : 'error'}
+                        sx={{
+                          mt: SIZES.spacing.xs,
+                          height: 24
+                        }}
+                      />
+                    }
                   />
                 </ListItem>
               </List>
@@ -286,19 +362,41 @@ const ProfilePage: React.FC = () => {
 
         {/* Форма редактирования профиля */}
         <Box>
-          <Paper sx={{ p: 3 }}>
+          <Paper sx={{ 
+            p: SIZES.spacing.lg,
+            ...formCardStyles,
+            borderRadius: SIZES.borderRadius.md
+          }}>
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: SIZES.spacing.lg,
+                  borderRadius: SIZES.borderRadius.sm 
+                }}
+              >
                 {error}
               </Alert>
             )}
             
-            <Typography variant="h6" gutterBottom>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ fontWeight: 'medium', mb: SIZES.spacing.sm }}
+            >
               Редагування профілю
             </Typography>
-            <Divider sx={{ mb: 3 }} />
+            <Divider sx={{ mb: SIZES.spacing.lg }} />
             
-            <Box component="form" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+            <Box 
+              component="form" 
+              sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+                gap: SIZES.spacing.md,
+                ...formStyles
+              }}
+            >
               <Box>
                 <TextField
                   fullWidth
@@ -306,6 +404,7 @@ const ProfilePage: React.FC = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
+                  sx={textFieldStyles}
                 />
               </Box>
               
@@ -316,6 +415,7 @@ const ProfilePage: React.FC = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
+                  sx={textFieldStyles}
                 />
               </Box>
               
@@ -326,6 +426,7 @@ const ProfilePage: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  sx={textFieldStyles}
                 />
               </Box>
               
@@ -336,6 +437,7 @@ const ProfilePage: React.FC = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
+                  sx={textFieldStyles}
                 />
               </Box>
               
@@ -346,15 +448,20 @@ const ProfilePage: React.FC = () => {
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
+                  sx={textFieldStyles}
                 />
               </Box>
               
               <Box sx={{ gridColumn: '1 / -1' }}>
-                <Divider sx={{ my: 1 }} />
+                <Divider sx={{ my: SIZES.spacing.md }} />
                 <Button 
                   startIcon={<LockIcon />} 
                   onClick={toggleChangePassword}
                   color="primary"
+                  sx={{
+                    ...getButtonStyles(theme, 'secondary'),
+                    mb: changePassword ? SIZES.spacing.md : 0
+                  }}
                 >
                   {changePassword ? 'Скасувати зміну пароля' : 'Змінити пароль'}
                 </Button>
@@ -370,6 +477,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={formData.oldPassword}
                       onChange={handleInputChange}
+                      sx={textFieldStyles}
                     />
                   </Box>
                   
@@ -381,6 +489,7 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={formData.newPassword}
                       onChange={handleInputChange}
+                      sx={textFieldStyles}
                     />
                   </Box>
                   
@@ -392,19 +501,21 @@ const ProfilePage: React.FC = () => {
                       type="password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
+                      sx={textFieldStyles}
                     />
                   </Box>
                 </>
               )}
               
               <Box sx={{ gridColumn: '1 / -1' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: SIZES.spacing.md }}>
                   <Button
                     variant="contained"
                     color="primary"
                     startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                     onClick={handleSaveProfile}
                     disabled={loading}
+                    sx={primaryButtonStyles}
                   >
                     Зберегти зміни
                   </Button>
@@ -422,7 +533,14 @@ const ProfilePage: React.FC = () => {
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity="success" 
+          sx={{ 
+            width: '100%',
+            borderRadius: SIZES.borderRadius.sm 
+          }}
+        >
           Дані профілю успішно оновлено!
         </Alert>
       </Snackbar>
@@ -430,4 +548,4 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;

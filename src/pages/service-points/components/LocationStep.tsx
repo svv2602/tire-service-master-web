@@ -9,10 +9,12 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
 import { useGetRegionsQuery } from '../../../api/regions.api';
 import { useGetCitiesQuery } from '../../../api/cities.api';
+import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Region, City, ServicePoint } from '../../../types/models';
 
 interface LocationStepProps {
@@ -23,6 +25,9 @@ interface LocationStepProps {
 
 const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+  const theme = useTheme();
+  const formStyles = getFormStyles(theme);
+  const textFieldStyles = getTextFieldStyles(theme);
 
   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery({});
   
@@ -50,16 +55,31 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+    <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
+      <Typography 
+        variant="h6" 
+        gutterBottom 
+        sx={{ 
+          mb: SIZES.spacing.lg,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+        }}
+      >
         Адрес и местоположение
       </Typography>
       
-      <Grid container spacing={3}>
+      <Grid container spacing={SIZES.spacing.lg}>
         <Grid item xs={12} md={6}>
           <FormControl 
             fullWidth 
             required
+            sx={{
+              ...formStyles.field,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           >
             <InputLabel id="region-id-label">Регион</InputLabel>
             <Select
@@ -92,6 +112,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
             fullWidth 
             error={formik.touched.city_id && Boolean(formik.errors.city_id)}
             required
+            sx={{
+              ...formStyles.field,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           >
             <InputLabel id="city-id-label">Город</InputLabel>
             <Select
@@ -137,6 +163,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
             helperText={formik.touched.address && formik.errors.address}
             placeholder="Введите полный адрес сервисной точки"
             required
+            sx={{
+              ...textFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           />
         </Grid>
 
@@ -159,6 +191,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
                 max: 90
               }
             }}
+            sx={{
+              ...textFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
+            }}
           />
         </Grid>
 
@@ -180,6 +218,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
                 min: -180,
                 max: 180
               }
+            }}
+            sx={{
+              ...textFieldStyles,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: SIZES.borderRadius.sm,
+              },
             }}
           />
         </Grid>

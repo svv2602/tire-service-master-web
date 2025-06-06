@@ -2,9 +2,12 @@
 // Главный компонент для выбора доступности
 
 import React, { useState } from 'react';
+import { Box, Stack, Typography, useTheme, Paper } from '@mui/material';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { DayDetailsPanel } from './DayDetailsPanel';
+import { SIZES } from '../../styles/theme';
+import { getCardStyles } from '../../styles/components';
 
 interface AvailabilitySelectorProps {
   servicePointId: string | number;
@@ -25,6 +28,8 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   showDetails = true,
   className = ''
 }) => {
+  const theme = useTheme();
+  const cardStyles = getCardStyles(theme);
   const [currentDate, setCurrentDate] = useState<Date>(selectedDate || new Date());
   const [currentTime, setCurrentTime] = useState<string | undefined>(selectedTime);
 
@@ -40,21 +45,34 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
+    <Box sx={{ 
+      mb: SIZES.spacing.lg,
+      className
+    }}>
       {/* Календарь для выбора даты */}
-      <div>
+      <Box sx={{ mb: SIZES.spacing.md }}>
         <AvailabilityCalendar
           servicePointId={servicePointId}
           selectedDate={currentDate}
           onDateSelect={handleDateSelect}
           minDate={new Date()}
         />
-      </div>
+      </Box>
 
       {/* Сетка с выбором времени и деталями */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Box 
+        sx={{ 
+          display: 'grid',
+          gridTemplateColumns: { 
+            xs: '1fr',
+            lg: showDetails ? '2fr 1fr' : '1fr' 
+          },
+          gap: SIZES.spacing.md,
+          mb: SIZES.spacing.md
+        }}
+      >
         {/* Выбор временных слотов */}
-        <div className="lg:col-span-2">
+        <Box>
           <TimeSlotPicker
             servicePointId={servicePointId}
             selectedDate={currentDate}
@@ -62,37 +80,62 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             onTimeSelect={handleTimeSelect}
             minDuration={minDuration}
           />
-        </div>
+        </Box>
 
         {/* Панель с деталями дня */}
         {showDetails && (
-          <div className="lg:col-span-1">
+          <Box>
             <DayDetailsPanel
               servicePointId={servicePointId}
               selectedDate={currentDate}
             />
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
       {/* Итоговая информация о выборе */}
       {currentTime && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <Paper 
+          sx={{ 
+            ...cardStyles, 
+            p: SIZES.spacing.md,
+            bgcolor: `${theme.palette.primary.main}10`,
+            borderColor: `${theme.palette.primary.main}30`,
+            borderRadius: SIZES.borderRadius.md,
+          }}
+          variant="outlined"
+        >
+          <Box sx={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: SIZES.spacing.sm 
+          }}>
+            <Box 
+              component="svg" 
+              sx={{ 
+                width: 20,
+                height: 20,
+                color: theme.palette.primary.main
+              }} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <div className="text-blue-800">
-              <span className="font-medium">Выбранное время:</span>{' '}
+            </Box>
+            <Typography sx={{ color: theme.palette.primary.dark }}>
+              <Box component="span" sx={{ fontWeight: 500 }}>
+                Выбранное время:
+              </Box>{' '}
               {currentDate.toLocaleDateString('ru-RU', { 
                 day: 'numeric', 
                 month: 'long', 
                 year: 'numeric' 
               })} в {currentTime}
-            </div>
-          </div>
-        </div>
+            </Typography>
+          </Box>
+        </Paper>
       )}
-    </div>
+    </Box>
   );
 }; 

@@ -19,7 +19,15 @@ import {
   MenuItem,
   ListSubheader,
   Collapse,
+  useTheme,
 } from '@mui/material';
+// Импорт централизованной системы стилей
+import { 
+  SIZES, 
+  getButtonStyles,
+  getNavigationStyles,
+  getFormStyles
+} from '../../styles';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -30,7 +38,6 @@ import {
   ExitToApp as LogoutIcon,
   AccountCircle as AccountIcon,
   DirectionsCar as CarIcon,
-  DirectionsCar,
   Build as ServiceIcon,
   Business as CompanyIcon,
   ExpandLess,
@@ -43,7 +50,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
-import { logout, getCurrentUser, logoutUser } from '../../store/slices/authSlice';
+import { getCurrentUser, logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { User } from '../../types/user';
@@ -64,6 +71,13 @@ interface MenuItemType {
 }
 
 const MainLayout: React.FC = () => {
+  // Хуки для централизованной системы стилей - обеспечивают консистентность дизайна
+  const theme = useTheme();
+  const navigationStyles = getNavigationStyles(theme); // Стили для навигационных элементов
+  const buttonStyles = getButtonStyles(theme); // Централизованные стили кнопок
+  const formStyles = getFormStyles(theme); // Стили для форм и контейнеров
+  
+  // Состояние компонента
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
@@ -400,6 +414,7 @@ const MainLayout: React.FC = () => {
   };
 
   // Разрешенные действия для каждой роли (информационный блок)
+  // Использует централизованные стили для консистентного отображения
   const getRoleCapabilities = () => {
     if (!user || !(user as User).role) return null;
 
@@ -435,7 +450,12 @@ const MainLayout: React.FC = () => {
     }
 
     return (
-      <Box sx={{ p: 2, bgcolor: 'action.selected', borderRadius: 1, mb: 2 }}>
+      <Box sx={{ 
+        ...formStyles.container, // Использование централизованных стилей для контейнера
+        bgcolor: theme.palette.action.selected, 
+        borderRadius: SIZES.borderRadius.md, // Консистентный border radius
+        mb: SIZES.spacing.md // Унифицированные отступы
+      }}>
         <Typography variant="subtitle2" color="text.secondary" gutterBottom>
           Ваша роль: {getRoleName(userRole)}
         </Typography>
@@ -465,27 +485,36 @@ const MainLayout: React.FC = () => {
 
   const drawer = (
     <div>
+      {/* Заголовок боковой панели с использованием централизованных стилей */}
       <Toolbar
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: 2,
-          background: 'linear-gradient(to right, #1976d2, #2196f3)',
-          color: 'white'
+          padding: SIZES.spacing.md, // Консистентные отступы
+          background: theme.palette.primary.main, // Тематический цвет
+          color: theme.palette.primary.contrastText
         }}
       >
-        <Typography variant="h6" noWrap component="div" fontWeight="bold">
+        <Typography 
+          variant="h6" 
+          noWrap 
+          component="div" 
+          sx={{ fontWeight: 'bold', fontSize: SIZES.fontSize.lg }} // Унифицированный размер шрифта
+        >
           Твоя шина
         </Typography>
       </Toolbar>
       <Divider />
       
+      {/* Блок возможностей роли с централизованными стилями */}
       {user && getRoleCapabilities()}
       
-      <List sx={{ padding: 1 }}>
+      {/* Навигационное меню с применением централизованных стилей */}
+      <List sx={{ padding: SIZES.spacing.xs }}> {/* Консистентные отступы */}
         {getFilteredMenuSections().map((section) => (
           <React.Fragment key={section.title}>
+            {/* Заголовок секции с централизованными стилями */}
             <ListSubheader 
               onClick={() => toggleSection(section.title)} 
               sx={{ 
@@ -493,11 +522,12 @@ const MainLayout: React.FC = () => {
                 display: 'flex', 
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: 'rgba(25, 118, 210, 0.08)',
-                color: 'primary.main',
-                borderRadius: 1,
-                margin: '4px 0',
-                fontWeight: 'bold'
+                background: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`, // Тематический фон
+                color: theme.palette.primary.main,
+                borderRadius: SIZES.borderRadius.sm, // Консистентный border radius
+                margin: `${SIZES.spacing.xs}px 0`, // Унифицированные отступы
+                fontWeight: 'bold',
+                fontSize: SIZES.fontSize.sm // Унифицированный размер шрифта
               }}
             >
               <Box component="span">{section.title}</Box>
@@ -515,25 +545,25 @@ const MainLayout: React.FC = () => {
                     <ListItem 
                       key={item.text} 
                       disablePadding
-                      sx={{ 
-                        backgroundColor: isActive ? 'rgba(25, 118, 210, 0.12)' : 'transparent',
-                        borderRadius: 1,
-                        mb: 0.5,
+                      sx={{
+                        ...navigationStyles.listItem,
+                        backgroundColor: isActive ? `rgba(${theme.palette.primary.main.replace('#', '')}, 0.12)` : 'transparent',
+                        mb: SIZES.spacing.xs,
                         '&:hover': {
-                          backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                          backgroundColor: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`
                         }
                       }}
                     >
                       <ListItemButton 
                         onClick={() => handleNavigate(item.path)}
                         sx={{ 
-                          borderRadius: 1,
-                          pl: 2
+                          borderRadius: SIZES.borderRadius.sm,
+                          pl: SIZES.spacing.md
                         }}
                       >
-                        <ListItemIcon sx={{ 
-                          color: isActive ? 'primary.main' : 'inherit',
-                          minWidth: '40px'
+                        <ListItemIcon sx={{
+                          ...navigationStyles.listItemIcon,
+                          color: isActive ? theme.palette.primary.main : 'inherit'
                         }}>
                           {item.icon}
                         </ListItemIcon>
@@ -542,11 +572,11 @@ const MainLayout: React.FC = () => {
                           secondary={item.description} 
                           primaryTypographyProps={{
                             fontWeight: isActive ? 'bold' : 'normal',
-                            fontSize: '0.95rem',
-                            color: isActive ? 'primary.main' : 'inherit'
+                            fontSize: SIZES.fontSize.md,
+                            color: isActive ? theme.palette.primary.main : 'inherit'
                           }}
                           secondaryTypographyProps={{
-                            fontSize: '0.75rem'
+                            fontSize: SIZES.fontSize.sm
                           }}
                         />
                       </ListItemButton>
@@ -555,7 +585,7 @@ const MainLayout: React.FC = () => {
                 })}
               </List>
             </Collapse>
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: SIZES.spacing.xs }} />
           </React.Fragment>
         ))}
       </List>
@@ -578,16 +608,37 @@ const MainLayout: React.FC = () => {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: SIZES.spacing.md, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              flexGrow: 1, 
+              fontSize: SIZES.fontSize.lg 
+            }}
+          >
             Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
           </Typography>
           {user ? (
             <>
-              <Button color="inherit" onClick={handleUserMenuOpen} endIcon={<AccountIcon />}>
+              <Button 
+                color="inherit" 
+                onClick={handleUserMenuOpen} 
+                endIcon={<AccountIcon />}
+                sx={{
+                  ...buttonStyles,
+                  color: 'inherit',
+                  borderColor: 'currentColor',
+                  '&:hover': {
+                    borderColor: 'currentColor',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+              >
                 {(user as User).first_name
                   ? `${(user as User).first_name} ${(user as User).last_name || ''}`
                   : (user as User).email}
@@ -623,6 +674,15 @@ const MainLayout: React.FC = () => {
             <Button 
               color="inherit"
               onClick={() => navigate('/login')}
+              sx={{
+                ...buttonStyles,
+                color: 'inherit',
+                borderColor: 'currentColor',
+                '&:hover': {
+                  borderColor: 'currentColor',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
             >
               Войти
             </Button>
@@ -661,7 +721,11 @@ const MainLayout: React.FC = () => {
       </Box>
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` } }}
+        sx={{ 
+          flexGrow: 1, 
+          p: SIZES.spacing.lg, 
+          width: { sm: `calc(100% - ${drawerWidth}px)` } 
+        }}
       >
         <Toolbar />
         <Outlet />

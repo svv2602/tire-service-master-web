@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -13,6 +13,7 @@ import {
   Select,
   MenuItem,
   FormHelperText,
+  useTheme,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -28,8 +29,16 @@ import {
 } from '../../api';
 import { Booking } from '../../types/models';
 import { RootState } from '../../store';
+import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { SIZES } from '../../styles/theme';
 
-// Схема валидации
+/**
+ * Схема валидации для формы отзыва
+ * Определяет правила валидации полей отзыва:
+ * - Бронирование: обязательное поле выбора
+ * - Рейтинг: от 1 до 5 звезд (обязательно)
+ * - Комментарий: от 10 до 1000 символов (обязательно)
+ */
 const validationSchema = yup.object({
   booking_id: yup.number()
     .required('Выберите бронирование'),
@@ -43,9 +52,29 @@ const validationSchema = yup.object({
     .max(1000, 'Максимальная длина отзыва - 1000 символов'),
 });
 
+/**
+ * Компонент формы создания отзыва о сервисной точке
+ * Позволяет клиентам оставлять отзывы на основе завершенных бронирований
+ * 
+ * Функциональность:
+ * - Выбор бронирования из списка завершенных
+ * - Выставление рейтинга от 1 до 5 звезд
+ * - Написание текстового отзыва
+ * - Валидация всех полей формы
+ * 
+ * Использует централизованную систему стилей для консистентного UI
+ */
+
 const ReviewFormPage: React.FC = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation();
+  
+  // Централизованные стили
+  const cardStyles = getCardStyles(theme);
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const textFieldStyles = getTextFieldStyles(theme);
   
   // Получаем userId из Redux store
   const userId = useSelector((state: RootState) => state.auth.user?.id);
@@ -95,7 +124,7 @@ const ReviewFormPage: React.FC = () => {
 
   if (bookingsError) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ padding: SIZES.spacing.xl }}>
         <Alert severity="error">
           Ошибка при загрузке бронирований: {bookingsError.toString()}
         </Alert>
@@ -108,12 +137,29 @@ const ReviewFormPage: React.FC = () => {
   // Если нет завершенных бронирований
   if (bookings.length === 0) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+      <Box sx={{ padding: SIZES.spacing.xl }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: SIZES.spacing.sm, 
+          marginBottom: SIZES.spacing.xl 
+        }}>
+          <Button 
+            startIcon={<ArrowBackIcon />} 
+            onClick={handleBack}
+            sx={secondaryButtonStyles}
+          >
             Назад
           </Button>
-          <Typography variant="h4">Новый отзыв</Typography>
+          <Typography 
+            variant="h4"
+            sx={{
+              fontSize: SIZES.fontSize.xl,
+              fontWeight: 600,
+            }}
+          >
+            Новый отзыв
+          </Typography>
         </Box>
         <Alert severity="info">
           У вас пока нет завершенных бронирований. После завершения обслуживания вы сможете оставить отзыв.
@@ -123,19 +169,40 @@ const ReviewFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ padding: SIZES.spacing.xl }}>
       {/* Заголовок */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: SIZES.spacing.sm, 
+        marginBottom: SIZES.spacing.xl 
+      }}>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          onClick={handleBack}
+          sx={secondaryButtonStyles}
+        >
           Назад
         </Button>
-        <Typography variant="h4">Новый отзыв</Typography>
+        <Typography 
+          variant="h4"
+          sx={{
+            fontSize: SIZES.fontSize.xl,
+            fontWeight: 600,
+          }}
+        >
+          Новый отзыв
+        </Typography>
       </Box>
 
       {/* Форма */}
-      <Paper sx={{ p: 3, maxWidth: 600 }}>
+      <Paper sx={{ ...cardStyles, maxWidth: 600 }}>
         <form onSubmit={formik.handleSubmit}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: SIZES.spacing.xl 
+          }}>
             <FormControl error={formik.touched.booking_id && Boolean(formik.errors.booking_id)}>
               <InputLabel>Выберите бронирование</InputLabel>
               <Select
@@ -144,6 +211,12 @@ const ReviewFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 label="Выберите бронирование"
+                sx={{
+                  ...textFieldStyles,
+                  '& .MuiSelect-select': {
+                    borderRadius: SIZES.borderRadius.sm,
+                  }
+                }}
               >
                 {bookings.map((booking: Booking) => (
                   <MenuItem key={booking.id} value={booking.id}>
@@ -157,7 +230,16 @@ const ReviewFormPage: React.FC = () => {
             </FormControl>
 
             <Box>
-              <Typography component="legend">Ваша оценка</Typography>
+              <Typography 
+                component="legend"
+                sx={{
+                  fontSize: SIZES.fontSize.md,
+                  fontWeight: 500,
+                  marginBottom: SIZES.spacing.sm,
+                }}
+              >
+                Ваша оценка
+              </Typography>
               <Rating
                 name="rating"
                 value={formik.values.rating}
@@ -166,6 +248,14 @@ const ReviewFormPage: React.FC = () => {
                 }}
                 onBlur={formik.handleBlur}
                 size="large"
+                sx={{
+                  '& .MuiRating-iconFilled': {
+                    color: theme.palette.primary.main,
+                  },
+                  '& .MuiRating-iconHover': {
+                    color: theme.palette.primary.light,
+                  },
+                }}
               />
               {formik.touched.rating && formik.errors.rating && (
                 <FormHelperText error>{formik.errors.rating}</FormHelperText>
@@ -183,10 +273,19 @@ const ReviewFormPage: React.FC = () => {
               onBlur={formik.handleBlur}
               error={formik.touched.comment && Boolean(formik.errors.comment)}
               helperText={formik.touched.comment && formik.errors.comment}
+              sx={textFieldStyles}
             />
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-              <Button onClick={handleBack}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              gap: SIZES.spacing.md, 
+              marginTop: SIZES.spacing.lg 
+            }}>
+              <Button 
+                onClick={handleBack}
+                sx={secondaryButtonStyles}
+              >
                 Отмена
               </Button>
               <Button
@@ -194,6 +293,7 @@ const ReviewFormPage: React.FC = () => {
                 variant="contained"
                 disabled={isSubmitting}
                 startIcon={<StarIcon />}
+                sx={primaryButtonStyles}
               >
                 {isSubmitting ? 'Сохранение...' : 'Опубликовать отзыв'}
               </Button>
