@@ -99,8 +99,8 @@ const BookingFormPageWithAvailability: React.FC = () => {
   });
   
   // Состояния для доступности
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [estimatedDuration, setEstimatedDuration] = useState<number>(60); // минуты
   
   // Справочные данные
@@ -165,23 +165,20 @@ const BookingFormPageWithAvailability: React.FC = () => {
     setTotalPrice(total);
   }, [formData.services]);
 
-  // Обработчик выбора даты и времени
-  const handleDateTimeSelect = (date: Date, time?: string) => {
-    setSelectedDate(date);
-    setSelectedTime(time);
-    
-    if (date && time) {
-      const dateString = date.toISOString().split('T')[0];
-      const endTime = calculateEndTime(time, estimatedDuration);
+  // Обработка изменений даты и времени
+  useEffect(() => {
+    if (selectedDate && selectedTime) {
+      const dateString = selectedDate.toISOString().split('T')[0];
+      const endTime = calculateEndTime(selectedTime, estimatedDuration);
       
       setFormData(prev => ({
         ...prev,
         booking_date: dateString,
-        start_time: time,
+        start_time: selectedTime,
         end_time: endTime
       }));
     }
-  };
+  }, [selectedDate, selectedTime, estimatedDuration]);
 
   // Вычисление времени окончания
   const calculateEndTime = (startTime: string, durationMinutes: number): string => {
@@ -195,8 +192,8 @@ const BookingFormPageWithAvailability: React.FC = () => {
   const handleServicePointChange = (servicePointId: number) => {
     setFormData(prev => ({ ...prev, service_point_id: servicePointId }));
     // Сбрасываем выбранную дату/время при смене точки
-    setSelectedDate(undefined);
-    setSelectedTime(undefined);
+    setSelectedDate(null);
+    setSelectedTime(null);
   };
 
   // Обработчик добавления услуги
@@ -485,11 +482,15 @@ const BookingFormPageWithAvailability: React.FC = () => {
               
               <AvailabilitySelector
                 servicePointId={formData.service_point_id}
-                selectedDate={selectedDate || undefined}
-                selectedTime={selectedTime}
-                onDateTimeSelect={handleDateTimeSelect}
-                minDuration={estimatedDuration}
-                showDetails={false}
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                selectedTimeSlot={selectedTime}
+                onTimeSlotChange={setSelectedTime}
+                availableTimeSlots={[
+                  '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
+                  '15:00', '16:00', '17:00', '18:00'
+                ]}
+                isLoading={isLoading}
               />
             </Paper>
           )}
