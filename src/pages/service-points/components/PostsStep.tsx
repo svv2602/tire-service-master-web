@@ -90,6 +90,42 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   // Получаем посты из формы (исключая помеченные для удаления)
   const activePosts = formik.values.service_posts?.filter(post => !post._destroy) || [];
 
+  // Функция для пересчета номеров постов (если есть дубликаты)
+  const recalculatePostNumbers = () => {
+    const allPosts = formik.values.service_posts || [];
+    const postNumbers = new Set<number>();
+    let needsUpdate = false;
+    
+    const updatedPosts = allPosts.map((post, index) => {
+      if (post._destroy) return post; // Не изменяем удаленные посты
+      
+      if (postNumbers.has(post.post_number)) {
+        // Есть дубликат, нужно найти новый номер
+        let newNumber = 1;
+        while (postNumbers.has(newNumber)) {
+          newNumber++;
+        }
+        postNumbers.add(newNumber);
+        needsUpdate = true;
+        console.log(`Обнаружен дубликат post_number ${post.post_number}, заменяем на ${newNumber}`);
+        return { ...post, post_number: newNumber, name: `Пост ${newNumber}` };
+      } else {
+        postNumbers.add(post.post_number);
+        return post;
+      }
+    });
+    
+    if (needsUpdate) {
+      console.log('Пересчитываем номера постов для устранения дубликатов');
+      formik.setFieldValue('service_posts', updatedPosts);
+    }
+  };
+
+  // Проверяем на дубликаты при изменении постов
+  React.useEffect(() => {
+    recalculatePostNumbers();
+  }, [formik.values.service_posts?.length]);
+
   // Отладка данных постов (упрощенная)
   console.log('PostsStep: количество постов в форме:', activePosts.length);
   if (activePosts.length > 0) {
@@ -105,10 +141,18 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
 
   // Функция добавления нового поста
   const addNewPost = () => {
+    // Находим максимальный post_number среди всех постов (включая помеченные для удаления)
+    const allPosts = formik.values.service_posts || [];
+    const maxPostNumber = allPosts.length > 0 
+      ? Math.max(...allPosts.map(post => post.post_number || 0))
+      : 0;
+    
+    const newPostNumber = maxPostNumber + 1;
+    
     const newPost: ServicePost = {
       id: Date.now(), // Временный ID для новых постов
-      post_number: activePosts.length + 1,
-      name: `Пост ${activePosts.length + 1}`,
+      post_number: newPostNumber,
+      name: `Пост ${newPostNumber}`,
       description: '',
       slot_duration: 30,
       is_active: true,
@@ -127,6 +171,8 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         end: '18:00',
       },
     };
+    
+    console.log('addNewPost: создаем новый пост с номером', newPostNumber, 'максимальный был', maxPostNumber);
     
     formik.setFieldValue('service_posts', [
       ...(formik.values.service_posts || []), 
@@ -283,9 +329,9 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
           mb: SIZES.spacing.lg,
           borderRadius: SIZES.borderRadius.sm
         }}
-        disabled={activePosts.length >= 10} // Ограничиваем максимальное количество постов
+        disabled={activePosts.length >= 10} // Ограничиваем максимальное количество активных постов
       >
-        Добавить пост
+        Добавить пост ({activePosts.length}/10)
       </Button>
 
       {/* Предупреждение о максимальном количестве постов */}
