@@ -35,6 +35,7 @@ import {
   useDeleteServicePointPhotoMutation,
 } from '../../api';
 import { ServicePointPhoto } from '../../types/servicePoint';
+import { HiddenElement } from '../../components/styled/CommonComponents';
 
 const ServicePointPhotosPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -155,9 +156,9 @@ const ServicePointPhotosPage: React.FC = () => {
         <Divider sx={{ mb: 2 }} />
         
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <input
+          <HiddenElement
+            component="input"
             accept="image/*"
-            style={{ display: 'none' }}
             id="photo-upload"
             type="file"
             onChange={handleFileChange}

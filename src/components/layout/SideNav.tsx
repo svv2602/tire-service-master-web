@@ -18,6 +18,7 @@ import {
   getNavigationStyles,
   ANIMATIONS
 } from '../../styles';
+import { StyledListItemButton } from '../styled/CommonComponents';
 import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
@@ -96,81 +97,61 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
       <List component="nav">
         {/* Главная страница - дашборд */}
         <ListItem disablePadding>
-          <ListItemButton 
+          <StyledListItemButton 
             component={Link} 
             to="/" 
             selected={pathname === '/'}
-            sx={{
-              ...navigationStyles.listItem,
-              borderRadius: SIZES.borderRadius.sm,
-              margin: SIZES.spacing.xs,
-            }}
           >
-            <ListItemIcon sx={navigationStyles.listItemIcon}>
+            <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
             <ListItemText primary="Дашборд" />
-          </ListItemButton>
+          </StyledListItemButton>
         </ListItem>
 
         {/* Партнеры (доступно админам) */}
         {isAdmin && (
           <ListItem disablePadding>
-            <ListItemButton 
+            <StyledListItemButton 
               component={Link} 
               to="/partners" 
               selected={pathname === '/partners'}
-              sx={{
-                ...navigationStyles.listItem,
-                borderRadius: SIZES.borderRadius.sm,
-                margin: SIZES.spacing.xs,
-              }}
             >
-              <ListItemIcon sx={navigationStyles.listItemIcon}>
+              <ListItemIcon>
                 <BusinessIcon />
               </ListItemIcon>
               <ListItemText primary="Партнеры" />
-            </ListItemButton>
+            </StyledListItemButton>
           </ListItem>
         )}
 
         {/* Клиенты */}
         <ListItem disablePadding>
-          <ListItemButton
+          <StyledListItemButton
             component={Link}
             to="/clients"
             selected={pathname === '/clients'}
-            sx={{
-              ...navigationStyles.listItem,
-              borderRadius: SIZES.borderRadius.sm,
-              margin: SIZES.spacing.xs,
-            }}
           >
-            <ListItemIcon sx={navigationStyles.listItemIcon}>
+            <ListItemIcon>
               <PeopleIcon />
             </ListItemIcon>
             <ListItemText primary="Клиенты" />
-          </ListItemButton>
+          </StyledListItemButton>
         </ListItem>
 
         {/* Пользователи (доступно админам) */}
         {isAdmin && (
           <ListItem disablePadding>
-            <ListItemButton
+            <StyledListItemButton
               component={Link}
               to="/users"
               selected={pathname === '/users'}
-              sx={{
-                ...navigationStyles.listItem,
-                borderRadius: SIZES.borderRadius.sm,
-                margin: SIZES.spacing.xs,
-              }}
             >
-              <ListItemIcon sx={navigationStyles.listItemIcon}>
+              <ListItemIcon>
                 <PersonIcon />
               </ListItemIcon>
               <ListItemText primary="Пользователи" />
-            </ListItemButton>
+            </StyledListItemButton>
           </ListItem>
         )}
 
@@ -178,59 +159,42 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         {(isAdmin || isPartner || isManager) && (
           <>
             <ListItem disablePadding>
-              <ListItemButton 
-                onClick={handleServicePointsClick}
-                sx={{
-                  ...navigationStyles.listItem,
-                  borderRadius: SIZES.borderRadius.sm,
-                  margin: SIZES.spacing.xs,
-                }}
-              >
-                <ListItemIcon sx={navigationStyles.listItemIcon}>
+              <StyledListItemButton onClick={handleServicePointsClick}>
+                <ListItemIcon>
                   <LocationOnIcon />
                 </ListItemIcon>
                 <ListItemText primary="Сервисные точки" />
                 {openServicePoints ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
+              </StyledListItemButton>
             </ListItem>
             <Collapse in={openServicePoints} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem disablePadding>
-                  <ListItemButton
+                  <StyledListItemButton
                     component={Link}
                     to="/service-points"
                     selected={pathname === '/service-points'}
-                    sx={{ 
-                      ...navigationStyles.listItem,
-                      pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
-                      borderRadius: SIZES.borderRadius.sm,
-                      margin: SIZES.spacing.xs,
-                    }}
+                    nested={1}
                   >
-                    <ListItemIcon sx={navigationStyles.listItemIcon}>
+                    <ListItemIcon>
                       <LocationOnIcon />
                     </ListItemIcon>
                     <ListItemText primary="Все точки" />
-                  </ListItemButton>
+                  </StyledListItemButton>
                 </ListItem>
                 {(isPartner || isManager) && (
                   <ListItem disablePadding>
-                    <ListItemButton
+                    <StyledListItemButton
                       component={Link}
                       to="/my-service-points"
                       selected={pathname === '/my-service-points'}
-                      sx={{ 
-                        ...navigationStyles.listItem,
-                        pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
-                        borderRadius: SIZES.borderRadius.sm,
-                        margin: SIZES.spacing.xs,
-                      }}
+                      nested={1}
                     >
-                      <ListItemIcon sx={navigationStyles.listItemIcon}>
+                      <ListItemIcon>
                         <LocationOnIcon />
                       </ListItemIcon>
                       <ListItemText primary="Мои точки" />
-                    </ListItemButton>
+                    </StyledListItemButton>
                   </ListItem>
                 )}
               </List>
@@ -240,59 +204,42 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         
         {/* Бронирования */}
         <ListItem disablePadding>
-          <ListItemButton 
-            onClick={handleBookingsClick}
-            sx={{
-              ...navigationStyles.listItem,
-              borderRadius: SIZES.borderRadius.sm,
-              margin: SIZES.spacing.xs,
-            }}
-          >
-            <ListItemIcon sx={navigationStyles.listItemIcon}>
+          <StyledListItemButton onClick={handleBookingsClick}>
+            <ListItemIcon>
               <CalendarMonthIcon />
             </ListItemIcon>
             <ListItemText primary="Бронирования" />
             {openBookings ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </StyledListItemButton>
         </ListItem>
         <Collapse in={openBookings} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             <ListItem disablePadding>
-              <ListItemButton
+              <StyledListItemButton
                 component={Link}
                 to="/bookings"
                 selected={pathname === '/bookings'}
-                sx={{ 
-                  ...navigationStyles.listItem,
-                  pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
-                  borderRadius: SIZES.borderRadius.sm,
-                  margin: SIZES.spacing.xs,
-                }}
+                nested={1}
               >
-                <ListItemIcon sx={navigationStyles.listItemIcon}>
+                <ListItemIcon>
                   <CalendarMonthIcon />
                 </ListItemIcon>
                 <ListItemText primary="Все бронирования" />
-              </ListItemButton>
+              </StyledListItemButton>
             </ListItem>
             {(isPartner || isManager) && (
               <ListItem disablePadding>
-                <ListItemButton
+                <StyledListItemButton
                   component={Link}
                   to="/my-bookings"
                   selected={pathname === '/my-bookings'}
-                  sx={{ 
-                    ...navigationStyles.listItem,
-                    pl: SIZES.spacing.xl, // Увеличенный отступ для вложенности
-                    borderRadius: SIZES.borderRadius.sm,
-                    margin: SIZES.spacing.xs,
-                  }}
+                  nested={1}
                 >
-                  <ListItemIcon sx={navigationStyles.listItemIcon}>
+                  <ListItemIcon>
                     <CalendarMonthIcon />
                   </ListItemIcon>
                   <ListItemText primary="Бронирования моих точек" />
-                </ListItemButton>
+                </StyledListItemButton>
               </ListItem>
             )}
           </List>
@@ -302,119 +249,87 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         {isAdmin && (
           <>
             <ListItem disablePadding>
-              <ListItemButton 
-                onClick={handleCatalogsClick}
-                sx={{
-                  ...navigationStyles.listItem,
-                  borderRadius: SIZES.borderRadius.sm,
-                  margin: SIZES.spacing.xs,
-                }}
-              >
-                <ListItemIcon sx={navigationStyles.listItemIcon}>
+              <StyledListItemButton onClick={handleCatalogsClick}>
+                <ListItemIcon>
                   <ListAltIcon />
                 </ListItemIcon>
                 <ListItemText primary="Справочники" />
                 {openCatalogs ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
+              </StyledListItemButton>
             </ListItem>
             <Collapse in={openCatalogs} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 {/* Подраздел Местоположения */}
                 <ListItem disablePadding>
-                  <ListItemButton
+                  <StyledListItemButton
                     onClick={handleLocationsClick}
-                    sx={{ 
-                      ...navigationStyles.listItem,
-                      pl: SIZES.spacing.xl, // Первый уровень вложенности
-                      borderRadius: SIZES.borderRadius.sm,
-                      margin: SIZES.spacing.xs,
-                    }}
+                    nested={1}
                   >
-                    <ListItemIcon sx={navigationStyles.listItemIcon}>
+                    <ListItemIcon>
                       <PlaceOutlinedIcon />
                     </ListItemIcon>
                     <ListItemText primary="Местоположения" />
                     {openLocations ? <ExpandLess /> : <ExpandMore />}
-                  </ListItemButton>
+                  </StyledListItemButton>
                 </ListItem>
                 <Collapse in={openLocations} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     <ListItem disablePadding>
-                      <ListItemButton
+                      <StyledListItemButton
                         component={Link}
                         to="/regions"
                         selected={pathname === '/regions'}
-                        sx={{ 
-                          ...navigationStyles.listItem,
-                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
-                          borderRadius: SIZES.borderRadius.sm,
-                          margin: SIZES.spacing.xs,
-                        }}
+                        nested={2}
                       >
-                        <ListItemIcon sx={navigationStyles.listItemIcon}>
+                        <ListItemIcon>
                           <MapIcon />
                         </ListItemIcon>
                         <ListItemText primary="Области и Города" />
-                      </ListItemButton>
+                      </StyledListItemButton>
                     </ListItem>
                   </List>
                 </Collapse>
                 
                 {/* Подраздел Автомобили */}
                 <ListItem disablePadding>
-                  <ListItemButton
+                  <StyledListItemButton
                     onClick={handleCarsClick}
-                    sx={{ 
-                      ...navigationStyles.listItem,
-                      pl: SIZES.spacing.xl, // Первый уровень вложенности
-                      borderRadius: SIZES.borderRadius.sm,
-                      margin: SIZES.spacing.xs,
-                    }}
+                    nested={1}
                   >
-                    <ListItemIcon sx={navigationStyles.listItemIcon}>
+                    <ListItemIcon>
                       <DirectionsCarIcon />
                     </ListItemIcon>
                     <ListItemText primary="Автомобили" />
                     {openCars ? <ExpandLess /> : <ExpandMore />}
-                  </ListItemButton>
+                  </StyledListItemButton>
                 </ListItem>
                 <Collapse in={openCars} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     <ListItem disablePadding>
-                      <ListItemButton
+                      <StyledListItemButton
                         component={Link}
                         to="/car-brands"
                         selected={pathname === '/car-brands'}
-                        sx={{ 
-                          ...navigationStyles.listItem,
-                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
-                          borderRadius: SIZES.borderRadius.sm,
-                          margin: SIZES.spacing.xs,
-                        }}
+                        nested={2}
                       >
-                        <ListItemIcon sx={navigationStyles.listItemIcon}>
+                        <ListItemIcon>
                           <DirectionsCarIcon />
                         </ListItemIcon>
                         <ListItemText primary="Бренды авто" />
-                      </ListItemButton>
+                      </StyledListItemButton>
                     </ListItem>
                     <ListItem disablePadding>
-                      <ListItemButton
+                      <StyledListItemButton
                         component={Link}
                         to="/car-models"
                         selected={pathname === '/car-models'}
-                        sx={{ 
-                          ...navigationStyles.listItem,
-                          pl: SIZES.spacing.xxl, // Второй уровень вложенности
-                          borderRadius: SIZES.borderRadius.sm,
-                          margin: SIZES.spacing.xs,
-                        }}
+                        nested={2}
                       >
-                        <ListItemIcon sx={navigationStyles.listItemIcon}>
+                        <ListItemIcon>
                           <DirectionsCarIcon />
                         </ListItemIcon>
                         <ListItemText primary="Модели авто" />
-                      </ListItemButton>
+                      </StyledListItemButton>
                     </ListItem>
                   </List>
                 </Collapse>
@@ -425,21 +340,16 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
 
         {/* Настройки */}
         <ListItem disablePadding>
-          <ListItemButton
+          <StyledListItemButton
             component={Link}
             to="/settings"
             selected={pathname === '/settings'}
-            sx={{
-              ...navigationStyles.listItem,
-              borderRadius: SIZES.borderRadius.sm,
-              margin: SIZES.spacing.xs,
-            }}
           >
-            <ListItemIcon sx={navigationStyles.listItemIcon}>
+            <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
             <ListItemText primary="Настройки" />
-          </ListItemButton>
+          </StyledListItemButton>
         </ListItem>
       </List>
     </Box>

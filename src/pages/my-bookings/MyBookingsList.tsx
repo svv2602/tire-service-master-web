@@ -28,6 +28,7 @@ import {
   EventNote as EventNoteIcon,
 } from '@mui/icons-material';
 import { User } from '../../types/user';
+import { GridContainer, GridItem } from '../../components/styled/CommonComponents';
 
 interface Booking {
   id: number;
@@ -194,9 +195,9 @@ const MyBookingsList: React.FC = () => {
           </Button>
         </Paper>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
+        <GridContainer spacing={3}>
           {bookings.map((booking) => (
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }} key={booking.id}>
+            <GridItem xs={12} sm={6} key={booking.id}>
               <Card>
                 <CardContent>
                   <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -251,9 +252,9 @@ const MyBookingsList: React.FC = () => {
                   )}
                 </CardActions>
               </Card>
-            </div>
+            </GridItem>
           ))}
-        </div>
+        </GridContainer>
       )}
     </Box>
   );

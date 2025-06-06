@@ -171,3 +171,61 @@ export const GRADIENTS: Record<GradientType, string> = {
 export const getGradient = (theme: Theme, type: GradientType = 'primary') => {
   return GRADIENTS[type];
 };
+
+// Стили для кнопок
+export const getButtonStyles = (theme: Theme, variant: 'primary' | 'secondary' | 'success' | 'error' = 'primary') => {
+  const colors = getThemeColors(theme);
+  
+  const baseStyles = {
+    borderRadius: SIZES.borderRadius.sm,
+    transition: ANIMATIONS.transition.medium,
+    textTransform: 'none' as const,
+    fontWeight: 500,
+    letterSpacing: '0.02em',
+  };
+
+  const styles = {
+    primary: {
+      ...baseStyles,
+      background: colors.primary,
+      color: theme.palette.mode === 'dark' ? '#000' : '#fff',
+      boxShadow: theme.shadows[1],
+      '&:hover': {
+        background: colors.primaryDark,
+        boxShadow: theme.shadows[2],
+      },
+      '&:active': {
+        boxShadow: theme.shadows[1],
+      },
+    },
+    secondary: {
+      ...baseStyles,
+      background: 'transparent',
+      border: `1px solid ${colors.borderSecondary}`,
+      color: colors.textPrimary,
+      '&:hover': {
+        background: theme.palette.mode === 'dark'
+          ? 'rgba(255, 255, 255, 0.05)'
+          : 'rgba(0, 0, 0, 0.05)',
+      },
+    },
+    success: {
+      ...baseStyles,
+      background: colors.success,
+      color: '#fff',
+      '&:hover': {
+        background: theme.palette.success.dark,
+      },
+    },
+    error: {
+      ...baseStyles,
+      background: colors.error,
+      color: '#fff',
+      '&:hover': {
+        background: theme.palette.error.dark,
+      },
+    },
+  };
+
+  return styles[variant] || styles.primary;
+};

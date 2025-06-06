@@ -16,6 +16,9 @@ import {
   Tooltip,
   Paper,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import {
   AddPhotoAlternate as AddPhotoIcon,
@@ -27,6 +30,7 @@ import {
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePointPhoto, ServicePoint } from '../../../types/models';
+import { HiddenElement, StyledList } from '../../../components/styled/CommonComponents';
 
 interface PhotosStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -219,9 +223,9 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
 
       {/* Блок загрузки фотографий */}
       <Paper sx={{ p: 3, mb: 3, border: '2px dashed', borderColor: 'primary.main', textAlign: 'center' }}>
-        <input
+        <HiddenElement
+          component="input"
           accept="image/jpeg,image/jpg,image/png,image/webp"
-          style={{ display: 'none' }}
           id="photo-upload-input"
           multiple
           type="file"
@@ -511,23 +515,39 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
               <strong>Что фотографировать:</strong>
-              <ul style={{ marginTop: 8, paddingLeft: 20 }}>
-                <li>Общий вид сервисного центра</li>
-                <li>Рабочие места и оборудование</li>
-                <li>Зону ожидания клиентов</li>
-                <li>Парковку и въезд</li>
-              </ul>
+              <StyledList gap={8} sx={{ mt: 1, pl: 2.5 }}>
+                <ListItem disablePadding>
+                  <ListItemText primary="Общий вид сервисного центра" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Рабочие места и оборудование" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Зону ожидания клиентов" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Парковку и въезд" />
+                </ListItem>
+              </StyledList>
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
               <strong>Качество фотографий:</strong>
-              <ul style={{ marginTop: 8, paddingLeft: 20 }}>
-                <li>Хорошее освещение</li>
-                <li>Высокое разрешение</li>
-                <li>Четкие, не размытые снимки</li>
-                <li>Привлекательные ракурсы</li>
-              </ul>
+              <StyledList gap={8} sx={{ mt: 1, pl: 2.5 }}>
+                <ListItem disablePadding>
+                  <ListItemText primary="Хорошее освещение" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Высокое разрешение" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Четкие, не размытые снимки" />
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemText primary="Привлекательные ракурсы" />
+                </ListItem>
+              </StyledList>
             </Typography>
           </Grid>
         </Grid>

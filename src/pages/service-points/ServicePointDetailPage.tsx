@@ -34,6 +34,7 @@ import {
 } from '../../api';
 import { useTranslation } from 'react-i18next';
 import { ServicePoint } from '../../types/models';
+import { ResponsiveImage } from '../../components/styled/CommonComponents';
 
 const ServicePointDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -171,10 +172,10 @@ const ServicePointDetailPage: React.FC = () => {
               <Grid container spacing={2}>
                 {servicePoint.photos.slice(0, 4).map((photo) => (
                   <Grid item xs={6} sm={3} key={photo.id}>
-                    <img 
+                    <ResponsiveImage
                       src={photo.url} 
                       alt={`Фото ${photo.id}`}
-                      style={{ width: '100%', height: 'auto', borderRadius: 4 }}
+                      borderRadius={4}
                     />
                   </Grid>
                 ))}

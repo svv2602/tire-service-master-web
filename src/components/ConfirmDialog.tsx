@@ -8,7 +8,8 @@ import {
   Button,
   useTheme,
 } from '@mui/material';
-import { SIZES } from '../styles';
+import { SIZES, getFormStyles } from '../styles';
+import { StyledButton, FlexBox } from './styled/CommonComponents';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onCancel,
 }) => {
   const theme = useTheme();
+  const formStyles = getFormStyles(theme);
   
   return (
     <Dialog
@@ -39,19 +41,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       aria-describedby="confirm-dialog-description"
       PaperProps={{
         sx: {
-          borderRadius: SIZES.borderRadius.md,
-          padding: SIZES.spacing.sm,
+          ...formStyles.container,
           minWidth: 320,
         }
       }}
     >
       <DialogTitle 
         id="confirm-dialog-title"
-        sx={{
-          fontSize: SIZES.fontSize.lg,
-          fontWeight: 600,
-          paddingBottom: SIZES.spacing.sm,
-        }}
+        sx={formStyles.sectionTitle}
       >
         {title}
       </DialogTitle>
@@ -66,35 +63,22 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {message}
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ gap: SIZES.spacing.sm, padding: SIZES.spacing.md }}>
-        <Button 
-          onClick={onCancel} 
-          color="primary"
-          sx={{
-            textTransform: 'none',
-            fontWeight: 500,
-            padding: `${SIZES.spacing.sm}px ${SIZES.spacing.md}px`,
-          }}
-        >
-          {cancelText}
-        </Button>
-        <Button 
-          onClick={onConfirm} 
-          color="primary" 
-          variant="contained" 
-          autoFocus
-          sx={{
-            textTransform: 'none',
-            fontWeight: 500,
-            padding: `${SIZES.spacing.sm}px ${SIZES.spacing.md}px`,
-            boxShadow: theme.shadows[2],
-            '&:hover': {
-              boxShadow: theme.shadows[4],
-            },
-          }}
-        >
-          {confirmText}
-        </Button>
+      <DialogActions sx={{ padding: SIZES.spacing.md }}>
+        <FlexBox gap={SIZES.spacing.sm}>
+          <StyledButton 
+            styleVariant="secondary"
+            onClick={onCancel} 
+          >
+            {cancelText}
+          </StyledButton>
+          <StyledButton 
+            styleVariant="primary"
+            onClick={onConfirm} 
+            autoFocus
+          >
+            {confirmText}
+          </StyledButton>
+        </FlexBox>
       </DialogActions>
     </Dialog>
   );

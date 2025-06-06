@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { fetchWithAuth } from '../../../api/apiUtils';
+import { GridContainer, GridItem } from '../../../components/styled/CommonComponents';
 
 interface ServicePoint {
   id: number;
@@ -177,9 +178,9 @@ const FavoriteServicePoints: React.FC = () => {
           </Button>
         </Box>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
+        <GridContainer spacing={3}>
           {favoritePoints.map((point) => (
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }} key={point.id}>
+            <GridItem xs={12} sm={6} key={point.id}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardMedia
                   component="img"
@@ -205,23 +206,19 @@ const FavoriteServicePoints: React.FC = () => {
                     </Box>
                   </Box>
                   
-                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <LocationIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Box display="flex" alignItems="flex-start" mb={1}>
+                    <LocationIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary', fontSize: 20 }} />
+                    <Typography variant="body2" color="text.secondary">
                     {point.address}
                   </Typography>
+                  </Box>
                   
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Время работы: {point.opening_time} - {point.closing_time}
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {point.description}
                   </Typography>
                   
-                  <Divider sx={{ my: 1 }} />
-                  
-                  <Typography variant="body2" gutterBottom>
-                    Услуги:
-                  </Typography>
-                  
-                  <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {point.services.slice(0, 5).map(service => (
+                  <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
+                    {point.services.slice(0, 3).map((service) => (
                       <Chip 
                         key={service.id} 
                         label={`${service.name} - ${service.price} ₽`} 
@@ -229,15 +226,9 @@ const FavoriteServicePoints: React.FC = () => {
                         variant="outlined" 
                       />
                     ))}
-                    {point.services.length > 5 && (
-                      <Chip 
-                        label={`+${point.services.length - 5}`} 
-                        size="small"
-                        variant="outlined"
-                      />
-                    )}
                   </Box>
                 </CardContent>
+                
                 <CardActions>
                   <Button 
                     size="small" 
@@ -245,14 +236,6 @@ const FavoriteServicePoints: React.FC = () => {
                     to={`/service-points/${point.id}`}
                   >
                     Подробнее
-                  </Button>
-                  <Button 
-                    size="small" 
-                    component={RouterLink}
-                    to={`/bookings/new?service_point_id=${point.id}`}
-                    color="primary"
-                  >
-                    Записаться
                   </Button>
                   <Button 
                     size="small"
@@ -264,9 +247,9 @@ const FavoriteServicePoints: React.FC = () => {
                   </Button>
                 </CardActions>
               </Card>
-            </div>
+            </GridItem>
           ))}
-        </div>
+        </GridContainer>
       )}
     </Box>
   );

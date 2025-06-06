@@ -13,7 +13,8 @@ import {
   CardActions,
   Grid,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -28,6 +29,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { User } from '../../types/user';
+import { GridContainer, GridItem, CenteredBox, StyledAlert } from '../../components/styled/CommonComponents';
 
 interface Car {
   id: number;
@@ -131,29 +133,28 @@ const MyCarsList: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
+      <CenteredBox my={4}>
         <CircularProgress />
-      </Box>
+      </CenteredBox>
     );
   }
 
   if (error) {
     return (
       <Box my={4}>
-        <Paper sx={{ p: 3, backgroundColor: '#ffebee' }}>
-          <Typography color="error" variant="h6">
+        <StyledAlert severity="error" marginBottom={2}>
+          <Typography variant="h6">
             Ошибка загрузки данных
           </Typography>
-          <Typography color="error">{error}</Typography>
-          <Button 
-            variant="outlined" 
-            color="primary" 
-            onClick={fetchCars} 
-            sx={{ mt: 2 }}
-          >
-            Попробовать снова
-          </Button>
-        </Paper>
+          <Typography>{error}</Typography>
+        </StyledAlert>
+        <Button 
+          variant="outlined" 
+          color="primary" 
+          onClick={fetchCars} 
+        >
+          Попробовать снова
+        </Button>
       </Box>
     );
   }
@@ -196,9 +197,9 @@ const MyCarsList: React.FC = () => {
           </Button>
         </Paper>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
+        <GridContainer spacing={3}>
           {cars.map((car) => (
-            <div style={{ width: '33.33%', padding: '12px', boxSizing: 'border-box' }} key={car.id}>
+            <GridItem xs={12} sm={6} md={4} key={car.id}>
               <Card 
                 sx={{ 
                   height: '100%',
@@ -262,9 +263,9 @@ const MyCarsList: React.FC = () => {
                   )}
                 </CardActions>
               </Card>
-            </div>
+            </GridItem>
           ))}
-        </div>
+        </GridContainer>
       )}
     </Box>
   );

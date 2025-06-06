@@ -29,6 +29,7 @@ import {
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarsQuery, useDeleteClientCarMutation } from '../../api/clients.api';
 import { Client, ClientCar } from '../../types/client';
+import { FlexBox, CenteredBox, StyledAlert } from '../../components/styled/CommonComponents';
 
 const ClientCarsPage: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
@@ -71,18 +72,18 @@ const ClientCarsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <CenteredBox minHeight="400px">
         <CircularProgress />
-      </Box>
+      </CenteredBox>
     );
   }
 
   if (!client) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+        <StyledAlert severity="error">
           Клиент не найден
-        </Alert>
+        </StyledAlert>
       </Box>
     );
   }
@@ -90,7 +91,7 @@ const ClientCarsPage: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Заголовок */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <FlexBox justifyContent="space-between" alignItems="center" my={3}>
         <Typography variant="h4">
           Автомобили клиента {client.first_name} {client.last_name}
         </Typography>
@@ -101,7 +102,7 @@ const ClientCarsPage: React.FC = () => {
         >
           Добавить автомобиль
         </Button>
-      </Box>
+      </FlexBox>
 
       {/* Таблица автомобилей */}
       <TableContainer component={Paper}>
@@ -119,18 +120,18 @@ const ClientCarsPage: React.FC = () => {
             {cars?.map((car: ClientCar) => (
               <TableRow key={car.id}>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FlexBox alignItems="center" gap={1}>
                     <CarIcon />
                     <Typography>
                       {car.brand}
                     </Typography>
-                  </Box>
+                  </FlexBox>
                 </TableCell>
                 <TableCell>{car.model}</TableCell>
                 <TableCell>{car.year}</TableCell>
                 <TableCell>{car.license_plate}</TableCell>
                 <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                  <FlexBox justifyContent="flex-end" gap={1}>
                     <Tooltip title="Редактировать">
                       <IconButton
                         onClick={() => navigate(`/clients/${clientId}/cars/${car.id}/edit`)}
@@ -148,7 +149,7 @@ const ClientCarsPage: React.FC = () => {
                         <DeleteIcon />
                       </IconButton>
                     </Tooltip>
-                  </Box>
+                  </FlexBox>
                 </TableCell>
               </TableRow>
             ))}

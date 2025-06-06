@@ -9,13 +9,13 @@ export {
   GRADIENTS,
   getThemeColors,
   getGradient,
+  getButtonStyles,
   type GradientType,
 } from './theme';
 
 // Экспорт стилей компонентов
 export {
   getCardStyles,
-  getButtonStyles,
   getTextFieldStyles,
   getChipStyles,
   getTableStyles,

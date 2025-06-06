@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import type { ServicePoint } from '../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../types/working-hours';
+import { FlexBox } from '../components/styled/CommonComponents';
 
 interface ServicePointDetailsProps {
   servicePoint: ServicePoint;
@@ -73,25 +74,25 @@ const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint 
         
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <FlexBox alignItems="center" gap={1} my={2}>
               <LocationIcon color="action" />
               <Typography>
                 {servicePoint.address}
                 {servicePoint.city && `, ${servicePoint.city.name}`}
               </Typography>
-            </Box>
+            </FlexBox>
             
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <FlexBox alignItems="center" gap={1} my={2}>
               <PhoneIcon color="action" />
               <Typography>{servicePoint.contact_phone}</Typography>
-            </Box>
+            </FlexBox>
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <FlexBox alignItems="center" gap={1} my={2}>
               <ScheduleIcon color="action" />
               <Typography>Режим работы: {formatWorkingHours(servicePoint.working_hours)}</Typography>
-            </Box>
+            </FlexBox>
             
             <Chip
               label={servicePoint.is_active ? 'Активна' : 'Неактивна'}

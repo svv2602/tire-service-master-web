@@ -27,6 +27,17 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 import { fetchWithAuth } from '../../../api/apiUtils';
+import { 
+  GridContainer, 
+  GridItem, 
+  FlexBox, 
+  CenteredBox,
+  StyledAlert,
+  ServiceCard,
+  ServiceCardMedia,
+  ServiceCardContent,
+  ServiceCardActions
+} from '../../../components/styled/CommonComponents';
 
 interface ServicePoint {
   id: number;
@@ -222,18 +233,18 @@ const ServicePointsSearch: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
+      <CenteredBox my={4}>
         <CircularProgress />
-      </Box>
+      </CenteredBox>
     );
   }
 
   if (error) {
     return (
-      <Box my={4}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <FlexBox direction="column" my={4}>
+        <StyledAlert severity="error" marginBottom={2}>
           {error}
-        </Alert>
+        </StyledAlert>
         <Button 
           variant="outlined" 
           color="primary" 
@@ -241,169 +252,138 @@ const ServicePointsSearch: React.FC = () => {
         >
           Попробовать снова
         </Button>
-      </Box>
+      </FlexBox>
     );
   }
 
   return (
-    <Box my={3}>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Поиск сервисных центров
-      </Typography>
-
+    <GridContainer spacing={3} my={3}>
       {/* Фильтры поиска */}
-      <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
-          <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
-            <TextField
-              fullWidth
-              label="Поиск по названию или адресу"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </div>
-          <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }}>
-            <FormControl fullWidth>
-              <InputLabel id="service-select-label">Услуга</InputLabel>
-              <Select
-                labelId="service-select-label"
-                value={selectedService}
-                onChange={handleServiceChange}
-                label="Услуга"
-              >
-                <MenuItem value="">Все услуги</MenuItem>
-                {services.map(service => (
-                  <MenuItem key={service.id} value={service.id}>
-                    {service.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
-        </div>
-      </Box>
+      <GridItem xs={12}>
+        <FlexBox gap={2}>
+          <TextField
+            fullWidth
+            placeholder="Поиск по названию, адресу или описанию..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <FormControl fullWidth>
+            <InputLabel>Фильтр по услугам</InputLabel>
+            <Select
+              value={selectedService}
+              onChange={handleServiceChange}
+              label="Фильтр по услугам"
+            >
+              <MenuItem value="">Все услуги</MenuItem>
+              {services.map(service => (
+                <MenuItem key={service.id} value={service.id}>
+                  {service.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </FlexBox>
+      </GridItem>
 
       {/* Результаты поиска */}
       {filteredPoints.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <StoreIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            Сервисные центры не найдены
-          </Typography>
-          <Typography color="textSecondary">
-            Попробуйте изменить параметры поиска
-          </Typography>
-        </Box>
+        <GridItem xs={12}>
+          <CenteredBox flexDirection="column" py={4}>
+            <StoreIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary">
+              Сервисные центры не найдены
+            </Typography>
+            <Typography color="text.secondary">
+              Попробуйте изменить параметры поиска
+            </Typography>
+          </CenteredBox>
+        </GridItem>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', margin: '-12px' }}>
-          {filteredPoints.map((point) => (
-            <div style={{ width: '50%', padding: '12px', boxSizing: 'border-box' }} key={point.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardMedia
-                  component="img"
-                  height="160"
-                  image={(point.photos && point.photos.length > 0) ? point.photos[0].url : '/images/service-point-placeholder.jpg'}
-                  alt={point.name}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                    <Typography variant="h6" component="div" gutterBottom>
+        <GridItem xs={12}>
+          <GridContainer spacing={3}>
+            {filteredPoints.map((point) => (
+              <GridItem key={point.id} xs={12} sm={6} md={4}>
+                <ServiceCard>
+                  {point.photos && point.photos.length > 0 && (
+                    <ServiceCardMedia
+                      component="img"
+                      image={point.photos[0].url}
+                      alt={point.name}
+                    />
+                  )}
+                  <ServiceCardContent>
+                    <Typography variant="h6" component="h2">
                       {point.name}
                     </Typography>
-                    <Box display="flex" alignItems="center">
-                      <Rating 
-                        value={point.average_rating || 0} 
-                        readOnly 
-                        precision={0.5} 
-                        size="small" 
-                      />
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                        ({point.total_clients_served || 0})
+                    <FlexBox alignItems="center" gap={1}>
+                      <LocationIcon color="action" />
+                      <Typography variant="body2" color="text.secondary">
+                        {point.address}
                       </Typography>
-                    </Box>
-                  </Box>
-                  
-                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-                    <LocationIcon fontSize="small" sx={{ mr: 0.5 }} />
-                    {point.address}
-                    {point.city && `, ${point.city.name}`}
-                    {point.city?.region && `, ${point.city.region.name}`}
-                  </Typography>
-                  
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {point.partner?.company_name && `Партнер: ${point.partner.company_name}`}
-                  </Typography>
-                  
-                  {point.description && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      {point.description.length > 100 
-                        ? `${point.description.substring(0, 100)}...` 
-                        : point.description}
-                    </Typography>
-                  )}
-                  
-                  <Divider sx={{ my: 1 }} />
-                  
-                  <Typography variant="body2" gutterBottom>
-                    Услуги:
-                  </Typography>
-                  
-                  <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {point.services?.slice(0, 5).map(service => (
-                      <Chip 
-                        key={service.id} 
-                        label={`${service.name} - ${service.price} ₽`} 
-                        size="small" 
-                        variant="outlined" 
-                      />
-                    ))}
-                    {point.services && point.services.length > 5 && (
-                      <Chip 
-                        label={`+${point.services.length - 5}`} 
-                        size="small"
-                        variant="outlined"
-                      />
+                    </FlexBox>
+                    {point.description && (
+                      <Typography variant="body2" color="text.secondary">
+                        {point.description}
+                      </Typography>
                     )}
-                  </Box>
-                </CardContent>
-                <CardActions>
-                  <Button 
-                    size="small" 
-                    component={RouterLink}
-                    to={`/service-points/${point.id}`}
-                  >
-                    Подробнее
-                  </Button>
-                  <Button 
-                    size="small" 
-                    component={RouterLink}
-                    to={`/bookings/new?service_point_id=${point.id}`}
-                    color="primary"
-                  >
-                    Записаться
-                  </Button>
-                  <Button 
-                    size="small"
-                    color={point.is_favorite ? 'error' : 'secondary'}
-                    onClick={() => toggleFavorite(point.id, point.is_favorite || false)}
-                    startIcon={<StarIcon />}
-                  >
-                    {point.is_favorite ? 'Удалить из избранного' : 'В избранное'}
-                  </Button>
-                </CardActions>
-              </Card>
-            </div>
-          ))}
-        </div>
+                    <FlexBox alignItems="center" gap={1}>
+                      <Rating value={point.average_rating} readOnly size="small" />
+                      <Typography variant="body2" color="text.secondary">
+                        ({point.reviews_count || 0} отзывов)
+                      </Typography>
+                    </FlexBox>
+                    {point.services && point.services.length > 0 && (
+                      <FlexBox gap={1} wrap>
+                        {point.services.slice(0, 3).map(service => (
+                          <Chip
+                            key={service.id}
+                            label={`${service.name} - ${service.price} ₽`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                        {point.services.length > 3 && (
+                          <Chip
+                            label={`+${point.services.length - 3}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </FlexBox>
+                    )}
+                  </ServiceCardContent>
+                  <ServiceCardActions>
+                    <Button
+                      component={RouterLink}
+                      to={`/service-points/${point.id}`}
+                      size="small"
+                      color="primary"
+                    >
+                      Подробнее
+                    </Button>
+                    <Button
+                      size="small"
+                      color={point.is_favorite ? "error" : "primary"}
+                      onClick={() => toggleFavorite(point.id, point.is_favorite || false)}
+                      startIcon={<StarIcon />}
+                    >
+                      {point.is_favorite ? "Убрать из избранного" : "В избранное"}
+                    </Button>
+                  </ServiceCardActions>
+                </ServiceCard>
+              </GridItem>
+            ))}
+          </GridContainer>
+        </GridItem>
       )}
-    </Box>
+    </GridContainer>
   );
 };
 

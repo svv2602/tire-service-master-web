@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CssBaseline, ThemeProvider, createTheme, useMediaQuery } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, useMediaQuery, Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
@@ -63,16 +63,18 @@ const ProtectedRoute: React.FC<{
   if (loading || !isInitialized) {
     console.log('ProtectedRoute: Ожидание завершения инициализации...');
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '18px',
-        color: '#666'
-      }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontSize: '18px',
+          color: 'text.secondary'
+        }}
+      >
         🔄 Проверка аутентификации...
-      </div>
+      </Box>
     );
   }
   

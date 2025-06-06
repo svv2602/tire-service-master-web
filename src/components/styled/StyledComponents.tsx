@@ -147,9 +147,9 @@ export const StyledFormSection: React.FC<StyledFormSectionProps> = ({
   return (
     <MuiBox sx={{ ...formStyles.section, ...sx }} {...props}>
       {title && (
-        <div style={formStyles.sectionTitle as React.CSSProperties}>
+        <MuiBox sx={formStyles.sectionTitle}>
           {title}
-        </div>
+        </MuiBox>
       )}
       {children}
     </MuiBox>
