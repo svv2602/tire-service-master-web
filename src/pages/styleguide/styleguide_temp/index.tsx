@@ -16,7 +16,12 @@ import {
   RadioSection,
   SelectSection,
   SwitchSection,
-  ThemeSection
+  ThemeSection,
+  DatePickerSection,
+  AccordionSection,
+  StepperSection,
+  FilterSection,
+  ScrollbarSection
 } from './sections';
 
 const StyleGuide: React.FC = () => {
@@ -46,6 +51,7 @@ const StyleGuide: React.FC = () => {
         <RadioSection />
         <SelectSection />
         <SwitchSection />
+        <DatePickerSection />
       </Box>
 
       {/* Навигация и отображение данных */}
@@ -55,6 +61,9 @@ const StyleGuide: React.FC = () => {
         </Typography>
         <DropdownSection />
         <TableSection />
+        <AccordionSection />
+        <StepperSection />
+        <ScrollbarSection />
       </Box>
 
       {/* Вспомогательные компоненты */}
@@ -65,6 +74,7 @@ const StyleGuide: React.FC = () => {
         <TooltipSection />
         <AlertSection />
         <ModalSection />
+        <FilterSection />
       </Box>
 
       {/* Типография */}
