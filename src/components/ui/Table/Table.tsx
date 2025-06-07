@@ -5,11 +5,10 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TablePagination,
   TableRow,
-  Paper
+  Paper,
+  TableProps as MuiTableProps
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 
 /** Колонка таблицы */
 export interface Column {
@@ -20,34 +19,20 @@ export interface Column {
   /** Минимальная ширина */
   minWidth?: number;
   /** Выравнивание */
-  align?: 'right' | 'left' | 'center';
+  align?: 'left' | 'right' | 'center';
   /** Форматирование значения */
   format?: (value: any) => string;
 }
 
 /** Пропсы таблицы */
-export interface TableProps {
-  /** Колонки */
+export interface TableProps extends MuiTableProps {
   columns: Column[];
-  /** Строки */
-  rows: Record<string, any>[];
-  /** Включить пагинацию */
+  rows: any[];
+  stickyHeader?: boolean;
+  maxHeight?: number;
   pagination?: boolean;
-  /** Строк на странице */
   rowsPerPage?: number;
 }
-
-/** Стилизованный контейнер таблицы */
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  borderRadius: '12px',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-  '& .MuiTableCell-head': {
-    fontWeight: 600,
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? theme.palette.grey[800] 
-      : theme.palette.grey[100],
-  },
-}));
 
 /** 
  * Компонент таблицы с поддержкой пагинации
@@ -55,70 +40,56 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 export const Table: React.FC<TableProps> = ({
   columns,
   rows,
+  stickyHeader = false,
+  maxHeight,
   pagination = false,
-  rowsPerPage: defaultRowsPerPage = 5
+  rowsPerPage = 10,
+  ...props
 }) => {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(defaultRowsPerPage);
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(+event.target.value);
-    setPage(0);
-  };
-
-  const displayedRows = pagination
-    ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    : rows;
-
   return (
-    <StyledPaper>
-      <TableContainer>
-        <MuiTable stickyHeader>
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.id}
-                  align={column.align}
-                  style={{ minWidth: column.minWidth }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {displayedRows.map((row, index) => (
-              <TableRow hover role="checkbox" tabIndex={-1} key={index}>
-                {columns.map((column) => {
-                  const value = row[column.id];
-                  return (
-                    <TableCell key={column.id} align={column.align}>
-                      {column.format ? column.format(value) : value}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
+    <TableContainer
+      component={Paper}
+      sx={{
+        maxHeight: maxHeight,
+        '& .MuiTableCell-root': {
+          borderBottom: '1px solid rgba(224, 224, 224, 1)'
+        }
+      }}
+    >
+      <MuiTable stickyHeader={stickyHeader} {...props}>
+        <TableHead>
+          <TableRow>
+            {columns.map((column) => (
+              <TableCell
+                key={column.id}
+                align={column.align}
+                style={{ minWidth: column.minWidth }}
+                sx={{
+                  fontWeight: 'bold',
+                  backgroundColor: 'background.paper'
+                }}
+              >
+                {column.label}
+              </TableCell>
             ))}
-          </TableBody>
-        </MuiTable>
-        {pagination && (
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        )}
-      </TableContainer>
-    </StyledPaper>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row, index) => (
+            <TableRow hover role="checkbox" tabIndex={-1} key={index}>
+              {columns.map((column) => {
+                const value = row[column.id];
+                return (
+                  <TableCell key={column.id} align={column.align}>
+                    {column.format ? column.format(value) : value}
+                  </TableCell>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableBody>
+      </MuiTable>
+    </TableContainer>
   );
 };
 

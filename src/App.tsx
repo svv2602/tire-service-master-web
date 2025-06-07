@@ -65,7 +65,7 @@ import PageContentPage from './pages/page-content/PageContentPage';
 import PageContentFormPage from './pages/page-content/PageContentFormPage';
 
 // Импорт для страницы StyleGuide
-import StyleGuidePage from './pages/styleguide/StyleGuidePage';
+import StyleGuide from './pages/styleguide/styleguide_temp';
 
 // Компонент для тем
 const ThemeContext = React.createContext<{
@@ -150,7 +150,7 @@ function App() {
               <Routes>
                 {/* Публичные маршруты */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/styleguide" element={<StyleGuidePage />} />
+                <Route path="/styleguide" element={<StyleGuide />} />
                 
                 {/* Главная страница для клиентов (без авторизации) */}
                 <Route path="/client" element={

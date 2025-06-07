@@ -1,38 +1,26 @@
 import React from 'react';
-import { Alert as MuiAlert, AlertProps as MuiAlertProps } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Alert as MuiAlert, AlertProps as MuiAlertProps, Box, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 /** Типы вариантов алертов */
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error' | 'standard' | 'filled' | 'outlined';
 
+export interface AlertAction {
+  label: string;
+  onClick: () => void;
+}
+
 /** Пропсы алерта */
-export interface AlertProps extends Omit<MuiAlertProps, 'variant'> {
+export interface AlertProps extends Omit<MuiAlertProps, 'variant' | 'action'> {
   /** Вариант алерта */
   variant?: AlertVariant;
   /** Можно ли закрыть */
   closable?: boolean;
+  title?: string;
+  onClose?: () => void;
+  actions?: AlertAction[];
+  children: React.ReactNode;
 }
-
-/** Стилизованный алерт */
-const StyledAlert = styled(MuiAlert)<AlertProps>(({ theme, variant }) => {
-  // Маппинг наших вариантов на варианты MUI
-  const variantMapping: Record<AlertVariant, MuiAlertProps['variant']> = {
-    info: 'filled',
-    success: 'filled',
-    warning: 'filled',
-    error: 'filled',
-    standard: 'standard',
-    filled: 'filled',
-    outlined: 'outlined'
-  };
-
-  return {
-    borderRadius: '8px',
-    '& .MuiAlert-message': {
-      padding: '8px 0',
-    },
-  };
-});
 
 /**
  * Компонент оповещения
@@ -40,12 +28,14 @@ const StyledAlert = styled(MuiAlert)<AlertProps>(({ theme, variant }) => {
  * @example
  * <Alert severity="success">Успешное действие</Alert>
  */
-export const Alert: React.FC<AlertProps> = ({ 
+export const Alert: React.FC<AlertProps> = ({
   variant = 'standard',
   closable = false,
   onClose,
+  title,
+  actions,
   children,
-  ...props 
+  ...props
 }) => {
   // Определяем соответствующие MUI варианты
   const muiVariant = ['standard', 'filled', 'outlined'].includes(variant) 
@@ -57,15 +47,50 @@ export const Alert: React.FC<AlertProps> = ({
     ? variant as MuiAlertProps['severity']
     : undefined;
 
+  const actionButtons = (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+      {actions?.map((action, index) => (
+        <IconButton
+          key={index}
+          size="small"
+          onClick={action.onClick}
+          sx={{ color: 'inherit' }}
+        >
+          {action.label}
+        </IconButton>
+      ))}
+      {onClose && (
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{ color: 'inherit' }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
+  );
+
   return (
-    <StyledAlert
+    <MuiAlert
       variant={muiVariant}
       severity={severity}
       onClose={closable ? onClose : undefined}
-      {...props}
+      action={actionButtons}
+      sx={{
+        '& .MuiAlert-message': {
+          width: '100%'
+        },
+        ...props.sx
+      }}
     >
+      {title && (
+        <Box component="div" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+          {title}
+        </Box>
+      )}
       {children}
-    </StyledAlert>
+    </MuiAlert>
   );
 };
 

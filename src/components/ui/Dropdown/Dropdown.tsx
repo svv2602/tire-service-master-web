@@ -3,14 +3,16 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Button,
   MenuProps,
-  Typography,
+  ButtonProps,
   ListItemIcon,
   ListItemText,
+  Typography,
+  Box
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { styled } from '@mui/material/styles';
-import { SIZES, ANIMATIONS, getThemeColors } from '../../../styles/theme';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export interface DropdownItem {
   /** Уникальный идентификатор пункта меню */
@@ -20,65 +22,29 @@ export interface DropdownItem {
   /** Иконка пункта меню */
   icon?: React.ReactNode;
   /** Колбэк клика по пункту */
-  onClick?: () => void;
+  onClick: () => void;
   /** Отключен ли пункт */
   disabled?: boolean;
   /** Опасное действие (красный цвет) */
   danger?: boolean;
+  /** Разделитель */
+  divider?: boolean;
 }
 
 export interface DropdownProps {
   /** Элементы меню */
   items: DropdownItem[];
-  /** Кастомная кнопка открытия */
+  /** Вариант отображения */
+  variant?: 'icon' | 'button';
+  /** Пропсы для кнопки */
+  buttonProps?: ButtonProps;
+  /** Пропсы для меню */
+  menuProps?: Omit<MenuProps, 'open' | 'onClose' | 'anchorEl'>;
+  /** Текст кнопки */
+  label?: string;
+  /** Кастомный триггер */
   trigger?: React.ReactNode;
-  /** Позиция меню */
-  position?: MenuProps['anchorOrigin'];
 }
-
-const StyledMenu = styled(Menu)(({ theme }) => {
-  const colors = getThemeColors(theme);
-  
-  return {
-    '& .MuiPaper-root': {
-      backgroundColor: colors.backgroundCard,
-      borderRadius: SIZES.borderRadius.md,
-      border: `1px solid ${colors.borderPrimary}`,
-      boxShadow: `0 4px 20px ${colors.shadowMedium}`,
-      animation: `${ANIMATIONS.zoomIn} 0.2s ${ANIMATIONS.transition.cubic}`,
-    },
-    
-    '& .MuiMenuItem-root': {
-      padding: theme.spacing(1, 2),
-      transition: ANIMATIONS.transition.fast,
-      
-      '&:hover': {
-        backgroundColor: colors.backgroundHover,
-      },
-      
-      '&.Mui-disabled': {
-        opacity: 0.5,
-      },
-      
-      '&.danger': {
-        color: colors.error,
-        
-        '& .MuiListItemIcon-root': {
-          color: colors.error,
-        },
-        
-        '&:hover': {
-          backgroundColor: colors.errorBg,
-        },
-      },
-    },
-    
-    '& .MuiListItemIcon-root': {
-      minWidth: 36,
-      color: colors.textSecondary,
-    },
-  };
-});
 
 /**
  * Компонент выпадающего меню
@@ -89,15 +55,16 @@ const StyledMenu = styled(Menu)(({ theme }) => {
  *     { id: 'edit', label: 'Редактировать', icon: <EditIcon /> },
  *     { id: 'delete', label: 'Удалить', icon: <DeleteIcon />, danger: true },
  *   ]}
+ *   trigger={<Button>Открыть меню</Button>}
  * />
  */
 export const Dropdown: React.FC<DropdownProps> = ({
   items,
-  trigger,
-  position = {
-    vertical: 'bottom',
-    horizontal: 'right',
-  },
+  variant = 'icon',
+  buttonProps,
+  menuProps,
+  label,
+  trigger
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -110,44 +77,70 @@ export const Dropdown: React.FC<DropdownProps> = ({
     setAnchorEl(null);
   };
   
-  const handleItemClick = (item: DropdownItem) => {
-    if (item.onClick) {
-      item.onClick();
-    }
+  const handleItemClick = (onClick: () => void) => {
     handleClose();
+    onClick();
   };
 
   return (
     <>
-      {trigger || (
+      {trigger ? (
+        <Box onClick={handleClick} sx={{ display: 'inline-block', cursor: 'pointer' }}>
+          {trigger}
+        </Box>
+      ) : variant === 'icon' ? (
         <IconButton
-          aria-label="more"
-          aria-controls={open ? 'dropdown-menu' : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? 'true' : undefined}
           onClick={handleClick}
+          size="small"
+          {...buttonProps}
         >
           <MoreVertIcon />
         </IconButton>
+      ) : (
+        <Button
+          onClick={handleClick}
+          endIcon={<KeyboardArrowDownIcon />}
+          {...buttonProps}
+        >
+          {label}
+        </Button>
       )}
       
-      <StyledMenu
-        id="dropdown-menu"
+      <Menu
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        anchorOrigin={position}
-        transformOrigin={{
-          vertical: position.vertical === 'top' ? 'bottom' : 'top',
-          horizontal: position.horizontal,
+        onClick={handleClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+            mt: 1.5,
+            '& .MuiMenuItem-root': {
+              px: 2,
+              py: 1,
+              borderRadius: 0.5,
+              '&:hover': {
+                backgroundColor: 'action.hover'
+              }
+            },
+            '& .MuiDivider-root': {
+              my: 1
+            }
+          }
         }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        {...menuProps}
       >
-        {items.map((item) => (
+        {items.map((item, index) => (
           <MenuItem
-            key={item.id}
-            onClick={() => handleItemClick(item)}
+            key={index}
+            onClick={() => handleItemClick(item.onClick)}
             disabled={item.disabled}
             className={item.danger ? 'danger' : ''}
+            divider={item.divider}
           >
             {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
             <ListItemText>
@@ -157,7 +150,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
             </ListItemText>
           </MenuItem>
         ))}
-      </StyledMenu>
+      </Menu>
     </>
   );
 };

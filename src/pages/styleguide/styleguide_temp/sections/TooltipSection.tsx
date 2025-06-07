@@ -1,80 +1,37 @@
 import React from 'react';
-import { Typography, Box, Grid } from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import HelpIcon from '@mui/icons-material/Help';
-import { Tooltip } from '../../../../components/ui/Tooltip';
-import { Button } from '../../../../components/ui/Button';
-import { Card } from '../../../../components/ui/Card';
+import { Box, Typography, Button, Tooltip } from '@mui/material';
 
-export const TooltipSection: React.FC = () => {
+export const TooltipSection = () => {
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Тултипы
+    <Box mb={4}>
+      <Typography variant="h5" gutterBottom>
+        Подсказки
       </Typography>
+      <Box display="flex" gap={2}>
+        <Tooltip title="Подсказка сверху">
+          <Button variant="contained">Сверху</Button>
+        </Tooltip>
 
-      <Grid container spacing={3}>
-        {/* Простые тултипы */}
-        <Grid item xs={12} md={6}>
-          <Card title="Простые тултипы">
-            <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-              <Tooltip 
-                title="Это простой тултип"
-                arrow
-              >
-                <Button variant="contained" color="primary">
-                  Наведи на меня
-                </Button>
-              </Tooltip>
-            </Box>
-          </Card>
-        </Grid>
+        <Tooltip title="Подсказка снизу" placement="bottom">
+          <Button variant="contained">Снизу</Button>
+        </Tooltip>
 
-        {/* Форматированные тултипы */}
-        <Grid item xs={12} md={6}>
-          <Card title="Форматированные тултипы">
-            <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-              <Tooltip 
-                title={
-                  <Typography color="inherit">
-                    Тултип с <b>форматированным</b> текстом
-                  </Typography>
-                }
-                arrow
-              >
-                <Button variant="outlined" color="secondary">
-                  С форматированием
-                </Button>
-              </Tooltip>
-            </Box>
-          </Card>
-        </Grid>
+        <Tooltip title="Подсказка слева" placement="left">
+          <Button variant="contained">Слева</Button>
+        </Tooltip>
 
-        {/* Тултипы с разными темами */}
-        <Grid item xs={12}>
-          <Card title="Тултипы с разными темами">
-            <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-              <Tooltip 
-                title="Светлый тултип"
-                arrow
-              >
-                <Button variant="contained" color="primary">
-                  Светлый
-                </Button>
-              </Tooltip>
+        <Tooltip title="Подсказка справа" placement="right">
+          <Button variant="contained">Справа</Button>
+        </Tooltip>
 
-              <Tooltip 
-                title="Темный тултип"
-                arrow
-              >
-                <Button variant="outlined" color="secondary">
-                  Темный
-                </Button>
-              </Tooltip>
-            </Box>
-          </Card>
-        </Grid>
-      </Grid>
+        <Tooltip 
+          title="Подсказка с задержкой"
+          enterDelay={500}
+          leaveDelay={200}
+        >
+          <Button variant="contained">С задержкой</Button>
+        </Tooltip>
+      </Box>
     </Box>
   );
 };

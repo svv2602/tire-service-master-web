@@ -1,86 +1,69 @@
-import React from 'react';
-import { Typography, Box, Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Button } from '@mui/material';
 import { Modal } from '../../../../components/ui/Modal';
-import { Button } from '../../../../components/ui/Button';
 
-export const ModalSection: React.FC = () => {
-  const [simpleModalOpen, setSimpleModalOpen] = React.useState(false);
-  const [complexModalOpen, setComplexModalOpen] = React.useState(false);
+export const ModalSection = () => {
+  const [simpleModalOpen, setSimpleModalOpen] = useState(false);
+  const [complexModalOpen, setComplexModalOpen] = useState(false);
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
+    <Box mb={4}>
+      <Typography variant="h5" gutterBottom>
         Модальные окна
       </Typography>
+      <Box display="flex" gap={2}>
+        <Button
+          variant="contained"
+          onClick={() => setSimpleModalOpen(true)}
+        >
+          Простое модальное окно
+        </Button>
 
-      <Grid container spacing={2}>
-        <Grid item>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setSimpleModalOpen(true)}
-          >
-            Простое модальное окно
-          </Button>
+        <Button
+          variant="contained"
+          onClick={() => setComplexModalOpen(true)}
+        >
+          Сложное модальное окно
+        </Button>
 
-          <Modal
-            open={simpleModalOpen}
-            onClose={() => setSimpleModalOpen(false)}
-            title="Простое модальное окно"
-            actions={
+        <Modal
+          open={simpleModalOpen}
+          onClose={() => setSimpleModalOpen(false)}
+          title="Простое модальное окно"
+        >
+          <Typography>
+            Это простое модальное окно с базовым содержимым.
+          </Typography>
+        </Modal>
+
+        <Modal
+          open={complexModalOpen}
+          onClose={() => setComplexModalOpen(false)}
+          title="Сложное модальное окно"
+          maxWidth={800}
+          fullWidth
+        >
+          <Box display="flex" flexDirection="column" gap={2}>
+            <Typography>
+              Это сложное модальное окно с дополнительными элементами управления и форматированием.
+            </Typography>
+            <Box display="flex" gap={1} justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                onClick={() => setComplexModalOpen(false)}
+              >
+                Отмена
+              </Button>
               <Button
                 variant="contained"
-                color="primary"
-                onClick={() => setSimpleModalOpen(false)}
+                onClick={() => setComplexModalOpen(false)}
               >
-                Закрыть
+                Подтвердить
               </Button>
-            }
-          >
-            <Typography>
-              Это простое модальное окно с одной кнопкой действия.
-            </Typography>
-          </Modal>
-        </Grid>
-
-        <Grid item>
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={() => setComplexModalOpen(true)}
-          >
-            Сложное модальное окно
-          </Button>
-
-          <Modal
-            open={complexModalOpen}
-            onClose={() => setComplexModalOpen(false)}
-            title="Сложное модальное окно"
-            actions={
-              <>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={() => setComplexModalOpen(false)}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => setComplexModalOpen(false)}
-                >
-                  Подтвердить
-                </Button>
-              </>
-            }
-          >
-            <Typography>
-              Это сложное модальное окно с несколькими кнопками действий.
-            </Typography>
-          </Modal>
-        </Grid>
-      </Grid>
+            </Box>
+          </Box>
+        </Modal>
+      </Box>
     </Box>
   );
 };

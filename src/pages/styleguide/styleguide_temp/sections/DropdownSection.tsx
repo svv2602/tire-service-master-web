@@ -1,50 +1,60 @@
 import React from 'react';
-import { Typography, Box, Grid, Button } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ShareIcon from '@mui/icons-material/Share';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { Dropdown } from '../../../../components/ui/Dropdown';
 
-export const DropdownSection: React.FC = () => {
+export const DropdownSection = () => {
   const items = [
     {
       id: 'edit',
       label: 'Редактировать',
       icon: <EditIcon />,
-      onClick: () => console.log('Edit clicked'),
+      onClick: () => console.log('Редактировать')
     },
     {
-      id: 'share',
-      label: 'Поделиться',
-      icon: <ShareIcon />,
-      onClick: () => console.log('Share clicked'),
+      id: 'settings',
+      label: 'Настройки',
+      icon: <SettingsIcon />,
+      onClick: () => console.log('Настройки')
     },
     {
       id: 'delete',
       label: 'Удалить',
       icon: <DeleteIcon />,
-      onClick: () => console.log('Delete clicked'),
-      danger: true,
-    },
+      onClick: () => console.log('Удалить'),
+      danger: true
+    }
   ];
 
   return (
-    <Box sx={{ mb: 6 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box mb={4}>
+      <Typography variant="h5" gutterBottom>
         Выпадающие меню
       </Typography>
-      
-      <Grid container spacing={4}>
-        <Grid item>
-          <Typography variant="h6" gutterBottom>
-            Стандартное меню
+      <Box display="flex" gap={4}>
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Иконка
           </Typography>
-          <Dropdown items={items} />
-        </Grid>
-        
-        <Grid item>
-          <Typography variant="h6" gutterBottom>
-            С кастомным триггером
+          <Dropdown items={items} variant="icon" />
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Кнопка
+          </Typography>
+          <Dropdown
+            items={items}
+            variant="button"
+            label="Действия"
+          />
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Кастомный триггер
           </Typography>
           <Dropdown
             items={items}
@@ -54,8 +64,8 @@ export const DropdownSection: React.FC = () => {
               </Button>
             }
           />
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

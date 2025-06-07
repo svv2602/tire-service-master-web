@@ -1,64 +1,65 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
-import { Table } from '../../../../components/ui/Table';
+import { Box, Typography } from '@mui/material';
+import { Table, Column } from '../../../../components/ui/Table';
 
-const columns = [
-  { id: 'name', label: 'Название', minWidth: 170 },
-  { id: 'code', label: 'Код', minWidth: 100 },
-  {
-    id: 'population',
-    label: 'Население',
-    minWidth: 170,
-    align: 'right' as const,
-    format: (value: number) => value.toLocaleString('ru-RU'),
-  },
-  {
-    id: 'size',
-    label: 'Размер',
-    minWidth: 170,
-    align: 'right' as const,
-    format: (value: number) => value.toLocaleString('ru-RU'),
-  },
-];
+export const TableSection = () => {
+  const columns: Column[] = [
+    { 
+      id: 'name', 
+      label: 'Название', 
+      minWidth: 170,
+      align: 'left'
+    },
+    { 
+      id: 'code', 
+      label: 'Код', 
+      minWidth: 100,
+      align: 'left'
+    },
+    {
+      id: 'population',
+      label: 'Население',
+      minWidth: 170,
+      align: 'right',
+      format: (value: number) => value.toLocaleString('ru-RU'),
+    },
+  ];
 
-const createData = (name: string, code: string, population: number, size: number) => {
-  return { name, code, population, size };
-};
+  const data = [
+    { name: 'Россия', code: 'RU', population: 146793744 },
+    { name: 'Китай', code: 'CN', population: 1402112000 },
+    { name: 'Италия', code: 'IT', population: 60317000 },
+    { name: 'США', code: 'US', population: 331002651 },
+    { name: 'Канада', code: 'CA', population: 37742154 },
+  ];
 
-const rows = [
-  createData('Индия', 'IN', 1324171354, 3287263),
-  createData('Китай', 'CN', 1403500365, 9596961),
-  createData('Италия', 'IT', 60483973, 301340),
-  createData('США', 'US', 327167434, 9833520),
-  createData('Канада', 'CA', 37602103, 9984670),
-];
-
-export const TableSection: React.FC = () => {
   return (
-    <Box sx={{ mb: 6 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box mb={4}>
+      <Typography variant="h5" gutterBottom>
         Таблицы
       </Typography>
-      
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Простая таблица
-        </Typography>
-        <Table
-          columns={columns}
-          rows={rows}
-        />
-      </Box>
-      
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Таблица с пагинацией
-        </Typography>
-        <Table
-          columns={columns}
-          rows={rows}
-          pagination
-        />
+      <Box display="flex" flexDirection="column" gap={4}>
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Простая таблица
+          </Typography>
+          <Table
+            columns={columns}
+            rows={data}
+          />
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle1" gutterBottom>
+            Таблица с фиксированным заголовком
+          </Typography>
+          <Table
+            columns={columns}
+            rows={data}
+            stickyHeader
+            maxHeight={300}
+          />
+        </Box>
       </Box>
     </Box>
   );
