@@ -347,7 +347,7 @@ export const StyledListItemButton: React.FC<StyledListItemButtonProps> = ({
   const theme = useTheme();
   
   // Определяем отступ в зависимости от уровня вложенности
-  const paddingLeft = nested === 1 ? SIZES.spacing.xl : nested === 2 ? SIZES.spacing.xxl : undefined;
+  const paddingLeft = nested === 1 ? SIZES.spacing.xl : nested === 2 ? '48px' : undefined;
   
   return (
     <ListItemButton

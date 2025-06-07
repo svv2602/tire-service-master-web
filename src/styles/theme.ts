@@ -2,9 +2,52 @@
 // Централизованная система стилей для обеспечения единообразия
 
 import { Theme, createTheme, ThemeOptions } from '@mui/material/styles';
+import { keyframes } from '@mui/material/styles';
 
-// Константы цветов для темной и светлой тем
+/** Цвета темы */
 export const THEME_COLORS = {
+  primary: {
+    light: '#64B5F6',
+    main: '#2196F3',
+    dark: '#1976D2',
+  },
+  secondary: {
+    light: '#FF4081',
+    main: '#F50057',
+    dark: '#C51162',
+  },
+  error: {
+    light: '#E57373',
+    main: '#F44336',
+    dark: '#D32F2F',
+  },
+  warning: {
+    light: '#FFB74D',
+    main: '#FF9800',
+    dark: '#F57C00',
+  },
+  info: {
+    light: '#4FC3F7',
+    main: '#03A9F4',
+    dark: '#0288D1',
+  },
+  success: {
+    light: '#81C784',
+    main: '#4CAF50',
+    dark: '#388E3C',
+  },
+  grey: {
+    50: '#FAFAFA',
+    100: '#F5F5F5',
+    200: '#EEEEEE',
+    300: '#E0E0E0',
+    400: '#BDBDBD',
+    500: '#9E9E9E',
+    600: '#757575',
+    700: '#616161',
+    800: '#424242',
+    900: '#212121',
+  },
   dark: {
     // Основные цвета
     primary: '#e0e0e0',
@@ -94,42 +137,37 @@ export const THEME_COLORS = {
     shadowLight: 'rgba(0, 0, 0, 0.05)',
     shadowMedium: 'rgba(0, 0, 0, 0.08)',
     shadowDark: 'rgba(0, 0, 0, 0.12)',
-  }
+  },
 };
 
-// Константы размеров
+/** Размеры */
 export const SIZES = {
   borderRadius: {
-    xs: 2,
-    small: 3,
-    sm: 4,
-    md: 6,
-    medium: 6,
-    lg: 8,
-    large: 8,
-    xl: 12,
+    xs: '4px',
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
   },
   spacing: {
-    xs: 0.5,
-    sm: 1,
-    md: 2,
-    lg: 3,
-    xl: 4,
-    xxl: 6,
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+    xl: '32px',
+  },
+  fontSize: {
+    xs: '12px',
+    sm: '14px',
+    md: '16px',
+    lg: '20px',
+    xl: '24px',
   },
   icon: {
     small: 16,
     medium: 24,
     large: 32,
     xlarge: 48,
-  },
-  fontSize: {
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 20,
-    xxl: 24,
   },
   // Новые константы для улучшенного дизайна
   navigation: {
@@ -155,16 +193,41 @@ export const SIZES = {
   }
 };
 
-// Константы анимаций
+/** Анимации */
 export const ANIMATIONS = {
+  fadeIn: keyframes`
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  `,
+  slideIn: keyframes`
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  `,
+  zoomIn: keyframes`
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  `,
   transition: {
-    fast: '0.2s ease-in-out',
-    medium: '0.3s ease-in-out',
-    slow: '0.5s ease-in-out',
-    cubic: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    // Новые анимации для улучшенного UX
-    smooth: '0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    bounce: '0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+    fast: '150ms',
+    medium: '300ms',
+    slow: '500ms',
+    cubic: 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
   duration: {
     fast: 200,
@@ -177,10 +240,6 @@ export const ANIMATIONS = {
     exit: 'fade-exit',
     exitActive: 'fade-exit-active',
   },
-  fadeIn: '@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }',
-  slideIn: '@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
-  zoomIn: '@keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
-  // Новые анимации
   slideDown: '@keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }',
   scaleIn: '@keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }',
   pulse: '@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }',
@@ -286,7 +345,7 @@ export const getNavigationStyles = (theme: Theme) => {
       width: SIZES.navigation.width,
       backgroundColor: theme.palette.background.paper,
       borderRight: `1px solid ${theme.palette.divider}`,
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
       height: '100vh',
       overflow: 'hidden',
       display: 'flex',
@@ -320,7 +379,7 @@ export const getNavigationStyles = (theme: Theme) => {
       minHeight: SIZES.navigation.itemHeight,
       borderRadius: 0, // Убираем закругления как просил пользователь
       margin: 0,
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
       position: 'relative',
       overflow: 'hidden',
       '&::before': {
@@ -356,7 +415,7 @@ export const getNavigationStyles = (theme: Theme) => {
     listItemIcon: {
       color: colors.textSecondary,
       minWidth: 40,
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
     },
     
     // Стили для заголовков разделов
@@ -375,7 +434,7 @@ export const getNavigationStyles = (theme: Theme) => {
       borderRadius: 0,
       margin: 0,
       cursor: 'pointer',
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
       '&:hover': {
         backgroundColor: theme.palette.mode === 'dark' 
           ? 'rgba(255, 255, 255, 0.05)'
@@ -399,7 +458,7 @@ export const getUserButtonStyles = (theme: Theme) => {
       color: 'white',
       border: '1px solid rgba(255, 255, 255, 0.2)',
       backdropFilter: 'blur(10px)',
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
       textTransform: 'none' as const,
       fontSize: SIZES.fontSize.md,
       fontWeight: 500,
@@ -443,7 +502,7 @@ export const getInteractiveStyles = (theme: Theme) => {
   return {
     // Эффект при наведении с микроанимацией
     hoverLift: {
-      transition: ANIMATIONS.transition.smooth,
+      transition: ANIMATIONS.transition.medium,
       '&:hover': {
         transform: 'translateY(-2px)',
         boxShadow: theme.shadows[4],
@@ -731,7 +790,7 @@ export const SHADOWS = {
 export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
   const colors = mode === 'dark' ? THEME_COLORS.dark : THEME_COLORS.light;
   
-  const themeOptions: ThemeOptions = {
+  const themeOptions = {
     palette: {
       mode,
       primary: {
@@ -819,7 +878,7 @@ export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
       },
     },
     shape: {
-      borderRadius: SIZES.borderRadius.md,
+      borderRadius: parseInt(SIZES.borderRadius.md) || 8,
     },
     spacing: 8,
     components: {
@@ -858,7 +917,7 @@ export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
                 ? 'rgba(255, 255, 255, 0.4)' 
                 : 'rgba(0, 0, 0, 0.4)',
               borderRadius: SIZES.scrollbar.borderRadius,
-              transition: ANIMATIONS.transition.smooth,
+              transition: ANIMATIONS.transition.medium,
               '&:hover': {
                 backgroundColor: mode === 'dark' 
                   ? 'rgba(255, 255, 255, 0.6)' 
@@ -874,7 +933,7 @@ export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
             textTransform: 'none',
             borderRadius: SIZES.borderRadius.md,
             fontWeight: 600,
-            transition: ANIMATIONS.transition.smooth,
+            transition: ANIMATIONS.transition.medium,
           },
         },
       },
@@ -998,7 +1057,7 @@ export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
         },
       },
     },
-  };
+  } as ThemeOptions;
 
   return createTheme(themeOptions);
 };

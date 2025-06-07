@@ -2,23 +2,7 @@
 // Главный файл экспорта всех стилей
 
 // Экспорт базовых констант и утилит темы
-export {
-  THEME_COLORS,
-  SIZES,
-  ANIMATIONS,
-  GRADIENTS,
-  TYPOGRAPHY,
-  SHADOWS,
-  getThemeColors,
-  getGradient,
-  getButtonStyles,
-  type GradientType,
-  getNavigationStyles,
-  getUserButtonStyles,
-  getInteractiveStyles,
-  getTableStyles,
-  getAdaptiveTableStyles,
-} from './theme';
+export * from './theme';
 
 // Экспорт стилей компонентов
 export {

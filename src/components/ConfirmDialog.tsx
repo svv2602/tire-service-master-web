@@ -3,24 +3,48 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogContentText,
   DialogActions,
-  Button,
-  useTheme,
+  Typography,
+  Box,
 } from '@mui/material';
-import { SIZES, getFormStyles } from '../styles';
-import { StyledButton, FlexBox } from './styled/CommonComponents';
+import { styled } from '@mui/material/styles';
+import { SIZES } from '../styles/theme';
+import { FlexBox } from './styled/CommonComponents';
+import { Button } from './ui/Button';
 
 interface ConfirmDialogProps {
+  /** Открыто ли диалоговое окно */
   open: boolean;
+  /** Заголовок */
   title: string;
+  /** Сообщение */
   message: string;
+  /** Текст кнопки подтверждения */
   confirmText?: string;
+  /** Текст кнопки отмены */
   cancelText?: string;
+  /** Обработчик подтверждения */
   onConfirm: () => void;
+  /** Обработчик отмены */
   onCancel: () => void;
 }
 
+const StyledButton = styled(Button)(({ theme }) => ({
+  minWidth: 100,
+}));
+
+/**
+ * Компонент диалогового окна подтверждения
+ * 
+ * @example
+ * <ConfirmDialog
+ *   open={open}
+ *   title="Подтверждение"
+ *   message="Вы уверены, что хотите удалить этот элемент?"
+ *   onConfirm={handleConfirm}
+ *   onCancel={handleCancel}
+ * />
+ */
 export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   title,
@@ -30,56 +54,43 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const theme = useTheme();
-  const formStyles = getFormStyles(theme);
-  
   return (
     <Dialog
       open={open}
       onClose={onCancel}
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-description"
-      PaperProps={{
-        sx: {
-          ...formStyles.container,
-          minWidth: 320,
-        }
-      }}
+      maxWidth="xs"
+      fullWidth
     >
-      <DialogTitle 
-        id="confirm-dialog-title"
-        sx={formStyles.sectionTitle}
-      >
-        {title}
+      <DialogTitle>
+        <Typography variant="h6">
+          {title}
+        </Typography>
       </DialogTitle>
-      <DialogContent sx={{ paddingBottom: SIZES.spacing.md }}>
-        <DialogContentText 
-          id="confirm-dialog-description"
-          sx={{
-            fontSize: SIZES.fontSize.md,
-            color: theme.palette.text.secondary,
-          }}
-        >
+      <DialogContent>
+        <Typography>
           {message}
-        </DialogContentText>
+        </Typography>
       </DialogContent>
       <DialogActions sx={{ padding: SIZES.spacing.md }}>
-        <FlexBox gap={SIZES.spacing.sm}>
+        <FlexBox gap={1}>
           <StyledButton 
-            styleVariant="secondary"
-          onClick={onCancel} 
-        >
-          {cancelText}
+            variant="outlined"
+            color="primary"
+            onClick={onCancel}
+          >
+            {cancelText}
           </StyledButton>
-          <StyledButton 
-            styleVariant="primary"
-          onClick={onConfirm} 
-          autoFocus
-        >
-          {confirmText}
+          <StyledButton
+            variant="contained"
+            color="primary"
+            onClick={onConfirm}
+          >
+            {confirmText}
           </StyledButton>
         </FlexBox>
       </DialogActions>
     </Dialog>
   );
 };
+
+export default ConfirmDialog;
