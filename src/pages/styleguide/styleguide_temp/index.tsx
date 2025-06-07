@@ -11,7 +11,12 @@ import {
   DropdownSection,
   AlertSection,
   ModalSection,
-  TooltipSection
+  TooltipSection,
+  CheckboxSection,
+  RadioSection,
+  SelectSection,
+  SwitchSection,
+  ThemeSection
 } from './sections';
 
 const StyleGuide: React.FC = () => {
@@ -20,6 +25,11 @@ const StyleGuide: React.FC = () => {
       <Typography variant="h2" gutterBottom>
         Style Guide
       </Typography>
+
+      {/* Тема */}
+      <Box mb={6}>
+        <ThemeSection />
+      </Box>
 
       {/* Основные компоненты */}
       <Box mb={6}>
@@ -32,6 +42,10 @@ const StyleGuide: React.FC = () => {
         <PaginationSection />
         <BreadcrumbsSection />
         <ProgressSection />
+        <CheckboxSection />
+        <RadioSection />
+        <SelectSection />
+        <SwitchSection />
       </Box>
 
       {/* Навигация и отображение данных */}
