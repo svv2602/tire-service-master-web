@@ -65,7 +65,7 @@ import PageContentPage from './pages/page-content/PageContentPage';
 import PageContentFormPage from './pages/page-content/PageContentFormPage';
 
 // Импорт для страницы StyleGuide
-import StyleGuide from './pages/styleguide/styleguide_temp';
+import StyleGuide from './pages/styleguide';
 
 // Компонент для тем
 const ThemeContext = React.createContext<{

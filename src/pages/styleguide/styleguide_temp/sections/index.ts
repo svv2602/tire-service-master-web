@@ -1,3 +1,15 @@
+export { default as AppBarSection } from './AppBarSection';
+export { default as BadgeSection } from './BadgeSection';
+export { default as CardSection } from './CardSection';
+export { default as DrawerSection } from './DrawerSection';
+export { default as PaperSection } from './PaperSection';
+export { default as SpeedDialSection } from './SpeedDialSection';
+export { default as RatingSection } from './RatingSection';
+export { default as TimePickerSection } from './TimePickerSection';
+export { default as AutoCompleteSection } from './AutoCompleteSection';
+export { default as FileUploadSection } from './FileUploadSection';
+export { default as SliderSection } from './SliderSection';
+
 export { default as ButtonSection } from './ButtonSection';
 export { default as TextFieldSection } from './TextFieldSection';
 export { default as ChipSection } from './ChipSection';

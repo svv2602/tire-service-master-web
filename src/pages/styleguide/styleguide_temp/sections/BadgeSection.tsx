@@ -1,79 +1,92 @@
 import React from 'react';
-import { Typography, Box, Grid } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import MailIcon from '@mui/icons-material/Mail';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import Badge from '../../../../components/ui/Badge';
+import { Box, Typography, Badge, Grid, IconButton } from '@mui/material';
+import {
+  Mail as MailIcon,
+  Notifications as NotificationsIcon,
+  ShoppingCart as ShoppingCartIcon,
+} from '@mui/icons-material';
 import { Card } from '../../../../components/ui/Card';
 
 export const BadgeSection: React.FC = () => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Бейджи
+        Badge
       </Typography>
 
-      <Grid container spacing={3}>
-        {/* Простые бейджи */}
-        <Grid item xs={12} md={6}>
-          <Card title="Простые бейджи">
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4}>
+      <Card title="Примеры значков">
+        <Grid container spacing={4}>
+          {/* Базовые значки */}
+          <Grid item xs={12} md={6}>
+            <Typography gutterBottom>Базовые значки</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Badge badgeContent={4} color="primary">
                 <MailIcon />
               </Badge>
-              <Badge badgeContent={10}>
+              <Badge badgeContent={100} color="secondary">
+                <NotificationsIcon />
+              </Badge>
+              <Badge badgeContent={1000} max={999} color="error">
                 <ShoppingCartIcon />
               </Badge>
             </Box>
-          </Card>
-        </Grid>
+          </Grid>
 
-        {/* Бейджи с разными размерами */}
-        <Grid item xs={12} md={6}>
-          <Card title="Размеры бейджей">
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4}>
-                <Box sx={{ transform: 'scale(0.8)' }}>
+          {/* Значки с точкой */}
+          <Grid item xs={12} md={6}>
+            <Typography gutterBottom>Значки с точкой</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Badge variant="dot" color="primary">
+                <MailIcon />
+              </Badge>
+              <Badge variant="dot" color="secondary">
+                <NotificationsIcon />
+              </Badge>
+              <Badge variant="dot" color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            </Box>
+          </Grid>
+
+          {/* Значки на кнопках */}
+          <Grid item xs={12} md={6}>
+            <Typography gutterBottom>Значки на кнопках</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <IconButton aria-label="mail">
+                <Badge badgeContent={4} color="primary">
                   <MailIcon />
-                </Box>
-              </Badge>
-              <Badge badgeContent={10}>
-                <Box sx={{ transform: 'scale(1.2)' }}>
+                </Badge>
+              </IconButton>
+              <IconButton aria-label="notifications">
+                <Badge badgeContent={17} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <IconButton aria-label="cart">
+                <Badge badgeContent={3} color="secondary">
                   <ShoppingCartIcon />
-                </Box>
-              </Badge>
+                </Badge>
+              </IconButton>
             </Box>
-          </Card>
-        </Grid>
+          </Grid>
 
-        {/* Бейджи с разными вариантами */}
-        <Grid item xs={12} md={6}>
-          <Card title="Варианты бейджей">
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge dot>
+          {/* Позиционирование значков */}
+          <Grid item xs={12} md={6}>
+            <Typography gutterBottom>Позиционирование значков</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Badge badgeContent={4} color="primary" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
                 <MailIcon />
               </Badge>
-              <Badge badgeContent={10}>
-                <ShoppingCartIcon />
-              </Badge>
-            </Box>
-          </Card>
-        </Grid>
-
-        {/* Пульсирующие бейджи */}
-        <Grid item xs={12} md={6}>
-          <Card title="Пульсирующие бейджи">
-            <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4} pulse>
+              <Badge badgeContent={4} color="primary" anchorOrigin={{ vertical: 'top', horizontal: 'left' }}>
                 <MailIcon />
               </Badge>
-              <Badge dot pulse>
-                <ShoppingCartIcon />
+              <Badge badgeContent={4} color="primary" anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}>
+                <MailIcon />
               </Badge>
             </Box>
-          </Card>
+          </Grid>
         </Grid>
-      </Grid>
+      </Card>
     </Box>
   );
 };

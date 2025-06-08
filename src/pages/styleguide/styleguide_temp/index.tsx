@@ -21,7 +21,18 @@ import {
   AccordionSection,
   StepperSection,
   FilterSection,
-  ScrollbarSection
+  ScrollbarSection,
+  AppBarSection,
+  CardSection,
+  DrawerSection,
+  TimePickerSection,
+  AutoCompleteSection,
+  FileUploadSection,
+  SpeedDialSection,
+  PaperSection,
+  BadgeSection,
+  RatingSection,
+  SliderSection
 } from './sections';
 
 const StyleGuide: React.FC = () => {
@@ -52,6 +63,10 @@ const StyleGuide: React.FC = () => {
         <SelectSection />
         <SwitchSection />
         <DatePickerSection />
+        <TimePickerSection />
+        <SliderSection />
+        <FileUploadSection />
+        <AutoCompleteSection />
       </Box>
 
       {/* Навигация и отображение данных */}
@@ -59,6 +74,8 @@ const StyleGuide: React.FC = () => {
         <Typography variant="h4" gutterBottom>
           Навигация и отображение данных
         </Typography>
+        <AppBarSection />
+        <DrawerSection />
         <DropdownSection />
         <TableSection />
         <AccordionSection />
@@ -66,11 +83,23 @@ const StyleGuide: React.FC = () => {
         <ScrollbarSection />
       </Box>
 
+      {/* Контейнеры и карточки */}
+      <Box mb={6}>
+        <Typography variant="h4" gutterBottom>
+          Контейнеры и карточки
+        </Typography>
+        <CardSection />
+        <PaperSection />
+      </Box>
+
       {/* Вспомогательные компоненты */}
       <Box mb={6}>
         <Typography variant="h4" gutterBottom>
           Вспомогательные компоненты
         </Typography>
+        <BadgeSection />
+        <SpeedDialSection />
+        <RatingSection />
         <TooltipSection />
         <AlertSection />
         <ModalSection />
