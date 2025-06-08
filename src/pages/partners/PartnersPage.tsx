@@ -370,7 +370,10 @@ const PartnersPage: React.FC = () => {
       <Paper sx={{ 
         ...cardStyles, 
         p: SIZES.spacing.md, 
-        mb: SIZES.spacing.lg 
+        mb: SIZES.spacing.lg,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
       }}>
         <Box sx={{ display: 'flex', gap: SIZES.spacing.md }}>
           <TextField
@@ -392,7 +395,12 @@ const PartnersPage: React.FC = () => {
         </Box>
       </Paper>
 
-      <Paper sx={cardStyles}>
+      <Paper sx={{
+        ...cardStyles,
+        backgroundColor: 'transparent',
+        boxShadow: 'none', 
+        border: 'none'
+      }}>
         {isLoading ? (
           <Box sx={{ 
             display: 'flex', 
