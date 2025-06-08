@@ -4,18 +4,9 @@ import {
   Typography,
   Grid,
   Slider,
-  Paper,
 } from '@mui/material';
 import VolumeDown from '@mui/icons-material/VolumeDown';
 import VolumeUp from '@mui/icons-material/VolumeUp';
-
-const sectionStyle = {
-  p: 3,
-  mb: 2,
-  borderRadius: 1,
-  bgcolor: 'background.paper',
-  boxShadow: 1,
-};
 
 const marks = [
   {
@@ -54,110 +45,104 @@ export const SliderSection: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h6" gutterBottom sx={{ mb: 4 }}>
         Sliders
       </Typography>
 
-      <Paper sx={sectionStyle}>
-        <Typography variant="subtitle1" gutterBottom sx={{ mb: 3 }}>
-          Примеры слайдеров
-        </Typography>
-
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Базовый слайдер
-              </Typography>
-              <Slider
-                aria-label="Базовый"
-                defaultValue={30}
-                valueLabelDisplay="auto"
-              />
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Слайдер с метками
-              </Typography>
-              <Slider
-                aria-label="С метками"
-                defaultValue={20}
-                valueLabelDisplay="auto"
-                step={10}
-                marks
-                min={0}
-                max={100}
-              />
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Слайдер с кастомными метками
-              </Typography>
-              <Slider
-                aria-label="Кастомные метки"
-                defaultValue={37}
-                getAriaValueText={valuetext}
-                valueLabelDisplay="auto"
-                step={null}
-                marks={marks}
-              />
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Диапазонный слайдер
-              </Typography>
-              <Slider
-                value={rangeValue}
-                onChange={handleRangeChange}
-                valueLabelDisplay="auto"
-                getAriaValueText={valuetext}
-                min={0}
-                max={100}
-              />
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Слайдер с иконками
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <VolumeDown sx={{ mr: 2 }} />
-                <Slider
-                  aria-label="Громкость"
-                  value={value}
-                  onChange={handleChange}
-                  sx={{ mx: 2 }}
-                />
-                <VolumeUp sx={{ ml: 2 }} />
-              </Box>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ width: '100%', px: 2 }}>
-              <Typography variant="subtitle2" gutterBottom color="text.secondary">
-                Отключенный слайдер
-              </Typography>
-              <Slider
-                aria-label="Отключен"
-                defaultValue={30}
-                disabled
-              />
-            </Box>
-          </Grid>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Базовый слайдер
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Slider
+              aria-label="Базовый"
+              defaultValue={30}
+              valueLabelDisplay="auto"
+            />
+          </Box>
         </Grid>
-      </Paper>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Слайдер с метками
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Slider
+              aria-label="С метками"
+              defaultValue={20}
+              valueLabelDisplay="auto"
+              step={10}
+              marks
+              min={0}
+              max={100}
+            />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Слайдер с кастомными метками
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Slider
+              aria-label="Кастомные метки"
+              defaultValue={37}
+              getAriaValueText={valuetext}
+              valueLabelDisplay="auto"
+              step={null}
+              marks={marks}
+            />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Диапазонный слайдер
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Slider
+              value={rangeValue}
+              onChange={handleRangeChange}
+              valueLabelDisplay="auto"
+              getAriaValueText={valuetext}
+              min={0}
+              max={100}
+            />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Слайдер с иконками
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <VolumeDown sx={{ mr: 2 }} />
+              <Slider
+                aria-label="Громкость"
+                value={value}
+                onChange={handleChange}
+                sx={{ mx: 2 }}
+              />
+              <VolumeUp sx={{ ml: 2 }} />
+            </Box>
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Отключенный слайдер
+          </Typography>
+          <Box sx={{ width: '100%', px: 2 }}>
+            <Slider
+              aria-label="Отключен"
+              defaultValue={30}
+              disabled
+            />
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

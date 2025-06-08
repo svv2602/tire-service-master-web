@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Paper } from '@mui/material';
+import { Container, Typography, Box, Divider } from '@mui/material';
 import {
   ButtonSection,
   TextFieldSection,
@@ -32,103 +32,131 @@ import {
   PaperSection,
   BadgeSection,
   RatingSection,
-  SliderSection
+  SliderSection,
+  ColorSection,
+  SkeletonSection,
+  TabsSection,
+  NotificationSection
 } from './sections';
-import StyleGuidePage from './StyleGuidePage';
 
-const sectionStyle = {
-  mb: 4,
-  p: 3,
-  borderRadius: 2,
-  bgcolor: 'background.paper',
-  boxShadow: 1,
+// Интерфейс для описания секции
+interface StyleGuideSection {
+  title: string;
+  component: React.ComponentType;
+}
+
+// Конфигурация всех секций с группировкой
+const sectionGroups = [
+  {
+    groupTitle: 'Тема оформления',
+    sections: [
+      { title: 'Тема', component: ThemeSection },
+      { title: 'Цвета', component: ColorSection }
+    ]
+  },
+  {
+    groupTitle: 'Основные компоненты',
+    sections: [
+      { title: 'Кнопки', component: ButtonSection },
+      { title: 'Текстовые поля', component: TextFieldSection },
+      { title: 'Чипы', component: ChipSection },
+      { title: 'Пагинация', component: PaginationSection },
+      { title: 'Хлебные крошки', component: BreadcrumbsSection },
+      { title: 'Прогресс', component: ProgressSection },
+      { title: 'Чекбоксы', component: CheckboxSection },
+      { title: 'Радиокнопки', component: RadioSection },
+      { title: 'Селект', component: SelectSection },
+      { title: 'Переключатели', component: SwitchSection },
+      { title: 'Выбор даты', component: DatePickerSection },
+      { title: 'Выбор времени', component: TimePickerSection },
+      { title: 'Загрузка файлов', component: FileUploadSection },
+      { title: 'Автодополнение', component: AutoCompleteSection },
+      { title: 'Слайдер', component: SliderSection }
+    ]
+  },
+  {
+    groupTitle: 'Навигация и отображение данных',
+    sections: [
+      { title: 'Панель приложения', component: AppBarSection },
+      { title: 'Боковая панель', component: DrawerSection },
+      { title: 'Вкладки', component: TabsSection },
+      { title: 'Выпадающее меню', component: DropdownSection },
+      { title: 'Таблицы', component: TableSection },
+      { title: 'Аккордеон', component: AccordionSection },
+      { title: 'Степпер', component: StepperSection },
+      { title: 'Скроллбар', component: ScrollbarSection }
+    ]
+  },
+  {
+    groupTitle: 'Контейнеры и карточки',
+    sections: [
+      { title: 'Карточки', component: CardSection },
+      { title: 'Бумага', component: PaperSection }
+    ]
+  },
+  {
+    groupTitle: 'Вспомогательные компоненты',
+    sections: [
+      { title: 'Значки', component: BadgeSection },
+      { title: 'Быстрый набор', component: SpeedDialSection },
+      { title: 'Рейтинг', component: RatingSection },
+      { title: 'Подсказки', component: TooltipSection },
+      { title: 'Уведомления', component: AlertSection },
+      { title: 'Нотификации', component: NotificationSection },
+      { title: 'Модальные окна', component: ModalSection },
+      { title: 'Фильтры', component: FilterSection },
+      { title: 'Скелетон', component: SkeletonSection }
+    ]
+  }
+];
+
+// Компонент для отображения одной секции в унифицированном формате
+const SectionWrapper: React.FC<{ section: StyleGuideSection }> = ({ section }) => {
+  const Component = section.component;
+  
+  return (
+    <Box sx={{ mb: 6 }}>
+      <Component />
+    </Box>
+  );
 };
 
 const StyleGuide: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h2" gutterBottom sx={{ mb: 4 }}>
+      <Typography variant="h2" gutterBottom sx={{ mb: 6 }}>
         Style Guide
       </Typography>
 
-      {/* Тема */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Тема
-        </Typography>
-        <ThemeSection />
-      </Paper>
+      {sectionGroups.map((group, groupIndex) => (
+        <Box key={group.groupTitle} sx={{ mb: 8 }}>
+          {/* Заголовок группы */}
+          <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+            {group.groupTitle}
+          </Typography>
 
-      {/* Основные компоненты */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Основные компоненты
-        </Typography>
-        <Box sx={{ '& > *': { mb: 4 } }}>
-          <TimePickerSection />
-          <SliderSection />
-          <ButtonSection />
-          <TextFieldSection />
-          <ChipSection />
-          <PaginationSection />
-          <BreadcrumbsSection />
-          <ProgressSection />
-          <CheckboxSection />
-          <RadioSection />
-          <SelectSection />
-          <SwitchSection />
-          <DatePickerSection />
-          <FileUploadSection />
-          <AutoCompleteSection />
+          {/* Секции группы */}
+          {group.sections.map((section, sectionIndex) => (
+            <React.Fragment key={section.title}>
+              <SectionWrapper section={section} />
+              
+              {/* Разделитель между секциями (кроме последней в группе) */}
+              {sectionIndex < group.sections.length - 1 && (
+                <Divider sx={{ my: 4 }} />
+              )}
+            </React.Fragment>
+          ))}
+
+          {/* Разделитель между группами (кроме последней) */}
+          {groupIndex < sectionGroups.length - 1 && (
+            <Divider sx={{ my: 6, borderColor: 'primary.main', borderWidth: 2 }} />
+          )}
         </Box>
-      </Paper>
+      ))}
 
-      {/* Навигация и отображение данных */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Навигация и отображение данных
-        </Typography>
-        <Box sx={{ '& > *': { mb: 4 } }}>
-          <AppBarSection />
-          <DrawerSection />
-          <DropdownSection />
-          <TableSection />
-          <AccordionSection />
-          <StepperSection />
-          <ScrollbarSection />
-        </Box>
-      </Paper>
-
-      {/* Контейнеры и карточки */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Контейнеры и карточки
-        </Typography>
-        <Box sx={{ '& > *': { mb: 4 } }}>
-          <CardSection />
-          <PaperSection />
-        </Box>
-      </Paper>
-
-      {/* Вспомогательные компоненты */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Вспомогательные компоненты
-        </Typography>
-        <Box sx={{ '& > *': { mb: 4 } }}>
-          <BadgeSection />
-          <SpeedDialSection />
-          <RatingSection />
-          <TooltipSection />
-          <AlertSection />
-          <ModalSection />
-          <FilterSection />
-        </Box>
-      </Paper>
-
-      {/* Типография */}
-      <Paper sx={sectionStyle}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+      {/* Типография как отдельная секция */}
+      <Box sx={{ mb: 6 }}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
           Типография
         </Typography>
         <Box sx={{ '& > *': { mb: 2 } }}>
@@ -147,9 +175,9 @@ const StyleGuide: React.FC = () => {
             Quos blanditiis tenetur unde suscipit.
           </Typography>
         </Box>
-      </Paper>
+      </Box>
     </Container>
   );
 };
 
-export default StyleGuidePage;
+export default StyleGuide;

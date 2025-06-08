@@ -6,7 +6,6 @@ import {
   Star as StarIcon,
   StarBorder as StarBorderIcon,
 } from '@mui/icons-material';
-import { Card } from '../../../../components/ui/Card';
 
 export const RatingSection: React.FC = () => {
   const [value1, setValue1] = useState<number | null>(2.5);
@@ -29,75 +28,83 @@ export const RatingSection: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom sx={{ mb: 4 }}>
         Rating
       </Typography>
 
-      <Card title="Примеры рейтингов">
-        <Grid container spacing={4}>
-          {/* Базовый рейтинг */}
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Базовый рейтинг</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Rating
-                name="simple-rating"
-                value={value1}
-                precision={0.5}
-                onChange={(_, newValue) => setValue1(newValue)}
-              />
-              <Box sx={{ ml: 2 }}>{value1 !== null && labels[value1]}</Box>
-            </Box>
-          </Grid>
-
-          {/* Кастомные иконки */}
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Кастомные иконки</Typography>
+      <Grid container spacing={4}>
+        {/* Базовый рейтинг */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Базовый рейтинг
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Rating
-              name="customized-rating"
-              value={value2}
-              onChange={(_, newValue) => setValue2(newValue)}
-              icon={<FavoriteIcon fontSize="inherit" color="error" />}
-              emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
-            />
-          </Grid>
-
-          {/* Рейтинг с подсказками */}
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Рейтинг с подсказками</Typography>
-            <Rating
-              name="hover-feedback"
-              value={value3}
+              name="simple-rating"
+              value={value1}
               precision={0.5}
-              onChange={(_, newValue) => setValue3(newValue)}
-              onChangeActive={(_, newHover) => setHover(newHover)}
-              icon={<StarIcon fontSize="inherit" />}
-              emptyIcon={<StarBorderIcon fontSize="inherit" />}
+              onChange={(_, newValue) => setValue1(newValue)}
             />
-            {value3 !== null && (
-              <Box sx={{ ml: 2 }}>{labels[hover !== -1 ? hover : value3]}</Box>
-            )}
-          </Grid>
-
-          {/* Размеры рейтинга */}
-          <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Размеры рейтинга</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Rating name="size-small" defaultValue={2} size="small" />
-              <Rating name="size-medium" defaultValue={2} />
-              <Rating name="size-large" defaultValue={2} size="large" />
-            </Box>
-          </Grid>
-
-          {/* Только для чтения и отключенный */}
-          <Grid item xs={12}>
-            <Typography gutterBottom>Только для чтения и отключенный</Typography>
-            <Box sx={{ display: 'flex', gap: 4 }}>
-              <Rating name="read-only" value={4} readOnly />
-              <Rating name="disabled" value={4} disabled />
-            </Box>
-          </Grid>
+            <Box sx={{ ml: 2 }}>{value1 !== null && labels[value1]}</Box>
+          </Box>
         </Grid>
-      </Card>
+
+        {/* Кастомные иконки */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Кастомные иконки
+          </Typography>
+          <Rating
+            name="customized-rating"
+            value={value2}
+            onChange={(_, newValue) => setValue2(newValue)}
+            icon={<FavoriteIcon fontSize="inherit" color="error" />}
+            emptyIcon={<FavoriteBorderIcon fontSize="inherit" />}
+          />
+        </Grid>
+
+        {/* Рейтинг с подсказками */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Рейтинг с подсказками
+          </Typography>
+          <Rating
+            name="hover-feedback"
+            value={value3}
+            precision={0.5}
+            onChange={(_, newValue) => setValue3(newValue)}
+            onChangeActive={(_, newHover) => setHover(newHover)}
+            icon={<StarIcon fontSize="inherit" />}
+            emptyIcon={<StarBorderIcon fontSize="inherit" />}
+          />
+          {value3 !== null && (
+            <Box sx={{ ml: 2 }}>{labels[hover !== -1 ? hover : value3]}</Box>
+          )}
+        </Grid>
+
+        {/* Размеры рейтинга */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Размеры рейтинга
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Rating name="size-small" defaultValue={2} size="small" />
+            <Rating name="size-medium" defaultValue={2} />
+            <Rating name="size-large" defaultValue={2} size="large" />
+          </Box>
+        </Grid>
+
+        {/* Только для чтения и отключенный */}
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Только для чтения и отключенный
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 4 }}>
+            <Rating name="read-only" value={4} readOnly />
+            <Rating name="disabled" value={4} disabled />
+          </Box>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
