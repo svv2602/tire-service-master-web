@@ -8,46 +8,99 @@ import {
 } from '@mui/material';
 
 /** Пропсы переключателя */
-export interface SwitchProps extends Omit<MuiSwitchProps, 'onChange'> {
-  /** Лейбл */
+export interface SwitchProps extends Omit<MuiSwitchProps, 'size'> {
+  /** Подпись переключателя */
   label?: string;
-  /** Позиция лейбла */
-  labelPlacement?: FormControlLabelProps['labelPlacement'];
+  /** Размер переключателя */
+  size?: 'small' | 'medium' | 'large';
+  /** Цвет переключателя */
+  color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  /** Положение подписи */
+  labelPlacement?: 'end' | 'start' | 'top' | 'bottom';
+  /** Отключен ли переключатель */
+  disabled?: boolean;
+  /** Состояние переключателя */
+  checked?: boolean;
   /** Колбэк изменения состояния */
-  onChange?: (checked: boolean) => void;
-  /** Размер */
-  size?: 'small' | 'medium';
-  /** Цвет */
-  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+  onChange?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
 }
 
-const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
-  '& .MuiSwitch-root': {
-    width: 42,
-    height: 26,
-    padding: 0,
-    margin: theme.spacing(1),
-  },
-  '& .MuiSwitch-switchBase': {
-    padding: 1,
-    '&.Mui-checked': {
-      transform: 'translateX(16px)',
-      color: '#fff',
-      '& + .MuiSwitch-track': {
-        opacity: 1,
+/** Стилизованный переключатель */
+const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'large' }>(({ theme, customSize = 'medium' }) => {
+  const sizes = {
+    small: {
+      width: 34,
+      height: 18,
+      padding: 0,
+      thumbSize: 14,
+      trackHeight: 18,
+    },
+    medium: {
+      width: 42,
+      height: 22,
+      padding: 0,
+      thumbSize: 18,
+      trackHeight: 22,
+    },
+    large: {
+      width: 50,
+      height: 26,
+      padding: 0,
+      thumbSize: 22,
+      trackHeight: 26,
+    },
+  };
+
+  const size = sizes[customSize];
+
+  return {
+    width: size.width,
+    height: size.height,
+    padding: size.padding,
+    '& .MuiSwitch-switchBase': {
+      padding: 2,
+      '&.Mui-checked': {
+        transform: `translateX(${size.width - size.thumbSize - 4}px)`,
+        color: '#fff',
+        '& + .MuiSwitch-track': {
+          backgroundColor: theme.palette.primary.main,
+          opacity: 1,
+          border: 0,
+        },
+        '&.Mui-disabled + .MuiSwitch-track': {
+          opacity: 0.5,
+        },
+      },
+      '&.Mui-focusVisible .MuiSwitch-thumb': {
+        color: theme.palette.primary.main,
+        border: `6px solid #fff`,
+      },
+      '&.Mui-disabled .MuiSwitch-thumb': {
+        color: theme.palette.grey[400],
+      },
+      '&.Mui-disabled + .MuiSwitch-track': {
+        opacity: 0.3,
       },
     },
-  },
-  '& .MuiSwitch-thumb': {
-    width: 24,
-    height: 24,
-  },
-  '& .MuiSwitch-track': {
-    borderRadius: 13,
-    opacity: 1,
-    backgroundColor: theme.palette.mode === 'dark' ? '#8796A5' : '#aab4be',
-  },
-}));
+    '& .MuiSwitch-thumb': {
+      boxSizing: 'border-box',
+      width: size.thumbSize,
+      height: size.thumbSize,
+      boxShadow: theme.shadows[2],
+      transition: theme.transitions.create(['transform'], {
+        duration: theme.transitions.duration.shorter,
+      }),
+    },
+    '& .MuiSwitch-track': {
+      borderRadius: size.trackHeight / 2,
+      backgroundColor: theme.palette.grey[400],
+      opacity: 1,
+      transition: theme.transitions.create(['background-color'], {
+        duration: theme.transitions.duration.shorter,
+      }),
+    },
+  };
+});
 
 /**
  * Компонент переключателя
@@ -55,51 +108,50 @@ const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
  * @example
  * <Switch
  *   label="Включить уведомления"
- *   checked={checked}
- *   onChange={setChecked}
- *   color="primary"
+ *   checked={enabled}
+ *   onChange={(event, checked) => setEnabled(checked)}
  * />
  */
 export const Switch: React.FC<SwitchProps> = ({
   label,
-  labelPlacement = 'end',
-  onChange,
-  checked,
   size = 'medium',
   color = 'primary',
+  labelPlacement = 'end',
+  disabled = false,
+  checked,
+  onChange,
   ...props
 }) => {
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange?.(event.target.checked);
-  };
+  const switchElement = (
+    <StyledSwitch
+      customSize={size}
+      color={color}
+      disabled={disabled}
+      checked={checked}
+      onChange={onChange}
+      {...props}
+    />
+  );
 
   if (label) {
     return (
-      <StyledFormControlLabel
-        control={
-          <MuiSwitch
-            checked={checked}
-            onChange={handleChange}
-            size={size}
-            color={color}
-            {...props}
-          />
-        }
+      <FormControlLabel
+        control={switchElement}
         label={label}
         labelPlacement={labelPlacement}
+        disabled={disabled}
+        sx={{
+          margin: 0,
+          '& .MuiFormControlLabel-label': {
+            fontSize: size === 'small' ? '0.75rem' : size === 'large' ? '1rem' : '0.875rem',
+            color: disabled ? 'text.disabled' : 'text.primary',
+          },
+        }}
       />
     );
   }
 
-  return (
-    <MuiSwitch
-      checked={checked}
-      onChange={handleChange}
-      size={size}
-      color={color}
-      {...props}
-    />
-  );
+  return switchElement;
 };
 
 export default Switch; 

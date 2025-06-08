@@ -2,20 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
-  TextField,
-  Button,
   Divider,
-  Switch,
   FormControlLabel,
   FormControl,
   InputLabel,
-  Select,
   MenuItem,
-  Tabs,
   Tab,
-  Alert,
-  Snackbar,
   CircularProgress,
   SelectChangeEvent,
   useTheme,
@@ -38,6 +30,16 @@ import {
   getFormStyles,
 } from '../../styles';
 
+// Импорты UI компонентов
+import Paper from '../../components/ui/Paper';
+import { TextField } from '../../components/ui/TextField';
+import { Button } from '../../components/ui/Button';
+import { Select } from '../../components/ui/Select';
+import { Alert } from '../../components/ui/Alert';
+import { Tabs, TabPanel } from '../../components/ui/Tabs';
+import { Switch } from '../../components/ui/Switch';
+import { Snackbar } from '../../components/ui/Snackbar';
+
 // Интерфейс для настроек системы
 interface SystemSettings {
   systemName: string;
@@ -49,41 +51,6 @@ interface SystemSettings {
   emailNotifications: boolean;
   smsNotifications: boolean;
 }
-
-// Интерфейс для панелей настроек
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-// Панель с контентом вкладки
-const TabPanel = (props: TabPanelProps) => {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <Box
-      role="tabpanel"
-      hidden={value !== index}
-      id={`settings-tabpanel-${index}`}
-      aria-labelledby={`settings-tab-${index}`}
-      {...other}
-      sx={{
-        py: SIZES.spacing.lg,
-        px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
-      }}
-    >
-      {value === index && children}
-    </Box>
-  );
-};
-
-const a11yProps = (index: number) => {
-  return {
-    id: `settings-tab-${index}`,
-    'aria-controls': `settings-tabpanel-${index}`,
-  };
-};
 
 const SettingsPage: React.FC = () => {
   // Получение темы и централизованных стилей
@@ -175,6 +142,30 @@ const SettingsPage: React.FC = () => {
     setError(null);
   };
 
+  // Подготовка данных для вкладок
+  const tabs = [
+    {
+      label: 'Общие',
+      value: 0,
+      icon: <SettingsIcon />
+    },
+    {
+      label: 'Уведомления',
+      value: 1,
+      icon: <NotificationsIcon />
+    },
+    {
+      label: 'Безопасность',
+      value: 2,
+      icon: <SecurityIcon />
+    },
+    {
+      label: 'Интеграции',
+      value: 3,
+      icon: <DevicesIcon />
+    }
+  ];
+
   if (loading) {
     return (
       <Box sx={{ 
@@ -199,89 +190,18 @@ const SettingsPage: React.FC = () => {
       <Paper 
         elevation={0}
         sx={{
-          ...cardStyles,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          border: 'none'
         }}
       >
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange} 
-            aria-label="settings tabs"
-            variant="scrollable"
-            scrollButtons="auto"
-            TabIndicatorProps={{
-              sx: {
-                height: 3,
-                borderRadius: SIZES.borderRadius.sm,
-              }
-            }}
-            sx={{
-              borderBottom: `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Tab 
-              icon={<SettingsIcon />} 
-              label="Общие" 
-              {...a11yProps(0)}
-              sx={{
-                minHeight: 48,
-                textTransform: 'none',
-                fontWeight: 500,
-                fontSize: SIZES.fontSize.md,
-                transition: ANIMATIONS.transition.fast,
-                '&.Mui-selected': {
-                  color: theme.palette.primary.main,
-                },
-              }}
-            />
-            <Tab 
-              icon={<NotificationsIcon />} 
-              label="Уведомления" 
-              {...a11yProps(1)}
-              sx={{
-                minHeight: 48,
-                textTransform: 'none',
-                fontWeight: 500,
-                fontSize: SIZES.fontSize.md,
-                transition: ANIMATIONS.transition.fast,
-                '&.Mui-selected': {
-                  color: theme.palette.primary.main,
-                },
-              }}
-            />
-            <Tab 
-              icon={<SecurityIcon />} 
-              label="Безопасность" 
-              {...a11yProps(2)}
-              sx={{
-                minHeight: 48,
-                textTransform: 'none',
-                fontWeight: 500,
-                fontSize: SIZES.fontSize.md,
-                transition: ANIMATIONS.transition.fast,
-                '&.Mui-selected': {
-                  color: theme.palette.primary.main,
-                },
-              }}
-            />
-            <Tab 
-              icon={<DevicesIcon />} 
-              label="Интеграции" 
-              {...a11yProps(3)}
-              sx={{
-                minHeight: 48,
-                textTransform: 'none',
-                fontWeight: 500,
-                fontSize: SIZES.fontSize.md,
-                transition: ANIMATIONS.transition.fast,
-                '&.Mui-selected': {
-                  color: theme.palette.primary.main,
-                },
-              }}
-            />
-          </Tabs>
-        </Box>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          tabs={tabs}
+          variant="scrollable"
+        />
 
         {loading ? (
           <Box sx={{ 
@@ -299,7 +219,8 @@ const SettingsPage: React.FC = () => {
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: SIZES.spacing.lg,
-                ...formStyles.container
+                py: SIZES.spacing.lg,
+                px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
                 <Box>
                   <Typography variant="h6" sx={{ 
@@ -323,7 +244,6 @@ const SettingsPage: React.FC = () => {
                     name="systemName"
                     value={settings.systemName}
                     onChange={handleTextChange}
-                    sx={textFieldStyles}
                   />
 
                   <TextField
@@ -332,7 +252,6 @@ const SettingsPage: React.FC = () => {
                     name="contactEmail"
                     value={settings.contactEmail}
                     onChange={handleTextChange}
-                    sx={textFieldStyles}
                   />
 
                   <TextField
@@ -341,16 +260,15 @@ const SettingsPage: React.FC = () => {
                     name="supportPhone"
                     value={settings.supportPhone}
                     onChange={handleTextChange}
-                    sx={textFieldStyles}
                   />
 
-                  <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Город по умолчанию</InputLabel>
+                  <FormControl fullWidth>
                     <Select
                       name="defaultCityId"
                       value={settings.defaultCityId}
                       label="Город по умолчанию"
                       onChange={handleSelectChange}
+                      displayEmpty
                     >
                       {Array.isArray(cities) ? cities.map(city => (
                         <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>
@@ -376,8 +294,7 @@ const SettingsPage: React.FC = () => {
                   gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
                   gap: SIZES.spacing.md 
                 }}>
-                  <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Формат даты</InputLabel>
+                  <FormControl fullWidth>
                     <Select
                       name="dateFormat"
                       value={settings.dateFormat}
@@ -390,8 +307,7 @@ const SettingsPage: React.FC = () => {
                     </Select>
                   </FormControl>
 
-                  <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Формат времени</InputLabel>
+                  <FormControl fullWidth>
                     <Select
                       name="timeFormat"
                       value={settings.timeFormat}
@@ -410,7 +326,6 @@ const SettingsPage: React.FC = () => {
                     startIcon={<SaveIcon />}
                     onClick={handleSave}
                     disabled={loading || updating}
-                    sx={buttonStyles}
                   >
                     Сохранить изменения
                   </Button>
@@ -424,7 +339,8 @@ const SettingsPage: React.FC = () => {
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: SIZES.spacing.lg,
-                ...formStyles.container
+                py: SIZES.spacing.lg,
+                px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
                 <Typography variant="h6" sx={{ 
                   fontSize: SIZES.fontSize.lg,
@@ -435,26 +351,16 @@ const SettingsPage: React.FC = () => {
                 </Typography>
                 <Divider />
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.emailNotifications}
-                      onChange={(e) => handleToggleChange(e, 'emailNotifications')}
-                      name="emailNotifications"
-                    />
-                  }
+                <Switch
                   label="Получать уведомления по email"
+                  checked={settings.emailNotifications}
+                  onChange={(e) => handleToggleChange(e, 'emailNotifications')}
                 />
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.smsNotifications}
-                      onChange={(e) => handleToggleChange(e, 'smsNotifications')}
-                      name="smsNotifications"
-                    />
-                  }
+                <Switch
                   label="Получать SMS уведомления"
+                  checked={settings.smsNotifications}
+                  onChange={(e) => handleToggleChange(e, 'smsNotifications')}
                 />
 
                 <Box sx={{ mt: SIZES.spacing.lg }}>
@@ -463,7 +369,6 @@ const SettingsPage: React.FC = () => {
                     startIcon={<SaveIcon />}
                     onClick={handleSave}
                     disabled={loading || updating}
-                    sx={buttonStyles}
                   >
                     Сохранить изменения
                   </Button>
@@ -477,7 +382,8 @@ const SettingsPage: React.FC = () => {
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: SIZES.spacing.lg,
-                ...formStyles.container
+                py: SIZES.spacing.lg,
+                px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
                 <Typography variant="h6" sx={{ 
                   fontSize: SIZES.fontSize.lg,
@@ -498,7 +404,6 @@ const SettingsPage: React.FC = () => {
                     startIcon={<SaveIcon />}
                     onClick={handleSave}
                     disabled={loading || updating}
-                    sx={buttonStyles}
                   >
                     Сохранить изменения
                   </Button>
@@ -508,23 +413,25 @@ const SettingsPage: React.FC = () => {
 
             {/* Вкладка интеграций */}
             <TabPanel value={tabValue} index={3}>
-              <Alert 
-                severity="info" 
-                sx={{ 
-                  mb: SIZES.spacing.lg,
-                  borderRadius: SIZES.borderRadius.sm 
-                }}
-              >
-                Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
-              </Alert>
-              
-              <Typography variant="body1" sx={{ 
-                color: theme.palette.text.secondary,
-                fontSize: SIZES.fontSize.md
+              <Box sx={{ 
+                py: SIZES.spacing.lg,
+                px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
-                В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
-                платежные сервисы и мессенджеры.
-              </Typography>
+                <Alert 
+                  severity="info" 
+                  sx={{ mb: SIZES.spacing.lg }}
+                >
+                  Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
+                </Alert>
+                
+                <Typography variant="body1" sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontSize: SIZES.fontSize.md
+                }}>
+                  В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
+                  платежные сервисы и мессенджеры.
+                </Typography>
+              </Box>
             </TabPanel>
           </>
         )}
@@ -533,42 +440,22 @@ const SettingsPage: React.FC = () => {
       {/* Уведомление об успешном сохранении */}
       <Snackbar
         open={saveSuccess}
-        autoHideDuration={6000}
+        message="Настройки успешно сохранены"
+        severity="success"
         onClose={handleCloseSnackbar}
+        autoHideDuration={6000}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity="success"
-          sx={{ 
-            borderRadius: SIZES.borderRadius.sm,
-            width: '100%' 
-          }}
-        >
-          Настройки успешно сохранены
-        </Alert>
-      </Snackbar>
+      />
 
       {/* Уведомление об ошибке */}
-      {error && (
-        <Snackbar
-          open={Boolean(error)}
-          autoHideDuration={6000}
-          onClose={handleCloseError}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        >
-          <Alert 
-            onClose={handleCloseError} 
-            severity="error"
-            sx={{ 
-              borderRadius: SIZES.borderRadius.sm,
-              width: '100%' 
-            }}
-          >
-            {error}
-          </Alert>
-        </Snackbar>
-      )}
+      <Snackbar
+        open={Boolean(error)}
+        message={error || ''}
+        severity="error"
+        onClose={handleCloseError}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      />
     </Box>
   );
 };
