@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
   CardContent,
@@ -32,6 +32,7 @@ import { Modal } from '../../components/ui/Modal';
 const PER_PAGE = 25;
 
 export const ServicesPage: React.FC = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -74,6 +75,10 @@ export const ServicesPage: React.FC = () => {
     setPage(1);
   };
 
+  const handleAddCategory = () => {
+    navigate('/services/new');
+  };
+
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
@@ -94,8 +99,7 @@ export const ServicesPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          component={Link}
-          to="/services/new"
+          onClick={handleAddCategory}
         >
           Добавить категорию
         </Button>
@@ -227,7 +231,7 @@ export const ServicesPage: React.FC = () => {
           <Pagination
             count={totalPages}
             page={page}
-            onChange={(_, newPage) => setPage(newPage)}
+            onChange={(newPage: number) => setPage(newPage)}
             color="primary"
           />
         </Box>
