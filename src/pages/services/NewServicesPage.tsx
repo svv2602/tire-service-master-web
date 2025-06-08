@@ -2,23 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
-  Button,
-  Card,
   CardContent,
   Typography,
-  TextField,
   InputAdornment,
   IconButton,
-  Chip,
   Grid,
-  Pagination,
   Skeleton,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
   DialogContentText,
-  DialogActions,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,6 +19,15 @@ import {
 } from '@mui/icons-material';
 import { useGetServiceCategoriesQuery, useDeleteServiceCategoryMutation } from '../../api/serviceCategories.api';
 import { ServiceCategoryData } from '../../types/service';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
+import { TextField } from '../../components/ui/TextField';
+import { Chip } from '../../components/ui/Chip';
+import { Pagination } from '../../components/ui/Pagination';
+import { Alert } from '../../components/ui/Alert';
+import { Modal } from '../../components/ui/Modal';
 
 const PER_PAGE = 25;
 
@@ -131,7 +130,11 @@ export const ServicesPage: React.FC = () => {
         <Grid container spacing={3}>
           {Array.from({ length: 6 }).map((_, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card>
+              <Card sx={{
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                border: 'none'
+              }}>
                 <CardContent>
                   <Skeleton variant="text" height={32} />
                   <Skeleton variant="text" height={20} sx={{ mt: 1 }} />
@@ -142,7 +145,11 @@ export const ServicesPage: React.FC = () => {
           ))}
         </Grid>
       ) : categories.length === 0 ? (
-        <Card>
+        <Card sx={{
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          border: 'none'
+        }}>
           <CardContent sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6" color="text.secondary">
               {searchQuery ? 'Категории услуг не найдены' : 'Категории услуг отсутствуют'}
@@ -156,7 +163,14 @@ export const ServicesPage: React.FC = () => {
         <Grid container spacing={3}>
           {categories.map((category) => (
             <Grid item xs={12} sm={6} md={4} key={category.id}>
-              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Card sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                border: 'none'
+              }}>
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Typography variant="h6" component="h2" sx={{ flexGrow: 1 }}>
@@ -219,34 +233,35 @@ export const ServicesPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog
+      {/* Модальное окно подтверждения удаления */}
+      <Modal
         open={deleteDialogOpen}
         onClose={() => {
           setDeleteDialogOpen(false);
           setCategoryToDelete(null);
         }}
+        title="Удалить категорию услуг"
+        maxWidth={400}
+        actions={
+          <>
+            <Button
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setCategoryToDelete(null);
+              }}
+            >
+              Отмена
+            </Button>
+            <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+              Удалить
+            </Button>
+          </>
+        }
       >
-        <DialogTitle>Удалить категорию услуг</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Вы уверены, что хотите удалить категорию "{categoryToDelete?.name}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setDeleteDialogOpen(false);
-              setCategoryToDelete(null);
-            }}
-          >
-            Отмена
-          </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <DialogContentText>
+          Вы уверены, что хотите удалить категорию "{categoryToDelete?.name}"?
+        </DialogContentText>
+      </Modal>
     </Box>
   );
 };
