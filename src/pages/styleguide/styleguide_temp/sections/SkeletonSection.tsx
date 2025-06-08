@@ -1,76 +1,72 @@
 import React from 'react';
 import { Typography, Box, Grid } from '@mui/material';
-import { Skeleton } from '../../../../components/ui/Skeleton';
+import Skeleton from '../../../../components/ui/Skeleton';
 import { Card } from '../../../../components/ui/Card';
 
 export const SkeletonSection: React.FC = () => {
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Скелетоны
+    <Card>
+      <Typography variant="h4" gutterBottom>
+        Skeleton
+      </Typography>
+      <Typography variant="body1" paragraph>
+        Компонент для отображения состояния загрузки контента.
       </Typography>
 
-      <Grid container spacing={3}>
-        {/* Текстовые скелетоны */}
+      <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
-          <Card title="Текстовые скелетоны">
-            <Box sx={{ mb: 2 }}>
-              <Skeleton variant="text" width="80%" height={32} />
-              <Skeleton variant="text" width="60%" />
-              <Skeleton variant="text" width="70%" />
-            </Box>
-          </Card>
+          <Typography variant="h6" gutterBottom>
+            Текстовый скелетон
+          </Typography>
+          <Box sx={{ maxWidth: 500 }}>
+            <Typography variant="h4">
+              <Skeleton width="60%" />
+            </Typography>
+            <Typography variant="body1">
+              <Skeleton />
+            </Typography>
+            <Typography variant="body1">
+              <Skeleton width="80%" />
+            </Typography>
+          </Box>
         </Grid>
 
-        {/* Прямоугольный скелетон */}
         <Grid item xs={12} md={6}>
-          <Card title="Прямоугольный скелетон">
-            <Box sx={{ p: 2 }}>
-              <Skeleton 
-                variant="rectangular" 
-                width="100%" 
-                height={200}
-                animation="pulse"
-              />
-            </Box>
-          </Card>
+          <Typography variant="h6" gutterBottom>
+            Прямоугольный скелетон
+          </Typography>
+          <Skeleton variant="rectangular" width={300} height={200} />
         </Grid>
 
-        {/* Круглые скелетоны */}
         <Grid item xs={12} md={6}>
-          <Card title="Круглые скелетоны">
-            <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-              <Skeleton 
-                variant="circular" 
-                width={40} 
-                height={40}
-                animation="wave"
-              />
-              <Skeleton 
-                variant="circular" 
-                width={40} 
-                height={40}
-                animation="pulse"
-              />
-            </Box>
-          </Card>
+          <Typography variant="h6" gutterBottom>
+            Круглый скелетон
+          </Typography>
+          <Skeleton variant="circular" width={40} height={40} />
         </Grid>
 
-        {/* Комбинированный пример */}
         <Grid item xs={12} md={6}>
-          <Card title="Карточка загрузки">
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <Skeleton variant="circular" width={40} height={40} />
-              <Box sx={{ flex: 1 }}>
-                <Skeleton variant="text" width="70%" />
-                <Skeleton variant="text" width="40%" />
-              </Box>
-            </Box>
-            <Skeleton variant="rectangular" width="100%" height={150} />
-          </Card>
+          <Typography variant="h6" gutterBottom>
+            Скругленный скелетон
+          </Typography>
+          <Skeleton variant="rounded" width={300} height={200} borderRadius={16} />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="h6" gutterBottom>
+            Волновая анимация
+          </Typography>
+          <Skeleton variant="rectangular" width={300} height={200} animation="wave" />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Typography variant="h6" gutterBottom>
+            Без анимации
+          </Typography>
+          <Skeleton variant="rectangular" width={300} height={200} animation={false} />
         </Grid>
       </Grid>
-    </Box>
+    </Card>
   );
 };
 
