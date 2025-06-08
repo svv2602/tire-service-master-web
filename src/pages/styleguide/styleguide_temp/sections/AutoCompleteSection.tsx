@@ -27,11 +27,11 @@ const top100Films: Film[] = [
 ];
 
 const brands = [
-  { name: 'Michelin', country: 'Франция', logo: '/image/1.jpeg' },
-  { name: 'Continental', country: 'Германия', logo: '/image/2.jpeg' },
-  { name: 'Bridgestone', country: 'Япония', logo: '/image/3.jpeg' },
-  { name: 'Pirelli', country: 'Италия', logo: '/image/4.jpeg' },
-  { name: 'Goodyear', country: 'США', logo: '/image/1.jpeg' },
+  { name: 'Michelin', country: 'Франция', logo: 'image/1.jpeg' },
+  { name: 'Continental', country: 'Германия', logo: 'image/2.jpeg' },
+  { name: 'Bridgestone', country: 'Япония', logo: 'image/3.jpeg' },
+  { name: 'Pirelli', country: 'Италия', logo: 'image/4.jpeg' },
+  { name: 'Goodyear', country: 'США', logo: 'image/1.jpeg' },
 ];
 
 const tireTypes = [

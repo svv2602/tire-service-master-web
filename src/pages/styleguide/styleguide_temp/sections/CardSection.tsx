@@ -58,7 +58,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="194"
-              image="/image/1.jpeg"
+              image="image/1.jpeg"
               alt="Шины"
             />
             <CardContent>
@@ -100,7 +100,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="194"
-              image="/image/2.jpeg"
+              image="image/2.jpeg"
               alt="Автосервис"
             />
             <CardContent>
@@ -132,7 +132,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="140"
-              image="/image/3.jpeg"
+              image="image/3.jpeg"
               alt="Акция на шины"
             />
             <CardHeader
@@ -168,7 +168,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="194"
-              image="/image/4.jpeg"
+              image="image/4.jpeg"
               alt="Шиномонтаж"
             />
             <CardContent>
