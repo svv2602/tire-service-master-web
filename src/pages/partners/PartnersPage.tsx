@@ -2,29 +2,19 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
-  Button,
-  TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
+  IconButton,
+  Tooltip,
+  Avatar,
+  useTheme,
+  useMediaQuery,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Tooltip,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Pagination,
-  Avatar,
-  useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -44,6 +34,15 @@ import {
 import { Partner } from '../../types/models';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
+
+// Импорты UI компонентов
+import Paper from '../../components/ui/Paper';
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import { Modal } from '../../components/ui/Modal';
+import { Alert } from '../../components/ui/Alert';
+import { Pagination } from '../../components/ui/Pagination';
+import { Chip } from '../../components/ui/Chip';
 
 // Импорты централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, getChipStyles } from '../../styles/components';
@@ -467,7 +466,7 @@ const PartnersPage: React.FC = () => {
                 <Pagination
                   count={partnersData.pagination.total_pages}
                   page={Math.min(page, partnersData.pagination.total_pages)}
-                  onChange={handlePageChange}
+                  onChange={(newPage) => handlePageChange({} as React.ChangeEvent<unknown>, newPage)}
                   color="primary"
                   disabled={partnersData.pagination.total_pages <= 1}
                 />
@@ -477,36 +476,34 @@ const PartnersPage: React.FC = () => {
         )}
       </Paper>
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog
+      {/* Модальное окно подтверждения удаления */}
+      <Modal
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
+        title="Подтверждение удаления"
+        actions={
+          <>
+            <Button 
+              onClick={() => setDeleteDialogOpen(false)}
+              sx={secondaryButtonStyles}
+            >
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleDeleteConfirm} 
+              color="error" 
+              variant="contained"
+              sx={primaryButtonStyles}
+            >
+              Удалить
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ fontSize: SIZES.fontSize.lg }}>
-          Подтверждение удаления
-        </DialogTitle>
-        <DialogContent>
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-            Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ gap: SIZES.spacing.sm, p: SIZES.spacing.md }}>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)}
-            sx={secondaryButtonStyles}
-          >
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-            sx={primaryButtonStyles}
-          >
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+          Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
+        </Typography>
+      </Modal>
     </Box>
   );
 };
