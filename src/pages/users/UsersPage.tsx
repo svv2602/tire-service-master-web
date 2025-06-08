@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Button,
-  TextField,
   InputAdornment,
   CircularProgress,
   Table,
@@ -15,15 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   IconButton,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Pagination,
   Avatar,
   FormControlLabel,
   Switch,
@@ -50,6 +40,15 @@ import type { User } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getAdaptiveTableStyles } from '../../styles';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import Paper from '../../components/ui/Paper';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Pagination } from '../../components/ui/Pagination';
+import { Modal } from '../../components/ui/Modal';
 
 // Мемоизированный компонент строки пользователя
 const UserRow = React.memo<{
@@ -329,6 +328,10 @@ export const UsersPage: React.FC = () => {
     }
   }, [updateUser, enqueueSnackbar, refetch]);
 
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+  }, []);
+
   return (
     <Box>
       {/* Заголовок и кнопка создания */}
@@ -433,7 +436,11 @@ export const UsersPage: React.FC = () => {
           {/* Таблица пользователей */}
           <TableContainer 
             component={Paper}
-            sx={tableStyles.tableContainer}
+            sx={{
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              border: 'none'
+            }}
           >
             <Table sx={tableStyles.table}>
               <TableHead sx={tableStyles.tableHead}>
@@ -480,13 +487,12 @@ export const UsersPage: React.FC = () => {
             <Box sx={{ 
               display: 'flex', 
               justifyContent: 'center', 
-              mt: 3,
-              ...tableStyles.pagination
+              mt: 3
             }}>
               <Pagination
                 count={totalPages}
                 page={page}
-                onChange={(event, value) => setPage(value)}
+                onChange={handlePageChange}
                 color="primary"
               />
             </Box>
@@ -494,34 +500,33 @@ export const UsersPage: React.FC = () => {
         </>
       )}
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog
+      {/* Модальное окно подтверждения удаления */}
+      <Modal
         open={deleteDialogOpen}
         onClose={!isDeleting ? handleDeleteCancel : undefined}
-        maxWidth="sm"
-        fullWidth
+        title="Подтверждение деактивации"
+        maxWidth={400}
+        actions={
+          <>
+            <Button onClick={handleDeleteCancel} disabled={isDeleting}>
+              Отмена
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+              startIcon={isDeleting ? <CircularProgress size={16} /> : null}
+            >
+              {isDeleting ? 'Деактивация...' : 'Деактивировать'}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle>Подтверждение деактивации</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Вы уверены, что хотите деактивировать этого пользователя? Пользователь будет исключен из активных операций, но его данные сохранятся в системе.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel} disabled={isDeleting}>
-            Отмена
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-            startIcon={isDeleting ? <CircularProgress size={16} /> : null}
-          >
-            {isDeleting ? 'Деактивация...' : 'Деактивировать'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography>
+          Вы уверены, что хотите деактивировать этого пользователя? Пользователь будет исключен из активных операций, но его данные сохранятся в системе.
+        </Typography>
+      </Modal>
     </Box>
   );
 };
