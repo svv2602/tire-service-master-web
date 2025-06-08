@@ -12,34 +12,71 @@ export interface AuthData {
 
 // Функции для работы с токеном
 export const getToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY);
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch (error) {
+    console.error('Ошибка при получении токена:', error);
+    return null;
+  }
 };
 
 export const setToken = (token: string): void => {
-  localStorage.setItem(TOKEN_KEY, token);
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch (error) {
+    console.error('Ошибка при сохранении токена:', error);
+  }
 };
 
 export const removeToken = (): void => {
-  localStorage.removeItem(TOKEN_KEY);
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch (error) {
+    console.error('Ошибка при удалении токена:', error);
+  }
 };
 
 // Функции для работы с данными пользователя
 export const getUser = (): User | null => {
-  const userStr = localStorage.getItem(USER_KEY);
-  return userStr ? JSON.parse(userStr) : null;
+  try {
+    const userStr = localStorage.getItem(USER_KEY);
+    if (!userStr) return null;
+    
+    try {
+      return JSON.parse(userStr);
+    } catch (error) {
+      throw new Error('Некорректные данные пользователя в localStorage');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Некорректные данные пользователя в localStorage') {
+      throw error;
+    }
+    console.error('Ошибка при получении пользователя:', error);
+    return null;
+  }
 };
 
 export const setUser = (user: User): void => {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch (error) {
+    console.error('Ошибка при сохранении пользователя:', error);
+  }
 };
 
 export const removeUser = (): void => {
-  localStorage.removeItem(USER_KEY);
+  try {
+    localStorage.removeItem(USER_KEY);
+  } catch (error) {
+    console.error('Ошибка при удалении пользователя:', error);
+  }
 };
 
 // Функция для проверки аутентификации
 export const isAuthenticated = (): boolean => {
-  return !!getToken() && !!getUser();
+  const token = getToken();
+  const user = getUser();
+  return token !== null && user !== null;
 };
 
 // Функция для сохранения данных аутентификации
@@ -58,18 +95,19 @@ export const clearAuthData = (): void => {
 export const updateUser = (userData: Partial<User>): void => {
   const currentUser = getUser();
   if (currentUser) {
-    setUser({ ...currentUser, ...userData });
+    const updatedUser = { ...currentUser, ...userData };
+    setUser(updatedUser);
   }
 };
 
 // Функция для проверки роли пользователя
 export const hasRole = (role: string): boolean => {
   const user = getUser();
-  return user ? user.role === role : false;
+  return user !== null && user.role === role;
 };
 
 // Функция для проверки активности пользователя
 export const isUserActive = (): boolean => {
   const user = getUser();
-  return user ? user.is_active : false;
+  return user !== null && user.is_active;
 }; 

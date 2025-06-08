@@ -36,33 +36,49 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
-// Мокирование localStorage
-const createStorageMock = (): Storage => {
-  let store: Record<string, string> = {};
+// Функция для создания мока хранилища
+class LocalStorageMock {
+  private store: { [key: string]: string };
 
-  return {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: jest.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: jest.fn(() => {
-      store = {};
-    }),
-    length: 0,
-    key: jest.fn(),
-  };
-};
+  constructor() {
+    this.store = {};
+  }
 
-const localStorageMock = createStorageMock();
+  clear() {
+    this.store = {};
+  }
+
+  getItem(key: string) {
+    return this.store[key] || null;
+  }
+
+  setItem(key: string, value: string) {
+    this.store[key] = value;
+  }
+
+  removeItem(key: string) {
+    delete this.store[key];
+  }
+
+  get length() {
+    return Object.keys(this.store).length;
+  }
+
+  key(index: number) {
+    return Object.keys(this.store)[index] || null;
+  }
+}
+
+// Создаем экземпляры моков для localStorage и sessionStorage
+const localStorageMock = new LocalStorageMock();
+const sessionStorageMock = new LocalStorageMock();
+
+// Переопределяем localStorage
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Мокирование sessionStorage
-const sessionStorageMock = createStorageMock();
+// Переопределяем sessionStorage
 Object.defineProperty(window, 'sessionStorage', {
   value: sessionStorageMock,
 });
@@ -83,4 +99,11 @@ beforeAll(() => {
 
 afterAll(() => {
   console.error = originalError;
+});
+
+// Очистка моков после каждого теста
+afterEach(() => {
+  jest.clearAllMocks();
+  localStorageMock.clear();
+  sessionStorageMock.clear();
 });

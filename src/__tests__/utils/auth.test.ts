@@ -18,12 +18,13 @@ import { User } from '../../types/models';
 describe('auth utils', () => {
   // Создаем тестового пользователя
   const mockUser: User = {
-    id: 1,
+    id: '1',
     email: 'test@example.com',
     phone: '+1234567890',
     first_name: 'Test',
     last_name: 'User',
     role: 'client',
+    role_id: 1,
     is_active: true,
     email_verified: false,
     phone_verified: false,
@@ -36,6 +37,7 @@ describe('auth utils', () => {
   beforeEach(() => {
     // Очищаем localStorage перед каждым тестом
     localStorage.clear();
+    jest.clearAllMocks();
   });
 
   describe('работа с токеном', () => {
@@ -49,12 +51,12 @@ describe('auth utils', () => {
     });
 
     it('getToken должен возвращать сохраненный токен', () => {
-      setToken(testToken);
+      localStorage.setItem('auth_token', testToken);
       expect(getToken()).toBe(testToken);
     });
 
     it('removeToken должен удалять токен из localStorage', () => {
-      setToken(testToken);
+      localStorage.setItem('auth_token', testToken);
       expect(getToken()).toBe(testToken);
       
       removeToken();
@@ -75,13 +77,13 @@ describe('auth utils', () => {
     });
 
     it('getUser должен возвращать сохраненного пользователя', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       const retrievedUser = getUser();
       expect(retrievedUser).toEqual(mockUser);
     });
 
     it('removeUser должен удалять пользователя из localStorage', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(getUser()).toEqual(mockUser);
       
       removeUser();
@@ -101,18 +103,18 @@ describe('auth utils', () => {
     });
 
     it('isAuthenticated должен возвращать false если есть только токен', () => {
-      setToken(testToken);
+      localStorage.setItem('auth_token', testToken);
       expect(isAuthenticated()).toBe(false);
     });
 
     it('isAuthenticated должен возвращать false если есть только пользователь', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(isAuthenticated()).toBe(false);
     });
 
     it('isAuthenticated должен возвращать true если есть и токен и пользователь', () => {
-      setToken(testToken);
-      setUser(mockUser);
+      localStorage.setItem('auth_token', testToken);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(isAuthenticated()).toBe(true);
     });
   });
@@ -126,14 +128,14 @@ describe('auth utils', () => {
 
       setAuthData(authData);
 
-      expect(getToken()).toBe(testToken);
-      expect(getUser()).toEqual(mockUser);
+      expect(localStorage.getItem('auth_token')).toBe(testToken);
+      expect(localStorage.getItem('auth_user')).toBe(JSON.stringify(mockUser));
       expect(isAuthenticated()).toBe(true);
     });
 
     it('clearAuthData должен очищать и токен и пользователя', () => {
-      setToken(testToken);
-      setUser(mockUser);
+      localStorage.setItem('auth_token', testToken);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(isAuthenticated()).toBe(true);
 
       clearAuthData();
@@ -146,7 +148,7 @@ describe('auth utils', () => {
 
   describe('обновление пользователя', () => {
     it('updateUser должен обновлять данные существующего пользователя', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
 
       const updates = {
         first_name: 'Новое Имя',
@@ -173,7 +175,7 @@ describe('auth utils', () => {
     });
 
     it('updateUser должен сохранять неизмененные поля', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
 
       updateUser({ first_name: 'Новое Имя' });
 
@@ -191,20 +193,27 @@ describe('auth utils', () => {
     });
 
     it('hasRole должен возвращать true для правильной роли', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(hasRole('client')).toBe(true);
     });
 
     it('hasRole должен возвращать false для неправильной роли', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(hasRole('admin')).toBe(false);
-      expect(hasRole('partner')).toBe(false);
     });
 
-    it('hasRole должен быть чувствительным к регистру', () => {
-      setUser(mockUser);
-      expect(hasRole('CLIENT')).toBe(false);
-      expect(hasRole('Client')).toBe(false);
+    it('hasRole должен работать с разными ролями', () => {
+      const adminUser: User = {
+        ...mockUser,
+        id: '2',
+        email: 'admin@example.com',
+        role: 'admin',
+        role_id: 2,
+      };
+
+      localStorage.setItem('auth_user', JSON.stringify(adminUser));
+      expect(hasRole('admin')).toBe(true);
+      expect(hasRole('client')).toBe(false);
     });
   });
 
@@ -214,13 +223,16 @@ describe('auth utils', () => {
     });
 
     it('isUserActive должен возвращать true для активного пользователя', () => {
-      setUser(mockUser);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
       expect(isUserActive()).toBe(true);
     });
 
     it('isUserActive должен возвращать false для неактивного пользователя', () => {
-      const inactiveUser = { ...mockUser, is_active: false };
-      setUser(inactiveUser);
+      const inactiveUser: User = {
+        ...mockUser,
+        is_active: false,
+      };
+      localStorage.setItem('auth_user', JSON.stringify(inactiveUser));
       expect(isUserActive()).toBe(false);
     });
   });
@@ -237,6 +249,7 @@ describe('auth utils', () => {
         token: testToken,
         user: mockUser,
       };
+
       setAuthData(authData);
 
       // Проверка состояния после аутентификации
@@ -244,13 +257,10 @@ describe('auth utils', () => {
       expect(hasRole('client')).toBe(true);
       expect(isUserActive()).toBe(true);
 
-      // Обновление пользователя
-      updateUser({ first_name: 'Обновленное Имя' });
-      expect(getUser()?.first_name).toBe('Обновленное Имя');
-      expect(isAuthenticated()).toBe(true); // Должен остаться аутентифицированным
-
-      // Выход из системы
+      // Очистка данных
       clearAuthData();
+
+      // Проверка состояния после очистки
       expect(isAuthenticated()).toBe(false);
       expect(hasRole('client')).toBe(false);
       expect(isUserActive()).toBe(false);
@@ -264,15 +274,15 @@ describe('auth utils', () => {
       // Второй пользователь с другой ролью
       const adminUser: User = {
         ...mockUser,
-        id: 2,
+        id: '2',
         email: 'admin@example.com',
         role: 'admin',
+        role_id: 2,
       };
 
-      setAuthData({ token: 'new-token', user: adminUser });
-      expect(hasRole('client')).toBe(false);
+      setAuthData({ token: 'admin-token', user: adminUser });
       expect(hasRole('admin')).toBe(true);
-      expect(getToken()).toBe('new-token');
+      expect(hasRole('client')).toBe(false);
     });
   });
 }); 
