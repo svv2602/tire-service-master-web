@@ -409,7 +409,13 @@ const StyleGuidePage: React.FC = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <AutoComplete
-              options={['JavaScript', 'TypeScript', 'React', 'Vue', 'Angular']}
+              options={[
+                { id: 1, label: 'JavaScript' },
+                { id: 2, label: 'TypeScript' },
+                { id: 3, label: 'React' },
+                { id: 4, label: 'Vue' },
+                { id: 5, label: 'Angular' }
+              ]}
               label="Выберите технологию"
             />
           </Grid>
@@ -421,10 +427,10 @@ const StyleGuidePage: React.FC = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <FileUpload
-              onUpload={() => {}}
+              onUploadSuccess={() => {}}
               accept="image/*"
               maxSize={5000000}
-              label="Загрузить изображение"
+              dropzoneText="Загрузить изображение"
             />
           </Grid>
         </Grid>

@@ -73,4 +73,8 @@ export interface FileUploadProps {
    * Дополнительные стили
    */
   sx?: Record<string, any>;
+
+  onFilesSelected: (files: File[]) => void;
+  maxFiles?: number;
+  label?: string;
 } 
