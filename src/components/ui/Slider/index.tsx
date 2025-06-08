@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 
 export interface SliderProps extends Omit<MuiSliderProps, 'onChange'> {
   value: number | [number, number];
-  onChange: (value: number | number[], thumb?: number) => void;
+  onChange: (event: Event, value: number | number[]) => void;
   showValue?: boolean;
   valueFormatter?: (value: number) => string;
   marks?: { value: number; label: string }[];
@@ -29,8 +29,8 @@ export const Slider: React.FC<SliderProps> = ({
   marks,
   ...props
 }) => {
-  const handleChange = (_: Event, newValue: number | number[]) => {
-    onChange(newValue);
+  const handleChange = (event: Event, newValue: number | number[]) => {
+    onChange(event, newValue);
   };
 
   return (
@@ -44,5 +44,3 @@ export const Slider: React.FC<SliderProps> = ({
     />
   );
 };
-
-export default Slider;

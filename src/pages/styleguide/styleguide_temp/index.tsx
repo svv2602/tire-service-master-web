@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, Paper } from '@mui/material';
 import {
   ButtonSection,
   TextFieldSection,
@@ -34,100 +34,122 @@ import {
   RatingSection,
   SliderSection
 } from './sections';
+import StyleGuidePage from './StyleGuidePage';
+
+const sectionStyle = {
+  mb: 4,
+  p: 3,
+  borderRadius: 2,
+  bgcolor: 'background.paper',
+  boxShadow: 1,
+};
 
 const StyleGuide: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography variant="h2" gutterBottom sx={{ mb: 4 }}>
         Style Guide
       </Typography>
 
       {/* Тема */}
-      <Box mb={6}>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+          Тема
+        </Typography>
         <ThemeSection />
-      </Box>
+      </Paper>
 
       {/* Основные компоненты */}
-      <Box mb={6}>
-        <Typography variant="h4" gutterBottom>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Основные компоненты
         </Typography>
-        <ButtonSection />
-        <TextFieldSection />
-        <ChipSection />
-        <PaginationSection />
-        <BreadcrumbsSection />
-        <ProgressSection />
-        <CheckboxSection />
-        <RadioSection />
-        <SelectSection />
-        <SwitchSection />
-        <DatePickerSection />
-        <TimePickerSection />
-        <SliderSection />
-        <FileUploadSection />
-        <AutoCompleteSection />
-      </Box>
+        <Box sx={{ '& > *': { mb: 4 } }}>
+          <TimePickerSection />
+          <SliderSection />
+          <ButtonSection />
+          <TextFieldSection />
+          <ChipSection />
+          <PaginationSection />
+          <BreadcrumbsSection />
+          <ProgressSection />
+          <CheckboxSection />
+          <RadioSection />
+          <SelectSection />
+          <SwitchSection />
+          <DatePickerSection />
+          <FileUploadSection />
+          <AutoCompleteSection />
+        </Box>
+      </Paper>
 
       {/* Навигация и отображение данных */}
-      <Box mb={6}>
-        <Typography variant="h4" gutterBottom>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Навигация и отображение данных
         </Typography>
-        <AppBarSection />
-        <DrawerSection />
-        <DropdownSection />
-        <TableSection />
-        <AccordionSection />
-        <StepperSection />
-        <ScrollbarSection />
-      </Box>
+        <Box sx={{ '& > *': { mb: 4 } }}>
+          <AppBarSection />
+          <DrawerSection />
+          <DropdownSection />
+          <TableSection />
+          <AccordionSection />
+          <StepperSection />
+          <ScrollbarSection />
+        </Box>
+      </Paper>
 
       {/* Контейнеры и карточки */}
-      <Box mb={6}>
-        <Typography variant="h4" gutterBottom>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Контейнеры и карточки
         </Typography>
-        <CardSection />
-        <PaperSection />
-      </Box>
+        <Box sx={{ '& > *': { mb: 4 } }}>
+          <CardSection />
+          <PaperSection />
+        </Box>
+      </Paper>
 
       {/* Вспомогательные компоненты */}
-      <Box mb={6}>
-        <Typography variant="h4" gutterBottom>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Вспомогательные компоненты
         </Typography>
-        <BadgeSection />
-        <SpeedDialSection />
-        <RatingSection />
-        <TooltipSection />
-        <AlertSection />
-        <ModalSection />
-        <FilterSection />
-      </Box>
+        <Box sx={{ '& > *': { mb: 4 } }}>
+          <BadgeSection />
+          <SpeedDialSection />
+          <RatingSection />
+          <TooltipSection />
+          <AlertSection />
+          <ModalSection />
+          <FilterSection />
+        </Box>
+      </Paper>
 
       {/* Типография */}
-      <Box mb={6}>
-        <Typography variant="h4" gutterBottom>
+      <Paper sx={sectionStyle}>
+        <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
           Типография
         </Typography>
-        <Typography variant="h1" gutterBottom>H1 Заголовок</Typography>
-        <Typography variant="h2" gutterBottom>H2 Заголовок</Typography>
-        <Typography variant="h3" gutterBottom>H3 Заголовок</Typography>
-        <Typography variant="h4" gutterBottom>H4 Заголовок</Typography>
-        <Typography variant="h5" gutterBottom>H5 Заголовок</Typography>
-        <Typography variant="h6" gutterBottom>H6 Заголовок</Typography>
-        <Typography variant="body1" gutterBottom>
-          Body 1. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-          Quos blanditiis tenetur unde suscipit.
-        </Typography>
-        <Typography variant="body2" gutterBottom>
-          Body 2. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-          Quos blanditiis tenetur unde suscipit.
-        </Typography>
-      </Box>
+        <Box sx={{ '& > *': { mb: 2 } }}>
+          <Typography variant="h1" gutterBottom>H1 Заголовок</Typography>
+          <Typography variant="h2" gutterBottom>H2 Заголовок</Typography>
+          <Typography variant="h3" gutterBottom>H3 Заголовок</Typography>
+          <Typography variant="h4" gutterBottom>H4 Заголовок</Typography>
+          <Typography variant="h5" gutterBottom>H5 Заголовок</Typography>
+          <Typography variant="h6" gutterBottom>H6 Заголовок</Typography>
+          <Typography variant="body1" gutterBottom>
+            Body 1. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+            Quos blanditiis tenetur unde suscipit.
+          </Typography>
+          <Typography variant="body2" gutterBottom>
+            Body 2. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+            Quos blanditiis tenetur unde suscipit.
+          </Typography>
+        </Box>
+      </Paper>
     </Container>
   );
 };
 
-export default StyleGuide;
+export default StyleGuidePage;

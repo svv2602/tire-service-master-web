@@ -1,101 +1,207 @@
-import React from 'react';
-import { Typography, Box, Grid } from '@mui/material';
-import { TextField } from '../../../../components/ui/TextField';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Grid,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Paper,
+} from '@mui/material';
+import {
+  Visibility,
+  VisibilityOff,
+  Search as SearchIcon,
+  Person as PersonIcon,
+} from '@mui/icons-material';
+
+const sectionStyle = {
+  p: 3,
+  mb: 2,
+  borderRadius: 1,
+  bgcolor: 'background.paper',
+  boxShadow: 1,
+};
+
+const fieldGroupStyle = {
+  '& > *': { mb: 2, width: '100%' }
+};
 
 export const TextFieldSection: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Текстовые поля
+      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+        Text Fields
       </Typography>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Базовые поля
+      <Paper sx={sectionStyle}>
+        <Typography variant="subtitle1" gutterBottom sx={{ mb: 3 }}>
+          Примеры текстовых полей
         </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Стандартное поле"
-              placeholder="Введите текст"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Поле с ошибкой"
-              error
-              helperText="Текст ошибки"
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Отключенное поле"
-              disabled
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-      </Box>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Поля с подсказками
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="С подсказкой"
-              helperText="Вспомогательный текст"
-              fullWidth
-            />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Базовые поля
+            </Typography>
+            <Box sx={fieldGroupStyle}>
+              <TextField
+                label="Стандартное"
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Заполненное"
+                variant="filled"
+                size="small"
+              />
+              <TextField
+                label="Стандартное"
+                variant="standard"
+                size="small"
+              />
+            </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Обязательное поле"
-              required
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="С плейсхолдером"
-              placeholder="Подсказка для ввода"
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-      </Box>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Размеры полей
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Маленькое поле"
-              size="small"
-              fullWidth
-            />
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              С подсказками
+            </Typography>
+            <Box sx={fieldGroupStyle}>
+              <TextField
+                label="С подсказкой"
+                helperText="Вспомогательный текст"
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                error
+                label="Ошибка"
+                helperText="Текст ошибки"
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                disabled
+                label="Отключено"
+                helperText="Недоступно для ввода"
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Стандартное поле"
-              fullWidth
-            />
+
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Размеры полей
+            </Typography>
+            <Box sx={fieldGroupStyle}>
+              <TextField
+                label="Маленькое"
+                size="small"
+                variant="outlined"
+              />
+              <TextField
+                label="Стандартное"
+                variant="outlined"
+              />
+              <TextField
+                label="Многострочное"
+                multiline
+                rows={4}
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              label="Многострочное поле"
-              multiline
-              rows={4}
-              fullWidth
-            />
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              С иконками
+            </Typography>
+            <Box sx={fieldGroupStyle}>
+              <TextField
+                label="Поиск"
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Имя пользователя"
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Пароль"
+                type={showPassword ? 'text' : 'password'}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Состояния полей
+            </Typography>
+            <Box sx={fieldGroupStyle}>
+              <TextField
+                label="Только для чтения"
+                defaultValue="Нельзя изменить"
+                InputProps={{
+                  readOnly: true,
+                }}
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="С плейсхолдером"
+                placeholder="Введите текст..."
+                variant="outlined"
+                size="small"
+              />
+              <TextField
+                label="Обязательное"
+                required
+                variant="outlined"
+                size="small"
+              />
+            </Box>
           </Grid>
         </Grid>
-      </Box>
+      </Paper>
     </Box>
   );
 };

@@ -65,7 +65,7 @@ import PageContentPage from './pages/page-content/PageContentPage';
 import PageContentFormPage from './pages/page-content/PageContentFormPage';
 
 // Импорт для страницы StyleGuide
-import StyleGuide from './pages/styleguide';
+import StyleGuide from './pages/styleguide/styleguide_temp';
 
 // Компонент для тем
 const ThemeContext = React.createContext<{
@@ -150,7 +150,13 @@ function App() {
               <Routes>
                 {/* Публичные маршруты */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/styleguide" element={<StyleGuide />} />
+                <Route path="/styleguide" element={
+                  <AppThemeProvider>
+                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+                      <StyleGuide />
+                    </LocalizationProvider>
+                  </AppThemeProvider>
+                } />
                 
                 {/* Главная страница для клиентов (без авторизации) */}
                 <Route path="/client" element={

@@ -1,88 +1,117 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import { Button } from '../../../../components/ui/Button';
+import { Box, Typography, Grid, Button, IconButton, Paper } from '@mui/material';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+
+const sectionStyle = {
+  p: 3,
+  mb: 2,
+  borderRadius: 1,
+  bgcolor: 'background.paper',
+  boxShadow: 1,
+};
+
+const buttonGroupStyle = {
+  '& > button': { mr: 1, mb: 1 }
+};
 
 export const ButtonSection: React.FC = () => {
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Кнопки
+      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+        Buttons
       </Typography>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Варианты кнопок
+      <Paper sx={sectionStyle}>
+        <Typography variant="subtitle1" gutterBottom sx={{ mb: 3 }}>
+          Примеры кнопок
         </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          <Button variant="primary">Основная</Button>
-          <Button variant="secondary">Дополнительная</Button>
-          <Button variant="success">Успех</Button>
-          <Button variant="error">Ошибка</Button>
-        </Box>
-      </Box>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Состояния кнопок
-        </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          <Button variant="primary" disabled>
-            Отключена
-          </Button>
-          <Button variant="primary" loading>
-            Загрузка
-          </Button>
-          <Button variant="secondary" fullWidth>
-            На всю ширину
-          </Button>
-        </Box>
-      </Box>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Базовые кнопки
+            </Typography>
+            <Box sx={buttonGroupStyle}>
+              <Button variant="contained">Contained</Button>
+              <Button variant="outlined">Outlined</Button>
+              <Button variant="text">Text</Button>
+            </Box>
+          </Grid>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Кнопки с иконками
-        </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap">
-          <Button
-            variant="error"
-            startIcon={<DeleteIcon />}
-          >
-            Удалить
-          </Button>
-          <Button
-            variant="success"
-            endIcon={<AddIcon />}
-          >
-            Добавить
-          </Button>
-          <Button
-            variant="primary"
-            startIcon={<AddIcon />}
-            endIcon={<DeleteIcon />}
-          >
-            Действия
-          </Button>
-        </Box>
-      </Box>
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Цветные кнопки
+            </Typography>
+            <Box sx={buttonGroupStyle}>
+              <Button variant="contained" color="primary">Primary</Button>
+              <Button variant="contained" color="secondary">Secondary</Button>
+              <Button variant="contained" color="error">Error</Button>
+            </Box>
+          </Grid>
 
-      <Box mb={4}>
-        <Typography variant="subtitle1" gutterBottom>
-          Размеры кнопок
-        </Typography>
-        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-          <Button variant="primary" size="small">
-            Маленькая
-          </Button>
-          <Button variant="primary" size="medium">
-            Средняя
-          </Button>
-          <Button variant="primary" size="large">
-            Большая
-          </Button>
-        </Box>
-      </Box>
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Размеры кнопок
+            </Typography>
+            <Box sx={buttonGroupStyle}>
+              <Button variant="contained" size="small">Small</Button>
+              <Button variant="contained" size="medium">Medium</Button>
+              <Button variant="contained" size="large">Large</Button>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Кнопки с иконками
+            </Typography>
+            <Box sx={buttonGroupStyle}>
+              <Button variant="contained" startIcon={<AddIcon />}>
+                Добавить
+              </Button>
+              <Button variant="outlined" startIcon={<EditIcon />}>
+                Изменить
+              </Button>
+              <Button variant="text" startIcon={<DeleteIcon />}>
+                Удалить
+              </Button>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Иконки-кнопки
+            </Typography>
+            <Box sx={{ '& > button': { mr: 1 } }}>
+              <IconButton color="primary" aria-label="add">
+                <AddIcon />
+              </IconButton>
+              <IconButton color="secondary" aria-label="edit">
+                <EditIcon />
+              </IconButton>
+              <IconButton color="error" aria-label="delete">
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Typography variant="subtitle2" gutterBottom color="text.secondary">
+              Состояния кнопок
+            </Typography>
+            <Box sx={buttonGroupStyle}>
+              <Button variant="contained" disabled>
+                Disabled
+              </Button>
+              <Button variant="contained" href="#" onClick={(e) => e.preventDefault()}>
+                Link
+              </Button>
+              <Button variant="contained" color="primary" disableElevation>
+                No Shadow
+              </Button>
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
     </Box>
   );
 };

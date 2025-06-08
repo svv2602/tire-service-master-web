@@ -1,90 +1,163 @@
 import React, { useState } from 'react';
-import { Box, Typography, Grid } from '@mui/material';
-import { Card } from '../../../../components/ui/Card';
-import { Slider } from '../../../../components/ui/Slider';
+import {
+  Box,
+  Typography,
+  Grid,
+  Slider,
+  Paper,
+} from '@mui/material';
+import VolumeDown from '@mui/icons-material/VolumeDown';
+import VolumeUp from '@mui/icons-material/VolumeUp';
+
+const sectionStyle = {
+  p: 3,
+  mb: 2,
+  borderRadius: 1,
+  bgcolor: 'background.paper',
+  boxShadow: 1,
+};
+
+const marks = [
+  {
+    value: 0,
+    label: '0°C',
+  },
+  {
+    value: 20,
+    label: '20°C',
+  },
+  {
+    value: 37,
+    label: '37°C',
+  },
+  {
+    value: 100,
+    label: '100°C',
+  },
+];
+
+function valuetext(value: number) {
+  return `${value}°C`;
+}
 
 export const SliderSection: React.FC = () => {
-  const [value, setValue] = useState(50);
-  const [rangeValue, setRangeValue] = useState<[number, number]>([20, 80]);
+  const [value, setValue] = useState<number>(30);
+  const [rangeValue, setRangeValue] = useState<number[]>([20, 37]);
 
-  const marks = [
-    { value: 0, label: '0°C' },
-    { value: 50, label: '50°C' },
-    { value: 100, label: '100°C' },
-  ];
-
-  const defaultMarks = [
-    { value: 0, label: '0' },
-    { value: 20, label: '20' },
-    { value: 40, label: '40' },
-    { value: 60, label: '60' },
-    { value: 80, label: '80' },
-    { value: 100, label: '100' },
-  ];
-
-  const handleRangeChange = (newValue: number | number[]) => {
-    if (Array.isArray(newValue) && newValue.length === 2) {
-      setRangeValue([newValue[0], newValue[1]]);
-    }
+  const handleChange = (event: Event, newValue: number | number[]) => {
+    setValue(newValue as number);
   };
 
-  const handleSingleChange = (newValue: number | number[]) => {
-    if (typeof newValue === 'number') {
-      setValue(newValue);
-    }
+  const handleRangeChange = (event: Event, newValue: number | number[]) => {
+    setRangeValue(newValue as number[]);
   };
 
   return (
     <Box>
-      <Typography variant="h6" gutterBottom>
-        Slider
+      <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+        Sliders
       </Typography>
 
-      <Card title="Примеры слайдеров">
-        <Grid container spacing={2}>
+      <Paper sx={sectionStyle}>
+        <Typography variant="subtitle1" gutterBottom sx={{ mb: 3 }}>
+          Примеры слайдеров
+        </Typography>
+
+        <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Обычный слайдер</Typography>
-            <Slider
-              value={value}
-              onChange={handleSingleChange}
-              marks={marks}
-              step={10}
-            />
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Базовый слайдер
+              </Typography>
+              <Slider
+                aria-label="Базовый"
+                defaultValue={30}
+                valueLabelDisplay="auto"
+              />
+            </Box>
           </Grid>
+
           <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Диапазон значений</Typography>
-            <Slider
-              value={rangeValue}
-              onChange={handleRangeChange}
-              showValue
-              valueFormatter={(value) => `${value}%`}
-            />
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Слайдер с метками
+              </Typography>
+              <Slider
+                aria-label="С метками"
+                defaultValue={20}
+                valueLabelDisplay="auto"
+                step={10}
+                marks
+                min={0}
+                max={100}
+              />
+            </Box>
           </Grid>
+
           <Grid item xs={12} md={6}>
-            <Typography gutterBottom>Дискретный слайдер</Typography>
-            <Slider
-              value={value}
-              onChange={handleSingleChange}
-              step={10}
-              marks={defaultMarks}
-              min={0}
-              max={100}
-            />
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Слайдер с кастомными метками
+              </Typography>
+              <Slider
+                aria-label="Кастомные метки"
+                defaultValue={37}
+                getAriaValueText={valuetext}
+                valueLabelDisplay="auto"
+                step={null}
+                marks={marks}
+              />
+            </Box>
           </Grid>
+
           <Grid item xs={12} md={6}>
-            <Typography gutterBottom>С подписями значений</Typography>
-            <Slider
-              value={value}
-              onChange={handleSingleChange}
-              valueLabelDisplay="auto"
-              step={10}
-              marks={defaultMarks}
-              min={0}
-              max={100}
-            />
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Диапазонный слайдер
+              </Typography>
+              <Slider
+                value={rangeValue}
+                onChange={handleRangeChange}
+                valueLabelDisplay="auto"
+                getAriaValueText={valuetext}
+                min={0}
+                max={100}
+              />
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Слайдер с иконками
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <VolumeDown sx={{ mr: 2 }} />
+                <Slider
+                  aria-label="Громкость"
+                  value={value}
+                  onChange={handleChange}
+                  sx={{ mx: 2 }}
+                />
+                <VolumeUp sx={{ ml: 2 }} />
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Box sx={{ width: '100%', px: 2 }}>
+              <Typography variant="subtitle2" gutterBottom color="text.secondary">
+                Отключенный слайдер
+              </Typography>
+              <Slider
+                aria-label="Отключен"
+                defaultValue={30}
+                disabled
+              />
+            </Box>
           </Grid>
         </Grid>
-      </Card>
+      </Paper>
     </Box>
   );
 };
