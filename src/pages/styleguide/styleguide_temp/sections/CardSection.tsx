@@ -58,7 +58,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="194"
-              image="https://source.unsplash.com/random/400x200/?tire"
+              image="/image/1.jpeg"
               alt="Шины"
             />
             <CardContent>
@@ -100,7 +100,7 @@ export const CardSection: React.FC = () => {
             <CardMedia
               component="img"
               height="194"
-              image="https://source.unsplash.com/random/400x200/?car,service"
+              image="/image/2.jpeg"
               alt="Автосервис"
             />
             <CardContent>
@@ -129,6 +129,12 @@ export const CardSection: React.FC = () => {
             Карточка с действиями
           </Typography>
           <MuiCard>
+            <CardMedia
+              component="img"
+              height="140"
+              image="/image/3.jpeg"
+              alt="Акция на шины"
+            />
             <CardHeader
               title="Акция"
               subheader="Действует до 31 марта 2024"
@@ -150,6 +156,54 @@ export const CardSection: React.FC = () => {
                 Подробные условия
               </Button>
             </CardActions>
+          </MuiCard>
+        </Grid>
+
+        {/* Карточка с дополнительным примером */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Информационная карточка
+          </Typography>
+          <MuiCard>
+            <CardMedia
+              component="img"
+              height="194"
+              image="/image/4.jpeg"
+              alt="Шиномонтаж"
+            />
+            <CardContent>
+              <Typography variant="h5" component="div" gutterBottom>
+                Шиномонтаж
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Профессиональный шиномонтаж с использованием современного оборудования.
+                Быстро, качественно и с гарантией.
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button size="small">Записаться</Button>
+              <Button size="small">Узнать цены</Button>
+            </CardActions>
+          </MuiCard>
+        </Grid>
+
+        {/* Компактная карточка */}
+        <Grid item xs={12} md={6}>
+          <Typography variant="subtitle2" gutterBottom color="text.secondary" sx={{ mb: 3 }}>
+            Компактная карточка
+          </Typography>
+          <MuiCard>
+            <CardContent>
+              <Typography variant="h6" component="div" gutterBottom>
+                Быстрый ремонт
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Экспресс-ремонт проколов и мелких повреждений. Минимальное время ожидания.
+              </Typography>
+              <Button variant="contained" size="small">
+                Заказать
+              </Button>
+            </CardContent>
           </MuiCard>
         </Grid>
       </Grid>
