@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Typography, Grid, Card } from '@mui/material';
-import { Badge } from '../../../components/ui/Badge';
+import { Box, Typography, Grid } from '@mui/material';
+import Badge from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { Card } from '../../../components/ui/Card';
 
 export const BadgeSection: React.FC = () => {
   return (
@@ -32,14 +33,18 @@ export const BadgeSection: React.FC = () => {
         <Grid item xs={12}>
           <Card title="Размеры бейджей">
             <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4} size="small" color="primary">
+              <Badge badgeContent={4} color="primary">
+                <Box sx={{ transform: 'scale(0.8)' }}>
+                  <NotificationsIcon />
+                </Box>
+              </Badge>
+              <Badge badgeContent={4} color="primary">
                 <NotificationsIcon />
               </Badge>
-              <Badge badgeContent={4} size="medium" color="primary">
-                <NotificationsIcon />
-              </Badge>
-              <Badge badgeContent={4} size="large" color="primary">
-                <NotificationsIcon />
+              <Badge badgeContent={4} color="primary">
+                <Box sx={{ transform: 'scale(1.2)' }}>
+                  <NotificationsIcon />
+                </Box>
               </Badge>
             </Box>
           </Card>
@@ -76,7 +81,7 @@ export const BadgeSection: React.FC = () => {
               <Badge badgeContent={1} color="error" pulse>
                 <NotificationsIcon />
               </Badge>
-              <Badge color="success" pulse>
+              <Badge dot color="success" pulse>
                 <MailIcon />
               </Badge>
             </Box>

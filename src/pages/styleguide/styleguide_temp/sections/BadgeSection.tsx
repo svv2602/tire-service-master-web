@@ -3,7 +3,7 @@ import { Typography, Box, Grid } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MailIcon from '@mui/icons-material/Mail';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { Badge } from '../../../../components/ui/Badge';
+import Badge from '../../../../components/ui/Badge';
 import { Card } from '../../../../components/ui/Card';
 
 export const BadgeSection: React.FC = () => {
@@ -32,11 +32,15 @@ export const BadgeSection: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Card title="Размеры бейджей">
             <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4} size="small">
-                <MailIcon />
+              <Badge badgeContent={4}>
+                <Box sx={{ transform: 'scale(0.8)' }}>
+                  <MailIcon />
+                </Box>
               </Badge>
-              <Badge badgeContent={10} size="medium">
-                <ShoppingCartIcon />
+              <Badge badgeContent={10}>
+                <Box sx={{ transform: 'scale(1.2)' }}>
+                  <ShoppingCartIcon />
+                </Box>
               </Badge>
             </Box>
           </Card>
@@ -46,10 +50,10 @@ export const BadgeSection: React.FC = () => {
         <Grid item xs={12} md={6}>
           <Card title="Варианты бейджей">
             <Box sx={{ display: 'flex', gap: 3 }}>
-              <Badge badgeContent={4} variant="dot">
+              <Badge dot>
                 <MailIcon />
               </Badge>
-              <Badge badgeContent={10} variant="standard">
+              <Badge badgeContent={10}>
                 <ShoppingCartIcon />
               </Badge>
             </Box>
@@ -63,7 +67,7 @@ export const BadgeSection: React.FC = () => {
               <Badge badgeContent={4} pulse>
                 <MailIcon />
               </Badge>
-              <Badge badgeContent={10} pulse>
+              <Badge dot pulse>
                 <ShoppingCartIcon />
               </Badge>
             </Box>

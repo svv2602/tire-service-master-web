@@ -1,90 +1,55 @@
 import React from 'react';
-import { Badge as MuiBadge, BadgeProps as MuiBadgeProps } from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
-import { SIZES, ANIMATIONS, getThemeColors } from '../../../styles/theme';
+import MuiBadge from '@mui/material/Badge';
+import { BadgeProps } from './types';
+import { styled } from '@mui/material/styles';
 
-export type BadgeProps = MuiBadgeProps & {
-  /** Содержимое бейджа */
-  badgeContent?: React.ReactNode;
-  /** Цвет бейджа */
-  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
-  /** Размер бейджа */
-  size?: 'small' | 'medium' | 'large';
-  /** Максимальное значение */
-  max?: number;
-  /** Пульсирующая анимация */
-  pulse?: boolean;
-};
-
-const pulseAnimation = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-`;
-
-const StyledBadge = styled(MuiBadge)<BadgeProps>(({ theme, pulse }) => ({
+// Создаем стилизованный компонент для пульсирующей анимации
+const PulsingBadge = styled(MuiBadge)(({ theme }) => ({
   '& .MuiBadge-badge': {
-    animation: pulse ? `${pulseAnimation} 2s infinite` : 'none',
-    '&.MuiBadge-colorPrimary': {
-      backgroundColor: theme.palette.primary.main,
+    '&::after': {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      animation: 'ripple 1.2s infinite ease-in-out',
+      border: '1px solid currentColor',
+      content: '""',
     },
-    '&.MuiBadge-colorSecondary': {
-      backgroundColor: theme.palette.secondary.main,
+  },
+  '@keyframes ripple': {
+    '0%': {
+      transform: 'scale(1)',
+      opacity: 1,
     },
-    '&.MuiBadge-colorError': {
-      backgroundColor: theme.palette.error.main,
-    },
-    '&.MuiBadge-colorInfo': {
-      backgroundColor: theme.palette.info.main,
-    },
-    '&.MuiBadge-colorSuccess': {
-      backgroundColor: theme.palette.success.main,
-    },
-    '&.MuiBadge-colorWarning': {
-      backgroundColor: theme.palette.warning.main,
+    '100%': {
+      transform: 'scale(2)',
+      opacity: 0,
     },
   },
 }));
 
 /**
- * Компонент бейджа для отображения меток и счетчиков
- * 
- * @example
- * // Простой бейдж
- * <Badge badgeContent={4} color="primary" pulse>
- *   <NotificationsIcon />
- * </Badge>
- * 
- * // Пульсирующий бейдж с максимальным значением
- * <Badge badgeContent={100} max={99} color="error" pulse>
- *   <MailIcon />
- * </Badge>
+ * Компонент Badge - отображает индикатор с числом или точку над дочерним элементом
  */
-export const Badge: React.FC<BadgeProps> = ({
-  badgeContent,
-  color = 'primary',
-  size = 'medium',
-  max = 99,
+const Badge: React.FC<BadgeProps> = ({
+  dot = false,
   pulse = false,
+  badgeContent,
   children,
-  ...props
+  ...rest
 }) => {
-  // Форматируем контент, если это число
-  const formattedContent = typeof badgeContent === 'number' && max
-    ? badgeContent > max ? `${max}+` : badgeContent
-    : badgeContent;
+  const BadgeComponent = pulse ? PulsingBadge : MuiBadge;
 
   return (
-    <StyledBadge
-      badgeContent={formattedContent}
-      color={color}
-      size={size}
-      max={max}
-      pulse={pulse}
-      {...props}
+    <BadgeComponent
+      badgeContent={badgeContent}
+      variant={dot ? 'dot' : 'standard'}
+      {...rest}
     >
       {children}
-    </StyledBadge>
+    </BadgeComponent>
   );
 };
 
