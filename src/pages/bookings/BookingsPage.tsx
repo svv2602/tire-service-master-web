@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Button,
-  TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -15,13 +12,6 @@ import {
   TableRow,
   IconButton,
   Tooltip,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TablePagination,
   Avatar,
   Menu,
   MenuItem,
@@ -43,6 +33,15 @@ import {
 } from '../../api/bookings.api';
 import { Booking, ApiResponse } from '../../types/models';
 import { BookingStatusEnum, BookingFilter } from '../../types/booking';
+
+// Импорты UI компонентов
+import Paper from '../../components/ui/Paper';
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import { Modal } from '../../components/ui/Modal';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Pagination } from '../../components/ui/Pagination';
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -221,7 +220,13 @@ const BookingsPage: React.FC = () => {
       </Box>
 
       {/* Поиск */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper sx={{ 
+        p: 2, 
+        mb: 3,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
+      }}>
         <TextField
           placeholder="Поиск по имени, фамилии, email или номеру телефона клиента"
           variant="outlined"
@@ -240,7 +245,11 @@ const BookingsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица бронирований */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
+      }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -313,33 +322,41 @@ const BookingsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-        />
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          p: 2 
+        }}>
+          <Pagination
+            count={Math.ceil(totalItems / rowsPerPage)}
+            page={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            color="primary"
+            disabled={totalItems <= rowsPerPage}
+          />
+        </Box>
       </TableContainer>
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Вы действительно хотите удалить бронирование?
-            Это действие нельзя будет отменить.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Модальное окно подтверждения удаления */}
+      <Modal 
+        open={deleteDialogOpen} 
+        onClose={handleCloseDialog}
+        title="Подтверждение удаления"
+        maxWidth={400}
+        actions={
+          <>
+            <Button onClick={handleCloseDialog}>Отмена</Button>
+            <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+              Удалить
+            </Button>
+          </>
+        }
+      >
+        <Typography>
+          Вы действительно хотите удалить бронирование?
+          Это действие нельзя будет отменить.
+        </Typography>
+      </Modal>
     </Box>
   );
 };
