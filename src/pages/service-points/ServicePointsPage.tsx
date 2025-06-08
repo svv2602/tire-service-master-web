@@ -3,10 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Button,
-  TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -16,16 +13,9 @@ import {
   TableRow,
   IconButton,
   Tooltip,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TablePagination,
   FormControl,
   InputLabel,
-  Select,
   MenuItem,
   useMediaQuery,
   useTheme,
@@ -56,6 +46,16 @@ import {
   getAdaptiveTableStyles, 
   getChipStyles 
 } from '../../styles';
+
+// Импорты UI компонентов
+import Paper from '../../components/ui/Paper';
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import { Select } from '../../components/ui/Select';
+import { Modal } from '../../components/ui/Modal';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Pagination } from '../../components/ui/Pagination';
 
 // Функция для форматирования рабочих часов
 const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
@@ -277,7 +277,10 @@ const ServicePointsPage: React.FC = () => {
       <Paper sx={{ 
         ...cardStyles, 
         p: isMobile ? SIZES.spacing.md : SIZES.spacing.lg, 
-        mb: SIZES.spacing.lg 
+        mb: SIZES.spacing.lg,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
       }}>
         <Box sx={{ 
           display: 'flex', 
@@ -315,58 +318,49 @@ const ServicePointsPage: React.FC = () => {
             flexDirection: isMobile ? 'column' : 'row',
             width: isMobile ? '100%' : 'auto',
           }}>
-            <FormControl 
-              size="small" 
+            <Select
+              label="Регион"
+              value={selectedRegionId}
+              onChange={(value) => {
+                setSelectedRegionId(value as number | '');
+                setSelectedCityId('');
+                setPage(0);
+              }}
+              options={[
+                { value: '', label: 'Все регионы' },
+                ...(regionsData?.data?.map((region) => ({
+                  value: region.id,
+                  label: region.name
+                })) || [])
+              ]}
+              size="small"
               sx={{ 
-                ...textFieldStyles,
                 minWidth: isMobile ? '100%' : 150,
                 width: isMobile ? '100%' : 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: SIZES.borderRadius.sm
-                }
               }}
-            >
-              <InputLabel>Регион</InputLabel>
-              <Select
-                value={selectedRegionId}
-                onChange={handleRegionChange}
-                label="Регион"
-              >
-                <MenuItem value="">Все регионы</MenuItem>
-                {regionsData?.data?.map((region) => (
-                  <MenuItem key={region.id} value={region.id}>
-                    {region.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            />
 
-            <FormControl 
-              size="small" 
+            <Select
+              label="Город"
+              value={selectedCityId}
+              onChange={(value) => {
+                setSelectedCityId(value as number | '');
+                setPage(0);
+              }}
+              options={[
+                { value: '', label: 'Все города' },
+                ...(citiesData?.data?.map((city) => ({
+                  value: city.id,
+                  label: city.name
+                })) || [])
+              ]}
+              disabled={!selectedRegionId}
+              size="small"
               sx={{ 
-                ...textFieldStyles,
                 minWidth: isMobile ? '100%' : 150,
                 width: isMobile ? '100%' : 150,
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: SIZES.borderRadius.sm
-                }
               }}
-            >
-              <InputLabel>Город</InputLabel>
-              <Select
-                value={selectedCityId}
-                onChange={handleCityChange}
-                label="Город"
-                disabled={!selectedRegionId}
-              >
-                <MenuItem value="">Все города</MenuItem>
-                {citiesData?.data?.map((city) => (
-                  <MenuItem key={city.id} value={city.id}>
-                    {city.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            />
           </Box>
         </Box>
       </Paper>
@@ -374,7 +368,12 @@ const ServicePointsPage: React.FC = () => {
       {/* Таблица сервисных точек */}
       <TableContainer 
         component={Paper} 
-        sx={tableStyles.tableContainer}
+        sx={{
+          ...tableStyles.tableContainer,
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          border: 'none'
+        }}
       >
         <Table sx={tableStyles.table}>
           <TableHead sx={tableStyles.tableHead}>
@@ -551,76 +550,53 @@ const ServicePointsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          sx={tableStyles.pagination}
-        />
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          p: SIZES.spacing.md 
+        }}>
+          <Pagination
+            count={Math.ceil(totalItems / rowsPerPage)}
+            page={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            color="primary"
+            disabled={totalItems <= rowsPerPage}
+          />
+        </Box>
       </TableContainer>
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog 
-        open={deleteDialogOpen} 
+      {/* Модальное окно подтверждения удаления */}
+      <Modal
+        open={deleteDialogOpen}
         onClose={isDeleting ? undefined : handleCloseDialog}
-        disableEscapeKeyDown={isDeleting}
-        PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400
-          }
-        }}
+        title="Подтверждение удаления"
+        maxWidth={400}
+        actions={
+          <>
+            <Button
+              onClick={handleCloseDialog}
+              disabled={isDeleting}
+              variant="outlined"
+            >
+              Отмена
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+              startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
+            >
+              {isDeleting ? 'Удаление...' : 'Удалить'}
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ 
-          fontSize: SIZES.fontSize.lg, 
-          fontWeight: 600,
-          pb: SIZES.spacing.sm
-        }}>
-          Подтверждение удаления
-        </DialogTitle>
-        <DialogContent sx={{ pb: SIZES.spacing.md }}>
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-            Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
-            Это действие нельзя будет отменить.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ 
-          p: SIZES.spacing.lg, 
-          gap: SIZES.spacing.sm 
-        }}>
-          <Button 
-            onClick={handleCloseDialog} 
-            disabled={isDeleting}
-            sx={{
-              ...buttonStyles,
-              variant: 'outlined',
-              borderRadius: SIZES.borderRadius.sm
-            }}
-          >
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-            disabled={isDeleting}
-            startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
-            sx={{
-              borderRadius: SIZES.borderRadius.sm,
-              '&:hover': {
-                backgroundColor: theme.palette.error.dark
-              }
-            }}
-          >
-            {isDeleting ? 'Удаление...' : 'Удалить'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+          Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
+          Это действие нельзя будет отменить.
+        </Typography>
+      </Modal>
     </Box>
   );
 };
