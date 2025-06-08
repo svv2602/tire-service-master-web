@@ -66,7 +66,6 @@ import PageContentFormPage from './pages/page-content/PageContentFormPage';
 
 // Импорт для страницы StyleGuide
 import StyleGuide from './pages/styleguide/styleguide_temp';
-import TestPage from './TestPage';
 
 // Компонент для тем
 const ThemeContext = React.createContext<{
@@ -149,7 +148,6 @@ function App() {
           <Router>
             <Routes>
               {/* Публичные маршруты */}
-              <Route path="/test" element={<TestPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/styleguide" element={
                 <AppThemeProvider>
