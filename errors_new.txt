@@ -1,132 +1,339 @@
 Compiled with problems:
 ×
-ERROR in src/components/ui/Card/Card.tsx:7:18
-TS2430: Interface 'CardProps' incorrectly extends interface 'CardOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 7 more ... | "raised"> & { ...; }'.
-  Type 'CardProps' is not assignable to type 'Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ref?: ((instance: HTMLDivElement | null) => void) | ... 2 more ... | undefined; }, "className" | ... 7 more ... | "raised">'.
-    Types of property 'title' are incompatible.
-      Type 'ReactNode' is not assignable to type 'string | undefined'.
-        Type 'null' is not assignable to type 'string | undefined'.
-     5 |
-     6 | /** Пропсы карточки */
-  >  7 | export interface CardProps extends MuiCardProps {
-       |                  ^^^^^^^^^
-     8 |   /** Заголовок карточки */
-     9 |   title?: React.ReactNode;
-    10 |   /** Контент карточки */
-ERROR in src/components/ui/Table/Table.tsx:78:27
-TS2322: Type '{ children: (false | Element)[]; component: OverridableComponent<PaperTypeMap<{}, "div">>; }' is not assignable to type 'IntrinsicAttributes & TableContainerOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 3 more ... | "sx"> & MUIStyledCommonProps<...>'.
-  Property 'component' does not exist on type 'IntrinsicAttributes & TableContainerOwnProps & CommonProps & Omit<Omit<DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>, "ref"> & { ...; }, "className" | ... 3 more ... | "sx"> & MUIStyledCommonProps<...>'.
-    76 |
-    77 |   return (
-  > 78 |     <StyledTableContainer component={Paper}>
-       |                           ^^^^^^^^^
-    79 |       <MuiTable stickyHeader>
-    80 |         <TableHead>
-    81 |           <TableRow>
-ERROR in src/pages/styleguide/sections/CardSection.tsx:16:13
-TS2322: Type '{ children: string; title: string; subtitle: string; hoverable: true; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
-  Property 'subtitle' does not exist on type 'IntrinsicAttributes & CardProps'.
-    14 |           <Card
-    15 |             title="Простая карточка"
-  > 16 |             subtitle="С подзаголовком"
-       |             ^^^^^^^^
-    17 |             hoverable
-    18 |           >
-    19 |             Содержимое карточки
-ERROR in src/pages/styleguide/sections/TableSection.tsx:29:11
-TS2322: Type '({ id: string; label: string; minWidth: number; align?: undefined; } | { id: string; label: string; minWidth: number; align: string; })[]' is not assignable to type 'Column[]'.
-  Type '{ id: string; label: string; minWidth: number; align?: undefined; } | { id: string; label: string; minWidth: number; align: string; }' is not assignable to type 'Column'.
-    Type '{ id: string; label: string; minWidth: number; align: string; }' is not assignable to type 'Column'.
-      Types of property 'align' are incompatible.
-        Type 'string' is not assignable to type '"right" | "left" | "center" | undefined'.
-    27 |         </Typography>
-    28 |         <Table
-  > 29 |           columns={columns}
-       |           ^^^^^^^
-    30 |           rows={rows}
-    31 |         />
-    32 |       </Box>
-ERROR in src/pages/styleguide/sections/TableSection.tsx:39:11
-TS2322: Type '({ id: string; label: string; minWidth: number; align?: undefined; } | { id: string; label: string; minWidth: number; align: string; })[]' is not assignable to type 'Column[]'.
-    37 |         </Typography>
-    38 |         <Table
-  > 39 |           columns={columns}
-       |           ^^^^^^^
-    40 |           rows={rows}
-    41 |           pagination
-    42 |         />
-ERROR in src/pages/styleguide/sections/TabsSection.tsx:37:11
-TS2322: Type '{ items: { id: string; label: string; icon: Element; }[]; value: string; onChange: (value: string) => void; }' is not assignable to type 'IntrinsicAttributes & TabsProps'.
-  Property 'items' does not exist on type 'IntrinsicAttributes & TabsProps'.
-    35 |         </Typography>
-    36 |         <Tabs
-  > 37 |           items={tabs}
-       |           ^^^^^
-    38 |           value={activeTab}
-    39 |           onChange={handleTabChange}
-    40 |         />
-ERROR in src/pages/styleguide/sections/TabsSection.tsx:48:11
-TS2322: Type '{ items: { id: string; label: string; icon: Element; }[]; value: string; onChange: (value: string) => void; orientation: "vertical"; }' is not assignable to type 'IntrinsicAttributes & TabsProps'.
-  Property 'items' does not exist on type 'IntrinsicAttributes & TabsProps'.
-    46 |         </Typography>
-    47 |         <Tabs
-  > 48 |           items={tabs}
-       |           ^^^^^
-    49 |           value={activeVerticalTab}
-    50 |           onChange={handleVerticalTabChange}
-    51 |           orientation="vertical"
-ERROR in src/pages/styleguide/styleguide_temp/sections/CardSection.tsx:16:13
-TS2322: Type '{ children: string; title: string; subtitle: string; hoverable: true; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
-  Property 'subtitle' does not exist on type 'IntrinsicAttributes & CardProps'.
-    14 |           <Card
-    15 |             title="Простая карточка"
-  > 16 |             subtitle="С подзаголовком"
-       |             ^^^^^^^^
-    17 |             hoverable
-    18 |           >
-    19 |             Содержимое карточки
-ERROR in src/pages/styleguide/styleguide_temp/sections/CardSection.tsx:26:13
-TS2322: Type '{ children: string; title: string; actions: Element; hoverable: true; animated: true; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
-  Property 'actions' does not exist on type 'IntrinsicAttributes & CardProps'. Did you mean 'action'?
-    24 |           <Card
-    25 |             title="Карточка с действиями"
-  > 26 |             actions={
-       |             ^^^^^^^
-    27 |               <>
-    28 |                 <Button variant="secondary">Отмена</Button>
-    29 |                 <Button variant="primary">ОК</Button>
-ERROR in src/pages/styleguide/styleguide_temp/sections/TableSection.tsx:3:23
-TS2307: Cannot find module '../../../components/ui/Table' or its corresponding type declarations.
-    1 | import React from 'react';
-    2 | import { Typography, Box } from '@mui/material';
-  > 3 | import { Table } from '../../../components/ui/Table';
-      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+  Error: Child compilation failed:
+  Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/pa  ckage.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tir  e-service-master-web/package.json (directory description file): SyntaxError: /  home/snisar/mobi_tz/tire-service-master-web/package.json (directory descriptio  n file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.jso  n (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service  -master-web/package.json (directory description file): SyntaxError: Expected d  ouble-quoted property name in JSON at position 753
+  ModuleNotFoundError: Module not found: SyntaxError: /home/snisar/mobi_tz/tire-  service-master-web/package.json (directory description file): SyntaxError: /ho  me/snisar/mobi_tz/tire-service-master-web/package.json (directory description   file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json   (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-m  aster-web/package.json (directory description file): SyntaxError: /home/snisar  /mobi_tz/tire-service-master-web/package.json (directory description file): Sy  ntaxError: Expected double-quoted property name in JSON at position 753
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/C  ompilation.js:2230:28
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:933:13
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:10:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:347:22
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:9:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:530:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:167:10
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:756:23
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/neo-async/asy  nc.js:2830:7
+      at done (/home/snisar/mobi_tz/tire-service-master-web/node_modules/neo-asy  nc/async.js:2925:13)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:1202:23
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:620:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:24:1)
+      at done (/home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack  /lib/cache/ResolverCachePlugin.js:369:13)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/c  ache/ResolverCachePlugin.js:204:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:10:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:24:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFilePlugin.js:58:24
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFileUtils.js:146:21
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/forEachBail.js:39:13
+      at onJson (/home/snisar/mobi_tz/tire-service-master-web/node_modules/enhan  ced-resolve/lib/DescriptionFileUtils.js:131:14)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFileUtils.js:81:15
+      at runCallbacks (/home/snisar/mobi_tz/tire-service-master-web/node_modules  /enhanced-resolve/lib/CachedInputFileSystem.js:52:4)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/CachedInputFileSystem.js:279:5
+      at Array.<anonymous> (/home/snisar/mobi_tz/tire-service-master-web/node_mo  dules/enhanced-resolve/lib/CachedInputFileSystem.js:596:17)
+      at runCallbacks (/home/snisar/mobi_tz/tire-service-master-web/node_modules  /enhanced-resolve/lib/CachedInputFileSystem.js:45:15)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/CachedInputFileSystem.js:279:5
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/graceful-fs/g  raceful-fs.js:123:16
+      at FSReqCallback.readFileAfterClose [as oncomplete] (node:internal/fs/read  /context:68:3)
+  
+  - Compilation.js:2230 
+    [tire-service-master-web]/[webpack]/lib/Compilation.js:2230:28
+  
+  - NormalModuleFactory.js:933 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:933:13
+  
+  
+  - NormalModuleFactory.js:347 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:347:22
+  
+  
+  - NormalModuleFactory.js:530 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:530:22
+  
+  - NormalModuleFactory.js:167 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:167:10
+  
+  - NormalModuleFactory.js:756 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:756:23
+  
+  - async.js:2830 
+    [tire-service-master-web]/[neo-async]/async.js:2830:7
+  
+  - async.js:2925 done
+    [tire-service-master-web]/[neo-async]/async.js:2925:13
+  
+  - NormalModuleFactory.js:1202 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:1202:23
+  
+  - Resolver.js:620 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:620:22
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - ResolverCachePlugin.js:369 done
+    [tire-service-master-web]/[webpack]/lib/cache/ResolverCachePlugin.js:369:13
+  
+  - ResolverCachePlugin.js:204 
+    [tire-service-master-web]/[webpack]/lib/cache/ResolverCachePlugin.js:204:22
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - DescriptionFilePlugin.js:58 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFilePlugin.js:58    :24
+  
+  - DescriptionFileUtils.js:146 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:146    :21
+  
+  - forEachBail.js:39 
+    [tire-service-master-web]/[enhanced-resolve]/lib/forEachBail.js:39:13
+  
+  - DescriptionFileUtils.js:131 onJson
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:131    :14
+  
+  - DescriptionFileUtils.js:81 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:81:    15
+  
+  - CachedInputFileSystem.js:52 runCallbacks
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:52    :4
+  
+  - CachedInputFileSystem.js:279 
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:27    9:5
+  
+  - CachedInputFileSystem.js:596 Array.<anonymous>
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:59    6:17
+  
+  - CachedInputFileSystem.js:45 runCallbacks
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:45    :15
+  
+  - CachedInputFileSystem.js:279 
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:27    9:5
+  
+  - graceful-fs.js:123 
+    [tire-service-master-web]/[graceful-fs]/graceful-fs.js:123:16
+  
+  - context:68 FSReqCallback.readFileAfterClose [as oncomplete]
+    node:internal/fs/read/context:68:3
+  
+  - child-compiler.js:211 
+    [tire-service-master-web]/[html-webpack-plugin]/lib/child-compiler.js:211:18  
+  - Compiler.js:625 finalCallback
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:625:5
+  
+  - Compiler.js:661 
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:661:11
+  
+  - Compiler.js:1347 
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:1347:17
+  
+  
+  - task_queues:95 process.processTicksAndRejections
+    node:internal/process/task_queues:95:5
+  
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json (directory description file): SyntaxError: Expected double-quoted property name in JSON at position 753
+ERROR
+  Error: Child compilation failed:
+  Module not found: SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/pa  ckage.json (directory description file): SyntaxError: /home/snisar/mobi_tz/tir  e-service-master-web/package.json (directory description file): SyntaxError: /  home/snisar/mobi_tz/tire-service-master-web/package.json (directory descriptio  n file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.jso  n (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service  -master-web/package.json (directory description file): SyntaxError: Expected d  ouble-quoted property name in JSON at position 753
+  ModuleNotFoundError: Module not found: SyntaxError: /home/snisar/mobi_tz/tire-  service-master-web/package.json (directory description file): SyntaxError: /ho  me/snisar/mobi_tz/tire-service-master-web/package.json (directory description   file): SyntaxError: /home/snisar/mobi_tz/tire-service-master-web/package.json   (directory description file): SyntaxError: /home/snisar/mobi_tz/tire-service-m  aster-web/package.json (directory description file): SyntaxError: /home/snisar  /mobi_tz/tire-service-master-web/package.json (directory description file): Sy  ntaxError: Expected double-quoted property name in JSON at position 753
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/C  ompilation.js:2230:28
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:933:13
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:10:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:347:22
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:9:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:530:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:167:10
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:756:23
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/neo-async/asy  nc.js:2830:7
+      at done (/home/snisar/mobi_tz/tire-service-master-web/node_modules/neo-asy  nc/async.js:2925:13)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/N  ormalModuleFactory.js:1202:23
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:620:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:24:1)
+      at done (/home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack  /lib/cache/ResolverCachePlugin.js:369:13)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/webpack/lib/c  ache/ResolverCachePlugin.js:204:22
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:10:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/Resolver.js:716:21
+      at eval (eval at create (/home/snisar/mobi_tz/tire-service-master-web/node  _modules/tapable/lib/HookCodeFactory.js:33:10), <anonymous>:24:1)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFilePlugin.js:58:24
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFileUtils.js:146:21
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/forEachBail.js:39:13
+      at onJson (/home/snisar/mobi_tz/tire-service-master-web/node_modules/enhan  ced-resolve/lib/DescriptionFileUtils.js:131:14)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/DescriptionFileUtils.js:81:15
+      at runCallbacks (/home/snisar/mobi_tz/tire-service-master-web/node_modules  /enhanced-resolve/lib/CachedInputFileSystem.js:52:4)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/CachedInputFileSystem.js:279:5
+      at Array.<anonymous> (/home/snisar/mobi_tz/tire-service-master-web/node_mo  dules/enhanced-resolve/lib/CachedInputFileSystem.js:596:17)
+      at runCallbacks (/home/snisar/mobi_tz/tire-service-master-web/node_modules  /enhanced-resolve/lib/CachedInputFileSystem.js:45:15)
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/enhanced-reso  lve/lib/CachedInputFileSystem.js:279:5
+      at /home/snisar/mobi_tz/tire-service-master-web/node_modules/graceful-fs/g  raceful-fs.js:123:16
+      at FSReqCallback.readFileAfterClose [as oncomplete] (node:internal/fs/read  /context:68:3)
+  
+  - Compilation.js:2230 
+    [tire-service-master-web]/[webpack]/lib/Compilation.js:2230:28
+  
+  - NormalModuleFactory.js:933 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:933:13
+  
+  
+  - NormalModuleFactory.js:347 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:347:22
+  
+  
+  - NormalModuleFactory.js:530 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:530:22
+  
+  - NormalModuleFactory.js:167 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:167:10
+  
+  - NormalModuleFactory.js:756 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:756:23
+  
+  - async.js:2830 
+    [tire-service-master-web]/[neo-async]/async.js:2830:7
+  
+  - async.js:2925 done
+    [tire-service-master-web]/[neo-async]/async.js:2925:13
+  
+  - NormalModuleFactory.js:1202 
+    [tire-service-master-web]/[webpack]/lib/NormalModuleFactory.js:1202:23
+  
+  - Resolver.js:620 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:620:22
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - ResolverCachePlugin.js:369 done
+    [tire-service-master-web]/[webpack]/lib/cache/ResolverCachePlugin.js:369:13
+  
+  - ResolverCachePlugin.js:204 
+    [tire-service-master-web]/[webpack]/lib/cache/ResolverCachePlugin.js:204:22
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - Resolver.js:716 
+    [tire-service-master-web]/[enhanced-resolve]/lib/Resolver.js:716:21
+  
+  
+  - DescriptionFilePlugin.js:58 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFilePlugin.js:58    :24
+  
+  - DescriptionFileUtils.js:146 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:146    :21
+  
+  - forEachBail.js:39 
+    [tire-service-master-web]/[enhanced-resolve]/lib/forEachBail.js:39:13
+  
+  - DescriptionFileUtils.js:131 onJson
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:131    :14
+  
+  - DescriptionFileUtils.js:81 
+    [tire-service-master-web]/[enhanced-resolve]/lib/DescriptionFileUtils.js:81:    15
+  
+  - CachedInputFileSystem.js:52 runCallbacks
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:52    :4
+  
+  - CachedInputFileSystem.js:279 
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:27    9:5
+  
+  - CachedInputFileSystem.js:596 Array.<anonymous>
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:59    6:17
+  
+  - CachedInputFileSystem.js:45 runCallbacks
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:45    :15
+  
+  - CachedInputFileSystem.js:279 
+    [tire-service-master-web]/[enhanced-resolve]/lib/CachedInputFileSystem.js:27    9:5
+  
+  - graceful-fs.js:123 
+    [tire-service-master-web]/[graceful-fs]/graceful-fs.js:123:16
+  
+  - context:68 FSReqCallback.readFileAfterClose [as oncomplete]
+    node:internal/fs/read/context:68:3
+  
+  - child-compiler.js:211 
+    [tire-service-master-web]/[html-webpack-plugin]/lib/child-compiler.js:211:18  
+  - Compiler.js:625 finalCallback
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:625:5
+  
+  - Compiler.js:661 
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:661:11
+  
+  - Compiler.js:1347 
+    [tire-service-master-web]/[webpack]/lib/Compiler.js:1347:17
+  
+  
+  - task_queues:95 process.processTicksAndRejections
+    node:internal/process/task_queues:95:5
+  
+ERROR in src/pages/styleguide/styleguide_temp/sections/AccordionSection.tsx:3:27
+TS2307: Cannot find module '../../../../components/ui/Accordion' or its corresponding type declarations.
+    1 | import React, { useState } from 'react';
+    2 | import { Box, Typography } from '@mui/material';
+  > 3 | import { Accordion } from '../../../../components/ui/Accordion';
+      |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     4 |
-    5 | const columns = [
-    6 |   { id: 'name', label: 'Название', minWidth: 170 },
-ERROR in src/pages/styleguide/styleguide_temp/sections/TabsSection.tsx:6:22
-TS2307: Cannot find module '../../../components/ui/Tabs' or its corresponding type declarations.
-    4 | import PersonIcon from '@mui/icons-material/Person';
-    5 | import SettingsIcon from '@mui/icons-material/Settings';
-  > 6 | import { Tabs } from '../../../components/ui/Tabs';
-      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    7 |
-    8 | export const TabsSection: React.FC = () => {
-    9 |   const [activeTab, setActiveTab] = React.useState('home');
-ERROR in src/pages/styleguide/StyleGuidePage.tsx:82:22
-TS2769: No overload matches this call.
-  Overload 1 of 3, '(props: { href: string; } & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<Omit<DetailedHTMLProps<AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, "ref"> & { ...; }, "style" | ... 24 more ... | "startIcon">): Element', gave the following error.
-    Type '{ children: string; variant: "contained"; color: "primary"; loading: true; }' is not assignable to type 'IntrinsicAttributes & { href: string; } & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<...>'.
-      Property 'loading' does not exist on type 'IntrinsicAttributes & { href: string; } & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<...>'.
-  Overload 2 of 3, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<...>): Element | null', gave the following error.
-    Property 'component' is missing in type '{ children: string; variant: "contained"; color: "primary"; loading: true; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
-  Overload 3 of 3, '(props: DefaultComponentProps<ExtendButtonBaseTypeMap<ButtonTypeMap<{}, "button">>>): Element | null', gave the following error.
-    Type '{ children: string; variant: "contained"; color: "primary"; loading: true; }' is not assignable to type 'IntrinsicAttributes & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<...>'.
-      Property 'loading' does not exist on type 'IntrinsicAttributes & ButtonOwnProps & Omit<ButtonBaseOwnProps, "classes"> & CommonProps & Omit<...>'.
-    80 |           <Grid item><Button variant="contained" color="success">Success Button</Button></Grid>
-    81 |           <Grid item><Button variant="contained" color="error">Error Button</Button></Grid>
-  > 82 |           <Grid item><Button variant="contained" color="primary" loading>Loading Button</Button></Grid>
-       |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    83 |         </Grid>
-    84 |       </Section>
-    85 |
+    5 | const AccordionSection = () => {
+    6 |   const [expanded, setExpanded] = useState<string | false>(false);
+ERROR in src/pages/styleguide/styleguide_temp/sections/DatePickerSection.tsx:3:28
+TS2307: Cannot find module '../../../../components/ui/DatePicker' or its corresponding type declarations.
+    1 | import React, { useState } from 'react';
+    2 | import { Box, Typography } from '@mui/material';
+  > 3 | import { DatePicker } from '../../../../components/ui/DatePicker';
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    4 |
+    5 | const DatePickerSection = () => {
+    6 |   const [date, setDate] = useState<Date | null>(new Date());
+ERROR in src/pages/styleguide/styleguide_temp/sections/FilterSection.tsx:3:24
+TS2307: Cannot find module '../../../../components/ui/Filter' or its corresponding type declarations.
+    1 | import React from 'react';
+    2 | import { Box, Typography, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+  > 3 | import { Filter } from '../../../../components/ui/Filter';
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    4 |
+    5 | const FilterSection = () => {
+    6 |   const handleApply = () => {
+ERROR in src/pages/styleguide/styleguide_temp/sections/ScrollbarSection.tsx:3:27
+TS2307: Cannot find module '../../../../components/ui/Scrollbar' or its corresponding type declarations.
+    1 | import React from 'react';
+    2 | import { Box, Typography, Paper } from '@mui/material';
+  > 3 | import { Scrollbar } from '../../../../components/ui/Scrollbar';
+      |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    4 |
+    5 | const ScrollbarSection = () => {
+    6 |   const longText = Array(20)
+ERROR in src/pages/styleguide/styleguide_temp/sections/StepperSection.tsx:3:25
+TS2307: Cannot find module '../../../../components/ui/Stepper' or its corresponding type declarations.
+    1 | import React, { useState } from 'react';
+    2 | import { Box, Typography } from '@mui/material';
+  > 3 | import { Stepper } from '../../../../components/ui/Stepper';
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    4 |
+    5 | const StepperSection = () => {
+    6 |   const [activeStep, setActiveStep] = useState(0);

@@ -6,21 +6,21 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { Tabs } from '../../../components/ui/Tabs';
 
 export const TabsSection: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState<string>('home');
-  const [activeVerticalTab, setActiveVerticalTab] = React.useState<string>('profile');
+  const [activeTab, setActiveTab] = React.useState<number>(0);
+  const [activeVerticalTab, setActiveVerticalTab] = React.useState<number>(0);
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
-  const handleVerticalTabChange = (value: string) => {
-    setActiveVerticalTab(value);
+  const handleVerticalTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveVerticalTab(newValue);
   };
 
   const tabs = [
-    { id: 'home', label: 'Главная', icon: <HomeIcon /> },
-    { id: 'profile', label: 'Профиль', icon: <PersonIcon /> },
-    { id: 'settings', label: 'Настройки', icon: <SettingsIcon /> }
+    { id: 'home', label: 'Главная', icon: <HomeIcon />, content: 'Содержимое главной вкладки' },
+    { id: 'profile', label: 'Профиль', icon: <PersonIcon />, content: 'Содержимое профиля' },
+    { id: 'settings', label: 'Настройки', icon: <SettingsIcon />, content: 'Содержимое настроек' }
   ];
 
   return (

@@ -11,9 +11,16 @@ module.exports = {
           fullySpecified: false,
         },
       });
-      webpackConfig.alias = {
+      
+      // Настраиваем алиасы
+      if (!webpackConfig.resolve) {
+        webpackConfig.resolve = {};
+      }
+      
+      webpackConfig.resolve.alias = {
         '@': path.resolve(__dirname, 'src'),
       };
+      
       return webpackConfig;
     },
   },

@@ -1,76 +1,116 @@
 import React from 'react';
-import { Card as MuiCard, CardProps as MuiCardProps, CardContent, CardHeader, CardActions } from '@mui/material';
+import {
+  Card as MuiCard,
+  CardContent,
+  CardActions,
+  CardMedia,
+  Typography,
+  useTheme
+} from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { ANIMATIONS } from '../../../styles/theme';
+import { CardProps } from './types';
 
-/** Пропсы карточки */
-export interface CardProps extends Omit<MuiCardProps, 'title'> {
-  /** Заголовок карточки */
-  title?: string;
-  /** Контент карточки */
-  children?: React.ReactNode;
-  /** Действия в футере карточки */
-  action?: React.ReactNode;
-  /** Анимировать появление */
-  animated?: boolean;
-  /** Добавить эффект при наведении */
-  hoverable?: boolean;
-}
-
-/** Стилизованная карточка */
-const StyledCard = styled(MuiCard)<CardProps>(({ theme, animated, hoverable }) => ({
-  borderRadius: '12px',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-  transition: 'all 0.3s ease',
-  animation: animated ? `${ANIMATIONS.fadeIn} 0.3s ${ANIMATIONS.transition.cubic}` : 'none',
-  
-  ...(hoverable && {
-    '&:hover': {
-      transform: 'translateY(-4px)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    },
+// Стилизованная карточка с поддержкой темной темы
+const StyledCard = styled(MuiCard)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  backgroundColor: theme.palette.mode === 'dark' 
+    ? theme.palette.background.paper 
+    : theme.palette.background.default,
+  borderRadius: theme.shape.borderRadius,
+  transition: theme.transitions.create(['box-shadow', 'transform'], {
+    duration: theme.transitions.duration.standard,
   }),
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme.shadows[4],
+  },
+}));
+
+// Стилизованный контент карточки
+const StyledCardContent = styled(CardContent)(({ theme }) => ({
+  flexGrow: 1,
+  padding: theme.spacing(3),
+}));
+
+// Стилизованные действия карточки
+const StyledCardActions = styled(CardActions)(({ theme }) => ({
+  padding: theme.spacing(2),
+  justifyContent: 'flex-end',
 }));
 
 /**
- * Универсальный компонент карточки
- * 
- * @example
- * <Card
- *   title="Заголовок"
- *   subtitle="Подзаголовок"
- *   action={<Button>Действие</Button>}
- * >
- *   Содержимое карточки
- * </Card>
+ * Универсальный компонент Card
  */
 export const Card: React.FC<CardProps> = ({
   title,
-  children,
-  action,
-  animated = false,
-  hoverable = false,
+  subtitle,
+  content,
+  media,
+  actions,
+  elevation = 1,
+  variant = 'elevation',
+  onClick,
+  className,
   ...props
 }) => {
+  const theme = useTheme();
+
   return (
-    <StyledCard
-      animated={animated}
-      hoverable={hoverable}
+    <StyledCard 
+      elevation={elevation}
+      variant={variant}
+      onClick={onClick}
+      className={className}
       {...props}
     >
-      {title && (
-        <CardHeader title={title} />
+      {media && (
+        <CardMedia
+          component="img"
+          height={media.height || 200}
+          image={media.image}
+          alt={media.alt || title}
+        />
       )}
-      <CardContent>
-        {children}
-      </CardContent>
-      {action && (
-        <CardActions>
-          {action}
-        </CardActions>
+      
+      <StyledCardContent>
+        {title && (
+          <Typography 
+            variant="h5" 
+            component="h2" 
+            gutterBottom
+            color={theme.palette.text.primary}
+          >
+            {title}
+          </Typography>
+        )}
+        
+        {subtitle && (
+          <Typography 
+            variant="subtitle1" 
+            color={theme.palette.text.secondary}
+            gutterBottom
+          >
+            {subtitle}
+          </Typography>
+        )}
+        
+        {content && (
+          <Typography 
+            variant="body1" 
+            color={theme.palette.text.primary}
+          >
+            {content}
+          </Typography>
+        )}
+      </StyledCardContent>
+
+      {actions && (
+        <StyledCardActions>
+          {actions}
+        </StyledCardActions>
       )}
     </StyledCard>
   );
 };
-
-export default Card;

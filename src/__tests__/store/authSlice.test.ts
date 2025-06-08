@@ -15,12 +15,13 @@ describe('authSlice', () => {
 
   // Создаем тестового пользователя
   const testUser = {
-    id: 1,
+    id: '1',
     email: 'test@example.com',
     phone: '+1234567890',
     first_name: 'Тест',
     last_name: 'Пользователь',
     role: 'client',
+    role_id: 1,
     is_active: true,
     email_verified: false,
     phone_verified: false,
