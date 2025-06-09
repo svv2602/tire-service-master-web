@@ -2,21 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Avatar,
-  Button,
-  TextField,
   Divider,
-  Snackbar,
-  Alert,
   CircularProgress,
-  Card,
-  CardContent,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
-  Chip,
   useTheme,
 } from '@mui/material';
 import {
@@ -31,6 +23,15 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Snackbar } from '../../components/ui/Snackbar';
+import { Card } from '../../components/ui/Card';
+
 import {
   SIZES,
   getCardStyles,
@@ -93,8 +94,6 @@ const ProfilePage: React.FC = () => {
       }));
     }
   }, [user]);
-
-
 
   // Получение инициалов для аватара
   const getInitials = () => {
@@ -214,8 +213,12 @@ const ProfilePage: React.FC = () => {
   const formStyles = getFormStyles(theme);
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: SIZES.spacing.lg }}>
+    <Box sx={{ p: SIZES.spacing.lg }}>
+      <Typography variant="h4" gutterBottom sx={{ 
+        mb: SIZES.spacing.lg,
+        fontSize: SIZES.fontSize.xl,
+        fontWeight: 600
+      }}>
         Профіль користувача
       </Typography>
 
@@ -226,143 +229,143 @@ const ProfilePage: React.FC = () => {
       }}>
         {/* Карточка с информацией о профиле */}
         <Box>
-          <Card sx={{ 
-            mb: SIZES.spacing.lg, 
-            ...cardStyles,
-          }}>
-            <CardContent sx={{ 
+          <Card 
+            sx={{ 
+              mb: SIZES.spacing.lg, 
+              ...cardStyles,
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center', 
-              pt: SIZES.spacing.lg 
-            }}>
-              {/* Аватар пользователя */}
-              <Avatar 
-                sx={{ 
-                  width: 100, 
-                  height: 100, 
-                  mb: SIZES.spacing.md, 
-                  bgcolor: theme.palette.primary.main, 
-                  fontSize: SIZES.fontSize.xl 
-                }}
-              >
-                {getInitials()}
-              </Avatar>
+              pt: SIZES.spacing.lg,
+              p: SIZES.spacing.lg
+            }}
+          >
+            {/* Аватар пользователя */}
+            <Avatar 
+              sx={{ 
+                width: 100, 
+                height: 100, 
+                mb: SIZES.spacing.md, 
+                bgcolor: theme.palette.primary.main, 
+                fontSize: SIZES.fontSize.xl 
+              }}
+            >
+              {getInitials()}
+            </Avatar>
+            
+            <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
+              {user?.first_name} {user?.last_name}
+            </Typography>
+            
+            <Typography 
+              color="textSecondary" 
+              gutterBottom 
+              sx={{ mb: SIZES.spacing.xs }}
+            >
+              {formData.position}
+            </Typography>
+            
+            <Chip 
+              icon={<RoleIcon />} 
+              label={getRoleLabel(user?.role)}
+              color={getRoleColor(user?.role) as 'default' | 'primary' | 'success' | 'error'} 
+              sx={{ 
+                mt: SIZES.spacing.xs,
+                ...chipStyles
+              }}
+            />
+            
+            <Divider sx={{ width: '100%', my: SIZES.spacing.md }} />
+            
+            <List sx={{ width: '100%' }}>
+              <ListItem sx={{ 
+                py: SIZES.spacing.sm,
+                '&:hover': { 
+                  bgcolor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}>
+                <ListItemIcon>
+                  <EmailIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="body2" color="textSecondary">Email</Typography>}
+                  secondary={<Typography variant="body1">{user?.email}</Typography>}
+                />
+              </ListItem>
               
-              <Typography variant="h6" sx={{ fontWeight: 'medium' }}>
-                {user?.first_name} {user?.last_name}
-              </Typography>
+              <ListItem sx={{ 
+                py: SIZES.spacing.sm,
+                '&:hover': { 
+                  bgcolor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}>
+                <ListItemIcon>
+                  <PhoneIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="body2" color="textSecondary">Телефон</Typography>}
+                  secondary={<Typography variant="body1">{user?.phone}</Typography>}
+                />
+              </ListItem>
               
-              <Typography 
-                color="textSecondary" 
-                gutterBottom 
-                sx={{ mb: SIZES.spacing.xs }}
-              >
-                {formData.position}
-              </Typography>
+              <ListItem sx={{ 
+                py: SIZES.spacing.sm,
+                '&:hover': { 
+                  bgcolor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}>
+                <ListItemIcon>
+                  <BusinessIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="body2" color="textSecondary">Організація</Typography>}
+                  secondary={<Typography variant="body1">Твоя шина</Typography>}
+                />
+              </ListItem>
               
-              <Chip 
-                icon={<RoleIcon />} 
-                label={getRoleLabel(user?.role)}
-                color={getRoleColor(user?.role) as 'default' | 'primary' | 'success' | 'error'} 
-                sx={{ 
-                  mt: SIZES.spacing.xs,
-                  ...chipStyles
-                }}
-              />
-              
-              <Divider sx={{ width: '100%', my: SIZES.spacing.md }} />
-              
-              <List sx={{ width: '100%' }}>
-                <ListItem sx={{ 
-                  py: SIZES.spacing.sm,
-                  '&:hover': { 
-                    bgcolor: theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: SIZES.borderRadius.sm
+              <ListItem sx={{ 
+                py: SIZES.spacing.sm,
+                '&:hover': { 
+                  bgcolor: theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.02)',
+                  borderRadius: SIZES.borderRadius.sm
+                }
+              }}>
+                <ListItemIcon>
+                  <CalendarIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText 
+                  primary={<Typography variant="body2" color="textSecondary">Статус користувача</Typography>}
+                  secondary={
+                    <Chip 
+                      size="small"
+                      label={user?.is_active ? 'Активний' : 'Неактивний'} 
+                      color={user?.is_active ? 'success' : 'error'}
+                      sx={{
+                        mt: SIZES.spacing.xs,
+                        height: 24
+                      }}
+                    />
                   }
-                }}>
-                  <ListItemIcon>
-                    <EmailIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={<Typography variant="body2" color="textSecondary">Email</Typography>}
-                    secondary={<Typography variant="body1">{user?.email}</Typography>}
-                  />
-                </ListItem>
-                
-                <ListItem sx={{ 
-                  py: SIZES.spacing.sm,
-                  '&:hover': { 
-                    bgcolor: theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: SIZES.borderRadius.sm
-                  }
-                }}>
-                  <ListItemIcon>
-                    <PhoneIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={<Typography variant="body2" color="textSecondary">Телефон</Typography>}
-                    secondary={<Typography variant="body1">{user?.phone}</Typography>}
-                  />
-                </ListItem>
-                
-                <ListItem sx={{ 
-                  py: SIZES.spacing.sm,
-                  '&:hover': { 
-                    bgcolor: theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: SIZES.borderRadius.sm
-                  }
-                }}>
-                  <ListItemIcon>
-                    <BusinessIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={<Typography variant="body2" color="textSecondary">Організація</Typography>}
-                    secondary={<Typography variant="body1">Твоя шина</Typography>}
-                  />
-                </ListItem>
-                
-                <ListItem sx={{ 
-                  py: SIZES.spacing.sm,
-                  '&:hover': { 
-                    bgcolor: theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.02)',
-                    borderRadius: SIZES.borderRadius.sm
-                  }
-                }}>
-                  <ListItemIcon>
-                    <CalendarIcon color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={<Typography variant="body2" color="textSecondary">Статус користувача</Typography>}
-                    secondary={
-                      <Chip 
-                        size="small"
-                        label={user?.is_active ? 'Активний' : 'Неактивний'} 
-                        color={user?.is_active ? 'success' : 'error'}
-                        sx={{
-                          mt: SIZES.spacing.xs,
-                          height: 24
-                        }}
-                      />
-                    }
-                  />
-                </ListItem>
-              </List>
-            </CardContent>
+                />
+              </ListItem>
+            </List>
           </Card>
         </Box>
 
         {/* Форма редактирования профиля */}
         <Box>
-          <Paper sx={{ 
+          <Box sx={{ 
             p: SIZES.spacing.lg,
             ...formCardStyles,
             borderRadius: SIZES.borderRadius.md
@@ -522,28 +525,17 @@ const ProfilePage: React.FC = () => {
                 </Box>
               </Box>
             </Box>
-          </Paper>
+          </Box>
         </Box>
       </Box>
 
       {/* Уведомление об успешном сохранении */}
       <Snackbar
         open={saveSuccess}
-        autoHideDuration={6000}
+        message="Дані профілю успішно оновлено!"
+        severity="success"
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={handleCloseSnackbar} 
-          severity="success" 
-          sx={{ 
-            width: '100%',
-            borderRadius: SIZES.borderRadius.sm 
-          }}
-        >
-          Дані профілю успішно оновлено!
-        </Alert>
-      </Snackbar>
+      />
     </Box>
   );
 };
