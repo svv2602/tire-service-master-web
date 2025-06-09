@@ -32,12 +32,11 @@ import { ApiResponse } from '../../types/models';
 import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
-import Paper from '../../components/ui/Paper';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Modal } from '../../components/ui/Modal';
 import { Alert } from '../../components/ui/Alert';
 import { Pagination } from '../../components/ui/Pagination';
+import { Modal } from '../../components/ui/Modal';
 
 // Мемоизированный компонент строки клиента
 const ClientRow = React.memo<{
@@ -215,12 +214,9 @@ const ClientsPage: React.FC = () => {
       </Box>
 
       {/* Поиск */}
-      <Paper sx={{ 
+      <Box sx={{ 
         p: 2, 
-        mb: 3,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: 3
       }}>
         <TextField
           placeholder="Поиск по имени, фамилии, email или номеру телефона..."
@@ -237,10 +233,10 @@ const ClientsPage: React.FC = () => {
             ),
           }}
         />
-      </Paper>
+      </Box>
 
       {/* Таблица клиентов */}
-      <TableContainer component={Paper} sx={{
+      <TableContainer sx={{
         backgroundColor: 'transparent',
         boxShadow: 'none',
         border: 'none'

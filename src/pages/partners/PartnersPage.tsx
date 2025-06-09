@@ -36,7 +36,6 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from '@reduxjs/toolkit';
 
 // Импорты UI компонентов
-import Paper from '../../components/ui/Paper';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Modal } from '../../components/ui/Modal';
@@ -367,13 +366,10 @@ const PartnersPage: React.FC = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ 
-        ...cardStyles, 
+      {/* Поиск */}
+      <Box sx={{ 
         p: SIZES.spacing.md, 
-        mb: SIZES.spacing.lg,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: SIZES.spacing.lg
       }}>
         <Box sx={{ display: 'flex', gap: SIZES.spacing.md }}>
           <TextField
@@ -393,14 +389,10 @@ const PartnersPage: React.FC = () => {
             }}
           />
         </Box>
-      </Paper>
+      </Box>
 
-      <Paper sx={{
-        ...cardStyles,
-        backgroundColor: 'transparent',
-        boxShadow: 'none', 
-        border: 'none'
-      }}>
+      {/* Таблица партнеров */}
+      <Box>
         {isLoading ? (
           <Box sx={{ 
             display: 'flex', 
@@ -482,7 +474,7 @@ const PartnersPage: React.FC = () => {
             </Box>
           </>
         )}
-      </Paper>
+      </Box>
 
       {/* Модальное окно подтверждения удаления */}
       <Modal

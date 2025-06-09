@@ -44,7 +44,6 @@ import { getAdaptiveTableStyles } from '../../styles';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import Paper from '../../components/ui/Paper';
 import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Pagination } from '../../components/ui/Pagination';
@@ -435,7 +434,6 @@ export const UsersPage: React.FC = () => {
         <>
           {/* Таблица пользователей */}
           <TableContainer 
-            component={Paper}
             sx={{
               backgroundColor: 'transparent',
               boxShadow: 'none',

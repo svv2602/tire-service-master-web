@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -233,13 +232,9 @@ const RegionsPage: React.FC = () => {
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ 
-        ...cardStyles,
+      <Box sx={{ 
         p: SIZES.spacing.md, 
-        mb: SIZES.spacing.lg,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: SIZES.spacing.lg
       }}>
         <Box sx={{ 
           display: 'flex', 
@@ -280,15 +275,10 @@ const RegionsPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
+      </Box>
 
       {/* Таблица регионов */}
-      <Paper sx={{
-        ...cardStyles,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
-      }}>
+      <Box>
         <TableContainer sx={tableStyles.tableContainer}>
           <Table>
             <TableHead sx={tableStyles.tableHead}>
@@ -431,7 +421,7 @@ const RegionsPage: React.FC = () => {
             }
           }}
         />
-      </Paper>
+      </Box>
 
       {/* Диалог подтверждения удаления */}
       <Dialog 

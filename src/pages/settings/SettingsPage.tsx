@@ -31,7 +31,6 @@ import {
 } from '../../styles';
 
 // Импорты UI компонентов
-import Paper from '../../components/ui/Paper';
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Select';
@@ -194,15 +193,9 @@ const SettingsPage: React.FC = () => {
       mx: 'auto',
       px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg },
     }}>
-      <Paper 
-        elevation={0}
-        sx={{
-          overflow: 'hidden',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          border: 'none'
-        }}
-      >
+      <Box sx={{
+        overflow: 'hidden'
+      }}>
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
@@ -442,7 +435,7 @@ const SettingsPage: React.FC = () => {
             </TabPanel>
           </>
         )}
-      </Paper>
+      </Box>
 
       {/* Уведомление об успешном сохранении */}
       <Snackbar

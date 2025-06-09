@@ -54,7 +54,6 @@ import {
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import Paper from '../../components/ui/Paper';
 import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Select } from '../../components/ui/Select';
@@ -242,12 +241,9 @@ const ReviewsPage: React.FC = () => {
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ 
+      <Box sx={{ 
         p: SIZES.spacing.md, 
-        mb: SIZES.spacing.md,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: SIZES.spacing.md
       }}>
         <Box sx={{ display: 'flex', gap: SIZES.spacing.md, alignItems: 'center', flexWrap: 'wrap' }}>
           <TextField
@@ -298,10 +294,10 @@ const ReviewsPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
+      </Box>
 
       {/* Таблица отзывов */}
-      <TableContainer component={Paper} sx={{
+      <TableContainer sx={{
         backgroundColor: 'transparent',
         boxShadow: 'none',
         border: 'none'

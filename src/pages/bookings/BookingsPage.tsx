@@ -35,13 +35,12 @@ import { Booking, ApiResponse } from '../../types/models';
 import { BookingStatusEnum, BookingFilter } from '../../types/booking';
 
 // Импорты UI компонентов
-import Paper from '../../components/ui/Paper';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Modal } from '../../components/ui/Modal';
 import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Pagination } from '../../components/ui/Pagination';
+import { Modal } from '../../components/ui/Modal';
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -220,12 +219,9 @@ const BookingsPage: React.FC = () => {
       </Box>
 
       {/* Поиск */}
-      <Paper sx={{ 
+      <Box sx={{ 
         p: 2, 
-        mb: 3,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: 3
       }}>
         <TextField
           placeholder="Поиск по имени, фамилии, email или номеру телефона клиента"
@@ -242,10 +238,10 @@ const BookingsPage: React.FC = () => {
             ),
           }}
         />
-      </Paper>
+      </Box>
 
       {/* Таблица бронирований */}
-      <TableContainer component={Paper} sx={{
+      <TableContainer sx={{
         backgroundColor: 'transparent',
         boxShadow: 'none',
         border: 'none'
