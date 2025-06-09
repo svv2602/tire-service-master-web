@@ -2,24 +2,14 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
-  Button,
-  TextField,
-  Paper,
   Grid,
   CircularProgress,
-  Alert,
-  Snackbar,
   FormControl,
   InputLabel,
-  Select,
   MenuItem,
   SelectChangeEvent,
   FormControlLabel,
-  Switch,
   InputAdornment,
-  Card,
-  CardContent,
-  CardActions,
   FormHelperText,
   IconButton,
   Accordion,
@@ -82,6 +72,15 @@ import {
   getTextFieldStyles
 } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { TextField } from '../../components/ui/TextField';
+import { Alert } from '../../components/ui/Alert';
+import { Snackbar } from '../../components/ui/Snackbar';
+import { Select } from '../../components/ui/Select';
+import { Switch } from '../../components/ui/Switch';
+import { Card } from '../../components/ui/Card';
 
 // Определяем типы для FormikTouched и FormikErrors
 interface ServiceFormData {
@@ -698,7 +697,7 @@ const ServicePointFormPage: React.FC = () => {
       )}
 
       {/* Основная форма с централизованными стилями */}
-      <Paper sx={cardStyles}>
+      <Box sx={cardStyles}>
         {loading ? (
           <Box sx={{ 
             display: 'flex', 
@@ -762,8 +761,8 @@ const ServicePointFormPage: React.FC = () => {
                     id="partner_id"
                     name="partner_id"
                     value={(formik.values.partner_id || 0).toString()}
-                    onChange={(e: SelectChangeEvent<string>) => {
-                      formik.setFieldValue('partner_id', Number(e.target.value));
+                    onChange={(value: string | number) => {
+                      formik.setFieldValue('partner_id', Number(value));
                     }}
                     onBlur={formik.handleBlur}
                     label="Партнер"
@@ -848,7 +847,11 @@ const ServicePointFormPage: React.FC = () => {
                     id="region_id"
                     name="region_id"
                     value={formik.values.region_id?.toString() || '0'}
-                    onChange={handleRegionChange}
+                    onChange={(value: string | number) => {
+                      const regionId = Number(value);
+                      setSelectedRegionId(regionId);
+                      formik.setFieldValue('region_id', regionId);
+                    }}
                     onBlur={formik.handleBlur}
                     label="Регион"
                   >
@@ -877,7 +880,10 @@ const ServicePointFormPage: React.FC = () => {
                     id="city_id"
                     name="city_id"
                     value={formik.values.city_id?.toString() || '0'}
-                    onChange={handleCityChange}
+                    onChange={(value: string | number) => {
+                      const cityId = Number(value);
+                      formik.setFieldValue('city_id', cityId);
+                    }}
                     onBlur={formik.handleBlur}
                     label="Город"
                     disabled={!formik.values.region_id}
@@ -1087,8 +1093,8 @@ const ServicePointFormPage: React.FC = () => {
                         id="work_status"
                         name="work_status"
                         value={formik.values.work_status || 'working'}
-                        onChange={(e) => {
-                          formik.setFieldValue('work_status', e.target.value);
+                        onChange={(value: string | number) => {
+                          formik.setFieldValue('work_status', value);
                         }}
                         label="Статус работы"
                         disabled={workStatusesLoading}
@@ -1183,259 +1189,257 @@ const ServicePointFormPage: React.FC = () => {
                               p: SIZES.spacing.md,
                               borderRadius: SIZES.borderRadius.sm
                             }}>
-                              <CardContent>
-                                <Box sx={{ 
-                                  display: 'flex', 
-                                  justifyContent: 'space-between', 
-                                  alignItems: 'center', 
-                                  mb: SIZES.spacing.md 
-                                }}>
-                                  <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
-                                    Пост {post.post_number}
-                                  </Typography>
-                                  <IconButton
-                                    color="error"
-                                    onClick={() => removePost(originalIndex)}
-                                    size="small"
-                                    disabled={formik.values.service_posts.filter(p => !p._destroy).length === 1}
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </Box>
-                                
-                                <TextField
-                                  fullWidth
-                                  label="Название поста"
-                                  value={post.name}
-                                  onChange={(e) => {
-                                    const updatedPosts = [...formik.values.service_posts];
-                                    updatedPosts[originalIndex] = { ...post, name: e.target.value };
-                                    formik.setFieldValue('service_posts', updatedPosts);
-                                  }}
-                                  margin="normal"
-                                  sx={{
-                                    ...textFieldStyles,
-                                    '& .MuiOutlinedInput-root': {
-                                      borderRadius: SIZES.borderRadius.sm
-                                    }
-                                  }}
-                                />
-                                
-                                <TextField
-                                  fullWidth
-                                  label="Описание"
-                                  value={post.description || ''}
-                                  onChange={(e) => {
-                                    const updatedPosts = [...formik.values.service_posts];
-                                    updatedPosts[originalIndex] = { ...post, description: e.target.value };
-                                    formik.setFieldValue('service_posts', updatedPosts);
-                                  }}
-                                  multiline
-                                  rows={2}
-                                  margin="normal"
-                                  sx={{
-                                    ...textFieldStyles,
-                                    '& .MuiOutlinedInput-root': {
-                                      borderRadius: SIZES.borderRadius.sm
-                                    }
-                                  }}
-                                />
-                                
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="Длительность слота (мин)"
-                                  value={post.slot_duration}
-                                  onChange={(e) => {
-                                    const updatedPosts = [...formik.values.service_posts];
-                                    updatedPosts[originalIndex] = { ...post, slot_duration: Number(e.target.value) };
-                                    formik.setFieldValue('service_posts', updatedPosts);
-                                  }}
-                                  InputProps={{
-                                    inputProps: { min: 5, max: 480 },
-                                    endAdornment: <InputAdornment position="end">мин</InputAdornment>
-                                  }}
-                                  margin="normal"
-                                  sx={{
-                                    ...textFieldStyles,
-                                    '& .MuiOutlinedInput-root': {
-                                      borderRadius: SIZES.borderRadius.sm
-                                    }
-                                  }}
-                                />
-                                
+                              <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center', 
+                                mb: SIZES.spacing.md 
+                              }}>
+                                <Typography variant="h6" sx={{ fontSize: SIZES.fontSize.lg }}>
+                                  Пост {post.post_number}
+                                </Typography>
+                                <IconButton
+                                  color="error"
+                                  onClick={() => removePost(originalIndex)}
+                                  size="small"
+                                  disabled={formik.values.service_posts.filter(p => !p._destroy).length === 1}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Box>
+                              
+                              <TextField
+                                fullWidth
+                                label="Название поста"
+                                value={post.name}
+                                onChange={(e) => {
+                                  const updatedPosts = [...formik.values.service_posts];
+                                  updatedPosts[originalIndex] = { ...post, name: e.target.value };
+                                  formik.setFieldValue('service_posts', updatedPosts);
+                                }}
+                                margin="normal"
+                                sx={{
+                                  ...textFieldStyles,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: SIZES.borderRadius.sm
+                                  }
+                                }}
+                              />
+                              
+                              <TextField
+                                fullWidth
+                                label="Описание"
+                                value={post.description || ''}
+                                onChange={(e) => {
+                                  const updatedPosts = [...formik.values.service_posts];
+                                  updatedPosts[originalIndex] = { ...post, description: e.target.value };
+                                  formik.setFieldValue('service_posts', updatedPosts);
+                                }}
+                                multiline
+                                rows={2}
+                                margin="normal"
+                                sx={{
+                                  ...textFieldStyles,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: SIZES.borderRadius.sm
+                                  }
+                                }}
+                              />
+                              
+                              <TextField
+                                fullWidth
+                                type="number"
+                                label="Длительность слота (мин)"
+                                value={post.slot_duration}
+                                onChange={(e) => {
+                                  const updatedPosts = [...formik.values.service_posts];
+                                  updatedPosts[originalIndex] = { ...post, slot_duration: Number(e.target.value) };
+                                  formik.setFieldValue('service_posts', updatedPosts);
+                                }}
+                                InputProps={{
+                                  inputProps: { min: 5, max: 480 },
+                                  endAdornment: <InputAdornment position="end">мин</InputAdornment>
+                                }}
+                                margin="normal"
+                                sx={{
+                                  ...textFieldStyles,
+                                  '& .MuiOutlinedInput-root': {
+                                    borderRadius: SIZES.borderRadius.sm
+                                  }
+                                }}
+                              />
+                              
+                              <FormControlLabel
+                                control={
+                                  <Switch
+                                    checked={post.is_active}
+                                    onChange={(e) => {
+                                      const updatedPosts = [...formik.values.service_posts];
+                                      updatedPosts[originalIndex] = { ...post, is_active: e.target.checked };
+                                      formik.setFieldValue('service_posts', updatedPosts);
+                                    }}
+                                  />
+                                }
+                                label="Пост активен"
+                                sx={{ 
+                                  mt: SIZES.spacing.xs,
+                                  fontSize: SIZES.fontSize.md
+                                }}
+                              />
+
+                              {/* Настройки индивидуального расписания */}
+                              <Box sx={{ 
+                                mt: SIZES.spacing.md, 
+                                p: SIZES.spacing.md, 
+                                border: '1px solid #e0e0e0', 
+                                borderRadius: SIZES.borderRadius.sm, 
+                                backgroundColor: 'grey.50' 
+                              }}>
                                 <FormControlLabel
                                   control={
                                     <Switch
-                                      checked={post.is_active}
+                                      checked={post.has_custom_schedule || false}
                                       onChange={(e) => {
                                         const updatedPosts = [...formik.values.service_posts];
-                                        updatedPosts[originalIndex] = { ...post, is_active: e.target.checked };
+                                        const updatedPost = { ...post, has_custom_schedule: e.target.checked };
+                                        
+                                        // При включении собственного расписания устанавливаем значения по умолчанию
+                                        if (e.target.checked && !post.working_days) {
+                                          updatedPost.working_days = {
+                                            monday: true,
+                                            tuesday: true,
+                                            wednesday: true,
+                                            thursday: true,
+                                            friday: true,
+                                            saturday: false,
+                                            sunday: false,
+                                          };
+                                          updatedPost.custom_hours = {
+                                            start: '09:00',
+                                            end: '18:00',
+                                          };
+                                        }
+                                        
+                                        updatedPosts[originalIndex] = updatedPost;
                                         formik.setFieldValue('service_posts', updatedPosts);
                                       }}
+                                      color="secondary"
                                     />
                                   }
-                                  label="Пост активен"
-                                  sx={{ 
-                                    mt: SIZES.spacing.xs,
-                                    fontSize: SIZES.fontSize.md
-                                  }}
+                                  label="Индивидуальное расписание"
                                 />
-
-                                {/* Настройки индивидуального расписания */}
-                                <Box sx={{ 
-                                  mt: SIZES.spacing.md, 
-                                  p: SIZES.spacing.md, 
-                                  border: '1px solid #e0e0e0', 
-                                  borderRadius: SIZES.borderRadius.sm, 
-                                  backgroundColor: 'grey.50' 
-                                }}>
-                                  <FormControlLabel
-                                    control={
-                                      <Switch
-                                        checked={post.has_custom_schedule || false}
-                                        onChange={(e) => {
-                                          const updatedPosts = [...formik.values.service_posts];
-                                          const updatedPost = { ...post, has_custom_schedule: e.target.checked };
-                                          
-                                          // При включении собственного расписания устанавливаем значения по умолчанию
-                                          if (e.target.checked && !post.working_days) {
-                                            updatedPost.working_days = {
-                                              monday: true,
-                                              tuesday: true,
-                                              wednesday: true,
-                                              thursday: true,
-                                              friday: true,
-                                              saturday: false,
-                                              sunday: false,
-                                            };
-                                            updatedPost.custom_hours = {
-                                              start: '09:00',
-                                              end: '18:00',
-                                            };
-                                          }
-                                          
-                                          updatedPosts[originalIndex] = updatedPost;
-                                          formik.setFieldValue('service_posts', updatedPosts);
-                                        }}
-                                        color="secondary"
-                                      />
-                                    }
-                                    label="Индивидуальное расписание"
-                                  />
-                                  
-                                  {post.has_custom_schedule && (
-                                    <Box sx={{ mt: SIZES.spacing.md }}>
-                                      <Typography variant="subtitle2" gutterBottom sx={{ fontSize: SIZES.fontSize.md }}>
-                                        Рабочие дни:
-                                      </Typography>
-                                      
-                                      <Grid container spacing={SIZES.spacing.xs} sx={{ mb: SIZES.spacing.md }}>
-                                        {Object.entries({
-                                          monday: 'Пн',
-                                          tuesday: 'Вт', 
-                                          wednesday: 'Ср',
-                                          thursday: 'Чт',
-                                          friday: 'Пт',
-                                          saturday: 'Сб',
-                                          sunday: 'Вс'
-                                        }).map(([day, label]) => (
-                                          <Grid item key={day}>
-                                            <FormControlLabel
-                                              control={
-                                                <Switch
-                                                  size="small"
-                                                  checked={post.working_days?.[day as keyof typeof post.working_days] || false}
-                                                  onChange={(e) => {
-                                                    const updatedPosts = [...formik.values.service_posts];
-                                                    const updatedWorkingDays = {
-                                                      monday: false,
-                                                      tuesday: false,
-                                                      wednesday: false,
-                                                      thursday: false,
-                                                      friday: false,
-                                                      saturday: false,
-                                                      sunday: false,
-                                                      ...post.working_days,
-                                                      [day]: e.target.checked
-                                                    };
-                                                    updatedPosts[originalIndex] = { 
-                                                      ...post, 
-                                                      working_days: updatedWorkingDays 
-                                                    };
-                                                    formik.setFieldValue('service_posts', updatedPosts);
-                                                  }}
-                                                />
-                                              }
-                                              label={label}
-                                              sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
-                                            />
-                                          </Grid>
-                                        ))}
-                                      </Grid>
-
-                                      <Grid container spacing={SIZES.spacing.md}>
-                                        <Grid item xs={6}>
-                                          <TextField
-                                            fullWidth
-                                            type="time"
-                                            label="Начало работы"
-                                            value={post.custom_hours?.start || '09:00'}
-                                            onChange={(e) => {
-                                              const updatedPosts = [...formik.values.service_posts];
-                                              const updatedHours = {
-                                                start: e.target.value,
-                                                end: post.custom_hours?.end || '18:00'
-                                              };
-                                              updatedPosts[originalIndex] = { 
-                                                ...post, 
-                                                custom_hours: updatedHours 
-                                              };
-                                              formik.setFieldValue('service_posts', updatedPosts);
-                                            }}
-                                            size="small"
-                                            InputLabelProps={{ shrink: true }}
-                                            sx={{
-                                              ...textFieldStyles,
-                                              '& .MuiOutlinedInput-root': {
-                                                borderRadius: SIZES.borderRadius.sm
-                                              }
-                                            }}
+                                
+                                {post.has_custom_schedule && (
+                                  <Box sx={{ mt: SIZES.spacing.md }}>
+                                    <Typography variant="subtitle2" gutterBottom sx={{ fontSize: SIZES.fontSize.md }}>
+                                      Рабочие дни:
+                                    </Typography>
+                                    
+                                    <Grid container spacing={SIZES.spacing.xs} sx={{ mb: SIZES.spacing.md }}>
+                                      {Object.entries({
+                                        monday: 'Пн',
+                                        tuesday: 'Вт', 
+                                        wednesday: 'Ср',
+                                        thursday: 'Чт',
+                                        friday: 'Пт',
+                                        saturday: 'Сб',
+                                        sunday: 'Вс'
+                                      }).map(([day, label]) => (
+                                        <Grid item key={day}>
+                                          <FormControlLabel
+                                            control={
+                                              <Switch
+                                                size="small"
+                                                checked={post.working_days?.[day as keyof typeof post.working_days] || false}
+                                                onChange={(e) => {
+                                                  const updatedPosts = [...formik.values.service_posts];
+                                                  const updatedWorkingDays = {
+                                                    monday: false,
+                                                    tuesday: false,
+                                                    wednesday: false,
+                                                    thursday: false,
+                                                    friday: false,
+                                                    saturday: false,
+                                                    sunday: false,
+                                                    ...post.working_days,
+                                                    [day]: e.target.checked
+                                                  };
+                                                  updatedPosts[originalIndex] = { 
+                                                    ...post, 
+                                                    working_days: updatedWorkingDays 
+                                                  };
+                                                  formik.setFieldValue('service_posts', updatedPosts);
+                                                }}
+                                              />
+                                            }
+                                            label={label}
+                                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.75rem' } }}
                                           />
                                         </Grid>
-                                        <Grid item xs={6}>
-                                          <TextField
-                                            fullWidth
-                                            type="time"
-                                            label="Конец работы"
-                                            value={post.custom_hours?.end || '18:00'}
-                                            onChange={(e) => {
-                                              const updatedPosts = [...formik.values.service_posts];
-                                              const updatedHours = {
-                                                start: post.custom_hours?.start || '09:00',
-                                                end: e.target.value
-                                              };
-                                              updatedPosts[originalIndex] = { 
-                                                ...post, 
-                                                custom_hours: updatedHours 
-                                              };
-                                              formik.setFieldValue('service_posts', updatedPosts);
-                                            }}
-                                            size="small"
-                                            InputLabelProps={{ shrink: true }}
-                                            sx={{
-                                              ...textFieldStyles,
-                                              '& .MuiOutlinedInput-root': {
-                                                borderRadius: SIZES.borderRadius.sm
-                                              }
-                                            }}
-                                          />
-                                        </Grid>
+                                      ))}
+                                    </Grid>
+
+                                    <Grid container spacing={SIZES.spacing.md}>
+                                      <Grid item xs={6}>
+                                        <TextField
+                                          fullWidth
+                                          type="time"
+                                          label="Начало работы"
+                                          value={post.custom_hours?.start || '09:00'}
+                                          onChange={(e) => {
+                                            const updatedPosts = [...formik.values.service_posts];
+                                            const updatedHours = {
+                                              start: e.target.value,
+                                              end: post.custom_hours?.end || '18:00'
+                                            };
+                                            updatedPosts[originalIndex] = { 
+                                              ...post, 
+                                              custom_hours: updatedHours 
+                                            };
+                                            formik.setFieldValue('service_posts', updatedPosts);
+                                          }}
+                                          size="small"
+                                          InputLabelProps={{ shrink: true }}
+                                          sx={{
+                                            ...textFieldStyles,
+                                            '& .MuiOutlinedInput-root': {
+                                              borderRadius: SIZES.borderRadius.sm
+                                            }
+                                          }}
+                                        />
                                       </Grid>
-                                    </Box>
-                                  )}
-                                </Box>
-                              </CardContent>
+                                      <Grid item xs={6}>
+                                        <TextField
+                                          fullWidth
+                                          type="time"
+                                          label="Конец работы"
+                                          value={post.custom_hours?.end || '18:00'}
+                                          onChange={(e) => {
+                                            const updatedPosts = [...formik.values.service_posts];
+                                            const updatedHours = {
+                                              start: post.custom_hours?.start || '09:00',
+                                              end: e.target.value
+                                            };
+                                            updatedPosts[originalIndex] = { 
+                                              ...post, 
+                                              custom_hours: updatedHours 
+                                            };
+                                            formik.setFieldValue('service_posts', updatedPosts);
+                                          }}
+                                          size="small"
+                                          InputLabelProps={{ shrink: true }}
+                                          sx={{
+                                            ...textFieldStyles,
+                                            '& .MuiOutlinedInput-root': {
+                                              borderRadius: SIZES.borderRadius.sm
+                                            }
+                                          }}
+                                        />
+                                      </Grid>
+                                    </Grid>
+                                  </Box>
+                                )}
+                              </Box>
                             </Card>
                           </Grid>
                         );
@@ -1564,8 +1568,8 @@ const ServicePointFormPage: React.FC = () => {
                                     <InputLabel>Услуга</InputLabel>
                                     <Select
                                       value={service.service_id ? String(service.service_id) : '0'}
-                                      onChange={(e) => {
-                                        const selectedServiceId = Number(e.target.value);
+                                      onChange={(value: string | number) => {
+                                        const selectedServiceId = Number(value);
                                         const selectedService = servicesData?.find((s: Service) => s.id === selectedServiceId);
                                         if (selectedService) {
                                           formik.setFieldValue(`services.${originalIndex}`, {
@@ -1772,37 +1776,40 @@ const ServicePointFormPage: React.FC = () => {
                           ...cardStyles,
                           borderRadius: SIZES.borderRadius.sm 
                         }}>
-                          <CardContent>
-                            <Box
-                              component="img"
-                              src={photo.preview}
-                              alt={`Фото ${index + 1}`}
-                              sx={{
-                                width: '100%',
-                                height: 200,
-                                objectFit: 'cover',
+                          <Box
+                            component="img"
+                            src={photo.preview}
+                            alt={`Фото ${index + 1}`}
+                            sx={{
+                              width: '100%',
+                              height: 200,
+                              objectFit: 'cover',
+                              borderRadius: SIZES.borderRadius.sm
+                            }}
+                          />
+                          <TextField
+                            fullWidth
+                            margin="normal"
+                            label="Описание"
+                            value={photo.description || ''}
+                            onChange={(e) => {
+                              const newPhotos = [...photoUploads];
+                              newPhotos[index].description = e.target.value;
+                              setPhotoUploads(newPhotos);
+                            }}
+                            sx={{
+                              ...textFieldStyles,
+                              '& .MuiOutlinedInput-root': {
                                 borderRadius: SIZES.borderRadius.sm
-                              }}
-                            />
-                            <TextField
-                              fullWidth
-                              margin="normal"
-                              label="Описание"
-                              value={photo.description || ''}
-                              onChange={(e) => {
-                                const newPhotos = [...photoUploads];
-                                newPhotos[index].description = e.target.value;
-                                setPhotoUploads(newPhotos);
-                              }}
-                              sx={{
-                                ...textFieldStyles,
-                                '& .MuiOutlinedInput-root': {
-                                  borderRadius: SIZES.borderRadius.sm
-                                }
-                              }}
-                            />
-                          </CardContent>
-                          <CardActions>
+                              }
+                            }}
+                          />
+                          <Box sx={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center',
+                            pt: SIZES.spacing.md
+                          }}>
                             <FormControlLabel
                               control={
                                 <Switch
@@ -1818,7 +1825,7 @@ const ServicePointFormPage: React.FC = () => {
                             >
                               <DeleteIcon />
                             </IconButton>
-                          </CardActions>
+                          </Box>
                         </Card>
                       </Grid>
                     ))}
@@ -2020,40 +2027,34 @@ const ServicePointFormPage: React.FC = () => {
               )}
           </form>
         )}
-      </Paper>
+      </Box>
 
       <Snackbar
         open={Boolean(successMessage)}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity="success" onClose={handleCloseSnackbar}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
+        message={successMessage || ''}
+        severity="success"
+      />
       
       <Snackbar
         open={Boolean(errorMessage)}
         autoHideDuration={5000}
         onClose={() => setErrorMessage(null)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity="error" onClose={() => setErrorMessage(null)}>
-          {errorMessage}
-        </Alert>
-      </Snackbar>
+        message={errorMessage || ''}
+        severity="error"
+      />
 
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+        message={snackbarMessage || ''}
+        severity={snackbarSeverity}
+      />
     </Box>
   );
 };

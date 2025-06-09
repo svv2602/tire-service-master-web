@@ -1,20 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
-  Paper, 
   Box, 
-  Button, 
   List, 
   ListItem, 
   Divider, 
-  Chip,
-  Card,
-  CardContent,
-  CardActions,
   Grid,
   IconButton,
-  CircularProgress,
-  Alert
+  CircularProgress
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -30,6 +23,19 @@ import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { User } from '../../types/user';
 import { GridContainer, GridItem, CenteredBox, StyledAlert } from '../../components/styled/CommonComponents';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Card } from '../../components/ui/Card';
+
+// Импорт стилей
+import { SIZES } from '../../styles/theme';
+import { 
+  getButtonStyles, 
+  getCardStyles
+} from '../../styles/components';
 
 interface Car {
   id: number;
@@ -133,82 +139,105 @@ const MyCarsList: React.FC = () => {
 
   if (loading) {
     return (
-      <CenteredBox my={4}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        my: SIZES.spacing.lg,
+        p: SIZES.spacing.lg
+      }}>
         <CircularProgress />
-      </CenteredBox>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Box my={4}>
-        <StyledAlert severity="error" marginBottom={2}>
-          <Typography variant="h6">
+      <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
+        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
+          <Typography variant="h6" sx={{
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600
+          }}>
             Ошибка загрузки данных
           </Typography>
-          <Typography>{error}</Typography>
-        </StyledAlert>
-          <Button 
-            variant="outlined" 
-            color="primary" 
-            onClick={fetchCars} 
-          >
-            Попробовать снова
-          </Button>
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            {error}
+          </Typography>
+        </Alert>
+        <Button 
+          variant="outlined" 
+          onClick={fetchCars} 
+        >
+          Попробовать снова
+        </Button>
       </Box>
     );
   }
 
   return (
-    <Box my={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h1" gutterBottom>
+    <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography variant="h5" component="h1" gutterBottom sx={{
+          fontSize: SIZES.fontSize.xl,
+          fontWeight: 600
+        }}>
           Мои автомобили
         </Typography>
         <Button 
           variant="contained" 
-          color="primary" 
           startIcon={<AddIcon />}
-          component={RouterLink}
-          to="/my-cars/new"
+          onClick={() => window.location.href = '/my-cars/new'}
         >
           Добавить автомобиль
         </Button>
       </Box>
       
       {cars.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <CarIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
+        <Box sx={{ 
+          p: SIZES.spacing.xl, 
+          textAlign: 'center',
+          borderRadius: SIZES.borderRadius.md,
+          border: `1px solid rgba(0, 0, 0, 0.12)`
+        }}>
+          <CarIcon sx={{ fontSize: 60, color: 'text.secondary', mb: SIZES.spacing.md }} />
+          <Typography variant="h6" gutterBottom sx={{
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600
+          }}>
             У вас пока нет добавленных автомобилей
           </Typography>
-          <Typography color="textSecondary" paragraph>
+          <Typography color="textSecondary" paragraph sx={{
+            fontSize: SIZES.fontSize.md,
+            mb: SIZES.spacing.md
+          }}>
             Добавьте свой первый автомобиль, чтобы ускорить процесс записи на шиномонтаж
           </Typography>
           <Button 
             variant="contained" 
-            color="primary" 
             startIcon={<AddIcon />}
-            component={RouterLink}
-            to="/my-cars/new"
-            sx={{ mt: 2 }}
+            onClick={() => window.location.href = '/my-cars/new'}
+            sx={{ mt: SIZES.spacing.md }}
           >
             Добавить автомобиль
           </Button>
-        </Paper>
+        </Box>
       ) : (
         <GridContainer spacing={3}>
           {cars.map((car) => (
             <GridItem xs={12} sm={6} md={4} key={car.id}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  position: 'relative',
-                  border: car.is_primary ? '2px solid #4caf50' : 'none'
-                }}
-              >
+              <Card sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                border: car.is_primary ? '2px solid #4caf50' : 'none',
+                p: SIZES.spacing.lg
+              }}>
                 {car.is_primary && (
                   <Chip 
                     icon={<StarIcon />} 
@@ -217,29 +246,43 @@ const MyCarsList: React.FC = () => {
                     size="small"
                     sx={{ 
                       position: 'absolute', 
-                      top: 10, 
-                      right: 10,
+                      top: SIZES.spacing.md, 
+                      right: SIZES.spacing.md,
                       zIndex: 1
                     }}
                   />
                 )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" component="div" gutterBottom>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" component="div" gutterBottom sx={{
+                    fontSize: SIZES.fontSize.lg,
+                    fontWeight: 600
+                  }}>
                     {car.make} {car.model} ({car.year})
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+                    fontSize: SIZES.fontSize.sm,
+                    mb: SIZES.spacing.sm
+                  }}>
                     Гос. номер: {car.license_plate}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{
+                    fontSize: SIZES.fontSize.sm
+                  }}>
                     Цвет: {car.color}
                   </Typography>
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
-                  <Box>
+                </Box>
+                <Box sx={{ 
+                  display: 'flex',
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  mt: SIZES.spacing.md,
+                  pt: SIZES.spacing.md,
+                  borderTop: `1px solid rgba(0, 0, 0, 0.12)`
+                }}>
+                  <Box sx={{ display: 'flex', gap: SIZES.spacing.sm }}>
                     <IconButton 
                       aria-label="edit"
-                      component={RouterLink}
-                      to={`/my-cars/${car.id}/edit`}
+                      onClick={() => window.location.href = `/my-cars/${car.id}/edit`}
                       color="primary"
                     >
                       <EditIcon />
@@ -261,7 +304,7 @@ const MyCarsList: React.FC = () => {
                       Сделать основным
                     </Button>
                   )}
-                </CardActions>
+                </Box>
               </Card>
             </GridItem>
           ))}
