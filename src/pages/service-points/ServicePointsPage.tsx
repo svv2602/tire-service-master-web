@@ -48,7 +48,6 @@ import {
 } from '../../styles';
 
 // Импорты UI компонентов
-import Paper from '../../components/ui/Paper';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Select } from '../../components/ui/Select';
@@ -274,13 +273,10 @@ const ServicePointsPage: React.FC = () => {
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ 
+      <Box sx={{ 
         ...cardStyles, 
         p: isMobile ? SIZES.spacing.md : SIZES.spacing.lg, 
-        mb: SIZES.spacing.lg,
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+        mb: SIZES.spacing.lg
       }}>
         <Box sx={{ 
           display: 'flex', 
@@ -363,16 +359,13 @@ const ServicePointsPage: React.FC = () => {
             />
           </Box>
         </Box>
-      </Paper>
+      </Box>
 
       {/* Таблица сервисных точек */}
       <TableContainer 
-        component={Paper} 
+        component={Box} 
         sx={{
-          ...tableStyles.tableContainer,
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          border: 'none'
+          ...tableStyles.tableContainer
         }}
       >
         <Table sx={tableStyles.table}>
