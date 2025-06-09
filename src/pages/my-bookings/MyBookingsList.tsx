@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
-  Paper, 
   Box, 
-  Button, 
-  Chip,
-  Card,
-  CardContent,
-  CardActions,
-  CircularProgress,
-  Alert
+  CircularProgress
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -29,6 +22,19 @@ import {
 } from '@mui/icons-material';
 import { User } from '../../types/user';
 import { GridContainer, GridItem } from '../../components/styled/CommonComponents';
+
+// Импорты UI компонентов
+import { Button } from '../../components/ui/Button';
+import { Alert } from '../../components/ui/Alert';
+import { Chip } from '../../components/ui/Chip';
+import { Card } from '../../components/ui/Card';
+
+// Импорт стилей
+import { SIZES } from '../../styles/theme';
+import { 
+  getButtonStyles, 
+  getCardStyles
+} from '../../styles/components';
 
 interface Booking {
   id: number;
@@ -134,7 +140,12 @@ const MyBookingsList: React.FC = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        my: SIZES.spacing.lg,
+        p: SIZES.spacing.lg
+      }}>
         <CircularProgress />
       </Box>
     );
@@ -142,13 +153,12 @@ const MyBookingsList: React.FC = () => {
 
   if (error) {
     return (
-      <Box my={4}>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
+        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
           {error}
         </Alert>
         <Button 
           variant="outlined" 
-          color="primary" 
           onClick={fetchBookings} 
         >
           Попробовать снова
@@ -158,84 +168,131 @@ const MyBookingsList: React.FC = () => {
   }
 
   return (
-    <Box my={3}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" component="h1" gutterBottom>
+    <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Typography variant="h5" component="h1" gutterBottom sx={{
+          fontSize: SIZES.fontSize.xl,
+          fontWeight: 600
+        }}>
           Мои записи на шиномонтаж
         </Typography>
         <Button 
           variant="contained" 
-          color="primary" 
           startIcon={<AddIcon />}
-          component={RouterLink}
-          to="/service-points/search"
+          onClick={() => window.location.href = '/service-points/search'}
         >
           Записаться на шиномонтаж
         </Button>
       </Box>
       
       {bookings.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <CalendarIcon sx={{ fontSize: 60, color: 'text.secondary', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
+        <Box sx={{ 
+          p: SIZES.spacing.lg, 
+          textAlign: 'center',
+          borderRadius: SIZES.borderRadius.md,
+          border: `1px solid rgba(0, 0, 0, 0.12)`
+        }}>
+          <CalendarIcon sx={{ fontSize: 60, color: 'text.secondary', mb: SIZES.spacing.md }} />
+          <Typography variant="h6" gutterBottom sx={{
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600
+          }}>
             У вас пока нет записей на шиномонтаж
           </Typography>
-          <Typography color="textSecondary" paragraph>
+          <Typography color="textSecondary" paragraph sx={{
+            fontSize: SIZES.fontSize.md,
+            mb: SIZES.spacing.md
+          }}>
             Выберите сервисный центр и запишитесь на удобное время
           </Typography>
           <Button 
             variant="contained" 
-            color="primary" 
             startIcon={<AddIcon />}
-            component={RouterLink}
-            to="/service-points/search"
-            sx={{ mt: 2 }}
+            onClick={() => window.location.href = '/service-points/search'}
+            sx={{ mt: SIZES.spacing.md }}
           >
             Выбрать сервисный центр
           </Button>
-        </Paper>
+        </Box>
       ) : (
         <GridContainer spacing={3}>
           {bookings.map((booking) => (
             <GridItem xs={12} sm={6} key={booking.id}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                    <Typography variant="h6" component="div" gutterBottom>
+              <Card sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                p: SIZES.spacing.lg
+              }}>
+                <Box sx={{ flex: 1 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start', 
+                    mb: SIZES.spacing.md 
+                  }}>
+                    <Typography variant="h6" component="div" gutterBottom sx={{
+                      fontSize: SIZES.fontSize.lg,
+                      fontWeight: 600
+                    }}>
                       {booking.service_point_name}
                     </Typography>
                     {getStatusChip(booking.status)}
                   </Box>
                   
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+                    fontSize: SIZES.fontSize.sm,
+                    mb: SIZES.spacing.sm
+                  }}>
                     <strong>Автомобиль:</strong> {booking.car_name}
                   </Typography>
                   
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+                    fontSize: SIZES.fontSize.sm,
+                    mb: SIZES.spacing.sm
+                  }}>
                     <strong>Дата и время:</strong> {formatDate(booking.start_time)}
                   </Typography>
                   
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" gutterBottom sx={{
+                    fontSize: SIZES.fontSize.sm,
+                    mb: SIZES.spacing.sm
+                  }}>
                     <strong>Услуги:</strong> {booking.services.map(service => service.name).join(', ')}
                   </Typography>
                   
-                  <Typography variant="body1" fontWeight="bold" mt={2}>
+                  <Typography variant="body1" fontWeight="bold" sx={{
+                    mt: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.md
+                  }}>
                     Стоимость: {booking.total_price} ₽
                   </Typography>
                   
                   {booking.comment && (
-                    <Box mt={2}>
-                      <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ mt: SIZES.spacing.md }}>
+                      <Typography variant="body2" color="text.secondary" sx={{
+                        fontSize: SIZES.fontSize.sm
+                      }}>
                         <strong>Комментарий:</strong> {booking.comment}
                       </Typography>
                     </Box>
                   )}
-                </CardContent>
+                </Box>
                 
-                <CardActions>
+                <Box sx={{ 
+                  display: 'flex',
+                  gap: SIZES.spacing.sm,
+                  mt: SIZES.spacing.md,
+                  pt: SIZES.spacing.md,
+                  borderTop: `1px solid rgba(0, 0, 0, 0.12)`
+                }}>
                   <Button 
-                    component={RouterLink}
-                    to={`/bookings/${booking.id}`}
+                    onClick={() => window.location.href = `/bookings/${booking.id}`}
                     size="small"
                   >
                     Подробнее
@@ -250,7 +307,7 @@ const MyBookingsList: React.FC = () => {
                       Отменить запись
                     </Button>
                   )}
-                </CardActions>
+                </Box>
               </Card>
             </GridItem>
           ))}

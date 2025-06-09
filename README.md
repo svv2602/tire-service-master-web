@@ -151,15 +151,15 @@ tests/
 
 Проект находится в процессе миграции с Material UI на собственную UI систему.
 
-### Прогресс миграции: 15/24 страниц (62.5%) 🔥
+### Прогресс миграции: 16/24 страниц (66.7%) 🔥
 
 **✅ Завершенные страницы:**
 - DashboardPage, LoginPage, PartnersPage, ServicePointsPage
 - ClientsPage, BookingsPage, NewServicesPage, ReviewsPage
-- UsersPage, SettingsPage, RegionsPage, CarBrandsPage, CitiesPage, ArticlesPage, ProfilePage
+- UsersPage, SettingsPage, RegionsPage, CarBrandsPage, CitiesPage, ArticlesPage, ProfilePage, MyBookingsPage
 
 **🔄 В процессе:**
-- MyBookingsPage, MyCarsPage, KnowledgeBasePage
+- MyCarsPage, KnowledgeBasePage
 - PageContentPage, ServicePointFormPage, ClientFormPage
 - RegionFormPage, ArticleFormPage
 
