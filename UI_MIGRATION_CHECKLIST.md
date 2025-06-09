@@ -317,7 +317,9 @@ git reset --soft HEAD~1
 #### ✅ ServicePointsPage - ЗАВЕРШЕНО ✨
 - ✅ Заменены: Paper→Box, Button, TextField, Select, Modal, Alert, Chip, Pagination
 - ✅ **УБРАНЫ ФОНОВЫЕ ПОДКЛАДКИ** - transparent backgrounds, no shadows, no borders
-- ✅ Коммит: e000192
+- ✅ **ДОРАБОТАНО** - исправлена стилизация согласно V2.0, соответствие общему стилю сайта
+- ✅ Адаптивная таблица сервисных точек с фильтрацией по регионам и городам
+- ✅ Централизованные стили SIZES
 
 #### ✅ ClientsPage - ЗАВЕРШЕНО ✨  
 - ✅ Заменены: Paper→Box, Button, TextField, Modal, Alert, Pagination
@@ -327,7 +329,7 @@ git reset --soft HEAD~1
 #### ✅ BookingsPage - ЗАВЕРШЕНО ✨
 - ✅ Заменены: Paper→Box, Button, TextField, Modal, Alert, Chip, Pagination
 - ✅ **УБРАНЫ ФОНОВЫЕ ПОДКЛАДКИ** - transparent backgrounds, no shadows, no borders
-- ✅ Коммит: 6cc318e
+- ✅ Централизованные стили SIZES
 
 #### ✅ NewServicesPage - ЗАВЕРШЕНО ✨
 - ✅ Заменены: Button, Card, TextField, Chip, Pagination, Alert, Modal
