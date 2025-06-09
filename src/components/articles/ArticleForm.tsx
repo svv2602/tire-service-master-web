@@ -365,7 +365,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs 
                 value={activeTab} 
-                onChange={(value) => setActiveTab(value)}
+                onChange={(value) => setActiveTab(typeof value === 'string' ? parseInt(value) : value)}
                 tabs={[
                   { label: 'Основное', value: 0, icon: <EditIcon /> },
                   { label: 'SEO и медиа', value: 1, icon: <SearchIcon /> },
@@ -526,12 +526,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                     <Switch
                       checked={formData.featured}
                       onChange={(checked) => handleInputChange('featured')({ target: { checked } })}
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LabelIcon sx={{ color: colors.warning }} />
-                          <Typography>Рекомендуемая статья</Typography>
-                        </Box>
-                      }
+                      label="Рекомендуемая статья"
                     />
                   </Grid>
 
@@ -539,12 +534,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                     <Switch
                       checked={formData.allow_comments}
                       onChange={(checked) => handleInputChange('allow_comments')({ target: { checked } })}
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <VisibilityIcon sx={{ color: colors.primary }} />
-                          <Typography>Разрешить комментарии</Typography>
-                        </Box>
-                      }
+                      label="Разрешить комментарии"
                     />
                   </Grid>
                 </Grid>
