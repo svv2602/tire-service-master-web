@@ -7,27 +7,10 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Switch,
   FormControlLabel,
   CircularProgress,
-  Alert,
   DialogContentText,
-  Pagination,
-  Chip,
   useTheme,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Skeleton
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
@@ -54,6 +37,15 @@ import {
   useDeleteCityMutation,
 } from '../api/cities.api';
 import { City, CityFormData } from '../types/models';
+
+// Импорты UI компонентов
+import { Button } from '../components/ui/Button';
+import { TextField } from '../components/ui/TextField';
+import { Modal } from '../components/ui/Modal';
+import { Alert } from '../components/ui/Alert';
+import { Switch } from '../components/ui/Switch';
+import { Chip } from '../components/ui/Chip';
+import { Pagination } from '../components/ui/Pagination';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -176,8 +168,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
     }
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   if (isLoading) {
@@ -209,10 +201,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       {error && (
         <Alert 
           severity="error" 
-          sx={{ 
-            mb: SIZES.spacing.md,
-            borderRadius: SIZES.borderRadius.sm 
-          }} 
+          sx={{ mb: SIZES.spacing.md }} 
           onClose={() => setError(null)}
         >
           {error}
@@ -225,10 +214,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         placeholder="Поиск городов..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{
-          ...textFieldStyles,
-          mb: SIZES.spacing.md
-        }}
+        sx={{ mb: SIZES.spacing.md }}
       />
 
       <List sx={{ 
@@ -262,7 +248,6 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
                     label={city.is_active ? 'Активен' : 'Неактивен'}
                     color={city.is_active ? 'success' : 'error'}
                     size="small"
-                    sx={city.is_active ? getChipStyles(theme, 'success') : getChipStyles(theme, 'error')}
                   />
                 </Box>
               }
@@ -336,11 +321,6 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
             page={page}
             onChange={handlePageChange}
             color="primary"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
           />
         </Box>
       )}
@@ -349,106 +329,74 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         <Button
           startIcon={<AddIcon />}
           variant="contained"
-          sx={buttonStyles}
           onClick={() => handleOpenDialog()}
         >
           Добавить город
         </Button>
       </Box>
 
-      {/* Диалог создания/редактирования города */}
-      <Dialog 
+      {/* Модальное окно создания/редактирования города */}
+      <Modal 
         open={isDialogOpen} 
-        onClose={handleCloseDialog} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            p: 0
-          }
-        }}
-      >
-        <form onSubmit={formik.handleSubmit}>
-          <DialogTitle sx={{ 
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            fontSize: SIZES.fontSize.lg,
-            fontWeight: 600,
-            pb: SIZES.spacing.md 
-          }}>
-            {selectedCity ? 'Редактировать город' : 'Добавить город'}
-          </DialogTitle>
-          <DialogContent sx={{ pt: SIZES.spacing.md }}>
-            <Box pt={SIZES.spacing.sm}>
-              <TextField
-                fullWidth
-                id="name"
-                name="name"
-                label="Название города"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="is_active"
-                    name="is_active"
-                    checked={formik.values.is_active}
-                    onChange={formik.handleChange}
-                    color="primary"
-                  />
-                }
-                label="Активен"
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
-            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
-            <Button type="submit" variant="contained" sx={buttonStyles}>
+        onClose={handleCloseDialog}
+        title={selectedCity ? 'Редактировать город' : 'Добавить город'}
+        maxWidth={600}
+        actions={
+          <>
+            <Button onClick={handleCloseDialog}>Отмена</Button>
+            <Button 
+              onClick={() => formik.handleSubmit()} 
+              variant="contained"
+            >
               {selectedCity ? 'Сохранить' : 'Создать'}
             </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+          </>
+        }
+      >
+        <Box pt={SIZES.spacing.sm}>
+          <TextField
+            fullWidth
+            id="name"
+            name="name"
+            label="Название города"
+            value={formik.values.name}
+            onChange={formik.handleChange}
+            error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={formik.touched.name && formik.errors.name}
+            sx={{ mb: SIZES.spacing.md }}
+          />
+          <Switch
+            label="Активен"
+            checked={formik.values.is_active}
+            onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+          />
+        </Box>
+      </Modal>
 
-      {/* Диалог подтверждения удаления */}
-      <Dialog 
+      {/* Модальное окно подтверждения удаления */}
+      <Modal 
         open={isDeleteDialogOpen} 
         onClose={handleCloseDeleteDialog}
-        PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400,
-            p: 0
-          }
-        }}
+        title="Подтверждение удаления"
+        maxWidth={400}
+        actions={
+          <>
+            <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
+            <Button 
+              onClick={handleConfirmDelete} 
+              color="error" 
+              variant="contained"
+            >
+              Удалить
+            </Button>
+          </>
+        }
       >
-        <DialogTitle sx={{ 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          fontSize: SIZES.fontSize.lg,
-          fontWeight: 600,
-          color: theme.palette.error.main
-        }}>
-          Подтверждение удаления
-        </DialogTitle>
-        <DialogContent sx={{ pt: SIZES.spacing.md }}>
-          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
-            Вы действительно хотите удалить город "{cityToDelete?.name}"?
-            Это действие нельзя будет отменить.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ p: SIZES.spacing.md }}>
-          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
-          <Button onClick={handleConfirmDelete} sx={dangerButtonStyles}>
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+          Вы действительно хотите удалить город "{cityToDelete?.name}"?
+          Это действие нельзя будет отменить.
+        </Typography>
+      </Modal>
     </Box>
   );
 };

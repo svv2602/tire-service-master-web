@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { SIZES } from '../../styles/theme';
 import CitiesList from '../../components/CitiesList';
 
 const CitiesPage: React.FC = () => {
@@ -8,8 +9,15 @@ const CitiesPage: React.FC = () => {
   const defaultRegionId = 1;
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ p: SIZES.spacing.lg }}>
+      <Typography 
+        variant="h4" 
+        sx={{ 
+          fontSize: SIZES.fontSize.xl,
+          fontWeight: 600,
+          mb: SIZES.spacing.lg 
+        }}
+      >
         Города
       </Typography>
       <CitiesList regionId={defaultRegionId} />
