@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
-  Paper,
   Typography,
-  TextField,
-  Button,
   CircularProgress,
-  FormControlLabel,
-  Switch,
   IconButton,
   Divider,
   Grid,
@@ -26,10 +21,15 @@ import {
   useGetRegionByIdQuery,
 } from '../../api/regions.api';
 import { RegionFormData } from '../../types/models';
-import Notification from '../../components/Notification';
 import CitiesList from '../../components/CitiesList';
 import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
+
+// Импорты UI компонентов
+import { TextField } from '../../components/ui/TextField';
+import { Button } from '../../components/ui/Button';
+import { Switch } from '../../components/ui/Switch';
+import { Snackbar } from '../../components/ui/Snackbar';
 
 /**
  * Схема валидации для формы региона
@@ -205,7 +205,7 @@ const RegionFormPage: React.FC = () => {
       <Grid container spacing={SIZES.spacing.xl}>
         {/* Форма региона */}
         <Grid item xs={12} md={isEditMode ? 6 : 12}>
-          <Paper sx={cardStyles}>
+          <Box sx={cardStyles}>
             <Typography 
               variant="h6" 
               sx={{
@@ -248,15 +248,11 @@ const RegionFormPage: React.FC = () => {
                 sx={textFieldStyles}
               />
 
-              <FormControlLabel
-                control={
-                  <Switch
-                    id="is_active"
-                    name="is_active"
-                    checked={formik.values.is_active}
-                    onChange={formik.handleChange}
-                  />
-                }
+              <Switch
+                id="is_active"
+                name="is_active"
+                checked={formik.values.is_active}
+                onChange={(checked) => formik.setFieldValue('is_active', checked)}
                 label="Активен"
                 sx={{ marginTop: SIZES.spacing.lg }}
               />
@@ -285,13 +281,13 @@ const RegionFormPage: React.FC = () => {
                 </Button>
               </Box>
             </Box>
-          </Paper>
+          </Box>
         </Grid>
 
         {/* Список городов (только при редактировании) */}
         {isEditMode && id && (
           <Grid item xs={12} md={6}>
-            <Paper sx={cardStyles}>
+            <Box sx={cardStyles}>
               <Typography 
                 variant="h6" 
                 sx={{
@@ -304,13 +300,13 @@ const RegionFormPage: React.FC = () => {
               </Typography>
               <Divider sx={{ marginBottom: SIZES.spacing.lg }} />
               <CitiesList regionId={id} />
-            </Paper>
+            </Box>
           </Grid>
         )}
       </Grid>
 
       {/* Уведомления */}
-      <Notification
+      <Snackbar
         open={notification.open}
         message={notification.message}
         severity={notification.severity}
