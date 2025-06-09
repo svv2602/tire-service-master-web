@@ -4,24 +4,12 @@ import {
   Box,
   Container,
   Typography,
-  Button,
-  TextField,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
-  FormControlLabel,
-  Switch,
-  Chip,
-  Paper,
   Grid,
-  Tabs,
-  Tab,
-  Alert,
   CircularProgress,
   Fade,
   Divider,
-  Tooltip,
   IconButton,
   useTheme
 } from '@mui/material';
@@ -56,6 +44,15 @@ import {
   SIZES,
   getThemeColors
 } from '../../styles';
+
+// Импорты UI компонентов
+import { TextField } from '../ui/TextField';
+import { Button } from '../ui/Button';
+import { Select } from '../ui/Select';
+import { Switch } from '../ui/Switch';
+import { Tabs } from '../ui/Tabs';
+import { Alert } from '../ui/Alert';
+import { Chip } from '../ui/Chip';
 
 interface ArticleFormProps {
   article?: Article;
@@ -228,7 +225,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
 
   // Рендер предпросмотра
   const renderPreview = () => (
-    <Paper sx={{ ...cardStyles, mb: 3 }}>
+    <Box sx={{ ...cardStyles, mb: 3 }}>
       <Typography variant="h4" component="h1" sx={{ mb: 2, color: colors.textPrimary }}>
         {formData.title || 'Заголовок статьи'}
       </Typography>
@@ -282,7 +279,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
           __html: formData.content || '<p style="color: #999; font-style: italic;">Содержимое появится здесь...</p>' 
         }}
       />
-    </Paper>
+    </Box>
   );
 
   return (
@@ -363,14 +360,18 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
         </Fade>
       ) : (
         <Fade in timeout={300}>
-          <Paper sx={cardStyles}>
+          <Box sx={cardStyles}>
             {/* Табы */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-              <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
-                <Tab label="Основное" icon={<EditIcon />} />
-                <Tab label="SEO и медиа" icon={<SearchIcon />} />
-                <Tab label="Настройки" icon={<SettingsIcon />} />
-              </Tabs>
+              <Tabs 
+                value={activeTab} 
+                onChange={(value) => setActiveTab(value)}
+                tabs={[
+                  { label: 'Основное', value: 0, icon: <EditIcon /> },
+                  { label: 'SEO и медиа', value: 1, icon: <SearchIcon /> },
+                  { label: 'Настройки', value: 2, icon: <SettingsIcon /> }
+                ]}
+              />
             </Box>
 
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
@@ -390,34 +391,30 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth sx={textFieldStyles} required>
-                      <InputLabel>Категория</InputLabel>
-                      <Select
-                        value={formData.category}
-                        onChange={(e) => handleInputChange('category')(e.target.value)}
-                        label="Категория"
-                      >
-                        {categories.map((category) => (
-                          <MenuItem key={category.key} value={category.key}>
-                            {category.icon} {category.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <Select
+                      fullWidth
+                      label="Категория"
+                      value={formData.category}
+                      onChange={(value) => handleInputChange('category')(value)}
+                      options={categories.map((category) => ({
+                        value: category.key,
+                        label: `${category.icon} ${category.name}`
+                      }))}
+                      required
+                    />
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth sx={textFieldStyles}>
-                      <InputLabel>Статус</InputLabel>
-                      <Select
-                        value={formData.status}
-                        onChange={(e) => handleInputChange('status')(e.target.value)}
-                        label="Статус"
-                      >
-                        <MenuItem value="draft">Черновик</MenuItem>
-                        <MenuItem value="published">Опубликовано</MenuItem>
-                      </Select>
-                    </FormControl>
+                    <Select
+                      fullWidth
+                      label="Статус"
+                      value={formData.status}
+                      onChange={(value) => handleInputChange('status')(value)}
+                      options={[
+                        { value: 'draft', label: 'Черновик' },
+                        { value: 'published', label: 'Опубликовано' }
+                      ]}
+                    />
                   </Grid>
 
                   <Grid item xs={12}>
@@ -526,14 +523,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
               <TabPanel value={activeTab} index={2}>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.featured}
-                          onChange={handleInputChange('featured')}
-                          color="primary"
-                        />
-                      }
+                    <Switch
+                      checked={formData.featured}
+                      onChange={(checked) => handleInputChange('featured')({ target: { checked } })}
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <LabelIcon sx={{ color: colors.warning }} />
@@ -544,14 +536,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={formData.allow_comments}
-                          onChange={handleInputChange('allow_comments')}
-                          color="primary"
-                        />
-                      }
+                    <Switch
+                      checked={formData.allow_comments}
+                      onChange={(checked) => handleInputChange('allow_comments')({ target: { checked } })}
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <VisibilityIcon sx={{ color: colors.primary }} />
@@ -563,7 +550,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 </Grid>
               </TabPanel>
             </form>
-          </Paper>
+          </Box>
         </Fade>
       )}
     </Container>
