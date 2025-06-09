@@ -4,10 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
   Box,
-  Paper,
   Typography,
-  TextField,
-  Button,
   Grid,
   CircularProgress,
   useTheme,
@@ -16,6 +13,10 @@ import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation
 import { ClientFormData } from '../../types/client';
 import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
+
+// Импорты UI компонентов
+import { TextField } from '../../components/ui/TextField';
+import { Button } from '../../components/ui/Button';
 
 /**
  * Схема валидации для формы клиента
@@ -120,7 +121,7 @@ const ClientFormPage: React.FC = () => {
 
   return (
     <Box sx={{ padding: SIZES.spacing.xl }}>
-      <Paper sx={cardStyles}>
+      <Box sx={cardStyles}>
         <Typography 
           variant="h5" 
           sx={{ 
@@ -225,7 +226,7 @@ const ClientFormPage: React.FC = () => {
             </Grid>
           </Grid>
         </form>
-      </Paper>
+      </Box>
     </Box>
   );
 };
