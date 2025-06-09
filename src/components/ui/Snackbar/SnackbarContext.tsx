@@ -90,9 +90,12 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {/* Отображаем только первое сообщение из очереди */}
       {messages[0] && (
         <Snackbar
-          message={messages[0]}
+          open={true}
+          message={messages[0].message}
+          severity={messages[0].type}
           onClose={() => removeMessage(messages[0].id)}
           anchorOrigin={messages[0].position || DEFAULT_POSITION}
+          autoHideDuration={messages[0].autoHideDuration || DEFAULT_AUTO_HIDE_DURATION}
         />
       )}
     </SnackbarContext.Provider>

@@ -30,7 +30,7 @@ export const SwitchSection = () => {
           <Switch
             label={`Переключатель ${checked ? 'включен' : 'выключен'}`}
             checked={checked}
-            onChange={setChecked}
+            onChange={(event, newChecked) => setChecked(newChecked)}
           />
         </Box>
 

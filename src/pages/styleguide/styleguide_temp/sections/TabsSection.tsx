@@ -8,8 +8,8 @@ import { Tabs } from '../../../../components/ui/Tabs';
 export const TabsSection: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<number>(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  const handleTabChange = (newValue: string | number) => {
+    setActiveTab(newValue as number);
   };
 
   const tabs = [

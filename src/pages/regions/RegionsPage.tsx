@@ -236,7 +236,10 @@ const RegionsPage: React.FC = () => {
       <Paper sx={{ 
         ...cardStyles,
         p: SIZES.spacing.md, 
-        mb: SIZES.spacing.lg 
+        mb: SIZES.spacing.lg,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
       }}>
         <Box sx={{ 
           display: 'flex', 
@@ -280,7 +283,12 @@ const RegionsPage: React.FC = () => {
       </Paper>
 
       {/* Таблица регионов */}
-      <Paper sx={cardStyles}>
+      <Paper sx={{
+        ...cardStyles,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        border: 'none'
+      }}>
         <TableContainer sx={tableStyles.tableContainer}>
           <Table>
             <TableHead sx={tableStyles.tableHead}>

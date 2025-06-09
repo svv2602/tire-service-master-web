@@ -9,12 +9,12 @@ export const TabsSection: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState<number>(0);
   const [activeVerticalTab, setActiveVerticalTab] = React.useState<number>(0);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
+  const handleTabChange = (newValue: string | number) => {
+    setActiveTab(newValue as number);
   };
 
-  const handleVerticalTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveVerticalTab(newValue);
+  const handleVerticalTabChange = (newValue: string | number) => {
+    setActiveVerticalTab(newValue as number);
   };
 
   const tabs = [

@@ -140,13 +140,13 @@ const ReviewsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleStatusFilterChange = (event: SelectChangeEvent<ReviewStatus | ''>) => {
-    setStatusFilter(event.target.value as ReviewStatus | '');
+  const handleStatusFilterChange = (value: string | number) => {
+    setStatusFilter(value as ReviewStatus | '');
     setPage(0);
   };
 
-  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
-    setServicePointId(event.target.value);
+  const handleServicePointChange = (value: string | number) => {
+    setServicePointId(value as string);
     setPage(0);
   };
 

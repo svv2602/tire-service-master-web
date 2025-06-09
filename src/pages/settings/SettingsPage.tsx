@@ -100,8 +100,8 @@ const SettingsPage: React.FC = () => {
   }, [settingsData]);
 
   // Обработчик изменения вкладки
-  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
+  const handleTabChange = (newValue: string | number) => {
+    setTabValue(newValue as number);
   };
 
   // Обработчик изменения текстовых полей
@@ -111,9 +111,16 @@ const SettingsPage: React.FC = () => {
   };
 
   // Обработчик изменения выпадающих списков
-  const handleSelectChange = (e: SelectChangeEvent<string | number>) => {
-    const { name, value } = e.target;
-    setSettings(prev => ({ ...prev, [name]: value }));
+  const handleCityChange = (value: string | number) => {
+    setSettings(prev => ({ ...prev, defaultCityId: value as string }));
+  };
+
+  const handleDateFormatChange = (value: string | number) => {
+    setSettings(prev => ({ ...prev, dateFormat: value as string }));
+  };
+
+  const handleTimeFormatChange = (value: string | number) => {
+    setSettings(prev => ({ ...prev, timeFormat: value as string }));
   };
 
   // Обработчик изменения переключателей
@@ -267,7 +274,7 @@ const SettingsPage: React.FC = () => {
                       name="defaultCityId"
                       value={settings.defaultCityId}
                       label="Город по умолчанию"
-                      onChange={handleSelectChange}
+                      onChange={handleCityChange}
                       displayEmpty
                     >
                       {Array.isArray(cities) ? cities.map(city => (
@@ -299,7 +306,7 @@ const SettingsPage: React.FC = () => {
                       name="dateFormat"
                       value={settings.dateFormat}
                       label="Формат даты"
-                      onChange={handleSelectChange}
+                      onChange={handleDateFormatChange}
                     >
                       <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
                       <MenuItem value="MM/DD/YYYY">MM/DD/YYYY</MenuItem>
@@ -312,7 +319,7 @@ const SettingsPage: React.FC = () => {
                       name="timeFormat"
                       value={settings.timeFormat}
                       label="Формат времени"
-                      onChange={handleSelectChange}
+                      onChange={handleTimeFormatChange}
                     >
                       <MenuItem value="24h">24-часовой (14:30)</MenuItem>
                       <MenuItem value="12h">12-часовой (2:30 PM)</MenuItem>

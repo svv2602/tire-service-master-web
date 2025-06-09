@@ -21,11 +21,11 @@ export interface TabProps extends Omit<MuiTabProps, 'value'> {
 }
 
 /** Пропсы для Tabs */
-export interface TabsProps extends Omit<MuiTabsProps, 'children'> {
+export interface TabsProps extends Omit<MuiTabsProps, 'children' | 'onChange'> {
   /** Текущее значение */
   value: string | number;
   /** Колбэк изменения вкладки */
-  onChange: (event: React.SyntheticEvent, value: string | number) => void;
+  onChange: (value: string | number, event?: React.SyntheticEvent) => void;
   /** Список вкладок */
   tabs: TabProps[];
   /** Вариант отображения */
@@ -115,7 +115,7 @@ export const Tabs: React.FC<TabsProps> = ({
   ...props
 }) => {
   const handleChange = (event: React.SyntheticEvent, newValue: string | number) => {
-    onChange(event, newValue);
+    onChange(newValue, event);
   };
 
   return (

@@ -22,7 +22,7 @@ export interface SelectOption {
 /** Пропсы селекта */
 export interface SelectProps extends Omit<MuiSelectProps, 'onChange'> {
   /** Опции */
-  options: SelectOption[];
+  options?: SelectOption[];
   /** Лейбл */
   label?: string;
   /** Текст подсказки */
@@ -37,6 +37,8 @@ export interface SelectProps extends Omit<MuiSelectProps, 'onChange'> {
   errorText?: string;
   /** Полная ширина */
   fullWidth?: boolean;
+  /** Дочерние элементы (альтернатива options) */
+  children?: React.ReactNode;
 }
 
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
@@ -75,6 +77,7 @@ export const Select: React.FC<SelectProps> = ({
   error = false,
   errorText,
   fullWidth = false,
+  children,
   ...props
 }) => {
   const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
@@ -101,7 +104,7 @@ export const Select: React.FC<SelectProps> = ({
         label={label}
         {...props}
       >
-        {options.map((option) => (
+        {children || options?.map((option) => (
           <MenuItem
             key={option.value}
             value={option.value}
