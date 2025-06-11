@@ -297,8 +297,7 @@ const PartnerFormPage: React.FC = () => {
     validateOnBlur: true,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        console.log('Сохранение партнера:', isEdit ? 'обновление' : 'создание');
-        console.log('Исходные значения формы:', values);
+        // Подготавливаем данные для отправки
         
         // Подготавливаем данные в формате, ожидаемом API
         const submitData: PartnerFormData = {
@@ -331,20 +330,16 @@ const PartnerFormPage: React.FC = () => {
           };
         }
 
-        console.log('Подготовленные данные для отправки:', submitData);
-
         if (isEdit && id) {
-          const result = await updatePartner({ 
+          await updatePartner({ 
             id: parseInt(id), 
             partner: submitData 
           }).unwrap();
-          console.log('Результат обновления:', result);
           setSuccessMessage('Партнер успешно обновлен');
           setTimeout(() => navigate('/partners'), 1500);
         } else {
           // Оборачиваем данные в объект partner при создании нового партнера
-          const result = await createPartner({ partner: submitData }).unwrap();
-          console.log('Результат создания:', result);
+          await createPartner({ partner: submitData }).unwrap();
           setSuccessMessage('Партнер успешно создан');
           setTimeout(() => navigate('/partners'), 1500);
         }
@@ -367,7 +362,6 @@ const PartnerFormPage: React.FC = () => {
   // Обработчик изменения региона
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
     const newRegionId = event.target.value;
-    console.log('Изменение региона:', newRegionId);
     
     formik.setFieldValue('region_id', newRegionId);
     formik.setFieldValue('city_id', '');
@@ -375,16 +369,13 @@ const PartnerFormPage: React.FC = () => {
     if (newRegionId && newRegionId !== '') {
       setSelectedRegionId(Number(newRegionId));
     } else {
-      console.log('Регион сброшен');
       setSelectedRegionId(undefined);
-      console.log('Город сброшен');
     }
   };
 
   // Обработчик изменения города
   const handleCityChange = (event: SelectChangeEvent<string>) => {
     const newCityId = event.target.value;
-    console.log('Изменение города:', newCityId);
     formik.setFieldValue('city_id', newCityId);
   };
 
@@ -858,151 +849,6 @@ const PartnerFormPage: React.FC = () => {
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
                 </Button>
               </Box>
-              {/* Временная отладочная информация для создания партнера */}
-              {!isEdit && process.env.NODE_ENV === 'development' && (
-                <Box sx={{ 
-                  mt: SIZES.spacing.md, 
-                  p: SIZES.spacing.md, 
-                  bgcolor: 'grey.100', 
-                  borderRadius: SIZES.borderRadius.md 
-                }}>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    Отладка создания партнера:
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isValid: {formik.isValid.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isLoading: {isLoading.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isEdit: {isEdit.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    user данные: {JSON.stringify(formik.values.user, null, 2)}
-                  </Typography>
-                  {Object.keys(formik.errors).length > 0 && (
-                    <Typography 
-                      variant="caption" 
-                      display="block" 
-                      color="error"
-                      sx={{ fontSize: SIZES.fontSize.sm }}
-                    >
-                      Ошибки: {JSON.stringify(formik.errors, null, 2)}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-              {/* Отладочная информация для редактирования партнера */}
-              {isEdit && process.env.NODE_ENV === 'development' && (
-                <Box sx={{ 
-                  mt: SIZES.spacing.md, 
-                  p: SIZES.spacing.md, 
-                  bgcolor: 'blue.50', 
-                  borderRadius: SIZES.borderRadius.md 
-                }}>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    Отладка редактирования партнера:
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isValid: {formik.isValid.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isLoading: {isLoading.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    isEdit: {isEdit.toString()}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    partner ID: {id}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    region_id: {formik.values.region_id || 'пусто'}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    city_id: {formik.values.city_id || 'пусто'}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    selectedRegionId: {selectedRegionId || 'не выбран'}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    доступно городов: {citiesData?.data?.length || 0}
-                  </Typography>
-                  <Typography 
-                    variant="caption" 
-                    display="block"
-                    sx={{ fontSize: SIZES.fontSize.sm }}
-                  >
-                    user данные: {JSON.stringify(formik.values.user, null, 2)}
-                  </Typography>
-                  {Object.keys(formik.errors).length > 0 && (
-                    <Typography 
-                      variant="caption" 
-                      display="block" 
-                      color="error"
-                      sx={{ fontSize: SIZES.fontSize.sm }}
-                    >
-                      Ошибки: {JSON.stringify(formik.errors, null, 2)}
-                    </Typography>
-                  )}
-                </Box>
-              )}
             </Grid>
           </Grid>
         </Paper>
