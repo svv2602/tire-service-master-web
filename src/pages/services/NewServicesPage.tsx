@@ -1,72 +1,85 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import {
   Box,
-  CardContent,
   Typography,
+  Button,
+  TextField,
   InputAdornment,
+  Paper,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   IconButton,
-  Grid,
-  Skeleton,
-  DialogContentText,
+  Tooltip,
+  Chip,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TablePagination,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Clear as ClearIcon,
+  Category as CategoryIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  CalendarToday as CalendarTodayIcon,
 } from '@mui/icons-material';
-import { useGetServiceCategoriesQuery, useDeleteServiceCategoryMutation } from '../../api/services.api';
+import { useNavigate } from 'react-router-dom';
+import {
+  useGetServiceCategoriesQuery,
+  useDeleteServiceCategoryMutation,
+} from '../../api/services.api';
 import { ServiceCategoryData } from '../../types/service';
+import Notification from '../../components/Notification';
 
-// Импорты UI компонентов
-import { Button } from '../../components/ui/Button';
-import { Card } from '../../components/ui/Card';
-import { TextField } from '../../components/ui/TextField';
-import { Chip } from '../../components/ui/Chip';
-import { Pagination } from '../../components/ui/Pagination';
-import { Alert } from '../../components/ui/Alert';
-import { Modal } from '../../components/ui/Modal';
-
-const PER_PAGE = 25;
+const PER_PAGE = 10;
 
 export const ServicesPage: React.FC = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<ServiceCategoryData | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
-  const { data: response, isLoading, error, isFetching, isUninitialized } = useGetServiceCategoriesQuery({
-    page,
+  const { 
+    data: response, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useGetServiceCategoriesQuery({
+    page: page + 1,
     per_page: PER_PAGE,
     query: searchQuery || undefined,
   });
 
-  console.log('🔍 NewServicesPage Debug - ПОЛНАЯ ИНФОРМАЦИЯ:', {
-    response,
-    isLoading,
-    error,
-    isFetching,
-    isUninitialized,
-    data: response?.data,
-    pagination: response?.pagination,
-    categories: response?.data?.length || 0,
-    queryParams: {
-      page,
-      per_page: PER_PAGE,
-      query: searchQuery || undefined,
-    }
-  });
+  const [deleteCategory] = useDeleteServiceCategoryMutation();
 
   const categories = response?.data || [];
-  const totalPages = response?.pagination ? Math.ceil(response.pagination.total_count / PER_PAGE) : 0;
-  const [deleteCategory] = useDeleteServiceCategoryMutation();
+  const totalCount = response?.pagination?.total_count || 0;
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setPage(1);
+    setPage(0);
   };
 
   const handleDeleteClick = (category: ServiceCategoryData) => {
@@ -80,19 +93,29 @@ export const ServicesPage: React.FC = () => {
         await deleteCategory(categoryToDelete.id).unwrap();
         setDeleteDialogOpen(false);
         setCategoryToDelete(null);
+        setNotification({
+          open: true,
+          message: 'Категория услуг успешно удалена',
+          severity: 'success',
+        });
+        refetch();
       } catch (error) {
         console.error('Ошибка при удалении категории:', error);
+        setNotification({
+          open: true,
+          message: 'Ошибка при удалении категории услуг',
+          severity: 'error',
+        });
       }
     }
   };
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setPage(1);
-  };
-
   const handleAddCategory = () => {
     navigate('/services/new');
+  };
+
+  const handleEditCategory = (categoryId: number) => {
+    navigate(`/services/${categoryId}/edit`);
   };
 
   if (error) {
@@ -108,9 +131,17 @@ export const ServicesPage: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Услуги и Категории
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3 
+      }}>
+        <Typography variant="h4" component="h1" sx={{ 
+          fontWeight: 600,
+          color: theme.palette.text.primary 
+        }}>
+          Категории услуг
         </Typography>
         <Button
           variant="contained"
@@ -134,154 +165,202 @@ export const ServicesPage: React.FC = () => {
                 <SearchIcon />
               </InputAdornment>
             ),
-            endAdornment: searchQuery && (
-              <InputAdornment position="end">
-                <IconButton onClick={clearSearch} size="small">
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
           }}
         />
       </Box>
 
-      {/* Список категорий */}
-      {isLoading ? (
-        <Grid container spacing={3}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card sx={{
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                border: 'none'
-              }}>
-                <CardContent>
-                  <Skeleton variant="text" height={32} />
-                  <Skeleton variant="text" height={20} sx={{ mt: 1 }} />
-                  <Skeleton variant="text" height={20} sx={{ mt: 1 }} />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      ) : categories.length === 0 ? (
-        <Card sx={{
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          border: 'none'
-        }}>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h6" color="text.secondary">
-              {searchQuery ? 'Категории услуг не найдены' : 'Категории услуг отсутствуют'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {searchQuery ? 'Попробуйте изменить запрос' : 'Добавьте первую категорию услуг'}
-            </Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        <Grid container spacing={3}>
-          {categories.map((category) => (
-            <Grid item xs={12} sm={6} md={4} key={category.id}>
-              <Card sx={{ 
-                height: '100%', 
-                display: 'flex', 
-                flexDirection: 'column',
-                backgroundColor: 'transparent',
-                boxShadow: 'none',
-                border: 'none'
-              }}>
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Typography variant="h6" component="h2" sx={{ flexGrow: 1 }}>
-                      {category.name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <IconButton
-                        size="small"
-                        component={Link}
-                        to={`/services/${category.id}/edit`}
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteClick(category)}
-                        color="error"
-                        disabled={!!(category.services_count && category.services_count > 0)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
+      {/* Таблица */}
+      <Paper sx={{ overflow: 'hidden' }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CategoryIcon fontSize="small" />
+                    Название
                   </Box>
-
-                  {category.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      {category.description}
-                    </Typography>
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <Chip
-                      label={category.is_active ? 'Активна' : 'Неактивна'}
-                      color={category.is_active ? 'success' : 'default'}
-                      size="small"
-                    />
-                    <Chip
-                      label={`Услуг: ${category.services_count || 0}`}
-                      variant="outlined"
-                      size="small"
-                    />
+                </TableCell>
+                <TableCell>Описание</TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ToggleOnIcon fontSize="small" />
+                    Статус
                   </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
+                </TableCell>
+                <TableCell>Количество услуг</TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CalendarTodayIcon fontSize="small" />
+                    Дата создания
+                  </Box>
+                </TableCell>
+                <TableCell align="center">
+                  Действия
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : categories.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      {searchQuery ? 'Категории не найдены' : 'Категории услуг отсутствуют'}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                categories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell>
+                      <Typography variant="body1" fontWeight={500}>
+                        {category.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ 
+                          maxWidth: 200,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {category.description || '—'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={category.is_active ? 'Активна' : 'Неактивна'}
+                        color={category.is_active ? 'success' : 'default'}
+                        size="small"
+                        icon={category.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {category.services_count || 0}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary">
+                        {category.created_at 
+                          ? new Date(category.created_at).toLocaleDateString('ru-RU')
+                          : '—'
+                        }
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        <Tooltip title="Редактировать">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditCategory(category.id)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Удалить">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteClick(category)}
+                            disabled={!!(category.services_count && category.services_count > 0)}
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Пагинация */}
-      {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Pagination
-            count={totalPages}
+        {/* Пагинация */}
+        {totalCount > 0 && (
+          <TablePagination
+            component="div"
+            count={totalCount}
             page={page}
-            onChange={(newPage: number) => setPage(newPage)}
-            color="primary"
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={PER_PAGE}
+            onRowsPerPageChange={() => {}} // Фиксированное количество строк
+            rowsPerPageOptions={[PER_PAGE]}
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}–${to} из ${count !== -1 ? count : `больше чем ${to}`}`
+            }
+            labelRowsPerPage="Строк на странице:"
+            sx={{
+              borderTop: `1px solid ${theme.palette.divider}`,
+              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                color: theme.palette.text.secondary,
+              },
+            }}
           />
-        </Box>
-      )}
+        )}
+      </Paper>
 
-      {/* Модальное окно подтверждения удаления */}
-      <Modal
+      {/* Диалог подтверждения удаления */}
+      <Dialog
         open={deleteDialogOpen}
         onClose={() => {
           setDeleteDialogOpen(false);
           setCategoryToDelete(null);
         }}
-        title="Удалить категорию услуг"
-        maxWidth={400}
-        actions={
-          <>
-            <Button
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setCategoryToDelete(null);
-              }}
-            >
-              Отмена
-            </Button>
-            <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-              Удалить
-            </Button>
-          </>
-        }
+        maxWidth="sm"
+        fullWidth
       >
-        <DialogContentText>
-          Вы уверены, что хотите удалить категорию "{categoryToDelete?.name}"?
-        </DialogContentText>
-      </Modal>
+        <DialogTitle>Удалить категорию услуг</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите удалить категорию "{categoryToDelete?.name}"?
+          </Typography>
+          {categoryToDelete?.services_count && categoryToDelete.services_count > 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              В этой категории есть услуги. Удаление невозможно.
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setCategoryToDelete(null);
+            }}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={!!(categoryToDelete?.services_count && categoryToDelete.services_count > 0)}
+          >
+            Удалить
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
     </Box>
   );
 };
+
+export default ServicesPage;
