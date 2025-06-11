@@ -1,7 +1,13 @@
 import type { Service, ServicesResponse, ServiceFormData, ServiceCategoryFormData } from '../types/service';
 import type { ServiceCategory } from '../types/models';
-import { ApiResponse } from '../types/models';
+import { ApiResponse, PaginationFilter } from '../types/models';
 import { baseApi } from './baseApi';
+
+// Интерфейс для фильтров категорий услуг
+interface ServiceCategoryFilter extends PaginationFilter {
+  query?: string;
+  active?: boolean;
+}
 
 // Расширяем baseApi вместо создания нового
 export const servicesApi = baseApi.injectEndpoints({
@@ -46,8 +52,20 @@ export const servicesApi = baseApi.injectEndpoints({
     }),
 
     // Категории услуг
-    getServiceCategories: builder.query<ApiResponse<ServiceCategory[]>, void>({
-      query: () => 'service_categories',
+    getServiceCategories: builder.query<ApiResponse<ServiceCategory>, ServiceCategoryFilter>({
+      query: (params = {}) => {
+        console.log('🔍 services.api.ts getServiceCategories params:', params);
+        const queryResult = {
+          url: 'service_categories',
+          params,
+        };
+        console.log('🔍 services.api.ts getServiceCategories query result:', queryResult);
+        return queryResult;
+      },
+      transformResponse: (response: any) => {
+        console.log('🔍 services.api.ts getServiceCategories response:', response);
+        return response;
+      },
       providesTags: ['ServiceCategory'],
     }),
 

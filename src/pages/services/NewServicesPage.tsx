@@ -17,7 +17,7 @@ import {
   Delete as DeleteIcon,
   Clear as ClearIcon,
 } from '@mui/icons-material';
-import { useGetServiceCategoriesQuery, useDeleteServiceCategoryMutation } from '../../api/serviceCategories.api';
+import { useGetServiceCategoriesQuery, useDeleteServiceCategoryMutation } from '../../api/services.api';
 import { ServiceCategoryData } from '../../types/service';
 
 // Импорты UI компонентов
@@ -38,10 +38,26 @@ export const ServicesPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<ServiceCategoryData | null>(null);
 
-  const { data: response, isLoading, error } = useGetServiceCategoriesQuery({
+  const { data: response, isLoading, error, isFetching, isUninitialized } = useGetServiceCategoriesQuery({
     page,
     per_page: PER_PAGE,
     query: searchQuery || undefined,
+  });
+
+  console.log('🔍 NewServicesPage Debug - ПОЛНАЯ ИНФОРМАЦИЯ:', {
+    response,
+    isLoading,
+    error,
+    isFetching,
+    isUninitialized,
+    data: response?.data,
+    pagination: response?.pagination,
+    categories: response?.data?.length || 0,
+    queryParams: {
+      page,
+      per_page: PER_PAGE,
+      query: searchQuery || undefined,
+    }
   });
 
   const categories = response?.data || [];
@@ -61,7 +77,7 @@ export const ServicesPage: React.FC = () => {
   const handleDeleteConfirm = async () => {
     if (categoryToDelete) {
       try {
-        await deleteCategory(categoryToDelete.id.toString()).unwrap();
+        await deleteCategory(categoryToDelete.id).unwrap();
         setDeleteDialogOpen(false);
         setCategoryToDelete(null);
       } catch (error) {

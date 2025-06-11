@@ -119,6 +119,7 @@ export interface ServiceCategory extends BaseModel {
   name: string;
   description?: string;
   is_active: boolean;
+  services_count?: number;
 }
 
 // Модель услуги

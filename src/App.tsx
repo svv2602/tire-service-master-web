@@ -21,7 +21,7 @@ import ServicePointFormPageNew from './pages/service-points/ServicePointFormPage
 import ServicePointDetailPage from './pages/service-points/ServicePointDetailPage';
 import ServicePointPhotosPage from './pages/service-points/ServicePointPhotosPage';
 import ServicePointServicesPage from './pages/service-points/ServicePointServicesPage';
-import ServicesPage from './pages/services/ServicesPage';
+import { ServicesPage } from './pages/services/NewServicesPage';
 import ServiceFormPage from './pages/services/ServiceFormPage';
 import ClientsPage from './pages/clients/ClientsPage';
 import ClientFormPage from './pages/clients/ClientFormPage';
