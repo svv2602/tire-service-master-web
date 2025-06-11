@@ -1,7 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQuery } from './baseQuery';
+import { baseApi } from './baseApi';
 import type { User, UserFormData } from '../types/user';
-import { getRoleFromId, getRoleId } from '../utils/roles.utils';
+import { getRoleFromId } from '../utils/roles.utils';
 
 export interface ApiUser {
   id: number;
@@ -51,10 +50,7 @@ export interface UsersQueryParams {
 
 // Функция перенесена в utils/roles.utils.ts
 
-export const usersApi = createApi({
-  reducerPath: 'usersApi',
-  baseQuery,
-  tagTypes: ['User'],
+export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<UsersResponse, UsersQueryParams>({
       query: (params = {}) => ({

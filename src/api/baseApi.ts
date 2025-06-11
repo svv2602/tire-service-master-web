@@ -79,11 +79,11 @@ export const baseApi = createApi({
         
         // Пытаемся получить детали ошибки из ответа
         const errorData = isJson ? await response.json() : await response.text();
-        throw {
+        throw new Error(JSON.stringify({
           status: response.status,
           data: errorData,
           message: `Ошибка ${response.status}: ${response.statusText}`
-        };
+        }));
       }
 
       return isJson ? response.json() : response.text();
@@ -103,6 +103,7 @@ export const baseApi = createApi({
     'Service',
     'ServiceCategory',
     'Settings',
+    'User',
     'ClientCars',
     'Schedule',
     'ServicePointPhoto',
