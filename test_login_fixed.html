@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправленного логина</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 10px 5px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #1976d2; color: white; }
+        .success { background: #4caf50; color: white; }
+        .danger { background: #f44336; color: white; }
+        .info { background: #2196f3; color: white; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success { background: #e8f5e8; color: #2e7d32; }
+        .result.error { background: #ffebee; color: #c62828; }
+        .result.info { background: #e3f2fd; color: #1565c0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Тест исправленного логина</h1>
+        <p>Проверяем работу аутентификации с исправленной структурой запроса: <code>{"auth":{"login":"...","password":"..."}}</code></p>
+        
+        <div class="section">
+            <h3>1. Тест API напрямую</h3>
+            <button class="primary" onclick="testLoginAPI()">Тест с test@test.com</button>
+            <button class="info" onclick="testLoginAPIAdmin()">Тест с admin@test.com</button>
+            <button class="danger" onclick="testWrongCredentials()">Тест неверных данных</button>
+            <div id="api-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>2. Текущее состояние localStorage</h3>
+            <button class="info" onclick="checkLocalStorage()">Проверить localStorage</button>
+            <button class="danger" onclick="clearAuth()">Очистить данные</button>
+            <div id="storage-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>3. Тест доступа к admin API</h3>
+            <p>После успешного логина проверим доступ к защищенным эндпойнтам</p>
+            <button class="success" onclick="testUsersAPI()">Тест /users</button>
+            <button class="success" onclick="testClientsAPI()">Тест /clients</button>
+            <div id="admin-result"></div>
+        </div>
+        
+        <div class="section">
+            <h3>4. Быстрые действия</h3>
+            <button class="primary" onclick="openLogin()">Открыть страницу логина</button>
+            <button class="success" onclick="openDashboard()">Открыть dashboard</button>
+            <button class="info" onclick="openUsers()">Открыть управление пользователями</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const FRONTEND_BASE = 'http://localhost:3008';
+        const TOKEN_KEY = 'tvoya_shina_auth_token';
+        const USER_KEY = 'tvoya_shina_user';
+        
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : 'success';
+            element.innerHTML = `<div class="result ${className}">[${timestamp}] ${JSON.stringify(data, null, 2)}</div>`;
+        }
+        
+        async function testLoginAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: { 
+                            login: 'test@test.com', 
+                            password: 'test123' 
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Сохраняем токен в формате, ожидаемом frontend
+                    localStorage.setItem(TOKEN_KEY, data.tokens.access);
+                    localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    
+                    showResult('api-result', {
+                        success: true,
+                        message: data.message,
+                        user: data.user,
+                        tokenSaved: !!localStorage.getItem(TOKEN_KEY),
+                        tokenPreview: data.tokens.access.substring(0, 20) + '...'
+                    });
+                } else {
+                    showResult('api-result', { error: data }, true);
+                }
+            } catch (error) {
+                showResult('api-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testLoginAPIAdmin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: { 
+                            login: 'admin@test.com', 
+                            password: 'admin123' 
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem(TOKEN_KEY, data.tokens.access);
+                    localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    
+                    showResult('api-result', {
+                        success: true,
+                        message: data.message,
+                        user: data.user,
+                        adminInfo: data.admin_info,
+                        tokenSaved: !!localStorage.getItem(TOKEN_KEY)
+                    });
+                } else {
+                    showResult('api-result', { error: data }, true);
+                }
+            } catch (error) {
+                showResult('api-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testWrongCredentials() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: { 
+                            login: 'wrong@test.com', 
+                            password: 'wrongpassword' 
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                showResult('api-result', {
+                    status: response.status,
+                    expectedError: true,
+                    data: data
+                }, !response.ok);
+            } catch (error) {
+                showResult('api-result', { error: error.message }, true);
+            }
+        }
+        
+        function checkLocalStorage() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            const refreshToken = localStorage.getItem('tvoya_shina_refresh_token');
+            
+            showResult('storage-result', {
+                hasToken: !!token,
+                hasUser: !!user,
+                hasRefreshToken: !!refreshToken,
+                tokenPreview: token ? token.substring(0, 20) + '...' : null,
+                user: user ? JSON.parse(user) : null,
+                allKeys: Object.keys(localStorage).filter(key => key.includes('tvoya_shina'))
+            });
+        }
+        
+        function clearAuth() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem('tvoya_shina_refresh_token');
+            showResult('storage-result', { message: 'Все данные аутентификации очищены' });
+        }
+        
+        async function testUsersAPI() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                showResult('admin-result', { error: 'Сначала войдите в систему!' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/users?page=1&per_page=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                showResult('admin-result', {
+                    endpoint: '/users',
+                    success: response.ok,
+                    status: response.status,
+                    count: data.data?.length || 0,
+                    total: data.pagination?.total_count || 'N/A'
+                });
+            } catch (error) {
+                showResult('admin-result', { error: error.message }, true);
+            }
+        }
+        
+        async function testClientsAPI() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) {
+                showResult('admin-result', { error: 'Сначала войдите в систему!' }, true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/clients?page=1&per_page=5`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                showResult('admin-result', {
+                    endpoint: '/clients',
+                    success: response.ok,
+                    status: response.status,
+                    count: data.data?.length || 0,
+                    total: data.pagination?.total_count || 'N/A'
+                });
+            } catch (error) {
+                showResult('admin-result', { error: error.message }, true);
+            }
+        }
+        
+        function openLogin() {
+            window.open(`${FRONTEND_BASE}/login`, '_blank');
+        }
+        
+        function openDashboard() {
+            window.open(`${FRONTEND_BASE}/dashboard`, '_blank');
+        }
+        
+        function openUsers() {
+            window.open(`${FRONTEND_BASE}/users`, '_blank');
+        }
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLocalStorage();
+        });
+    </script>
+</body>
+</html>
