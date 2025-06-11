@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { getCurrentUser, setInitialized, logout } from '../../store/authSlice';
+import { getCurrentUser, setInitialized, logout } from '../../store/slices/authSlice';
 import { apiClient } from '../../api';
 import config from '../../config';
 import { logAuthDiagnostic, checkAuthState } from '../../utils/authMonitor';

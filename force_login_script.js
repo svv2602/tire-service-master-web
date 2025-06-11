@@ -23,7 +23,7 @@ async function forceLoginAndClearCache() {
             },
             body: JSON.stringify({
                 auth: {
-                    email: 'admin@test.com',
+                    login: 'admin@test.com',
                     password: 'admin'
                 }
             })

@@ -1,25 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { 
-  baseApi,
-  usersApi
-} from '../api';
-import { authReducer } from './authSlice';
+import { baseApi } from '../api';
+import authReducer from './slices/authSlice';
 
 export const store = configureStore({
   reducer: {
-    // Базовый API (включает в себя все injected endpoints)
+    // Базовый API (включает в себя все injected endpoints, включая users)
     [baseApi.reducerPath]: baseApi.reducer,
-    
-    // Отдельные API
-    [usersApi.reducerPath]: usersApi.reducer,
     
     // Обычные reducers
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
-      baseApi.middleware,
-      usersApi.middleware
+      baseApi.middleware
     ),
 });
 

@@ -103,8 +103,10 @@ export const responseErrorInterceptor = async (error: any) => {
       try {
         // Используем основной эндпойнт аутентификации
         const response = await axios.post('/api/v1/authenticate', {
-          email,
-          password
+          auth: {
+            login: email,
+            password
+          }
         });
 
         const { auth_token: newToken } = response.data;

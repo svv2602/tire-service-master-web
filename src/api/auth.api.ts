@@ -4,17 +4,13 @@ import config from '../config';
 // Типы
 interface LoginRequest {
   auth: {
-    email: string;
+    login: string;
     password: string;
   };
 }
 
 interface LoginResponse {
-  auth_token: string;
-  token: string;
-  refresh_token: string;
-  token_type: string;
-  expires_in: number;
+  message: string;
   user: {
     id: number;
     email: string;
@@ -25,16 +21,23 @@ interface LoginResponse {
     role: string;
     last_login?: string;
     is_active: boolean;
-    email_verified: boolean;
-    phone_verified: boolean;
-    created_at: string;
-    updated_at: string;
+    email_verified?: boolean;
+    phone_verified?: boolean;
+    created_at?: string;
+    updated_at?: string;
     profile?: {
       position?: string;
       access_level: number;
     };
   };
-  message: string;
+  tokens: {
+    access: string;
+    refresh: string;
+  };
+  admin_info?: {
+    role_permissions: string[];
+    last_login: string;
+  };
 }
 
 interface CurrentUserResponse {
@@ -72,13 +75,13 @@ export const authApi = baseApi.injectEndpoints({
         try {
           const { data } = await queryFulfilled;
           
-          // Сохраняем токены в localStorage
-          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.auth_token || data.token);
+          // Сохраняем токены в localStorage (новая структура backend)
+          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.tokens.access);
           localStorage.setItem('tvoya_shina_user', JSON.stringify(data.user));
           
           // Сохраняем refresh token если есть
-          if (data.refresh_token) {
-            localStorage.setItem('tvoya_shina_refresh_token', data.refresh_token);
+          if (data.tokens.refresh) {
+            localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
           }
           
           console.log('✅ Данные аутентификации сохранены в localStorage');
@@ -110,10 +113,10 @@ export const authApi = baseApi.injectEndpoints({
           const { data } = await queryFulfilled;
           
           // Сохраняем новые токены
-          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.auth_token || data.token);
+          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.tokens.access);
           
-          if (data.refresh_token) {
-            localStorage.setItem('tvoya_shina_refresh_token', data.refresh_token);
+          if (data.tokens.refresh) {
+            localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
           }
           
           console.log('✅ Токен успешно обновлен');

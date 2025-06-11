@@ -48,7 +48,7 @@ async function testServiceDeletion() {
     };
 
     const loginData = JSON.stringify({
-      email: 'admin@test.com',
+      login: 'admin@test.com',
       password: 'admin'
     });
 

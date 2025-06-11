@@ -35,7 +35,7 @@ async function testServicePointsAPI() {
         console.log('4. Тест аутентификации:');
         const loginResponse = await axios.post(`${API_BASE}/api/v1/auth/login`, {
             auth: {
-                email: 'test@test.com',
+                login: 'test@test.com',
                 password: 'password'
             }
         });

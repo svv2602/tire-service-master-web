@@ -156,27 +156,27 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/api/v1/auth/login', { auth: { email, password }});
-      localStorage.setItem(STORAGE_KEY, response.data.auth_token);
+      const response = await apiClient.post('/api/v1/auth/login', { auth: { login: email, password }});
+      localStorage.setItem(STORAGE_KEY, response.data.tokens.access);
       
       // Приведение возвращаемого пользователя к типу User
       const user: User = {
         id: response.data.user.id.toString(),
         email: response.data.user.email,
         phone: response.data.user.phone || '',
-        role_id: response.data.user.role_id,
+        role_id: response.data.user.role_id || 1, // Fallback если нет role_id
         first_name: response.data.user.first_name || '',
         last_name: response.data.user.last_name || '',
         role: response.data.user.role,
         is_active: response.data.user.is_active,
-        email_verified: response.data.user.email_verified,
-        phone_verified: response.data.user.phone_verified,
+        email_verified: response.data.user.email_verified || false,
+        phone_verified: response.data.user.phone_verified || false,
         created_at: response.data.user.created_at || new Date().toISOString(),
         updated_at: response.data.user.updated_at || new Date().toISOString()
       };
       
       return {
-        auth_token: response.data.auth_token,
+        auth_token: response.data.tokens.access, // Используем новую структуру
         user
       };
     } catch (error: any) {
