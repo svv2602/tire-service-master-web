@@ -9,7 +9,7 @@
  * - Использование централизованной системы стилей для консистентного дизайна
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -88,12 +88,13 @@ export const ServiceFormPage: React.FC = () => {
    */
   const formik = useFormik<ServiceCategoryFormData>({
     initialValues: {
-      name: '',
-      description: '',
-      is_active: true,
-      sort_order: 0,
+      name: category?.name || '',
+      description: category?.description || '',
+      is_active: category?.is_active ?? true,
+      sort_order: category?.sort_order || 0,
     },
     validationSchema,
+    enableReinitialize: true, // Автоматически перезагружает значения при изменении initialValues
     onSubmit: async (values) => {
       try {
         setSubmitError('');
@@ -108,21 +109,6 @@ export const ServiceFormPage: React.FC = () => {
       }
     },
   });
-
-  /**
-   * Эффект для заполнения формы данными при редактировании
-   * Срабатывает при загрузке данных категории
-   */
-  useEffect(() => {
-    if (category) {
-      formik.setValues({
-        name: category.name || '',
-        description: category.description || '',
-        is_active: category.is_active,
-        sort_order: category.sort_order || 0,
-      });
-    }
-  }, [category, formik]);
 
   // Состояние загрузки для режима редактирования
   if (isEditing && isLoading) {

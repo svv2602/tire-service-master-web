@@ -1,8 +1,6 @@
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Service, ServiceFormData, ServicesResponse } from '../types/service';
+import { Service, ServiceFormData } from '../types/service';
 import { ApiResponse, PaginationFilter } from '../types/models';
-import { transformPaginatedResponse } from './apiUtils';
 
 interface ServiceFilter extends PaginationFilter {
   query?: string;
@@ -86,44 +84,35 @@ export const servicesApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Полностью переделанный метод для удаления услуг
     deleteService: build.mutation<void, { categoryId: string; id: string }>({
-      queryFn: async (arg, _queryApi, _extraOptions, baseQuery) => {
-        const { categoryId, id } = arg;
+      query: ({ categoryId, id }) => {
+        // Принудительно преобразуем в строки для предотвращения [object Object]
+        const catId = String(categoryId);
+        const servId = String(id);
         
-        console.log('ПОЛНАЯ ОТЛАДКА УДАЛЕНИЯ:');
-        console.log('- categoryId:', categoryId);
-        console.log('- serviceId:', id);
+        console.log('🔍 RTK DELETE Query - Input params:', { categoryId, id });
+        console.log('🔍 RTK DELETE Query - After String conversion:', { catId, servId });
+        console.log('🔍 RTK DELETE Query - Types:', { 
+          categoryIdType: typeof categoryId, 
+          idType: typeof id,
+          catIdType: typeof catId,
+          servIdType: typeof servId
+        });
         
-        // Проверяем, что оба параметра есть и они строки
-        if (typeof categoryId !== 'string' || typeof id !== 'string') {
-          console.error('Неверные типы параметров:', { categoryId, id });
-          return { error: { status: 400, data: 'Неверные параметры запроса', error: 'Bad Request' } };
+        const url = `service_categories/${catId}/services/${servId}`;
+        console.log('🔍 RTK DELETE Query - Final URL:', url);
+        
+        // Проверяем на наличие [object Object] в URL
+        if (url.includes('[object') || url.includes('undefined') || url.includes('null')) {
+          console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Неправильный URL!', { url, categoryId, id, catId, servId });
+          throw new Error(`Некорректный URL для удаления: ${url}`);
         }
         
-        try {
-          const hardcodedUrl = `service_categories/${categoryId}/services/${id}`;
-          console.log('Используем URL:', hardcodedUrl);
-          
-          // Используем baseQuery для выполнения запроса
-          const result = await baseQuery({
-            url: hardcodedUrl,
-            method: 'DELETE'
-          });
-          
-          console.log('Результат запроса:', result);
-          
-          if (result.error) {
-            return { error: result.error };
-          }
-          
-          return { data: undefined };
-        } catch (error) {
-          console.error('Ошибка при выполнении запроса:', error);
-          return { error: { status: 500, data: 'Ошибка при выполнении запроса', error: String(error) } };
-        }
+        return {
+          url,
+          method: 'DELETE',
+        };
       },
-      // Инвалидация кэша по тегам
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Service' as const, id },
         'Service',

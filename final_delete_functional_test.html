@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Финальный тест удаления услуги</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .step { margin: 20px 0; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; }
+        .success { background: #d4edda; border-left-color: #28a745; color: #155724; }
+        .error { background: #f8d7da; border-left-color: #dc3545; color: #721c24; }
+        .info { background: #d1ecf1; border-left-color: #17a2b8; color: #0c5460; }
+        .warning { background: #fff3cd; border-left-color: #ffc107; color: #856404; }
+        button { padding: 12px 24px; margin: 10px 5px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+        .progress { width: 100%; height: 20px; background: #e9ecef; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-bar { height: 100%; background: #007bff; transition: width 0.3s ease; }
+        h1 { color: #333; text-align: center; margin-bottom: 30px; }
+        h3 { color: #495057; border-bottom: 2px solid #dee2e6; padding-bottom: 5px; }
+        .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+        .stat { text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { color: #6c757d; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Финальный тест удаления услуги</h1>
+        
+        <div class="step info">
+            <h3>📋 План тестирования:</h3>
+            <ol>
+                <li><strong>Подготовка:</strong> Авторизация и получение текущего количества услуг</li>
+                <li><strong>Выбор цели:</strong> Определение услуги для удаления</li>
+                <li><strong>Удаление:</strong> Выполнение DELETE запроса</li>
+                <li><strong>Проверка:</strong> Подтверждение успешного удаления</li>
+                <li><strong>Результат:</strong> Финальная статистика</li>
+            </ol>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progress" style="width: 0%"></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="initial-count">-</div>
+                <div class="stat-label">Услуг до теста</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="final-count">-</div>
+                <div class="stat-label">Услуг после теста</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="deleted-count">0</div>
+                <div class="stat-label">Удалено услуг</div>
+            </div>
+        </div>
+
+        <div class="step">
+            <button onclick="runDeleteTest()" class="btn-primary" id="start-btn">🚀 Запустить тест удаления</button>
+            <button onclick="checkStatus()" class="btn-secondary">📊 Проверить статус</button>
+            <button onclick="resetTest()" class="btn-danger">🔄 Сброс</button>
+        </div>
+
+        <div id="test-results"></div>
+        
+        <h3>📝 Детальный лог тестирования:</h3>
+        <pre id="detailed-log"></pre>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        let totalSteps = 5;
+        let testResults = [];
+        let authToken = null;
+        let serviceToDelete = null;
+        let initialCount = 0;
+        let finalCount = 0;
+
+        function updateProgress() {
+            const percentage = (currentStep / totalSteps) * 100;
+            document.getElementById('progress').style.width = `${percentage}%`;
+        }
+
+        function addResult(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            testResults.push(logEntry);
+            
+            document.getElementById('detailed-log').textContent = testResults.join('\n');
+            
+            const resultsDiv = document.getElementById('test-results');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = `step ${type}`;
+            stepDiv.innerHTML = `<strong>Шаг ${currentStep}:</strong> ${message}`;
+            resultsDiv.appendChild(stepDiv);
+            
+            console.log(logEntry);
+        }
+
+        function updateStats() {
+            document.getElementById('initial-count').textContent = initialCount;
+            document.getElementById('final-count').textContent = finalCount;
+            document.getElementById('deleted-count').textContent = Math.max(0, initialCount - finalCount);
+        }
+
+        async function runDeleteTest() {
+            try {
+                document.getElementById('start-btn').disabled = true;
+                resetTest(false);
+                
+                // Шаг 1: Авторизация
+                currentStep = 1;
+                updateProgress();
+                addResult('🔐 Начинаем авторизацию...', 'info');
+                
+                const authResponse = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+
+                if (!authResponse.ok) {
+                    throw new Error(`Ошибка авторизации: ${authResponse.status}`);
+                }
+
+                const authData = await authResponse.json();
+                authToken = authData.tokens.access;
+                addResult(`✅ Авторизация успешна! Токен: ${authToken.substring(0, 30)}...`, 'success');
+
+                // Шаг 2: Получение начального количества услуг
+                currentStep = 2;
+                updateProgress();
+                addResult('📊 Получение списка услуг...', 'info');
+                
+                const servicesResponse = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!servicesResponse.ok) {
+                    throw new Error(`Ошибка получения услуг: ${servicesResponse.status}`);
+                }
+
+                const servicesData = await servicesResponse.json();
+                const services = servicesData.data;
+                initialCount = services.length;
+                updateStats();
+                
+                addResult(`📋 Получено ${services.length} услуг в категории 3`, 'success');
+
+                if (services.length === 0) {
+                    addResult('⚠️ Нет услуг для удаления!', 'warning');
+                    return;
+                }
+
+                // Шаг 3: Выбор услуги для удаления
+                currentStep = 3;
+                updateProgress();
+                serviceToDelete = services[0];
+                addResult(`🎯 Выбрана услуга для удаления: "${serviceToDelete.name}" (ID: ${serviceToDelete.id})`, 'info');
+
+                // Шаг 4: Удаление услуги
+                currentStep = 4;
+                updateProgress();
+                addResult('🗑️ Выполняем удаление услуги...', 'info');
+                
+                // Симулируем логику RTK Query
+                const categoryId = '3';
+                const serviceId = String(serviceToDelete.id);
+                const deleteUrl = `http://localhost:8000/api/v1/service_categories/${categoryId}/services/${serviceId}`;
+                
+                addResult(`🔗 URL удаления: ${deleteUrl}`, 'info');
+                
+                const deleteResponse = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                addResult(`📡 Ответ сервера: ${deleteResponse.status} ${deleteResponse.statusText}`, 'info');
+
+                if (!deleteResponse.ok) {
+                    const errorText = await deleteResponse.text();
+                    throw new Error(`Ошибка удаления: ${deleteResponse.status} - ${errorText}`);
+                }
+
+                addResult('✅ Услуга успешно удалена!', 'success');
+
+                // Шаг 5: Проверка результата
+                currentStep = 5;
+                updateProgress();
+                addResult('🔍 Проверяем результат удаления...', 'info');
+                
+                const verifyResponse = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!verifyResponse.ok) {
+                    throw new Error(`Ошибка проверки: ${verifyResponse.status}`);
+                }
+
+                const verifyData = await verifyResponse.json();
+                const remainingServices = verifyData.data;
+                finalCount = remainingServices.length;
+                updateStats();
+                
+                const stillExists = remainingServices.find(s => s.id === serviceToDelete.id);
+                
+                if (stillExists) {
+                    addResult('❌ ОШИБКА: Услуга все еще существует!', 'error');
+                } else {
+                    addResult(`✅ ПОДТВЕРЖДЕНО: Услуга удалена. Осталось ${remainingServices.length} услуг`, 'success');
+                }
+
+                addResult(`🎉 ТЕСТ ЗАВЕРШЕН! Удалено услуг: ${initialCount - finalCount}`, 'success');
+
+            } catch (error) {
+                addResult(`❌ ОШИБКА: ${error.message}`, 'error');
+                console.error('Детали ошибки:', error);
+            } finally {
+                document.getElementById('start-btn').disabled = false;
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                addResult('📊 Проверяем текущий статус...', 'info');
+                
+                // Получаем токен заново
+                const authResponse = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+
+                const authData = await authResponse.json();
+                const token = authData.tokens.access;
+                
+                const servicesResponse = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const servicesData = await servicesResponse.json();
+                const currentCount = servicesData.data.length;
+                
+                addResult(`📈 Текущее количество услуг в категории 3: ${currentCount}`, 'info');
+                
+            } catch (error) {
+                addResult(`❌ Ошибка проверки статуса: ${error.message}`, 'error');
+            }
+        }
+
+        function resetTest(showMessage = true) {
+            currentStep = 0;
+            updateProgress();
+            testResults = [];
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('detailed-log').textContent = '';
+            
+            if (showMessage) {
+                addResult('🔄 Тест сброшен. Готов к новому запуску.', 'info');
+            }
+        }
+
+        // Инициализация
+        window.onload = function() {
+            addResult('🚀 Система тестирования удаления услуг готова к работе!', 'info');
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

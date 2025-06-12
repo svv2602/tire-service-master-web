@@ -43,7 +43,7 @@ export const servicesApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteService: builder.mutation<void, number>({
+    deleteServiceOld: builder.mutation<void, number>({
       query: (id) => ({
         url: `services/${id}`,
         method: 'DELETE',
@@ -110,7 +110,7 @@ export const {
   useGetServiceByIdQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
-  useDeleteServiceMutation,
+  useDeleteServiceOldMutation,
   useGetServiceCategoriesQuery,
   useGetServiceCategoryByIdQuery,
   useCreateServiceCategoryMutation,

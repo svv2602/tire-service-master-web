@@ -43,8 +43,6 @@ import {
   useUpdateServiceMutation,
   useDeleteServiceMutation,
 } from '../api/servicesList.api';
-// Импорт функции прямого вызова API для удаления услуги
-import { deleteService as directDeleteService } from '../api/directApi';
 import { Service, ServiceFormData } from '../types/service';
 
 const validationSchema = Yup.object({
@@ -54,10 +52,6 @@ const validationSchema = Yup.object({
     .max(100, 'Название не должно превышать 100 символов'),
   description: Yup.string()
     .max(500, 'Описание не должно превышать 500 символов'),
-  default_duration: Yup.number()
-    .required('Длительность обязательна')
-    .min(1, 'Длительность должна быть минимум 1 минута')
-    .max(1440, 'Длительность не должна превышать 1440 минут (24 часа)'),
   is_active: Yup.boolean(),
   sort_order: Yup.number().min(0, 'Порядок сортировки должен быть неотрицательным'),
 });
@@ -103,23 +97,28 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     initialValues: {
       name: '',
       description: '',
-      default_duration: 30,
+      default_duration: 30, // добавляем дефолтное значение
       is_active: true,
       sort_order: 0,
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
+        // Добавляем default_duration с дефолтным значением, если не указано
+        const cleanValues = { 
+          ...values,
+          default_duration: values.default_duration || 30 // обеспечиваем наличие значения
+        };
         if (selectedService) {
           await updateService({
             categoryId,
             id: selectedService.id.toString(),
-            data: values,
+            data: cleanValues,
           }).unwrap();
         } else {
           await createService({
             categoryId,
-            data: values,
+            data: cleanValues,
           }).unwrap();
         }
         handleCloseDialog();
@@ -149,7 +148,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       formik.setValues({
         name: service.name,
         description: service.description || '',
-        default_duration: service.default_duration,
+        default_duration: service.default_duration || 30, // добавляем default_duration
         is_active: service.is_active,
         sort_order: service.sort_order || 0,
       });
@@ -180,61 +179,54 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     setError(null);
   };
 
-  // ВНИМАНИЕ: Импортируем функцию для прямого удаления услуги
-  // В начале файла добавьте: import { deleteService as directDeleteService } from '../api/directApi';
-
-  // Обходное решение без RTK Query - прямое удаление без использования RTK
+  // Удаление услуги через RTK Query
   const handleDeleteService = async () => {
     if (!serviceToDelete) return;
 
     try {
-      // Печатаем информацию о попытке удаления
-      console.log('🗑️ ПРЯМОЕ УДАЛЕНИЕ УСЛУГИ БЕЗ RTK:');
-      console.log(`- Категория ID: ${categoryId}`);
-      console.log(`- Услуга ID: ${serviceToDelete.id}`);
-      console.log(`- Название услуги: ${serviceToDelete.name}`);
-      
-      // Попытка прямого удаления через fetch
-      const token = localStorage.getItem('tvoya_shina_token');
-      if (!token) {
-        throw new Error('Отсутствует токен авторизации');
-      }
-      
-      // Явное преобразование ID в строки
-      const catId = String(categoryId);
-      const serviceId = String(serviceToDelete.id);
-      
-      console.log('API вызов:', `http://localhost:8000/api/v1/service_categories/${catId}/services/${serviceId}`);
-      
-      // Выполняем запрос на удаление напрямую через fetch
-      const response = await fetch(`http://localhost:8000/api/v1/service_categories/${catId}/services/${serviceId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
+      console.log('🔍 FRONTEND: Исходные данные:', {
+        categoryIdProp: categoryId,
+        categoryIdType: typeof categoryId,
+        serviceToDelete: serviceToDelete,
+        serviceId: serviceToDelete.id,
+        serviceIdType: typeof serviceToDelete.id
       });
+
+      // Принудительно конвертируем в строки
+      const categoryIdStr = String(categoryId);
+      const serviceIdStr = String(serviceToDelete.id);
       
-      console.log('Статус ответа:', response.status, response.statusText);
+      console.log(`🗑️ Удаление услуги через RTK Query:`, {
+        categoryId: categoryIdStr,
+        serviceId: serviceIdStr,
+        serviceName: serviceToDelete.name,
+        categoryIdStrType: typeof categoryIdStr,
+        serviceIdStrType: typeof serviceIdStr
+      });
+
+      const deleteArgs = {
+        categoryId: categoryIdStr,
+        id: serviceIdStr,
+      };
       
-      if (!response.ok) {
-        let errorText = '';
-        try {
-          const errorData = await response.json();
-          errorText = JSON.stringify(errorData);
-        } catch (e) {
-          errorText = await response.text();
-        }
-        throw new Error(`Ошибка при удалении услуги: ${response.status} ${response.statusText} - ${errorText}`);
+      console.log('🔍 FRONTEND: Аргументы для deleteService:', deleteArgs);
+      console.log('🔍 FRONTEND: JSON.stringify аргументов:', JSON.stringify(deleteArgs));
+
+      // Проверяем аргументы перед вызовом
+      if (!deleteArgs.categoryId || !deleteArgs.id) {
+        throw new Error('Отсутствуют обязательные параметры categoryId или id');
       }
       
-      console.log('✅ Услуга успешно удалена!');
-      
-      // Закрываем диалог подтверждения
+      if (deleteArgs.categoryId.includes('[object') || deleteArgs.id.includes('[object')) {
+        throw new Error('Аргументы содержат [object Object]');
+      }
+
+      console.log('🚀 FRONTEND: Вызываем deleteService...');
+      const result = await deleteService(deleteArgs).unwrap();
+      console.log('✅ FRONTEND: Результат deleteService:', result);
+
+      console.log('✅ Услуга успешно удалена через RTK Query!');
       handleCloseDeleteDialog();
-      
-      // Обновляем список услуг
-      window.location.reload(); // Временное решение для обновления списка
     } catch (error: any) {
       console.error('❌ Ошибка при удалении услуги:', error);
       let errorMessage = 'Произошла ошибка при удалении услуги';
@@ -508,7 +500,6 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 helperText={formik.touched.name && formik.errors.name}
                 sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
-              
               <TextField
                 fullWidth
                 id="description"
@@ -523,22 +514,6 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 helperText={formik.touched.description && formik.errors.description}
                 sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
               />
-
-              <TextField
-                fullWidth
-                id="default_duration"
-                name="default_duration"
-                label="Длительность (в минутах)"
-                type="number"
-                value={formik.values.default_duration}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.default_duration && Boolean(formik.errors.default_duration)}
-                helperText={formik.touched.default_duration && formik.errors.default_duration}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-                inputProps={{ min: 1, max: 1440 }}
-              />
-
               <TextField
                 fullWidth
                 id="sort_order"
@@ -553,7 +528,6 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                 sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
                 inputProps={{ min: 0 }}
               />
-
               <FormControlLabel
                 control={
                   <Switch

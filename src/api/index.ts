@@ -90,3 +90,9 @@ export {
 
 // Экспортируем только базовый API из baseApi
 export { baseApi } from './baseApi';
+
+// Экспортируем правильную мутацию удаления услуг из servicesList.api.ts
+export {
+  useGetServicesByCategoryIdQuery,
+  useDeleteServiceMutation,
+} from './servicesList.api';

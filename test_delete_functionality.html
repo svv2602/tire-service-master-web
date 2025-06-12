@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Финальный тест удаления услуг</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #b8daff; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Финальный тест удаления услуг</h1>
+    
+    <div id="status-container"></div>
+    
+    <div>
+        <button class="btn-primary" onclick="checkAuth()">1. Проверить авторизацию</button>
+        <button class="btn-primary" onclick="listServices()">2. Получить список услуг</button>
+        <button class="btn-danger" onclick="testDeleteService()">3. Тест удаления услуги</button>
+        <button class="btn-success" onclick="runFullTest()">🚀 Полный тест</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+        let authToken = null;
+        let servicesList = [];
+        
+        function addStatus(message, type = 'info') {
+            const container = document.getElementById('status-container');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            container.appendChild(div);
+            console.log(`[${type}] ${message}`);
+        }
+        
+        function addResult(title, content) {
+            const container = document.getElementById('results');
+            const div = document.createElement('div');
+            div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+            container.appendChild(div);
+        }
+        
+        async function checkAuth() {
+            try {
+                addStatus('Проверка авторизации...', 'info');
+                
+                // Проверяем существующий токен
+                authToken = localStorage.getItem('tvoya_shina_token') || 
+                           localStorage.getItem('tvoya_shina_auth_token') || 
+                           localStorage.getItem('token');
+                
+                if (authToken) {
+                    addStatus('Токен найден в localStorage', 'success');
+                    
+                    // Проверяем токен
+                    const response = await fetch(`${API_URL}/service_categories`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        addStatus('Токен действителен', 'success');
+                        return true;
+                    } else {
+                        addStatus('Токен недействителен, требуется новая авторизация', 'warning');
+                    }
+                }
+                
+                // Авторизуемся заново
+                addStatus('Выполняется авторизация...', 'info');
+                
+                const loginResponse = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                addResult('Ответ авторизации', JSON.stringify(loginData, null, 2));
+                
+                if (loginData.tokens && loginData.tokens.access) {
+                    authToken = loginData.tokens.access;
+                    localStorage.setItem('tvoya_shina_token', authToken);
+                    addStatus('✅ Авторизация успешна, токен сохранен', 'success');
+                    return true;
+                } else {
+                    addStatus('❌ Ошибка авторизации: токен не получен', 'error');
+                    return false;
+                }
+                
+            } catch (error) {
+                addStatus(`❌ Ошибка авторизации: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        async function listServices() {
+            try {
+                if (!authToken && !(await checkAuth())) {
+                    return;
+                }
+                
+                addStatus('Получение списка услуг категории 3...', 'info');
+                
+                const response = await fetch(`${API_URL}/service_categories/3/services`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                servicesList = await response.json();
+                addResult('Список услуг', JSON.stringify(servicesList, null, 2));
+                addStatus(`✅ Получено услуг: ${servicesList.length}`, 'success');
+                
+            } catch (error) {
+                addStatus(`❌ Ошибка получения услуг: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDeleteService() {
+            try {
+                if (!authToken && !(await checkAuth())) {
+                    return;
+                }
+                
+                if (servicesList.length === 0) {
+                    await listServices();
+                }
+                
+                if (servicesList.length === 0) {
+                    addStatus('❌ Нет услуг для тестирования удаления', 'error');
+                    return;
+                }
+                
+                const serviceToDelete = servicesList[servicesList.length - 1];
+                addStatus(`Подготовка к удалению услуги: "${serviceToDelete.name}" (ID: ${serviceToDelete.id})`, 'info');
+                
+                // Проверяем параметры как в React коде
+                const categoryId = '3';
+                const serviceId = String(serviceToDelete.id);
+                
+                addResult('Параметры удаления', JSON.stringify({
+                    categoryId,
+                    serviceId,
+                    categoryIdType: typeof categoryId,
+                    serviceIdType: typeof serviceId,
+                    originalServiceId: serviceToDelete.id,
+                    originalServiceIdType: typeof serviceToDelete.id
+                }, null, 2));
+                
+                // Формируем URL как в RTK Query
+                const deleteUrl = `${API_URL}/service_categories/${categoryId}/services/${serviceId}`;
+                addStatus(`URL для удаления: ${deleteUrl}`, 'info');
+                
+                // Проверяем URL на корректность
+                if (deleteUrl.includes('[object') || deleteUrl.includes('undefined') || deleteUrl.includes('null')) {
+                    addStatus(`❌ КРИТИЧЕСКАЯ ОШИБКА: Некорректный URL! ${deleteUrl}`, 'error');
+                    return;
+                }
+                
+                addStatus('✅ URL сформирован корректно', 'success');
+                
+                // Спрашиваем подтверждение
+                if (!confirm(`Удалить услугу "${serviceToDelete.name}"?`)) {
+                    addStatus('Удаление отменено пользователем', 'warning');
+                    return;
+                }
+                
+                addStatus('Выполняется DELETE запрос...', 'info');
+                
+                const deleteResponse = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                addResult('Ответ DELETE запроса', `Status: ${deleteResponse.status} ${deleteResponse.statusText}`);
+                
+                if (deleteResponse.ok) {
+                    addStatus('✅ Услуга успешно удалена!', 'success');
+                    
+                    // Проверяем удаление
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await listServices();
+                    
+                    const stillExists = servicesList.find(s => s.id === serviceToDelete.id);
+                    if (stillExists) {
+                        addStatus('❌ ПРОБЛЕМА: Услуга все еще существует в списке', 'error');
+                    } else {
+                        addStatus('✅ ПОДТВЕРЖДЕНО: Услуга удалена из списка', 'success');
+                    }
+                } else {
+                    const errorText = await deleteResponse.text();
+                    addStatus(`❌ Ошибка удаления: ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                addStatus(`❌ Ошибка при тестировании удаления: ${error.message}`, 'error');
+            }
+        }
+        
+        async function runFullTest() {
+            addStatus('🚀 Запуск полного теста...', 'info');
+            
+            const success1 = await checkAuth();
+            if (!success1) return;
+            
+            await listServices();
+            await testDeleteService();
+            
+            addStatus('🏁 Полный тест завершен', 'info');
+        }
+        
+        // Автоматически проверяем авторизацию при загрузке
+        checkAuth();
+    </script>
+</body>
+</html>

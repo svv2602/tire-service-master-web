@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор React удаления</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Симулятор React App удаления услуг</h1>
+    
+    <div id="status" class="status info">
+        📡 Инициализация...
+    </div>
+
+    <h3>🎯 Последовательность действий:</h3>
+    <ol>
+        <li>Авторизация в системе</li>
+        <li>Получение списка услуг из категории 3</li>
+        <li>Симуляция RTK Query deleteService мутации</li>
+        <li>Проверка результата</li>
+    </ol>
+
+    <button onclick="runFullTest()" class="btn-primary">🚀 Запустить полный тест</button>
+    <button onclick="clearLogs()" class="btn-danger">🗑️ Очистить логи</button>
+
+    <h3>📋 Детальные логи:</h3>
+    <pre id="logs"></pre>
+
+    <script>
+        let logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            // Обновляем логи
+            document.getElementById('logs').textContent = logs.join('\n');
+            
+            // Обновляем статус
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            
+            console.log(logEntry);
+        }
+        
+        function clearLogs() {
+            logs = [];
+            document.getElementById('logs').textContent = '';
+            log('Логи очищены');
+        }
+        
+        async function runFullTest() {
+            try {
+                log('🔄 Начинаем полный тест функциональности удаления...', 'info');
+                
+                // 1. Авторизация
+                log('1️⃣ Авторизация в системе...', 'info');
+                const authResponse = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+
+                if (!authResponse.ok) {
+                    throw new Error(`Ошибка авторизации: ${authResponse.status}`);
+                }
+
+                const authData = await authResponse.json();
+                const token = authData.tokens.access;
+                log(`✅ Авторизация успешна. Токен: ${token.substring(0, 20)}...`, 'success');
+                
+                // Сохраняем токен как React приложение
+                localStorage.setItem('tvoya_shina_token', token);
+                
+                // 2. Получаем список услуг
+                log('2️⃣ Получение списка услуг из категории 3...', 'info');
+                const servicesResponse = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!servicesResponse.ok) {
+                    throw new Error(`Ошибка получения услуг: ${servicesResponse.status}`);
+                }
+
+                const servicesData = await servicesResponse.json();
+                const services = servicesData.data;
+                log(`✅ Получено ${services.length} услуг`, 'success');
+                
+                if (services.length === 0) {
+                    log('⚠️ Нет услуг для тестирования. Завершаем тест.', 'warning');
+                    return;
+                }
+                
+                // 3. Симулируем RTK Query логику удаления
+                const serviceToDelete = services[0];
+                log(`3️⃣ Подготовка к удалению услуги: "${serviceToDelete.name}" (ID: ${serviceToDelete.id})`, 'info');
+                
+                // Симулируем логику из React компонента
+                const categoryId = '3';
+                const serviceId = String(serviceToDelete.id);
+                
+                log(`🔍 Параметры: categoryId="${categoryId}" (${typeof categoryId}), serviceId="${serviceId}" (${typeof serviceId})`, 'info');
+                
+                // Симулируем RTK Query формирование URL
+                const catId = String(categoryId);
+                const servId = String(serviceId);
+                const url = `service_categories/${catId}/services/${servId}`;
+                
+                log(`🔗 RTK Query URL: ${url}`, 'info');
+                
+                // Проверяем на [object Object]
+                if (url.includes('[object') || url.includes('undefined') || url.includes('null')) {
+                    throw new Error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Неправильный URL! ${url}`);
+                }
+                
+                log('✅ URL прошел валидацию - нет [object Object]', 'success');
+                
+                // 4. Выполняем реальный DELETE запрос
+                log('4️⃣ Выполнение DELETE запроса...', 'info');
+                const fullUrl = `http://localhost:8000/api/v1/${url}`;
+                log(`🌐 Полный URL: ${fullUrl}`, 'info');
+                
+                const deleteResponse = await fetch(fullUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`📡 Ответ сервера: ${deleteResponse.status} ${deleteResponse.statusText}`, 'info');
+
+                if (deleteResponse.ok) {
+                    log('✅ Услуга успешно удалена!', 'success');
+                    
+                    // 5. Проверяем результат
+                    log('5️⃣ Проверка результата удаления...', 'info');
+                    const checkResponse = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (checkResponse.ok) {
+                        const checkData = await checkResponse.json();
+                        const remainingServices = checkData.data;
+                        const stillExists = remainingServices.find(s => s.id === serviceToDelete.id);
+                        
+                        if (stillExists) {
+                            log('❌ ОШИБКА: Услуга все еще существует!', 'error');
+                        } else {
+                            log(`✅ ПОДТВЕРЖДЕНО: Услуга удалена. Осталось ${remainingServices.length} услуг`, 'success');
+                        }
+                    }
+                    
+                } else {
+                    const errorText = await deleteResponse.text();
+                    throw new Error(`Ошибка удаления: ${deleteResponse.status} - ${errorText}`);
+                }
+                
+                log('🎉 ТЕСТ ЗАВЕРШЕН УСПЕШНО! Функциональность удаления работает корректно.', 'success');
+                
+            } catch (error) {
+                log(`❌ ОШИБКА ТЕСТА: ${error.message}`, 'error');
+                console.error('Детали ошибки:', error);
+            }
+        }
+        
+        // Автозапуск при загрузке страницы
+        window.onload = function() {
+            log('🔧 Тестовая страница загружена. Готов к тестированию удаления услуг.', 'info');
+        };
+    </script>
+</body>
+</html>

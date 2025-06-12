@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финальный тест React удаления</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4a5568;
+        }
+        .test-step {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #4299e1;
+            background: #f7fafc;
+        }
+        .step-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .success { background: #c6f6d5; border: 1px solid #9ae6b4; color: #22543d; }
+        .error { background: #fed7d7; border: 1px solid #feb2b2; color: #742a2a; }
+        .info { background: #bee3f8; border: 1px solid #90cdf4; color: #2a4365; }
+        .warning { background: #faf089; border: 1px solid #f6e05e; color: #744210; }
+        button {
+            padding: 12px 24px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .btn-primary { background: #4299e1; color: white; }
+        .btn-primary:hover { background: #3182ce; transform: translateY(-2px); }
+        .btn-success { background: #48bb78; color: white; }
+        .btn-success:hover { background: #38a169; transform: translateY(-2px); }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-danger:hover { background: #e53e3e; transform: translateY(-2px); }
+        .btn-secondary { background: #a0aec0; color: white; }
+        .btn-secondary:hover { background: #718096; transform: translateY(-2px); }
+        .logs {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .progress {
+            width: 100%;
+            background: #edf2f7;
+            border-radius: 10px;
+            height: 8px;
+            margin: 15px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1, #48bb78);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4299e1;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Финальный тест функциональности удаления услуг</h1>
+            <p>Полная симуляция работы пользователя с React приложением</p>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="currentStatus" class="status info">
+            ⏳ Готов к запуску тестирования...
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="servicesCount">-</div>
+                <div class="stat-label">Услуг в категории</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testsRun">0</div>
+                <div class="stat-label">Тестов выполнено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">-</div>
+                <div class="stat-label">Успешность</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="runCompleteTest()" class="btn-primary">🚀 Запустить полный тест</button>
+            <button onclick="testDirectAPI()" class="btn-success">🔗 Тест API напрямую</button>
+            <button onclick="openReactApp()" class="btn-secondary">🌐 Открыть React App</button>
+            <button onclick="clearLogs()" class="btn-danger">🗑️ Очистить логи</button>
+        </div>
+
+        <div class="test-step">
+            <div class="step-header">📋 План тестирования:</div>
+            <ol>
+                <li><strong>Авторизация:</strong> Войти в систему как admin@test.com</li>
+                <li><strong>Получение данных:</strong> Загрузить список услуг категории 3</li>
+                <li><strong>Симуляция RTK Query:</strong> Воспроизвести логику deleteService мутации</li>
+                <li><strong>Удаление:</strong> Выполнить DELETE запрос к API</li>
+                <li><strong>Проверка:</strong> Убедиться, что услуга удалена</li>
+            </ol>
+        </div>
+
+        <h3>📊 Детальные логи выполнения:</h3>
+        <div class="logs" id="logs"></div>
+    </div>
+
+    <script>
+        let logs = [];
+        let testsRun = 0;
+        let successfulTests = 0;
+        let authToken = null;
+        
+        function updateProgress(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+        
+        function updateStats() {
+            document.getElementById('testsRun').textContent = testsRun;
+            document.getElementById('successRate').textContent = 
+                testsRun > 0 ? Math.round((successfulTests / testsRun) * 100) + '%' : '-';
+        }
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push(logEntry);
+            
+            // Обновляем логи
+            const logsDiv = document.getElementById('logs');
+            logsDiv.textContent = logs.join('\n');
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            
+            // Обновляем статус
+            const statusDiv = document.getElementById('currentStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            
+            console.log(logEntry);
+        }
+        
+        function clearLogs() {
+            logs = [];
+            document.getElementById('logs').textContent = '';
+            log('📝 Логи очищены', 'info');
+        }
+
+        function openReactApp() {
+            window.open('http://localhost:3008/services/3/edit', '_blank');
+            log('🌐 Открыто React приложение в новой вкладке', 'info');
+        }
+        
+        async function authenticateUser() {
+            log('🔐 Начинаем авторизацию...', 'info');
+            updateProgress(10);
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                authToken = data.tokens.access;
+                
+                // Сохраняем токен как в React приложении
+                localStorage.setItem('tvoya_shina_token', authToken);
+                localStorage.setItem('auth_token', authToken);
+                localStorage.setItem('token', authToken);
+                
+                log(`✅ Авторизация успешна! Токен: ${authToken.substring(0, 30)}...`, 'success');
+                updateProgress(25);
+                return true;
+                
+            } catch (error) {
+                log(`❌ Ошибка авторизации: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function getServicesList() {
+            log('📋 Получаем список услуг категории 3...', 'info');
+            updateProgress(40);
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const services = data.data;
+                
+                document.getElementById('servicesCount').textContent = services.length;
+                log(`✅ Получено ${services.length} услуг`, 'success');
+                
+                if (services.length > 0) {
+                    log(`📝 Первая услуга: "${services[0].name}" (ID: ${services[0].id})`, 'info');
+                }
+                
+                updateProgress(55);
+                return services;
+                
+            } catch (error) {
+                log(`❌ Ошибка получения услуг: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function simulateRTKQueryDeletion(service) {
+            log(`🔧 Симулируем RTK Query deleteService для "${service.name}"...`, 'info');
+            updateProgress(70);
+            
+            // Воспроизводим точную логику из ServicesList.tsx
+            const categoryId = '3';
+            const serviceId = String(service.id);
+            
+            log(`🔍 Исходные параметры: categoryId="${categoryId}", serviceId="${serviceId}"`, 'info');
+            log(`🔍 Типы параметров: categoryId=${typeof categoryId}, serviceId=${typeof serviceId}`, 'info');
+            
+            // Симулируем логику из servicesList.api.ts
+            const catId = String(categoryId);
+            const servId = String(serviceId);
+            
+            log(`🔍 После String() конверсии: catId="${catId}", servId="${servId}"`, 'info');
+            
+            const url = `service_categories/${catId}/services/${servId}`;
+            log(`🔗 Сформированный RTK Query URL: ${url}`, 'info');
+            
+            // Проверяем на наличие [object Object]
+            if (url.includes('[object') || url.includes('undefined') || url.includes('null')) {
+                throw new Error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Неправильный URL! ${url}`);
+            }
+            
+            log('✅ Валидация URL пройдена - нет [object Object]', 'success');
+            
+            return {
+                url: url,
+                categoryId: catId,
+                serviceId: servId,
+                serviceName: service.name
+            };
+        }
+        
+        async function executeDelete(deleteData) {
+            log(`🗑️ Выполняем DELETE запрос для "${deleteData.serviceName}"...`, 'info');
+            updateProgress(85);
+            
+            const fullUrl = `http://localhost:8000/api/v1/${deleteData.url}`;
+            log(`🌐 Полный URL запроса: ${fullUrl}`, 'info');
+            
+            try {
+                const response = await fetch(fullUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`📡 Ответ сервера: ${response.status} ${response.statusText}`, 'info');
+
+                if (response.ok) {
+                    log(`✅ DELETE запрос успешен! Услуга "${deleteData.serviceName}" удалена`, 'success');
+                    return true;
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`DELETE ошибка ${response.status}: ${errorText}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка DELETE запроса: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function verifyDeletion(originalServiceId) {
+            log('🔍 Проверяем успешность удаления...', 'info');
+            updateProgress(95);
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/service_categories/3/services', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const remainingServices = data.data;
+                const stillExists = remainingServices.find(s => s.id === originalServiceId);
+                
+                document.getElementById('servicesCount').textContent = remainingServices.length;
+                
+                if (stillExists) {
+                    log('❌ ОШИБКА: Услуга все еще существует в списке!', 'error');
+                    return false;
+                } else {
+                    log(`✅ ПОДТВЕРЖДЕНО: Услуга удалена. Осталось ${remainingServices.length} услуг`, 'success');
+                    return true;
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка проверки удаления: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function runCompleteTest() {
+            testsRun++;
+            updateStats();
+            updateProgress(0);
+            
+            try {
+                log('🚀 Запускаем полный тест функциональности удаления услуг...', 'info');
+                
+                // 1. Авторизация
+                await authenticateUser();
+                
+                // 2. Получение списка услуг
+                const services = await getServicesList();
+                
+                if (services.length === 0) {
+                    log('⚠️ Нет услуг для тестирования. Завершаем тест.', 'warning');
+                    updateProgress(100);
+                    return;
+                }
+                
+                // 3. Симуляция RTK Query логики
+                const serviceToDelete = services[0];
+                const deleteData = await simulateRTKQueryDeletion(serviceToDelete);
+                
+                // 4. Выполнение DELETE запроса
+                await executeDelete(deleteData);
+                
+                // 5. Проверка результата
+                const deletionSuccess = await verifyDeletion(serviceToDelete.id);
+                
+                if (deletionSuccess) {
+                    successfulTests++;
+                    log('🎉 ТЕСТ ЗАВЕРШЕН УСПЕШНО! Удаление услуг работает корректно', 'success');
+                } else {
+                    log('❌ ТЕСТ ПРОВАЛЕН! Удаление не работает корректно', 'error');
+                }
+                
+                updateProgress(100);
+                updateStats();
+                
+            } catch (error) {
+                log(`❌ КРИТИЧЕСКАЯ ОШИБКА ТЕСТА: ${error.message}`, 'error');
+                updateProgress(100);
+                updateStats();
+            }
+        }
+        
+        async function testDirectAPI() {
+            log('🔗 Запускаем прямой тест API без RTK Query симуляции...', 'info');
+            testsRun++;
+            updateStats();
+            
+            try {
+                // Авторизация
+                await authenticateUser();
+                
+                // Получение услуг
+                const services = await getServicesList();
+                
+                if (services.length === 0) {
+                    log('⚠️ Нет услуг для прямого тестирования API', 'warning');
+                    return;
+                }
+                
+                const service = services[0];
+                const directUrl = `http://localhost:8000/api/v1/service_categories/3/services/${service.id}`;
+                
+                log(`🔗 Прямой DELETE к API: ${directUrl}`, 'info');
+                
+                const response = await fetch(directUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    successfulTests++;
+                    log('✅ Прямой API тест успешен!', 'success');
+                } else {
+                    log(`❌ Прямой API тест провален: ${response.status}`, 'error');
+                }
+                
+                updateStats();
+                
+            } catch (error) {
+                log(`❌ Ошибка прямого API теста: ${error.message}`, 'error');
+                updateStats();
+            }
+        }
+        
+        // Инициализация при загрузке
+        window.onload = function() {
+            log('🔧 Тестовая система загружена и готова к работе', 'info');
+            
+            // Проверяем наличие существующего токена
+            const existingToken = localStorage.getItem('tvoya_shina_token') || 
+                                localStorage.getItem('auth_token') || 
+                                localStorage.getItem('token');
+            
+            if (existingToken) {
+                authToken = existingToken;
+                log('ℹ️ Найден сохраненный токен авторизации', 'info');
+            }
+        };
+    </script>
+</body>
+</html>

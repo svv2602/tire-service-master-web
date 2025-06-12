@@ -18,7 +18,7 @@ export interface Service {
 export interface ServiceFormData {
   name: string;
   description?: string;
-  default_duration: number;
+  default_duration: number; // сделано обязательным снова
   is_active: boolean;
   sort_order?: number;
 }
