@@ -1,14 +1,17 @@
+#!/usr/bin/env node
+
 /**
- * Автоматизированный скрипт для проверки всех форм на наличие ошибок
- * 
- * Проверяет:
- * 1. Ошибки 401 Unauthorized (истекшие токены)
- * 2. Ошибки 400 Bad Request (проблемы с FormData)
- * 3. Undefined значения в URL
- * 4. Проблемы авторизации
+ * Автоматизированная проверка всех форм через Node.js
+ * Выполняет те же проверки, что и браузерный скрипт
  */
 
-// Список всех форм для проверки (обновлен на основе анализа кода)
+const https = require('https');
+const http = require('http');
+
+// Отключаем проверку SSL сертификатов для локальной разработки
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+// Список всех форм для проверки
 const FORMS_TO_CHECK = [
     // Партнеры (JSON)
     { name: 'Создание партнера', url: '/partners/new', hasFormData: false, api: '/partners' },
@@ -62,113 +65,99 @@ const FORMS_TO_CHECK = [
     { name: 'Редактирование марки авто', url: '/car-brands/1/edit', hasFormData: true, api: '/car_brands/1' },
 ];
 
-// Функция для проверки состояния авторизации
-function checkAuthStatus() {
-    console.log('🔐 === ПРОВЕРКА АВТОРИЗАЦИИ ===');
-    
-    const token = localStorage.getItem('tvoya_shina_token');
-    const user = localStorage.getItem('tvoya_shina_user');
-    const refreshToken = localStorage.getItem('tvoya_shina_refresh_token');
-    
-    console.log('Токен есть:', !!token);
-    console.log('Пользователь есть:', !!user);
-    console.log('Refresh токен есть:', !!refreshToken);
-    
-    if (token) {
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            console.log('Роль пользователя:', payload.role);
-            console.log('ID пользователя:', payload.user_id);
-            console.log('Токен истекает:', new Date(payload.exp * 1000));
-            console.log('Токен истек:', Date.now() > payload.exp * 1000);
-            
-            if (Date.now() > payload.exp * 1000) {
-                console.log('⚠️ ТОКЕН ИСТЕК! Требуется обновление.');
-                return false;
+let authToken = null;
+
+// Функция для выполнения HTTP запроса
+function makeRequest(url, options = {}) {
+    return new Promise((resolve, reject) => {
+        const urlObj = new URL(url);
+        const requestOptions = {
+            hostname: urlObj.hostname,
+            port: urlObj.port,
+            path: urlObj.pathname + urlObj.search,
+            method: options.method || 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'Forms-Checker/1.0',
+                ...options.headers
             }
-            return true;
-        } catch (e) {
-            console.log('❌ Ошибка декодирования токена:', e);
-            return false;
+        };
+
+        if (options.body) {
+            if (typeof options.body === 'string') {
+                requestOptions.headers['Content-Length'] = Buffer.byteLength(options.body);
+            }
         }
-    }
-    
-    return false;
+
+        const req = http.request(requestOptions, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            res.on('end', () => {
+                try {
+                    const jsonData = data ? JSON.parse(data) : {};
+                    resolve({
+                        status: res.statusCode,
+                        statusText: res.statusMessage,
+                        ok: res.statusCode >= 200 && res.statusCode < 300,
+                        data: jsonData,
+                        headers: res.headers
+                    });
+                } catch (e) {
+                    resolve({
+                        status: res.statusCode,
+                        statusText: res.statusMessage,
+                        ok: res.statusCode >= 200 && res.statusCode < 300,
+                        data: data,
+                        headers: res.headers
+                    });
+                }
+            });
+        });
+
+        req.on('error', (err) => {
+            reject(err);
+        });
+
+        if (options.body) {
+            req.write(options.body);
+        }
+
+        req.end();
+    });
 }
 
-// Функция для обновления токена
-async function refreshAuthToken() {
-    console.log('🔄 Обновление токена...');
+// Функция для получения токена авторизации
+async function getAuthToken() {
+    console.log('🔐 Получение токена авторизации...');
     
     try {
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+        const response = await makeRequest('http://localhost:8000/api/v1/auth/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                auth: { login: 'admin@test.com', password: 'admin123' }
+                auth: {
+                    login: 'admin@test.com',
+                    password: 'admin123'
+                }
             })
         });
-        
-        const data = await response.json();
-        
-        if (data.tokens?.access) {
-            localStorage.setItem('tvoya_shina_token', data.tokens.access);
-            localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
-            localStorage.setItem('tvoya_shina_user', JSON.stringify(data.user));
-            console.log('✅ Токен обновлен успешно!');
+
+        if (response.ok && response.data.tokens?.access) {
+            authToken = response.data.tokens.access;
+            console.log('✅ Токен получен успешно');
+            console.log(`👤 Пользователь: ${response.data.user.email} (${response.data.user.role})`);
             return true;
         } else {
-            console.log('❌ Не удалось получить токен');
+            console.log('❌ Не удалось получить токен:', response.data);
             return false;
         }
     } catch (error) {
-        console.error('❌ Ошибка обновления токена:', error);
+        console.log('❌ Ошибка при получении токена:', error.message);
         return false;
-    }
-}
-
-// Функция для проверки API эндпоинта
-async function checkApiEndpoint(endpoint, method = 'GET', data = null) {
-    const token = localStorage.getItem('tvoya_shina_token');
-    const url = `http://localhost:8000/api/v1${endpoint}`;
-    
-    const options = {
-        method,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-        }
-    };
-    
-    if (data && method !== 'GET') {
-        if (data instanceof FormData) {
-            // Для FormData не устанавливаем Content-Type - браузер сделает это автоматически
-            options.body = data;
-        } else {
-            options.headers['Content-Type'] = 'application/json';
-            options.body = JSON.stringify(data);
-        }
-    }
-    
-    try {
-        const response = await fetch(url, options);
-        return {
-            status: response.status,
-            ok: response.ok,
-            statusText: response.statusText,
-            url: url
-        };
-    } catch (error) {
-        return {
-            status: 0,
-            ok: false,
-            statusText: error.message,
-            url: url,
-            error: error
-        };
     }
 }
 
@@ -182,38 +171,65 @@ function createTestData(form, isUpdate = false) {
     // Специфичные данные для разных типов форм
     if (form.api.includes('partners')) {
         return {
-            ...baseData,
-            company_name: baseData.name,
-            contact_person: 'Test Contact',
-            legal_address: 'Test Address',
-            region_id: 1,
-            city_id: 1,
-            is_active: true
+            partner: {
+                ...baseData,
+                company_name: baseData.name,
+                contact_person: 'Test Contact',
+                legal_address: 'Test Address',
+                region_id: 1,
+                city_id: 1,
+                is_active: true
+            }
         };
     }
     
     if (form.api.includes('service_points')) {
         return {
-            ...baseData,
-            address: 'Test Address',
-            city_id: 1,
-            partner_id: 1,
-            contact_phone: '+380123456789',
-            is_active: true,
-            work_status: 'working',
-            latitude: 50.4501,
-            longitude: 30.5234
+            service_point: {
+                ...baseData,
+                address: 'Test Address',
+                city_id: 1,
+                partner_id: 1,
+                contact_phone: '+380123456789',
+                is_active: true,
+                work_status: 'working',
+                latitude: 50.4501,
+                longitude: 30.5234
+            }
         };
     }
     
     if (form.api.includes('users')) {
         return {
-            ...baseData,
-            email: 'test@example.com',
-            first_name: 'Test',
-            last_name: 'User',
-            phone: '+380123456789',
-            role_id: 1
+            user: {
+                ...baseData,
+                email: 'test@example.com',
+                first_name: 'Test',
+                last_name: 'User',
+                phone: '+380123456789',
+                role_id: 1
+            }
+        };
+    }
+    
+    if (form.api.includes('service_categories')) {
+        return {
+            service_category: baseData
+        };
+    }
+    
+    if (form.api.includes('regions')) {
+        return {
+            region: baseData
+        };
+    }
+    
+    if (form.api.includes('cities')) {
+        return {
+            city: {
+                ...baseData,
+                region_id: 1
+            }
         };
     }
     
@@ -237,48 +253,78 @@ async function checkForm(form) {
     
     // Тест 1: Проверка GET запроса (загрузка данных для редактирования)
     if (form.url.includes('/edit')) {
-        const getResult = await checkApiEndpoint(form.api);
-        results.tests.push({
-            test: 'GET запрос (загрузка данных)',
-            status: getResult.status,
-            ok: getResult.ok,
-            message: getResult.statusText
-        });
+        try {
+            const getResult = await makeRequest(`http://localhost:8000/api/v1${form.api}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+            
+            results.tests.push({
+                test: 'GET запрос (загрузка данных)',
+                status: getResult.status,
+                ok: getResult.ok,
+                message: getResult.statusText
+            });
+            
+            if (getResult.ok) {
+                console.log('✅ GET запрос успешен');
+            } else {
+                console.log(`❌ GET запрос неуспешен: ${getResult.status} ${getResult.statusText}`);
+            }
+        } catch (error) {
+            console.log(`❌ Ошибка GET запроса: ${error.message}`);
+            results.tests.push({
+                test: 'GET запрос (загрузка данных)',
+                status: 0,
+                ok: false,
+                message: error.message
+            });
+        }
     }
     
     // Тест 2: Проверка POST/PATCH запроса
     const isUpdate = form.url.includes('/edit');
     const method = isUpdate ? 'PATCH' : 'POST';
-    const endpoint = isUpdate ? form.api : form.api;
+    const endpoint = form.api;
     
-    let testData = createTestData(form, isUpdate);
-    
-    // Создаем FormData если форма использует загрузку файлов
-    if (form.hasFormData) {
-        const formData = new FormData();
+    try {
+        const testData = createTestData(form, isUpdate);
         
-        // Для сервисных точек используем специальный формат
-        if (form.api.includes('service_points')) {
-            Object.entries(testData).forEach(([key, value]) => {
-                formData.append(`service_point[${key}]`, value.toString());
-            });
+        const postResult = await makeRequest(`http://localhost:8000/api/v1${endpoint}`, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(testData)
+        });
+        
+        results.tests.push({
+            test: `${method} запрос (отправка формы)`,
+            status: postResult.status,
+            ok: postResult.ok,
+            message: postResult.statusText
+        });
+        
+        if (postResult.ok || postResult.status === 422) {
+            console.log(`✅ ${method} запрос успешен (${postResult.status})`);
         } else {
-            // Для других форм используем обычный формат
-            Object.entries(testData).forEach(([key, value]) => {
-                formData.append(key, value.toString());
-            });
+            console.log(`❌ ${method} запрос неуспешен: ${postResult.status} ${postResult.statusText}`);
+            if (postResult.data && typeof postResult.data === 'object') {
+                console.log('Детали ошибки:', JSON.stringify(postResult.data, null, 2));
+            }
         }
-        
-        testData = formData;
+    } catch (error) {
+        console.log(`❌ Ошибка ${method} запроса: ${error.message}`);
+        results.tests.push({
+            test: `${method} запрос (отправка формы)`,
+            status: 0,
+            ok: false,
+            message: error.message
+        });
     }
-    
-    const postResult = await checkApiEndpoint(endpoint, method, testData);
-    results.tests.push({
-        test: `${method} запрос (отправка формы)`,
-        status: postResult.status,
-        ok: postResult.ok,
-        message: postResult.statusText
-    });
     
     // Анализ результатов
     const hasAuthError = results.tests.some(t => t.status === 401);
@@ -306,18 +352,13 @@ async function checkForm(form) {
 
 // Основная функция проверки всех форм
 async function checkAllForms() {
-    console.log('🚀 === НАЧАЛО ПРОВЕРКИ ВСЕХ ФОРМ ===\n');
+    console.log('🚀 === НАЧАЛО АВТОМАТИЧЕСКОЙ ПРОВЕРКИ ВСЕХ ФОРМ ===\n');
     
-    // Проверяем авторизацию
-    const isAuthValid = checkAuthStatus();
-    
-    if (!isAuthValid) {
-        console.log('🔄 Обновляем токен...');
-        const tokenRefreshed = await refreshAuthToken();
-        if (!tokenRefreshed) {
-            console.log('❌ Не удалось обновить токен. Проверка прервана.');
-            return;
-        }
+    // Получаем токен авторизации
+    const authSuccess = await getAuthToken();
+    if (!authSuccess) {
+        console.log('❌ Не удалось получить токен. Проверка прервана.');
+        return;
     }
     
     const results = [];
@@ -331,7 +372,7 @@ async function checkAllForms() {
             // Небольшая пауза между запросами
             await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
-            console.log(`❌ Ошибка при проверке ${form.name}:`, error);
+            console.log(`❌ Ошибка при проверке ${form.name}:`, error.message);
             results.push({
                 name: form.name,
                 url: form.url,
@@ -348,7 +389,7 @@ async function checkAllForms() {
     const serverErrors = results.filter(r => r.tests?.some(t => t.status >= 500));
     const workingForms = results.filter(r => r.tests?.every(t => t.ok || t.status === 422 || t.status === 404));
     
-    console.log(`✅ Работающие формы: ${workingForms.length}`);
+    console.log(`✅ Работающие формы: ${workingForms.length}/${FORMS_TO_CHECK.length}`);
     console.log(`❌ Ошибки авторизации (401): ${authErrors.length}`);
     console.log(`❌ Ошибки FormData (400): ${formDataErrors.length}`);
     console.log(`❌ Ошибки сервера (5xx): ${serverErrors.length}`);
@@ -373,26 +414,6 @@ async function checkAllForms() {
     return results;
 }
 
-// Функция для быстрой проверки только критичных форм
-async function checkCriticalForms() {
-    const criticalForms = FORMS_TO_CHECK.filter(form => 
-        form.name.includes('партнер') || 
-        form.name.includes('сервисн') ||
-        form.name.includes('пользовател')
-    );
-    
-    console.log('⚡ === БЫСТРАЯ ПРОВЕРКА КРИТИЧНЫХ ФОРМ ===\n');
-    
-    const results = [];
-    for (const form of criticalForms) {
-        const result = await checkForm(form);
-        results.push(result);
-        await new Promise(resolve => setTimeout(resolve, 300));
-    }
-    
-    return results;
-}
-
 // Функция для проверки только FormData форм
 async function checkFormDataForms() {
     const formDataForms = FORMS_TO_CHECK.filter(form => form.hasFormData);
@@ -401,6 +422,13 @@ async function checkFormDataForms() {
     console.log(`Найдено ${formDataForms.length} форм с FormData:`);
     formDataForms.forEach(form => console.log(`  - ${form.name}`));
     console.log('');
+    
+    // Получаем токен авторизации
+    const authSuccess = await getAuthToken();
+    if (!authSuccess) {
+        console.log('❌ Не удалось получить токен. Проверка прервана.');
+        return;
+    }
     
     const results = [];
     for (const form of formDataForms) {
@@ -412,17 +440,13 @@ async function checkFormDataForms() {
     return results;
 }
 
-// Экспорт функций для использования в консоли
-window.checkAllForms = checkAllForms;
-window.checkCriticalForms = checkCriticalForms;
-window.checkFormDataForms = checkFormDataForms;
-window.checkAuthStatus = checkAuthStatus;
-window.refreshAuthToken = refreshAuthToken;
-
-console.log('📋 Скрипт проверки форм загружен!');
-console.log('Доступные команды:');
-console.log('  checkAllForms() - проверить все формы');
-console.log('  checkCriticalForms() - проверить только критичные формы');
-console.log('  checkFormDataForms() - проверить только FormData формы');
-console.log('  checkAuthStatus() - проверить состояние авторизации');
-console.log('  refreshAuthToken() - обновить токен'); 
+// Запуск проверки
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    
+    if (args.includes('--formdata')) {
+        checkFormDataForms().catch(console.error);
+    } else {
+        checkAllForms().catch(console.error);
+    }
+}

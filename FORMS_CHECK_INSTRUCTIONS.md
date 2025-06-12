@@ -127,4 +127,4 @@ cd /path/to/api && tail -f log/development.log
 
 # Поиск ошибок авторизации
 grep -n "401\|Unauthorized\|JWT" log/development.log
-```
+``` 

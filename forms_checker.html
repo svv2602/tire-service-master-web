@@ -301,7 +301,7 @@
             const authErrors = results.filter(r => r.tests?.some(t => t.status === 401));
             const formDataErrors = results.filter(r => r.hasFormData && r.tests?.some(t => t.status === 400));
             const serverErrors = results.filter(r => r.tests?.some(t => t.status >= 500));
-            const workingForms = results.filter(r => r.tests?.every(t => t.ok || t.status === 422 || t.status === 404));
+            const workingForms = results.filter(r => r.tests?.every(t => t.ok || t.status === 422));
             
             summary.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
@@ -367,4 +367,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
