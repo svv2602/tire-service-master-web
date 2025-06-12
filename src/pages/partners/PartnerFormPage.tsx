@@ -64,14 +64,14 @@ interface FormUserData {
 
 interface FormValues {
   company_name: string;
-  company_description?: string;
-  contact_person?: string;
-  logo_url?: string;
-  website?: string;
-  tax_number?: string;
-  legal_address?: string;
-  region_id?: string;
-  city_id?: string;
+  company_description: string | undefined;
+  contact_person: string | undefined;
+  logo_url: string | undefined;
+  website: string | undefined;
+  tax_number: string | undefined;
+  legal_address: string | undefined;
+  region_id: string | undefined;
+  city_id: string | undefined;
   is_active: boolean;
   user: FormUserData | null;
 }
@@ -99,8 +99,9 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
   
   tax_number: yup.string()
     .nullable()
+    .transform((value) => (value === '' ? null : value))
     .test('tax-number-format', 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов', function(value) {
-      if (!value) return true; // Если поле пустое, то валидация проходит
+      if (!value) return true; // Если поле пустое или null, то валидация проходит
       return /^[0-9-]{8,15}$/.test(value);
     }),
   
@@ -188,66 +189,107 @@ const PartnerFormPage: React.FC = () => {
   const extractErrorMessage = (error: any): string => {
     if (!error) return 'Произошла неизвестная ошибка';
     
-    console.log('Полная информация об ошибке:', error);
+    // Если ошибка уже в нужном формате
+    if (typeof error === 'string') return error;
     
-    // Обрабатываем ошибки парсинга
-    if (error.status === 'PARSING_ERROR' && error.data) {
-      try {
-        // Пытаемся извлечь JSON из строки
-        const jsonMatch = error.data.match(/\{.*\}/);
-        if (jsonMatch) {
-          const parsedError = JSON.parse(jsonMatch[0]);
-          if (parsedError.errors) {
-            return extractErrorsFromObject(parsedError.errors);
-          }
-        }
-      } catch (parseError) {
-        console.error('Ошибка парсинга JSON:', parseError);
+    // Обрабатываем различные форматы ошибок
+    if (error.data) {
+      if (typeof error.data === 'string') {
+        return error.data;
       }
       
-      // Если не удалось распарсить, пытаемся извлечь читаемое сообщение
-      if (typeof error.data === 'string') {
-        // Ищем сообщения об ошибках в строке
-        if (error.data.includes('Email has already')) {
-          return 'Пользователь с таким email уже существует. Используйте другой email или войдите под существующим аккаунтом.';
-        }
-        return 'Ошибка обработки данных на сервере. Проверьте правильность заполнения формы.';
+      if (error.data.errors) {
+        return Object.entries(error.data.errors)
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+          .join('; ');
+      }
+      
+      if (error.data.message) {
+        return error.data.message;
       }
     }
     
-    // Проверяем различные форматы ошибок API
-    if (error.data?.message) return error.data.message;
-    if (error.data?.error) return error.data.error;
-    
-    if (error.data?.errors) {
-      return extractErrorsFromObject(error.data.errors);
+    if (error.error) {
+      return error.error;
     }
     
-    if (error.message) return error.message;
-    
-    return 'Ошибка при обработке запроса';
+    return 'Произошла неизвестная ошибка при обработке запроса';
   };
 
-  // Вспомогательная функция для извлечения ошибок из объекта
-  const extractErrorsFromObject = (errors: any): string => {
-    if (typeof errors === 'string') return errors;
-    
-    // Обрабатываем ошибки в формате { user: [...], partner: [...] }
-    if (errors.user || errors.partner) {
-      let errorMessages: string[] = [];
-      if (errors.user) {
-        errorMessages = [...errorMessages, ...errors.user];
-      }
-      if (errors.partner) {
-        errorMessages = [...errorMessages, ...errors.partner];
-      }
-      return errorMessages.join('; ');
+  // Функция для форматирования данных перед отправкой
+  const formatPartnerData = (values: FormValues): PartnerFormData => {
+    const formattedData: PartnerFormData = {
+      company_name: values.company_name,
+      company_description: values.company_description || undefined,
+      contact_person: values.contact_person || undefined,
+      logo_url: values.logo_url || undefined,
+      website: values.website || undefined,
+      tax_number: values.tax_number || undefined,
+      legal_address: values.legal_address,
+      region_id: values.region_id ? parseInt(values.region_id) : undefined,
+      city_id: values.city_id ? parseInt(values.city_id) : undefined,
+      is_active: values.is_active,
+    };
+
+    // Добавляем данные пользователя только при создании
+    if (!isEdit && values.user) {
+      formattedData.user_attributes = {
+        email: values.user.email,
+        phone: values.user.phone,
+        first_name: values.user.first_name,
+        last_name: values.user.last_name,
+        password: values.user.password || undefined,
+        role_id: getRoleId('partner'),
+      };
     }
-    
-    // Обрабатываем ошибки в формате { field1: [...], field2: [...] }
-    return Object.entries(errors)
-      .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-      .join('; ');
+
+    return formattedData;
+  };
+
+  // Обработчик отправки формы
+  const handleSubmit = async (values: FormValues) => {
+    try {
+      setApiError(null);
+      setSuccessMessage(null);
+      
+      const formattedData = formatPartnerData(values);
+      console.log('Отправляемые данные:', formattedData);
+      
+      if (isEdit && id) {
+        await updatePartner({ id: parseInt(id), partner: formattedData }).unwrap();
+        setSuccessMessage('Партнер успешно обновлен');
+      } else {
+        await createPartner({ partner: formattedData }).unwrap();
+        setSuccessMessage('Партнер успешно создан');
+      }
+      
+      // Возвращаемся на список после успешного сохранения
+      navigate('/partners');
+    } catch (error: any) {
+      console.error('Ошибка при сохранении партнера:', error);
+      
+      // Извлекаем сообщение об ошибке
+      let errorMessage = 'Произошла ошибка при сохранении';
+      
+      if (error.data?.errors) {
+        // Формируем читаемое сообщение из всех ошибок
+        const errorMessages = [];
+        for (const [key, messages] of Object.entries(error.data.errors)) {
+          if (Array.isArray(messages)) {
+            errorMessages.push(`${key}: ${messages.join(', ')}`);
+          } else if (typeof messages === 'string') {
+            errorMessages.push(`${key}: ${messages}`);
+          }
+        }
+        errorMessage = errorMessages.join('\n');
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      setApiError(errorMessage);
+    }
   };
 
   // Мемоизированные начальные значения
@@ -295,61 +337,7 @@ const PartnerFormPage: React.FC = () => {
     validationSchema: createValidationSchema(isEdit),
     validateOnChange: true,
     validateOnBlur: true,
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-        // Подготавливаем данные для отправки
-        
-        // Подготавливаем данные в формате, ожидаемом API
-        const submitData: PartnerFormData = {
-          company_name: values.company_name,
-          company_description: values.company_description || undefined,
-          contact_person: values.contact_person || undefined,
-          logo_url: values.logo_url || undefined,
-          website: values.website || undefined,
-          tax_number: values.tax_number || undefined,
-          legal_address: values.legal_address || undefined,
-          region_id: values.region_id ? Number(values.region_id) : undefined,
-          city_id: values.city_id ? Number(values.city_id) : undefined,
-          is_active: values.is_active
-        };
-        
-        // Добавляем пользовательские данные только при создании или если они определены
-        if (values.user && (!isEdit || Object.values(values.user).some(v => v))) {
-          submitData.user = {
-            email: values.user.email,
-            phone: values.user.phone || '',
-            first_name: values.user.first_name,
-            role_id: getRoleId('partner'),
-            last_name: values.user.last_name,
-            password: values.user.password || undefined,
-            // Добавляем обязательные поля, которых нет в форме
-            is_active: true,
-            role: 'operator', // Используем роль оператора для новых пользователей
-            email_verified: false,
-            phone_verified: false
-          };
-        }
-
-        if (isEdit && id) {
-          await updatePartner({ 
-            id: parseInt(id), 
-            partner: submitData 
-          }).unwrap();
-          setSuccessMessage('Партнер успешно обновлен');
-          setTimeout(() => navigate('/partners'), 1500);
-        } else {
-          // Оборачиваем данные в объект partner при создании нового партнера
-          await createPartner({ partner: submitData }).unwrap();
-          setSuccessMessage('Партнер успешно создан');
-          setTimeout(() => navigate('/partners'), 1500);
-        }
-      } catch (error) {
-        console.error('Ошибка при сохранении партнера:', error);
-        setApiError(extractErrorMessage(error));
-      } finally {
-        setSubmitting(false);
-      }
-    },
+    onSubmit: handleSubmit,
   });
 
   // Устанавливаем выбранный регион при загрузке данных партнера

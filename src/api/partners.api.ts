@@ -43,7 +43,7 @@ export const partnersApi = baseApi.injectEndpoints({
       query: ({ id, partner }) => ({
         url: `partners/${id}`,
         method: 'PATCH',
-        body: partner,
+        body: { partner },
       }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },
@@ -63,7 +63,7 @@ export const partnersApi = baseApi.injectEndpoints({
       query: ({ id, isActive }) => ({
         url: `partners/${id}/toggle_active`,
         method: 'PATCH',
-        body: { active: isActive },
+        body: { partner: { is_active: isActive } },
       }),
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },

@@ -147,7 +147,6 @@ const PartnerRow = React.memo(({
 
       <TableCell>
         <Chip
-          icon={partner.is_active ? <CheckIcon /> : <CloseIcon />}
           label={partner.is_active ? 'Активен' : 'Неактивен'}
           color={partner.is_active ? 'success' : 'error'}
           size="small"
@@ -170,15 +169,6 @@ const PartnerRow = React.memo(({
               size="small"
             >
               <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={partner.is_active ? 'Деактивировать' : 'Активировать'}>
-            <IconButton
-              onClick={() => onToggleStatus(partner)}
-              size="small"
-              color={partner.is_active ? 'error' : 'success'}
-            >
-              {partner.is_active ? <CloseIcon /> : <CheckIcon />}
             </IconButton>
           </Tooltip>
           <Tooltip title="Удалить">

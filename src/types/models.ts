@@ -214,16 +214,23 @@ export interface BookingFormData {
 
 export interface PartnerFormData {
   company_name: string;
-  company_description?: string;
-  contact_person?: string;
-  logo_url?: string;
-  website?: string;
-  tax_number?: string;
-  legal_address?: string;
+  company_description: string | undefined;
+  contact_person: string | undefined;
+  logo_url: string | undefined;
+  website: string | undefined;
+  tax_number: string | undefined;
+  legal_address: string | undefined;
   is_active: boolean;
-  region_id?: number;
-  city_id?: number;
-  user?: Omit<User, 'id' | 'created_at' | 'updated_at'> & { password?: string };
+  region_id: number | undefined;
+  city_id: number | undefined;
+  user_attributes?: {
+    email: string;
+    phone: string;
+    first_name: string;
+    last_name: string;
+    password?: string;
+    role_id?: number;
+  };
 }
 
 export interface CityFormData {
