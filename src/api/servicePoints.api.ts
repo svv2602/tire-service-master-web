@@ -55,7 +55,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
         url: '/service_points',
         params: {
           ...params,
-          include: 'city.region,working_hours,status'
+          include: 'city.region,working_hours,status,partner'
         }
       }),
       providesTags: (result) =>

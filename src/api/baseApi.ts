@@ -36,7 +36,9 @@ const baseQueryWithLogging = fetchBaseQuery({
       console.log(`⚠️ [${endpoint}] Токен отсутствует, запрос без авторизации`);
     }
     headers.set('Accept', 'application/json');
-    headers.set('Content-Type', 'application/json');
+    
+    // НЕ устанавливаем Content-Type для FormData - браузер сделает это автоматически
+    // Это важно для правильной обработки multipart/form-data на сервере
     console.log(`📡 [${endpoint}] Подготовка headers для ${type}`);
     return headers;
   },

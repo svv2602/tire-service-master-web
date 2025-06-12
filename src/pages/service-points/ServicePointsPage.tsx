@@ -511,7 +511,16 @@ const ServicePointsPage: React.FC = () => {
                   }}>
                     <Tooltip title="Редактировать">
                       <IconButton 
-                        onClick={() => navigate(`/partners/${servicePoint.partner_id}/service-points/${servicePoint.id}/edit`)}
+                        onClick={() => {
+                          // partner_id обязателен для сервисной точки
+                          const partnerId = servicePoint.partner_id || servicePoint.partner?.id;
+                          if (!partnerId) {
+                            console.error('КРИТИЧЕСКАЯ ОШИБКА: Сервисная точка без partner_id!', servicePoint);
+                            alert('Ошибка: Сервисная точка не связана с партнером. Обратитесь к администратору.');
+                            return;
+                          }
+                          navigate(`/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
+                        }}
                         size="small"
                         sx={{ 
                           color: theme.palette.primary.main,

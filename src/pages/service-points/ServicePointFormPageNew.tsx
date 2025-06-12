@@ -121,6 +121,15 @@ const ServicePointFormPageNew: React.FC = () => {
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
 
+  // Проверяем корректность данных
+  useEffect(() => {
+    if (isEditMode && !partnerId) {
+      console.error('ОШИБКА: Попытка редактирования сервисной точки без partnerId в URL');
+      alert('Ошибка: Некорректный URL для редактирования сервисной точки');
+      navigate('/service-points');
+    }
+  }, [isEditMode, partnerId, navigate]);
+
   // Нормализуем данные расписания (конвертируем строки в булевы значения)
   const normalizedWorkingHours = useMemo(() => {
     if (!isEditMode || !servicePoint?.working_hours) {
@@ -372,7 +381,7 @@ const ServicePointFormPageNew: React.FC = () => {
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
           await createServicePoint({
-            partnerId: partnerId || values.partner_id.toString(),
+            partnerId: partnerId || '1', // fallback на партнера с ID 1
             servicePoint: formData
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно создана');
