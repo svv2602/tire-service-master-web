@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid } from '@mui/material';
+import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 interface RichTextEditorProps {
@@ -17,7 +17,7 @@ interface RichTextEditorProps {
 interface ImageDialogProps {
   open: boolean;
   onClose: () => void;
-  onInsert: (url: string, alt: string) => void;
+  onInsert: (url: string, alt: string, title: string, width: string, height: string, alignment: string, float: string) => void;
 }
 
 interface TableDialogProps {
@@ -29,7 +29,7 @@ interface TableDialogProps {
 interface VideoDialogProps {
   open: boolean;
   onClose: () => void;
-  onInsert: (url: string) => void;
+  onInsert: (url: string, title: string, width: string, height: string, alignment: string) => void;
 }
 
 // Стилизованный контейнер для редактора
@@ -51,6 +51,67 @@ const StyledEditorContainer = styled(Box, {
     borderTopRightRadius: theme.shape.borderRadius,
     borderBottom: 'none',
     backgroundColor: theme.palette.background.paper,
+    padding: '12px 8px',
+    '& button': {
+      height: '32px',
+      width: '32px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      '&:hover': {
+        backgroundColor: theme.palette.action.hover,
+        '&::after': {
+          content: 'attr(aria-label)',
+          position: 'absolute',
+          bottom: '-30px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          color: '#fff',
+          padding: '4px 8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          whiteSpace: 'nowrap',
+          zIndex: 1000,
+        }
+      },
+    },
+    '& .ql-picker': {
+      height: '32px',
+    },
+    '& .ql-formats': {
+      marginRight: '12px',
+    },
+    '& .ql-stroke': {
+      stroke: theme.palette.text.primary,
+      strokeWidth: '1.5px',
+    },
+    '& .ql-fill': {
+      fill: theme.palette.text.primary,
+    },
+    '& .ql-picker-label': {
+      color: theme.palette.text.primary,
+      '&:hover': {
+        color: theme.palette.primary.main,
+      },
+    },
+    '& .ql-picker-options': {
+      backgroundColor: theme.palette.background.paper,
+      border: `1px solid ${theme.palette.divider}`,
+      boxShadow: theme.shadows[3],
+      padding: '8px',
+      borderRadius: theme.shape.borderRadius,
+    },
+    '& .ql-active': {
+      backgroundColor: `${theme.palette.action.selected} !important`,
+      '& .ql-stroke': {
+        stroke: theme.palette.primary.main,
+      },
+      '& .ql-fill': {
+        fill: theme.palette.primary.main,
+      },
+    },
   },
   '& .ql-editor': {
     padding: '16px',
@@ -149,12 +210,22 @@ const StyledEditorContainer = styled(Box, {
 const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) => {
   const [url, setUrl] = useState('');
   const [alt, setAlt] = useState('');
+  const [title, setTitle] = useState('');
+  const [width, setWidth] = useState('');
+  const [height, setHeight] = useState('');
+  const [alignment, setAlignment] = useState('');
+  const [float, setFloat] = useState('');
 
   const handleInsert = () => {
     if (url) {
-      onInsert(url, alt);
+      onInsert(url, alt, title, width, height, alignment, float);
       setUrl('');
       setAlt('');
+      setTitle('');
+      setWidth('');
+      setHeight('');
+      setAlignment('');
+      setFloat('');
       onClose();
     }
   };
@@ -176,11 +247,69 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) =>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Альтернативный текст"
+              label="Альтернативный текст (alt)"
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
-              placeholder="Описание изображения"
+              placeholder="Описание изображения для SEO и доступности"
+              helperText="Важно для SEO и доступности"
             />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Заголовок (title)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Заголовок при наведении"
+              helperText="Отображается при наведении на изображение"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Ширина (px или %)"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              placeholder="например: 500px или 100%"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Высота (px или auto)"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="например: 300px или auto"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <FormControl fullWidth>
+              <InputLabel>Выравнивание</InputLabel>
+              <Select
+                value={alignment}
+                onChange={(e) => setAlignment(e.target.value)}
+                label="Выравнивание"
+              >
+                <MenuItem value="">Нет</MenuItem>
+                <MenuItem value="left">По левому краю</MenuItem>
+                <MenuItem value="center">По центру</MenuItem>
+                <MenuItem value="right">По правому краю</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={6}>
+            <FormControl fullWidth>
+              <InputLabel>Обтекание</InputLabel>
+              <Select
+                value={float}
+                onChange={(e) => setFloat(e.target.value)}
+                label="Обтекание"
+              >
+                <MenuItem value="">Нет</MenuItem>
+                <MenuItem value="left">Слева</MenuItem>
+                <MenuItem value="right">Справа</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
       </DialogContent>
@@ -244,11 +373,19 @@ const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) =>
 
 const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) => {
   const [url, setUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [width, setWidth] = useState('640');
+  const [height, setHeight] = useState('360');
+  const [alignment, setAlignment] = useState('');
 
   const handleInsert = () => {
     if (url) {
-      onInsert(url);
+      onInsert(url, title, width, height, alignment);
       setUrl('');
+      setTitle('');
+      setWidth('640');
+      setHeight('360');
+      setAlignment('');
       onClose();
     }
   };
@@ -267,6 +404,49 @@ const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) =>
               placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX"
               helperText="Поддерживаются ссылки YouTube, Vimeo и другие"
             />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Заголовок (title)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Заголовок видео для SEO"
+              helperText="Важно для SEO и доступности"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Ширина (px или %)"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              placeholder="например: 640"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Высота (px)"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              placeholder="например: 360"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <FormControl fullWidth>
+              <InputLabel>Выравнивание</InputLabel>
+              <Select
+                value={alignment}
+                onChange={(e) => setAlignment(e.target.value)}
+                label="Выравнивание"
+              >
+                <MenuItem value="">Нет</MenuItem>
+                <MenuItem value="left">По левому краю</MenuItem>
+                <MenuItem value="center">По центру</MenuItem>
+                <MenuItem value="right">По правому краю</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
         </Grid>
       </DialogContent>
@@ -295,17 +475,51 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   
+  // Состояние для переключения между режимами редактирования
+  const [isHtmlMode, setIsHtmlMode] = useState(false);
+  const [htmlContent, setHtmlContent] = useState('');
+  
   // Quill Reference
   const quillRef = useRef<ReactQuill>(null);
 
   // Обработчики для расширенных функций
-  const handleImageInsert = (url: string, alt: string) => {
+  const handleImageInsert = (
+    url: string, 
+    alt: string, 
+    title: string, 
+    width: string, 
+    height: string, 
+    alignment: string, 
+    float: string
+  ) => {
     const editor = quillRef.current?.getEditor();
     if (editor) {
       const range = editor.getSelection(true);
-      editor.insertEmbed(range.index, 'image', url);
-      // Добавляем атрибут alt, если поддерживается
-      editor.formatText(range.index, 1, { alt: alt });
+      
+      // Создаем стили для изображения
+      let imageStyles = '';
+      if (width) imageStyles += `width: ${width};`;
+      if (height) imageStyles += `height: ${height};`;
+      
+      // Добавляем выравнивание
+      if (alignment) {
+        if (alignment === 'center') {
+          imageStyles += `display: block; margin-left: auto; margin-right: auto;`;
+        } else {
+          imageStyles += `text-align: ${alignment};`;
+        }
+      }
+      
+      // Добавляем обтекание
+      if (float) {
+        imageStyles += `float: ${float}; margin: ${float === 'left' ? '0 10px 10px 0' : '0 0 10px 10px'};`;
+      }
+      
+      // Создаем HTML для изображения с атрибутами
+      const imageHtml = `<img src="${url}" alt="${alt}" title="${title}" style="${imageStyles}" />`;
+      
+      // Вставляем HTML через clipboard API
+      editor.clipboard.dangerouslyPasteHTML(range.index, imageHtml);
       editor.setSelection(range.index + 1, 0);
     }
   };
@@ -336,7 +550,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
-  const handleVideoInsert = (url: string) => {
+  const handleVideoInsert = (
+    url: string, 
+    title: string, 
+    width: string, 
+    height: string, 
+    alignment: string
+  ) => {
     const editor = quillRef.current?.getEditor();
     if (editor) {
       const range = editor.getSelection(true);
@@ -354,12 +574,102 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         videoUrl = `https://player.vimeo.com/video/${videoId}`;
       }
       
-      editor.insertEmbed(range.index, 'video', videoUrl);
+      // Создаем стили для контейнера видео
+      let containerStyles = '';
+      if (alignment === 'center') {
+        containerStyles = `display: flex; justify-content: center; margin: 10px 0;`;
+      } else if (alignment === 'left') {
+        containerStyles = `display: flex; justify-content: flex-start; margin: 10px 0;`;
+      } else if (alignment === 'right') {
+        containerStyles = `display: flex; justify-content: flex-end; margin: 10px 0;`;
+      }
+      
+      // Создаем HTML для видео с атрибутами
+      const videoHtml = `<div style="${containerStyles}"><iframe src="${videoUrl}" title="${title}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe></div>`;
+      
+      // Вставляем HTML через clipboard API
+      editor.clipboard.dangerouslyPasteHTML(range.index, videoHtml);
       editor.setSelection(range.index + 1, 0);
     }
   };
 
-  // Конфигурация модулей Quill
+  // Функция для добавления подписей к кнопкам
+  const addButtonLabels = () => {
+    setTimeout(() => {
+      // Добавляем подписи к кнопкам форматирования
+      const toolbar = document.querySelector('.ql-toolbar');
+      if (toolbar) {
+        // Форматирование текста
+        const boldButton = toolbar.querySelector('.ql-bold');
+        if (boldButton) boldButton.setAttribute('aria-label', 'Жирный');
+        
+        const italicButton = toolbar.querySelector('.ql-italic');
+        if (italicButton) italicButton.setAttribute('aria-label', 'Курсив');
+        
+        const underlineButton = toolbar.querySelector('.ql-underline');
+        if (underlineButton) underlineButton.setAttribute('aria-label', 'Подчеркнутый');
+        
+        const strikeButton = toolbar.querySelector('.ql-strike');
+        if (strikeButton) strikeButton.setAttribute('aria-label', 'Зачеркнутый');
+        
+        // Списки
+        const orderedListButton = toolbar.querySelector('.ql-list[value="ordered"]');
+        if (orderedListButton) orderedListButton.setAttribute('aria-label', 'Нумерованный список');
+        
+        const bulletListButton = toolbar.querySelector('.ql-list[value="bullet"]');
+        if (bulletListButton) bulletListButton.setAttribute('aria-label', 'Маркированный список');
+        
+        // Отступы
+        const indentMinusButton = toolbar.querySelector('.ql-indent[value="-1"]');
+        if (indentMinusButton) indentMinusButton.setAttribute('aria-label', 'Уменьшить отступ');
+        
+        const indentPlusButton = toolbar.querySelector('.ql-indent[value="+1"]');
+        if (indentPlusButton) indentPlusButton.setAttribute('aria-label', 'Увеличить отступ');
+        
+        // Выравнивание
+        const alignButtons = toolbar.querySelectorAll('.ql-align');
+        alignButtons.forEach((button) => {
+          const value = button.getAttribute('value') || 'left';
+          let label = 'По левому краю';
+          if (value === 'center') label = 'По центру';
+          if (value === 'right') label = 'По правому краю';
+          if (value === 'justify') label = 'По ширине';
+          button.setAttribute('aria-label', label);
+        });
+        
+        // Специальные блоки
+        const blockquoteButton = toolbar.querySelector('.ql-blockquote');
+        if (blockquoteButton) blockquoteButton.setAttribute('aria-label', 'Цитата');
+        
+        const codeBlockButton = toolbar.querySelector('.ql-code-block');
+        if (codeBlockButton) codeBlockButton.setAttribute('aria-label', 'Блок кода');
+        
+        // Медиа
+        const linkButton = toolbar.querySelector('.ql-link');
+        if (linkButton) linkButton.setAttribute('aria-label', 'Вставить ссылку');
+        
+        const imageButton = toolbar.querySelector('.ql-image');
+        if (imageButton) imageButton.setAttribute('aria-label', 'Вставить изображение');
+        
+        const videoButton = toolbar.querySelector('.ql-video');
+        if (videoButton) videoButton.setAttribute('aria-label', 'Вставить видео');
+        
+        const tableButton = toolbar.querySelector('.ql-table');
+        if (tableButton) tableButton.setAttribute('aria-label', 'Вставить таблицу');
+        
+        // Очистка форматирования
+        const cleanButton = toolbar.querySelector('.ql-clean');
+        if (cleanButton) cleanButton.setAttribute('aria-label', 'Очистить форматирование');
+      }
+    }, 100);
+  };
+
+  // Добавляем эффект для установки подписей после монтирования
+  React.useEffect(() => {
+    addButtonLabels();
+  }, []);
+
+  // Кастомные обработчики для тулбара
   const modules = useMemo(() => {
     // Перемещаем customHandlers внутрь useMemo для избежания предупреждений линтера
     const handlers = {
@@ -401,22 +711,67 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     'table', 'table-cell', 'table-row', 'table-header'
   ];
 
+  // Обработчик переключения между режимами редактирования
+  const handleModeToggle = () => {
+    if (isHtmlMode) {
+      // Переключаемся с HTML на визуальный режим
+      onChange(htmlContent);
+    } else {
+      // Переключаемся с визуального режима на HTML
+      setHtmlContent(value);
+    }
+    setIsHtmlMode(!isHtmlMode);
+  };
+
   return (
     <>
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={handleModeToggle}
+          sx={{ textTransform: 'none' }}
+        >
+          {isHtmlMode ? 'Визуальный редактор' : 'HTML редактор'}
+        </Button>
+      </Box>
+      
       <StyledEditorContainer error={error} editorHeight={height}>
-        <ReactQuill
-          ref={quillRef}
-          theme="snow"
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          modules={modules}
-          formats={formats}
-          readOnly={disabled}
-          style={{
-            height: height,
-          }}
-        />
+        {isHtmlMode ? (
+          <TextField
+            multiline
+            fullWidth
+            value={htmlContent}
+            onChange={(e) => setHtmlContent(e.target.value)}
+            placeholder="Введите HTML код..."
+            sx={{ 
+              height: height,
+              '& .MuiInputBase-root': {
+                height: '100%',
+                fontFamily: 'monospace',
+                fontSize: '14px',
+              },
+              '& .MuiInputBase-input': {
+                height: '100%',
+                overflow: 'auto',
+              }
+            }}
+          />
+        ) : (
+          <ReactQuill
+            ref={quillRef}
+            theme="snow"
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            modules={modules}
+            formats={formats}
+            readOnly={disabled}
+            style={{
+              height: height,
+            }}
+          />
+        )}
       </StyledEditorContainer>
       
       {/* Модальные окна для расширенных функций */}
