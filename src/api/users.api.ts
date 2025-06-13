@@ -65,7 +65,7 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiUsersResponse): UsersResponse => ({
         data: response.data.map(user => ({
-          id: user.id.toString(),
+          id: user.id,
           email: user.email,
           phone: user.phone || '',
           first_name: user.first_name,
@@ -95,7 +95,7 @@ export const usersApi = baseApi.injectEndpoints({
       query: (id) => `users/${id}`,
       transformResponse: (response: { data: ApiUser }): { data: User } => ({
         data: {
-          id: response.data.id.toString(),
+          id: response.data.id,
           email: response.data.email,
           phone: response.data.phone || '',
           first_name: response.data.first_name,
@@ -120,7 +120,7 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: ApiUser }): { data: User } => ({
         data: {
-          id: response.data.id.toString(),
+          id: response.data.id,
           email: response.data.email,
           phone: response.data.phone || '',
           first_name: response.data.first_name,
@@ -151,7 +151,7 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: ApiUser }): { data: User } => ({
         data: {
-          id: response.data.id.toString(),
+          id: response.data.id,
           email: response.data.email,
           phone: response.data.phone || '',
           first_name: response.data.first_name,

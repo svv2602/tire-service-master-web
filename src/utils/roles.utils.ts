@@ -1,12 +1,14 @@
-// Функция для преобразования role_id в строку роли
-export const getRoleFromId = (roleId: number): string => {
+import { UserRole } from '../types/user-role';
+
+// Функция для преобразования role_id в enum UserRole
+export const getRoleFromId = (roleId: number): UserRole => {
   switch (roleId) {
-    case 1: return 'admin';
-    case 2: return 'manager';
-    case 3: return 'partner';
-    case 4: return 'operator';
-    case 5: return 'client';
-    default: return 'client';
+    case 1: return UserRole.ADMIN;
+    case 2: return UserRole.MANAGER;
+    case 3: return UserRole.PARTNER;
+    case 4: return UserRole.OPERATOR;
+    case 5: return UserRole.CLIENT;
+    default: return UserRole.CLIENT;
   }
 };
 

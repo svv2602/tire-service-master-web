@@ -131,10 +131,10 @@ const UserForm: React.FC = () => {
           last_name: values.last_name,
           middle_name: values.middle_name || '',
           phone: values.phone || '',
-          role_id: values.role_id,
+          role_id: values.role_id || 5, // Устанавливаем значение по умолчанию, если role_id не определен
           is_active: values.is_active,
-          ...(values.password && { password: values.password }),
-          ...(values.password_confirmation && { password_confirmation: values.password_confirmation })
+          password: values.password || '',
+          password_confirmation: values.password_confirmation || ''
         };
 
         if (isEditMode) {

@@ -1,10 +1,12 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import config from '../config';
 import { checkApiAvailability } from './baseQuery';
+import { handleLogout, refreshTokens } from '../services/authService';
 
 // Константы
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
-const API_URL = config.API_URL;
+const REFRESH_TOKEN_KEY = 'tvoya_shina_refresh_token';
+const API_URL = `${config.API_URL}${config.API_PREFIX}`;
 
 // Создаем экземпляр axios с базовыми настройками
 export const apiClient = axios.create({
@@ -28,6 +30,13 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     // Add token with correct Bearer format
     const formattedToken = token.replace(/^Bearer\s+/i, '').trim();
     config.headers.Authorization = `Bearer ${formattedToken}`;
+    
+    // Отладочное логирование
+    console.log('🔐 Отправка запроса с токеном:', {
+      url: config.url,
+      token: formattedToken.substring(0, 10) + '...',
+      headers: config.headers
+    });
   }
 
   return config;
@@ -36,28 +45,57 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 // Response interceptor
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Обновляем токен если он пришел в ответе
-    if (
-      (response.config.url?.includes('/auth/login'))
-      && response.data.auth_token
-    ) {
-      localStorage.setItem(STORAGE_KEY, response.data.auth_token);
+    // Обновляем токены если они пришли в ответе при логине
+    if (response.config.url?.includes('/auth/login') && response.data.tokens) {
+      const { access, refresh } = response.data.tokens;
+      localStorage.setItem(STORAGE_KEY, access);
+      localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${access}`;
     }
     return response;
   },
   async (error) => {
-    if (error.response?.status === 401) {
-      // При 401 ошибке очищаем токен и перенаправляем на логин
-      localStorage.removeItem(STORAGE_KEY);
-      
-      // Сохраняем текущий путь для редиректа после логина
-      const currentPath = window.location.pathname + window.location.search;
-      if (!currentPath.includes('/login')) {
-        localStorage.setItem('returnPath', currentPath);
-        window.location.href = '/login';
-      }
+    const originalRequest = error.config;
+    
+    // Если это не 401 или запрос уже повторялся, возвращаем ошибку
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+    
+    // Не пытаемся обновить токен при ошибке логина
+    if (originalRequest.url?.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+    
+    // Если это запрос на обновление токена, выходим из системы
+    if (originalRequest.url === '/auth/refresh') {
+      handleLogout(require('../store/store').store.dispatch);
+      return Promise.reject(error);
+    }
+    
+    try {
+      originalRequest._retry = true;
+      
+      // Получаем refresh token из localStorage
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (!refreshToken) {
+        throw new Error('Отсутствует refresh token');
+      }
+      
+      // Используем refreshTokens из authService
+      const { access_token } = await refreshTokens(apiClient, refreshToken);
+      
+      // Обновляем токен в localStorage и заголовках
+      localStorage.setItem(STORAGE_KEY, access_token);
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
+      
+      // Повторяем оригинальный запрос
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      handleLogout(require('../store/store').store.dispatch);
+      return Promise.reject(refreshError);
+    }
   }
 );
 

@@ -1,4 +1,5 @@
 // Типы для аутентификации
+export { UserRole } from './user-role';
 
 // Types for car brands
 export interface CarBrand {
@@ -112,14 +113,6 @@ export interface AuthState {
   error: string | null;
   isAuthenticated: boolean;
   isInitialized: boolean;
-}
-
-// Перечисление ролей пользователей
-export enum UserRole {
-  CLIENT = 'client',
-  PARTNER = 'partner',
-  MANAGER = 'manager',
-  ADMIN = 'admin'
 }
 
 // Типы для партнеров

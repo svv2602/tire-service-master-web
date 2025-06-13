@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { login } from '../../store/slices/authSlice';
-import config from '../../config';
 import {
   Container,
   Paper,
@@ -16,17 +15,18 @@ import {
   Snackbar
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
-import { apiClient } from '../../api';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.auth);
+  const { loading: reduxLoading, error: reduxError } = useSelector((state: RootState) => state.auth);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -47,44 +47,30 @@ const LoginPage: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
 
     try {
-      console.log('Sending login request:', { email, password: '***' });
+      console.log('Attempting login with:', { email, password: '***' });
       const actionResult = await dispatch(login({ email, password })).unwrap();
       console.log('Login result:', actionResult);
       
-      if (actionResult && actionResult.auth_token) {
-        const token = actionResult.auth_token;
-        
-        // Store auth token with proper format
-        localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, token);
-        
-        // Store credentials for token refresh
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userPassword', password);
-        
-        setSuccessMessage('Вход выполнен успешно!');
-
-        // Update axios default headers
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
-        // Allow time to see success message before redirect
-        setTimeout(() => {
-          const returnPath = localStorage.getItem('returnPath') || '/dashboard';
-          localStorage.removeItem('returnPath');
-          navigate(returnPath);
-        }, 500);
-      } else {
-        throw new Error('Не удалось получить токен авторизации');
-      }
-    } catch (error: unknown) {
+      // Перенаправляем на сохраненный путь или на главную
+      const returnPath = localStorage.getItem('returnPath') || '/';
+      localStorage.removeItem('returnPath');
+      navigate(returnPath);
+    } catch (error: any) {
       console.error('Login error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Ошибка авторизации';
-      setFormErrors(prev => ({ ...prev, submit: errorMessage }));
+      setError(error.message || 'Ошибка при входе в систему');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -182,7 +168,7 @@ const LoginPage: React.FC = () => {
             Тестовые данные для входа в систему:
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Email: admin@test.com, Пароль: admin
+            Email: admin@test.com, Пароль: admin123
           </Typography>
         </Box>
 

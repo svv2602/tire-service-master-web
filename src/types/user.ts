@@ -1,19 +1,13 @@
-export enum UserRole {
-  ADMIN = 'admin',
-  MANAGER = 'manager',
-  PARTNER = 'partner',
-  OPERATOR = 'operator',
-  CLIENT = 'client',
-}
+import { UserRole } from './index';
 
 export interface User {
-  id: string;
+  id: number;
   email: string;
-  phone: string;
+  phone?: string;
   first_name: string;
   last_name: string;
   middle_name?: string;
-  role: string;
+  role: UserRole;
   role_id: number;
   is_active: boolean;
   email_verified: boolean;
@@ -24,10 +18,10 @@ export interface User {
 
 export interface UserFormData {
   email: string;
-  phone?: string;
   first_name: string;
   last_name: string;
   middle_name?: string;
+  phone?: string;
   role_id: number;
   is_active: boolean;
   password?: string;
@@ -47,13 +41,4 @@ export interface PasswordResetConfirm {
   token: string;
   password: string;
   password_confirmation: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
 }

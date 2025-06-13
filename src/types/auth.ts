@@ -1,4 +1,4 @@
-import { User } from './models';
+import { User } from './user';
 
 // Интерфейс для ответа с токеном
 export interface TokenResponse {
@@ -38,4 +38,24 @@ export interface PasswordResetConfirmRequest {
   token: string;
   password: string;
   password_confirmation: string;
+}
+
+export interface AuthTokens {
+  access: string;
+  refresh: string;
+}
+
+export interface LoginResponse {
+  tokens: AuthTokens;
+  user: User;
+}
+
+export interface AuthState {
+  accessToken: string | null;
+  refreshToken: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+  isInitialized: boolean;
 } 

@@ -198,112 +198,29 @@ const MainLayout: React.FC = () => {
             text: 'Партнеры',
             icon: <CompanyIcon />,
             path: '/partners',
-            roles: [UserRole.ADMIN],
-            description: 'Управление партнерами сервиса',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: 'Управление партнерами',
           },
           {
-            text: 'Точки обслуживания',
+            text: 'Сервисные точки',
             icon: <LocationOnIcon />,
             path: '/service-points',
-            roles: [UserRole.ADMIN, UserRole.PARTNER],
-            description: 'Управление шиномонтажными мастерскими',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
+            description: 'Управление сервисными точками',
           },
           {
-            text: 'Клиенты',
-            icon: <PeopleIcon />,
-            path: '/clients',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Управление клиентской базой',
-          },
-        ],
-      },
-      {
-        title: 'Шиномонтаж',
-        items: [
-          {
-            text: 'Все бронирования',
-            icon: <EventNoteIcon />,
-            path: '/bookings',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Просмотр и управление бронированиями',
+            text: 'Услуги',
+            icon: <ServiceIcon />,
+            path: '/services',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: 'Управление услугами',
           },
           {
-            text: 'Мои записи',
-            icon: <EventNoteIcon />,
-            path: '/my-bookings',
-            roles: [UserRole.CLIENT],
-            description: 'Ваши текущие и прошлые записи',
-          },
-          {
-            text: 'Создать бронирование',
-            icon: <EventNoteIcon />,
-            path: '/bookings/new',
-            roles: [UserRole.MANAGER, UserRole.CLIENT],
-            description: 'Создание нового бронирования',
-          },
-          {
-            text: 'Записаться на шиномонтаж',
-            icon: <EventNoteIcon />,
-            path: '/bookings/new',
-            roles: [UserRole.CLIENT],
-            description: 'Запись на сервис',
-          },
-        ],
-      },
-      {
-        title: 'Отзывы',
-        items: [
-          {
-            text: 'Все отзывы',
-            icon: <StarIcon />,
-            path: '/reviews',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Просмотр и модерация отзывов',
-          },
-          {
-            text: 'Мои отзывы',
-            icon: <StarIcon />,
-            path: '/my-reviews',
-            roles: [UserRole.CLIENT],
-            description: 'Ваши отзывы о сервисах',
-          },
-        ],
-      },
-      {
-        title: 'Мое авто',
-        items: [
-          {
-            text: 'Мои автомобили',
+            text: 'Автомобили',
             icon: <CarIcon />,
-            path: '/my-cars',
-            roles: [UserRole.CLIENT],
-            description: 'Управление списком ваших автомобилей',
-          },
-          {
-            text: 'Добавить автомобиль',
-            icon: <CarIcon />,
-            path: '/my-cars/new',
-            roles: [UserRole.CLIENT],
-            description: 'Добавить новый автомобиль',
-          },
-        ],
-      },
-      {
-        title: 'Сервисные центры',
-        items: [
-          {
-            text: 'Найти центр',
-            icon: <LocationOnIcon />,
-            path: '/service-points/search',
-            roles: [UserRole.CLIENT],
-            description: 'Поиск ближайших сервисных центров',
-          },
-          {
-            text: 'Избранные центры',
-            icon: <LocationOnIcon />,
-            path: '/service-points/favorites',
-            roles: [UserRole.CLIENT],
-            description: 'Ваши избранные сервисные центры',
+            path: '/cars',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: 'Управление марками и моделями',
           },
         ],
       },
@@ -311,11 +228,11 @@ const MainLayout: React.FC = () => {
         title: 'Справочники',
         items: [
           {
-            text: 'Области и Города',
+            text: 'Регионы',
             icon: <MapIcon />,
             path: '/regions',
             roles: [UserRole.ADMIN],
-            description: 'Управление областями и городами',
+            description: 'Управление регионами',
           },
           {
             text: 'Бренды авто',
@@ -325,77 +242,68 @@ const MainLayout: React.FC = () => {
             description: 'Управление брендами автомобилей',
           },
           {
-            text: 'Автомобили',
+            text: 'Модели авто',
             icon: <CarIcon />,
-            path: '/cars',
+            path: '/car-models',
             roles: [UserRole.ADMIN],
-            description: 'Управление списком автомобилей',
+            description: 'Управление моделями автомобилей',
           },
+        ],
+      },
+      {
+        title: 'Контент',
+        items: [
           {
-            text: 'Услуги',
-            icon: <ServiceIcon />,
-            path: '/services',
-            roles: [UserRole.ADMIN, UserRole.PARTNER],
-            description: 'Управление каталогом услуг',
-          },
-          {
-            text: 'База знаний',
+            text: 'Тексты',
             icon: <ArticleIcon />,
-            path: '/articles',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Управление статьями и базой знаний',
-          },
-          {
-            text: 'Контент страниц',
-            icon: <WebIcon />,
-            path: '/page-content',
-            roles: [UserRole.ADMIN, UserRole.PARTNER],
-            description: 'Управление контентом клиентских страниц',
-          },
-        ],
-      },
-      {
-        title: 'Отчеты',
-        items: [
-          {
-            text: 'Аналитика',
-            icon: <ReportIcon />,
-            path: '/analytics',
-            roles: [UserRole.ADMIN, UserRole.PARTNER],
-            description: 'Отчеты и аналитика',
-          },
-          {
-            text: 'История поездок',
-            icon: <ReportIcon />,
-            path: '/trip-history',
-            roles: [UserRole.CLIENT],
-            description: 'История ваших поездок и обслуживания',
-          },
-        ],
-      },
-      {
-        title: 'Администрирование',
-        items: [
-          {
-            text: 'Пользователи',
-            icon: <UserIcon />,
-            path: '/users',
+            path: '/texts',
             roles: [UserRole.ADMIN],
-            description: 'Управление пользователями системы',
+            description: 'Управление текстовым содержимым',
           },
           {
-            text: 'Настройки',
-            icon: <SettingsIcon />,
-            path: '/settings',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER, UserRole.CLIENT],
-            description: 'Настройки системы и профиля',
+            text: 'SEO',
+            icon: <WebIcon />,
+            path: '/seo',
+            roles: [UserRole.ADMIN],
+            description: 'Управление SEO-параметрами',
           },
+        ],
+      },
+      {
+        title: 'Бронирования',
+        items: [
+          {
+            text: 'Все бронирования',
+            icon: <EventNoteIcon />,
+            path: '/bookings',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
+            description: 'Управление бронированиями',
+          },
+          {
+            text: 'Мои бронирования',
+            icon: <EventNoteIcon />,
+            path: '/my-bookings',
+            roles: [UserRole.CLIENT],
+            description: 'Ваши бронирования',
+          },
+        ],
+      },
+      {
+        title: 'Настройки',
+        items: [
           {
             text: 'Профиль',
-            icon: <AccountIcon />,
+            icon: <SettingsIcon />,
             path: '/profile',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER, UserRole.CLIENT],
-            description: 'Управление личным профилем',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER, UserRole.CLIENT],
+            description: 'Настройки профиля',
+          },
+          {
+            text: 'Системные настройки',
+            icon: <SettingsIcon />,
+            path: '/settings',
+            roles: [UserRole.ADMIN],
+            description: 'Общие настройки системы',
           },
         ],
       },
@@ -420,17 +328,13 @@ const MainLayout: React.FC = () => {
     const filteredSections = allSections.map(section => {
       // Фильтруем пункты меню в секции, оставляя только те, для которых у пользователя есть доступ
       const filteredItems = section.items.filter(item => 
-        item.roles.some(role => role.valueOf() === userRole)
+        item.roles.includes(userRole)
       );
-      
-      // Возвращаем секцию только если в ней остались пункты меню
-      return {
-        ...section,
-        items: filteredItems
-      };
-    }).filter(section => section.items.length > 0);
-    
-    console.log('Количество отфильтрованных секций:', filteredSections.length);
+
+      // Если в секции есть доступные пункты меню, возвращаем секцию с отфильтрованными пунктами
+      return filteredItems.length > 0 ? { ...section, items: filteredItems } : null;
+    }).filter(Boolean) as MenuSection[];
+
     return filteredSections;
   };
 
@@ -444,64 +348,46 @@ const MainLayout: React.FC = () => {
         'Полный доступ ко всем функциям',
         'Управление партнерами',
         'Управление пользователями',
-        'Просмотр всех данных'
+        'Управление справочниками',
+        'Просмотр статистики'
       ],
       [UserRole.PARTNER]: [
         'Управление своими точками обслуживания',
-        'Управление сотрудниками',
-        'Просмотр статистики',
-        'Настройка услуг'
+        'Просмотр бронирований',
+        'Управление расписанием',
+        'Просмотр статистики'
       ],
       [UserRole.MANAGER]: [
         'Управление бронированиями',
+        'Просмотр статистики',
+        'Работа с клиентами'
+      ],
+      [UserRole.OPERATOR]: [
+        'Обработка бронирований',
         'Работа с клиентами',
-        'Просмотр расписания'
+        'Базовые операции'
       ],
       [UserRole.CLIENT]: [
-        'Запись на шиномонтаж',
-        'Управление своими автомобилями',
-        'Просмотр истории записей'
+        'Управление бронированиями',
+        'Просмотр истории',
+        'Управление профилем'
       ]
     };
 
-    // Проверяем, что user.role валидный и существует в списке возможностей
-    const userRole = (user as User).role as UserRole;
-    if (!capabilities[userRole]) {
-      return null;
-    }
-
-    return (
-      <Box sx={{ 
-        ...formStyles.container, // Использование централизованных стилей для контейнера
-        bgcolor: theme.palette.action.selected, 
-        borderRadius: SIZES.borderRadius.md, // Консистентный border radius
-        mb: SIZES.spacing.md // Унифицированные отступы
-      }}>
-        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-          Ваша роль: {getRoleName(userRole)}
-        </Typography>
-        <List dense disablePadding>
-          {capabilities[userRole].map((capability, index) => (
-            <ListItem dense disablePadding key={index}>
-              <Typography variant="caption">• {capability}</Typography>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-    );
+    return capabilities[(user as User).role] || [];
   };
 
   // Перевод названия роли на русский
   const getRoleName = (role?: UserRole): string => {
-    if (!role) return 'Пользователь';
-    
     const roleNames = {
       [UserRole.ADMIN]: 'Администратор',
       [UserRole.PARTNER]: 'Партнер',
       [UserRole.MANAGER]: 'Менеджер',
+      [UserRole.OPERATOR]: 'Оператор',
       [UserRole.CLIENT]: 'Клиент'
     };
-    return roleNames[role] || 'Пользователь';
+
+    return roleNames[role as UserRole] || 'Пользователь';
   };
 
   const drawer = (

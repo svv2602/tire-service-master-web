@@ -36,7 +36,7 @@ import {
   useUpdateUserMutation
 } from '../../api/users.api';
 import { getRoleId } from '../../utils/roles.utils';
-import type { User } from '../../types/user';
+import type { User, UserFormData } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getAdaptiveTableStyles } from '../../styles';
@@ -52,8 +52,8 @@ import { Modal } from '../../components/ui/Modal';
 // Мемоизированный компонент строки пользователя
 const UserRow = React.memo<{
   user: User;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  onEdit: (id: number) => void;
+  onDelete: (id: number) => void;
   onToggleStatus: (user: User) => void;
   getRoleName: (role: string) => string;
   getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
@@ -175,7 +175,7 @@ export const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
@@ -248,70 +248,42 @@ export const UsersPage: React.FC = () => {
     navigate('/users/new');
   }, [navigate]);
 
-  const handleEdit = useCallback((id: string) => {
+  const handleEdit = (id: number) => {
     navigate(`/users/${id}/edit`);
-  }, [navigate]);
+  };
 
-  const handleDeleteClick = useCallback((id: string) => {
+  const handleDelete = (id: number) => {
     setUserToDelete(id);
     setDeleteDialogOpen(true);
-  }, []);
+  };
 
-  const handleDeleteConfirm = useCallback(async () => {
-    if (userToDelete) {
-      try {
-        console.log('Начинаем удаление пользователя:', userToDelete);
-        await deleteUser(userToDelete).unwrap();
-        console.log('Пользователь успешно удален');
-        enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
-        
-        // Принудительно обновляем данные
-        console.log('Обновляем список пользователей...');
-        await refetch();
-        console.log('Список пользователей обновлен');
-        
-      } catch (error: any) {
-        console.error('Ошибка при удалении пользователя:', error);
-        
-        let errorMessage = 'Ошибка при удалении пользователя';
-        
-        if (error.status === 403) {
-          errorMessage = 'У вас нет прав для удаления этого пользователя';
-        } else if (error.status === 404) {
-          errorMessage = 'Пользователь не найден';
-        } else if (error.status === 422) {
-          errorMessage = 'Невозможно удалить пользователя. Возможно, это ваш собственный аккаунт';
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        enqueueSnackbar(errorMessage, { variant: 'error' });
-      }
-    }
-    setDeleteDialogOpen(false);
-    setUserToDelete(null);
-  }, [userToDelete, deleteUser, refetch, enqueueSnackbar]);
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
 
-  const handleDeleteCancel = useCallback(() => {
-    setDeleteDialogOpen(false);
-    setUserToDelete(null);
-  }, []);
-
-  const handleToggleStatus = useCallback(async (user: User) => {
-    const newStatus = !user.is_active;
-    const action = newStatus ? 'активирован' : 'деактивирован';
-    
     try {
-      const updateData = {
+      await deleteUser(userToDelete.toString()).unwrap();
+      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
+    } catch (error) {
+      console.error('Ошибка при деактивации пользователя:', error);
+      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
+    } finally {
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const handleToggleStatus = async (user: User) => {
+    try {
+      const updateData: UserFormData = {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
         middle_name: user.middle_name || '',
         phone: user.phone || '',
         role_id: user.role_id,
-        is_active: newStatus
+        is_active: !user.is_active,
+        password: '',
+        password_confirmation: ''
       };
 
       await updateUser({
@@ -319,13 +291,13 @@ export const UsersPage: React.FC = () => {
         data: updateData
       }).unwrap();
       
+      const action = user.is_active ? 'деактивирован' : 'активирован';
       enqueueSnackbar(`Пользователь ${action}`, { variant: 'success' });
-      await refetch(); // Обновляем список
     } catch (error) {
-      enqueueSnackbar(`Ошибка при ${newStatus ? 'активации' : 'деактивации'} пользователя`, { variant: 'error' });
-      console.error('Ошибка при изменении статуса:', error);
+      console.error('Ошибка при изменении статуса пользователя:', error);
+      enqueueSnackbar('Ошибка при изменении статуса пользователя', { variant: 'error' });
     }
-  }, [updateUser, enqueueSnackbar, refetch]);
+  };
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
@@ -467,7 +439,7 @@ export const UsersPage: React.FC = () => {
                       key={user.id}
                       user={user}
                       onEdit={handleEdit}
-                      onDelete={handleDeleteClick}
+                      onDelete={handleDelete}
                       onToggleStatus={handleToggleStatus}
                       getRoleName={getRoleName}
                       getRoleColor={getRoleColor}
@@ -501,16 +473,16 @@ export const UsersPage: React.FC = () => {
       {/* Модальное окно подтверждения удаления */}
       <Modal
         open={deleteDialogOpen}
-        onClose={!isDeleting ? handleDeleteCancel : undefined}
+        onClose={!isDeleting ? () => setDeleteDialogOpen(false) : undefined}
         title="Подтверждение деактивации"
         maxWidth={400}
         actions={
           <>
-            <Button onClick={handleDeleteCancel} disabled={isDeleting}>
+            <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
               Отмена
             </Button>
             <Button
-              onClick={handleDeleteConfirm}
+              onClick={handleConfirmDelete}
               color="error"
               variant="contained"
               disabled={isDeleting}

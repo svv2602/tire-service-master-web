@@ -11,6 +11,7 @@ import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
 import { createAppTheme } from './styles/theme';
 import { useThemeMode } from './hooks/useTheme';
+import { LoadingScreen } from './components/LoadingScreen';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import PartnersPage from './pages/partners/PartnersPage';
@@ -98,45 +99,24 @@ const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const { isAuthenticated, token, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, accessToken, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   
   console.log('ProtectedRoute check:', { 
     isAuthenticated, 
-    hasToken: !!token,
+    hasToken: !!accessToken,
     hasUser: !!user,
     isInitialized,
-    loading,
-    tokenValue: token ? token.substring(0, 20) + '...' : 'null',
-    userEmail: user?.email || 'null'
+    loading
   });
-  
-  // Если идет загрузка или инициализация не завершена, показываем загрузку
-  if (loading || !isInitialized) {
-    console.log('ProtectedRoute: Ожидание завершения инициализации...');
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          fontSize: '18px',
-          color: 'text.secondary'
-        }}
-      >
-        🔄 Проверка аутентификации...
-      </Box>
-    );
-  }
-  
-  // После завершения инициализации проверяем аутентификацию
-  // Полагаемся только на состояние Redux, а не на localStorage
-  if (!isAuthenticated || !token || !user) {
-    console.log('ProtectedRoute: Перенаправление на /login - пользователь не аутентифицирован');
-    return <Navigate to="/login" replace />;
+
+  if (!isInitialized || loading) {
+    return <LoadingScreen />;
   }
 
-  console.log('ProtectedRoute: Доступ разрешен');
+  if (!isAuthenticated || !accessToken) {
+    return <Navigate to="/login" />;
+  }
+
   return <>{children}</>;
 };
 
