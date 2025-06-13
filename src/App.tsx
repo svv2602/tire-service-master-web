@@ -60,6 +60,7 @@ import ClientServicesPage from './pages/client/ClientServicesPage';
 import ClientSearchPage from './pages/client/ClientSearchPage';
 import ClientBookingPage from './pages/client/ClientBookingPage';
 import ClientProfilePage from './pages/client/ClientProfilePage';
+import BookingSuccessPage from './pages/client/BookingSuccessPage';
 
 // Импорты для управления контентом страниц
 import PageContentPage from './pages/page-content/PageContentPage';
@@ -146,6 +147,7 @@ function App() {
               <Route path="/client/services" element={<ClientServicesPage />} />
               <Route path="/client/search" element={<ClientSearchPage />} />
               <Route path="/client/booking" element={<ClientBookingPage />} />
+              <Route path="/client/booking/success" element={<BookingSuccessPage />} />
               <Route path="/client/profile" element={<ClientProfilePage />} />
               
               {/* Публичная база знаний (без авторизации) */}
