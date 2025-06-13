@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Box, useTheme } from '@mui/material';
+import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 interface RichTextEditorProps {
@@ -11,6 +11,25 @@ interface RichTextEditorProps {
   height?: number;
   error?: boolean;
   disabled?: boolean;
+}
+
+// Типы для модальных окон
+interface ImageDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onInsert: (url: string, alt: string) => void;
+}
+
+interface TableDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onInsert: (rows: number, cols: number) => void;
+}
+
+interface VideoDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onInsert: (url: string) => void;
 }
 
 // Стилизованный контейнер для редактора
@@ -126,6 +145,141 @@ const StyledEditorContainer = styled(Box, {
   },
 }));
 
+// Компоненты модальных окон для расширенных функций
+const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) => {
+  const [url, setUrl] = useState('');
+  const [alt, setAlt] = useState('');
+
+  const handleInsert = () => {
+    if (url) {
+      onInsert(url, alt);
+      setUrl('');
+      setAlt('');
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Вставить изображение</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="URL изображения"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Альтернативный текст"
+              value={alt}
+              onChange={(e) => setAlt(e.target.value)}
+              placeholder="Описание изображения"
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={handleInsert} variant="contained" color="primary">
+          Вставить
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) => {
+  const [rows, setRows] = useState(2);
+  const [cols, setCols] = useState(2);
+
+  const handleInsert = () => {
+    onInsert(rows, cols);
+    setRows(2);
+    setCols(2);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Вставить таблицу</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Строки"
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+              inputProps={{ min: 1, max: 10 }}
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Столбцы"
+              value={cols}
+              onChange={(e) => setCols(Number(e.target.value))}
+              inputProps={{ min: 1, max: 10 }}
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={handleInsert} variant="contained" color="primary">
+          Вставить
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) => {
+  const [url, setUrl] = useState('');
+
+  const handleInsert = () => {
+    if (url) {
+      onInsert(url);
+      setUrl('');
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>Вставить видео</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="URL видео"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX"
+              helperText="Поддерживаются ссылки YouTube, Vimeo и другие"
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={handleInsert} variant="contained" color="primary">
+          Вставить
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
@@ -135,27 +289,105 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   disabled = false,
 }) => {
   const theme = useTheme();
+  
+  // Состояние для модальных окон
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [tableDialogOpen, setTableDialogOpen] = useState(false);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  
+  // Quill Reference
+  const quillRef = useRef<ReactQuill>(null);
+
+  // Обработчики для расширенных функций
+  const handleImageInsert = (url: string, alt: string) => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      editor.insertEmbed(range.index, 'image', url);
+      // Добавляем атрибут alt, если поддерживается
+      editor.formatText(range.index, 1, { alt: alt });
+      editor.setSelection(range.index + 1, 0);
+    }
+  };
+
+  const handleTableInsert = (rows: number, cols: number) => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      
+      // Создаем HTML для таблицы
+      let tableHTML = '<table><tbody>';
+      for (let r = 0; r < rows; r++) {
+        tableHTML += '<tr>';
+        for (let c = 0; c < cols; c++) {
+          if (r === 0) {
+            tableHTML += '<th></th>';
+          } else {
+            tableHTML += '<td></td>';
+          }
+        }
+        tableHTML += '</tr>';
+      }
+      tableHTML += '</tbody></table>';
+      
+      // Вставляем HTML через clipboard API
+      editor.clipboard.dangerouslyPasteHTML(range.index, tableHTML);
+      editor.setSelection(range.index + 1, 0);
+    }
+  };
+
+  const handleVideoInsert = (url: string) => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      
+      // Преобразуем URL YouTube если нужно
+      let videoUrl = url;
+      if (url.includes('youtube.com/watch?v=')) {
+        const videoId = url.split('v=')[1].split('&')[0];
+        videoUrl = `https://www.youtube.com/embed/${videoId}`;
+      } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1].split('?')[0];
+        videoUrl = `https://www.youtube.com/embed/${videoId}`;
+      } else if (url.includes('vimeo.com/')) {
+        const videoId = url.split('vimeo.com/')[1].split('?')[0];
+        videoUrl = `https://player.vimeo.com/video/${videoId}`;
+      }
+      
+      editor.insertEmbed(range.index, 'video', videoUrl);
+      editor.setSelection(range.index + 1, 0);
+    }
+  };
 
   // Конфигурация модулей Quill
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ 'indent': '-1'}, { 'indent': '+1' }],
-        [{ 'align': [] }],
-        ['blockquote', 'code-block'],
-        ['link', 'image'],
-        ['clean']
-      ],
-    },
-    clipboard: {
-      // Разрешить только обычную вставку текста
-      matchVisual: false,
-    },
-  }), []);
+  const modules = useMemo(() => {
+    // Перемещаем customHandlers внутрь useMemo для избежания предупреждений линтера
+    const handlers = {
+      image: () => setImageDialogOpen(true),
+      table: () => setTableDialogOpen(true),
+      video: () => setVideoDialogOpen(true),
+    };
+    
+    return {
+      toolbar: {
+        container: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'align': [] }],
+          ['blockquote', 'code-block'],
+          ['link', 'image', 'video', 'table'],
+          ['clean']
+        ],
+        handlers: handlers,
+      },
+      clipboard: {
+        matchVisual: false,
+      },
+    };
+  }, [setImageDialogOpen, setTableDialogOpen, setVideoDialogOpen]);
 
   // Форматы, которые поддерживает редактор
   const formats = [
@@ -165,24 +397,47 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     'list', 'bullet', 'indent',
     'align',
     'blockquote', 'code-block',
-    'link', 'image'
+    'link', 'image', 'video',
+    'table', 'table-cell', 'table-row', 'table-header'
   ];
 
   return (
-    <StyledEditorContainer error={error} editorHeight={height}>
-      <ReactQuill
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        modules={modules}
-        formats={formats}
-        readOnly={disabled}
-        style={{
-          height: height,
-        }}
+    <>
+      <StyledEditorContainer error={error} editorHeight={height}>
+        <ReactQuill
+          ref={quillRef}
+          theme="snow"
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          modules={modules}
+          formats={formats}
+          readOnly={disabled}
+          style={{
+            height: height,
+          }}
+        />
+      </StyledEditorContainer>
+      
+      {/* Модальные окна для расширенных функций */}
+      <ImageDialog 
+        open={imageDialogOpen} 
+        onClose={() => setImageDialogOpen(false)} 
+        onInsert={handleImageInsert} 
       />
-    </StyledEditorContainer>
+      
+      <TableDialog 
+        open={tableDialogOpen} 
+        onClose={() => setTableDialogOpen(false)} 
+        onInsert={handleTableInsert} 
+      />
+
+      <VideoDialog
+        open={videoDialogOpen}
+        onClose={() => setVideoDialogOpen(false)}
+        onInsert={handleVideoInsert}
+      />
+    </>
   );
 };
 
