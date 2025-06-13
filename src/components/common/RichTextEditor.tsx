@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 interface RichTextEditorProps {
@@ -718,16 +718,80 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       onChange(htmlContent);
     } else {
       // Переключаемся с визуального режима на HTML
-      setHtmlContent(value);
+      // Форматируем HTML для лучшей читаемости
+      const formattedHtml = formatHtml(value);
+      setHtmlContent(formattedHtml);
     }
     setIsHtmlMode(!isHtmlMode);
   };
 
+  // Функция для форматирования HTML
+  const formatHtml = (html: string): string => {
+    // Простое форматирование HTML с отступами
+    let formatted = '';
+    let indent = 0;
+    
+    // Замена всех тегов на теги с новой строкой
+    const tags = html.replace(/>\s*</g, '>\n<').split('\n');
+    
+    for (let i = 0; i < tags.length; i++) {
+      const tag = tags[i].trim();
+      
+      // Проверяем, является ли тег закрывающим
+      const isClosingTag = tag.indexOf('</') === 0;
+      // Проверяем, является ли тег самозакрывающимся
+      const isSelfClosingTag = tag.indexOf('/>') >= 0;
+      
+      // Уменьшаем отступ для закрывающих тегов
+      if (isClosingTag) {
+        indent--;
+      }
+      
+      // Добавляем отформатированную строку
+      formatted += '  '.repeat(Math.max(0, indent)) + tag + '\n';
+      
+      // Увеличиваем отступ для открывающих тегов, если они не самозакрывающиеся и не закрывающие
+      if (!isClosingTag && !isSelfClosingTag && tag.indexOf('<') === 0) {
+        indent++;
+      }
+    }
+    
+    return formatted;
+  };
+
   return (
     <>
-      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          {isHtmlMode && (
+            <>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  // Форматировать HTML
+                  setHtmlContent(formatHtml(htmlContent));
+                }}
+                sx={{ textTransform: 'none', mr: 1 }}
+              >
+                Форматировать
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  // Проверка орфографии
+                  window.alert('Функция проверки орфографии будет добавлена в следующей версии');
+                }}
+                sx={{ textTransform: 'none', mr: 1 }}
+              >
+                Проверка орфографии
+              </Button>
+            </>
+          )}
+        </Box>
         <Button
-          variant="outlined"
+          variant="contained"
           size="small"
           onClick={handleModeToggle}
           sx={{ textTransform: 'none' }}
@@ -754,7 +818,73 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               '& .MuiInputBase-input': {
                 height: '100%',
                 overflow: 'auto',
+                padding: '16px',
+                lineHeight: 1.5,
+                whiteSpace: 'pre-wrap',
+                alignItems: 'flex-start',
+                verticalAlign: 'top',
               }
+            }}
+            InputProps={{
+              startAdornment: (
+                <Box sx={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0,
+                  padding: '8px 16px',
+                  borderBottom: '1px solid #ddd',
+                  backgroundColor: '#f5f5f5',
+                  zIndex: 1,
+                  display: 'flex',
+                  justifyContent: 'space-between'
+                }}>
+                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                    HTML-редактор
+                  </Typography>
+                  <Box>
+                    <Button 
+                      size="small" 
+                      variant="text" 
+                      onClick={() => {
+                        // Открыть предпросмотр в новом окне
+                        const previewWindow = window.open('', '_blank');
+                        if (previewWindow) {
+                          previewWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <title>Предпросмотр</title>
+                                <meta charset="utf-8">
+                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                <style>
+                                  body { 
+                                    font-family: Arial, sans-serif; 
+                                    line-height: 1.6;
+                                    max-width: 800px;
+                                    margin: 0 auto;
+                                    padding: 20px;
+                                  }
+                                  img { max-width: 100%; height: auto; }
+                                  table { border-collapse: collapse; width: 100%; }
+                                  th, td { border: 1px solid #ddd; padding: 8px; }
+                                  th { background-color: #f2f2f2; }
+                                </style>
+                              </head>
+                              <body>
+                                ${htmlContent}
+                              </body>
+                            </html>
+                          `);
+                          previewWindow.document.close();
+                        }
+                      }}
+                    >
+                      Предпросмотр
+                    </Button>
+                  </Box>
+                </Box>
+              ),
             }}
           />
         ) : (
