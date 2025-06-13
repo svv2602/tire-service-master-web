@@ -61,6 +61,9 @@ import ClientSearchPage from './pages/client/ClientSearchPage';
 import ClientBookingPage from './pages/client/ClientBookingPage';
 import ClientProfilePage from './pages/client/ClientProfilePage';
 import BookingSuccessPage from './pages/client/BookingSuccessPage';
+import MyBookingsPage from './pages/client/MyBookingsPage';
+import BookingDetailsPage from './pages/client/BookingDetailsPage';
+import RescheduleBookingPage from './pages/client/RescheduleBookingPage';
 
 // Импорты для управления контентом страниц
 import PageContentPage from './pages/page-content/PageContentPage';
@@ -149,6 +152,11 @@ function App() {
               <Route path="/client/booking" element={<ClientBookingPage />} />
               <Route path="/client/booking/success" element={<BookingSuccessPage />} />
               <Route path="/client/profile" element={<ClientProfilePage />} />
+              
+              {/* Новые маршруты для управления записями клиента */}
+              <Route path="/client/bookings" element={<MyBookingsPage />} />
+              <Route path="/client/bookings/:id" element={<BookingDetailsPage />} />
+              <Route path="/client/bookings/:id/reschedule" element={<RescheduleBookingPage />} />
               
               {/* Публичная база знаний (без авторизации) */}
               <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
