@@ -84,6 +84,8 @@ export interface ServicePoint {
   latitude?: number | null;
   longitude?: number | null;
   contact_phone: string;
+  phone?: string;
+  email?: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
   post_count: number;

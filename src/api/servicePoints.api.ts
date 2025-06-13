@@ -76,11 +76,24 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Получение сервисной точки по ID
-    getServicePointById: builder.query<ServicePoint, { partner_id: number; id: string }>({
-      query: ({ partner_id, id }) => ({
-        url: `/partners/${partner_id}/service_points/${id}`,
-      }),
-      providesTags: (_result, _error, { id }) => [{ type: 'ServicePoint' as const, id }],
+    getServicePointById: builder.query<ServicePoint, { partner_id: number; id: string } | string>({
+      query: (arg) => {
+        // Если передана строка, используем ее как ID
+        if (typeof arg === 'string') {
+          return {
+            url: `/service_points/${arg}`,
+          };
+        }
+        // Иначе используем объект с partner_id и id
+        const { partner_id, id } = arg;
+        return {
+          url: `/partners/${partner_id}/service_points/${id}`,
+        };
+      },
+      providesTags: (_result, _error, arg) => {
+        const id = typeof arg === 'string' ? arg : arg.id;
+        return [{ type: 'ServicePoint' as const, id }];
+      },
     }),
 
     // Создание новой сервисной точки

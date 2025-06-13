@@ -223,4 +223,7 @@ export const getCurrentUser = createAsyncThunk(
 
 export const { setCredentials, logout, setInitialized } = authSlice.actions;
 
+// Селектор для получения текущего пользователя
+export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;
+
 export default authSlice.reducer;

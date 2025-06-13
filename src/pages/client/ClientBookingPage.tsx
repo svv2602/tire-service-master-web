@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { 
   Box, 
   Container, 
@@ -51,6 +53,7 @@ const ClientBookingPage: React.FC = () => {
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   
   // Получаем ID сервисной точки из параметров URL
   const searchParams = new URLSearchParams(location.search);
@@ -210,6 +213,7 @@ const ClientBookingPage: React.FC = () => {
           <ClientInfoForm
             clientInfo={clientInfo}
             setClientInfo={setClientInfo}
+            isAuthenticated={isAuthenticated}
           />
         );
       case 3:
