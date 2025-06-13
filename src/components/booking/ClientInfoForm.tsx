@@ -6,7 +6,9 @@ import {
   Grid,
   FormControlLabel,
   Checkbox,
-  InputAdornment
+  InputAdornment,
+  FormControl,
+  FormHelperText
 } from '@mui/material';
 import { useTheme } from '@mui/material';
 import { getThemeColors } from '../../styles';
@@ -16,6 +18,7 @@ import {
   Email as EmailIcon,
   Comment as CommentIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface ClientInfoFormProps {
   clientInfo: {
@@ -23,18 +26,22 @@ interface ClientInfoFormProps {
     phone: string;
     email: string;
     notes: string;
+    receive_notifications: boolean;
   };
   setClientInfo: React.Dispatch<React.SetStateAction<{
     name: string;
     phone: string;
     email: string;
     notes: string;
+    receive_notifications: boolean;
   }>>;
+  isAuthenticated: boolean;
 }
 
-const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientInfo }) => {
+const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientInfo, isAuthenticated }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const { t } = useTranslation();
   
   const [errors, setErrors] = useState({
     name: '',
@@ -70,6 +77,10 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
 
   const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setClientInfo(prev => ({ ...prev, notes: event.target.value }));
+  };
+
+  const handleReceiveNotificationsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setClientInfo(prev => ({ ...prev, receive_notifications: event.target.checked }));
   };
 
   // Валидация полей
@@ -166,23 +177,26 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
         </Grid>
         
         <Grid item xs={12} md={6}>
-          <TextField
-            id="client-email"
-            label="Email"
-            variant="outlined"
-            fullWidth
-            value={clientInfo.email}
-            onChange={handleEmailChange}
-            error={!!errors.email}
-            helperText={errors.email || 'Необязательно'}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <FormControl fullWidth error={!!errors.email}>
+            <TextField
+              id="client-email"
+              label="Email"
+              variant="outlined"
+              fullWidth
+              value={clientInfo.email}
+              onChange={handleEmailChange}
+              error={!!errors.email}
+              helperText={errors.email || 'Необязательно'}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </FormControl>
+          <FormHelperText>{errors.email}</FormHelperText>
         </Grid>
         
         <Grid item xs={12}>
@@ -220,6 +234,21 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
                 Я согласен на обработку персональных данных и принимаю условия пользовательского соглашения
               </Typography>
             }
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="receive_notifications"
+                checked={clientInfo.receive_notifications}
+                onChange={handleReceiveNotificationsChange}
+                color="primary"
+              />
+            }
+            label={t('Получать уведомления на email')}
+            sx={{ mt: 2 }}
           />
         </Grid>
       </Grid>

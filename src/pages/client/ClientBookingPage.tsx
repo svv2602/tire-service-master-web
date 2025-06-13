@@ -72,7 +72,8 @@ const ClientBookingPage: React.FC = () => {
     name: '',
     phone: '',
     email: '',
-    notes: ''
+    notes: '',
+    receive_notifications: true
   });
   const [services, setServices] = useState([
     { service_id: 1, quantity: 1, price: 1000 } // Пример услуги
