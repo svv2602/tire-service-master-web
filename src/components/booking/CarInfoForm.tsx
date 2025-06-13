@@ -18,13 +18,15 @@ interface CarInfoFormProps {
     brand: string;
     model: string;
     year: string;
-    license_plate: string;
+    licensePlate: string;
+    carTypeId?: number;
   };
   setCarInfo: React.Dispatch<React.SetStateAction<{
     brand: string;
     model: string;
     year: string;
-    license_plate: string;
+    licensePlate: string;
+    carTypeId: number;
   }>>;
 }
 
@@ -83,7 +85,7 @@ const CarInfoForm: React.FC<CarInfoFormProps> = ({ carInfo, setCarInfo }) => {
   const handleLicensePlateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setCarInfo(prev => ({
       ...prev,
-      license_plate: event.target.value
+      licensePlate: event.target.value
     }));
   };
   
@@ -152,7 +154,7 @@ const CarInfoForm: React.FC<CarInfoFormProps> = ({ carInfo, setCarInfo }) => {
           <TextField
             fullWidth
             label={t('Гос. номер (необязательно)')}
-            value={carInfo.license_plate}
+            value={carInfo.licensePlate}
             onChange={handleLicensePlateChange}
             placeholder={t('Например: А123БВ777')}
           />

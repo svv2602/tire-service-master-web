@@ -176,7 +176,7 @@ const ClientBookingPage: React.FC = () => {
       const response = await createBooking({
         booking: bookingData,
         client: clientData,
-        ...carData
+        car: carData
       }).unwrap();
       
       // Переходим на страницу успешного бронирования

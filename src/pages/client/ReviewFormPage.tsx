@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Paper, Button, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Container, Typography, Box, Paper, Button, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -10,6 +10,7 @@ import { ReviewFormData } from '../../types/review';
 import ReviewForm from '../../components/reviews/ReviewForm';
 import LoginPrompt from '../../components/auth/LoginPrompt';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Booking as ModelBooking } from '../../types/models';
 
 const ReviewFormPage: React.FC = () => {
   const { t } = useTranslation();
@@ -21,7 +22,7 @@ const ReviewFormPage: React.FC = () => {
 
   // Запрос на получение записей клиента для выбора сервисной точки
   const { data: bookingsData, isLoading: isLoadingBookings } = useGetBookingsByClientQuery(
-    currentUser?.id || '',
+    currentUser?.id ? String(currentUser.id) : '',
     { skip: !currentUser?.id }
   );
 
@@ -46,15 +47,15 @@ const ReviewFormPage: React.FC = () => {
   };
 
   // Обработчик изменения выбранной записи
-  const handleBookingChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+  const handleBookingChange = (event: SelectChangeEvent<string>) => {
     const bookingId = event.target.value as string;
     setSelectedBookingId(bookingId);
     
     // Если выбрана запись, устанавливаем соответствующую сервисную точку
     if (bookingId && bookingsData) {
-      const booking = bookingsData.data.find(b => b.id === bookingId);
+      const booking = bookingsData.data.find(b => String(b.id) === bookingId);
       if (booking) {
-        setSelectedServicePointId(booking.service_point_id);
+        setSelectedServicePointId(String(booking.service_point_id));
       }
     }
   };
@@ -70,7 +71,7 @@ const ReviewFormPage: React.FC = () => {
   }
 
   // Фильтруем только завершенные записи
-  const completedBookings = bookingsData?.data.filter(booking => booking.status === 2) || [];
+  const completedBookings = bookingsData?.data.filter(booking => booking.status_id === 2) || [];
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -126,7 +127,7 @@ const ReviewFormPage: React.FC = () => {
               >
                 <MenuItem value="">{t('Выберите запись')}</MenuItem>
                 {completedBookings.map((booking) => (
-                  <MenuItem key={booking.id} value={booking.id}>
+                  <MenuItem key={booking.id} value={String(booking.id)}>
                     {t('Запись №')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})
                   </MenuItem>
                 ))}

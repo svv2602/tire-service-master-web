@@ -7,9 +7,81 @@ import {
 import { useGetBookingByIdQuery, useUpdateBookingMutation } from '../../api/bookings.api';
 import { useTranslation } from 'react-i18next';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AvailabilitySelector from '../../components/availability/AvailabilitySelector';
-import TimeSlotPicker from '../../components/availability/TimeSlotPicker';
+import { format, parse } from 'date-fns';
 import { BookingFormData } from '../../types/booking';
+
+// Компонент для выбора даты
+interface AvailabilitySelectorProps {
+  servicePointId: number | string;
+  onDateSelect: (date: string) => void;
+  selectedDate: string | null;
+}
+
+const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({ servicePointId, onDateSelect, selectedDate }) => {
+  // Здесь должна быть логика выбора даты
+  // Для упрощения просто выбираем дату из предопределенного списка
+  const availableDates = [
+    format(new Date(), 'yyyy-MM-dd'),
+    format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
+    format(new Date(Date.now() + 86400000 * 2), 'yyyy-MM-dd'),
+  ];
+
+  return (
+    <Box>
+      <Typography variant="subtitle1" gutterBottom>
+        Доступные даты:
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {availableDates.map(date => (
+          <Button
+            key={date}
+            variant={selectedDate === date ? 'contained' : 'outlined'}
+            onClick={() => onDateSelect(date)}
+          >
+            {date}
+          </Button>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
+// Компонент для выбора времени
+interface TimeSlotPickerProps {
+  servicePointId: number | string;
+  date: string;
+  onTimeSlotSelect: (slot: { start_time: string; end_time: string }) => void;
+  selectedTimeSlot: { start_time: string; end_time: string } | null;
+}
+
+const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({ servicePointId, date, onTimeSlotSelect, selectedTimeSlot }) => {
+  // Здесь должна быть логика получения доступных временных слотов
+  // Для упрощения используем предопределенный список
+  const availableSlots = [
+    { start_time: '10:00', end_time: '11:00' },
+    { start_time: '11:30', end_time: '12:30' },
+    { start_time: '14:00', end_time: '15:00' },
+  ];
+
+  return (
+    <Box>
+      <Typography variant="subtitle1" gutterBottom>
+        Доступное время:
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {availableSlots.map(slot => (
+          <Button
+            key={slot.start_time}
+            variant={selectedTimeSlot?.start_time === slot.start_time ? 'contained' : 'outlined'}
+            onClick={() => onTimeSlotSelect(slot)}
+          >
+            {slot.start_time} - {slot.end_time}
+          </Button>
+        ))}
+      </Box>
+    </Box>
+  );
+};
 
 const RescheduleBookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -51,7 +123,7 @@ const RescheduleBookingPage: React.FC = () => {
     if (!booking || !selectedDate || !selectedTimeSlot) return;
 
     try {
-      const updateData: Partial<BookingFormData> = {
+      const updateData = {
         booking_date: selectedDate,
         start_time: selectedTimeSlot.start_time,
         end_time: selectedTimeSlot.end_time,

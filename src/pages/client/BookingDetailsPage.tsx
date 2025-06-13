@@ -1,287 +1,343 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Container, Typography, Box, Paper, Grid, Divider, 
-  Button, Chip, CircularProgress, Alert, Dialog,
-  DialogTitle, DialogContent, DialogContentText, DialogActions
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Paper,
+  Grid,
+  Divider,
+  CircularProgress,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
-import { useGetBookingByIdQuery, useDeleteBookingMutation } from '../../api/bookings.api';
-import { BookingStatusEnum } from '../../types/booking';
-import { useTranslation } from 'react-i18next';
+import {
+  CalendarToday as CalendarIcon,
+  AccessTime as TimeIcon,
+  LocationOn as LocationIcon,
+  DirectionsCar as CarIcon,
+  ArrowBack as ArrowBackIcon
+} from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import NotesIcon from '@mui/icons-material/Notes';
-import BookingStatus from '../../components/bookings/BookingStatus';
-import ContactService from '../../components/bookings/ContactService';
+import { useGetBookingByIdQuery, useCancelBookingMutation } from '../../api/bookings.api';
+import { BookingFormData, BookingService } from '../../types/booking';
+import { getThemeColors, getButtonStyles } from '../../styles';
+import { useTheme } from '@mui/material/styles';
+import PageHeader from '../../components/common/PageHeader';
+import BookingStatusBadge from '../../components/bookings/BookingStatusBadge';
+
+// Расширенный интерфейс для сервиса бронирования с дополнительными полями
+interface ExtendedBookingService extends BookingService {
+  id?: number;
+  name?: string;
+}
+
+// Расширенный интерфейс для данных бронирования с дополнительными полями
+interface ExtendedBooking extends BookingFormData {
+  id: number;
+  status_id: number;
+  services: ExtendedBookingService[];
+  car?: {
+    brand?: string;
+    model?: string;
+    year?: string;
+    license_plate?: string;
+  };
+  service_point?: {
+    name?: string;
+    address?: string;
+  };
+}
 
 const BookingDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const dangerButtonStyles = getButtonStyles(theme, 'error');
   const navigate = useNavigate();
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-
-  // Запрос на получение данных о записи
-  const { data: booking, isLoading, isError } = useGetBookingByIdQuery(id || '');
+  const { user } = useSelector((state: RootState) => state.auth);
   
-  // Мутация для отмены записи
-  const [deleteBooking, { isLoading: isDeleting }] = useDeleteBookingMutation();
-
-  // Получение названия статуса
-  const getStatusName = (status: BookingStatusEnum) => {
-    switch (status) {
-      case BookingStatusEnum.PENDING:
-        return t('Ожидает');
-      case BookingStatusEnum.COMPLETED:
-        return t('Завершено');
-      case BookingStatusEnum.CANCELLED:
-        return t('Отменено');
-      default:
-        return t('Неизвестно');
-    }
-  };
-
-  // Получение цвета статуса
-  const getStatusColor = (status: BookingStatusEnum) => {
-    switch (status) {
-      case BookingStatusEnum.PENDING:
-        return 'primary';
-      case BookingStatusEnum.COMPLETED:
-        return 'success';
-      case BookingStatusEnum.CANCELLED:
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
+  // Состояние для диалога отмены бронирования
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  
+  // Запрос данных бронирования
+  const { data: bookingData, isLoading, error } = useGetBookingByIdQuery(id || '', {
+    skip: !id
+  });
+  
+  // Приводим данные к нужному типу
+  const booking = bookingData as unknown as ExtendedBooking;
+  
+  // Мутация для отмены бронирования
+  const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
+  
   // Форматирование даты
-  const formatDate = (dateString: string) => {
+  const formatBookingDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), 'd MMMM yyyy', { locale: ru });
-    } catch (error) {
+      const date = new Date(dateString);
+      return format(date, 'd MMMM yyyy (EEEE)', { locale: ru });
+    } catch (e) {
       return dateString;
     }
   };
-
-  // Обработчик возврата к списку записей
-  const handleBack = () => {
-    navigate('/client/bookings');
-  };
-
-  // Обработчик перехода на страницу переноса записи
-  const handleReschedule = () => {
-    navigate(`/client/bookings/${id}/reschedule`);
-  };
-
-  // Обработчики отмены записи
-  const handleCancelBookingClick = () => {
-    setCancelDialogOpen(true);
-  };
-
-  const handleCancelDialogClose = () => {
-    setCancelDialogOpen(false);
-  };
-
-  const handleConfirmCancel = async () => {
+  
+  // Обработчик отмены бронирования
+  const handleCancelBooking = async () => {
+    if (!id) return;
+    
     try {
-      await deleteBooking(id || '').unwrap();
+      await cancelBooking(id).unwrap();
       setCancelDialogOpen(false);
-      navigate('/client/bookings');
-    } catch (error) {
-      console.error('Ошибка при отмене записи:', error);
+      // Обновляем страницу или перенаправляем пользователя
+      window.location.reload();
+    } catch (error: any) {
+      setCancelError(error.data?.error || 'Не удалось отменить бронирование');
     }
   };
-
+  
+  // Проверяем, может ли пользователь отменить бронирование
+  const canCancel = booking && booking.status_id === 1; // Предполагаем, что 1 - это статус "pending"
+  
+  // Если данные загружаются
   if (isLoading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" my={8}>
-          <CircularProgress />
-        </Box>
-      </Container>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <CircularProgress />
+      </Box>
     );
   }
-
-  if (isError || !booking) {
+  
+  // Если произошла ошибка
+  if (error || !booking) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t('Ошибка при загрузке данных о записи')}
+          Не удалось загрузить данные бронирования. Пожалуйста, попробуйте позже.
         </Alert>
         <Button 
+          variant="outlined" 
           startIcon={<ArrowBackIcon />} 
-          onClick={handleBack}
-          variant="outlined"
+          component={Link} 
+          to="/client/bookings"
+          sx={secondaryButtonStyles}
         >
-          {t('Вернуться к списку записей')}
+          Вернуться к списку
         </Button>
       </Container>
     );
   }
-
+  
+  // Определяем статус бронирования
+  const getStatusLabel = (statusId: number) => {
+    switch (statusId) {
+      case 1: return 'pending';
+      case 2: return 'confirmed';
+      case 3: return 'completed';
+      case 4: return 'cancelled';
+      default: return 'unknown';
+    }
+  };
+  
+  const bookingStatus = getStatusLabel(booking.status_id);
+  
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box mb={3} display="flex" alignItems="center">
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={handleBack}
-          sx={{ mr: 2 }}
-        >
-          {t('Назад')}
-        </Button>
-        <Typography variant="h4" component="h1">
-          {t('Запись №')}{booking.id}
-        </Typography>
-        <Box ml={2}>
-          <Chip 
-            label={getStatusName(booking.status)} 
-            color={getStatusColor(booking.status) as any}
-          />
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <PageHeader 
+        title="Детали бронирования"
+        breadcrumbs={[
+          { label: 'Главная', link: '/client' },
+          { label: 'Мои записи', link: '/client/bookings' },
+          { label: `Запись №${booking.id}`, link: '' }
+        ]}
+      />
+      
+      <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Запись №{booking.id}
+          </Typography>
+          <BookingStatusBadge status={bookingStatus} />
         </Box>
-      </Box>
-
-      <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          {t('Детали записи')}
-        </Typography>
         
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          <Grid item xs={12} sm={6}>
-            <Box display="flex" alignItems="center" mb={2}>
-              <CalendarTodayIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body1">
-                <strong>{t('Дата')}:</strong> {formatDate(booking.booking_date)}
-              </Typography>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12} sm={6}>
-            <Box display="flex" alignItems="center" mb={2}>
-              <AccessTimeIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body1">
-                <strong>{t('Время')}:</strong> {booking.start_time} - {booking.end_time}
-              </Typography>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box display="flex" alignItems="center" mb={2}>
-              <LocationOnIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body1">
-                <strong>{t('Сервисная точка')}:</strong> ID: {booking.service_point_id}
-              </Typography>
-            </Box>
-          </Grid>
-          
-          {booking.car_id && (
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center" mb={2}>
-                <DirectionsCarIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                <Typography variant="body1">
-                  <strong>{t('Автомобиль')}:</strong> ID: {booking.car_id}
+        <Divider sx={{ mb: 3 }} />
+        
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <CalendarIcon sx={{ mr: 1, color: colors.primary }} />
+                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                  Дата
                 </Typography>
               </Box>
-            </Grid>
-          )}
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {formatBookingDate(booking.booking_date)}
+              </Typography>
+            </Box>
+          </Grid>
           
-          {booking.notes && (
-            <Grid item xs={12}>
-              <Box display="flex" mb={2}>
-                <NotesIcon sx={{ mr: 1, mt: 0.5, color: 'text.secondary' }} />
-                <Box>
-                  <Typography variant="body1" gutterBottom>
-                    <strong>{t('Примечания')}:</strong>
-                  </Typography>
-                  <Typography variant="body2">
-                    {booking.notes}
-                  </Typography>
-                </Box>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <TimeIcon sx={{ mr: 1, color: colors.primary }} />
+                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                  Время
+                </Typography>
               </Box>
-            </Grid>
-          )}
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {booking.start_time} - {booking.end_time}
+              </Typography>
+            </Box>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <LocationIcon sx={{ mr: 1, color: colors.primary }} />
+                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                  Сервисный центр
+                </Typography>
+              </Box>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {booking.service_point?.name || '—'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                {booking.service_point?.address || '—'}
+              </Typography>
+            </Box>
+          </Grid>
         </Grid>
         
         <Divider sx={{ my: 3 }} />
         
-        <Typography variant="h6" gutterBottom>
-          {t('Услуги')}
-        </Typography>
-        
-        {booking.services && booking.services.length > 0 ? (
-          <Box component="ul" sx={{ pl: 2 }}>
-            {booking.services.map((service, index) => (
-              <Typography component="li" key={index} variant="body1" gutterBottom>
-                {t('Услуга')} ID: {service.service_id} - {service.quantity} шт. x {service.price} руб.
-              </Typography>
-            ))}
-          </Box>
-        ) : (
-          <Typography variant="body2" color="textSecondary">
-            {t('Нет информации об услугах')}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Автомобиль
           </Typography>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <CarIcon sx={{ mr: 1, color: colors.primary }} />
+            <Typography variant="body1">
+              {booking.car?.brand} {booking.car?.model} ({booking.car?.year})
+            </Typography>
+          </Box>
+          
+          <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+            Гос. номер: <strong>{booking.car?.license_plate || '—'}</strong>
+          </Typography>
+        </Box>
+        
+        <Divider sx={{ my: 3 }} />
+        
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Услуги
+          </Typography>
+          
+          {booking.services && booking.services.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {booking.services.map((service, index) => (
+                <BookingStatusBadge 
+                  key={service.id || service.service_id || index} 
+                  customLabel={`${(service as ExtendedBookingService).name || `Услуга ${service.service_id}`} (${service.quantity} шт.)`}
+                  status="default"
+                  size="small"
+                />
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+              Нет выбранных услуг
+            </Typography>
+          )}
+        </Box>
+        
+        {booking.notes && (
+          <>
+            <Divider sx={{ my: 3 }} />
+            
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Примечания
+              </Typography>
+              
+              <Typography variant="body2">
+                {booking.notes}
+              </Typography>
+            </Box>
+          </>
         )}
         
-        <Box mt={4} display="flex" flexWrap="wrap" gap={2}>
-          {booking.status === BookingStatusEnum.PENDING && (
-            <>
-              <Button 
-                variant="contained" 
-                color="primary"
-                onClick={handleReschedule}
-              >
-                {t('Перенести запись')}
-              </Button>
-              
-              <Button 
-                variant="outlined" 
-                color="error"
-                onClick={handleCancelBookingClick}
-                disabled={isDeleting}
-              >
-                {t('Отменить запись')}
-              </Button>
-            </>
+        <Divider sx={{ my: 3 }} />
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Button 
+            variant="outlined" 
+            startIcon={<ArrowBackIcon />} 
+            component={Link} 
+            to="/client/bookings"
+            sx={secondaryButtonStyles}
+          >
+            Назад к списку
+          </Button>
+          
+          {canCancel && (
+            <Button 
+              variant="contained" 
+              color="error"
+              onClick={() => setCancelDialogOpen(true)}
+              disabled={isCancelling}
+              sx={dangerButtonStyles}
+            >
+              {isCancelling ? <CircularProgress size={24} /> : 'Отменить запись'}
+            </Button>
           )}
         </Box>
       </Paper>
       
-      <Grid container spacing={4}>
-        <Grid item xs={12} md={6}>
-          <BookingStatus booking={booking} />
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <ContactService servicePointId={booking.service_point_id} />
-        </Grid>
-      </Grid>
-      
-      {/* Диалог подтверждения отмены */}
+      {/* Диалог подтверждения отмены бронирования */}
       <Dialog
         open={cancelDialogOpen}
-        onClose={handleCancelDialogClose}
+        onClose={() => setCancelDialogOpen(false)}
       >
-        <DialogTitle>{t('Отменить запись?')}</DialogTitle>
+        <DialogTitle>Отмена записи</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {t('Вы уверены, что хотите отменить запись? Это действие нельзя будет отменить.')}
+            Вы уверены, что хотите отменить запись? Это действие нельзя отменить.
           </DialogContentText>
+          {cancelError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {cancelError}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDialogClose} color="primary">
-            {t('Отмена')}
+          <Button 
+            onClick={() => setCancelDialogOpen(false)} 
+            sx={secondaryButtonStyles}
+            disabled={isCancelling}
+          >
+            Отмена
           </Button>
           <Button 
-            onClick={handleConfirmCancel} 
+            onClick={handleCancelBooking} 
             color="error" 
             variant="contained"
-            disabled={isDeleting}
+            disabled={isCancelling}
+            sx={dangerButtonStyles}
           >
-            {isDeleting ? <CircularProgress size={24} /> : t('Подтвердить отмену')}
+            {isCancelling ? <CircularProgress size={24} /> : 'Подтвердить отмену'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -8,7 +8,25 @@ import ReviewsList from '../../components/reviews/ReviewsList';
 import LoginPrompt from '../../components/auth/LoginPrompt';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
-import { ReviewStatus } from '../../types/review';
+import { ReviewStatus, Review as ReviewType } from '../../types/review';
+import { Review as ModelReview } from '../../types/models';
+
+// Функция для конвертации типов Review
+const convertReview = (modelReview: ModelReview): ReviewType => {
+  return {
+    id: modelReview.id,
+    user_id: modelReview.client_id,
+    service_point_id: modelReview.service_point_id,
+    booking_id: 0, // Значение по умолчанию
+    rating: modelReview.rating,
+    comment: modelReview.comment || modelReview.text || '',
+    status: modelReview.status as ReviewStatus || 'published',
+    response: modelReview.response,
+    created_at: modelReview.created_at,
+    updated_at: modelReview.updated_at,
+    service_point: modelReview.service_point
+  };
+};
 
 // Интерфейс для фильтров
 interface ReviewsFilter {
@@ -26,7 +44,7 @@ const MyReviewsPage: React.FC = () => {
 
   // Запрос на получение отзывов клиента
   const { data: reviewsData, isLoading, isError, refetch } = useGetReviewsByClientQuery(
-    currentUser?.id || '',
+    currentUser?.id ? String(currentUser.id) : '',
     { skip: !currentUser?.id }
   );
 
@@ -51,6 +69,13 @@ const MyReviewsPage: React.FC = () => {
   if (!currentUser) {
     return <LoginPrompt />;
   }
+
+  // Конвертируем данные отзывов
+  const convertedReviews = reviewsData?.data
+    ? reviewsData.data
+        .map(convertReview)
+        .filter(review => review.status === filters.status)
+    : [];
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -89,9 +114,9 @@ const MyReviewsPage: React.FC = () => {
           </Box>
         ) : isError ? (
           <Alert severity="error">{t('Произошла ошибка при загрузке отзывов')}</Alert>
-        ) : reviewsData && reviewsData.data.length > 0 ? (
+        ) : convertedReviews.length > 0 ? (
           <ReviewsList 
-            reviews={reviewsData.data.filter(review => review.status === filters.status)} 
+            reviews={convertedReviews} 
             showServicePoint={true}
           />
         ) : (

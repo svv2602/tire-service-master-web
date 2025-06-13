@@ -6,13 +6,53 @@ import {
 import { useGetReviewsByServicePointQuery } from '../../api/reviews.api';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Review } from '../../types/review';
+import { Review as ReviewType } from '../../types/review';
+import { Review as ModelReview } from '../../types/models';
 import ReviewCard from '../reviews/ReviewCard';
-import AddIcon from '@mui/icons-material/Add';
+import { Add as AddIcon } from '@mui/icons-material';
+import { UserRole } from '../../types/user-role';
 
 interface ReviewsSectionProps {
   servicePointId: string | number;
 }
+
+// Функция для преобразования Review из models в Review из review
+const convertModelReviewToReviewType = (modelReview: ModelReview): ReviewType => {
+  // Создаем базовый объект Review
+  const review: Partial<ReviewType> = {
+    id: modelReview.id,
+    user_id: modelReview.client_id, 
+    service_point_id: modelReview.service_point_id,
+    booking_id: 0, // Значение по умолчанию
+    rating: modelReview.rating,
+    comment: modelReview.comment || modelReview.text || '',
+    status: modelReview.status || 'published',
+    response: modelReview.response,
+    created_at: modelReview.created_at,
+    updated_at: modelReview.updated_at,
+    service_point: modelReview.service_point
+  };
+  
+  // Если есть client, преобразуем его в User
+  if (modelReview.client) {
+    review.user = {
+      id: modelReview.client.id,
+      email: modelReview.client.email || '',
+      phone: modelReview.client.phone,
+      first_name: modelReview.client.first_name,
+      last_name: modelReview.client.last_name,
+      role: UserRole.CLIENT,
+      role_id: 1, // ID роли клиента
+      is_active: true,
+      email_verified: true,
+      phone_verified: true,
+      created_at: modelReview.client.created_at || modelReview.created_at,
+      updated_at: modelReview.client.updated_at || modelReview.updated_at
+    };
+  }
+  
+  return review as ReviewType;
+};
 
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ servicePointId }) => {
   const { t } = useTranslation();
@@ -79,14 +119,17 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ servicePointId }) => {
     : 0;
 
   // Фильтруем отзывы по рейтингу в зависимости от выбранной вкладки
-  let filteredReviews: Review[] = [];
+  let filteredModelReviews: ModelReview[] = [];
   if (tabValue === 0) {
-    filteredReviews = publishedReviews; // Все отзывы
+    filteredModelReviews = publishedReviews; // Все отзывы
   } else if (tabValue === 1) {
-    filteredReviews = publishedReviews.filter(review => review.rating >= 4); // Положительные (4-5 звезд)
+    filteredModelReviews = publishedReviews.filter(review => review.rating >= 4); // Положительные (4-5 звезд)
   } else if (tabValue === 2) {
-    filteredReviews = publishedReviews.filter(review => review.rating <= 3); // Критические (1-3 звезды)
+    filteredModelReviews = publishedReviews.filter(review => review.rating <= 3); // Критические (1-3 звезды)
   }
+  
+  // Конвертируем отзывы из модели в тип Review
+  const filteredReviews: ReviewType[] = filteredModelReviews.map(convertModelReviewToReviewType);
 
   // Разбиваем на страницы
   const startIndex = (page - 1) * reviewsPerPage;

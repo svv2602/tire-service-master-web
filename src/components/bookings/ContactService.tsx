@@ -15,7 +15,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
   const { t } = useTranslation();
   
   // Запрос на получение данных о сервисной точке
-  const { data: servicePoint, isLoading, isError } = useGetServicePointByIdQuery(servicePointId);
+  const { data: servicePoint, isLoading, isError } = useGetServicePointByIdQuery(String(servicePointId));
 
   if (isLoading) {
     return (
@@ -42,6 +42,38 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
       </Paper>
     );
   }
+
+  // Преобразуем рабочие часы в строку для отображения
+  const formatWorkingHours = (workingHours: any): string => {
+    if (!workingHours) return 'Информация отсутствует';
+    
+    try {
+      if (typeof workingHours === 'string') {
+        return workingHours;
+      }
+      
+      // Предполагаем, что workingHours - это объект с днями недели
+      const daysTranslation: Record<string, string> = {
+        monday: 'Понедельник',
+        tuesday: 'Вторник',
+        wednesday: 'Среда',
+        thursday: 'Четверг',
+        friday: 'Пятница',
+        saturday: 'Суббота',
+        sunday: 'Воскресенье'
+      };
+      
+      return Object.entries(workingHours)
+        .map(([day, hours]) => {
+          if (!hours || (hours as any).closed) return `${daysTranslation[day]}: Выходной`;
+          return `${daysTranslation[day]}: ${(hours as any).start || ''} - ${(hours as any).end || ''}`;
+        })
+        .join('\n');
+    } catch (error) {
+      console.error('Ошибка форматирования рабочих часов:', error);
+      return 'Информация отсутствует';
+    }
+  };
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
@@ -93,7 +125,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
                 {t('Часы работы')}:
               </Typography>
               <Typography variant="body2" component="div" sx={{ whiteSpace: 'pre-line' }}>
-                {servicePoint.working_hours}
+                {formatWorkingHours(servicePoint.working_hours)}
               </Typography>
             </Box>
           </Box>

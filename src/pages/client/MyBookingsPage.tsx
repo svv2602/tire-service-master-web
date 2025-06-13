@@ -8,6 +8,33 @@ import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
 import { BookingStatusEnum } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
+import { Booking as ModelBooking } from '../../types/models';
+import { Booking } from '../../types/booking';
+
+// Функция для конвертации типов Booking
+const convertBooking = (modelBooking: ModelBooking): Booking => {
+  return {
+    id: String(modelBooking.id),
+    client_id: String(modelBooking.client_id),
+    service_point_id: String(modelBooking.service_point_id),
+    car_id: modelBooking.car_id ? String(modelBooking.car_id) : null,
+    car_type_id: String(modelBooking.car_type_id),
+    slot_id: String(modelBooking.slot_id || 0),
+    booking_date: modelBooking.booking_date,
+    start_time: modelBooking.start_time,
+    end_time: modelBooking.end_time,
+    notes: modelBooking.notes,
+    services: modelBooking.services?.map(s => ({
+      service_id: String(s.service_id),
+      quantity: s.quantity,
+      price: s.price
+    })) || [],
+    status: modelBooking.status_id as BookingStatusEnum,
+    scheduled_at: modelBooking.booking_date + ' ' + modelBooking.start_time,
+    created_at: modelBooking.created_at,
+    updated_at: modelBooking.updated_at
+  };
+};
 
 // Интерфейс для фильтров
 interface BookingsFilter {
@@ -26,7 +53,7 @@ const MyBookingsPage: React.FC = () => {
 
   // Запрос на получение записей клиента
   const { data: bookingsData, isLoading, isError, refetch } = useGetBookingsByClientQuery(
-    currentUser?.id || '', 
+    currentUser?.id ? String(currentUser.id) : '', 
     { skip: !currentUser?.id }
   );
 
@@ -61,6 +88,12 @@ const MyBookingsPage: React.FC = () => {
     return <LoginPrompt />;
   }
 
+  // Конвертируем данные бронирований
+  const convertedBookings = bookingsData?.data
+    ? bookingsData.data.map(convertBooking)
+        .filter(booking => booking.status === filters.status)
+    : [];
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -93,9 +126,9 @@ const MyBookingsPage: React.FC = () => {
           </Box>
         ) : isError ? (
           <Alert severity="error">{t('Произошла ошибка при загрузке записей')}</Alert>
-        ) : bookingsData && bookingsData.data.length > 0 ? (
+        ) : convertedBookings.length > 0 ? (
           <BookingsList 
-            bookings={bookingsData.data.filter(booking => booking.status === filters.status)} 
+            bookings={convertedBookings} 
           />
         ) : (
           <Alert severity="info">{t('У вас нет записей с выбранными параметрами')}</Alert>

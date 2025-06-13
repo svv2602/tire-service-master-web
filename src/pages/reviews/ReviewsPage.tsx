@@ -38,8 +38,8 @@ import {
   useUpdateReviewMutation,
   useGetServicePointsQuery,
 } from '../../api';
-import { Review, ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
-import { ServicePoint } from '../../types/models';
+import { Review as ModelReview, ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
+import { ServicePoint, Review as DBReview } from '../../types/models';
 import { SelectChangeEvent } from '@mui/material/Select';
 // Импорты централизованной системы стилей
 import { SIZES } from '../../styles/theme';
@@ -60,19 +60,39 @@ import { Select } from '../../components/ui/Select';
 import { Pagination } from '../../components/ui/Pagination';
 import { Modal } from '../../components/ui/Modal';
 
-// Расширяем интерфейс Review для отображения
-interface ReviewWithClient extends Review {
+// Расширяем интерфейс для отображения, не наследуя от ModelReview
+interface ReviewWithClient {
+  id: number;
+  user_id: number;
+  service_point_id: number;
+  booking_id: number;
+  rating: number;
+  comment: string;
+  status: ReviewStatus;
+  response?: string;
+  created_at: string;
+  updated_at: string;
   client?: {
     first_name: string;
     last_name: string;
   };
-  text?: string; // Альтернативное поле для comment
+  text?: string;
+  user?: {
+    first_name: string;
+    last_name: string;
+  };
+  service_point?: {
+    id: number;
+    name: string;
+  };
   booking?: {
     id: number;
     scheduled_at: string;
-    clientCar?: {
-      carBrand?: { name: string };
-      carModel?: { name: string };
+    client?: {
+      car?: {
+        carBrand?: { name: string };
+        carModel?: { name: string };
+      }
     };
   };
 }
@@ -129,7 +149,15 @@ const ReviewsPage: React.FC = () => {
 
   const isLoading = reviewsLoading || deleteLoading;
   const error = reviewsError;
-  const reviews = (reviewsData as unknown as ReviewWithClient[]) || [];
+  const reviews = (Array.isArray(reviewsData?.data) 
+    ? reviewsData?.data.map((review: any) => ({
+        ...review,
+        user_id: review.client_id || 0,
+        booking_id: review.booking?.id || 0,
+        status: review.status || 'pending',
+        user: review.user || { first_name: '', last_name: '' }
+      }))
+    : []) as ReviewWithClient[];
   const totalItems = reviews.length;
   const servicePoints = (servicePointsData as unknown as ServicePoint[]) || [];
 
@@ -315,7 +343,7 @@ const ReviewsPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {reviews.map((review) => (
+            {reviews.map((review: ReviewWithClient) => (
               <TableRow key={review.id}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
@@ -337,7 +365,7 @@ const ReviewsPage: React.FC = () => {
                           color: theme.palette.text.secondary 
                         }}
                       >
-                        {review.booking?.clientCar?.carBrand?.name} {review.booking?.clientCar?.carModel?.name}
+                        {review.booking?.client?.car?.carBrand?.name} {review.booking?.client?.car?.carModel?.name}
                       </Typography>
                     </Box>
                   </Box>
