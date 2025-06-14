@@ -959,9 +959,9 @@ const RichTextEditor = ({
           `;
           tableButton.innerHTML = '';
           tableButton.appendChild(tableIcon);
-          tableButton.style.display = 'flex';
-          tableButton.style.alignItems = 'center';
-          tableButton.style.justifyContent = 'center';
+          
+          // Используем setAttribute для установки стилей вместо прямого обращения к style
+          tableButton.setAttribute('style', 'display: flex; align-items: center; justify-content: center;');
         }
         
         // Очистка форматирования
