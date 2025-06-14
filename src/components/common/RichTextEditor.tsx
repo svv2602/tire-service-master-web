@@ -1,8 +1,16 @@
 import React, { useMemo, useState, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography, Checkbox, FormControlLabel } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import TableChartIcon from '@mui/icons-material/TableChart';
+
+// Интерфейс для модального окна ссылок
+interface LinkDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onInsert: (url: string, text: string, title: string, target: string, rel: string, cssClass: string, noFollow: boolean, id: string) => void;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -112,6 +120,22 @@ const StyledEditorContainer = styled(Box, {
         fill: theme.palette.primary.main,
       },
     },
+    // Стиль для кнопки таблицы
+    '& .ql-table': {
+      position: 'relative',
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '20px',
+        height: '20px',
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    },
   },
   '& .ql-editor': {
     padding: '16px',
@@ -205,6 +229,153 @@ const StyledEditorContainer = styled(Box, {
     boxShadow: theme.shadows[4],
   },
 }));
+
+// Компонент модального окна для ссылок
+const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
+  const [url, setUrl] = useState('');
+  const [text, setText] = useState('');
+  const [title, setTitle] = useState('');
+  const [target, setTarget] = useState('_self');
+  const [cssClass, setCssClass] = useState('');
+  const [noFollow, setNoFollow] = useState(false);
+  const [id, setId] = useState('');
+  const [rel, setRel] = useState('');
+
+  const handleInsert = () => {
+    if (url) {
+      onInsert(url, text, title, target, rel, cssClass, noFollow, id);
+      setUrl('');
+      setText('');
+      setTitle('');
+      setTarget('_self');
+      setCssClass('');
+      setNoFollow(false);
+      setId('');
+      setRel('');
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle>Ссылка</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Вид ссылки:</InputLabel>
+              <Select
+                value="на документ на сервере"
+                label="Вид ссылки:"
+              >
+                <MenuItem value="на документ на сервере">на документ на сервере</MenuItem>
+                <MenuItem value="на документ в интернете">на документ в интернете</MenuItem>
+                <MenuItem value="якорь в этом документе">якорь в этом документе</MenuItem>
+                <MenuItem value="e-mail">e-mail</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Текст:"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Текст ссылки"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Адрес:"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
+              Дополнительные параметры
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Всплывающая подсказка:"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="CSS класс:"
+              value={cssClass}
+              onChange={(e) => setCssClass(e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Открыть ссылку в:</InputLabel>
+              <Select
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                label="Открыть ссылку в:"
+              >
+                <MenuItem value="_self">этом окне (_self)</MenuItem>
+                <MenuItem value="_blank">новом окне (_blank)</MenuItem>
+                <MenuItem value="_parent">родительском окне (_parent)</MenuItem>
+                <MenuItem value="_top">верхнем окне (_top)</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox 
+                  checked={noFollow}
+                  onChange={(e) => setNoFollow(e.target.checked)}
+                />
+              }
+              label="Не учитывать ссылку поисковиками (nofollow, noindex)"
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Идентификатор (id):"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Атрибут Rel:"
+              value={rel}
+              onChange={(e) => setRel(e.target.value)}
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Отменить</Button>
+        <Button onClick={handleInsert} variant="contained" color="primary">
+          Сохранить
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 // Компоненты модальных окон для расширенных функций
 const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) => {
@@ -474,6 +645,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [tableDialogOpen, setTableDialogOpen] = useState(false);
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   
   // Состояние для переключения между режимами редактирования
   const [isHtmlMode, setIsHtmlMode] = useState(false);
@@ -593,6 +765,42 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
+  // Обработчик вставки ссылки
+  const handleLinkInsert = (
+    url: string, 
+    text: string, 
+    title: string, 
+    target: string, 
+    rel: string, 
+    cssClass: string, 
+    noFollow: boolean, 
+    id: string
+  ) => {
+    const editor = quillRef.current?.getEditor();
+    if (editor) {
+      const range = editor.getSelection(true);
+      
+      // Формируем атрибуты для ссылки
+      let relValue = rel || '';
+      if (noFollow) {
+        relValue = relValue ? `${relValue} nofollow noindex` : 'nofollow noindex';
+      }
+      
+      // Создаем HTML для ссылки с атрибутами
+      let linkHtml = `<a href="${url}"`;
+      if (title) linkHtml += ` title="${title}"`;
+      if (target) linkHtml += ` target="${target}"`;
+      if (relValue) linkHtml += ` rel="${relValue}"`;
+      if (cssClass) linkHtml += ` class="${cssClass}"`;
+      if (id) linkHtml += ` id="${id}"`;
+      linkHtml += `>${text || url}</a>`;
+      
+      // Вставляем HTML через clipboard API
+      editor.clipboard.dangerouslyPasteHTML(range.index, linkHtml);
+      editor.setSelection(range.index + 1, 0);
+    }
+  };
+
   // Функция для добавления подписей к кнопкам
   const addButtonLabels = () => {
     setTimeout(() => {
@@ -646,7 +854,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         
         // Медиа
         const linkButton = toolbar.querySelector('.ql-link');
-        if (linkButton) linkButton.setAttribute('aria-label', 'Вставить ссылку');
+        if (linkButton) {
+          linkButton.setAttribute('aria-label', 'Вставить ссылку');
+          // Переопределяем обработчик клика для открытия нашего модального окна
+          linkButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setLinkDialogOpen(true);
+          });
+        }
         
         const imageButton = toolbar.querySelector('.ql-image');
         if (imageButton) imageButton.setAttribute('aria-label', 'Вставить изображение');
@@ -654,8 +870,28 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         const videoButton = toolbar.querySelector('.ql-video');
         if (videoButton) videoButton.setAttribute('aria-label', 'Вставить видео');
         
+        // Добавляем иконку таблицы
         const tableButton = toolbar.querySelector('.ql-table');
-        if (tableButton) tableButton.setAttribute('aria-label', 'Вставить таблицу');
+        if (tableButton) {
+          tableButton.setAttribute('aria-label', 'Вставить таблицу');
+          
+          // Создаем и добавляем SVG иконку таблицы
+          const tableIcon = document.createElement('span');
+          tableIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+              <line x1="15" y1="3" x2="15" y2="21"></line>
+            </svg>
+          `;
+          tableButton.innerHTML = '';
+          tableButton.appendChild(tableIcon);
+          tableButton.style.display = 'flex';
+          tableButton.style.alignItems = 'center';
+          tableButton.style.justifyContent = 'center';
+        }
         
         // Очистка форматирования
         const cleanButton = toolbar.querySelector('.ql-clean');
@@ -676,6 +912,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       image: () => setImageDialogOpen(true),
       table: () => setTableDialogOpen(true),
       video: () => setVideoDialogOpen(true),
+      link: () => setLinkDialogOpen(true),
     };
     
     return {
@@ -697,7 +934,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         matchVisual: false,
       },
     };
-  }, [setImageDialogOpen, setTableDialogOpen, setVideoDialogOpen]);
+  }, [setImageDialogOpen, setTableDialogOpen, setVideoDialogOpen, setLinkDialogOpen]);
 
   // Форматы, которые поддерживает редактор
   const formats = [
@@ -921,6 +1158,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         open={videoDialogOpen}
         onClose={() => setVideoDialogOpen(false)}
         onInsert={handleVideoInsert}
+      />
+
+      <LinkDialog
+        open={linkDialogOpen}
+        onClose={() => setLinkDialogOpen(false)}
+        onInsert={handleLinkInsert}
       />
     </>
   );
