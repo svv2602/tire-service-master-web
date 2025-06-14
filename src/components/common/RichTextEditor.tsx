@@ -1175,7 +1175,7 @@ const RichTextEditor = ({
         )}
       </Box>
       
-      <Box ref={editorContainerRef} sx={{ position: 'relative', marginBottom: '30px' }}>
+      <Box ref={editorContainerRef} sx={{ position: 'relative', marginBottom: '30px', zIndex: 1 }}>
         <StyledEditorContainer error={error} editorHeight={currentHeight}>
           {editorMode === 'html' ? (
             <Box sx={{ 
@@ -1320,10 +1320,10 @@ const RichTextEditor = ({
           )}
         </StyledEditorContainer>
         
-        {/* Добавляем элемент для изменения размера */}
+        {/* Добавляем элемент для изменения размера с повышенным z-index */}
         <Box 
           sx={{
-            height: '10px',
+            height: '16px',
             cursor: 'ns-resize',
             backgroundColor: '#f0f0f0',
             borderBottomLeftRadius: '4px',
@@ -1332,6 +1332,8 @@ const RichTextEditor = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
+            position: 'relative',
+            zIndex: 10,
             '&:hover': {
               backgroundColor: '#e0e0e0',
             },
@@ -1339,9 +1341,13 @@ const RichTextEditor = ({
               backgroundColor: '#d0d0d0',
             }
           }}
-          onMouseDown={handleResizeStart}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handleResizeStart(e);
+          }}
         >
-          <Box sx={{ width: '30px', height: '4px', backgroundColor: '#bdbdbd', borderRadius: '2px' }} />
+          <Box sx={{ width: '40px', height: '4px', backgroundColor: '#bdbdbd', borderRadius: '2px' }} />
         </Box>
       </Box>
       
