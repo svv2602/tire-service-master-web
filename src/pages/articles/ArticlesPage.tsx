@@ -40,6 +40,7 @@ import { Chip } from '../../components/ui/Chip';
 
 // Локальные импорты
 import { useGetArticlesQuery, useGetCategoriesQuery } from '../../api/articles.api';
+import { useArticleActions } from '../../hooks/useArticles';
 import { ArticleSummary } from '../../types/articles';
 import { SIZES } from '../../styles/theme';
 import { 
@@ -75,12 +76,14 @@ const ArticlesPage: React.FC = () => {
     category: selectedCategory || undefined,
     sort: selectedSort as 'recent' | 'popular' | 'oldest',
     page: currentPage,
-    per_page: 12
+    per_page: 12,
+    include_drafts: true // Включаем черновики для администраторов
   };
 
   // Хуки для данных
   const { data, error, isLoading, refetch } = useGetArticlesQuery(filters);
   const { data: categoriesData } = useGetCategoriesQuery();
+  const { deleteArticle, loading: deleting } = useArticleActions();
 
   // Данные для отображения
   const displayArticles = data?.data || [];
@@ -91,6 +94,16 @@ const ArticlesPage: React.FC = () => {
     total_count: 0,
   };
   const categories = categoriesData || [];
+
+  // Добавляем логирование для отладки
+  React.useEffect(() => {
+    console.log('📊 ArticlesPage: Данные обновились', {
+      totalArticles: displayArticles.length,
+      totalCount: displayPagination.total_count,
+      filters,
+      articles: displayArticles.map(a => ({ id: a.id, title: a.title, status: a.status }))
+    });
+  }, [displayArticles, displayPagination, filters]);
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,9 +137,18 @@ const ArticlesPage: React.FC = () => {
     if (window.confirm('Вы уверены, что хотите удалить эту статью?')) {
       try {
         console.log('Удаление статьи:', articleId);
-        refetch();
+        const result = await deleteArticle(articleId);
+        
+        if (result.success) {
+          console.log('Статья успешно удалена');
+          refetch(); // Обновляем список статей
+        } else {
+          console.error('Ошибка при удалении статьи:', result.error);
+          alert(`Ошибка при удалении статьи: ${result.error}`);
+        }
       } catch (error) {
         console.error('Ошибка при удалении статьи:', error);
+        alert('Произошла ошибка при удалении статьи');
       }
     }
   };
