@@ -270,71 +270,61 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Вид ссылки:</InputLabel>
-              <Select
-                value="на документ на сервере"
-                label="Вид ссылки:"
-              >
-                <MenuItem value="на документ на сервере">на документ на сервере</MenuItem>
-                <MenuItem value="на документ в интернете">на документ в интернете</MenuItem>
-                <MenuItem value="якорь в этом документе">якорь в этом документе</MenuItem>
-                <MenuItem value="e-mail">e-mail</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Текст:"
+              label="Текст ссылки"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Текст ссылки"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Адрес:"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1 }}>
-              Дополнительные параметры
-            </Typography>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Всплывающая подсказка:"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="CSS класс:"
-              value={cssClass}
-              onChange={(e) => setCssClass(e.target.value)}
+              size="small"
             />
           </Grid>
           
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Открыть ссылку в:</InputLabel>
+            <TextField
+              fullWidth
+              label="Адрес ссылки"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+              size="small"
+              required
+            />
+          </Grid>
+          
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" sx={{ mt: 1, mb: 1, fontSize: '0.9rem', color: 'text.secondary' }}>
+              Дополнительные параметры
+            </Typography>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Всплывающая подсказка"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="CSS класс"
+              value={cssClass}
+              onChange={(e) => setCssClass(e.target.value)}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Открыть ссылку в</InputLabel>
               <Select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                label="Открыть ссылку в:"
+                label="Открыть ссылку в"
               >
                 <MenuItem value="_self">этом окне (_self)</MenuItem>
                 <MenuItem value="_blank">новом окне (_blank)</MenuItem>
@@ -344,40 +334,47 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
             </FormControl>
           </Grid>
           
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Атрибут Rel"
+              value={rel}
+              onChange={(e) => setRel(e.target.value)}
+              size="small"
+            />
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Идентификатор (id)"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
+              size="small"
+            />
+          </Grid>
+          
           <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Checkbox 
                   checked={noFollow}
                   onChange={(e) => setNoFollow(e.target.checked)}
+                  size="small"
                 />
               }
-              label="Не учитывать ссылку поисковиками (nofollow, noindex)"
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Идентификатор (id):"
-              value={id}
-              onChange={(e) => setId(e.target.value)}
-            />
-          </Grid>
-          
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Атрибут Rel:"
-              value={rel}
-              onChange={(e) => setRel(e.target.value)}
+              label={
+                <Typography variant="body2">
+                  Не учитывать ссылку поисковиками (nofollow, noindex)
+                </Typography>
+              }
             />
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Отменить</Button>
-        <Button onClick={handleInsert} variant="contained" color="primary">
+        <Button onClick={onClose} size="small">Отменить</Button>
+        <Button onClick={handleInsert} variant="contained" color="primary" size="small">
           Сохранить
         </Button>
       </DialogActions>
