@@ -1,9 +1,14 @@
 import React, { useMemo, useState, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography, Checkbox, FormControlLabel } from '@mui/material';
+import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography, Checkbox, FormControlLabel, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import TableChartIcon from '@mui/icons-material/TableChart';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import CodeIcon from '@mui/icons-material/Code';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import TextFormatIcon from '@mui/icons-material/TextFormat';
 
 // Интерфейс для модального окна ссылок
 interface LinkDialogProps {
@@ -39,6 +44,9 @@ interface VideoDialogProps {
   onClose: () => void;
   onInsert: (url: string, title: string, width: string, height: string, alignment: string) => void;
 }
+
+// Типы режимов редактора
+type EditorMode = 'visual' | 'html' | 'text';
 
 // Стилизованный контейнер для редактора
 const StyledEditorContainer = styled(Box, {
@@ -631,14 +639,14 @@ const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) =>
   );
 };
 
-const RichTextEditor: React.FC<RichTextEditorProps> = ({
+const RichTextEditor = ({
   value,
   onChange,
   placeholder = 'Начните писать...',
   height = 400,
   error = false,
   disabled = false,
-}) => {
+}: RichTextEditorProps): React.ReactElement => {
   const theme = useTheme();
   
   // Состояние для модальных окон
@@ -648,11 +656,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   
   // Состояние для переключения между режимами редактирования
-  const [isHtmlMode, setIsHtmlMode] = useState(false);
+  const [editorMode, setEditorMode] = useState<EditorMode>('visual');
   const [htmlContent, setHtmlContent] = useState('');
+  const [textContent, setTextContent] = useState('');
   
   // Quill Reference
   const quillRef = useRef<ReactQuill>(null);
+
+  // История изменений для отмены/повтора
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
 
   // Обработчики для расширенных функций
   const handleImageInsert = (
@@ -801,6 +814,64 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
+  // Обработчик отмены действия
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousContent = history[newIndex];
+      setHistoryIndex(newIndex);
+      onChange(previousContent);
+    }
+  };
+
+  // Обработчик повтора действия
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextContent = history[newIndex];
+      setHistoryIndex(newIndex);
+      onChange(nextContent);
+    }
+  };
+
+  // Добавление изменения в историю
+  React.useEffect(() => {
+    if (value && (history.length === 0 || value !== history[historyIndex])) {
+      // Обрезаем историю если мы находимся не в конце
+      const newHistory = history.slice(0, historyIndex + 1);
+      newHistory.push(value);
+      setHistory(newHistory);
+      setHistoryIndex(newHistory.length - 1);
+    }
+  }, [value]);
+
+  // Обработчик переключения режима редактора
+  const handleModeChange = (event: React.MouseEvent<HTMLElement>, newMode: EditorMode | null) => {
+    if (newMode !== null) {
+      if (editorMode === 'visual' && newMode === 'html') {
+        // Переключаемся с визуального режима на HTML
+        const formattedHtml = formatHtml(value);
+        setHtmlContent(formattedHtml);
+      } else if (editorMode === 'visual' && newMode === 'text') {
+        // Переключаемся с визуального режима на текст
+        setTextContent(value.replace(/<[^>]*>/g, ''));
+      } else if (editorMode === 'html' && newMode === 'visual') {
+        // Переключаемся с HTML на визуальный режим
+        onChange(htmlContent);
+      } else if (editorMode === 'html' && newMode === 'text') {
+        // Переключаемся с HTML на текст
+        setTextContent(htmlContent.replace(/<[^>]*>/g, ''));
+      } else if (editorMode === 'text' && newMode === 'visual') {
+        // Переключаемся с текста на визуальный режим
+        onChange(textContent);
+      } else if (editorMode === 'text' && newMode === 'html') {
+        // Переключаемся с текста на HTML режим
+        setHtmlContent(textContent);
+      }
+      setEditorMode(newMode);
+    }
+  };
+
   // Функция для добавления подписей к кнопкам
   const addButtonLabels = () => {
     setTimeout(() => {
@@ -919,7 +990,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       toolbar: {
         container: [
           [{ 'header': [1, 2, 3, false] }],
+          [{ 'font': [] }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
           ['bold', 'italic', 'underline', 'strike'],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
           [{ 'color': [] }, { 'background': [] }],
           [{ 'list': 'ordered'}, { 'list': 'bullet' }],
           [{ 'indent': '-1'}, { 'indent': '+1' }],
@@ -933,34 +1007,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       clipboard: {
         matchVisual: false,
       },
+      history: {
+        delay: 1000,
+        maxStack: 50,
+        userOnly: true
+      }
     };
   }, [setImageDialogOpen, setTableDialogOpen, setVideoDialogOpen, setLinkDialogOpen]);
 
   // Форматы, которые поддерживает редактор
   const formats = [
-    'header',
+    'header', 'font', 'size',
     'bold', 'italic', 'underline', 'strike',
     'color', 'background',
+    'script',
     'list', 'bullet', 'indent',
     'align',
     'blockquote', 'code-block',
     'link', 'image', 'video',
     'table', 'table-cell', 'table-row', 'table-header'
   ];
-
-  // Обработчик переключения между режимами редактирования
-  const handleModeToggle = () => {
-    if (isHtmlMode) {
-      // Переключаемся с HTML на визуальный режим
-      onChange(htmlContent);
-    } else {
-      // Переключаемся с визуального режима на HTML
-      // Форматируем HTML для лучшей читаемости
-      const formattedHtml = formatHtml(value);
-      setHtmlContent(formattedHtml);
-    }
-    setIsHtmlMode(!isHtmlMode);
-  };
 
   // Функция для форматирования HTML
   const formatHtml = (html: string): string => {
@@ -999,46 +1065,76 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   return (
     <>
       <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          {isHtmlMode && (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <ToggleButtonGroup
+            value={editorMode}
+            exclusive
+            onChange={handleModeChange}
+            aria-label="режим редактора"
+            size="small"
+            sx={{ mr: 2 }}
+          >
+            <ToggleButton value="text" aria-label="текстовый режим">
+              <TextFormatIcon fontSize="small" />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                Текст
+              </Typography>
+            </ToggleButton>
+            <ToggleButton value="html" aria-label="HTML режим">
+              <CodeIcon fontSize="small" />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                HTML
+              </Typography>
+            </ToggleButton>
+            <ToggleButton value="visual" aria-label="визуальный режим">
+              <VisibilityIcon fontSize="small" />
+              <Typography variant="caption" sx={{ ml: 0.5 }}>
+                Визуальный редактор
+              </Typography>
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          {editorMode === 'visual' && (
             <>
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => {
-                  // Форматировать HTML
-                  setHtmlContent(formatHtml(htmlContent));
-                }}
-                sx={{ textTransform: 'none', mr: 1 }}
+                onClick={handleUndo}
+                disabled={historyIndex <= 0}
+                sx={{ minWidth: '40px', mr: 1 }}
               >
-                Форматировать
+                <UndoIcon fontSize="small" />
               </Button>
               <Button
                 variant="outlined"
                 size="small"
-                onClick={() => {
-                  // Проверка орфографии
-                  window.alert('Функция проверки орфографии будет добавлена в следующей версии');
-                }}
-                sx={{ textTransform: 'none', mr: 1 }}
+                onClick={handleRedo}
+                disabled={historyIndex >= history.length - 1}
+                sx={{ minWidth: '40px' }}
               >
-                Проверка орфографии
+                <RedoIcon fontSize="small" />
               </Button>
             </>
           )}
         </Box>
-        <Button
-          variant="contained"
-          size="small"
-          onClick={handleModeToggle}
-          sx={{ textTransform: 'none' }}
-        >
-          {isHtmlMode ? 'Визуальный редактор' : 'HTML редактор'}
-        </Button>
+        
+        {editorMode === 'html' && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              // Форматировать HTML
+              setHtmlContent(formatHtml(htmlContent));
+            }}
+            sx={{ textTransform: 'none' }}
+          >
+            Форматировать
+          </Button>
+        )}
       </Box>
       
       <StyledEditorContainer error={error} editorHeight={height}>
-        {isHtmlMode ? (
+        {editorMode === 'html' ? (
           <TextField
             multiline
             fullWidth
@@ -1122,6 +1218,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   </Box>
                 </Box>
               ),
+            }}
+          />
+        ) : editorMode === 'text' ? (
+          <TextField
+            multiline
+            fullWidth
+            value={textContent}
+            onChange={(e) => setTextContent(e.target.value)}
+            placeholder="Введите простой текст..."
+            sx={{ 
+              height: height,
+              '& .MuiInputBase-root': {
+                height: '100%',
+              },
+              '& .MuiInputBase-input': {
+                height: '100%',
+                overflow: 'auto',
+                padding: '16px',
+                lineHeight: 1.5,
+              }
             }}
           />
         ) : (
