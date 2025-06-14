@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography, Checkbox, FormControlLabel, ToggleButtonGroup, ToggleButton } from '@mui/material';
@@ -52,6 +52,8 @@ type EditorMode = 'visual' | 'html' | 'text';
 const StyledEditorContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'error' && prop !== 'editorHeight'
 })<{ error?: boolean; editorHeight?: number }>(({ theme, error, editorHeight = 300 }) => ({
+  position: 'relative',
+  minHeight: `${editorHeight}px`,
   '& .ql-container': {
     minHeight: `${editorHeight - 84}px`, // Вычитаем высоту тулбара
     fontSize: '16px',
@@ -665,6 +667,9 @@ const RichTextEditor = ({
   
   // Quill Reference
   const quillRef = useRef<ReactQuill>(null);
+  
+  // Ref для контейнера редактора
+  const editorContainerRef = useRef<HTMLDivElement>(null);
 
   // История изменений для отмены/повтора
   const [history, setHistory] = useState<string[]>([]);
@@ -672,6 +677,7 @@ const RichTextEditor = ({
 
   // Обработчики для начала, процесса и окончания изменения размера
   const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
     setIsResizing(true);
     resizeStartY.current = e.clientY;
     startHeight.current = currentHeight;
@@ -681,19 +687,19 @@ const RichTextEditor = ({
     document.addEventListener('mouseup', handleResizeEnd);
   };
   
-  const handleResizeMove = (e: MouseEvent) => {
+  const handleResizeMove = useCallback((e: MouseEvent) => {
     if (isResizing) {
       const deltaY = e.clientY - resizeStartY.current;
-      const newHeight = Math.max(200, startHeight.current + deltaY);
+      const newHeight = Math.max(300, startHeight.current + deltaY);
       setCurrentHeight(newHeight);
     }
-  };
+  }, [isResizing]);
   
-  const handleResizeEnd = () => {
+  const handleResizeEnd = useCallback(() => {
     setIsResizing(false);
     document.removeEventListener('mousemove', handleResizeMove);
     document.removeEventListener('mouseup', handleResizeEnd);
-  };
+  }, [handleResizeMove]);
   
   // Удаляем обработчики событий при размонтировании компонента
   useEffect(() => {
@@ -701,7 +707,7 @@ const RichTextEditor = ({
       document.removeEventListener('mousemove', handleResizeMove);
       document.removeEventListener('mouseup', handleResizeEnd);
     };
-  }, [isResizing]);
+  }, [handleResizeMove, handleResizeEnd]);
 
   // Обработчики для расширенных функций
   const handleImageInsert = (
@@ -1110,10 +1116,10 @@ const RichTextEditor = ({
             size="small"
             sx={{ mr: 2 }}
           >
-            <ToggleButton value="text" aria-label="текстовый режим">
-              <TextFormatIcon fontSize="small" />
+            <ToggleButton value="visual" aria-label="визуальный режим">
+              <VisibilityIcon fontSize="small" />
               <Typography variant="caption" sx={{ ml: 0.5 }}>
-                Текст
+                Визуальный редактор
               </Typography>
             </ToggleButton>
             <ToggleButton value="html" aria-label="HTML режим">
@@ -1122,10 +1128,10 @@ const RichTextEditor = ({
                 HTML
               </Typography>
             </ToggleButton>
-            <ToggleButton value="visual" aria-label="визуальный режим">
-              <VisibilityIcon fontSize="small" />
+            <ToggleButton value="text" aria-label="текстовый режим">
+              <TextFormatIcon fontSize="small" />
               <Typography variant="caption" sx={{ ml: 0.5 }}>
-                Визуальный редактор
+                Текст
               </Typography>
             </ToggleButton>
           </ToggleButtonGroup>
@@ -1169,159 +1175,174 @@ const RichTextEditor = ({
         )}
       </Box>
       
-      <StyledEditorContainer error={error} editorHeight={currentHeight}>
-        {editorMode === 'html' ? (
-          <Box sx={{ position: 'relative', height: '100%', border: '1px solid #ddd', borderRadius: '4px' }}>
+      <Box ref={editorContainerRef} sx={{ position: 'relative', marginBottom: '30px' }}>
+        <StyledEditorContainer error={error} editorHeight={currentHeight}>
+          {editorMode === 'html' ? (
             <Box sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0,
-              padding: '8px 16px',
-              borderBottom: '1px solid #ddd',
-              backgroundColor: '#f5f5f5',
-              zIndex: 1,
-              display: 'flex',
-              justifyContent: 'space-between',
-              height: '36px'
+              position: 'relative', 
+              height: `${currentHeight}px`, 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              overflow: 'hidden'
             }}>
-              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                HTML-редактор
-              </Typography>
-              <Box>
-                <Button 
-                  size="small" 
-                  variant="text" 
-                  onClick={() => {
-                    // Открыть предпросмотр в новом окне
-                    const previewWindow = window.open('', '_blank');
-                    if (previewWindow) {
-                      previewWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Предпросмотр</title>
-                            <meta charset="utf-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1">
-                            <style>
-                              body { 
-                                font-family: Arial, sans-serif; 
-                                line-height: 1.6;
-                                max-width: 800px;
-                                margin: 0 auto;
-                                padding: 20px;
-                              }
-                              img { max-width: 100%; height: auto; }
-                              table { border-collapse: collapse; width: 100%; }
-                              th, td { border: 1px solid #ddd; padding: 8px; }
-                              th { background-color: #f2f2f2; }
-                            </style>
-                          </head>
-                          <body>
-                            ${htmlContent}
-                          </body>
-                        </html>
-                      `);
-                      previewWindow.document.close();
-                    }
-                  }}
-                >
-                  Предпросмотр
-                </Button>
+              <Box sx={{ 
+                position: 'sticky', 
+                top: 0, 
+                left: 0, 
+                right: 0,
+                padding: '8px 16px',
+                borderBottom: '1px solid #ddd',
+                backgroundColor: '#f5f5f5',
+                zIndex: 10,
+                display: 'flex',
+                justifyContent: 'space-between',
+                height: '36px'
+              }}>
+                <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                  HTML-редактор
+                </Typography>
+                <Box>
+                  <Button 
+                    size="small" 
+                    variant="text" 
+                    onClick={() => {
+                      // Открыть предпросмотр в новом окне
+                      const previewWindow = window.open('', '_blank');
+                      if (previewWindow) {
+                        previewWindow.document.write(`
+                          <!DOCTYPE html>
+                          <html>
+                            <head>
+                              <title>Предпросмотр</title>
+                              <meta charset="utf-8">
+                              <meta name="viewport" content="width=device-width, initial-scale=1">
+                              <style>
+                                body { 
+                                  font-family: Arial, sans-serif; 
+                                  line-height: 1.6;
+                                  max-width: 800px;
+                                  margin: 0 auto;
+                                  padding: 20px;
+                                }
+                                img { max-width: 100%; height: auto; }
+                                table { border-collapse: collapse; width: 100%; }
+                                th, td { border: 1px solid #ddd; padding: 8px; }
+                                th { background-color: #f2f2f2; }
+                              </style>
+                            </head>
+                            <body>
+                              ${htmlContent}
+                            </body>
+                          </html>
+                        `);
+                        previewWindow.document.close();
+                      }
+                    }}
+                  >
+                    Предпросмотр
+                  </Button>
+                </Box>
               </Box>
+              <textarea 
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                placeholder="Введите HTML код..."
+                style={{
+                  width: '100%',
+                  height: 'calc(100% - 36px)',
+                  padding: '16px',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  fontFamily: 'monospace',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  overflowY: 'auto',
+                }}
+              />
             </Box>
-            <textarea 
-              value={htmlContent}
-              onChange={(e) => setHtmlContent(e.target.value)}
-              placeholder="Введите HTML код..."
-              style={{
-                width: '100%',
-                height: 'calc(100% - 36px)',
-                marginTop: '36px',
-                padding: '16px',
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                lineHeight: '1.5',
-                overflowY: 'auto',
-              }}
-            />
-          </Box>
-        ) : editorMode === 'text' ? (
-          <Box sx={{ position: 'relative', height: '100%', border: '1px solid #ddd', borderRadius: '4px' }}>
+          ) : editorMode === 'text' ? (
             <Box sx={{ 
-              position: 'absolute', 
-              top: 0, 
-              left: 0, 
-              right: 0,
-              padding: '8px 16px',
-              borderBottom: '1px solid #ddd',
-              backgroundColor: '#f5f5f5',
-              zIndex: 1,
-              display: 'flex',
-              justifyContent: 'space-between',
-              height: '36px'
+              position: 'relative', 
+              height: `${currentHeight}px`, 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              overflow: 'hidden'
             }}>
-              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                Текстовый редактор
-              </Typography>
+              <Box sx={{ 
+                position: 'sticky', 
+                top: 0, 
+                left: 0, 
+                right: 0,
+                padding: '8px 16px',
+                borderBottom: '1px solid #ddd',
+                backgroundColor: '#f5f5f5',
+                zIndex: 10,
+                display: 'flex',
+                justifyContent: 'space-between',
+                height: '36px'
+              }}>
+                <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                  Текстовый редактор
+                </Typography>
+              </Box>
+              <textarea 
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+                placeholder="Введите простой текст..."
+                style={{
+                  width: '100%',
+                  height: 'calc(100% - 36px)',
+                  padding: '16px',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  overflowY: 'auto',
+                }}
+              />
             </Box>
-            <textarea 
-              value={textContent}
-              onChange={(e) => setTextContent(e.target.value)}
-              placeholder="Введите простой текст..."
+          ) : (
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={value}
+              onChange={onChange}
+              placeholder={placeholder}
+              modules={modules}
+              formats={formats}
+              readOnly={disabled}
               style={{
-                width: '100%',
-                height: 'calc(100% - 36px)',
-                marginTop: '36px',
-                padding: '16px',
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                fontSize: '14px',
-                lineHeight: '1.5',
-                overflowY: 'auto',
+                height: currentHeight,
               }}
             />
-          </Box>
-        ) : (
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            modules={modules}
-            formats={formats}
-            readOnly={disabled}
-            style={{
-              height: currentHeight,
-            }}
-          />
-        )}
-      </StyledEditorContainer>
-      
-      {/* Добавляем элемент для изменения размера */}
-      <Box 
-        sx={{
-          height: '10px',
-          cursor: 'ns-resize',
-          backgroundColor: '#f0f0f0',
-          borderBottomLeftRadius: '4px',
-          borderBottomRightRadius: '4px',
-          borderTop: '1px solid #ddd',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          '&:hover': {
-            backgroundColor: '#e0e0e0',
-          }
-        }}
-        onMouseDown={handleResizeStart}
-      >
-        <Box sx={{ width: '30px', height: '4px', backgroundColor: '#bdbdbd', borderRadius: '2px' }} />
+          )}
+        </StyledEditorContainer>
+        
+        {/* Добавляем элемент для изменения размера */}
+        <Box 
+          sx={{
+            height: '10px',
+            cursor: 'ns-resize',
+            backgroundColor: '#f0f0f0',
+            borderBottomLeftRadius: '4px',
+            borderBottomRightRadius: '4px',
+            borderTop: '1px solid #ddd',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            '&:hover': {
+              backgroundColor: '#e0e0e0',
+            },
+            '&:active': {
+              backgroundColor: '#d0d0d0',
+            }
+          }}
+          onMouseDown={handleResizeStart}
+        >
+          <Box sx={{ width: '30px', height: '4px', backgroundColor: '#bdbdbd', borderRadius: '2px' }} />
+        </Box>
       </Box>
       
       {/* Модальные окна для расширенных функций */}
