@@ -1152,6 +1152,7 @@ const RichTextEditor = ({
                 height: '100%',
                 overflow: 'auto',
                 padding: '16px',
+                paddingTop: '50px',
                 lineHeight: 1.5,
                 whiteSpace: 'pre-wrap',
                 alignItems: 'flex-start',
@@ -1221,25 +1222,44 @@ const RichTextEditor = ({
             }}
           />
         ) : editorMode === 'text' ? (
-          <TextField
-            multiline
-            fullWidth
-            value={textContent}
-            onChange={(e) => setTextContent(e.target.value)}
-            placeholder="Введите простой текст..."
-            sx={{ 
-              height: height,
-              '& .MuiInputBase-root': {
-                height: '100%',
-              },
-              '& .MuiInputBase-input': {
-                height: '100%',
-                overflow: 'auto',
-                padding: '16px',
-                lineHeight: 1.5,
-              }
-            }}
-          />
+          <Box sx={{ position: 'relative', height: '100%' }}>
+            <Box sx={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0,
+              padding: '8px 16px',
+              borderBottom: '1px solid #ddd',
+              backgroundColor: '#f5f5f5',
+              zIndex: 1,
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}>
+              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                Текстовый редактор
+              </Typography>
+            </Box>
+            <TextField
+              multiline
+              fullWidth
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
+              placeholder="Введите простой текст..."
+              sx={{ 
+                height: height,
+                '& .MuiInputBase-root': {
+                  height: '100%',
+                },
+                '& .MuiInputBase-input': {
+                  height: '100%',
+                  overflow: 'auto',
+                  padding: '16px',
+                  paddingTop: '50px',
+                  lineHeight: 1.5,
+                }
+              }}
+            />
+          </Box>
         ) : (
           <ReactQuill
             ref={quillRef}
