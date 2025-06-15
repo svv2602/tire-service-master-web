@@ -82,14 +82,29 @@ const ClientMainPage: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<string | null>('Київ');
   
   // Получаем контент страницы из API
-  const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
+  const { data: pageContentData, isLoading: contentLoading, refetch } = useGetPageContentsQuery({
     section: 'client_main'
+  }, {
+    refetchOnMountOrArgChange: true, // Принудительное обновление при монтировании
+    refetchOnFocus: true, // Обновление при фокусе на окне
   });
   
   const { data: citiesData } = useGetCitiesWithServicePointsQuery();
   const { data: articlesData } = useGetFeaturedArticlesQuery();
   
   const pageContent = pageContentData?.data || [];
+  
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 ClientMainPage Debug Info:');
+    console.log('📊 Page Content Data:', pageContentData);
+    console.log('📋 Page Content Array:', pageContent);
+    console.log('🔢 Content Count:', pageContent.length);
+    console.log('🎯 Services Content:', pageContent.filter(item => item.content_type === 'service'));
+    console.log('📰 Articles Content:', pageContent.filter(item => item.content_type === 'article'));
+    console.log('🎪 Hero Content:', pageContent.find(item => item.content_type === 'hero'));
+    console.log('📢 CTA Content:', pageContent.find(item => item.content_type === 'cta'));
+  }
   
   // Получаем контент по типам
   const heroContent = pageContent.find(item => item.content_type === 'hero');

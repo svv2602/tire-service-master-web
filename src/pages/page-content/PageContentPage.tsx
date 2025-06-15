@@ -29,7 +29,8 @@ import {
   Web as WebIcon,
   Settings as SettingsIcon,
   ContentCopy as ContentIcon,
-  DragIndicator as DragIcon
+  DragIndicator as DragIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 import { 
   getCardStyles, 
@@ -65,7 +66,8 @@ const PageContentPage: React.FC = () => {
   const {
     data: pageContentData,
     isLoading,
-    error
+    error,
+    refetch
   } = useGetPageContentsQuery({});
   
   const [deletePage] = useDeletePageContentMutation();
@@ -76,9 +78,26 @@ const PageContentPage: React.FC = () => {
     const matchesSearch = page.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          page.section.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          page.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesActive = showInactive || page.active;
+    
+    // Логика фильтрации по активности:
+    // Если showInactive = true, показываем ВСЕ (активные и неактивные)
+    // Если showInactive = false, показываем только активные
+    const matchesActive = showInactive ? true : page.active;
+    
     return matchesSearch && matchesActive;
   }) || [];
+
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 PageContentPage Debug Info:');
+    console.log('📊 All Pages:', pageContentData?.data);
+    console.log('🔢 Total Pages Count:', pageContentData?.data?.length);
+    console.log('🔍 Search Query:', searchQuery);
+    console.log('👁️ Show Inactive:', showInactive);
+    console.log('📋 Filtered Pages:', filteredPages);
+    console.log('🔢 Filtered Count:', filteredPages.length);
+    console.log('❌ Inactive Pages:', pageContentData?.data?.filter(p => !p.active));
+  }
   
   // Обработка переключения активности
   const handleToggleActive = async (pageId: number, currentActive: boolean) => {
@@ -155,13 +174,23 @@ const PageContentPage: React.FC = () => {
         <Typography variant="h4" sx={{ fontWeight: 700 }}>
           Управление контентом страниц
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/page-content/new')}
-        >
-          Создать контент
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={() => refetch()}
+            disabled={isLoading}
+          >
+            Обновить
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/page-content/new')}
+          >
+            Создать контент
+          </Button>
+        </Box>
       </Box>
 
       {/* Описание */}
