@@ -161,6 +161,14 @@ const PartnerFormPage: React.FC = () => {
   });
   const { data: regionsData } = useGetRegionsQuery({});
   
+  // Устанавливаем выбранный регион при загрузке данных партнера
+  useEffect(() => {
+    if (partner && isEdit && partner.region_id && !selectedRegionId) {
+      console.log('Устанавливаем selectedRegionId:', partner.region_id);
+      setSelectedRegionId(partner.region_id);
+    }
+  }, [partner, isEdit, selectedRegionId]);
+  
   // Обновляем логику запроса городов
   const regionIdForCities = useMemo(() => {
     if (partner && isEdit && partner.region_id) {
@@ -168,6 +176,8 @@ const PartnerFormPage: React.FC = () => {
     }
     return selectedRegionId ? Number(selectedRegionId) : undefined;
   }, [partner, isEdit, selectedRegionId]);
+  
+  console.log('regionIdForCities:', regionIdForCities, 'selectedRegionId:', selectedRegionId);
   
   const { data: citiesData } = useGetCitiesQuery(
     { 
@@ -339,13 +349,6 @@ const PartnerFormPage: React.FC = () => {
     validateOnBlur: true,
     onSubmit: handleSubmit,
   });
-
-  // Устанавливаем выбранный регион при загрузке данных партнера
-  useEffect(() => {
-    if (partner && isEdit && partner.region_id) {
-      setSelectedRegionId(partner.region_id);
-    }
-  }, [partner, isEdit]);
 
   // Обработчик изменения региона
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
@@ -641,6 +644,12 @@ const PartnerFormPage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
+                {/* Отладочная информация */}
+                {process.env.NODE_ENV === 'development' && (
+                  <Typography variant="caption" sx={{ mt: 0.5, ml: 1.5, color: 'info.main' }}>
+                    Отладка: regionId={regionIdForCities}, городов={citiesData?.data?.length || 0}
+                  </Typography>
+                )}
                 {formik.touched.city_id && formik.errors.city_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                     {formik.errors.city_id}
