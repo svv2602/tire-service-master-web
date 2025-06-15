@@ -50,6 +50,9 @@ import {
   Star as StarIcon,
   Article as ArticleIcon,
   Web as WebIcon,
+  Edit as EditIcon,
+  Add as AddIcon,
+  ManageAccounts as ManageIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -254,11 +257,25 @@ const MainLayout: React.FC = () => {
             description: 'Управление статьями базы знаний',
           },
           {
-            text: 'Контент страниц',
+            text: 'Весь контент',
             icon: <WebIcon />,
             path: '/page-content',
             roles: [UserRole.ADMIN],
-            description: 'Управление содержимым страниц',
+            description: 'Просмотр всего контента страниц',
+          },
+          {
+            text: 'Создать контент',
+            icon: <AddIcon />,
+            path: '/page-content/new',
+            roles: [UserRole.ADMIN],
+            description: 'Создание нового контента',
+          },
+          {
+            text: 'Расширенное управление',
+            icon: <ManageIcon />,
+            path: '/page-content/management',
+            roles: [UserRole.ADMIN],
+            description: 'Продвинутые инструменты управления контентом',
           },
           {
             text: 'SEO настройки',
