@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест API городов с фильтрацией по регионам</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест API городов с фильтрацией по регионам</h1>
+    
+    <div class="test-section">
+        <h2>1. Получение всех регионов</h2>
+        <button onclick="testRegions()">Загрузить регионы</button>
+        <div id="regions-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Получение всех городов (без фильтрации)</h2>
+        <button onclick="testAllCities()">Загрузить все города</button>
+        <div id="all-cities-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Получение городов по региону</h2>
+        <select id="region-select">
+            <option value="">Выберите регион</option>
+        </select>
+        <button onclick="testCitiesByRegion()">Загрузить города региона</button>
+        <div id="cities-by-region-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Тест пагинации</h2>
+        <button onclick="testPagination()">Тест пагинации (per_page=2)</button>
+        <div id="pagination-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3009/api/v1';
+        let regions = [];
+
+        async function apiRequest(url) {
+            try {
+                console.log(`🔄 Запрос: ${url}`);
+                const response = await fetch(url);
+                const data = await response.json();
+                console.log(`✅ Ответ:`, data);
+                return { success: true, data };
+            } catch (error) {
+                console.error(`❌ Ошибка:`, error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testRegions() {
+            const result = await apiRequest(`${API_BASE}/regions`);
+            const resultDiv = document.getElementById('regions-result');
+            
+            if (result.success) {
+                regions = result.data.data || [];
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Загружено ${regions.length} регионов:\n${JSON.stringify(result.data, null, 2)}`;
+                
+                // Заполняем селект регионов
+                const select = document.getElementById('region-select');
+                select.innerHTML = '<option value="">Выберите регион</option>';
+                regions.forEach(region => {
+                    const option = document.createElement('option');
+                    option.value = region.id;
+                    option.textContent = `${region.name} (ID: ${region.id})`;
+                    select.appendChild(option);
+                });
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка: ${result.error}`;
+            }
+        }
+
+        async function testAllCities() {
+            const result = await apiRequest(`${API_BASE}/cities`);
+            const resultDiv = document.getElementById('all-cities-result');
+            
+            if (result.success) {
+                const cities = result.data.data || [];
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Загружено ${cities.length} городов:\n${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка: ${result.error}`;
+            }
+        }
+
+        async function testCitiesByRegion() {
+            const regionId = document.getElementById('region-select').value;
+            if (!regionId) {
+                alert('Выберите регион!');
+                return;
+            }
+
+            const result = await apiRequest(`${API_BASE}/cities?region_id=${regionId}`);
+            const resultDiv = document.getElementById('cities-by-region-result');
+            
+            if (result.success) {
+                const cities = result.data.data || [];
+                const selectedRegion = regions.find(r => r.id == regionId);
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Города региона "${selectedRegion?.name}" (ID: ${regionId}):\n` +
+                    `Найдено: ${cities.length} городов\n\n${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка: ${result.error}`;
+            }
+        }
+
+        async function testPagination() {
+            const result = await apiRequest(`${API_BASE}/cities?per_page=2&page=1`);
+            const resultDiv = document.getElementById('pagination-result');
+            
+            if (result.success) {
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Тест пагинации (per_page=2, page=1):\n${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка: ${result.error}`;
+            }
+        }
+
+        // Автоматически загружаем регионы при загрузке страницы
+        window.onload = function() {
+            testRegions();
+        };
+    </script>
+</body>
+</html> 

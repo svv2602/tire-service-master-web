@@ -171,21 +171,27 @@ const PartnerFormPage: React.FC = () => {
   
   // Обновляем логику запроса городов
   const regionIdForCities = useMemo(() => {
-    if (partner && isEdit && partner.region_id) {
-      return partner.region_id;
+    // При редактировании используем selectedRegionId, если он установлен, иначе region_id партнера
+    if (isEdit && partner) {
+      return selectedRegionId || partner.region_id;
     }
-    return selectedRegionId ? Number(selectedRegionId) : undefined;
+    // При создании используем только selectedRegionId
+    return selectedRegionId;
   }, [partner, isEdit, selectedRegionId]);
   
-  console.log('regionIdForCities:', regionIdForCities, 'selectedRegionId:', selectedRegionId);
+  console.log('regionIdForCities:', regionIdForCities, 'selectedRegionId:', selectedRegionId, 'partner.region_id:', partner?.region_id);
   
-  const { data: citiesData } = useGetCitiesQuery(
+  const { data: citiesData, refetch: refetchCities, isLoading: citiesLoading, isFetching: citiesFetching } = useGetCitiesQuery(
     { 
       region_id: regionIdForCities || undefined,
       page: 1,
       per_page: 100
     }, 
-    { skip: !regionIdForCities }
+    { 
+      skip: !regionIdForCities,
+      // Принудительно обновляем при изменении regionIdForCities
+      refetchOnMountOrArgChange: true
+    }
   );
   
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
@@ -354,9 +360,13 @@ const PartnerFormPage: React.FC = () => {
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
     const newRegionId = event.target.value;
     
-    formik.setFieldValue('region_id', newRegionId);
-    formik.setFieldValue('city_id', '');
+    console.log('Изменение региона:', newRegionId);
     
+    // Обновляем значения формы
+    formik.setFieldValue('region_id', newRegionId);
+    formik.setFieldValue('city_id', ''); // Сбрасываем выбранный город
+    
+    // Обновляем selectedRegionId - это автоматически вызовет обновление городов
     if (newRegionId && newRegionId !== '') {
       setSelectedRegionId(Number(newRegionId));
     } else {
@@ -635,9 +645,11 @@ const PartnerFormPage: React.FC = () => {
                   onChange={handleCityChange}
                   onBlur={formik.handleBlur}
                   error={formik.touched.city_id && Boolean(formik.errors.city_id)}
-                  disabled={!formik.values.region_id}
+                  disabled={!formik.values.region_id || citiesLoading || citiesFetching}
                 >
-                  <MenuItem value="">Не выбран</MenuItem>
+                  <MenuItem value="">
+                    {citiesLoading || citiesFetching ? 'Загрузка городов...' : 'Не выбран'}
+                  </MenuItem>
                   {citiesData?.data?.map((city) => (
                     <MenuItem key={city.id} value={city.id.toString()}>
                       {city.name}
@@ -648,6 +660,8 @@ const PartnerFormPage: React.FC = () => {
                 {process.env.NODE_ENV === 'development' && (
                   <Typography variant="caption" sx={{ mt: 0.5, ml: 1.5, color: 'info.main' }}>
                     Отладка: regionId={regionIdForCities}, городов={citiesData?.data?.length || 0}
+                    {citiesLoading && ' (загрузка...)'}
+                    {citiesFetching && ' (обновление...)'}
                   </Typography>
                 )}
                 {formik.touched.city_id && formik.errors.city_id && (
