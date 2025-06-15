@@ -47,7 +47,7 @@ import {
   getThemeColors 
 } from '../../styles';
 import { 
-  useGetPageContentQuery,
+  useGetPageContentByIdQuery,
   useCreatePageContentMutation,
   useUpdatePageContentMutation,
   PageContent,
@@ -111,7 +111,7 @@ const PageContentFormPage: React.FC = () => {
     data: pageData,
     isLoading,
     error
-  } = useGetPageContentQuery(parseInt(id!) || 0, { skip: !isEdit });
+  } = useGetPageContentByIdQuery(parseInt(id!) || 0, { skip: !isEdit });
   
   const [createPage, { isLoading: isCreating }] = useCreatePageContentMutation();
   const [updatePage, { isLoading: isUpdating }] = useUpdatePageContentMutation();

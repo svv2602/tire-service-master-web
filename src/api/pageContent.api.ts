@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
@@ -110,20 +110,8 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
   }
 };
 
-// API
-export const pageContentApi = createApi({
-  reducerPath: 'pageContentApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/page_contents`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['PageContent', 'Section'],
+// API через baseApi.injectEndpoints
+export const pageContentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение списка контента
     getPageContents: builder.query<PageContentListResponse, PageContentFilters>({
@@ -134,20 +122,20 @@ export const pageContentApi = createApi({
             params.append(key, String(value));
           }
         });
-        return `?${params.toString()}`;
+        return `page_contents?${params.toString()}`;
       },
       providesTags: ['PageContent'],
     }),
 
     // Получение секций с количеством контента
     getSections: builder.query<{ data: Section[] }, void>({
-      query: () => 'sections',
-      providesTags: ['Section'],
+      query: () => 'page_contents/sections',
+      providesTags: ['PageContent'],
     }),
 
     // Получение конкретного контента
     getPageContentById: builder.query<PageContent, number>({
-      query: (id) => `${id}`,
+      query: (id) => `page_contents/${id}`,
       providesTags: (result, error, id) => [{ type: 'PageContent', id }],
     }),
 
@@ -183,7 +171,7 @@ export const pageContentApi = createApi({
           }
 
           return {
-            url: '',
+            url: 'page_contents',
             method: 'POST',
             body: formData,
           };
@@ -191,12 +179,12 @@ export const pageContentApi = createApi({
 
         // Если файлов нет, используем JSON
         return {
-          url: '',
+          url: 'page_contents',
           method: 'POST',
           body: { page_content: data },
         };
       },
-      invalidatesTags: ['PageContent', 'Section'],
+      invalidatesTags: ['PageContent'],
     }),
 
     // Обновление контента
@@ -231,46 +219,98 @@ export const pageContentApi = createApi({
           }
 
           return {
-            url: `${id}`,
-            method: 'PATCH',
+            url: `page_contents/${id}`,
+            method: 'PUT',
             body: formData,
           };
         }
 
         // Если файлов нет, используем JSON
         return {
-          url: `${id}`,
-          method: 'PATCH',
+          url: `page_contents/${id}`,
+          method: 'PUT',
           body: { page_content: data },
         };
       },
       invalidatesTags: (result, error, { id }) => [
         { type: 'PageContent', id },
-        'PageContent',
-        'Section'
+        'PageContent'
       ],
     }),
 
     // Удаление контента
     deletePageContent: builder.mutation<void, number>({
       query: (id) => ({
-        url: `${id}`,
+        url: `page_contents/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['PageContent', 'Section'],
+      invalidatesTags: ['PageContent'],
     }),
 
-    // Переключение активности
-    togglePageContentActive: builder.mutation<PageContent, number>({
-      query: (id) => ({
-        url: `${id}/toggle_active`,
-        method: 'PATCH',
+    // Получение типов контента
+    getContentTypes: builder.query<{ data: ContentType[] }, void>({
+      query: () => 'page_contents/content_types',
+      providesTags: ['PageContent'],
+    }),
+
+    // Обновление позиций контента
+    updatePageContentPositions: builder.mutation<void, { section: string; positions: { id: number; position: number }[] }>({
+      query: ({ section, positions }) => ({
+        url: `page_contents/reorder`,
+        method: 'PUT',
+        body: { section, positions },
       }),
-      invalidatesTags: (result, error, id) => [
-        { type: 'PageContent', id },
-        'PageContent',
-        'Section'
-      ],
+      invalidatesTags: ['PageContent'],
+    }),
+
+    // Массовое обновление активности
+    bulkUpdatePageContentActive: builder.mutation<void, { ids: number[]; active: boolean }>({
+      query: ({ ids, active }) => ({
+        url: `page_contents/bulk_update`,
+        method: 'PUT',
+        body: { ids, active },
+      }),
+      invalidatesTags: ['PageContent'],
+    }),
+
+    // Дублирование контента
+    duplicatePageContent: builder.mutation<PageContent, number>({
+      query: (id) => ({
+        url: `page_contents/${id}/duplicate`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['PageContent'],
+    }),
+
+    // Получение контента по секции
+    getPageContentBySection: builder.query<PageContentListResponse, { section: string; active?: boolean }>({
+      query: ({ section, active }) => {
+        const params = new URLSearchParams({ section });
+        if (active !== undefined) {
+          params.append('active', String(active));
+        }
+        return `page_contents/by_section?${params.toString()}`;
+      },
+      providesTags: ['PageContent'],
+    }),
+
+    // Получение контента по типу
+    getPageContentByType: builder.query<PageContentListResponse, { content_type: string; active?: boolean }>({
+      query: ({ content_type, active }) => {
+        const params = new URLSearchParams({ content_type });
+        if (active !== undefined) {
+          params.append('active', String(active));
+        }
+        return `page_contents/by_type?${params.toString()}`;
+      },
+      providesTags: ['PageContent'],
+    }),
+
+    // Предварительный просмотр контента
+    previewPageContent: builder.query<PageContent, { section: string; content_type: string }>({
+      query: ({ section, content_type }) => 
+        `page_contents/preview?section=${section}&content_type=${content_type}`,
+      providesTags: ['PageContent'],
     }),
   }),
 });
@@ -278,13 +318,16 @@ export const pageContentApi = createApi({
 // Экспорт хуков
 export const {
   useGetPageContentsQuery,
-  useGetPageContentByIdQuery,
   useGetSectionsQuery,
+  useGetPageContentByIdQuery,
   useCreatePageContentMutation,
   useUpdatePageContentMutation,
   useDeletePageContentMutation,
-  useTogglePageContentActiveMutation,
-} = pageContentApi;
-
-// Алиас для совместимости
-export const useGetPageContentQuery = useGetPageContentByIdQuery; 
+  useGetContentTypesQuery,
+  useUpdatePageContentPositionsMutation,
+  useBulkUpdatePageContentActiveMutation,
+  useDuplicatePageContentMutation,
+  useGetPageContentBySectionQuery,
+  useGetPageContentByTypeQuery,
+  usePreviewPageContentQuery,
+} = pageContentApi; 

@@ -1,22 +1,8 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 import { City, CitiesResponse } from '../types/models';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
-
-// API
-export const citiesApi = createApi({
-  reducerPath: 'citiesApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/v1',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as any).auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
-  tagTypes: ['City'],
+// API через baseApi.injectEndpoints
+export const citiesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCities: builder.query<CitiesResponse, {
       region_id?: number;
@@ -25,7 +11,7 @@ export const citiesApi = createApi({
       query?: string;
     }>({
       query: (params = {}) => ({
-        url: '/cities',
+        url: 'cities',
         params: {
           page: params.page || 1,
           per_page: params.per_page || 20,
@@ -36,16 +22,16 @@ export const citiesApi = createApi({
       providesTags: ['City'],
     }),
     getCitiesWithServicePoints: builder.query<CitiesResponse, void>({
-      query: () => '/cities/with_service_points',
+      query: () => 'cities/with_service_points',
       providesTags: ['City'],
     }),
     getCityById: builder.query<{ data: City }, number>({
-      query: (id) => `/cities/${id}`,
+      query: (id) => `cities/${id}`,
       providesTags: (result, error, id) => [{ type: 'City', id }],
     }),
     createCity: builder.mutation<{ data: City }, Partial<City>>({
       query: (city) => ({
-        url: '/cities',
+        url: 'cities',
         method: 'POST',
         body: city,
       }),
@@ -53,7 +39,7 @@ export const citiesApi = createApi({
     }),
     updateCity: builder.mutation<{ data: City }, { id: number; city: Partial<City> }>({
       query: ({ id, city }) => ({
-        url: `/cities/${id}`,
+        url: `cities/${id}`,
         method: 'PUT',
         body: city,
       }),
@@ -61,7 +47,7 @@ export const citiesApi = createApi({
     }),
     deleteCity: builder.mutation<void, number>({
       query: (id) => ({
-        url: `/cities/${id}`,
+        url: `cities/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: (result, error, id) => [{ type: 'City', id }, 'City'],
