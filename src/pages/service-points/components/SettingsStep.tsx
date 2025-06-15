@@ -29,6 +29,14 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
 
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('SettingsStep: workStatusesData:', workStatusesData);
+    console.log('SettingsStep: workStatuses:', workStatuses);
+    console.log('SettingsStep: workStatusesLoading:', workStatusesLoading);
+    console.log('SettingsStep: formik.values.work_status:', formik.values.work_status);
+  }
+
   return (
     <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
       <Typography 

@@ -45,12 +45,30 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
   const regionsData = regions?.data || [];
   const citiesData = cities?.data || [];
 
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('LocationStep: regionsData:', regionsData);
+    console.log('LocationStep: citiesData:', citiesData);
+    console.log('LocationStep: selectedRegionId:', selectedRegionId);
+    console.log('LocationStep: regionIdForCities:', regionIdForCities);
+    console.log('LocationStep: formik.values.city_id:', formik.values.city_id);
+    console.log('LocationStep: formik.values.region_id:', formik.values.region_id);
+  }
+
   // Устанавливаем регион при загрузке точки обслуживания
   useEffect(() => {
     if (servicePoint?.city?.region_id && !selectedRegionId) {
       setSelectedRegionId(servicePoint.city.region_id);
+      formik.setFieldValue('region_id', servicePoint.city.region_id);
     }
-  }, [servicePoint, selectedRegionId]);
+  }, [servicePoint?.city?.region_id, selectedRegionId]); // Убираем formik из зависимостей
+
+  // Синхронизируем selectedRegionId с formik.values.region_id
+  useEffect(() => {
+    if (formik.values.region_id && formik.values.region_id > 0 && !selectedRegionId) {
+      setSelectedRegionId(formik.values.region_id);
+    }
+  }, [formik.values.region_id, selectedRegionId]);
 
   const handleRegionChange = (regionId: number) => {
     setSelectedRegionId(regionId);
@@ -94,10 +112,11 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               labelId="region-id-label"
               id="region_id"
               name="region_id"
-              value={selectedRegionId?.toString() || '0'}
+              value={selectedRegionId?.toString() || formik.values.region_id?.toString() || '0'}
               onChange={(e) => {
                 const regionId = Number(e.target.value);
                 handleRegionChange(regionId);
+                formik.setFieldValue('region_id', regionId);
               }}
               onBlur={formik.handleBlur}
               label="Регион"
@@ -132,7 +151,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               labelId="city-id-label"
               id="city_id"
               name="city_id"
-              value={formik.values.city_id?.toString() || '0'}
+              value={formik.values.city_id > 0 ? formik.values.city_id.toString() : '0'}
               onChange={(e) => {
                 formik.setFieldValue('city_id', Number(e.target.value));
               }}

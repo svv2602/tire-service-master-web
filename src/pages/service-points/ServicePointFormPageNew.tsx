@@ -83,6 +83,7 @@ const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHours
 const validationSchema = yup.object({
   name: yup.string().required('Название точки обязательно'),
   partner_id: yup.number().required('Партнер обязателен').min(1, 'Выберите партнера'),
+  region_id: yup.number().required('Регион обязателен').min(1, 'Выберите регион'),
   city_id: yup.number().required('Город обязателен').min(1, 'Выберите город'),
   address: yup.string().required('Адрес обязателен'),
   contact_phone: yup.string().required('Контактный телефон обязателен'),
@@ -164,6 +165,7 @@ const ServicePointFormPageNew: React.FC = () => {
     name: servicePoint?.name || '',
     partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
     city_id: servicePoint?.city?.id || 0,
+    region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
     address: servicePoint?.address || '',
     contact_phone: servicePoint?.contact_phone || '',
     description: servicePoint?.description || '',
@@ -374,9 +376,10 @@ const ServicePointFormPageNew: React.FC = () => {
         console.log(entries.join('\n'));
 
         if (isEditMode && id) {
+          // Для обновления используем JSON вместо FormData, чтобы избежать проблем с парсингом
           await updateServicePoint({
             id,
-            servicePoint: formData
+            servicePoint: servicePointData
           }).unwrap();
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
@@ -392,7 +395,29 @@ const ServicePointFormPageNew: React.FC = () => {
         }, 1000);
       } catch (error: any) {
         console.error('Ошибка при сохранении:', error);
-        setErrorMessage(error?.data?.message || 'Ошибка при сохранении точки обслуживания');
+        console.error('Детали ошибки:', {
+          status: error?.status,
+          data: error?.data,
+          message: error?.message,
+          originalStatus: error?.originalStatus
+        });
+        
+        // Выводим содержимое data отдельно для лучшей видимости
+        if (error?.data) {
+          console.error('Содержимое error.data:', JSON.stringify(error.data, null, 2));
+        }
+        
+        // Выводим детальную информацию об ошибках валидации
+        if (error?.data?.errors) {
+          console.error('Ошибки валидации:', error.data.errors);
+        }
+        
+        setErrorMessage(
+          error?.data?.message || 
+          error?.data?.error ||
+          error?.message ||
+          'Ошибка при сохранении точки обслуживания'
+        );
       }
     },
   });
@@ -410,7 +435,7 @@ const ServicePointFormPageNew: React.FC = () => {
       };
       formik.setFieldValue('service_posts', [defaultPost]);
     }
-  }, [isEditMode, formik.values.service_posts?.length]); // Добавляем зависимость чтобы избежать повторных вызовов
+  }, [isEditMode]); // Убираем formik.values.service_posts?.length из зависимостей
 
   // Инициализируем форму данными с сервера при первой загрузке
   useEffect(() => {
@@ -423,6 +448,7 @@ const ServicePointFormPageNew: React.FC = () => {
         name: servicePoint.name || '',
         partner_id: servicePoint.partner_id || (partnerId ? Number(partnerId) : 0),
         city_id: servicePoint.city?.id || 0,
+        region_id: servicePoint.city?.region_id || 0, // Добавляем region_id
         address: servicePoint.address || '',
         contact_phone: servicePoint.contact_phone || '',
         description: servicePoint.description || '',
@@ -436,7 +462,7 @@ const ServicePointFormPageNew: React.FC = () => {
         service_posts: servicePoint.service_posts || [],
       });
     }
-  }, [servicePoint?.id, isEditMode]); // Выполняем только при изменении ID точки
+  }, [servicePoint?.id, isEditMode, normalizedWorkingHours, partnerId]); // Добавляем все нужные зависимости
 
   // Обработчики
   const handleNext = () => {

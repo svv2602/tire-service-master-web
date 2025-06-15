@@ -29,6 +29,13 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
   const formStyles = getFormStyles(theme);
   const textFieldStyles = getTextFieldStyles(theme);
 
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('BasicInfoStep: partnersData:', partnersData);
+    console.log('BasicInfoStep: formik.values.partner_id:', formik.values.partner_id);
+    console.log('BasicInfoStep: partnersLoading:', partnersLoading);
+  }
+
   return (
     <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
       <Typography 
@@ -83,7 +90,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
               labelId="partner-id-label"
               id="partner_id"
               name="partner_id"
-              value={(formik.values.partner_id || 0).toString()}
+              value={formik.values.partner_id > 0 ? formik.values.partner_id.toString() : '0'}
               onChange={(e) => {
                 formik.setFieldValue('partner_id', Number(e.target.value));
               }}
