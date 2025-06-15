@@ -1,16 +1,25 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { baseApi } from '../api/baseApi';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { baseApi } from '../api';
 import authReducer from './slices/authSlice';
 
 // Настраиваем Redux store
 export const store = configureStore({
   reducer: {
-    [baseApi.reducerPath]: baseApi.reducer,
     auth: authReducer,
+    [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(baseApi.middleware),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+      },
+    }).concat(
+      baseApi.middleware,
+    ),
 });
+
+setupListeners(store.dispatch);
 
 // Типы для TypeScript
 export type RootState = ReturnType<typeof store.getState>;

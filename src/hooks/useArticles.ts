@@ -37,12 +37,12 @@ export const useArticles = (filters: ArticlesFilters = {}) => {
 
 // Хук для получения отдельной статьи
 export const useArticle = (id: string | number | null) => {
-  const { data, error, isLoading } = useGetArticleQuery(id!, { 
+  const { data, error, isLoading } = useGetArticleQuery(Number(id)!, { 
     skip: !id 
   });
   
   return {
-    article: data || null,
+    article: data?.data || null,
     loading: isLoading,
     error: error ? (error as any)?.data?.message || 'Ошибка загрузки статьи' : null,
   };
@@ -111,10 +111,10 @@ export const useArticleActions = () => {
 
 // Хук для получения популярных статей
 export const usePopularArticles = (limit: number = 5) => {
-  const { data, error, isLoading } = useGetPopularArticlesQuery(limit);
+  const { data, error, isLoading } = useGetPopularArticlesQuery();
   
   return {
-    articles: data || [],
+    articles: data?.data || [],
     loading: isLoading,
     error: error ? (error as any)?.data?.message || 'Ошибка загрузки популярных статей' : null,
   };
@@ -123,12 +123,12 @@ export const usePopularArticles = (limit: number = 5) => {
 // Хук для получения связанных статей
 export const useRelatedArticles = (articleId: number | null, limit: number = 3) => {
   const { data, error, isLoading } = useGetRelatedArticlesQuery(
-    { articleId: articleId!, limit },
+    { articleId: articleId! },
     { skip: !articleId }
   );
   
   return {
-    articles: data || [],
+    articles: data?.data || [],
     loading: isLoading,
     error: error ? (error as any)?.data?.message || 'Ошибка загрузки связанных статей' : null,
   };

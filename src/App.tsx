@@ -70,6 +70,7 @@ import ClientReviewFormPage from './pages/client/ReviewFormPage';
 // Импорты для управления контентом страниц
 import PageContentPage from './pages/page-content/PageContentPage';
 import PageContentFormPage from './pages/page-content/PageContentFormPage';
+import PageContentManagement from './pages/admin/PageContentManagement';
 
 // Импорт для страницы StyleGuide
 import StyleGuide from './pages/styleguide/styleguide_temp';
@@ -251,6 +252,7 @@ function App() {
                 <Route path="page-content" element={<PageContentPage />} />
                 <Route path="page-content/new" element={<PageContentFormPage />} />
                 <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
+                <Route path="page-content/management" element={<PageContentManagement />} />
               </Route>
               
               {/* Маршрут по умолчанию */}

@@ -89,8 +89,8 @@ const ServicePointDetailsPage = () => {
     skip: !servicePoint?.city_id,
   });
 
-  const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.region_id || 0, {
-    skip: !city?.region_id,
+  const { data: region, isLoading: regionLoading } = useGetRegionByIdQuery(city?.data?.region_id || 0, {
+    skip: !city?.data?.region_id,
   });
 
   if (servicePointLoading || servicesLoading || photosLoading || scheduleLoading || partnerLoading || cityLoading || regionLoading) {
@@ -138,7 +138,7 @@ const ServicePointDetailsPage = () => {
             )}
             {city && (
               <Chip
-                label={city.name}
+                label={city.data?.name || 'Неизвестный город'}
                 color="secondary"
                 variant="outlined"
               />
@@ -177,13 +177,13 @@ const ServicePointDetailsPage = () => {
         </>
       )}
 
-      {photos && photos.length > 0 && (
+      {photos && photos.data && photos.data.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom>
             Фотографии:
           </Typography>
           <Grid container spacing={2} sx={{ mb: 4 }}>
-            {photos.map((photo) => (
+            {photos.data.map((photo) => (
               <Grid item xs={12} sm={6} md={4} key={photo.id}>
                 <Card>
                   <CardMedia

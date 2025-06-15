@@ -57,7 +57,7 @@ const ServicePointPhotosPage: React.FC = () => {
   const [uploadPhoto] = useUploadServicePointPhotoMutation();
   const [deletePhoto] = useDeleteServicePointPhotoMutation();
 
-  const photos = photosResponse || [];
+  const photos = photosResponse;
   const isLoading = photosLoading;
   const error = photosError;
 
@@ -124,7 +124,7 @@ const ServicePointPhotosPage: React.FC = () => {
     );
   }
 
-  if (!photos.length) {
+  if (!photos || !photos.data || !Array.isArray(photos.data) || photos.data.length === 0) {
     return (
       <Box>
         <Alert severity="warning" sx={{ mb: 2 }}>
@@ -194,9 +194,9 @@ const ServicePointPhotosPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress />
         </Box>
-      ) : photos.length > 0 ? (
+      ) : photos && photos.data && Array.isArray(photos.data) && photos.data.length > 0 ? (
         <Grid container spacing={3}>
-          {photos.map((photo) => (
+          {photos.data.map((photo: any) => (
             <Grid item xs={12} sm={6} md={4} key={photo.id}>
               <Card>
                 <CardMedia

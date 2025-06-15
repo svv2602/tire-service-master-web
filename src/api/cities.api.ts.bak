@@ -1,7 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { City, CitiesResponse } from '../types/models';
+import { City as CityModel, CitiesResponse as CitiesResponseModel } from '../types/models';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+
+// Используем типы из models.ts
+type City = CityModel;
+type CitiesResponse = CitiesResponseModel;
 
 // API
 export const citiesApi = createApi({

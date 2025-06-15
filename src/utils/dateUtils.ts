@@ -1,22 +1,47 @@
-// Функция для форматирования даты и времени
-export const formatDateTime = (dateTimeString: string) => {
-  const date = new Date(dateTimeString);
+// Утилиты для работы с датами
+
+export const formatDate = (dateString: string | undefined | null): string => {
+  if (!dateString) return '';
   
-  // Форматирование даты в формате "DD.MM.YYYY"
-  const formattedDate = date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
 
-  // Форматирование времени в формате "HH:MM"
-  const formattedTime = date.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+export const formatDateTime = (dateString: string | undefined): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
 
-  return {
-    date: formattedDate,
-    time: formattedTime
-  };
-}; 
+export const formatTime = (dateString: string | undefined): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return dateString;
+  }
+};

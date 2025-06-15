@@ -220,25 +220,25 @@ const ArticleViewPage: React.FC = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <PersonIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.author.name}</Typography>
+                      <Typography variant="body2">{article.author?.name || 'Неизвестный автор'}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CalendarIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{formatDate(article.published_at)}</Typography>
+                      <Typography variant="body2">{formatDate(article.published_at || null)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <ScheduleIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.reading_time} мин чтения</Typography>
+                      <Typography variant="body2">{article.reading_time || 5} мин чтения</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <VisibilityIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.views_count.toLocaleString()} просмотров</Typography>
+                      <Typography variant="body2">{article.views_count?.toLocaleString() || '0'} просмотров</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -380,7 +380,7 @@ const ArticleViewPage: React.FC = () => {
                       Автор:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.author.name}
+                      {article.author?.name || 'Неизвестный автор'}
                     </Typography>
                   </Box>
                   <Box>
@@ -388,7 +388,7 @@ const ArticleViewPage: React.FC = () => {
                       Опубликовано:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {formatDate(article.published_at)}
+                      {formatDate(article.published_at || null)}
                     </Typography>
                   </Box>
                   <Box>
@@ -396,7 +396,7 @@ const ArticleViewPage: React.FC = () => {
                       Время чтения:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.reading_time} минут
+                      {article.reading_time || 5} минут
                     </Typography>
                   </Box>
                   <Box>
@@ -404,7 +404,7 @@ const ArticleViewPage: React.FC = () => {
                       Просмотры:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.views_count.toLocaleString()}
+                      {article.views_count?.toLocaleString() || '0'}
                     </Typography>
                   </Box>
                 </Box>
@@ -455,7 +455,7 @@ const ArticleViewPage: React.FC = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <ScheduleIcon sx={{ fontSize: 14, color: colors.textSecondary }} />
                             <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                              {relatedArticle.reading_time} мин
+                              {relatedArticle.reading_time || 5} мин
                             </Typography>
                             <VisibilityIcon sx={{ fontSize: 14, color: colors.textSecondary, ml: 1 }} />
                             <Typography variant="caption" sx={{ color: colors.textSecondary }}>

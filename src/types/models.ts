@@ -3,6 +3,7 @@ import { BookingStatus } from './booking';
 import type { Client, ClientCar as ClientCarType, ClientFilter as ClientFilterType } from './client';
 import type { User } from './user';
 import type { WorkingHoursSchedule, WorkingHours } from './working-hours';
+import { Article } from './articles';
 
 // Базовый интерфейс для всех моделей
 export interface BaseModel {
@@ -176,6 +177,7 @@ export interface City {
   region_id: number;
   region?: Region;
   is_active: boolean;
+  service_points_count?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -486,4 +488,32 @@ export interface ServicePointFormDataNew {
   services?: ServicePointService[];
   photos?: ServicePointPhoto[];
   service_posts?: ServicePost[];
+}
+
+// Ответ API для статей
+export interface ArticlesResponse {
+  data: Article[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_count: number;
+  };
+  meta: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_count: number;
+  };
+}
+
+// Ответ API для городов
+export interface CitiesResponse {
+  data: City[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_count: number;
+  };
 }

@@ -30,8 +30,8 @@ import {
 } from '@mui/icons-material';
 
 import { useArticleCategories, useArticleActions } from '../../hooks/useArticles';
-import type { Article, ArticleFormData, CreateArticleRequest } from '../../types/articles';
-import { ARTICLE_STATUSES } from '../../types/articles';
+import type { Article, ArticleSummary, ArticleFormData, CreateArticleRequest } from '../../types/articles';
+import { ARTICLE_STATUS_LABELS, ARTICLE_STATUSES } from '../../types/articles';
 import RichTextEditor from '../common/RichTextEditor';
 
 // Импорт централизованной системы стилей
@@ -55,7 +55,7 @@ import { Alert } from '../ui/Alert';
 import { Chip } from '../ui/Chip';
 
 interface ArticleFormProps {
-  article?: Article;
+  article?: Article | ArticleSummary;
   mode: 'create' | 'edit';
 }
 
@@ -118,16 +118,16 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
     if (mode === 'edit' && article) {
       setFormData({
         title: article.title,
-        content: article.content,
-        excerpt: article.excerpt,
+        content: (article as Article).content || '',
+        excerpt: article.excerpt || '',
         category: article.category,
         status: article.status === 'archived' ? 'draft' : article.status,
         featured: article.featured,
-        meta_title: article.meta_title || '',
-        meta_description: article.meta_description || '',
+        meta_title: (article as Article).meta_title || '',
+        meta_description: (article as Article).meta_description || '',
         featured_image_url: article.featured_image || '',
-        allow_comments: article.allow_comments ?? true,
-        tags: article.tags || [],
+        allow_comments: (article as Article).allow_comments ?? true,
+        tags: (article as Article).tags || [],
       });
     }
   }, [mode, article]);
@@ -396,7 +396,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                       label="Категория"
                       value={formData.category}
                       onChange={(value) => handleInputChange('category')(value)}
-                      options={categories.map((category) => ({
+                      options={categories.map((category: { key: string; name: string; icon: string }) => ({
                         value: category.key,
                         label: `${category.icon} ${category.name}`
                       }))}
