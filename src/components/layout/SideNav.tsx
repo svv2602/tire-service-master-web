@@ -67,6 +67,16 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   const isPartner = userRole === 'partner';
   const isManager = userRole === 'manager';
 
+  // Отладочная информация (только в режиме разработки)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 SideNav Debug Info:');
+    console.log('👤 User:', user);
+    console.log('🎭 User Role:', userRole);
+    console.log('👑 Is Admin:', isAdmin);
+    console.log('🤝 Is Partner:', isPartner);
+    console.log('👨‍💼 Is Manager:', isManager);
+  }
+
   // Обработчики для переключения состояния разделов меню
   const handleServicePointsClick = () => {
     setOpenServicePoints(!openServicePoints);
