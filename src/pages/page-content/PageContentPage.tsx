@@ -97,6 +97,10 @@ const PageContentPage: React.FC = () => {
     console.log('📋 Filtered Pages:', filteredPages);
     console.log('🔢 Filtered Count:', filteredPages.length);
     console.log('❌ Inactive Pages:', pageContentData?.data?.filter(p => !p.active));
+    console.log('✅ Active Pages:', pageContentData?.data?.filter(p => p.active));
+    console.log('🔑 Auth Token:', localStorage.getItem('tvoya_shina_token') ? 'присутствует' : 'отсутствует');
+    console.log('📡 API Response:', pageContentData);
+    console.log('⚠️ API Error:', error);
   }
   
   // Обработка переключения активности
