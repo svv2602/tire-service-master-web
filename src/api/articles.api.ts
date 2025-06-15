@@ -28,7 +28,7 @@ export const articlesApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Article'],
     }),
-    getArticleById: builder.query<{ data: Article }, number>({
+    getArticleById: builder.query<Article, number>({
       query: (id) => `/articles/${id}`,
       providesTags: (result, error, id) => [{ type: 'Article', id }],
     }),
@@ -54,19 +54,19 @@ export const articlesApi = baseApi.injectEndpoints({
     getArticleCategories: builder.query<ArticleCategory[], void>({
       queryFn: () => ({ data: ARTICLE_CATEGORIES }),
     }),
-    createArticle: builder.mutation<{ data: Article }, CreateArticleRequest>({
+    createArticle: builder.mutation<Article, CreateArticleRequest>({
       query: (article) => ({
         url: '/articles',
         method: 'POST',
-        body: article,
+        body: { article },
       }),
       invalidatesTags: ['Article'],
     }),
-    updateArticle: builder.mutation<{ data: Article }, { id: number; article: Partial<CreateArticleRequest> }>({
+    updateArticle: builder.mutation<Article, { id: number; article: Partial<CreateArticleRequest> }>({
       query: ({ id, article }) => ({
         url: `/articles/${id}`,
         method: 'PUT',
-        body: article,
+        body: { article },
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Article', id }, 'Article'],
     }),

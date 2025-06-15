@@ -478,6 +478,7 @@ export interface ServicePointFormDataNew {
   description?: string;
   address: string;
   city_id: number;
+  region_id?: number; // Добавляем поле region_id для каскадной загрузки
   partner_id: number;
   latitude?: number | null;
   longitude?: number | null;

@@ -7,6 +7,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
+  Select,
   SelectChangeEvent,
   FormControlLabel,
   InputAdornment,
@@ -78,7 +79,7 @@ import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Alert } from '../../components/ui/Alert';
 import { Snackbar } from '../../components/ui/Snackbar';
-import { Select } from '../../components/ui/Select';
+// import { Select } from '../../components/ui/Select'; // Заменено на стандартный MUI Select
 import { Switch } from '../../components/ui/Switch';
 import { Card } from '../../components/ui/Card';
 
@@ -768,8 +769,8 @@ const ServicePointFormPage: React.FC = () => {
                     id="partner_id"
                     name="partner_id"
                     value={(formik.values.partner_id || 0).toString()}
-                    onChange={(value: string | number) => {
-                      formik.setFieldValue('partner_id', Number(value));
+                    onChange={(event) => {
+                      formik.setFieldValue('partner_id', Number(event.target.value));
                     }}
                     onBlur={formik.handleBlur}
                     label="Партнер"
@@ -854,8 +855,8 @@ const ServicePointFormPage: React.FC = () => {
                     id="region_id"
                     name="region_id"
                     value={formik.values.region_id?.toString() || '0'}
-                    onChange={(value: string | number) => {
-                      const regionId = Number(value);
+                    onChange={(event) => {
+                      const regionId = Number(event.target.value);
                       setSelectedRegionId(regionId);
                       formik.setFieldValue('region_id', regionId);
                     }}
@@ -887,8 +888,8 @@ const ServicePointFormPage: React.FC = () => {
                     id="city_id"
                     name="city_id"
                     value={formik.values.city_id?.toString() || '0'}
-                    onChange={(value: string | number) => {
-                      const cityId = Number(value);
+                    onChange={(event) => {
+                      const cityId = Number(event.target.value);
                       formik.setFieldValue('city_id', cityId);
                     }}
                     onBlur={formik.handleBlur}
@@ -1100,8 +1101,8 @@ const ServicePointFormPage: React.FC = () => {
                         id="work_status"
                         name="work_status"
                         value={formik.values.work_status || 'working'}
-                        onChange={(value: string | number) => {
-                          formik.setFieldValue('work_status', value);
+                        onChange={(event) => {
+                          formik.setFieldValue('work_status', event.target.value);
                         }}
                         label="Статус работы"
                         disabled={workStatusesLoading}
@@ -1575,8 +1576,8 @@ const ServicePointFormPage: React.FC = () => {
                                     <InputLabel>Услуга</InputLabel>
                                     <Select
                                       value={service.service_id ? String(service.service_id) : '0'}
-                                      onChange={(value: string | number) => {
-                                        const selectedServiceId = Number(value);
+                                      onChange={(event) => {
+                                        const selectedServiceId = Number(event.target.value);
                                         const selectedService = servicesData?.find((s: Service) => s.id === selectedServiceId);
                                         if (selectedService) {
                                           formik.setFieldValue(`services.${originalIndex}`, {

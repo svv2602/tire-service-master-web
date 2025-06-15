@@ -74,10 +74,8 @@ const ArticlesPage: React.FC = () => {
   const filters = {
     query: searchQuery || undefined,
     category: selectedCategory || undefined,
-    sort: selectedSort as 'recent' | 'popular' | 'oldest',
     page: currentPage,
-    per_page: 12,
-    include_drafts: true // Включаем черновики для администраторов
+    per_page: 12
   };
 
   // Хуки для данных
@@ -101,9 +99,15 @@ const ArticlesPage: React.FC = () => {
       totalArticles: displayArticles.length,
       totalCount: displayPagination.total_count,
       filters,
-      articles: displayArticles.map(a => ({ id: a.id, title: a.title, status: a.status }))
+      articles: displayArticles.map(a => ({ id: a.id, title: a.title, status: a.status })),
+      error: error ? 'Есть ошибка' : 'Нет ошибки',
+      isLoading
     });
-  }, [displayArticles, displayPagination, filters]);
+    
+    // Дополнительная отладка для проверки авторизации
+    const token = localStorage.getItem('authToken');
+    console.log('🔑 Токен авторизации:', token ? `${token.substring(0, 20)}...` : 'отсутствует');
+  }, [displayArticles, displayPagination, filters, error, isLoading]);
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -42,7 +42,7 @@ export const useArticle = (id: string | number | null) => {
   });
   
   return {
-    article: data?.data || null,
+    article: data || null,
     loading: isLoading,
     error: error ? (error as any)?.data?.message || 'Ошибка загрузки статьи' : null,
   };
