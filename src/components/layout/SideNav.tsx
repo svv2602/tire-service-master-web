@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -68,14 +68,14 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   const isManager = userRole === 'manager';
 
   // Отладочная информация (только в режиме разработки)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 SideNav Debug Info:');
-    console.log('👤 User:', user);
-    console.log('🎭 User Role:', userRole);
-    console.log('👑 Is Admin:', isAdmin);
-    console.log('🤝 Is Partner:', isPartner);
-    console.log('👨‍💼 Is Manager:', isManager);
-  }
+  console.log('🔍 SideNav Debug Info:');
+  console.log('👤 User:', user);
+  console.log('🎭 User Role:', userRole);
+  console.log('👑 Is Admin:', isAdmin);
+  console.log('🤝 Is Partner:', isPartner);
+  console.log('👨‍💼 Is Manager:', isManager);
+  console.log('🌐 Should show content management:', isAdmin);
+  console.log('📍 Current pathname:', pathname);
 
   // Обработчики для переключения состояния разделов меню
   const handleServicePointsClick = () => {
@@ -105,6 +105,11 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   const handlePageContentClick = () => {
     setOpenPageContent(!openPageContent);
   };
+
+  // Принудительное обновление при изменении пользователя
+  useEffect(() => {
+    console.log('🔄 SideNav: User changed, re-rendering with role:', userRole);
+  }, [user, userRole]);
 
   return (
     <Box 

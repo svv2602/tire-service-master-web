@@ -12,8 +12,13 @@ interface ServiceCategoryFilter extends PaginationFilter {
 
 // Интерфейс для ответа API (как приходит с бэкенда)
 interface ApiServiceCategoriesResponse {
-  service_categories: ServiceCategoryData[];
-  total_items: number;
+  data: ServiceCategoryData[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
 }
 
 export const serviceCategoriesApi = baseApi.injectEndpoints({
@@ -24,13 +29,8 @@ export const serviceCategoriesApi = baseApi.injectEndpoints({
         params,
       }),
       transformResponse: (response: ApiServiceCategoriesResponse) => ({
-        data: response.service_categories,
-        pagination: {
-          current_page: 1,
-          total_pages: Math.ceil(response.total_items / 25),
-          total_count: response.total_items,
-          per_page: 25,
-        },
+        data: response.data,
+        pagination: response.pagination,
       }),
       providesTags: (result) =>
         result?.data
