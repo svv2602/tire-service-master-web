@@ -36,6 +36,8 @@ import {
   Article as ArticleIcon,
   MenuBook as MenuBookIcon,
   Create as CreateIcon,
+  Web as WebIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 
 interface SideNavProps {
@@ -58,6 +60,7 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
   const [openLocations, setOpenLocations] = useState(false);
   const [openCars, setOpenCars] = useState(false);
   const [openArticles, setOpenArticles] = useState(false);
+  const [openPageContent, setOpenPageContent] = useState(false);
 
   // Проверки ролей пользователей
   const isAdmin = userRole === 'admin';
@@ -87,6 +90,10 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
 
   const handleArticlesClick = () => {
     setOpenArticles(!openArticles);
+  };
+
+  const handlePageContentClick = () => {
+    setOpenPageContent(!openPageContent);
   };
 
   return (
@@ -220,6 +227,64 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
               <ListItemText primary="Пользователи" />
             </StyledListItemButton>
           </ListItem>
+        )}
+
+        {/* Управление контентом (доступно админам) */}
+        {isAdmin && (
+          <>
+            <ListItem disablePadding>
+              <StyledListItemButton onClick={handlePageContentClick}>
+                <ListItemIcon>
+                  <WebIcon />
+                </ListItemIcon>
+                <ListItemText primary="Управление контентом" />
+                {openPageContent ? <ExpandLess /> : <ExpandMore />}
+              </StyledListItemButton>
+            </ListItem>
+            <Collapse in={openPageContent} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <StyledListItemButton
+                    component={Link}
+                    to="/page-content"
+                    selected={pathname === '/page-content'}
+                    nested={1}
+                  >
+                    <ListItemIcon>
+                      <WebIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Весь контент" />
+                  </StyledListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <StyledListItemButton
+                    component={Link}
+                    to="/page-content/new"
+                    selected={pathname === '/page-content/new'}
+                    nested={1}
+                  >
+                    <ListItemIcon>
+                      <CreateIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Создать контент" />
+                  </StyledListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <StyledListItemButton
+                    component={Link}
+                    to="/page-content/management"
+                    selected={pathname === '/page-content/management'}
+                    nested={1}
+                  >
+                    <ListItemIcon>
+                      <EditIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Расширенное управление" />
+                  </StyledListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
+          </>
         )}
 
         {/* Сервисные точки */}
