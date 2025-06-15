@@ -196,10 +196,11 @@ const ServicePointFormPage: React.FC = () => {
   // Определяем region_id для загрузки городов: из selectedRegionId, servicePoint или 0
   const regionIdForCities = selectedRegionId || servicePoint?.city?.region_id || 0;
   
-  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
+  const { data: cities, isLoading: citiesLoading, refetch: refetchCities } = useGetCitiesQuery(
     { region_id: regionIdForCities },
     { 
-      skip: !regionIdForCities // Загружаем города если есть region_id
+      skip: !regionIdForCities, // Загружаем города если есть region_id
+      refetchOnMountOrArgChange: true
     }
   );
   const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
@@ -482,7 +483,13 @@ const ServicePointFormPage: React.FC = () => {
     const regionId = Number(event.target.value);
     setSelectedRegionId(regionId);
     formik.setFieldValue('region_id', regionId);
-  }, [formik]);
+    formik.setFieldValue('city_id', 0); // Сбрасываем город при смене региона
+    
+    // Принудительно обновляем список городов
+    if (regionId > 0) {
+      refetchCities();
+    }
+  }, [formik, refetchCities]);
 
   // Обработчик изменения города
   const handleCityChange = useCallback((event: SelectChangeEvent<string>) => {

@@ -34,9 +34,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
   // Определяем region_id для загрузки городов
   const regionIdForCities = selectedRegionId || servicePoint?.city?.region_id || 0;
   
-  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
+  const { data: cities, isLoading: citiesLoading, refetch: refetchCities } = useGetCitiesQuery(
     { region_id: regionIdForCities },
-    { skip: !regionIdForCities }
+    { 
+      skip: !regionIdForCities,
+      refetchOnMountOrArgChange: true
+    }
   );
 
   const regionsData = regions?.data || [];
@@ -52,6 +55,11 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
   const handleRegionChange = (regionId: number) => {
     setSelectedRegionId(regionId);
     formik.setFieldValue('city_id', 0); // Сбрасываем город при смене региона
+    
+    // Принудительно обновляем список городов
+    if (regionId > 0) {
+      refetchCities();
+    }
   };
 
   return (
