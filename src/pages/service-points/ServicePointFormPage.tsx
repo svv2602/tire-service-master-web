@@ -681,7 +681,7 @@ const ServicePointFormPage: React.FC = () => {
         <Typography 
           variant="h4"
           sx={{
-            fontSize: SIZES.fontSize.xl,
+            fontSize: SIZES.fontSize.xl, // Используем стандартный размер как на странице партнеров
             fontWeight: 600,
             color: theme.palette.text.primary,
           }}

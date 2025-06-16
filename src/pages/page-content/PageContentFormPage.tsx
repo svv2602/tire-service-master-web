@@ -177,7 +177,7 @@ const PageContentFormPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
           {isEdit ? 'Редактирование контента' : 'Создание контента'}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>

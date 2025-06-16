@@ -820,7 +820,7 @@ const ServicePointFormPageNew: React.FC = () => {
         <Typography 
           variant={isMobile ? "h5" : "h4"}
           sx={{
-            fontSize: isMobile ? SIZES.fontSize.xl : '32px',
+            fontSize: SIZES.fontSize.xl, // Используем стандартный размер как на странице партнеров
             fontWeight: 600,
             color: theme.palette.text.primary,
             lineHeight: 1.2,

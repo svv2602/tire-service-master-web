@@ -193,7 +193,7 @@ const ArticlesPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ ...cardStyles, textAlign: 'center', p: SIZES.spacing.lg }}>
             <ChartIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600, color: theme.palette.text.primary }}>
               {displayPagination.total_count}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
@@ -204,7 +204,7 @@ const ArticlesPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ ...cardStyles, textAlign: 'center', p: SIZES.spacing.lg }}>
             <StarIcon sx={{ fontSize: 40, color: theme.palette.warning.main, mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600, color: theme.palette.text.primary }}>
               {displayArticles.filter((a: ArticleSummary) => a.status === 'published').length}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
@@ -215,7 +215,7 @@ const ArticlesPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ ...cardStyles, textAlign: 'center', p: SIZES.spacing.lg }}>
             <ViewIcon sx={{ fontSize: 40, color: theme.palette.success.main, mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600, color: theme.palette.text.primary }}>
               {displayArticles.reduce((sum: number, a: ArticleSummary) => sum + (a.views_count || 0), 0)}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
@@ -226,7 +226,7 @@ const ArticlesPage: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ ...cardStyles, textAlign: 'center', p: SIZES.spacing.lg }}>
             <EditIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600, color: theme.palette.text.primary }}>
               {displayArticles.filter((a: ArticleSummary) => a.status === 'draft').length}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>

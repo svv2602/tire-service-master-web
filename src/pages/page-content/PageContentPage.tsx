@@ -147,7 +147,7 @@ const PageContentPage: React.FC = () => {
   if (isLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>
+        <Typography variant="h4" sx={{ mb: 4, fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
           Управление контентом страниц
         </Typography>
         <Grid container spacing={3}>
@@ -175,7 +175,7 @@ const PageContentPage: React.FC = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+        <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
           Управление контентом страниц
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
