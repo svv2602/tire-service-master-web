@@ -5,7 +5,9 @@ import {
   Box,
   Typography,
   styled,
+  useTheme,
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 export interface ProgressProps {
   /** Тип индикатора прогресса */
@@ -30,42 +32,158 @@ export interface ProgressProps {
   sx?: Record<string, any>;
 }
 
-const ProgressContainer = styled(Box)(({ theme }) => ({
-  display: 'inline-flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-}));
+const ProgressContainer = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'inline-flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  };
+});
 
-const ProgressLabel = styled(Typography)(({ theme }) => ({
-  marginTop: theme.spacing(1),
-  fontSize: '0.875rem',
-}));
+const ProgressLabel = styled(Typography)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    marginTop: tokens.spacing.md,
+    fontSize: tokens.typography.fontSize.sm,
+    fontFamily: tokens.typography.fontFamily,
+    color: themeColors.textSecondary,
+  };
+});
 
-const CircularProgressWithLabel = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  display: 'inline-flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-}));
+const CircularProgressWithLabel = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    position: 'relative',
+    display: 'inline-flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  };
+});
 
-const CircularProgressLabel = styled(Typography)(({ theme }) => ({
-  position: 'absolute',
-  fontSize: '0.75rem',
-  fontWeight: 500,
-}));
+const CircularProgressLabel = styled(Typography)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    position: 'absolute',
+    fontSize: tokens.typography.fontSize.xs,
+    fontWeight: tokens.typography.fontWeight.medium,
+    fontFamily: tokens.typography.fontFamily,
+    color: themeColors.textPrimary,
+  };
+});
 
-const LinearProgressContainer = styled(Box)(({ theme }) => ({
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(0.5),
-}));
+const LinearProgressContainer = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacing.xs,
+  };
+});
 
-const LinearProgressLabelContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-}));
+const LinearProgressLabelContainer = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  };
+});
+
+// Стилизованный круговой прогресс
+const StyledCircularProgress = styled(MuiCircularProgress)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    transition: tokens.transitions.duration.normal,
+    
+    '&.MuiCircularProgress-colorPrimary': {
+      color: themeColors.primary,
+    },
+    
+    '&.MuiCircularProgress-colorSecondary': {
+      color: theme.palette.secondary.main,
+    },
+    
+    '&.MuiCircularProgress-colorError': {
+      color: themeColors.error,
+    },
+    
+    '&.MuiCircularProgress-colorInfo': {
+      color: theme.palette.info.main,
+    },
+    
+    '&.MuiCircularProgress-colorSuccess': {
+      color: theme.palette.success.main,
+    },
+    
+    '&.MuiCircularProgress-colorWarning': {
+      color: theme.palette.warning.main,
+    },
+  };
+});
+
+// Стилизованный линейный прогресс
+const StyledLinearProgress = styled(MuiLinearProgress)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    height: 6,
+    borderRadius: tokens.borderRadius.pill,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? themeColors.backgroundSecondary 
+      : themeColors.backgroundLight,
+    transition: tokens.transitions.duration.normal,
+    
+    '& .MuiLinearProgress-bar': {
+      borderRadius: tokens.borderRadius.pill,
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '&.MuiLinearProgress-colorPrimary': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: themeColors.primary,
+      },
+    },
+    
+    '&.MuiLinearProgress-colorSecondary': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: theme.palette.secondary.main,
+      },
+    },
+    
+    '&.MuiLinearProgress-colorError': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: themeColors.error,
+      },
+    },
+    
+    '&.MuiLinearProgress-colorInfo': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: theme.palette.info.main,
+      },
+    },
+    
+    '&.MuiLinearProgress-colorSuccess': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: theme.palette.success.main,
+      },
+    },
+    
+    '&.MuiLinearProgress-colorWarning': {
+      '& .MuiLinearProgress-bar': {
+        backgroundColor: theme.palette.warning.main,
+      },
+    },
+  };
+});
 
 /**
  * Компонент Progress - индикатор прогресса для отображения состояния загрузки или выполнения операции
@@ -86,6 +204,8 @@ export const Progress: React.FC<ProgressProps> = ({
   indeterminate = false,
   sx,
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   const normalizedValue = Math.min(Math.max(value, 0), 100);
   const displayValue = Math.round(normalizedValue);
   const displayLabel = label || `${displayValue}%`;
@@ -96,14 +216,14 @@ export const Progress: React.FC<ProgressProps> = ({
     return (
       <ProgressContainer sx={sx}>
         {indeterminate ? (
-          <MuiCircularProgress
+          <StyledCircularProgress
             color={color}
             size={size}
             thickness={thickness}
           />
         ) : (
           <CircularProgressWithLabel>
-            <MuiCircularProgress
+            <StyledCircularProgress
               variant="determinate"
               value={normalizedValue}
               color={color}
@@ -126,17 +246,31 @@ export const Progress: React.FC<ProgressProps> = ({
     <LinearProgressContainer sx={sx}>
       {shouldShowLabel && (
         <LinearProgressLabelContainer>
-          <Typography variant="caption" color="text.secondary">
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              fontSize: tokens.typography.fontSize.xs,
+              fontFamily: tokens.typography.fontFamily,
+              color: themeColors.textSecondary
+            }}
+          >
             {label || 'Прогресс'}
           </Typography>
           {!indeterminate && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                fontSize: tokens.typography.fontSize.xs,
+                fontFamily: tokens.typography.fontFamily,
+                color: themeColors.textSecondary
+              }}
+            >
               {displayValue}%
             </Typography>
           )}
         </LinearProgressLabelContainer>
       )}
-      <MuiLinearProgress
+      <StyledLinearProgress
         variant={indeterminate ? 'indeterminate' : 'determinate'}
         value={normalizedValue}
         color={color}

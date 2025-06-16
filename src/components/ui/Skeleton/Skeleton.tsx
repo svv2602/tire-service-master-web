@@ -3,7 +3,9 @@ import {
   Skeleton as MuiSkeleton,
   SkeletonProps as MuiSkeletonProps,
   styled,
+  useTheme,
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 export interface SkeletonProps extends MuiSkeletonProps {
   /** Вариант скелетона */
@@ -20,11 +22,39 @@ export interface SkeletonProps extends MuiSkeletonProps {
   sx?: Record<string, any>;
 }
 
-const StyledSkeleton = styled(MuiSkeleton)(({ theme }) => ({
-  '&.MuiSkeleton-rounded': {
-    borderRadius: theme.shape.borderRadius,
-  },
-}));
+const StyledSkeleton = styled(MuiSkeleton)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? themeColors.backgroundSecondary 
+      : themeColors.backgroundLight,
+    transition: tokens.transitions.duration.normal,
+    
+    '&.MuiSkeleton-text': {
+      borderRadius: tokens.borderRadius.sm,
+      transform: 'scale(1, 0.8)',
+      marginTop: tokens.spacing.xs,
+      marginBottom: tokens.spacing.xs,
+    },
+    
+    '&.MuiSkeleton-circular': {
+      borderRadius: '50%',
+    },
+    
+    '&.MuiSkeleton-rectangular': {
+      borderRadius: tokens.borderRadius.none,
+    },
+    
+    '&.MuiSkeleton-rounded': {
+      borderRadius: tokens.borderRadius.md,
+    },
+    
+    '&.MuiSkeleton-wave::after': {
+      background: `linear-gradient(90deg, transparent, ${theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.04)'}, transparent)`,
+    },
+  };
+});
 
 /**
  * Компонент Skeleton - заполнитель для отображения во время загрузки контента
@@ -44,13 +74,28 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   sx,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   // Для варианта "rounded" используем "rectangular" с кастомным классом
   const actualVariant = variant === 'rounded' ? 'rectangular' : variant;
   const className = variant === 'rounded' ? 'MuiSkeleton-rounded' : undefined;
 
-  // Добавляем borderRadius в sx, если он задан
-  const updatedSx = borderRadius !== undefined 
-    ? { ...sx, borderRadius } 
+  // Определяем borderRadius в зависимости от варианта и переданного значения
+  let finalBorderRadius = borderRadius;
+  
+  if (borderRadius === undefined) {
+    if (variant === 'rounded') {
+      finalBorderRadius = tokens.borderRadius.md;
+    } else if (variant === 'circular') {
+      finalBorderRadius = '50%';
+    } else if (variant === 'text') {
+      finalBorderRadius = tokens.borderRadius.sm;
+    }
+  }
+
+  // Добавляем borderRadius в sx, если он определен
+  const updatedSx = finalBorderRadius !== undefined 
+    ? { ...sx, borderRadius: finalBorderRadius } 
     : sx;
 
   return (
