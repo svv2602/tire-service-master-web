@@ -31,6 +31,11 @@ export interface SpeedDialAction {
    * @default false
    */
   disabled?: boolean;
+  
+  /**
+   * Цвет кнопки действия (например, '#FF0000' или 'primary')
+   */
+  color?: string;
 }
 
 /**

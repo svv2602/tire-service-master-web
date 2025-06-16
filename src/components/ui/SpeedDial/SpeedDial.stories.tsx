@@ -1,26 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Story, Meta } from '@storybook/react';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import SaveIcon from '@mui/icons-material/Save';
 import PrintIcon from '@mui/icons-material/Print';
 import ShareIcon from '@mui/icons-material/Share';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import SpeedDial from './SpeedDial';
 import { SpeedDialProps } from './types';
-
-// Моковые действия для примеров
-const actions = [
-  { id: 1, icon: <FileCopyIcon />, tooltipTitle: 'Копировать', onClick: () => console.log('Копировать') },
-  { id: 2, icon: <SaveIcon />, tooltipTitle: 'Сохранить', onClick: () => console.log('Сохранить') },
-  { id: 3, icon: <PrintIcon />, tooltipTitle: 'Печать', onClick: () => console.log('Печать') },
-  { id: 4, icon: <ShareIcon />, tooltipTitle: 'Поделиться', onClick: () => console.log('Поделиться') },
-];
+import { Box, Switch, FormControlLabel, ThemeProvider } from '@mui/material';
+import { createTheme } from '../../../styles/theme/theme';
 
 export default {
   title: 'UI/SpeedDial',
   component: SpeedDial,
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: 'Компонент SpeedDial - плавающая кнопка с выпадающим меню действий. Обновлен для поддержки токенов дизайн-системы и темной темы.',
+      },
+    },
   },
   argTypes: {
     position: {
@@ -40,101 +41,164 @@ export default {
   },
 } as Meta;
 
-// Базовый пример
-export const Default: Story<SpeedDialProps> = (args) => (
-  <div style={{ height: '100vh', position: 'relative' }}>
-    <SpeedDial
-      {...args}
-      actions={actions}
-      icon={<EditIcon />}
-      tooltipTitle="Действия"
-    />
-  </div>
-);
+// Базовый шаблон с поддержкой темной темы
+const Template: Story<SpeedDialProps> = (args) => {
+  const [open, setOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  
+  const handleOpen = () => {
+    setOpen(true);
+  };
+  
+  const handleClose = () => {
+    setOpen(false);
+  };
+  
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+  
+  const theme = createTheme(darkMode ? 'dark' : 'light');
+
+  return (
+    <ThemeProvider theme={theme}>
+      <Box sx={{ height: '100vh', position: 'relative', p: 2, bgcolor: 'background.default' }}>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Темная тема"
+          sx={{ mb: 2 }}
+        />
+        <SpeedDial
+          {...args}
+          open={open}
+          onOpen={handleOpen}
+          onClose={handleClose}
+        />
+      </Box>
+    </ThemeProvider>
+  );
+};
+
+// Базовый пример с цветами
+export const Default = Template.bind({});
+Default.args = {
+  actions: [
+    {
+      id: 'edit',
+      icon: <EditIcon />,
+      tooltipTitle: 'Редактировать',
+      onClick: () => console.log('Edit clicked'),
+      color: '#2196F3', // Синий
+    },
+    {
+      id: 'copy',
+      icon: <FileCopyIcon />,
+      tooltipTitle: 'Копировать',
+      onClick: () => console.log('Copy clicked'),
+      color: '#4CAF50', // Зеленый
+    },
+    {
+      id: 'delete',
+      icon: <DeleteIcon />,
+      tooltipTitle: 'Удалить',
+      onClick: () => console.log('Delete clicked'),
+      color: '#F44336', // Красный
+    },
+  ],
+  icon: <AddIcon />,
+  tooltipTitle: 'Добавить',
+  ariaLabel: 'Добавить новый элемент',
+};
+
+// Пример без цветов (использует цвета темы)
+export const NoColors = Template.bind({});
+NoColors.args = {
+  actions: [
+    {
+      id: 'edit',
+      icon: <EditIcon />,
+      tooltipTitle: 'Редактировать',
+      onClick: () => console.log('Edit clicked'),
+    },
+    {
+      id: 'copy',
+      icon: <FileCopyIcon />,
+      tooltipTitle: 'Копировать',
+      onClick: () => console.log('Copy clicked'),
+    },
+    {
+      id: 'delete',
+      icon: <DeleteIcon />,
+      tooltipTitle: 'Удалить',
+      onClick: () => console.log('Delete clicked'),
+    },
+  ],
+  icon: <AddIcon />,
+  tooltipTitle: 'Добавить',
+  ariaLabel: 'Добавить новый элемент',
+};
 
 // Пример с разными позициями
-export const Positions: Story<SpeedDialProps> = (args) => (
-  <div style={{ height: '100vh', position: 'relative' }}>
-    <SpeedDial
-      {...args}
-      actions={actions.slice(0, 2)}
-      position="top-left"
-      direction="down"
-      tooltipTitle="Верхний левый"
-    />
-    <SpeedDial
-      {...args}
-      actions={actions.slice(0, 2)}
-      position="top-right"
-      direction="down"
-      tooltipTitle="Верхний правый"
-    />
-    <SpeedDial
-      {...args}
-      actions={actions.slice(0, 2)}
-      position="bottom-left"
-      direction="up"
-      tooltipTitle="Нижний левый"
-    />
-    <SpeedDial
-      {...args}
-      actions={actions.slice(0, 2)}
-      position="bottom-right"
-      direction="up"
-      tooltipTitle="Нижний правый"
-    />
-  </div>
-);
+export const TopLeft = Template.bind({});
+TopLeft.args = {
+  ...Default.args,
+  position: 'top-left',
+};
 
-// Пример с отключенными действиями
-export const WithDisabledActions: Story<SpeedDialProps> = (args) => (
-  <div style={{ height: '100vh', position: 'relative' }}>
-    <SpeedDial
-      {...args}
-      actions={[
-        ...actions.slice(0, 2),
-        { ...actions[2], disabled: true },
-        { ...actions[3], disabled: true },
-      ]}
-      tooltipTitle="Действия"
-    />
-  </div>
-);
+export const TopRight = Template.bind({});
+TopRight.args = {
+  ...Default.args,
+  position: 'top-right',
+};
+
+export const BottomLeft = Template.bind({});
+BottomLeft.args = {
+  ...Default.args,
+  position: 'bottom-left',
+};
 
 // Пример с разными направлениями
-export const Directions: Story<SpeedDialProps> = (args) => (
-  <div style={{ height: '100vh', position: 'relative', display: 'grid', gap: '1rem', padding: '1rem' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-      <SpeedDial
-        {...args}
-        actions={actions.slice(0, 2)}
-        direction="right"
-        position="top-left"
-        tooltipTitle="Вправо"
-      />
-      <SpeedDial
-        {...args}
-        actions={actions.slice(0, 2)}
-        direction="left"
-        position="top-right"
-        tooltipTitle="Влево"
-      />
-    </div>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '100%' }}>
-      <SpeedDial
-        {...args}
-        actions={actions.slice(0, 2)}
-        direction="up"
-        position="bottom-left"
-        tooltipTitle="Вверх"
-      />
-      <SpeedDial
-        {...args}
-        actions={actions.slice(0, 2)}
-        direction="down"
-        position="top-right"
-        tooltipTitle="Вниз"
-      />
-    </div>
-  </div>
-); 
+export const DirectionRight = Template.bind({});
+DirectionRight.args = {
+  ...Default.args,
+  direction: 'right',
+};
+
+export const DirectionDown = Template.bind({});
+DirectionDown.args = {
+  ...Default.args,
+  position: 'top-right',
+  direction: 'down',
+};
+
+// Пример с отключенными действиями
+export const WithDisabledAction = Template.bind({});
+WithDisabledAction.args = {
+  actions: [
+    {
+      id: 'edit',
+      icon: <EditIcon />,
+      tooltipTitle: 'Редактировать',
+      onClick: () => console.log('Edit clicked'),
+      color: '#2196F3',
+    },
+    {
+      id: 'copy',
+      icon: <FileCopyIcon />,
+      tooltipTitle: 'Копировать',
+      onClick: () => console.log('Copy clicked'),
+      disabled: true,
+      color: '#4CAF50',
+    },
+    {
+      id: 'delete',
+      icon: <DeleteIcon />,
+      tooltipTitle: 'Удалить',
+      onClick: () => console.log('Delete clicked'),
+      color: '#F44336',
+    },
+  ],
+  icon: <AddIcon />,
+  tooltipTitle: 'Добавить',
+  ariaLabel: 'Добавить новый элемент',
+};
