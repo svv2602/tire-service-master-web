@@ -686,7 +686,10 @@ const ServicePointFormPage: React.FC = () => {
             color: theme.palette.text.primary,
           }}
         >
-          {isEditMode ? 'Редактирование точки обслуживания' : 'Создание точки обслуживания'}
+          {isEditMode 
+            ? `Редактирование точки: ${servicePoint?.name || 'Загрузка...'}` 
+            : 'Создание точки обслуживания'
+          }
         </Typography>
         <Button 
           startIcon={<ArrowBackIcon />} 

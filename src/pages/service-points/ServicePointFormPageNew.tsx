@@ -827,7 +827,10 @@ const ServicePointFormPageNew: React.FC = () => {
             maxWidth: isMobile ? '100%' : '70%', // Ограничиваем ширину заголовка
           }}
         >
-          {isEditMode ? 'Редактирование точки обслуживания' : 'Создание точки обслуживания'}
+          {isEditMode 
+            ? `Редактирование точки: ${servicePoint?.name || 'Загрузка...'}` 
+            : 'Создание точки обслуживания'
+          }
         </Typography>
         <Button 
           startIcon={<ArrowBackIcon />} 

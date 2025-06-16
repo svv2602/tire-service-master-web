@@ -1,5 +1,5 @@
 // filepath: /home/snisar/mobi_tz/tire-service-master-web/src/pages/reviews/ReviewsPage.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -147,6 +147,13 @@ const ReviewsPage: React.FC = () => {
   const [deleteReview, { isLoading: deleteLoading }] = useDeleteReviewMutation();
   const [updateReview] = useUpdateReviewMutation();
 
+  // Отладочная информация для диагностики
+  useEffect(() => {
+    console.log('🔍 ReviewsPage Debug Info:');
+    console.log('📊 servicePointsData:', servicePointsData);
+    console.log('🏢 servicePoints.data:', servicePointsData?.data);
+  }, [servicePointsData]);
+
   const isLoading = reviewsLoading || deleteLoading;
   const error = reviewsError;
   const reviews = (Array.isArray(reviewsData?.data) 
@@ -159,7 +166,7 @@ const ReviewsPage: React.FC = () => {
       }))
     : []) as ReviewWithClient[];
   const totalItems = reviews.length;
-  const servicePoints = (servicePointsData as unknown as ServicePoint[]) || [];
+  const servicePoints = servicePointsData?.data || [];
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
