@@ -65,6 +65,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
               { type: 'ServicePoint' as const, id: 'LIST' },
             ]
           : [{ type: 'ServicePoint' as const, id: 'LIST' }],
+      // Кэширование на 5 минут
+      keepUnusedDataFor: 300,
     }),
 
     // Получение базовой информации о сервисной точке
@@ -73,6 +75,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
         url: `/service_points/${id}/basic`,
       }),
       providesTags: (_result, _error, id) => [{ type: 'ServicePoint' as const, id }],
+      // Кэширование на 10 минут
+      keepUnusedDataFor: 600,
     }),
 
     // Получение сервисной точки по ID
@@ -94,6 +98,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
         const id = typeof arg === 'string' ? arg : arg.id;
         return [{ type: 'ServicePoint' as const, id }];
       },
+      // Кэширование на 10 минут
+      keepUnusedDataFor: 600,
     }),
 
     // Создание новой сервисной точки
@@ -113,7 +119,10 @@ export const servicePointsApi = baseApi.injectEndpoints({
           };
         }
       },
-      invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
+      invalidatesTags: [
+        { type: 'ServicePoint' as const, id: 'LIST' },
+        { type: 'Partners' as const, id: 'LIST' }
+      ],
     }),
 
     // Обновление сервисной точки
@@ -141,7 +150,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
       },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'ServicePoint' as const, id },
-        { type: 'ServicePoint' as const, id: 'LIST' }
+        { type: 'ServicePoint' as const, id: 'LIST' },
+        { type: 'Partners' as const, id: 'LIST' }
       ],
     }),
 
@@ -151,7 +161,12 @@ export const servicePointsApi = baseApi.injectEndpoints({
         url: `/partners/${partner_id.toString()}/service_points/${id.toString()}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'ServicePoint' as const, id: 'LIST' }],
+      invalidatesTags: (_result, _error, { id, partner_id }) => [
+        { type: 'ServicePoint' as const, id },
+        { type: 'ServicePoint' as const, id: 'LIST' },
+        { type: 'Partners' as const, id: partner_id },
+        { type: 'Partners' as const, id: 'LIST' }
+      ],
     }),
 
     // Добавление фотографии
@@ -170,7 +185,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
       },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'ServicePoint' as const, id },
-        { type: 'ServicePointPhoto' as const, id: 'LIST' }
+        { type: 'ServicePointPhoto' as const, id: `LIST_${id}` }
       ],
     }),
 
@@ -179,6 +194,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
         url: '/service_point_statuses',
         method: 'GET',
       }),
+      // Кэширование на 1 час, так как статусы редко меняются
+      keepUnusedDataFor: 3600,
     }),
     
     // Новый endpoint для получения work statuses
@@ -187,6 +204,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
         url: '/service_points/work_statuses',
         method: 'GET',
       }),
+      // Кэширование на 1 час, так как статусы редко меняются
+      keepUnusedDataFor: 3600,
     }),
 
     // Новый endpoint для получения service posts
@@ -202,6 +221,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
               { type: 'ServicePost' as const, id: `LIST_${servicePointId}` },
             ]
           : [{ type: 'ServicePost' as const, id: `LIST_${servicePointId}` }],
+      // Кэширование на 5 минут
+      keepUnusedDataFor: 300,
     }),
 
     // Новый endpoint для обновления service post
@@ -214,6 +235,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { servicePointId, id }) => [
         { type: 'ServicePost' as const, id },
         { type: 'ServicePost' as const, id: `LIST_${servicePointId}` },
+        { type: 'ServicePoint' as const, id: servicePointId },
+        { type: 'SchedulePreview' as const, id: servicePointId }
       ],
     }),
 
@@ -230,6 +253,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
               { type: 'ServicePointService' as const, id: `LIST_${servicePointId}` },
             ]
           : [{ type: 'ServicePointService' as const, id: `LIST_${servicePointId}` }],
+      // Кэширование на 10 минут
+      keepUnusedDataFor: 600,
     }),
 
     // Новый endpoint для получения фотографий сервисной точки
@@ -245,6 +270,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
               { type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` },
             ]
           : [{ type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` }],
+      // Кэширование на 10 минут
+      keepUnusedDataFor: 600,
     }),
 
     // Новый endpoint для предварительного просмотра слотов
@@ -254,9 +281,11 @@ export const servicePointsApi = baseApi.injectEndpoints({
         method: 'GET',
         params: { date },
       }),
-      providesTags: (result, error, { servicePointId }) => [
-        { type: 'SchedulePreview' as const, id: servicePointId },
+      providesTags: (result, error, { servicePointId, date }) => [
+        { type: 'SchedulePreview' as const, id: `${servicePointId}_${date}` },
       ],
+      // Кэширование на 2 минуты, так как расписание может часто меняться
+      keepUnusedDataFor: 120,
     }),
 
     // Новый endpoint для расчета предварительного просмотра с данными формы
@@ -274,6 +303,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
       // Не кешируем мутацию, так как это предварительный просмотр
     }),
   }),
+  // Установка автоматического обновления при монтировании компонентов
+  overrideExisting: false,
 });
 
 export const {
