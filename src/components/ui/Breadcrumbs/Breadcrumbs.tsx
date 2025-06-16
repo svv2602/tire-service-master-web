@@ -3,8 +3,11 @@ import {
   Breadcrumbs as MuiBreadcrumbs,
   BreadcrumbsProps as MuiBreadcrumbsProps,
   Link,
-  Typography
+  Typography,
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Элемент хлебных крошек */
 export interface BreadcrumbItem {
@@ -22,6 +25,65 @@ export interface BreadcrumbsProps extends Omit<MuiBreadcrumbsProps, 'children'> 
   items: BreadcrumbItem[];
 }
 
+// Стилизованные хлебные крошки
+const StyledBreadcrumbs = styled(MuiBreadcrumbs)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.sm,
+    padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+    color: themeColors.textSecondary,
+    
+    '& .MuiBreadcrumbs-separator': {
+      margin: `0 ${tokens.spacing.xs}`,
+      color: themeColors.textSecondary,
+    },
+    
+    '& .MuiSvgIcon-root': {
+      fontSize: tokens.typography.fontSize.md,
+      marginRight: tokens.spacing.xs,
+    },
+  };
+});
+
+// Стилизованная ссылка
+const StyledLink = styled(Link)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    textDecoration: 'none',
+    color: themeColors.primary,
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.sm,
+    transition: tokens.transitions.duration.normal,
+    
+    '&:hover': {
+      textDecoration: 'underline',
+      color: theme.palette.mode === 'dark' 
+        ? themeColors.primaryLight 
+        : themeColors.primaryDark,
+    },
+  };
+});
+
+// Стилизованный текст
+const StyledTypography = styled(Typography)(({ theme, variant }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.sm,
+    color: variant === 'current' 
+      ? themeColors.textPrimary 
+      : themeColors.textSecondary,
+  };
+});
+
 /**
  * Компонент хлебных крошек
  * 
@@ -38,8 +100,10 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
   items,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   return (
-    <MuiBreadcrumbs {...props}>
+    <StyledBreadcrumbs {...props}>
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
         const content = (
@@ -52,49 +116,32 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
         if (isLast) {
           return (
-            <Typography
+            <StyledTypography
               key={index}
-              color="text.primary"
-              sx={{
-                display: 'flex',
-                alignItems: 'center'
-              }}
+              variant="current"
             >
               {content}
-            </Typography>
+            </StyledTypography>
           );
         }
 
         return item.href ? (
-          <Link
+          <StyledLink
             key={index}
             href={item.href}
-            color="inherit"
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}
           >
             {content}
-          </Link>
+          </StyledLink>
         ) : (
-          <Typography
+          <StyledTypography
             key={index}
-            color="text.secondary"
-            sx={{
-              display: 'flex',
-              alignItems: 'center'
-            }}
+            variant="default"
           >
             {content}
-          </Typography>
+          </StyledTypography>
         );
       })}
-    </MuiBreadcrumbs>
+    </StyledBreadcrumbs>
   );
 };
 

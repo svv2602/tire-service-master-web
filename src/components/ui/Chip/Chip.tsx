@@ -2,8 +2,10 @@ import React from 'react';
 import {
   Chip as MuiChip,
   ChipProps as MuiChipProps,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Пропсы чипа */
 export interface ChipProps extends Omit<MuiChipProps, 'onDelete'> {
@@ -27,26 +29,128 @@ export interface ChipProps extends Omit<MuiChipProps, 'onDelete'> {
   disabled?: boolean;
 }
 
-const StyledChip = styled(MuiChip)(({ theme }) => ({
-  borderRadius: theme.shape.borderRadius,
-  '&.MuiChip-filled': {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? theme.palette.grey[800] 
-      : theme.palette.grey[200],
-  },
-  '&.MuiChip-outlined': {
-    borderColor: theme.palette.mode === 'dark'
-      ? theme.palette.grey[700]
-      : theme.palette.grey[300],
-  },
-  '& .MuiChip-deleteIcon': {
-    color: 'inherit',
-    opacity: 0.7,
-    '&:hover': {
-      opacity: 1,
+const StyledChip = styled(MuiChip)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    borderRadius: tokens.borderRadius.pill,
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.xs,
+    fontWeight: tokens.typography.fontWeight.medium,
+    transition: tokens.transitions.duration.normal,
+    
+    '&.MuiChip-filled': {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? themeColors.backgroundSecondary 
+        : themeColors.backgroundLight,
     },
-  },
-}));
+    
+    '&.MuiChip-outlined': {
+      borderColor: theme.palette.mode === 'dark'
+        ? themeColors.borderSecondary
+        : themeColors.borderPrimary,
+      backgroundColor: 'transparent',
+    },
+    
+    '&.MuiChip-filledPrimary': {
+      backgroundColor: themeColors.primary,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedPrimary': {
+      borderColor: themeColors.primary,
+      color: themeColors.primary,
+    },
+    
+    '&.MuiChip-filledSecondary': {
+      backgroundColor: theme.palette.secondary.main,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedSecondary': {
+      borderColor: theme.palette.secondary.main,
+      color: theme.palette.secondary.main,
+    },
+    
+    '&.MuiChip-filledError': {
+      backgroundColor: themeColors.error,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedError': {
+      borderColor: themeColors.error,
+      color: themeColors.error,
+    },
+    
+    '&.MuiChip-filledSuccess': {
+      backgroundColor: theme.palette.success.main,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedSuccess': {
+      borderColor: theme.palette.success.main,
+      color: theme.palette.success.main,
+    },
+    
+    '&.MuiChip-filledInfo': {
+      backgroundColor: theme.palette.info.main,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedInfo': {
+      borderColor: theme.palette.info.main,
+      color: theme.palette.info.main,
+    },
+    
+    '&.MuiChip-filledWarning': {
+      backgroundColor: theme.palette.warning.main,
+      color: '#fff',
+    },
+    
+    '&.MuiChip-outlinedWarning': {
+      borderColor: theme.palette.warning.main,
+      color: theme.palette.warning.main,
+    },
+    
+    '& .MuiChip-label': {
+      padding: `0 ${tokens.spacing.sm}`,
+    },
+    
+    '& .MuiChip-icon': {
+      color: 'inherit',
+      marginLeft: tokens.spacing.xs,
+      marginRight: -tokens.spacing.xxs,
+    },
+    
+    '& .MuiChip-deleteIcon': {
+      color: 'inherit',
+      opacity: 0.7,
+      transition: tokens.transitions.duration.normal,
+      marginRight: tokens.spacing.xs,
+      '&:hover': {
+        opacity: 1,
+        color: 'inherit',
+      },
+    },
+    
+    '&.MuiChip-sizeSmall': {
+      height: 24,
+      fontSize: tokens.typography.fontSize.xxs,
+      
+      '& .MuiChip-label': {
+        padding: `0 ${tokens.spacing.xs}`,
+      },
+      
+      '& .MuiChip-icon': {
+        fontSize: tokens.typography.fontSize.sm,
+      },
+      
+      '& .MuiChip-deleteIcon': {
+        fontSize: tokens.typography.fontSize.sm,
+      },
+    },
+  };
+});
 
 /**
  * Компонент чипа/тега
@@ -71,6 +175,8 @@ export const Chip: React.FC<ChipProps> = ({
   disabled = false,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   return (
     <StyledChip
       label={label}
@@ -82,7 +188,6 @@ export const Chip: React.FC<ChipProps> = ({
       onClick={onClick}
       disabled={disabled}
       sx={{
-        borderRadius: '16px',
         '&:hover': {
           opacity: 0.9
         },
