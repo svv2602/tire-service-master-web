@@ -4,8 +4,10 @@ import {
   CheckboxProps as MuiCheckboxProps,
   FormControlLabel,
   FormControlLabelProps,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Пропсы чекбокса */
 export interface CheckboxProps extends Omit<MuiCheckboxProps, 'onChange'> {
@@ -21,20 +23,70 @@ export interface CheckboxProps extends Omit<MuiCheckboxProps, 'onChange'> {
   color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
 }
 
-const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
-  '& .MuiCheckbox-root': {
-    padding: theme.spacing(0.5),
+// Стилизованный чекбокс
+const StyledCheckbox = styled(MuiCheckbox)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: tokens.spacing.xs,
+    transition: tokens.transitions.duration.normal,
+    
     '&:hover': {
       backgroundColor: 'transparent',
     },
-  },
-  '& .MuiCheckbox-colorPrimary.Mui-checked': {
-    color: theme.palette.primary.main,
-  },
-  '& .MuiCheckbox-colorSecondary.Mui-checked': {
-    color: theme.palette.secondary.main,
-  },
-}));
+    
+    '&.Mui-checked': {
+      color: themeColors.primary,
+    },
+    
+    '&.MuiCheckbox-colorPrimary.Mui-checked': {
+      color: themeColors.primary,
+    },
+    
+    '&.MuiCheckbox-colorSecondary.Mui-checked': {
+      color: theme.palette.secondary.main,
+    },
+    
+    '&.MuiCheckbox-colorError.Mui-checked': {
+      color: themeColors.error,
+    },
+    
+    '&.MuiCheckbox-colorWarning.Mui-checked': {
+      color: theme.palette.warning.main,
+    },
+    
+    '&.MuiCheckbox-colorInfo.Mui-checked': {
+      color: theme.palette.info.main,
+    },
+    
+    '&.MuiCheckbox-colorSuccess.Mui-checked': {
+      color: theme.palette.success.main,
+    },
+  };
+});
+
+const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    margin: 0,
+    marginRight: tokens.spacing.md,
+    userSelect: 'none',
+    
+    '& .MuiFormControlLabel-label': {
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textPrimary,
+    },
+    
+    '&.Mui-disabled': {
+      '& .MuiFormControlLabel-label': {
+        color: themeColors.textSecondary,
+        opacity: 0.6,
+      },
+    },
+  };
+});
 
 /**
  * Компонент чекбокса
@@ -56,6 +108,9 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   color = 'primary',
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(event.target.checked);
   };
@@ -64,7 +119,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
     return (
       <StyledFormControlLabel
         control={
-          <MuiCheckbox
+          <StyledCheckbox
             checked={checked}
             onChange={handleChange}
             size={size}
@@ -79,7 +134,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   }
 
   return (
-    <MuiCheckbox
+    <StyledCheckbox
       checked={checked}
       onChange={handleChange}
       size={size}

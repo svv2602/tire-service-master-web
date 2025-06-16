@@ -6,8 +6,10 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Опция для селекта */
 export interface SelectOption {
@@ -41,17 +43,97 @@ export interface SelectProps extends Omit<MuiSelectProps, 'onChange'> {
   children?: React.ReactNode;
 }
 
-const StyledFormControl = styled(FormControl)(({ theme }) => ({
-  '& .MuiInputLabel-root': {
-    transform: 'translate(14px, 12px) scale(1)',
-    '&.Mui-focused, &.MuiFormLabel-filled': {
-      transform: 'translate(14px, -9px) scale(0.75)',
+const StyledFormControl = styled(FormControl)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    marginBottom: tokens.spacing.sm,
+    
+    '& .MuiInputLabel-root': {
+      transform: 'translate(14px, 12px) scale(1)',
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textSecondary,
+      
+      '&.Mui-focused': {
+        color: themeColors.primary,
+        transform: 'translate(14px, -9px) scale(0.75)',
+      },
+      
+      '&.MuiFormLabel-filled': {
+        transform: 'translate(14px, -9px) scale(0.75)',
+      },
+      
+      '&.Mui-error': {
+        color: themeColors.error,
+      },
     },
-  },
-  '& .MuiSelect-select': {
-    padding: '12px 14px',
-  },
-}));
+    
+    '& .MuiSelect-select': {
+      padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textPrimary,
+      backgroundColor: themeColors.backgroundField,
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '& .MuiOutlinedInput-root': {
+      borderRadius: tokens.borderRadius.md,
+      
+      '& fieldset': {
+        borderColor: themeColors.borderPrimary,
+        transition: tokens.transitions.duration.normal,
+      },
+      
+      '&:hover fieldset': {
+        borderColor: themeColors.borderHover,
+      },
+      
+      '&.Mui-focused fieldset': {
+        borderColor: themeColors.primary,
+        borderWidth: 1,
+      },
+      
+      '&.Mui-error fieldset': {
+        borderColor: themeColors.error,
+      },
+    },
+    
+    '& .MuiFormHelperText-root': {
+      fontSize: tokens.typography.fontSize.xs,
+      fontFamily: tokens.typography.fontFamily,
+      marginLeft: tokens.spacing.sm,
+      marginTop: tokens.spacing.xs,
+      
+      '&.Mui-error': {
+        color: themeColors.error,
+      },
+    },
+    
+    '& .MuiMenuItem-root': {
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+      
+      '&:hover': {
+        backgroundColor: themeColors.backgroundHover,
+      },
+      
+      '&.Mui-selected': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? 'rgba(25, 118, 210, 0.15)'
+          : 'rgba(25, 118, 210, 0.08)',
+        
+        '&:hover': {
+          backgroundColor: theme.palette.mode === 'dark'
+            ? 'rgba(25, 118, 210, 0.25)'
+            : 'rgba(25, 118, 210, 0.12)',
+        },
+      },
+    },
+  };
+});
 
 /**
  * Компонент выпадающего списка
@@ -80,6 +162,9 @@ export const Select: React.FC<SelectProps> = ({
   children,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     onChange?.(event.target.value as string | number);
   };
@@ -102,6 +187,17 @@ export const Select: React.FC<SelectProps> = ({
         value={value}
         onChange={handleChange as any}
         label={label}
+        MenuProps={{
+          PaperProps: {
+            sx: {
+              backgroundColor: themeColors.backgroundCard,
+              boxShadow: tokens.shadows.md,
+              borderRadius: tokens.borderRadius.md,
+              border: `1px solid ${themeColors.borderPrimary}`,
+              marginTop: tokens.spacing.xs,
+            }
+          }
+        }}
         {...props}
       >
         {children || options?.map((option) => (
