@@ -1,52 +1,58 @@
 import React from 'react';
-import MuiSkeleton from '@mui/material/Skeleton';
-import { SkeletonProps } from './types';
+import {
+  Skeleton as MuiSkeleton,
+  SkeletonProps as MuiSkeletonProps,
+  styled,
+} from '@mui/material';
+
+export interface SkeletonProps extends MuiSkeletonProps {
+  /** Вариант скелетона */
+  variant?: 'text' | 'rectangular' | 'circular' | 'rounded';
+  /** Ширина */
+  width?: number | string;
+  /** Высота */
+  height?: number | string;
+  /** Анимация */
+  animation?: 'pulse' | 'wave' | false;
+  /** Кастомные стили */
+  sx?: Record<string, any>;
+}
+
+const StyledSkeleton = styled(MuiSkeleton)(({ theme }) => ({
+  '&.MuiSkeleton-rounded': {
+    borderRadius: theme.shape.borderRadius,
+  },
+}));
 
 /**
- * Компонент Skeleton - плейсхолдер для загружаемого контента
+ * Компонент Skeleton - заполнитель для отображения во время загрузки контента
+ * 
+ * @example
+ * <Skeleton variant="text" width={200} height={40} />
+ * <Skeleton variant="rectangular" width="100%" height={200} />
+ * <Skeleton variant="circular" width={50} height={50} />
  */
-const Skeleton: React.FC<SkeletonProps> = ({
+export const Skeleton: React.FC<SkeletonProps> = ({
   variant = 'text',
-  animation = 'pulse',
-  height,
   width,
-  borderRadius = 8,
+  height,
+  animation = 'pulse',
   sx,
-  ...rest
+  ...props
 }) => {
-  // Определяем базовые стили в зависимости от варианта
-  const baseStyles = {
-    text: {
-      height: height || 20,
-      width: width || '100%',
-      borderRadius: 4,
-    },
-    rectangular: {
-      height: height || 100,
-      width: width || '100%',
-      borderRadius: 0,
-    },
-    circular: {
-      height: height || 40,
-      width: width || 40,
-      borderRadius: '50%',
-    },
-    rounded: {
-      height: height || 100,
-      width: width || '100%',
-      borderRadius,
-    },
-  }[variant];
+  // Для варианта "rounded" используем "rectangular" с кастомным классом
+  const actualVariant = variant === 'rounded' ? 'rectangular' : variant;
+  const className = variant === 'rounded' ? 'MuiSkeleton-rounded' : undefined;
 
   return (
-    <MuiSkeleton
-      variant={variant === 'rounded' ? 'rectangular' : variant}
+    <StyledSkeleton
+      variant={actualVariant}
+      width={width}
+      height={height}
       animation={animation}
-      sx={{
-        ...baseStyles,
-        ...sx,
-      }}
-      {...rest}
+      className={className}
+      sx={sx}
+      {...props}
     />
   );
 };

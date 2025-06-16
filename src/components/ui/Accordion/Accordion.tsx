@@ -1,99 +1,116 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Accordion as MuiAccordion,
-  AccordionSummary as MuiAccordionSummary,
-  AccordionDetails as MuiAccordionDetails,
+  AccordionProps as MuiAccordionProps,
+  AccordionSummary,
+  AccordionDetails,
   Typography,
+  styled,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-// Стилизованные компоненты
-const StyledAccordion = styled(MuiAccordion)(({ theme }) => ({
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: theme.shape.borderRadius,
-  '&:before': {
-    display: 'none',
-  },
-  '&:not(:last-child)': {
-    marginBottom: theme.spacing(1),
-  },
-}));
-
-const StyledAccordionSummary = styled(MuiAccordionSummary)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark'
-    ? theme.palette.grey[800]
-    : theme.palette.grey[50],
-  '&.Mui-expanded': {
-    minHeight: 48,
-  },
-}));
-
-const StyledAccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: `1px solid ${theme.palette.divider}`,
-}));
-
-export interface AccordionProps {
+export interface AccordionProps extends Omit<MuiAccordionProps, 'children'> {
   /** Заголовок аккордеона */
   title: React.ReactNode;
   /** Содержимое аккордеона */
   children: React.ReactNode;
-  /** Флаг развернутого состояния */
+  /** Иконка раскрытия (по умолчанию ExpandMoreIcon) */
+  expandIcon?: React.ReactNode;
+  /** Открыт ли аккордеон по умолчанию */
+  defaultExpanded?: boolean;
+  /** Контролируемое состояние раскрытия */
   expanded?: boolean;
-  /** Callback при изменении состояния */
+  /** Колбэк при изменении состояния */
   onChange?: (event: React.SyntheticEvent, expanded: boolean) => void;
-  /** Флаг отключения компонента */
+  /** Отключен ли аккордеон */
   disabled?: boolean;
-  /** Дополнительный класс для корневого элемента */
-  className?: string;
+  /** Кастомные стили */
+  sx?: Record<string, any>;
 }
 
+const StyledAccordion = styled(MuiAccordion)(({ theme }) => ({
+  boxShadow: 'none',
+  '&:before': {
+    display: 'none',
+  },
+  '&.Mui-expanded': {
+    margin: 0,
+  },
+}));
+
+const StyledAccordionSummary = styled(AccordionSummary)(({ theme }) => ({
+  minHeight: 48,
+  '&.Mui-expanded': {
+    minHeight: 48,
+  },
+  '& .MuiAccordionSummary-content': {
+    margin: theme.spacing(1, 0),
+    '&.Mui-expanded': {
+      margin: theme.spacing(1, 0),
+    },
+  },
+}));
+
+const StyledAccordionDetails = styled(AccordionDetails)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderTop: `1px solid ${theme.palette.divider}`,
+}));
+
 /**
- * Компонент аккордеона для отображения сворачиваемого/разворачиваемого контента
+ * Компонент Accordion - раскрывающаяся панель для группировки и скрытия содержимого
  * 
  * @example
- * ```tsx
- * <Accordion title="Заголовок секции">
- *   <Typography>
- *     Содержимое секции
- *   </Typography>
+ * <Accordion title="Заголовок аккордеона">
+ *   <Typography>Содержимое аккордеона</Typography>
  * </Accordion>
- * ```
  */
 export const Accordion: React.FC<AccordionProps> = ({
   title,
   children,
+  expandIcon = <ExpandMoreIcon />,
+  defaultExpanded = false,
   expanded,
   onChange,
-  disabled,
-  className,
+  disabled = false,
+  sx,
   ...props
 }) => {
+  // Используем внутреннее состояние только если expanded не передан извне
+  const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
+  
+  // Определяем, является ли компонент контролируемым
+  const isControlled = expanded !== undefined;
+  
+  // Используем либо внешнее, либо внутреннее состояние
+  const actualExpanded = isControlled ? expanded : internalExpanded;
+  
+  // Обработчик изменения состояния
+  const handleChange = (event: React.SyntheticEvent, isExpanded: boolean) => {
+    // Если компонент не контролируемый, обновляем внутреннее состояние
+    if (!isControlled) {
+      setInternalExpanded(isExpanded);
+    }
+    
+    // Вызываем внешний обработчик, если он предоставлен
+    if (onChange) {
+      onChange(event, isExpanded);
+    }
+  };
+
   return (
     <StyledAccordion
-      expanded={expanded}
-      onChange={onChange}
+      expanded={actualExpanded}
+      onChange={handleChange}
       disabled={disabled}
-      className={className}
+      sx={sx}
       {...props}
     >
-      <StyledAccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls="panel-content"
-        id="panel-header"
-      >
-        {typeof title === 'string' ? (
-          <Typography>{title}</Typography>
-        ) : (
-          title
-        )}
+      <StyledAccordionSummary expandIcon={expandIcon}>
+        {typeof title === 'string' ? <Typography>{title}</Typography> : title}
       </StyledAccordionSummary>
-      <StyledAccordionDetails>
-        {children}
-      </StyledAccordionDetails>
+      <StyledAccordionDetails>{children}</StyledAccordionDetails>
     </StyledAccordion>
   );
 };
 
-export default Accordion; 
+export default Accordion;

@@ -1,121 +1,143 @@
 import React from 'react';
 import {
-  LinearProgress,
-  CircularProgress,
+  CircularProgress as MuiCircularProgress,
+  LinearProgress as MuiLinearProgress,
   Box,
   Typography,
-  LinearProgressProps,
-  CircularProgressProps
+  styled,
 } from '@mui/material';
 
-/** Тип прогресса */
-export type ProgressVariant = 'linear' | 'circular';
-
-/** Пропсы прогресса */
 export interface ProgressProps {
-  /** Значение прогресса (0-100) */
+  /** Тип индикатора прогресса */
+  variant?: 'circular' | 'linear';
+  /** Цвет индикатора */
+  color?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
+  /** Значение прогресса (от 0 до 100) */
   value?: number;
-  /** Тип прогресса */
-  variant?: ProgressVariant;
-  /** Показывать ли значение */
-  showValue?: boolean;
-  /** Размер */
+  /** Размер кругового индикатора */
   size?: number;
-  /** Толщина */
+  /** Толщина линии */
   thickness?: number;
-  /** Цвет */
-  color?: 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
-  /** Высота для линейного прогресса */
-  height?: number;
+  /** Показать текст с процентами */
+  showLabel?: boolean;
+  /** Текст метки (если не задан, показывается процент) */
+  label?: string;
+  /** Неопределенный прогресс */
+  indeterminate?: boolean;
+  /** Кастомные стили */
+  sx?: Record<string, any>;
 }
 
+const ProgressContainer = styled(Box)(({ theme }) => ({
+  display: 'inline-flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+}));
+
+const ProgressLabel = styled(Typography)(({ theme }) => ({
+  marginTop: theme.spacing(1),
+  fontSize: '0.875rem',
+}));
+
+const CircularProgressWithLabel = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  display: 'inline-flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+}));
+
+const CircularProgressLabel = styled(Typography)(({ theme }) => ({
+  position: 'absolute',
+  fontSize: '0.75rem',
+  fontWeight: 500,
+}));
+
+const LinearProgressContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(0.5),
+}));
+
+const LinearProgressLabelContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+}));
+
 /**
- * Компонент индикатора прогресса
+ * Компонент Progress - индикатор прогресса для отображения состояния загрузки или выполнения операции
  * 
  * @example
- * <Progress
- *   value={75}
- *   variant="linear"
- *   showValue
- *   color="primary"
- * />
+ * <Progress variant="circular" value={75} showLabel />
+ * <Progress variant="linear" value={50} showLabel color="secondary" />
  */
 export const Progress: React.FC<ProgressProps> = ({
-  variant = 'linear',
-  value,
+  variant = 'circular',
   color = 'primary',
+  value = 0,
   size = 40,
   thickness = 3.6,
-  height = 4,
-  showValue = false
+  showLabel = false,
+  label,
+  indeterminate = false,
+  sx,
 }) => {
-  const isIndeterminate = value === undefined;
+  const normalizedValue = Math.min(Math.max(value, 0), 100);
+  const displayValue = Math.round(normalizedValue);
+  const displayLabel = label || `${displayValue}%`;
 
   if (variant === 'circular') {
-    const circularProps: CircularProgressProps = {
-      variant: isIndeterminate ? 'indeterminate' : 'determinate',
-      value: value ?? 0,
-      color,
-      size,
-      thickness
-    };
-
     return (
-      <Box position="relative" display="inline-flex">
-        <CircularProgress {...circularProps} />
-        {showValue && !isIndeterminate && (
-          <Box
-            sx={{
-              top: 0,
-              left: 0,
-              bottom: 0,
-              right: 0,
-              position: 'absolute',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Typography
-              variant="caption"
-              component="div"
-              color="text.secondary"
-            >
-              {`${Math.round(value ?? 0)}%`}
-            </Typography>
-          </Box>
+      <ProgressContainer sx={sx}>
+        {indeterminate ? (
+          <MuiCircularProgress
+            color={color}
+            size={size}
+            thickness={thickness}
+          />
+        ) : (
+          <CircularProgressWithLabel>
+            <MuiCircularProgress
+              variant="determinate"
+              value={normalizedValue}
+              color={color}
+              size={size}
+              thickness={thickness}
+            />
+            {showLabel && (
+              <CircularProgressLabel>
+                {displayLabel}
+              </CircularProgressLabel>
+            )}
+          </CircularProgressWithLabel>
         )}
-      </Box>
+        {label && <ProgressLabel color="text.secondary">{label}</ProgressLabel>}
+      </ProgressContainer>
     );
   }
 
-  const linearProps: LinearProgressProps = {
-    variant: isIndeterminate ? 'indeterminate' : 'determinate',
-    value: value ?? 0,
-    color,
-    sx: { height, borderRadius: height / 2 }
-  };
-
   return (
-    <Box width="100%" position="relative">
-      <LinearProgress {...linearProps} />
-      {showValue && !isIndeterminate && (
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            marginRight: '-40px'
-          }}
-        >
+    <LinearProgressContainer sx={sx}>
+      {showLabel && (
+        <LinearProgressLabelContainer>
           <Typography variant="caption" color="text.secondary">
-            {`${Math.round(value ?? 0)}%`}
+            {label || 'Прогресс'}
           </Typography>
-        </Box>
+          {!indeterminate && (
+            <Typography variant="caption" color="text.secondary">
+              {displayValue}%
+            </Typography>
+          )}
+        </LinearProgressLabelContainer>
       )}
-    </Box>
+      <MuiLinearProgress
+        variant={indeterminate ? 'indeterminate' : 'determinate'}
+        value={normalizedValue}
+        color={color}
+      />
+    </LinearProgressContainer>
   );
 };
 
-export default Progress; 
+export default Progress;
