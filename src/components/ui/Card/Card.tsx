@@ -34,16 +34,30 @@ const StyledCard = styled(MuiCard)(({ theme }) => {
 });
 
 // Стилизованный контент карточки
-const StyledCardContent = styled(CardContent)(({ theme }) => ({
-  flexGrow: 1,
-  padding: theme.spacing(3),
-}));
+const StyledCardContent = styled(CardContent)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    flexGrow: 1,
+    padding: tokens.spacing.lg,
+    backgroundColor: themeColors.backgroundCard,
+    color: themeColors.textPrimary,
+  };
+});
 
 // Стилизованные действия карточки
-const StyledCardActions = styled(CardActions)(({ theme }) => ({
-  padding: theme.spacing(2),
-  justifyContent: 'flex-end',
-}));
+const StyledCardActions = styled(CardActions)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+    justifyContent: 'flex-end',
+    borderTop: `1px solid ${themeColors.borderPrimary}`,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? 'rgba(0, 0, 0, 0.1)' 
+      : 'rgba(0, 0, 0, 0.02)',
+  };
+});
 
 /**
  * Универсальный компонент Card
@@ -61,6 +75,7 @@ export const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
 
   return (
     <StyledCard 
@@ -76,6 +91,10 @@ export const Card: React.FC<CardProps> = ({
           height={media.height || 200}
           image={media.image}
           alt={media.alt || title}
+          sx={{
+            objectFit: 'cover',
+            transition: tokens.transitions.duration.normal,
+          }}
         />
       )}
       
@@ -85,7 +104,12 @@ export const Card: React.FC<CardProps> = ({
             variant="h5" 
             component="h2" 
             gutterBottom
-            color={theme.palette.text.primary}
+            sx={{ 
+              color: themeColors.textPrimary,
+              fontSize: tokens.typography.fontSize.lg,
+              fontWeight: tokens.typography.fontWeights.medium,
+              marginBottom: tokens.spacing.sm,
+            }}
           >
             {title}
           </Typography>
@@ -94,8 +118,12 @@ export const Card: React.FC<CardProps> = ({
         {subtitle && (
           <Typography 
             variant="subtitle1" 
-            color={theme.palette.text.secondary}
             gutterBottom
+            sx={{ 
+              color: themeColors.textSecondary,
+              fontSize: tokens.typography.fontSize.md,
+              marginBottom: tokens.spacing.sm,
+            }}
           >
             {subtitle}
           </Typography>
@@ -104,7 +132,11 @@ export const Card: React.FC<CardProps> = ({
         {content && (
           <Typography 
             variant="body1" 
-            color={theme.palette.text.primary}
+            sx={{ 
+              color: themeColors.textPrimary,
+              fontSize: tokens.typography.fontSize.md,
+              lineHeight: tokens.typography.lineHeight.relaxed,
+            }}
           >
             {content}
           </Typography>
