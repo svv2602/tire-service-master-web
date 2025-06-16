@@ -9,6 +9,7 @@ import {
   useTheme,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { tokens } from '../../../styles/theme/tokens';
 
 export interface ModalProps {
   /** Заголовок модального окна */
@@ -37,42 +38,67 @@ export interface ModalProps {
   [key: string]: any;
 }
 
-const StyledModalContent = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  backgroundColor: theme.palette.background.paper,
-  boxShadow: theme.shadows[10],
-  borderRadius: theme.shape.borderRadius,
-  outline: 'none',
-  display: 'flex',
-  flexDirection: 'column',
-  maxHeight: '90vh',
-}));
+const StyledModalContent = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: themeColors.backgroundCard,
+    boxShadow: tokens.shadows.lg,
+    borderRadius: tokens.borderRadius.lg,
+    border: `1px solid ${themeColors.borderPrimary}`,
+    outline: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    maxHeight: '90vh',
+    transition: tokens.transitions.duration.normal,
+  };
+});
 
-const ModalHeader = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2, 3),
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderBottom: `1px solid ${theme.palette.divider}`,
-}));
+const ModalHeader = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: `${tokens.spacing.md} ${tokens.spacing.lg}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: `1px solid ${themeColors.borderPrimary}`,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? 'rgba(0, 0, 0, 0.1)' 
+      : 'rgba(0, 0, 0, 0.02)',
+  };
+});
 
-const ModalBody = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
-  overflowY: 'auto',
-  flexGrow: 1,
-}));
+const ModalBody = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: tokens.spacing.lg,
+    overflowY: 'auto',
+    flexGrow: 1,
+    color: themeColors.textPrimary,
+  };
+});
 
-const ModalFooter = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2, 3),
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  borderTop: `1px solid ${theme.palette.divider}`,
-  gap: theme.spacing(1),
-}));
+const ModalFooter = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: `${tokens.spacing.sm} ${tokens.spacing.lg} ${tokens.spacing.md}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    borderTop: `1px solid ${themeColors.borderPrimary}`,
+    gap: tokens.spacing.sm,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? 'rgba(0, 0, 0, 0.1)' 
+      : 'rgba(0, 0, 0, 0.02)',
+  };
+});
 
 /**
  * Компонент Modal - модальное окно для отображения содержимого поверх основного интерфейса
@@ -109,6 +135,7 @@ export const Modal: React.FC<ModalProps> = ({
   ...props
 }) => {
   const theme = useTheme();
+const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   const handleClose = () => {
     onClose?.();
@@ -133,7 +160,17 @@ export const Modal: React.FC<ModalProps> = ({
         {title && (
           <ModalHeader>
             {typeof title === 'string' ? (
-              <Typography variant="h6" component="h2" id="modal-title">
+              <Typography 
+                variant="h6" 
+                component="h2" 
+                id="modal-title"
+                sx={{ 
+                  color: themeColors.textPrimary,
+                  fontSize: tokens.typography.fontSize.lg,
+                  fontWeight: tokens.typography.fontWeights.medium,
+                  fontFamily: tokens.typography.fontFamily,
+                }}
+              >
                 {title}
               </Typography>
             ) : (
@@ -144,6 +181,13 @@ export const Modal: React.FC<ModalProps> = ({
                 aria-label="close"
                 onClick={handleClose}
                 size="small"
+                sx={{
+                  color: themeColors.textSecondary,
+                  transition: tokens.transitions.duration.normal,
+                  '&:hover': {
+                    color: themeColors.textPrimary,
+                  },
+                }}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>

@@ -2,21 +2,48 @@ import React from 'react';
 import { Grid as MuiGrid, useTheme } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { GridProps } from './types';
+import { tokens } from '../../../styles/theme/tokens';
 
 // Стилизованный Grid с поддержкой темной темы и адаптивности
-const StyledGrid = styled(MuiGrid)(({ theme }) => ({
-  display: 'flex',
-  flexWrap: 'wrap',
-  boxSizing: 'border-box',
-  '&.MuiGrid-container': {
-    width: '100%',
-    margin: 0,
-    padding: theme.spacing(1),
-  },
-  '&.MuiGrid-item': {
-    padding: theme.spacing(1),
-  },
-}));
+const StyledGrid = styled(MuiGrid)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'flex',
+    flexWrap: 'wrap',
+    boxSizing: 'border-box',
+    transition: tokens.transitions.duration.normal,
+    
+    '&.MuiGrid-container': {
+      width: '100%',
+      margin: 0,
+      padding: tokens.spacing.sm,
+    },
+    
+    '&.MuiGrid-item': {
+      padding: tokens.spacing.sm,
+    },
+    
+    // Адаптивные отступы для разных размеров экрана
+    [theme.breakpoints.up('sm')]: {
+      '&.MuiGrid-container': {
+        padding: tokens.spacing.sm,
+      },
+      '&.MuiGrid-item': {
+        padding: tokens.spacing.sm,
+      },
+    },
+    
+    [theme.breakpoints.up('md')]: {
+      '&.MuiGrid-container': {
+        padding: tokens.spacing.md,
+      },
+      '&.MuiGrid-item': {
+        padding: tokens.spacing.md,
+      },
+    },
+  };
+});
 
 /**
  * Универсальный компонент Grid для создания адаптивных макетов
