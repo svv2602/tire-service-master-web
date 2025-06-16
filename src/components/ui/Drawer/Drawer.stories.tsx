@@ -22,6 +22,7 @@ import Toolbar from '@mui/material/Toolbar';
 import MuiDrawer from '@mui/material/Drawer';
 import Drawer from './Drawer';
 import { DrawerProps } from './types';
+import { tokens } from '../../../styles/theme/tokens';
 
 export default {
   title: 'UI/Drawer',
@@ -49,7 +50,7 @@ const DrawerContent = () => (
   </List>
 );
 
-const Template: Story<DrawerProps> = (args) => {
+const Template: Story<DrawerProps & {children?: React.ReactNode}> = (args) => {
   const [open, setOpen] = useState(false);
 
   return (

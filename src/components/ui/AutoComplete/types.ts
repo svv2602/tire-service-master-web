@@ -1,5 +1,5 @@
-import { AutocompleteProps as MuiAutocompleteProps } from '@mui/material/Autocomplete';
-import { TextFieldProps } from '@mui/material/TextField';
+import { SxProps, TextFieldProps, AutocompleteProps } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 
 /**
  * Базовый элемент для автодополнения
@@ -24,73 +24,70 @@ export interface AutoCompleteOption {
 /**
  * Пропсы компонента AutoComplete
  */
-export interface AutoCompleteProps<T extends AutoCompleteOption = AutoCompleteOption> {
+export interface AutoCompleteProps {
   /**
    * Список опций для выбора
    */
-  options: T[];
+  options?: AutoCompleteOption[];
   
   /**
    * Выбранное значение
    */
-  value?: T | null;
+  value: AutoCompleteOption | null;
   
   /**
-   * Callback при изменении значения
+   * Обработчик изменения значения
    */
-  onChange?: (value: T | null) => void;
+  onChange: (value: AutoCompleteOption | null) => void;
   
   /**
-   * Placeholder для поля ввода
+   * Текст плейсхолдера
    */
   placeholder?: string;
   
   /**
-   * Label для поля ввода
+   * Метка (label) для поля
    */
   label?: string;
   
   /**
    * Функция для асинхронного поиска опций
    */
-  onSearch?: (query: string) => Promise<T[]>;
+  onSearch?: (query: string) => Promise<AutoCompleteOption[]>;
   
   /**
-   * Задержка перед поиском в мс
-   * @default 300
+   * Задержка для debounce при поиске (в мс)
    */
   debounceMs?: number;
   
   /**
-   * Минимальное количество символов для начала поиска
-   * @default 2
+   * Минимальная длина строки для начала поиска
    */
   minSearchLength?: number;
   
   /**
    * Текст при отсутствии опций
-   * @default 'Нет доступных вариантов'
    */
   noOptionsText?: string;
   
   /**
    * Текст при загрузке опций
-   * @default 'Загрузка...'
    */
   loadingText?: string;
   
   /**
-   * Пропсы для TextField
+   * Дополнительные пропсы для TextField
    */
   TextFieldProps?: Partial<TextFieldProps>;
   
   /**
-   * Пропсы для MUI Autocomplete
+   * Дополнительные пропсы для Autocomplete
    */
-  AutocompleteProps?: Partial<MuiAutocompleteProps<T, false, false, false>>;
+  AutocompleteProps?: Partial<Omit<AutocompleteProps<any, false, false, false>, 
+    'options' | 'value' | 'onChange' | 'renderInput'>>;
   
   /**
-   * Дополнительные стили
+   * Стили через SX API
    */
-  sx?: Record<string, any>;
+  sx?: SxProps<Theme>;
 } 

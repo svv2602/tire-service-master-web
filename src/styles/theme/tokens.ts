@@ -66,10 +66,13 @@ export const colors = {
     // Фоны
     backgroundPrimary: 'rgba(255, 255, 255, 1)',
     backgroundSecondary: 'rgba(250, 250, 250, 1)',
+    backgroundTertiary: 'rgba(245, 245, 245, 1)',
     backgroundCard: 'rgba(255, 255, 255, 1)',
     backgroundField: 'rgba(0, 0, 0, 0.02)',
     backgroundHover: 'rgba(0, 0, 0, 0.04)',
     backgroundError: 'rgba(244, 67, 54, 0.05)',
+    backgroundDisabled: 'rgba(0, 0, 0, 0.04)',
+    backgroundLight: 'rgba(248, 249, 250, 1)',
     
     // Фон для таблиц
     backgroundTable: 'rgba(255, 255, 255, 1)',
@@ -83,6 +86,7 @@ export const colors = {
     textPrimary: '#212121',
     textSecondary: 'rgba(0, 0, 0, 0.7)',
     textMuted: 'rgba(0, 0, 0, 0.5)',
+    textDisabled: 'rgba(0, 0, 0, 0.38)',
     
     // Рамки
     borderPrimary: 'rgba(0, 0, 0, 0.1)',
@@ -93,15 +97,24 @@ export const colors = {
     // Состояния
     success: '#43a047',
     successBg: 'rgba(76, 175, 80, 0.05)',
+    successLight: 'rgba(76, 175, 80, 0.2)',
     warning: '#f57c00',
     warningBg: 'rgba(255, 193, 7, 0.05)',
+    warningLight: 'rgba(255, 193, 7, 0.2)',
     error: '#d32f2f',
     errorBg: 'rgba(244, 67, 54, 0.05)',
+    errorLight: 'rgba(244, 67, 54, 0.2)',
+    errorDark: 'rgba(211, 47, 47, 0.8)',
+    info: '#0288d1',
+    infoLight: 'rgba(3, 169, 244, 0.2)',
     
     // Тени
     shadowLight: 'rgba(0, 0, 0, 0.05)',
     shadowMedium: 'rgba(0, 0, 0, 0.08)',
     shadowDark: 'rgba(0, 0, 0, 0.12)',
+
+    // Дополнительные цвета
+    white: '#FFFFFF',
   },
   dark: {
     // Основные цвета
@@ -112,10 +125,13 @@ export const colors = {
     // Фоны
     backgroundPrimary: 'rgba(18, 18, 18, 0.98)',
     backgroundSecondary: 'rgba(28, 28, 28, 0.98)',
+    backgroundTertiary: 'rgba(38, 38, 38, 0.98)',
     backgroundCard: 'rgba(33, 33, 33, 0.95)',
     backgroundField: 'rgba(255, 255, 255, 0.05)',
     backgroundHover: 'rgba(255, 255, 255, 0.05)',
     backgroundError: 'rgba(244, 67, 54, 0.15)',
+    backgroundDisabled: 'rgba(255, 255, 255, 0.12)',
+    backgroundLight: 'rgba(45, 45, 48, 0.95)',
     
     // Фон для таблиц
     backgroundTable: 'rgba(45, 45, 48, 0.95)',
@@ -129,6 +145,7 @@ export const colors = {
     textPrimary: '#ffffff',
     textSecondary: 'rgba(255, 255, 255, 0.7)',
     textMuted: 'rgba(255, 255, 255, 0.5)',
+    textDisabled: 'rgba(255, 255, 255, 0.5)',
     
     // Рамки
     borderPrimary: 'rgba(255, 255, 255, 0.1)',
@@ -139,15 +156,24 @@ export const colors = {
     // Состояния
     success: '#66bb6a',
     successBg: 'rgba(76, 175, 80, 0.15)',
+    successLight: 'rgba(76, 175, 80, 0.3)',
     warning: '#ffa726',
     warningBg: 'rgba(255, 193, 7, 0.15)',
+    warningLight: 'rgba(255, 193, 7, 0.3)',
     error: '#ef5350',
     errorBg: 'rgba(244, 67, 54, 0.15)',
+    errorLight: 'rgba(244, 67, 54, 0.3)',
+    errorDark: 'rgba(211, 47, 47, 0.8)',
+    info: '#29b6f6',
+    infoLight: 'rgba(3, 169, 244, 0.3)',
     
     // Тени
     shadowLight: 'rgba(0, 0, 0, 0.2)',
     shadowMedium: 'rgba(0, 0, 0, 0.3)',
     shadowDark: 'rgba(0, 0, 0, 0.4)',
+
+    // Дополнительные цвета
+    white: '#FFFFFF',
   },
 };
 
@@ -163,11 +189,18 @@ export const typography = {
     light: 300,
     regular: 400,
     medium: 500,
+    semibold: 600,
     bold: 700,
+  },
+  
+  // Алиас для совместимости
+  get fontWeight() {
+    return this.fontWeights;
   },
   
   // Размеры шрифтов
   fontSize: {
+    xxs: '0.625rem',  // 10px
     xs: '0.75rem',    // 12px
     sm: '0.875rem',   // 14px
     md: '1rem',       // 16px
@@ -185,6 +218,7 @@ export const typography = {
     normal: 1.5,
     relaxed: 1.75,
     loose: 2,
+    md: 1.5,  // алиас для совместимости
   },
   
   // Межбуквенные интервалы
@@ -206,13 +240,15 @@ export const spacing = {
   unit: 8,
   
   // Предопределенные отступы
-  xs: '0.25rem',    // 4px
-  sm: '0.5rem',     // 8px
-  md: '1rem',       // 16px
-  lg: '1.5rem',     // 24px
-  xl: '2rem',       // 32px
-  '2xl': '2.5rem',  // 40px
-  '3xl': '3rem',    // 48px
+  none: '0',
+  xxs: '0.125rem',   // 2px
+  xs: '0.25rem',     // 4px
+  sm: '0.5rem',      // 8px
+  md: '1rem',        // 16px
+  lg: '1.5rem',      // 24px
+  xl: '2rem',        // 32px
+  '2xl': '2.5rem',   // 40px
+  '3xl': '3rem',     // 48px
 };
 
 /**
@@ -224,6 +260,7 @@ export const borderRadius = {
   md: '0.25rem',    // 4px
   lg: '0.5rem',     // 8px
   xl: '1rem',       // 16px
+  pill: '9999px',   // Для круглых элементов
   full: '9999px',
 };
 
@@ -232,6 +269,7 @@ export const borderRadius = {
  */
 export const shadows = {
   none: 'none',
+  xs: '0 1px 1px 0 rgba(0, 0, 0, 0.03)',
   sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
   md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
   lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
@@ -244,6 +282,7 @@ export const shadows = {
 export const transitions = {
   // Длительности
   duration: {
+    fast: '100ms',
     short: '150ms',
     normal: '300ms',
     long: '500ms',
@@ -256,6 +295,18 @@ export const transitions = {
     easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
     sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
   },
+};
+
+/**
+ * Анимации
+ */
+export const animations = {
+  fadeIn: 'fadeIn',
+  fadeOut: 'fadeOut',
+  slideIn: 'slideIn',
+  slideOut: 'slideOut',
+  pulse: 'pulse',
+  spin: 'spin',
 };
 
 /**
@@ -347,6 +398,7 @@ export const tokens = {
   sizes,
   gradients,
   breakpoints,
+  animations,
 };
 
 export default tokens;

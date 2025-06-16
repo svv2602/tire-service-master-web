@@ -69,8 +69,15 @@ const StyledLink = styled(Link)(({ theme }) => {
   };
 });
 
+// Интерфейс для кастомных пропсов типографики
+interface CustomTypographyProps {
+  isCurrent?: boolean;
+}
+
 // Стилизованный текст
-const StyledTypography = styled(Typography)(({ theme, variant }) => {
+const StyledTypography = styled(Typography, {
+  shouldForwardProp: (prop) => prop !== 'isCurrent',
+})<CustomTypographyProps>(({ theme, isCurrent }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {
@@ -78,7 +85,7 @@ const StyledTypography = styled(Typography)(({ theme, variant }) => {
     alignItems: 'center',
     fontFamily: tokens.typography.fontFamily,
     fontSize: tokens.typography.fontSize.sm,
-    color: variant === 'current' 
+    color: isCurrent
       ? themeColors.textPrimary 
       : themeColors.textSecondary,
   };
@@ -118,7 +125,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
           return (
             <StyledTypography
               key={index}
-              variant="current"
+              isCurrent
             >
               {content}
             </StyledTypography>
@@ -135,7 +142,6 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
         ) : (
           <StyledTypography
             key={index}
-            variant="default"
           >
             {content}
           </StyledTypography>

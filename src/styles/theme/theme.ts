@@ -1,7 +1,7 @@
 // src/styles/theme/theme.ts
 // Создание темы на основе токенов дизайн-системы
 
-import { createTheme, ThemeOptions, Theme } from '@mui/material/styles';
+import { createTheme as muiCreateTheme, ThemeOptions, Theme } from '@mui/material/styles';
 import { tokens } from './tokens';
 
 /**
@@ -249,9 +249,6 @@ export const createAppTheme = (mode: 'light' | 'dark'): Theme => {
               '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: themeColors.borderHover,
               },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: colors.primary.main,
-              },
             },
           },
         },
@@ -260,8 +257,7 @@ export const createAppTheme = (mode: 'light' | 'dark'): Theme => {
       MuiTableCell: {
         styleOverrides: {
           root: {
-            padding: tokens.spacing.md,
-            borderBottom: `1px solid ${themeColors.borderPrimary}`,
+            borderColor: themeColors.borderPrimary,
           },
           head: {
             fontWeight: tokens.typography.fontWeights.medium,
@@ -269,37 +265,65 @@ export const createAppTheme = (mode: 'light' | 'dark'): Theme => {
           },
         },
       },
-      // Чип
-      MuiChip: {
-        styleOverrides: {
-          root: {
-            borderRadius: tokens.borderRadius.md,
-          },
-        },
-      },
-      // Диалог
-      MuiDialog: {
-        styleOverrides: {
-          paper: {
-            borderRadius: tokens.borderRadius.lg,
-            boxShadow: tokens.shadows.xl,
-          },
-        },
-      },
-      // Вкладки
+      // Табы
       MuiTab: {
         styleOverrides: {
           root: {
             textTransform: 'none',
             fontWeight: tokens.typography.fontWeights.medium,
-            minHeight: 48,
+            '&.Mui-selected': {
+              fontWeight: tokens.typography.fontWeights.bold,
+            },
+          },
+        },
+      },
+      // Иконки
+      MuiSvgIcon: {
+        styleOverrides: {
+          root: {
+            fontSize: '1.25rem',
+          },
+        },
+      },
+      // Переключатель (свитч)
+      MuiSwitch: {
+        styleOverrides: {
+          root: {
+            width: 42,
+            height: 26,
+            padding: 0,
+            '& .MuiSwitch-switchBase': {
+              padding: 1,
+              '&.Mui-checked': {
+                transform: 'translateX(16px)',
+                color: '#fff',
+                '& + .MuiSwitch-track': {
+                  backgroundColor: colors.primary.main,
+                  opacity: 1,
+                  border: 0,
+                },
+              },
+            },
+            '& .MuiSwitch-thumb': {
+              width: 24,
+              height: 24,
+            },
+            '& .MuiSwitch-track': {
+              borderRadius: 13,
+              border: `1px solid ${themeColors.borderPrimary}`,
+              backgroundColor: themeColors.backgroundField,
+              opacity: 1,
+            },
           },
         },
       },
     },
   };
 
-  return createTheme(themeOptions);
+  return muiCreateTheme(themeOptions);
 };
+
+// Алиас для обратной совместимости со сторибуками
+export const createTheme = createAppTheme;
 
 export default createAppTheme;

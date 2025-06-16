@@ -1,59 +1,75 @@
 import React from 'react';
-import MuiBackdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
-import { styled } from '@mui/material/styles';
-import { BackdropProps } from './types';
+import { Backdrop as MuiBackdrop, CircularProgress, Box, styled } from '@mui/material';
 import { tokens } from '../../../styles/theme/tokens';
+import { BackdropProps } from './types';
 
-// Стилизованный Backdrop
 const StyledBackdrop = styled(MuiBackdrop)(({ theme }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {
+    zIndex: theme.zIndex.drawer + 1,
+    color: themeColors.white,
     backgroundColor: theme.palette.mode === 'dark' 
       ? 'rgba(0, 0, 0, 0.8)' 
       : 'rgba(0, 0, 0, 0.7)',
-    backdropFilter: 'blur(4px)',
-    transition: `all ${tokens.transitions.duration.normal} ${tokens.transitions.easing.easeInOut}`,
-    zIndex: theme.zIndex.drawer + 1,
+    backdropFilter: 'blur(2px)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: tokens.spacing.lg,
+  };
+});
+
+// Стилизованный CircularProgress
+const StyledCircularProgress = styled(CircularProgress)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    color: tokens.colors.primary.main,
+    marginBottom: tokens.spacing.md,
+  };
+});
+
+// Стилизованный текст для сообщения
+const MessageText = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    color: themeColors.textPrimary,
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.md,
+    textAlign: 'center',
+    maxWidth: '80%',
   };
 });
 
 /**
- * Компонент Backdrop - затемняющий фон с возможностью отображения индикатора загрузки
- * или кастомного контента
+ * Компонент Backdrop - затемнение для отображения загрузки или блокировки интерфейса
+ * 
+ * @example
+ * <Backdrop open={loading} message="Загрузка данных..." />
  */
-export const Backdrop: React.FC<BackdropProps> = ({
-  open,
-  onClose,
-  children,
-  transitionDuration = parseInt(tokens.transitions.duration.normal),
-  loading = false,
-  loadingColor = 'primary',
-  loadingSize = 40,
-  sx,
-  ...props
-}) => {
+export const Backdrop: React.FC<BackdropProps> = ({ open, message, customContent, spinner = true, onClose, sx }) => {
   return (
-    <StyledBackdrop
-      open={open}
-      onClick={onClose}
-      transitionDuration={transitionDuration}
-      sx={sx}
-      {...props}
-    >
-      {loading ? (
-        <CircularProgress 
-          color={loadingColor} 
-          size={loadingSize} 
+    <StyledBackdrop open={open} onClick={onClose} sx={sx}>
+      {customContent ? (
+        customContent
+      ) : spinner ? (
+        <>
+          <StyledCircularProgress size={40} thickness={4} />
+          {message && <MessageText>{message}</MessageText>}
+        </>
+      ) : (
+        <Box
           sx={{
             transition: tokens.transitions.duration.normal,
-            animation: `animation-${tokens.transitions.duration.slow} ${tokens.transitions.easing.easeInOut} infinite`,
+            animation: `animation-${tokens.transitions.duration.long} ${tokens.transitions.easing.easeInOut} infinite`,
           }}
         />
-      ) : (
-        children
       )}
     </StyledBackdrop>
   );
-}; 
+};
+
+export default Backdrop; 

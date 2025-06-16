@@ -1,28 +1,20 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import MuiAutocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField';
-import CircularProgress from '@mui/material/CircularProgress';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Autocomplete,
+  TextField,
+  CircularProgress,
+  styled,
+  useTheme,
+} from '@mui/material';
 import { debounce } from '@mui/material/utils';
-import { styled, useTheme } from '@mui/material/styles';
 import { AutoCompleteProps, AutoCompleteOption } from './types';
 import { tokens } from '../../../styles/theme/tokens';
 
-// Стилизованный Autocomplete
-const StyledAutocomplete = styled(MuiAutocomplete)(({ theme }) => {
+// Стилизованный Autocomplete с any для обхода проблем типизации
+const StyledAutocomplete = styled(Autocomplete)(({ theme }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {
-    '& .MuiAutocomplete-inputRoot': {
-      fontFamily: tokens.typography.fontFamily,
-      fontSize: tokens.typography.fontSize.md,
-      transition: tokens.transitions.duration.normal,
-      
-      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-        borderColor: themeColors.primary,
-        borderWidth: '2px',
-      },
-    },
-    
     '& .MuiAutocomplete-tag': {
       backgroundColor: theme.palette.mode === 'dark' 
         ? themeColors.backgroundSecondary 
@@ -32,77 +24,93 @@ const StyledAutocomplete = styled(MuiAutocomplete)(({ theme }) => {
       borderRadius: tokens.borderRadius.sm,
       fontSize: tokens.typography.fontSize.sm,
       fontFamily: tokens.typography.fontFamily,
+    },
+    
+    '& .MuiAutocomplete-option': {
+      padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+      fontFamily: tokens.typography.fontFamily,
+      borderRadius: tokens.borderRadius.sm,
+      fontSize: tokens.typography.fontSize.md,
+      transition: tokens.transitions.duration.fast,
+      minHeight: '36px',
+      
+      '&[aria-selected="true"]': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? themeColors.backgroundSecondary 
+          : themeColors.backgroundTertiary,
+      },
+      
+      '&.Mui-focused': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? `${themeColors.primary}20` 
+          : `${tokens.colors.primary.light}20`,
+      },
+    },
+    
+    '& .MuiOutlinedInput-root': {
+      borderRadius: tokens.borderRadius.md,
       transition: tokens.transitions.duration.normal,
-    },
-    
-    '& .MuiAutocomplete-listbox': {
-      fontFamily: tokens.typography.fontFamily,
-      padding: tokens.spacing.xs,
       
-      '& .MuiAutocomplete-option': {
-        padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
-        borderRadius: tokens.borderRadius.sm,
-        fontSize: tokens.typography.fontSize.md,
-        transition: tokens.transitions.duration.fast,
-        minHeight: '36px',
-        
-        '&[aria-selected="true"]': {
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? themeColors.backgroundSecondary 
-            : themeColors.backgroundTertiary,
-        },
-        
-        '&.Mui-focused': {
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.08)' 
-            : 'rgba(0, 0, 0, 0.04)',
-        },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: themeColors.borderHover,
+      },
+      
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: tokens.colors.primary.main,
+        borderWidth: '2px',
+      },
+      
+      '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+        borderColor: themeColors.error,
+      },
+      
+      '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
+        borderColor: themeColors.borderPrimary,
       },
     },
     
-    '& .MuiAutocomplete-noOptions': {
+    '& .MuiFormLabel-root': {
       fontFamily: tokens.typography.fontFamily,
       fontSize: tokens.typography.fontSize.sm,
-      color: themeColors.textSecondary,
-      padding: tokens.spacing.md,
-    },
-    
-    '& .MuiAutocomplete-loading': {
-      fontFamily: tokens.typography.fontFamily,
-      fontSize: tokens.typography.fontSize.sm,
-      color: themeColors.textSecondary,
-      padding: tokens.spacing.md,
-    },
-    
-    '& .MuiAutocomplete-endAdornment': {
-      top: 'calc(50% - 14px)',
       
-      '& .MuiAutocomplete-popupIndicator': {
-        color: themeColors.textSecondary,
-        transition: tokens.transitions.duration.normal,
+      '&.Mui-focused': {
+        color: tokens.colors.primary.main,
       },
       
-      '& .MuiAutocomplete-clearIndicator': {
-        color: themeColors.textSecondary,
-        visibility: 'visible',
-        opacity: 0.6,
-        
-        '&:hover': {
-          opacity: 1,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.08)' 
-            : 'rgba(0, 0, 0, 0.04)',
-        },
+      '&.Mui-error': {
+        color: themeColors.error,
+      },
+      
+      '&.Mui-disabled': {
+        color: themeColors.textMuted,
+      },
+    },
+    
+    '& .MuiFormHelperText-root': {
+      fontFamily: tokens.typography.fontFamily,
+      fontSize: tokens.typography.fontSize.xs,
+      marginTop: tokens.spacing.xs,
+      
+      '&.Mui-error': {
+        color: themeColors.error,
       },
     },
   };
 });
 
 /**
- * Компонент AutoComplete - поле с автодополнением и асинхронным поиском
+ * Компонент AutoComplete - поле с автодополнением
+ * 
+ * @example
+ * <AutoComplete
+ *   options={options}
+ *   value={value}
+ *   onChange={setValue}
+ *   label="Выберите опцию"
+ * />
  */
-const AutoComplete = <T extends AutoCompleteOption>({
-  options: initialOptions,
+export const AutoComplete: React.FC<AutoCompleteProps> = ({
+  options: initialOptions = [],
   value,
   onChange,
   placeholder,
@@ -115,87 +123,72 @@ const AutoComplete = <T extends AutoCompleteOption>({
   TextFieldProps = {},
   AutocompleteProps = {},
   sx,
-}: AutoCompleteProps<T>) => {
-  // Состояние компонента
+}) => {
+  const theme = useTheme();
+  const [options, setOptions] = useState<AutoCompleteOption[]>(initialOptions);
   const [inputValue, setInputValue] = useState('');
-  const [options, setOptions] = useState<T[]>(initialOptions);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
-  /**
-   * Обработчик асинхронного поиска с debounce
-   */
-  const debouncedSearch = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!onSearch || query.length < minSearchLength) {
-          return;
-        }
+  // Функция для асинхронного поиска с debounce
+  const debouncedSearch = useCallback(
+    debounce(async (query: string) => {
+      if (!onSearch || query.length < minSearchLength) {
+        setLoading(false);
+        return;
+      }
 
-        setLoading(true);
-        try {
-          const results = await onSearch(query);
-          setOptions(results);
-        } catch (error) {
-          console.error('Ошибка при поиске:', error);
-          setOptions([]);
-        } finally {
-          setLoading(false);
-        }
-      }, debounceMs),
+      try {
+        const results = await onSearch(query);
+        setOptions(results);
+      } catch (error) {
+        console.error('Error searching options:', error);
+      } finally {
+        setLoading(false);
+      }
+    }, debounceMs),
     [onSearch, minSearchLength, debounceMs]
   );
 
-  /**
-   * Обработчик изменения значения в поле ввода
-   */
-  const handleInputChange = useCallback(
-    (event: React.SyntheticEvent, newInputValue: string) => {
-      setInputValue(newInputValue);
-      if (onSearch) {
-        debouncedSearch(newInputValue);
-      }
-    },
-    [debouncedSearch, onSearch]
-  );
+  // Обработка изменения ввода
+  const handleInputChange = (_event: React.SyntheticEvent, newInputValue: string) => {
+    setInputValue(newInputValue);
+    
+    if (onSearch && newInputValue.length >= minSearchLength) {
+      setLoading(true);
+      debouncedSearch(newInputValue);
+    }
+  };
 
-  /**
-   * Обработчик выбора значения
-   */
-  const handleChange = useCallback(
-    (event: React.SyntheticEvent, newValue: T | null) => {
-      onChange?.(newValue);
-    },
-    [onChange]
-  );
+  // Обработка изменения значения
+  const handleChange = (_event: React.SyntheticEvent, newValue: any) => {
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
 
-  /**
-   * Сброс опций при закрытии
-   */
+  // Обновление опций при изменении initialOptions
   useEffect(() => {
-    if (!open) {
+    if (initialOptions) {
       setOptions(initialOptions);
     }
-  }, [open, initialOptions]);
+  }, [initialOptions]);
 
-  const theme = useTheme();
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
   return (
-    <StyledAutocomplete<T, false, false, false>
+    <StyledAutocomplete
       options={options}
       value={value}
-      onChange={handleChange}
-      inputValue={inputValue}
+      onChange={handleChange as any}
       onInputChange={handleInputChange}
-      open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
-      isOptionEqualToValue={(option, value) => option.id === value.id}
-      getOptionLabel={(option) => option.label}
+      inputValue={inputValue}
       loading={loading}
       loadingText={loadingText}
       noOptionsText={noOptionsText}
+      open={open}
+      onOpen={() => setOpen(true)}
+      onClose={() => setOpen(false)}
+      getOptionLabel={(option: any) => option?.label || ''}
+      isOptionEqualToValue={(option: any, val: any) => option?.id === val?.id}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -204,43 +197,17 @@ const AutoComplete = <T extends AutoCompleteOption>({
           placeholder={placeholder}
           InputProps={{
             ...params.InputProps,
-            ...TextFieldProps.InputProps,
             endAdornment: (
-              <React.Fragment>
-                {loading && (
-                  <CircularProgress 
-                    color="inherit" 
-                    size={20} 
-                    sx={{
-                      color: themeColors.primary,
-                      marginRight: tokens.spacing.xs,
-                      transition: tokens.transitions.duration.normal,
-                    }}
-                  />
-                )}
+              <>
+                {loading ? <CircularProgress color="inherit" size={20} /> : null}
                 {params.InputProps.endAdornment}
-              </React.Fragment>
+              </>
             ),
-          }}
-          sx={{
-            '& .MuiInputLabel-root': {
-              fontFamily: tokens.typography.fontFamily,
-              fontSize: tokens.typography.fontSize.md,
-              transition: tokens.transitions.duration.normal,
-              
-              '&.Mui-focused': {
-                color: themeColors.primary,
-              },
-            },
-            ...TextFieldProps.sx,
           }}
         />
       )}
-      {...AutocompleteProps}
-      sx={{
-        width: '100%',
-        ...sx,
-      }}
+      sx={sx}
+      {...AutocompleteProps as any}
     />
   );
 };

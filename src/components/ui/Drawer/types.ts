@@ -1,4 +1,42 @@
 import { DrawerProps as MuiDrawerProps } from '@mui/material/Drawer';
+import { ReactNode } from 'react';
+import { SxProps } from '@mui/material';
+import { Theme } from '@mui/material/styles';
+
+/**
+ * Элемент меню в Drawer
+ */
+export interface DrawerItem {
+  /**
+   * Уникальный идентификатор элемента
+   */
+  id?: string | number;
+  
+  /**
+   * Текст элемента
+   */
+  text: string;
+  
+  /**
+   * Иконка элемента
+   */
+  icon?: ReactNode;
+  
+  /**
+   * URL для ссылки
+   */
+  href?: string;
+  
+  /**
+   * Обработчик клика
+   */
+  onClick?: () => void;
+  
+  /**
+   * Флаг отключения элемента
+   */
+  disabled?: boolean;
+}
 
 /**
  * Пропсы для компонента Drawer
@@ -27,15 +65,40 @@ export interface DrawerProps extends Omit<MuiDrawerProps, 'variant'> {
    * @default true
    */
   overlay?: boolean;
-
+  
   /**
-   * Callback при клике вне drawer (для закрытия)
+   * Показывать заголовок
+   * @default true
    */
-  onClickAway?: () => void;
-
+  header?: boolean;
+  
   /**
-   * Позиция drawer
-   * @default 'left'
+   * Элементы меню
    */
-  anchor?: 'left' | 'right' | 'top' | 'bottom';
+  items?: DrawerItem[];
+  
+  /**
+   * ID активного элемента
+   */
+  activeItemId?: string | number;
+  
+  /**
+   * Обработчик клика по элементу
+   */
+  onItemClick?: (item: DrawerItem) => void;
+  
+  /**
+   * Содержимое заголовка
+   */
+  headerContent?: ReactNode;
+  
+  /**
+   * Содержимое футера
+   */
+  footerContent?: ReactNode;
+  
+  /**
+   * Дополнительные стили
+   */
+  sx?: SxProps<Theme>;
 } 

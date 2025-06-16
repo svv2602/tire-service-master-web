@@ -1,55 +1,49 @@
-import { Theme } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { AppBar as MuiAppBar, Toolbar, Typography } from '@mui/material';
 import { tokens } from '../../../styles/theme/tokens';
 
 /**
- * Получить стили для AppBar
- * @param theme - тема Material-UI
+ * Стилизованный заголовок
  */
-export const getAppBarStyles = (theme: Theme) => {
+export const StyledTitle = styled(Typography)(({ theme }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {
-    root: {
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? themeColors.backgroundSecondary
-        : themeColors.primary,
-      boxShadow: tokens.shadows.md,
-      transition: tokens.transitions.duration.normal,
-      borderBottom: `1px solid ${themeColors.borderPrimary}`,
-    },
-    toolbar: {
-      padding: `${tokens.spacing.xs} ${tokens.spacing.lg}`,
-      [theme.breakpoints.up('sm')]: {
-        padding: `${tokens.spacing.xs} ${tokens.spacing.xl}`,
-      },
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      minHeight: '64px',
-    },
-    title: {
-      flexGrow: 1,
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      fontFamily: tokens.typography.fontFamily,
-      fontSize: tokens.typography.fontSize.lg,
-      fontWeight: tokens.typography.fontWeight.medium,
-      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
-    },
-    menuButton: {
-      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
-      marginRight: tokens.spacing.md,
-      padding: tokens.spacing.xs,
-      transition: tokens.transitions.duration.normal,
-      '&:hover': {
-        backgroundColor: theme.palette.mode === 'dark' 
-          ? 'rgba(255, 255, 255, 0.1)' 
-          : 'rgba(0, 0, 0, 0.1)',
-      },
-    },
-    actions: {
-      marginLeft: tokens.spacing.md,
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.lg,
+    fontWeight: tokens.typography.fontWeights.medium,
+    color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+  };
+});
+
+/**
+ * Стилизованный AppBar
+ */
+export const StyledAppBar = styled(MuiAppBar)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? themeColors.backgroundSecondary 
+      : tokens.colors.primary.main,
+    boxShadow: tokens.shadows.md,
+    zIndex: theme.zIndex.drawer + 1,
+    transition: tokens.transitions.duration.normal,
+  };
+});
+
+/**
+ * Стилизованный Toolbar
+ */
+export const StyledToolbar = styled(Toolbar)(({ theme }) => {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+    
+    [theme.breakpoints.up('md')]: {
+      padding: `${tokens.spacing.sm} ${tokens.spacing.lg}`,
     },
   };
-};
+});

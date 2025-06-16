@@ -75,6 +75,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
+// Алиас для обратной совместимости со сторибуками
+export const ThemeModeProvider = ThemeProvider;
+
 /**
  * Хук для использования темы в компонентах
  */

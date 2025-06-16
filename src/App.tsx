@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { CssBaseline, ThemeProvider } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
@@ -9,8 +9,7 @@ import { store } from './store/index';
 import MainLayout from './components/layouts/MainLayout';
 import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
-import { createAppTheme } from './styles/theme';
-import { useThemeMode } from './hooks/useTheme';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { LoadingScreen } from './components/LoadingScreen';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import { useSelector } from 'react-redux';
@@ -114,22 +113,6 @@ const ThemeContext = React.createContext<{
 
 export const useAppTheme = () => React.useContext(ThemeContext);
 
-// Компонент провайдера темы
-const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { themeMode, toggleTheme, isDarkMode } = useThemeMode();
-  const theme = React.useMemo(() => createAppTheme(themeMode), [themeMode]);
-
-  return (
-    <ThemeContext.Provider value={{ toggleTheme, isDarkMode }}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <GlobalUIStyles />
-        {children}
-      </ThemeProvider>
-    </ThemeContext.Provider>
-  );
-};
-
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -157,7 +140,7 @@ const ProtectedRoute: React.FC<{
 
 function App() {
   return (
-    <AppThemeProvider>
+    <ThemeProvider>
       <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
         <AuthInitializer>
           <Router>
@@ -166,11 +149,11 @@ function App() {
                 {/* Публичные маршруты */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/styleguide" element={
-                  <AppThemeProvider>
+                  <ThemeProvider>
                     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
                       <StyleGuide />
                     </LocalizationProvider>
-                  </AppThemeProvider>
+                  </ThemeProvider>
                 } />
                 
                 {/* Главная страница для клиентов (без авторизации) */}
@@ -291,7 +274,7 @@ function App() {
           </Router>
         </AuthInitializer>
       </LocalizationProvider>
-    </AppThemeProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,51 +1,40 @@
 import { BackdropProps as MuiBackdropProps } from '@mui/material/Backdrop';
+import { SxProps } from '@mui/material';
+import { Theme } from '@mui/material/styles';
+import { ReactNode } from 'react';
 
 /**
  * Пропсы компонента Backdrop
  */
 export interface BackdropProps extends Omit<MuiBackdropProps, 'children'> {
   /**
-   * Открыт ли компонент
-   * @default false
+   * Флаг открытия Backdrop
    */
   open: boolean;
-
+  
   /**
-   * Callback при клике по backdrop
+   * Обработчик закрытия
    */
   onClose?: () => void;
-
+  
   /**
-   * Содержимое поверх backdrop
+   * Текстовое сообщение для отображения
    */
-  children?: React.ReactNode;
-
+  message?: string;
+  
   /**
-   * Время анимации в мс
-   * @default 225
+   * Показывать ли спиннер
+   * @default true
    */
-  transitionDuration?: number;
-
+  spinner?: boolean;
+  
   /**
-   * Показывать ли индикатор загрузки
-   * @default false
+   * Пользовательский контент
    */
-  loading?: boolean;
-
+  customContent?: ReactNode;
+  
   /**
-   * Цвет индикатора загрузки
-   * @default 'primary'
+   * Дополнительные стили
    */
-  loadingColor?: 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' | 'inherit';
-
-  /**
-   * Размер индикатора загрузки
-   * @default 40
-   */
-  loadingSize?: number;
-
-  /**
-   * Дополнительные стили для backdrop
-   */
-  sx?: Record<string, any>;
+  sx?: SxProps<Theme>;
 } 

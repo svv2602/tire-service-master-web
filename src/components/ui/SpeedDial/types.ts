@@ -1,82 +1,121 @@
 import { SpeedDialProps as MuiSpeedDialProps } from '@mui/material/SpeedDial';
-import { SpeedDialActionProps as MuiSpeedDialActionProps } from '@mui/material/SpeedDialAction';
-import { SvgIconProps } from '@mui/material/SvgIcon';
+import { ReactNode } from 'react';
+import { SxProps } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 
 /**
- * Действие для SpeedDial
+ * Элемент меню в SpeedDial
  */
 export interface SpeedDialAction {
   /**
    * Уникальный идентификатор действия
    */
-  id: string | number;
-
+  id?: string;
+  
+  /**
+   * Название действия (отображается в тултипе)
+   */
+  name: string;
+  
   /**
    * Иконка действия
    */
-  icon: React.ReactElement<SvgIconProps>;
-
+  icon: ReactNode;
+  
   /**
-   * Подпись к действию
+   * Обработчик клика по действию
    */
-  tooltipTitle: string;
-
+  onClick?: (event: React.MouseEvent<HTMLDivElement>) => void;
+  
   /**
-   * Callback при клике на действие
-   */
-  onClick?: () => void;
-
-  /**
-   * Отключено ли действие
-   * @default false
+   * Флаг отключения действия
    */
   disabled?: boolean;
   
   /**
-   * Цвет кнопки действия (например, '#FF0000' или 'primary')
+   * Цвет кнопки действия
    */
   color?: string;
+  
+  /**
+   * Текст тултипа (для обратной совместимости)
+   * @deprecated Используйте name вместо tooltipTitle
+   */
+  tooltipTitle?: string;
 }
 
 /**
  * Пропсы компонента SpeedDial
  */
-export interface SpeedDialProps extends Omit<MuiSpeedDialProps, 'children'> {
+export interface SpeedDialProps {
   /**
    * Список действий
    */
-  actions: SpeedDialAction[];
-
+  actions?: SpeedDialAction[];
+  
   /**
    * Иконка основной кнопки
    */
-  icon?: React.ReactElement<SvgIconProps>;
-
-  /**
-   * Позиция на экране
-   * @default 'bottom-right'
-   */
-  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-
-  /**
-   * Отступы от краев экрана
-   * @default 16
-   */
-  margin?: number;
-
+  icon?: ReactNode;
+  
   /**
    * Направление открытия меню
    * @default 'up'
    */
   direction?: 'up' | 'down' | 'left' | 'right';
-
+  
   /**
-   * Подпись к основной кнопке
+   * Флаг скрытия компонента
+   * @default false
+   */
+  hidden?: boolean;
+  
+  /**
+   * Текст для aria-label
+   * @default 'Быстрые действия'
+   */
+  ariaLabel?: string;
+  
+  /**
+   * Текст тултипа для основной кнопки
    */
   tooltipTitle?: string;
-
+  
   /**
-   * Пропсы для каждого SpeedDialAction
+   * Флаг постоянного отображения тултипов
+   * @default false
    */
-  SpeedDialActionProps?: Partial<MuiSpeedDialActionProps>;
+  tooltipOpen?: boolean;
+  
+  /**
+   * Позиция тултипа
+   * @default 'left'
+   */
+  tooltipPlacement?: 'top' | 'right' | 'bottom' | 'left';
+  
+  /**
+   * Позиция SpeedDial (для обратной совместимости)
+   * @deprecated
+   */
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+  
+  /**
+   * Флаг открытия SpeedDial
+   */
+  open?: boolean;
+  
+  /**
+   * Обработчик закрытия
+   */
+  onClose?: () => void;
+  
+  /**
+   * Обработчик открытия
+   */
+  onOpen?: () => void;
+  
+  /**
+   * Дополнительные стили
+   */
+  sx?: SxProps<Theme>;
 } 

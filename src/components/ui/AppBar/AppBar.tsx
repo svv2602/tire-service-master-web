@@ -1,141 +1,289 @@
-import React from 'react';
-import { AppBar as MuiAppBar, Toolbar, IconButton, Typography, useTheme, Box } from '@mui/material';
-import { Menu as MenuIcon } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
+import React, { useState } from 'react';
+import {
+  Toolbar,
+  IconButton,
+  Typography,
+  Box,
+  Menu,
+  MenuItem,
+  Divider,
+  Avatar,
+  Badge,
+  useMediaQuery,
+  useTheme,
+  SxProps,
+  Theme,
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import MoreIcon from '@mui/icons-material/MoreVert';
 import { tokens } from '../../../styles/theme/tokens';
+import { StyledAppBar, StyledTitle } from './styles';
 
-// Стилизованный AppBar с поддержкой темной темы
-const StyledAppBar = styled(MuiAppBar)(({ theme }) => {
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
-  return {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? themeColors.backgroundSecondary
-      : themeColors.primary,
-    boxShadow: tokens.shadows.md,
-    transition: tokens.transitions.duration.normal,
-    borderBottom: `1px solid ${themeColors.borderPrimary}`,
-  };
-});
-
-// Стилизованный Toolbar с адаптивными отступами
-const StyledToolbar = styled(Toolbar)(({ theme }) => {
-  return {
-    padding: `${tokens.spacing.xs} ${tokens.spacing.lg}`,
-    [theme.breakpoints.up('sm')]: {
-      padding: `${tokens.spacing.xs} ${tokens.spacing.xl}`,
-    },
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    minHeight: '64px',
-  };
-});
-
-// Стилизованная кнопка меню
-const StyledIconButton = styled(IconButton)(({ theme }) => {
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
-  return {
-    color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
-    marginRight: tokens.spacing.md,
-    padding: tokens.spacing.xs,
-    transition: tokens.transitions.duration.normal,
-    
-    '&:hover': {
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? 'rgba(255, 255, 255, 0.1)' 
-        : 'rgba(0, 0, 0, 0.1)',
-    },
-  };
-});
-
-// Стилизованный заголовок
-const StyledTitle = styled(Typography)(({ theme }) => {
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
-  return {
-    flexGrow: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontFamily: tokens.typography.fontFamily,
-    fontSize: tokens.typography.fontSize.lg,
-    fontWeight: tokens.typography.fontWeight.medium,
-    color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
-  };
-});
-
-interface AppBarProps {
-  /** Заголовок в AppBar */
-  title: string;
-  /** Колбэк для открытия бокового меню */
-  onMenuClick?: () => void;
-  /** Дополнительные действия справа */
-  actions?: React.ReactNode;
-  /** Позиция AppBar */
-  position?: 'fixed' | 'absolute' | 'relative' | 'static' | 'sticky';
-  /** Включить поддержку цвета в темной теме */
-  enableColorOnDark?: boolean;
+/**
+ * Интерфейс для действий в меню
+ */
+export interface AppBarAction {
+  /** Текст действия */
+  label: string;
+  /** Иконка */
+  icon?: React.ReactNode;
+  /** Обработчик клика */
+  onClick: () => void;
+  /** Отключено ли действие */
+  disabled?: boolean;
 }
 
 /**
- * Компонент AppBar - верхняя панель приложения
+ * Интерфейс для пропсов компонента AppBar
+ */
+export interface AppBarProps {
+  /** Заголовок */
+  title: string;
+  /** Открыт ли боковой drawer */
+  drawerOpen?: boolean;
+  /** Обработчик открытия/закрытия drawer */
+  onDrawerToggle?: () => void;
+  /** Действия для меню профиля */
+  profileActions?: AppBarAction[];
+  /** Действия для меню уведомлений */
+  notificationActions?: AppBarAction[];
+  /** Количество непрочитанных уведомлений */
+  notificationCount?: number;
+  /** URL аватара пользователя */
+  avatarUrl?: string;
+  /** Имя пользователя */
+  username?: string;
+  /** Дополнительные компоненты для размещения в правой части */
+  rightContent?: React.ReactNode;
+  /** Дополнительные стили */
+  sx?: SxProps<Theme>;
+}
+
+/**
+ * Компонент AppBar - верхняя панель навигации
  * 
  * @example
- * ```tsx
  * <AppBar 
  *   title="Панель управления"
- *   onMenuClick={() => setMenuOpen(true)}
- *   actions={<Button color="inherit">Выйти</Button>}
+ *   drawerOpen={drawerOpen}
+ *   onDrawerToggle={handleDrawerToggle}
+ *   profileActions={[{ label: 'Выйти', onClick: handleLogout }]}
  * />
- * ```
  */
 export const AppBar: React.FC<AppBarProps> = ({
   title,
-  onMenuClick,
-  actions,
-  position = 'fixed',
-  enableColorOnDark = true,
+  drawerOpen,
+  onDrawerToggle,
+  profileActions = [],
+  notificationActions = [],
+  notificationCount = 0,
+  avatarUrl,
+  username,
+  rightContent,
+  sx,
 }) => {
   const theme = useTheme();
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
+  const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+  
+  const handleNotificationsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setNotificationsAnchorEl(event.currentTarget);
+  };
+  
+  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMobileMenuAnchorEl(event.currentTarget);
+  };
+  
+  const handleMenuClose = () => {
+    setProfileAnchorEl(null);
+    setNotificationsAnchorEl(null);
+    setMobileMenuAnchorEl(null);
+  };
+  
   return (
-    <React.Fragment>
-      <StyledAppBar 
-        position={position}
-        enableColorOnDark={enableColorOnDark}
-      >
-        <StyledToolbar>
-          {/* Кнопка меню */}
-          {onMenuClick && (
-            <StyledIconButton
-              aria-label="открыть меню"
-              onClick={onMenuClick}
-              edge="start"
+    <StyledAppBar position="fixed" sx={sx}>
+      <Toolbar>
+        {/* Кнопка меню для открытия/закрытия drawer */}
+        {onDrawerToggle && (
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={onDrawerToggle}
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+
+        {/* Заголовок */}
+        <StyledTitle variant="h6">
+          {title}
+        </StyledTitle>
+
+        <Box sx={{ flexGrow: 1 }} />
+        
+        {/* Дополнительный контент справа */}
+        {rightContent}
+        
+        {/* Десктопные иконки */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+          {/* Уведомления */}
+          {notificationActions.length > 0 && (
+            <IconButton
+              color="inherit"
+              aria-label="show notifications"
+              onClick={handleNotificationsMenuOpen}
             >
-              <MenuIcon />
-            </StyledIconButton>
+              <Badge badgeContent={notificationCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
           )}
-
-          {/* Заголовок */}
-          <StyledTitle variant="h6" component="h1">
-            {title}
-          </StyledTitle>
-
-          {/* Дополнительные действия */}
-          {actions && (
-            <Box sx={{ marginLeft: tokens.spacing.md }}>
-              {actions}
-            </Box>
-          )}
-        </StyledToolbar>
-      </StyledAppBar>
-
-      {/* Отступ для фиксированного AppBar */}
-      {position === 'fixed' && <Toolbar />}
-    </React.Fragment>
+          
+          {/* Профиль */}
+          <IconButton
+            edge="end"
+            aria-label="account of current user"
+            aria-haspopup="true"
+            onClick={handleProfileMenuOpen}
+            color="inherit"
+          >
+            {avatarUrl ? (
+              <Avatar src={avatarUrl} alt={username} sx={{ width: 32, height: 32 }} />
+            ) : (
+              <AccountCircleIcon />
+            )}
+          </IconButton>
+        </Box>
+        
+        {/* Мобильная иконка */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+          <IconButton
+            aria-label="show more"
+            aria-haspopup="true"
+            onClick={handleMobileMenuOpen}
+            color="inherit"
+          >
+            <MoreIcon />
+          </IconButton>
+        </Box>
+      </Toolbar>
+      
+      {/* Меню профиля */}
+      <Menu
+        anchorEl={profileAnchorEl}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        keepMounted
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={Boolean(profileAnchorEl)}
+        onClose={handleMenuClose}
+      >
+        {username && (
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="subtitle1">{username}</Typography>
+            <Divider sx={{ my: 1 }} />
+          </Box>
+        )}
+        {profileActions.map((action, index) => (
+          <MenuItem 
+            key={index} 
+            onClick={() => {
+              handleMenuClose();
+              action.onClick();
+            }}
+            disabled={action.disabled}
+          >
+            {action.icon && (
+              <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                {action.icon}
+              </Box>
+            )}
+            {action.label}
+          </MenuItem>
+        ))}
+      </Menu>
+      
+      {/* Меню уведомлений */}
+      <Menu
+        anchorEl={notificationsAnchorEl}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        keepMounted
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={Boolean(notificationsAnchorEl)}
+        onClose={handleMenuClose}
+      >
+        {notificationActions.length > 0 ? (
+          notificationActions.map((action, index) => (
+            <MenuItem 
+              key={index} 
+              onClick={() => {
+                handleMenuClose();
+                action.onClick();
+              }}
+              disabled={action.disabled}
+            >
+              {action.icon && (
+                <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                  {action.icon}
+                </Box>
+              )}
+              {action.label}
+            </MenuItem>
+          ))
+        ) : (
+          <MenuItem disabled>Нет уведомлений</MenuItem>
+        )}
+      </Menu>
+      
+      {/* Мобильное меню */}
+      <Menu
+        anchorEl={mobileMenuAnchorEl}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        keepMounted
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        open={Boolean(mobileMenuAnchorEl)}
+        onClose={handleMenuClose}
+      >
+        {/* Уведомления */}
+        {notificationActions.length > 0 && (
+          <MenuItem onClick={handleNotificationsMenuOpen}>
+            <IconButton color="inherit" aria-label="show notifications" size="large">
+              <Badge badgeContent={notificationCount} color="error">
+                <NotificationsIcon />
+              </Badge>
+            </IconButton>
+            <p>Уведомления</p>
+          </MenuItem>
+        )}
+        
+        {/* Профиль */}
+        <MenuItem onClick={handleProfileMenuOpen}>
+          <IconButton
+            aria-label="account of current user"
+            aria-haspopup="true"
+            color="inherit"
+            size="large"
+          >
+            {avatarUrl ? (
+              <Avatar src={avatarUrl} alt={username} sx={{ width: 32, height: 32 }} />
+            ) : (
+              <AccountCircleIcon />
+            )}
+          </IconButton>
+          <p>Профиль</p>
+        </MenuItem>
+      </Menu>
+    </StyledAppBar>
   );
 };
 

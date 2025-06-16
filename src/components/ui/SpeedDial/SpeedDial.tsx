@@ -1,110 +1,101 @@
-import React from 'react';
-import MuiSpeedDial from '@mui/material/SpeedDial';
-import SpeedDialAction from '@mui/material/SpeedDialAction';
-import SpeedDialIcon from '@mui/material/SpeedDialIcon';
-import { styled, useTheme } from '@mui/material/styles';
-import { SpeedDialProps } from './types';
+import React, { useState } from 'react';
+import {
+  SpeedDial as MuiSpeedDial,
+  SpeedDialIcon,
+  SpeedDialAction,
+  styled,
+  useTheme,
+} from '@mui/material';
+import { SpeedDialProps, SpeedDialAction as SpeedDialActionType } from './types';
 import { tokens } from '../../../styles/theme/tokens';
 
 /**
  * Стилизованный компонент SpeedDial с поддержкой позиционирования
  */
-const StyledSpeedDial = styled(MuiSpeedDial, {
-  shouldForwardProp: (prop) => !['position', 'margin'].includes(prop as string),
-})<{ position?: string; margin?: number }>(({ position = 'bottom-right', margin = 16, theme }) => {
+const StyledSpeedDial = styled(MuiSpeedDial)(({ theme }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  const positions = {
-    'top-left': { top: margin, left: margin },
-    'top-right': { top: margin, right: margin },
-    'bottom-left': { bottom: margin, left: margin },
-    'bottom-right': { bottom: margin, right: margin },
-  };
-
+  
   return {
     position: 'fixed',
-    ...positions[position as keyof typeof positions],
-    '& .MuiSpeedDial-actions': {
-      paddingBottom: tokens.spacing.md,
-      gap: tokens.spacing.sm,
-    },
-    '& .MuiFab-primary': {
-      backgroundColor: themeColors.primary,
+    bottom: tokens.spacing.lg,
+    right: tokens.spacing.lg,
+    
+    '& .MuiSpeedDial-fab': {
+      backgroundColor: tokens.colors.primary.main,
       color: themeColors.white,
+      
       '&:hover': {
-        backgroundColor: theme.palette.mode === 'dark' ? themeColors.primaryDark : themeColors.primaryLight,
+        backgroundColor: tokens.colors.primary.dark,
       },
-      boxShadow: tokens.shadows.md,
-      transition: `all ${tokens.transitions.duration.normal} ${tokens.transitions.easing.easeInOut}`,
     },
+    
     '& .MuiSpeedDialAction-fab': {
-      boxShadow: tokens.shadows.sm,
-      transition: `all ${tokens.transitions.duration.normal} ${tokens.transitions.easing.easeInOut}`,
-      '&:hover': {
-        transform: 'scale(1.05)',
-      },
-    },
-    '& .MuiSpeedDialAction-staticTooltipLabel': {
-      fontFamily: tokens.typography.fontFamily,
+      width: 40,
+      height: 40,
       fontSize: tokens.typography.fontSize.sm,
-      backgroundColor: theme.palette.mode === 'dark' ? themeColors.backgroundSecondary : themeColors.backgroundPaper,
-      color: themeColors.textPrimary,
-      boxShadow: tokens.shadows.sm,
-      borderRadius: tokens.borderRadius.md,
-      padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
     },
   };
 });
 
 /**
- * Компонент SpeedDial - плавающая кнопка с выпадающим меню действий
+ * Компонент SpeedDial - плавающая кнопка с выпадающими действиями
+ * 
+ * @example
+ * <SpeedDial
+ *   actions={[
+ *     { icon: <AddIcon />, name: 'Создать', onClick: handleCreate },
+ *     { icon: <EditIcon />, name: 'Редактировать', onClick: handleEdit },
+ *   ]}
+ * />
  */
-const SpeedDial: React.FC<SpeedDialProps> = ({
-  actions,
+export const SpeedDial: React.FC<SpeedDialProps> = ({
+  actions = [],
   icon,
-  position = 'bottom-right',
-  margin = 16,
+  ariaLabel = 'Быстрые действия',
   direction = 'up',
+  hidden = false,
   tooltipTitle,
-  SpeedDialActionProps = {},
-  ariaLabel = 'SpeedDial',
-  ...muiProps
+  tooltipOpen = false,
+  tooltipPlacement = 'left',
+  sx,
+  ...props
 }) => {
   const theme = useTheme();
+  const [open, setOpen] = useState(false);
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
   return (
     <StyledSpeedDial
-      {...muiProps}
       ariaLabel={ariaLabel}
-      icon={icon ? icon : <SpeedDialIcon />}
-      position={position}
-      margin={margin}
+      icon={icon || <SpeedDialIcon />}
+      onClose={handleClose}
+      onOpen={handleOpen}
+      open={open}
       direction={direction}
-      FabProps={{
-        sx: {
-          backgroundColor: themeColors.primary,
-          '&:hover': {
-            backgroundColor: theme.palette.mode === 'dark' ? themeColors.primaryDark : themeColors.primaryLight,
-          },
-        },
-        ...muiProps.FabProps,
-      }}
+      hidden={hidden}
+      sx={sx}
+      {...props}
     >
       {actions.map((action) => (
         <SpeedDialAction
-          key={action.id}
+          key={action.id || action.name}
           icon={action.icon}
-          tooltipTitle={action.tooltipTitle}
-          onClick={action.onClick}
-          tooltipOpen={muiProps.open}
-          FabProps={{ 
+          tooltipTitle={action.name}
+          tooltipOpen={tooltipOpen}
+          onClick={(e) => {
+            handleClose();
+            if (action.onClick) action.onClick(e);
+          }}
+          FabProps={{
             disabled: action.disabled,
             sx: {
-              backgroundColor: action.color || (theme.palette.mode === 'dark' ? themeColors.backgroundSecondary : themeColors.backgroundPaper),
+              backgroundColor: action.color || (theme.palette.mode === 'dark' ? themeColors.backgroundSecondary : themeColors.backgroundCard),
               color: action.color ? themeColors.white : themeColors.textPrimary,
             }
           }}
-          {...SpeedDialActionProps}
         />
       ))}
     </StyledSpeedDial>

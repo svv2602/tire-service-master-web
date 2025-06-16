@@ -53,34 +53,40 @@ const LoadingDemo: React.FC<{ args: BackdropProps }> = ({ args }) => {
 export const WithLoading: Story = (args) => <LoadingDemo args={args} />;
 WithLoading.args = {
   open: true,
-  loading: true,
-  loadingColor: 'primary',
-  loadingSize: 40,
+  spinner: true,
+  message: 'Загрузка...',
 };
 
 // Компонент-обертка для демонстрации с кастомным контентом
 const CustomContentDemo: React.FC<{ args: BackdropProps }> = ({ args }) => {
   const [open, setOpen] = React.useState(false);
   
+  const customContent = (
+    <div style={{ 
+      backgroundColor: 'white', 
+      padding: '20px', 
+      borderRadius: '8px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      alignItems: 'center'
+    }}>
+      <h3>Кастомный контент</h3>
+      <Button variant="contained" onClick={() => setOpen(false)}>
+        Закрыть
+      </Button>
+    </div>
+  );
+  
   return (
     <>
       <Button onClick={() => setOpen(true)}>Открыть с контентом</Button>
-      <Backdrop {...args} open={open} onClose={() => setOpen(false)}>
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '20px', 
-          borderRadius: '8px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          alignItems: 'center'
-        }}>
-          <h3>Кастомный контент</h3>
-          <Button variant="contained" onClick={() => setOpen(false)}>
-            Закрыть
-          </Button>
-        </div>
-      </Backdrop>
+      <Backdrop 
+        {...args} 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        customContent={customContent}
+      />
     </>
   );
 };

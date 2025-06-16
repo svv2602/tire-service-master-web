@@ -86,21 +86,21 @@ Default.args = {
     {
       id: 'edit',
       icon: <EditIcon />,
-      tooltipTitle: 'Редактировать',
+      name: 'Редактировать',
       onClick: () => console.log('Edit clicked'),
       color: '#2196F3', // Синий
     },
     {
       id: 'copy',
       icon: <FileCopyIcon />,
-      tooltipTitle: 'Копировать',
+      name: 'Копировать',
       onClick: () => console.log('Copy clicked'),
       color: '#4CAF50', // Зеленый
     },
     {
       id: 'delete',
       icon: <DeleteIcon />,
-      tooltipTitle: 'Удалить',
+      name: 'Удалить',
       onClick: () => console.log('Delete clicked'),
       color: '#F44336', // Красный
     },
@@ -117,19 +117,19 @@ NoColors.args = {
     {
       id: 'edit',
       icon: <EditIcon />,
-      tooltipTitle: 'Редактировать',
+      name: 'Редактировать',
       onClick: () => console.log('Edit clicked'),
     },
     {
       id: 'copy',
       icon: <FileCopyIcon />,
-      tooltipTitle: 'Копировать',
+      name: 'Копировать',
       onClick: () => console.log('Copy clicked'),
     },
     {
       id: 'delete',
       icon: <DeleteIcon />,
-      tooltipTitle: 'Удалить',
+      name: 'Удалить',
       onClick: () => console.log('Delete clicked'),
     },
   ],
@@ -178,14 +178,14 @@ WithDisabledAction.args = {
     {
       id: 'edit',
       icon: <EditIcon />,
-      tooltipTitle: 'Редактировать',
+      name: 'Редактировать',
       onClick: () => console.log('Edit clicked'),
       color: '#2196F3',
     },
     {
       id: 'copy',
       icon: <FileCopyIcon />,
-      tooltipTitle: 'Копировать',
+      name: 'Копировать',
       onClick: () => console.log('Copy clicked'),
       disabled: true,
       color: '#4CAF50',
@@ -193,7 +193,7 @@ WithDisabledAction.args = {
     {
       id: 'delete',
       icon: <DeleteIcon />,
-      tooltipTitle: 'Удалить',
+      name: 'Удалить',
       onClick: () => console.log('Delete clicked'),
       color: '#F44336',
     },
