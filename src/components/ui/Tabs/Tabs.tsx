@@ -5,8 +5,10 @@ import {
   TabsProps as MuiTabsProps,
   TabProps as MuiTabProps,
   Box,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Пропсы для Tab */
 export interface TabProps extends Omit<MuiTabProps, 'value'> {
@@ -37,39 +39,64 @@ export interface TabsProps extends Omit<MuiTabsProps, 'children' | 'onChange'> {
 }
 
 /** Стилизованные вкладки */
-const StyledTabs = styled(MuiTabs)(({ theme }) => ({
-  '& .MuiTabs-indicator': {
-    height: 3,
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: theme.palette.primary.main,
-  },
-  '& .MuiTabs-flexContainer': {
-    gap: theme.spacing(1),
-  },
-}));
+const StyledTabs = styled(MuiTabs)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiTabs-indicator': {
+      height: 3,
+      borderRadius: tokens.borderRadius.sm,
+      backgroundColor: themeColors.primary,
+      transition: tokens.transitions.duration.normal,
+    },
+    '& .MuiTabs-flexContainer': {
+      gap: tokens.spacing.sm,
+    },
+    borderColor: themeColors.borderPrimary,
+  };
+});
 
 /** Стилизованная вкладка */
-const StyledTab = styled(MuiTab)(({ theme }) => ({
-  textTransform: 'none',
-  fontWeight: 500,
-  fontSize: '0.875rem',
-  minHeight: 48,
-  padding: theme.spacing(1, 2),
-  transition: theme.transitions.create(['color', 'background-color'], {
-    duration: theme.transitions.duration.shortest,
-  }),
-  '&:hover': {
-    backgroundColor: theme.palette.action.hover,
-    borderRadius: theme.shape.borderRadius,
-  },
-  '&.Mui-selected': {
-    color: theme.palette.primary.main,
-    fontWeight: 600,
-  },
-  '&.Mui-disabled': {
-    opacity: 0.5,
-  },
-}));
+const StyledTab = styled(MuiTab)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    textTransform: 'none',
+    fontWeight: tokens.typography.fontWeights.medium,
+    fontSize: tokens.typography.fontSize.sm,
+    fontFamily: tokens.typography.fontFamily,
+    minHeight: 48,
+    padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+    transition: tokens.transitions.duration.normal,
+    color: themeColors.textSecondary,
+    
+    '&:hover': {
+      backgroundColor: themeColors.backgroundHover,
+      borderRadius: tokens.borderRadius.sm,
+      color: themeColors.textPrimary,
+    },
+    
+    '&.Mui-selected': {
+      color: themeColors.primary,
+      fontWeight: tokens.typography.fontWeights.bold,
+    },
+    
+    '&.Mui-disabled': {
+      opacity: 0.5,
+      color: themeColors.textSecondary,
+    },
+  };
+});
+
+/** Стилизованная панель контента для вкладки */
+const StyledTabPanel = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: `${tokens.spacing.md} 0`,
+    color: themeColors.textPrimary,
+  };
+});
 
 /** Панель контента для вкладки */
 interface TabPanelProps {
@@ -87,7 +114,7 @@ export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...o
       aria-labelledby={`tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+      {value === index && <StyledTabPanel>{children}</StyledTabPanel>}
     </div>
   );
 };
@@ -114,6 +141,9 @@ export const Tabs: React.FC<TabsProps> = ({
   size = 'medium',
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const handleChange = (event: React.SyntheticEvent, newValue: string | number) => {
     onChange(newValue, event);
   };
@@ -129,7 +159,6 @@ export const Tabs: React.FC<TabsProps> = ({
       sx={{
         borderBottom: orientation === 'horizontal' ? 1 : 0,
         borderRight: orientation === 'vertical' ? 1 : 0,
-        borderColor: 'divider',
         minHeight: size === 'small' ? 40 : size === 'large' ? 56 : 48,
       }}
       {...props}
