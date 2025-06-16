@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Story, Meta } from '@storybook/react';
 import { Slider } from './Slider';
 import { SliderProps } from './types';
-import { Box, Typography, Grid, Stack, Paper } from '@mui/material';
+import { Box, Typography, Grid, Stack, Paper, Switch, FormControlLabel, useTheme } from '@mui/material';
 import VolumeDown from '@mui/icons-material/VolumeDown';
 import VolumeUp from '@mui/icons-material/VolumeUp';
 import Brightness1Icon from '@mui/icons-material/Brightness1';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from '../../../styles/theme/theme';
 
 export default {
   title: 'UI/Slider',
@@ -14,7 +16,7 @@ export default {
   parameters: {
     docs: {
       description: {
-        component: 'Компонент Slider - слайдер для выбора числовых значений в заданном диапазоне.',
+        component: 'Компонент Slider - слайдер для выбора числовых значений в заданном диапазоне. Обновленная версия поддерживает токены дизайн-системы и темную тему.',
       },
     },
   },
@@ -52,18 +54,32 @@ export default {
 // Компонент-обертка для демонстрации
 const Template: Story<SliderProps> = (args) => {
   const [value, setValue] = useState<number | number[]>(args.value ?? 50);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
 
   const handleChange = (newValue: number | number[]) => {
     setValue(newValue);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const theme = createTheme(darkMode ? 'dark' : 'light');
+
   return (
-    <Box sx={{ width: 300, p: 2 }}>
-      <Slider {...args} value={value} onChange={handleChange} />
-      <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
-        Значение: {Array.isArray(value) ? `[${value.join(', ')}]` : value}
-      </Typography>
-    </Box>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ width: 300, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Темная тема"
+          sx={{ mb: 2 }}
+        />
+        <Slider {...args} value={value} onChange={handleChange} />
+        <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+          Значение: {Array.isArray(value) ? `[${value.join(', ')}]` : value}
+        </Typography>
+      </Box>
+    </ThemeProvider>
   );
 };
 
@@ -134,18 +150,34 @@ Vertical.args = {
  */
 export const Colors = () => {
   const colors: Array<SliderProps['color']> = ['primary', 'secondary', 'error', 'info', 'success', 'warning'];
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const theme = createTheme(darkMode ? 'dark' : 'light');
   
   return (
-    <Stack spacing={3} sx={{ width: 300 }}>
-      {colors.map((color) => (
-        <Box key={color}>
-          <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-            {color ? color.charAt(0).toUpperCase() + color.slice(1) : 'Primary'}
-          </Typography>
-          <Slider value={50} color={color} />
-        </Box>
-      ))}
-    </Stack>
+    <ThemeProvider theme={theme}>
+      <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Темная тема"
+          sx={{ mb: 2 }}
+        />
+        <Stack spacing={3} sx={{ width: 300 }}>
+          {colors.map((color) => (
+            <Box key={color}>
+              <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+                {color ? color.charAt(0).toUpperCase() + color.slice(1) : 'Primary'}
+              </Typography>
+              <Slider value={50} color={color} />
+            </Box>
+          ))}
+        </Stack>
+      </Box>
+    </ThemeProvider>
   );
 };
 
@@ -153,21 +185,38 @@ export const Colors = () => {
  * Слайдер с разными размерами
  */
 export const Sizes = () => {
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const theme = createTheme(darkMode ? 'dark' : 'light');
+  
   return (
-    <Stack spacing={4} sx={{ width: 300 }}>
-      <Box>
-        <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-          Small
-        </Typography>
-        <Slider value={50} size="small" />
+    <ThemeProvider theme={theme}>
+      <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Темная тема"
+          sx={{ mb: 2 }}
+        />
+        <Stack spacing={4} sx={{ width: 300 }}>
+          <Box>
+            <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+              Small
+            </Typography>
+            <Slider value={50} size="small" />
+          </Box>
+          <Box>
+            <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
+              Medium
+            </Typography>
+            <Slider value={50} size="medium" />
+          </Box>
+        </Stack>
       </Box>
-      <Box>
-        <Typography variant="caption" sx={{ mb: 1, display: 'block' }}>
-          Medium
-        </Typography>
-        <Slider value={50} size="medium" />
-      </Box>
-    </Stack>
+    </ThemeProvider>
   );
 };
 
@@ -189,74 +238,90 @@ export const Examples = () => {
   const [volume, setVolume] = useState<number>(30);
   const [brightness, setBrightness] = useState<number>(70);
   const [priceRange, setPriceRange] = useState<number[]>([1000, 5000]);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
   
   // Форматирование цены
   const formatPrice = (value: number) => {
     return `${value.toLocaleString('ru-RU')} ₽`;
   };
   
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
+  const theme = createTheme(darkMode ? 'dark' : 'light');
+  
   return (
-    <Stack spacing={4} sx={{ width: 350 }}>
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Регулировка громкости
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <VolumeDown />
-          <Slider 
-            value={volume} 
-            onChange={(value) => setVolume(value as number)} 
-            showValue
-            valueFormatter={(value) => `${value}%`}
-          />
-          <VolumeUp />
-        </Box>
-      </Paper>
-      
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Настройка яркости
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Brightness1Icon />
-          <Slider 
-            value={brightness} 
-            onChange={(value) => setBrightness(value as number)} 
-            color="warning"
-            showValue
-          />
-          <Brightness7Icon />
-        </Box>
-      </Paper>
-      
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Фильтр по цене
-        </Typography>
-        <Box sx={{ px: 1 }}>
-          <Slider 
-            value={priceRange} 
-            onChange={(value) => setPriceRange(value as number[])} 
-            min={0}
-            max={10000}
-            step={500}
-            showMarks
-            marks={[
-              { value: 0, label: '0 ₽' },
-              { value: 5000, label: '5 000 ₽' },
-              { value: 10000, label: '10 000 ₽' },
-            ]}
-          />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <Typography variant="body2">
-              От: {formatPrice(priceRange[0])}
+    <ThemeProvider theme={theme}>
+      <Box sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <FormControlLabel
+          control={<Switch checked={darkMode} onChange={toggleDarkMode} />}
+          label="Темная тема"
+          sx={{ mb: 2 }}
+        />
+        <Stack spacing={4} sx={{ width: 350 }}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Регулировка громкости
             </Typography>
-            <Typography variant="body2">
-              До: {formatPrice(priceRange[1])}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <VolumeDown />
+              <Slider 
+                value={volume} 
+                onChange={(value) => setVolume(value as number)} 
+                showValue
+                valueFormatter={(value) => `${value}%`}
+              />
+              <VolumeUp />
+            </Box>
+          </Paper>
+          
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Настройка яркости
             </Typography>
-          </Box>
-        </Box>
-      </Paper>
-    </Stack>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Brightness1Icon />
+              <Slider 
+                value={brightness} 
+                onChange={(value) => setBrightness(value as number)} 
+                color="warning"
+                showValue
+              />
+              <Brightness7Icon />
+            </Box>
+          </Paper>
+          
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Фильтр по цене
+            </Typography>
+            <Box sx={{ px: 1 }}>
+              <Slider 
+                value={priceRange} 
+                onChange={(value) => setPriceRange(value as number[])} 
+                min={0}
+                max={10000}
+                step={500}
+                showMarks
+                marks={[
+                  { value: 0, label: '0 ₽' },
+                  { value: 5000, label: '5 000 ₽' },
+                  { value: 10000, label: '10 000 ₽' },
+                ]}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                <Typography variant="body2">
+                  От: {formatPrice(priceRange[0])}
+                </Typography>
+                <Typography variant="body2">
+                  До: {formatPrice(priceRange[1])}
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Stack>
+      </Box>
+    </ThemeProvider>
   );
 }; 

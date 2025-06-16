@@ -3,7 +3,100 @@ import MuiAutocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
 import { debounce } from '@mui/material/utils';
+import { styled, useTheme } from '@mui/material/styles';
 import { AutoCompleteProps, AutoCompleteOption } from './types';
+import { tokens } from '../../../styles/theme/tokens';
+
+// Стилизованный Autocomplete
+const StyledAutocomplete = styled(MuiAutocomplete)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiAutocomplete-inputRoot': {
+      fontFamily: tokens.typography.fontFamily,
+      fontSize: tokens.typography.fontSize.md,
+      transition: tokens.transitions.duration.normal,
+      
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: themeColors.primary,
+        borderWidth: '2px',
+      },
+    },
+    
+    '& .MuiAutocomplete-tag': {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? themeColors.backgroundSecondary 
+        : themeColors.backgroundTertiary,
+      color: themeColors.textPrimary,
+      margin: tokens.spacing.xxs,
+      borderRadius: tokens.borderRadius.sm,
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '& .MuiAutocomplete-listbox': {
+      fontFamily: tokens.typography.fontFamily,
+      padding: tokens.spacing.xs,
+      
+      '& .MuiAutocomplete-option': {
+        padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+        borderRadius: tokens.borderRadius.sm,
+        fontSize: tokens.typography.fontSize.md,
+        transition: tokens.transitions.duration.fast,
+        minHeight: '36px',
+        
+        '&[aria-selected="true"]': {
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? themeColors.backgroundSecondary 
+            : themeColors.backgroundTertiary,
+        },
+        
+        '&.Mui-focused': {
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? 'rgba(255, 255, 255, 0.08)' 
+            : 'rgba(0, 0, 0, 0.04)',
+        },
+      },
+    },
+    
+    '& .MuiAutocomplete-noOptions': {
+      fontFamily: tokens.typography.fontFamily,
+      fontSize: tokens.typography.fontSize.sm,
+      color: themeColors.textSecondary,
+      padding: tokens.spacing.md,
+    },
+    
+    '& .MuiAutocomplete-loading': {
+      fontFamily: tokens.typography.fontFamily,
+      fontSize: tokens.typography.fontSize.sm,
+      color: themeColors.textSecondary,
+      padding: tokens.spacing.md,
+    },
+    
+    '& .MuiAutocomplete-endAdornment': {
+      top: 'calc(50% - 14px)',
+      
+      '& .MuiAutocomplete-popupIndicator': {
+        color: themeColors.textSecondary,
+        transition: tokens.transitions.duration.normal,
+      },
+      
+      '& .MuiAutocomplete-clearIndicator': {
+        color: themeColors.textSecondary,
+        visibility: 'visible',
+        opacity: 0.6,
+        
+        '&:hover': {
+          opacity: 1,
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? 'rgba(255, 255, 255, 0.08)' 
+            : 'rgba(0, 0, 0, 0.04)',
+        },
+      },
+    },
+  };
+});
 
 /**
  * Компонент AutoComplete - поле с автодополнением и асинхронным поиском
@@ -85,8 +178,11 @@ const AutoComplete = <T extends AutoCompleteOption>({
     }
   }, [open, initialOptions]);
 
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   return (
-    <MuiAutocomplete<T, false, false, false>
+    <StyledAutocomplete<T, false, false, false>
       options={options}
       value={value}
       onChange={handleChange}
@@ -111,10 +207,32 @@ const AutoComplete = <T extends AutoCompleteOption>({
             ...TextFieldProps.InputProps,
             endAdornment: (
               <React.Fragment>
-                {loading && <CircularProgress color="inherit" size={20} />}
+                {loading && (
+                  <CircularProgress 
+                    color="inherit" 
+                    size={20} 
+                    sx={{
+                      color: themeColors.primary,
+                      marginRight: tokens.spacing.xs,
+                      transition: tokens.transitions.duration.normal,
+                    }}
+                  />
+                )}
                 {params.InputProps.endAdornment}
               </React.Fragment>
             ),
+          }}
+          sx={{
+            '& .MuiInputLabel-root': {
+              fontFamily: tokens.typography.fontFamily,
+              fontSize: tokens.typography.fontSize.md,
+              transition: tokens.transitions.duration.normal,
+              
+              '&.Mui-focused': {
+                color: themeColors.primary,
+              },
+            },
+            ...TextFieldProps.sx,
           }}
         />
       )}
