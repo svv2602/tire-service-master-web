@@ -6,8 +6,8 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { SIZES, ANIMATIONS, getThemeColors } from '../../../styles/theme';
+import { styled, useTheme } from '@mui/material/styles';
+import { tokens } from '../../../styles/theme/tokens';
 
 export interface TooltipProps extends MuiTooltipProps {
   /** Контент тултипа */
@@ -30,25 +30,34 @@ export interface TooltipProps extends MuiTooltipProps {
 
 const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
   <MuiTooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-  '& .MuiTooltip-tooltip': {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.9)' 
-      : 'rgba(0, 0, 0, 0.9)',
-    color: theme.palette.mode === 'dark' ? '#000' : '#fff',
-    fontSize: 12,
-    borderRadius: theme.shape.borderRadius,
-    padding: theme.spacing(1, 1.5),
-    boxShadow: theme.shadows[1],
-    maxWidth: 300,
-    wordWrap: 'break-word',
-  },
-  '& .MuiTooltip-arrow': {
-    color: theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.9)' 
-      : 'rgba(0, 0, 0, 0.9)',
-  },
-}));
+))(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiTooltip-tooltip': {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.95)' 
+        : 'rgba(33, 33, 33, 0.95)',
+      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+      fontSize: tokens.typography.fontSize.xs,
+      fontFamily: tokens.typography.fontFamily,
+      fontWeight: tokens.typography.fontWeight.medium,
+      lineHeight: tokens.typography.lineHeight.md,
+      borderRadius: tokens.borderRadius.md,
+      padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+      boxShadow: tokens.shadows.md,
+      maxWidth: 300,
+      wordWrap: 'break-word',
+      transition: `opacity ${tokens.transitions.duration.fast} ${tokens.transitions.easing.easeInOut}`,
+    },
+    '& .MuiTooltip-arrow': {
+      color: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.95)' 
+        : 'rgba(33, 33, 33, 0.95)',
+      transition: tokens.transitions.duration.fast,
+    },
+  };
+});
 
 /**
  * Компонент тултипа
@@ -96,7 +105,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       title={tooltipContent}
       placement={placement}
       arrow={arrow}
-      TransitionProps={{ timeout: parseInt(ANIMATIONS.transition.fast) }}
+      TransitionProps={{ timeout: parseInt(tokens.transitions.duration.fast) }}
       {...props}
       sx={{
         '& .MuiTooltip-tooltip': {

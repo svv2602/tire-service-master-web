@@ -6,8 +6,10 @@ import {
   AlertColor,
   styled,
   IconButton,
+  useTheme,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Пропсы уведомления */
 export interface SnackbarProps extends Omit<MuiSnackbarProps, 'children'> {
@@ -31,28 +33,91 @@ export interface SnackbarProps extends Omit<MuiSnackbarProps, 'children'> {
 }
 
 /** Стилизованное уведомление */
-const StyledSnackbar = styled(MuiSnackbar)(({ theme }) => ({
-  '& .MuiSnackbarContent-root': {
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[6],
-  },
-  '& .MuiAlert-root': {
-    borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[6],
-    width: '100%',
-    '& .MuiAlert-icon': {
-      alignItems: 'center',
+const StyledSnackbar = styled(MuiSnackbar)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiSnackbarContent-root': {
+      borderRadius: tokens.borderRadius.md,
+      boxShadow: tokens.shadows.lg,
     },
-    '& .MuiAlert-message': {
-      fontSize: '0.875rem',
-      fontWeight: 500,
+    '& .MuiAlert-root': {
+      borderRadius: tokens.borderRadius.md,
+      boxShadow: tokens.shadows.lg,
+      width: '100%',
+      transition: `all ${tokens.transitions.duration.normal} ${tokens.transitions.easing.easeInOut}`,
+      
+      '&.MuiAlert-standardSuccess': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? themeColors.successLight 
+          : themeColors.successLight,
+        color: theme.palette.mode === 'dark' 
+          ? themeColors.textPrimary 
+          : themeColors.success,
+      },
+      
+      '&.MuiAlert-standardError': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? themeColors.errorLight 
+          : themeColors.errorLight,
+        color: theme.palette.mode === 'dark' 
+          ? themeColors.textPrimary 
+          : themeColors.error,
+      },
+      
+      '&.MuiAlert-standardWarning': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? themeColors.warningLight 
+          : themeColors.warningLight,
+        color: theme.palette.mode === 'dark' 
+          ? themeColors.textPrimary 
+          : themeColors.warning,
+      },
+      
+      '&.MuiAlert-standardInfo': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? themeColors.infoLight 
+          : themeColors.infoLight,
+        color: theme.palette.mode === 'dark' 
+          ? themeColors.textPrimary 
+          : themeColors.info,
+      },
+      
+      '& .MuiAlert-icon': {
+        alignItems: 'center',
+        color: 'inherit',
+      },
+      
+      '& .MuiAlert-message': {
+        fontSize: tokens.typography.fontSize.sm,
+        fontWeight: tokens.typography.fontWeight.medium,
+        fontFamily: tokens.typography.fontFamily,
+      },
+      
+      '& .MuiAlert-action': {
+        alignItems: 'center',
+        paddingTop: 0,
+        color: 'inherit',
+      },
     },
-    '& .MuiAlert-action': {
-      alignItems: 'center',
-      paddingTop: 0,
+  };
+});
+
+/** Стилизованная кнопка закрытия */
+const CloseButton = styled(IconButton)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: tokens.spacing.xxs,
+    transition: tokens.transitions.duration.fast,
+    
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.1)' 
+        : 'rgba(0, 0, 0, 0.1)',
     },
-  },
-}));
+  };
+});
 
 /**
  * Компонент уведомлений
@@ -83,15 +148,18 @@ export const Snackbar: React.FC<SnackbarProps> = ({
     onClose?.(event, reason);
   };
 
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const action = showCloseButton ? (
-    <IconButton
+    <CloseButton
       size="small"
       aria-label="close"
       color="inherit"
       onClick={handleClose}
     >
       <CloseIcon fontSize="small" />
-    </IconButton>
+    </CloseButton>
   ) : undefined;
 
   return (
@@ -106,7 +174,10 @@ export const Snackbar: React.FC<SnackbarProps> = ({
         severity={severity}
         action={action}
         onClose={showCloseButton ? handleClose : undefined}
-        sx={{ width: '100%' }}
+        sx={{ 
+          width: '100%',
+          animation: `${tokens.animations.fadeIn} ${tokens.transitions.duration.normal}ms ${tokens.transitions.easing.easeInOut}`,
+        }}
       >
         {message}
       </Alert>

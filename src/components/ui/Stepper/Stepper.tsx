@@ -8,19 +8,84 @@ import {
   Typography,
   Box,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
+import { tokens } from '../../../styles/theme/tokens';
 
 // Стилизованные компоненты
-const StyledStepper = styled(MuiStepper)(({ theme }) => ({
-  '& .MuiStepLabel-root': {
-    padding: theme.spacing(1, 0),
-  },
-  '& .MuiStepContent-root': {
-    borderLeft: `1px solid ${theme.palette.divider}`,
-    marginLeft: theme.spacing(2.5),
-    paddingLeft: theme.spacing(2),
-  },
-}));
+const StyledStepper = styled(MuiStepper)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiStepLabel-root': {
+      padding: `${tokens.spacing.sm} 0`,
+      
+      '& .MuiStepLabel-label': {
+        fontFamily: tokens.typography.fontFamily,
+        fontSize: tokens.typography.fontSize.md,
+        fontWeight: tokens.typography.fontWeight.medium,
+        transition: tokens.transitions.duration.normal,
+        
+        '&.Mui-active': {
+          color: themeColors.primary,
+          fontWeight: tokens.typography.fontWeight.semibold,
+        },
+        
+        '&.Mui-completed': {
+          color: themeColors.success,
+        },
+      },
+      
+      '& .MuiStepIcon-root': {
+        color: themeColors.borderSecondary,
+        
+        '&.Mui-active': {
+          color: themeColors.primary,
+        },
+        
+        '&.Mui-completed': {
+          color: themeColors.success,
+        },
+      },
+    },
+    
+    '& .MuiStepContent-root': {
+      borderLeft: `1px solid ${themeColors.borderPrimary}`,
+      marginLeft: tokens.spacing.lg,
+      paddingLeft: tokens.spacing.md,
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '& .MuiStepConnector-root': {
+      '& .MuiStepConnector-line': {
+        borderColor: themeColors.borderPrimary,
+      },
+    },
+  };
+});
+
+const StyledStepContent = styled(MuiStepContent)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+    transition: tokens.transitions.duration.normal,
+    animation: `${tokens.animations.fadeIn} ${tokens.transitions.duration.normal}ms ${tokens.transitions.easing.easeInOut}`,
+  };
+});
+
+const StyledStepLabel = styled(MuiStepLabel)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiStepLabel-labelContainer': {
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '& .MuiStepLabel-iconContainer': {
+      paddingRight: tokens.spacing.sm,
+    },
+  };
+});
 
 export interface StepItem {
   /** Заголовок шага */
@@ -90,6 +155,9 @@ export const Stepper: React.FC<StepperProps> = ({
     onStepChange(activeStep - 1);
   };
 
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   return (
     <StyledStepper
       activeStep={activeStep}
@@ -99,27 +167,51 @@ export const Stepper: React.FC<StepperProps> = ({
     >
       {steps.map((step, index) => (
         <MuiStep key={step.label} disabled={disabled}>
-          <MuiStepLabel
+          <StyledStepLabel
             optional={
               step.optional ? (
-                <Typography variant="caption">Опционально</Typography>
+                <Typography 
+                  variant="caption"
+                  sx={{
+                    color: themeColors.textSecondary,
+                    fontFamily: tokens.typography.fontFamily,
+                    fontSize: tokens.typography.fontSize.xs,
+                  }}
+                >
+                  Опционально
+                </Typography>
               ) : null
             }
           >
             {step.label}
-          </MuiStepLabel>
-          <MuiStepContent>
+          </StyledStepLabel>
+          <StyledStepContent>
             {step.description && (
-              <Typography color="textSecondary" sx={{ mt: 1, mb: 2 }}>
+              <Typography 
+                sx={{ 
+                  mt: 1, 
+                  mb: 2,
+                  color: themeColors.textSecondary,
+                  fontFamily: tokens.typography.fontFamily,
+                  fontSize: tokens.typography.fontSize.sm,
+                }}
+              >
                 {step.description}
               </Typography>
             )}
             {step.content}
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: tokens.spacing.md }}>
               <Button
                 variant="contained"
                 onClick={handleNext}
-                sx={{ mt: 1, mr: 1 }}
+                sx={{ 
+                  mt: tokens.spacing.sm, 
+                  mr: tokens.spacing.sm,
+                  fontFamily: tokens.typography.fontFamily,
+                  fontSize: tokens.typography.fontSize.sm,
+                  fontWeight: tokens.typography.fontWeight.medium,
+                  transition: tokens.transitions.duration.normal,
+                }}
                 disabled={disabled}
               >
                 {index === steps.length - 1 ? 'Завершить' : 'Продолжить'}
@@ -127,12 +219,19 @@ export const Stepper: React.FC<StepperProps> = ({
               <Button
                 disabled={index === 0 || disabled}
                 onClick={handleBack}
-                sx={{ mt: 1, mr: 1 }}
+                sx={{ 
+                  mt: tokens.spacing.sm, 
+                  mr: tokens.spacing.sm,
+                  fontFamily: tokens.typography.fontFamily,
+                  fontSize: tokens.typography.fontSize.sm,
+                  fontWeight: tokens.typography.fontWeight.medium,
+                  transition: tokens.transitions.duration.normal,
+                }}
               >
                 Назад
               </Button>
             </Box>
-          </MuiStepContent>
+          </StyledStepContent>
         </MuiStep>
       ))}
     </StyledStepper>
