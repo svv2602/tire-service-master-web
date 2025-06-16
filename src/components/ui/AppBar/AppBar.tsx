@@ -2,29 +2,69 @@ import React from 'react';
 import { AppBar as MuiAppBar, Toolbar, IconButton, Typography, useTheme, Box } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import { tokens } from '../../../styles/theme/tokens';
 
 // Стилизованный AppBar с поддержкой темной темы
-const StyledAppBar = styled(MuiAppBar)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' 
-    ? theme.palette.background.default 
-    : theme.palette.primary.main,
-  boxShadow: theme.shadows[2],
-  transition: theme.transitions.create(['margin', 'width'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-}));
+const StyledAppBar = styled(MuiAppBar)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? themeColors.backgroundSecondary
+      : themeColors.primary,
+    boxShadow: tokens.shadows.md,
+    transition: tokens.transitions.duration.normal,
+    borderBottom: `1px solid ${themeColors.borderPrimary}`,
+  };
+});
 
 // Стилизованный Toolbar с адаптивными отступами
-const StyledToolbar = styled(Toolbar)(({ theme }) => ({
-  padding: theme.spacing(0, 3),
-  [theme.breakpoints.up('sm')]: {
-    padding: theme.spacing(0, 4),
-  },
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-}));
+const StyledToolbar = styled(Toolbar)(({ theme }) => {
+  return {
+    padding: `${tokens.spacing.xs} ${tokens.spacing.lg}`,
+    [theme.breakpoints.up('sm')]: {
+      padding: `${tokens.spacing.xs} ${tokens.spacing.xl}`,
+    },
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    minHeight: '64px',
+  };
+});
+
+// Стилизованная кнопка меню
+const StyledIconButton = styled(IconButton)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+    marginRight: tokens.spacing.md,
+    padding: tokens.spacing.xs,
+    transition: tokens.transitions.duration.normal,
+    
+    '&:hover': {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.1)' 
+        : 'rgba(0, 0, 0, 0.1)',
+    },
+  };
+});
+
+// Стилизованный заголовок
+const StyledTitle = styled(Typography)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    flexGrow: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: tokens.typography.fontFamily,
+    fontSize: tokens.typography.fontSize.lg,
+    fontWeight: tokens.typography.fontWeight.medium,
+    color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+  };
+});
 
 interface AppBarProps {
   /** Заголовок в AppBar */
@@ -59,6 +99,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   enableColorOnDark = true,
 }) => {
   const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
 
   return (
     <React.Fragment>
@@ -69,34 +110,23 @@ export const AppBar: React.FC<AppBarProps> = ({
         <StyledToolbar>
           {/* Кнопка меню */}
           {onMenuClick && (
-            <IconButton
-              color="inherit"
+            <StyledIconButton
               aria-label="открыть меню"
               onClick={onMenuClick}
               edge="start"
-              sx={{ mr: 2 }}
             >
               <MenuIcon />
-            </IconButton>
+            </StyledIconButton>
           )}
 
           {/* Заголовок */}
-          <Typography 
-            variant="h6" 
-            component="h1"
-            sx={{
-              flexGrow: 1,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <StyledTitle variant="h6" component="h1">
             {title}
-          </Typography>
+          </StyledTitle>
 
           {/* Дополнительные действия */}
           {actions && (
-            <Box sx={{ ml: 2 }}>
+            <Box sx={{ marginLeft: tokens.spacing.md }}>
               {actions}
             </Box>
           )}

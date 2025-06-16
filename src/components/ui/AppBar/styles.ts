@@ -1,39 +1,55 @@
 import { Theme } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /**
  * Получить стили для AppBar
  * @param theme - тема Material-UI
  */
-export const getAppBarStyles = (theme: Theme) => ({
-  root: {
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? theme.palette.background.default 
-      : theme.palette.primary.main,
-    boxShadow: theme.shadows[2],
-    transition: theme.transitions.create(['margin', 'width'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.leavingScreen,
-    }),
-  },
-  toolbar: {
-    padding: theme.spacing(0, 3),
-    [theme.breakpoints.up('sm')]: {
-      padding: theme.spacing(0, 4),
+export const getAppBarStyles = (theme: Theme) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    root: {
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? themeColors.backgroundSecondary
+        : themeColors.primary,
+      boxShadow: tokens.shadows.md,
+      transition: tokens.transitions.duration.normal,
+      borderBottom: `1px solid ${themeColors.borderPrimary}`,
     },
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    flexGrow: 1,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  actions: {
-    marginLeft: theme.spacing(2),
-  },
-});
+    toolbar: {
+      padding: `${tokens.spacing.xs} ${tokens.spacing.lg}`,
+      [theme.breakpoints.up('sm')]: {
+        padding: `${tokens.spacing.xs} ${tokens.spacing.xl}`,
+      },
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      minHeight: '64px',
+    },
+    title: {
+      flexGrow: 1,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      fontFamily: tokens.typography.fontFamily,
+      fontSize: tokens.typography.fontSize.lg,
+      fontWeight: tokens.typography.fontWeight.medium,
+      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+    },
+    menuButton: {
+      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
+      marginRight: tokens.spacing.md,
+      padding: tokens.spacing.xs,
+      transition: tokens.transitions.duration.normal,
+      '&:hover': {
+        backgroundColor: theme.palette.mode === 'dark' 
+          ? 'rgba(255, 255, 255, 0.1)' 
+          : 'rgba(0, 0, 0, 0.1)',
+      },
+    },
+    actions: {
+      marginLeft: tokens.spacing.md,
+    },
+  };
+};
