@@ -8,11 +8,9 @@ import { UserRole } from '../../types';
 
 import config from '../../config';
 
-const ACCESS_TOKEN_KEY = config.AUTH_TOKEN_STORAGE_KEY;
-const REFRESH_TOKEN_KEY = 'tvoya_shina_refresh_token';
 const USER_STORAGE_KEY = 'tvoya_shina_user';
 
-// Функции для работы с localStorage
+// Функции для работы с localStorage только для пользователя
 const getStoredUser = (): User | null => {
   try {
     const storedUser = localStorage.getItem(USER_STORAGE_KEY);
@@ -37,20 +35,14 @@ const setStoredUser = (user: User | null): void => {
 
 // Начальное состояние
 const initialState: AuthState = {
-  accessToken: localStorage.getItem(ACCESS_TOKEN_KEY),
-  refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY),
+  accessToken: null, // Токен теперь не хранится в localStorage
+  refreshToken: null, // Refresh токен теперь не хранится в localStorage
   user: getStoredUser(),
-  isAuthenticated: !!localStorage.getItem(ACCESS_TOKEN_KEY) && !!getStoredUser(),
+  isAuthenticated: false, // Будет определяться при первом запросе к API
   loading: false,
   error: null,
   isInitialized: false,
 };
-
-// Устанавливаем заголовок Authorization если есть токен при инициализации
-const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-if (storedToken) {
-  apiClient.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-}
 
 // Функция для преобразования строки роли в enum UserRole
 const mapRoleToEnum = (role: string): UserRole => {
@@ -73,16 +65,13 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string; user: User }>
+      action: PayloadAction<{ accessToken: string; user: User }>
     ) => {
-      const { accessToken, refreshToken, user } = action.payload;
+      const { accessToken, user } = action.payload;
       state.accessToken = accessToken;
-      state.refreshToken = refreshToken;
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
       setStoredUser(user);
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     },
@@ -93,8 +82,6 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
-      localStorage.removeItem(ACCESS_TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
       setStoredUser(null);
       delete apiClient.defaults.headers.common['Authorization'];
     },
@@ -112,14 +99,11 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
         state.loading = false;
         state.accessToken = action.payload.tokens.access;
-        state.refreshToken = action.payload.tokens.refresh;
         state.user = action.payload.user;
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
         
-        localStorage.setItem(ACCESS_TOKEN_KEY, action.payload.tokens.access);
-        localStorage.setItem(REFRESH_TOKEN_KEY, action.payload.tokens.refresh);
         setStoredUser(action.payload.user);
         
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.tokens.access}`;
@@ -139,8 +123,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.isInitialized = true;
-        localStorage.removeItem(ACCESS_TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
         setStoredUser(null);
         delete apiClient.defaults.headers.common['Authorization'];
       })
@@ -154,6 +136,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload;
         state.error = null;
+        state.isAuthenticated = true; // Если получили пользователя, значит аутентифицированы
         setStoredUser(action.payload);
         console.log('User role after getCurrentUser:', action.payload.role);
       })
@@ -164,8 +147,6 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.refreshToken = null;
         state.isInitialized = true;
-        localStorage.removeItem(ACCESS_TOKEN_KEY);
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
         setStoredUser(null);
         delete apiClient.defaults.headers.common['Authorization'];
       });
@@ -200,7 +181,8 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
 );
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-  // Здесь можно добавить запрос к API для отзыва refresh token
+  // Отправляем запрос к API для выхода из системы
+  await apiClient.post('/auth/logout');
   return;
 });
 

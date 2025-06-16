@@ -5,7 +5,6 @@ import { handleLogout, refreshTokens } from '../services/authService';
 
 // Константы
 const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
-const REFRESH_TOKEN_KEY = 'tvoya_shina_refresh_token';
 const API_URL = `${config.API_URL}${config.API_PREFIX}`;
 
 // Создаем экземпляр axios с базовыми настройками
@@ -15,7 +14,7 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  withCredentials: false
+  withCredentials: true // Включаем поддержку куки
 });
 
 // Request interceptor
@@ -47,9 +46,8 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     // Обновляем токены если они пришли в ответе при логине
     if (response.config.url?.includes('/auth/login') && response.data.tokens) {
-      const { access, refresh } = response.data.tokens;
-      localStorage.setItem(STORAGE_KEY, access);
-      localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+      const { access } = response.data.tokens;
+      // Сохраняем только access токен в Redux через заголовок
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${access}`;
     }
     return response;
@@ -76,17 +74,10 @@ apiClient.interceptors.response.use(
     try {
       originalRequest._retry = true;
       
-      // Получаем refresh token из localStorage
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-      if (!refreshToken) {
-        throw new Error('Отсутствует refresh token');
-      }
+      // Используем refreshTokens из authService (без передачи refresh токена)
+      const { access_token } = await refreshTokens(apiClient);
       
-      // Используем refreshTokens из authService
-      const { access_token } = await refreshTokens(apiClient, refreshToken);
-      
-      // Обновляем токен в localStorage и заголовках
-      localStorage.setItem(STORAGE_KEY, access_token);
+      // Обновляем токен в заголовках
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
       

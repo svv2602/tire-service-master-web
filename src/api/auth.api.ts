@@ -32,7 +32,7 @@ interface LoginResponse {
   };
   tokens: {
     access: string;
-    refresh: string;
+    // refresh токен теперь приходит только в куки
   };
   admin_info?: {
     role_permissions: string[];
@@ -69,25 +69,20 @@ export const authApi = baseApi.injectEndpoints({
         url: 'auth/login',
         method: 'POST',
         body: credentials,
+        credentials: 'include', // Важно для получения куки
       }),
-      // Сохраняем токены после успешного входа
+      // Сохраняем только пользователя после успешного входа
       onQueryStarted: async (arg, { queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
           
-          // Сохраняем токены в localStorage (новая структура backend)
-          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.tokens.access);
+          // Сохраняем только данные пользователя
           localStorage.setItem('tvoya_shina_user', JSON.stringify(data.user));
           
-          // Сохраняем refresh token если есть
-          if (data.tokens.refresh) {
-            localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
-          }
-          
-          console.log('✅ Данные аутентификации сохранены в localStorage');
+          console.log('✅ Данные пользователя сохранены в localStorage');
           
         } catch (error) {
-          console.error('❌ Ошибка при сохранении данных аутентификации:', error);
+          console.error('❌ Ошибка при сохранении данных пользователя:', error);
         }
       },
     }),
@@ -97,34 +92,17 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({
         url: 'users/me',
         method: 'GET',
+        credentials: 'include', // Важно для отправки куки
       }),
     }),
 
     // Обновление токена
-    refreshToken: builder.mutation<LoginResponse, { refresh_token: string }>({
-      query: (body) => ({
+    refreshToken: builder.mutation<{ access_token: string }, void>({
+      query: () => ({
         url: 'auth/refresh',
         method: 'POST',
-        body,
+        credentials: 'include', // Важно для отправки и получения куки
       }),
-      // Сохраняем новые токены после обновления
-      onQueryStarted: async (arg, { queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          
-          // Сохраняем новые токены
-          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, data.tokens.access);
-          
-          if (data.tokens.refresh) {
-            localStorage.setItem('tvoya_shina_refresh_token', data.tokens.refresh);
-          }
-          
-          console.log('✅ Токен успешно обновлен');
-          
-        } catch (error) {
-          console.error('❌ Ошибка при обновлении токена:', error);
-        }
-      },
     }),
 
     // Выход из системы
@@ -132,24 +110,21 @@ export const authApi = baseApi.injectEndpoints({
       query: () => ({
         url: 'auth/logout',
         method: 'POST',
+        credentials: 'include', // Важно для отправки куки
       }),
       // Очищаем данные при выходе
       onQueryStarted: async (arg, { queryFulfilled }) => {
         try {
           await queryFulfilled;
           
-          // Очищаем localStorage
-          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
-          localStorage.removeItem('tvoya_shina_refresh_token');
+          // Очищаем только данные пользователя
           localStorage.removeItem('tvoya_shina_user');
           
-          console.log('✅ Данные аутентификации очищены');
+          console.log('✅ Данные пользователя очищены');
           
         } catch (error) {
           console.error('❌ Ошибка при выходе:', error);
-          // Все равно очищаем данные даже при ошибке
-          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
-          localStorage.removeItem('tvoya_shina_refresh_token');
+          // Все равно очищаем данные пользователя даже при ошибке
           localStorage.removeItem('tvoya_shina_user');
         }
       },

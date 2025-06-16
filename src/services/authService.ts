@@ -7,11 +7,9 @@ export const handleLogout = (dispatch: Dispatch) => {
 };
 
 // Функция для обновления токена
-export const refreshTokens = async (apiClient: any, refreshToken: string) => {
+export const refreshTokens = async (apiClient: any) => {
   const response = await apiClient.post('/api/v1/auth/refresh', null, {
-    headers: {
-      'Refresh-Token': refreshToken
-    }
+    withCredentials: true // Важно для отправки куки
   });
   return response.data;
 }; 
