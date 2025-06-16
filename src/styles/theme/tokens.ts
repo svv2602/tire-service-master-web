@@ -337,7 +337,11 @@ export const tokens = {
   typography,
   spacing,
   borderRadius,
-  shadows,
+  shadows: {
+    ...shadows,
+    // Убедимся, что none имеет тип "none"
+    none: 'none' as 'none',
+  },
   transitions,
   zIndex,
   sizes,

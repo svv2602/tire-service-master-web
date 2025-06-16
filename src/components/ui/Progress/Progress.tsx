@@ -20,6 +20,8 @@ export interface ProgressProps {
   thickness?: number;
   /** Показать текст с процентами */
   showLabel?: boolean;
+  /** Показать текст с процентами (алиас для showLabel) */
+  showValue?: boolean;
   /** Текст метки (если не задан, показывается процент) */
   label?: string;
   /** Неопределенный прогресс */
@@ -70,7 +72,7 @@ const LinearProgressLabelContainer = styled(Box)(({ theme }) => ({
  * 
  * @example
  * <Progress variant="circular" value={75} showLabel />
- * <Progress variant="linear" value={50} showLabel color="secondary" />
+ * <Progress variant="linear" value={50} showValue color="secondary" />
  */
 export const Progress: React.FC<ProgressProps> = ({
   variant = 'circular',
@@ -79,6 +81,7 @@ export const Progress: React.FC<ProgressProps> = ({
   size = 40,
   thickness = 3.6,
   showLabel = false,
+  showValue = false,
   label,
   indeterminate = false,
   sx,
@@ -86,6 +89,8 @@ export const Progress: React.FC<ProgressProps> = ({
   const normalizedValue = Math.min(Math.max(value, 0), 100);
   const displayValue = Math.round(normalizedValue);
   const displayLabel = label || `${displayValue}%`;
+  // Используем showLabel или showValue
+  const shouldShowLabel = showLabel || showValue;
 
   if (variant === 'circular') {
     return (
@@ -105,7 +110,7 @@ export const Progress: React.FC<ProgressProps> = ({
               size={size}
               thickness={thickness}
             />
-            {showLabel && (
+            {shouldShowLabel && (
               <CircularProgressLabel>
                 {displayLabel}
               </CircularProgressLabel>
@@ -119,7 +124,7 @@ export const Progress: React.FC<ProgressProps> = ({
 
   return (
     <LinearProgressContainer sx={sx}>
-      {showLabel && (
+      {shouldShowLabel && (
         <LinearProgressLabelContainer>
           <Typography variant="caption" color="text.secondary">
             {label || 'Прогресс'}

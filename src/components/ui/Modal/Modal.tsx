@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
-export interface ModalProps extends Omit<MuiModalProps, 'children'> {
+export interface ModalProps {
   /** Заголовок модального окна */
   title?: React.ReactNode;
   /** Содержимое модального окна */
@@ -23,10 +23,18 @@ export interface ModalProps extends Omit<MuiModalProps, 'children'> {
   onClose?: () => void;
   /** Ширина модального окна */
   width?: number | string;
+  /** Максимальная ширина модального окна */
+  maxWidth?: number | string;
   /** Высота модального окна */
   height?: number | string;
   /** Кастомные стили */
   sx?: Record<string, any>;
+  /** Флаг открытия модального окна */
+  open: boolean;
+  /** Полная ширина */
+  fullWidth?: boolean;
+  /** Остальные свойства MUI Modal */
+  [key: string]: any;
 }
 
 const StyledModalContent = styled(Box)(({ theme }) => ({
@@ -81,6 +89,7 @@ const ModalFooter = styled(Box)(({ theme }) => ({
  *   }
  *   onClose={handleClose}
  *   width={500}
+ *   maxWidth={800}
  * >
  *   <Typography>Содержимое модального окна</Typography>
  * </Modal>
@@ -93,8 +102,10 @@ export const Modal: React.FC<ModalProps> = ({
   showCloseButton = true,
   onClose,
   width = 500,
+  maxWidth,
   height = 'auto',
   sx,
+  fullWidth,
   ...props
 }) => {
   const theme = useTheme();
@@ -113,7 +124,8 @@ export const Modal: React.FC<ModalProps> = ({
     >
       <StyledModalContent
         sx={{
-          width,
+          width: fullWidth ? '100%' : width,
+          maxWidth,
           height,
           ...(sx || {}),
         }}

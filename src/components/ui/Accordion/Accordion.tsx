@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-export interface AccordionProps extends Omit<MuiAccordionProps, 'children'> {
+export interface AccordionProps {
   /** Заголовок аккордеона */
   title: React.ReactNode;
   /** Содержимое аккордеона */
@@ -26,6 +26,8 @@ export interface AccordionProps extends Omit<MuiAccordionProps, 'children'> {
   disabled?: boolean;
   /** Кастомные стили */
   sx?: Record<string, any>;
+  /** Остальные свойства MUI Accordion */
+  [key: string]: any;
 }
 
 const StyledAccordion = styled(MuiAccordion)(({ theme }) => ({

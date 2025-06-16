@@ -93,6 +93,13 @@ const ServicePointDetailsPage = () => {
     skip: !city?.data?.region_id,
   });
 
+  const servicesMap = React.useMemo(() => {
+    if (!allServices?.data) return new Map<number, Service>();
+    return new Map(allServices.data.map((service: Service) => [service.id, service]));
+  }, [allServices?.data]);
+
+  const servicePointServicesData = servicePointServices || [];
+
   if (servicePointLoading || servicesLoading || photosLoading || scheduleLoading || partnerLoading || cityLoading || regionLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -110,13 +117,6 @@ const ServicePointDetailsPage = () => {
       </Box>
     );
   }
-
-  const servicesMap = React.useMemo(() => {
-    if (!allServices?.data) return new Map<number, Service>();
-    return new Map(allServices.data.map((service: Service) => [service.id, service]));
-  }, [allServices]);
-
-  const servicePointServicesData = servicePointServices || [];
 
   return (
     <Box p={3}>
