@@ -21,7 +21,7 @@ export interface Column {
   /** Выравнивание */
   align?: 'left' | 'right' | 'center';
   /** Форматирование значения */
-  format?: (value: any) => string;
+  format?: (value: any) => string | React.ReactNode;
 }
 
 /** Пропсы таблицы */
