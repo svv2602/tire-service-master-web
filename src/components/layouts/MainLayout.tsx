@@ -61,7 +61,7 @@ import { getCurrentUser, logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { User } from '../../types/user';
-import ThemeToggle from '../ThemeToggle';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const drawerWidth = 240;
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button as MuiButton, ButtonProps as MuiButtonProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { THEME_COLORS } from '../../../styles/theme';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Типы вариантов кнопок */
 export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'error' | 'text' | 'contained' | 'outlined';
@@ -40,9 +40,23 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => {
 
   return {
     textTransform: 'none',
-    borderRadius: '8px',
-    fontWeight: 500,
-    padding: '8px 16px',
+    borderRadius: tokens.borderRadius.lg,
+    fontWeight: tokens.typography.fontWeights.medium,
+    padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+    transition: tokens.transitions.duration.normal,
+    
+    // Стили для состояний
+    '&:hover': {
+      boxShadow: tokens.shadows.md,
+    },
+    '&:active': {
+      transform: 'scale(0.98)',
+    },
+    
+    // Стили для disabled состояния
+    '&.Mui-disabled': {
+      opacity: 0.7,
+    },
   };
 });
 

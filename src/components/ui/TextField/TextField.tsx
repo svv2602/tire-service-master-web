@@ -1,7 +1,7 @@
 import React from 'react';
 import { TextField as MuiTextField, TextFieldProps as MuiTextFieldProps } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { ANIMATIONS } from '../../../styles/theme';
+import { tokens } from '../../../styles/theme/tokens';
 
 export type TextFieldProps = MuiTextFieldProps & {
   /** Состояние ошибки */
@@ -16,53 +16,70 @@ export type TextFieldProps = MuiTextFieldProps & {
   fullWidth?: boolean;
 }
 
-const StyledTextField = styled(MuiTextField)(({ theme }) => ({
-  '& .MuiOutlinedInput-root': {
-    transition: ANIMATIONS.transition.medium,
-    backgroundColor: theme.palette.mode === 'dark' 
-      ? 'rgba(255, 255, 255, 0.05)'
-      : 'rgba(0, 0, 0, 0.02)',
+const StyledTextField = styled(MuiTextField)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiOutlinedInput-root': {
+      transition: tokens.transitions.duration.normal,
+      backgroundColor: themeColors.backgroundField,
+      borderRadius: tokens.borderRadius.md,
+      
+      '&:hover': {
+        backgroundColor: themeColors.backgroundHover,
+      },
+      
+      '&.Mui-focused': {
+        backgroundColor: theme.palette.mode === 'dark'
+          ? 'rgba(255, 255, 255, 0.1)'
+          : 'rgba(0, 0, 0, 0.05)',
+      },
+      '&:hover fieldset': {
+        borderColor: tokens.colors.primary.main,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: tokens.colors.primary.main,
+      },
+      '&.Mui-error fieldset': {
+        borderColor: tokens.colors.error.main,
+      }
+    },
     
-    '&:hover': {
-      backgroundColor: theme.palette.mode === 'dark'
-        ? 'rgba(255, 255, 255, 0.08)'
-        : 'rgba(0, 0, 0, 0.04)',
+    '& .MuiOutlinedInput-notchedOutline': {
+      borderColor: themeColors.borderPrimary,
+      borderWidth: '1px',
+      transition: tokens.transitions.duration.normal,
     },
     
-    '&.Mui-focused': {
-      backgroundColor: theme.palette.mode === 'dark'
-        ? 'rgba(255, 255, 255, 0.1)'
-        : 'rgba(0, 0, 0, 0.05)',
+    '& .MuiInputLabel-root': {
+      color: themeColors.textSecondary,
+      fontSize: tokens.typography.fontSize.sm,
+      transition: tokens.transitions.duration.normal,
+      
+      '&.Mui-focused': {
+        color: tokens.colors.primary.main,
+      },
+      '&.Mui-error': {
+        color: tokens.colors.error.main,
+      }
     },
-    '&:hover fieldset': {
-      borderColor: theme.palette.primary.main,
+    
+    '& .MuiInputBase-input': {
+      color: themeColors.textPrimary,
+      fontSize: tokens.typography.fontSize.md,
+      padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
     },
-    '&.Mui-focused fieldset': {
-      borderColor: theme.palette.primary.main,
+    
+    '& .MuiFormHelperText-root': {
+      fontSize: tokens.typography.fontSize.xs,
+      marginTop: tokens.spacing.xs,
+      
+      '&.Mui-error': {
+        color: tokens.colors.error.main,
+      }
     },
-    '&.Mui-error fieldset': {
-      borderColor: theme.palette.error.main,
-    }
-  },
-  
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.1)'
-      : 'rgba(0, 0, 0, 0.1)',
-  },
-  
-  '& .MuiInputLabel-root': {
-    color: theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, 0.7)'
-      : 'rgba(0, 0, 0, 0.7)',
-  },
-  
-  '& .MuiInputBase-input': {
-    color: theme.palette.mode === 'dark'
-      ? '#ffffff'
-      : '#000000',
-  },
-}));
+  };
+});
 
 /**
  * Кастомный компонент текстового поля

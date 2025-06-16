@@ -9,24 +9,29 @@ import {
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { CardProps } from './types';
+import { tokens } from '../../../styles/theme/tokens';
 
 // Стилизованная карточка с поддержкой темной темы
-const StyledCard = styled(MuiCard)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  backgroundColor: theme.palette.mode === 'dark' 
-    ? theme.palette.background.paper 
-    : theme.palette.background.default,
-  borderRadius: theme.shape.borderRadius,
-  transition: theme.transitions.create(['box-shadow', 'transform'], {
-    duration: theme.transitions.duration.standard,
-  }),
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: theme.shadows[4],
-  },
-}));
+const StyledCard = styled(MuiCard)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
+    backgroundColor: themeColors.backgroundCard,
+    borderRadius: tokens.borderRadius.lg,
+    transition: tokens.transitions.duration.normal,
+    border: `1px solid ${themeColors.borderPrimary}`,
+    overflow: 'hidden',
+    
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      boxShadow: tokens.shadows.md,
+      borderColor: themeColors.borderHover,
+    },
+  };
+});
 
 // Стилизованный контент карточки
 const StyledCardContent = styled(CardContent)(({ theme }) => ({
