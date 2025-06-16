@@ -11,8 +11,10 @@ import {
   Typography,
   Box
 } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { tokens } from '../../../styles/theme/tokens';
 
 export interface DropdownItem {
   /** Уникальный идентификатор пункта меню */
@@ -46,6 +48,70 @@ export interface DropdownProps {
   trigger?: React.ReactNode;
 }
 
+// Стилизованное меню
+const StyledMenu = styled(Menu)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    '& .MuiPaper-root': {
+      backgroundColor: themeColors.backgroundPrimary,
+      borderRadius: tokens.borderRadius.md,
+      boxShadow: tokens.shadows.lg,
+      overflow: 'visible',
+      border: `1px solid ${themeColors.borderPrimary}`,
+      marginTop: tokens.spacing.sm,
+      
+      '& .MuiMenuItem-root': {
+        fontFamily: tokens.typography.fontFamily,
+        fontSize: tokens.typography.fontSize.md,
+        padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,
+        borderRadius: tokens.borderRadius.sm,
+        margin: tokens.spacing.xxs,
+        transition: tokens.transitions.duration.fast,
+        
+        '&:hover': {
+          backgroundColor: theme.palette.mode === 'dark' 
+            ? 'rgba(255, 255, 255, 0.08)' 
+            : 'rgba(0, 0, 0, 0.04)',
+        },
+        
+        '&.Mui-disabled': {
+          color: themeColors.textDisabled,
+        },
+        
+        '&.danger': {
+          color: themeColors.error,
+          
+          '& .MuiListItemIcon-root': {
+            color: themeColors.error,
+          },
+          
+          '&:hover': {
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? `${themeColors.errorDark}20` 
+              : `${themeColors.errorLight}40`,
+          },
+        },
+        
+        '& .MuiListItemIcon-root': {
+          color: themeColors.textSecondary,
+          minWidth: '36px',
+        },
+        
+        '& .MuiTypography-root': {
+          fontFamily: tokens.typography.fontFamily,
+          fontSize: tokens.typography.fontSize.md,
+        },
+      },
+      
+      '& .MuiDivider-root': {
+        margin: `${tokens.spacing.xs} 0`,
+        backgroundColor: themeColors.borderPrimary,
+      },
+    },
+  };
+});
+
 /**
  * Компонент выпадающего меню
  * 
@@ -68,6 +134,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -92,6 +160,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <IconButton
           onClick={handleClick}
           size="small"
+          sx={{
+            color: themeColors.textPrimary,
+            transition: tokens.transitions.duration.fast,
+            '&:hover': {
+              backgroundColor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.08)' 
+                : 'rgba(0, 0, 0, 0.04)',
+            },
+            ...buttonProps?.sx,
+          }}
           {...buttonProps}
         >
           <MoreVertIcon />
@@ -100,36 +178,24 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <Button
           onClick={handleClick}
           endIcon={<KeyboardArrowDownIcon />}
+          sx={{
+            fontFamily: tokens.typography.fontFamily,
+            fontSize: tokens.typography.fontSize.md,
+            transition: tokens.transitions.duration.normal,
+            ...buttonProps?.sx,
+          }}
           {...buttonProps}
         >
           {label}
         </Button>
       )}
       
-      <Menu
+      <StyledMenu
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
         onClick={handleClose}
-        PaperProps={{
-          elevation: 0,
-          sx: {
-            overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-            mt: 1.5,
-            '& .MuiMenuItem-root': {
-              px: 2,
-              py: 1,
-              borderRadius: 0.5,
-              '&:hover': {
-                backgroundColor: 'action.hover'
-              }
-            },
-            '& .MuiDivider-root': {
-              my: 1
-            }
-          }
-        }}
+        elevation={0}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         {...menuProps}
@@ -142,15 +208,32 @@ export const Dropdown: React.FC<DropdownProps> = ({
             className={item.danger ? 'danger' : ''}
             divider={item.divider}
           >
-            {item.icon && <ListItemIcon>{item.icon}</ListItemIcon>}
+            {item.icon && (
+              <ListItemIcon 
+                sx={{
+                  color: item.danger ? themeColors.error : themeColors.textSecondary,
+                  minWidth: '36px',
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+            )}
             <ListItemText>
-              <Typography variant="body2">
+              <Typography 
+                variant="body2"
+                sx={{
+                  fontFamily: tokens.typography.fontFamily,
+                  fontSize: tokens.typography.fontSize.md,
+                  fontWeight: tokens.typography.fontWeight.medium,
+                  color: item.danger ? themeColors.error : 'inherit',
+                }}
+              >
                 {item.label}
               </Typography>
             </ListItemText>
           </MenuItem>
         ))}
-      </Menu>
+      </StyledMenu>
     </>
   );
 };

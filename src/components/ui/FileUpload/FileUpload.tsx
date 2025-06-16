@@ -1,8 +1,75 @@
 import React, { useCallback, useState, useRef } from 'react';
 import { Box, Typography, LinearProgress, IconButton } from '@mui/material';
+import { styled, useTheme } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FileUploadProps, FileInfo, FileUploadStatus } from './types';
+import { tokens } from '../../../styles/theme/tokens';
+
+// Стилизованные компоненты
+const UploadBox = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    border: '2px dashed',
+    borderColor: themeColors.borderPrimary,
+    borderRadius: tokens.borderRadius.md,
+    padding: tokens.spacing.lg,
+    textAlign: 'center',
+    cursor: 'pointer',
+    backgroundColor: themeColors.backgroundPrimary,
+    transition: `all ${tokens.transitions.duration.fast} ${tokens.transitions.easing.easeInOut}`,
+    
+    '&:hover': {
+      borderColor: themeColors.primary,
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.05)' 
+        : 'rgba(0, 0, 0, 0.02)',
+    },
+    
+    '&.dragActive': {
+      borderColor: themeColors.primary,
+      backgroundColor: theme.palette.mode === 'dark' 
+        ? 'rgba(255, 255, 255, 0.08)' 
+        : 'rgba(0, 0, 0, 0.04)',
+    },
+  };
+});
+
+const FileItem = styled(Box)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    marginTop: tokens.spacing.md,
+    padding: tokens.spacing.md,
+    border: '1px solid',
+    borderColor: themeColors.borderPrimary,
+    borderRadius: tokens.borderRadius.md,
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacing.md,
+    backgroundColor: themeColors.backgroundSecondary,
+    transition: tokens.transitions.duration.normal,
+  };
+});
+
+const StyledLinearProgress = styled(LinearProgress)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    marginTop: tokens.spacing.sm,
+    height: 6,
+    borderRadius: tokens.borderRadius.pill,
+    backgroundColor: theme.palette.mode === 'dark' 
+      ? 'rgba(255, 255, 255, 0.1)' 
+      : 'rgba(0, 0, 0, 0.1)',
+    
+    '& .MuiLinearProgress-bar': {
+      borderRadius: tokens.borderRadius.pill,
+      backgroundColor: themeColors.primary,
+    },
+  };
+});
 
 /**
  * Компонент FileUpload - для загрузки файлов с поддержкой drag&drop
@@ -21,6 +88,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
 
   /**
    * Проверка файла на соответствие ограничениям
@@ -113,22 +182,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <Box sx={{ width: '100%', ...sx }}>
       {/* Зона для перетаскивания */}
-      <Box
+      <UploadBox
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        sx={{
-          border: '2px dashed',
-          borderColor: dragActive ? 'primary.main' : 'grey.300',
-          borderRadius: 1,
-          p: 3,
-          textAlign: 'center',
-          cursor: 'pointer',
-          bgcolor: dragActive ? 'action.hover' : 'background.paper',
-          transition: 'all 0.2s ease',
-        }}
+        className={dragActive ? 'dragActive' : ''}
       >
         <input
           ref={inputRef}
@@ -138,51 +198,91 @@ const FileUpload: React.FC<FileUploadProps> = ({
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
           style={{ display: 'none' }}
         />
-        <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 1 }} />
-        <Typography variant="body1">{dropzoneText}</Typography>
+        <CloudUploadIcon 
+          sx={{ 
+            fontSize: 48, 
+            color: themeColors.primary, 
+            mb: tokens.spacing.sm,
+            transition: tokens.transitions.duration.normal,
+          }} 
+        />
+        <Typography 
+          variant="body1"
+          sx={{
+            fontFamily: tokens.typography.fontFamily,
+            fontSize: tokens.typography.fontSize.md,
+            fontWeight: tokens.typography.fontWeight.medium,
+            color: themeColors.textPrimary,
+            mb: tokens.spacing.xs,
+          }}
+        >
+          {dropzoneText}
+        </Typography>
         {accept && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography 
+            variant="caption" 
+            sx={{
+              fontFamily: tokens.typography.fontFamily,
+              fontSize: tokens.typography.fontSize.sm,
+              color: themeColors.textSecondary,
+            }}
+          >
             Поддерживаемые форматы: {accept}
           </Typography>
         )}
-      </Box>
+      </UploadBox>
 
       {/* Список файлов */}
       {files.map((file, index) => (
-        <Box
+        <FileItem
           key={`${file.name}-${index}`}
-          sx={{
-            mt: 2,
-            p: 2,
-            border: '1px solid',
-            borderColor: 'grey.200',
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2,
-          }}
         >
           <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="subtitle2" noWrap>{file.name}</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography 
+              variant="subtitle2" 
+              noWrap
+              sx={{
+                fontFamily: tokens.typography.fontFamily,
+                fontSize: tokens.typography.fontSize.md,
+                fontWeight: tokens.typography.fontWeight.medium,
+                color: themeColors.textPrimary,
+              }}
+            >
+              {file.name}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{
+                fontFamily: tokens.typography.fontFamily,
+                fontSize: tokens.typography.fontSize.sm,
+                color: themeColors.textSecondary,
+              }}
+            >
               {(file.size / 1024).toFixed(1)} KB
             </Typography>
             {status === 'uploading' && (
-              <LinearProgress
+              <StyledLinearProgress
                 variant="determinate"
                 value={file.progress}
-                sx={{ mt: 1 }}
               />
             )}
           </Box>
           <IconButton
             size="small"
             onClick={() => handleDelete(index)}
-            sx={{ color: 'error.main' }}
+            sx={{ 
+              color: themeColors.error,
+              transition: tokens.transitions.duration.fast,
+              '&:hover': {
+                backgroundColor: theme.palette.mode === 'dark' 
+                  ? `${themeColors.errorDark}20` 
+                  : `${themeColors.errorLight}40`,
+              },
+            }}
           >
             <DeleteIcon />
           </IconButton>
-        </Box>
+        </FileItem>
       ))}
     </Box>
   );
