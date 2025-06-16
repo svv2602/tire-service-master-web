@@ -7,8 +7,10 @@ import {
   RadioGroup,
   FormControl,
   FormLabel,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Опция для радио группы */
 export interface RadioOption {
@@ -38,17 +40,96 @@ export interface RadioProps extends Omit<MuiRadioProps, 'onChange'> {
   row?: boolean;
 }
 
-const StyledFormControl = styled(FormControl)(({ theme }) => ({
-  '& .MuiFormLabel-root': {
-    marginBottom: theme.spacing(1),
-  },
-  '& .MuiRadio-root': {
-    padding: theme.spacing(0.5),
+// Стилизованный компонент FormControl
+const StyledFormControl = styled(FormControl)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    marginBottom: tokens.spacing.md,
+    
+    '& .MuiFormLabel-root': {
+      marginBottom: tokens.spacing.sm,
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textSecondary,
+      
+      '&.Mui-focused': {
+        color: themeColors.primary,
+      },
+      
+      '&.Mui-error': {
+        color: themeColors.error,
+      },
+    },
+  };
+});
+
+// Стилизованный компонент Radio
+const StyledRadio = styled(MuiRadio)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    padding: tokens.spacing.xs,
+    transition: tokens.transitions.duration.normal,
+    
     '&:hover': {
       backgroundColor: 'transparent',
     },
-  },
-}));
+    
+    '&.Mui-checked': {
+      color: themeColors.primary,
+    },
+    
+    '&.MuiRadio-colorPrimary.Mui-checked': {
+      color: themeColors.primary,
+    },
+    
+    '&.MuiRadio-colorSecondary.Mui-checked': {
+      color: theme.palette.secondary.main,
+    },
+    
+    '&.MuiRadio-colorError.Mui-checked': {
+      color: themeColors.error,
+    },
+    
+    '&.MuiRadio-colorWarning.Mui-checked': {
+      color: theme.palette.warning.main,
+    },
+    
+    '&.MuiRadio-colorInfo.Mui-checked': {
+      color: theme.palette.info.main,
+    },
+    
+    '&.MuiRadio-colorSuccess.Mui-checked': {
+      color: theme.palette.success.main,
+    },
+  };
+});
+
+// Стилизованный компонент FormControlLabel
+const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    margin: 0,
+    marginRight: tokens.spacing.md,
+    marginBottom: tokens.spacing.sm,
+    userSelect: 'none',
+    
+    '& .MuiFormControlLabel-label': {
+      fontSize: tokens.typography.fontSize.sm,
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textPrimary,
+    },
+    
+    '&.Mui-disabled': {
+      '& .MuiFormControlLabel-label': {
+        color: themeColors.textSecondary,
+        opacity: 0.6,
+      },
+    },
+  };
+});
 
 /**
  * Компонент радио-кнопок
@@ -74,6 +155,9 @@ export const Radio: React.FC<RadioProps> = ({
   row = false,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(event.target.value);
   };
@@ -85,13 +169,16 @@ export const Radio: React.FC<RadioProps> = ({
         value={value}
         onChange={handleChange}
         row={row}
+        sx={{
+          gap: tokens.spacing.xs,
+        }}
       >
         {options.map((option) => (
-          <FormControlLabel
+          <StyledFormControlLabel
             key={option.value}
             value={option.value}
             control={
-              <MuiRadio
+              <StyledRadio
                 size={size}
                 color={color}
                 {...props}

@@ -4,8 +4,10 @@ import {
   SwitchProps as MuiSwitchProps,
   FormControlLabel,
   FormControlLabelProps,
-  styled
+  styled,
+  useTheme
 } from '@mui/material';
+import { tokens } from '../../../styles/theme/tokens';
 
 /** Пропсы переключателя */
 export interface SwitchProps extends Omit<MuiSwitchProps, 'size'> {
@@ -27,6 +29,8 @@ export interface SwitchProps extends Omit<MuiSwitchProps, 'size'> {
 
 /** Стилизованный переключатель */
 const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'large' }>(({ theme, customSize = 'medium' }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const sizes = {
     small: {
       width: 34,
@@ -59,11 +63,12 @@ const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'larg
     padding: size.padding,
     '& .MuiSwitch-switchBase': {
       padding: 2,
+      transition: tokens.transitions.duration.normal,
       '&.Mui-checked': {
         transform: `translateX(${size.width - size.thumbSize - 4}px)`,
         color: '#fff',
         '& + .MuiSwitch-track': {
-          backgroundColor: theme.palette.primary.main,
+          backgroundColor: themeColors.primary,
           opacity: 1,
           border: 0,
         },
@@ -72,32 +77,52 @@ const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'larg
         },
       },
       '&.Mui-focusVisible .MuiSwitch-thumb': {
-        color: theme.palette.primary.main,
-        border: `6px solid #fff`,
+        color: themeColors.primary,
+        border: `6px solid ${themeColors.backgroundPrimary}`,
       },
       '&.Mui-disabled .MuiSwitch-thumb': {
-        color: theme.palette.grey[400],
+        color: theme.palette.mode === 'dark' ? themeColors.borderPrimary : theme.palette.grey[400],
       },
       '&.Mui-disabled + .MuiSwitch-track': {
-        opacity: 0.3,
+        opacity: theme.palette.mode === 'dark' ? 0.4 : 0.3,
       },
     },
     '& .MuiSwitch-thumb': {
       boxSizing: 'border-box',
       width: size.thumbSize,
       height: size.thumbSize,
-      boxShadow: theme.shadows[2],
-      transition: theme.transitions.create(['transform'], {
-        duration: theme.transitions.duration.shorter,
-      }),
+      boxShadow: tokens.shadows.sm,
+      transition: tokens.transitions.duration.normal,
     },
     '& .MuiSwitch-track': {
       borderRadius: size.trackHeight / 2,
-      backgroundColor: theme.palette.grey[400],
+      backgroundColor: theme.palette.mode === 'dark' ? themeColors.borderPrimary : theme.palette.grey[400],
       opacity: 1,
-      transition: theme.transitions.create(['background-color'], {
-        duration: theme.transitions.duration.shorter,
-      }),
+      transition: tokens.transitions.duration.normal,
+    },
+  };
+});
+
+/** Стилизованный компонент FormControlLabel */
+const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => {
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
+  return {
+    margin: 0,
+    marginRight: tokens.spacing.md,
+    userSelect: 'none',
+    
+    '& .MuiFormControlLabel-label': {
+      fontFamily: tokens.typography.fontFamily,
+      color: themeColors.textPrimary,
+      transition: tokens.transitions.duration.normal,
+    },
+    
+    '&.Mui-disabled': {
+      '& .MuiFormControlLabel-label': {
+        color: themeColors.textSecondary,
+        opacity: 0.6,
+      },
     },
   };
 });
@@ -122,6 +147,9 @@ export const Switch: React.FC<SwitchProps> = ({
   onChange,
   ...props
 }) => {
+  const theme = useTheme();
+  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  
   const switchElement = (
     <StyledSwitch
       customSize={size}
@@ -135,16 +163,16 @@ export const Switch: React.FC<SwitchProps> = ({
 
   if (label) {
     return (
-      <FormControlLabel
+      <StyledFormControlLabel
         control={switchElement}
         label={label}
         labelPlacement={labelPlacement}
         disabled={disabled}
         sx={{
-          margin: 0,
           '& .MuiFormControlLabel-label': {
-            fontSize: size === 'small' ? '0.75rem' : size === 'large' ? '1rem' : '0.875rem',
-            color: disabled ? 'text.disabled' : 'text.primary',
+            fontSize: size === 'small' ? tokens.typography.fontSize.xs : 
+                    size === 'large' ? tokens.typography.fontSize.md : 
+                    tokens.typography.fontSize.sm,
           },
         }}
       />
