@@ -33,4 +33,10 @@ export { default as SliderSection } from './SliderSection';
 export { default as ColorSection } from './ColorSection';
 export { default as SkeletonSection } from './SkeletonSection';
 export { default as TabsSection } from './TabsSection';
-export { default as NotificationSection } from './NotificationSection'; 
+export { default as NotificationSection } from './NotificationSection';
+
+// Новые компоненты
+export { default as AvatarSection } from './AvatarSection';
+export { default as GridSection } from './GridSection';
+export { default as TypographySection } from './TypographySection';
+export { default as DividerSection } from './DividerSection';

@@ -1,42 +1,61 @@
 import React from 'react';
 import { Container, Typography, Box, Divider } from '@mui/material';
 import {
+  // Основы дизайна
+  ThemeSection,
+  ColorSection,
+  TypographySection,
+  
+  // Элементы ввода
   ButtonSection,
   TextFieldSection,
-  ChipSection,
-  PaginationSection,
-  BreadcrumbsSection,
-  ProgressSection,
-  TableSection,
-  DropdownSection,
-  AlertSection,
-  ModalSection,
-  TooltipSection,
   CheckboxSection,
   RadioSection,
   SelectSection,
   SwitchSection,
-  ThemeSection,
-  DatePickerSection,
-  AccordionSection,
-  StepperSection,
-  FilterSection,
-  ScrollbarSection,
-  AppBarSection,
-  CardSection,
-  DrawerSection,
-  TimePickerSection,
+  SliderSection,
   AutoCompleteSection,
   FileUploadSection,
-  SpeedDialSection,
-  PaperSection,
-  BadgeSection,
-  RatingSection,
-  SliderSection,
-  ColorSection,
-  SkeletonSection,
+  
+  // Элементы даты и времени
+  DatePickerSection,
+  TimePickerSection,
+  
+  // Навигация
+  AppBarSection,
+  DrawerSection,
   TabsSection,
-  NotificationSection
+  BreadcrumbsSection,
+  PaginationSection,
+  StepperSection,
+  
+  // Отображение данных
+  TableSection,
+  ChipSection,
+  BadgeSection,
+  AvatarSection,
+  RatingSection,
+  ProgressSection,
+  
+  // Компоновка и структура
+  GridSection,
+  PaperSection,
+  CardSection,
+  AccordionSection,
+  DividerSection,
+  
+  // Обратная связь
+  AlertSection,
+  NotificationSection,
+  TooltipSection,
+  ModalSection,
+  SkeletonSection,
+  
+  // Утилитарные компоненты
+  FilterSection,
+  SpeedDialSection,
+  ScrollbarSection,
+  DropdownSection
 } from './sections';
 
 // Интерфейс для описания секции
@@ -48,64 +67,83 @@ interface StyleGuideSection {
 // Конфигурация всех секций с группировкой
 const sectionGroups = [
   {
-    groupTitle: 'Тема оформления',
+    groupTitle: 'Основы дизайна',
     sections: [
       { title: 'Тема', component: ThemeSection },
-      { title: 'Цвета', component: ColorSection }
+      { title: 'Цвета', component: ColorSection },
+      { title: 'Типография', component: TypographySection }
     ]
   },
   {
-    groupTitle: 'Основные компоненты',
+    groupTitle: 'Элементы ввода',
     sections: [
       { title: 'Кнопки', component: ButtonSection },
       { title: 'Текстовые поля', component: TextFieldSection },
-      { title: 'Чипы', component: ChipSection },
-      { title: 'Пагинация', component: PaginationSection },
-      { title: 'Хлебные крошки', component: BreadcrumbsSection },
-      { title: 'Прогресс', component: ProgressSection },
       { title: 'Чекбоксы', component: CheckboxSection },
       { title: 'Радиокнопки', component: RadioSection },
       { title: 'Селект', component: SelectSection },
       { title: 'Переключатели', component: SwitchSection },
-      { title: 'Выбор даты', component: DatePickerSection },
-      { title: 'Выбор времени', component: TimePickerSection },
-      { title: 'Загрузка файлов', component: FileUploadSection },
+      { title: 'Слайдер', component: SliderSection },
       { title: 'Автодополнение', component: AutoCompleteSection },
-      { title: 'Слайдер', component: SliderSection }
+      { title: 'Загрузка файлов', component: FileUploadSection }
     ]
   },
   {
-    groupTitle: 'Навигация и отображение данных',
+    groupTitle: 'Элементы даты и времени',
+    sections: [
+      { title: 'Выбор даты', component: DatePickerSection },
+      { title: 'Выбор времени', component: TimePickerSection }
+    ]
+  },
+  {
+    groupTitle: 'Навигация',
     sections: [
       { title: 'Панель приложения', component: AppBarSection },
       { title: 'Боковая панель', component: DrawerSection },
       { title: 'Вкладки', component: TabsSection },
-      { title: 'Выпадающее меню', component: DropdownSection },
+      { title: 'Хлебные крошки', component: BreadcrumbsSection },
+      { title: 'Пагинация', component: PaginationSection },
+      { title: 'Степпер', component: StepperSection }
+    ]
+  },
+  {
+    groupTitle: 'Отображение данных',
+    sections: [
       { title: 'Таблицы', component: TableSection },
-      { title: 'Аккордеон', component: AccordionSection },
-      { title: 'Степпер', component: StepperSection },
-      { title: 'Скроллбар', component: ScrollbarSection }
-    ]
-  },
-  {
-    groupTitle: 'Контейнеры и карточки',
-    sections: [
-      { title: 'Карточки', component: CardSection },
-      { title: 'Бумага', component: PaperSection }
-    ]
-  },
-  {
-    groupTitle: 'Вспомогательные компоненты',
-    sections: [
+      { title: 'Чипы', component: ChipSection },
       { title: 'Значки', component: BadgeSection },
-      { title: 'Быстрый набор', component: SpeedDialSection },
+      { title: 'Аватары', component: AvatarSection },
       { title: 'Рейтинг', component: RatingSection },
-      { title: 'Подсказки', component: TooltipSection },
+      { title: 'Прогресс', component: ProgressSection }
+    ]
+  },
+  {
+    groupTitle: 'Компоновка и структура',
+    sections: [
+      { title: 'Сетка', component: GridSection },
+      { title: 'Бумага', component: PaperSection },
+      { title: 'Карточки', component: CardSection },
+      { title: 'Аккордеон', component: AccordionSection },
+      { title: 'Разделители', component: DividerSection }
+    ]
+  },
+  {
+    groupTitle: 'Обратная связь',
+    sections: [
       { title: 'Уведомления', component: AlertSection },
       { title: 'Нотификации', component: NotificationSection },
+      { title: 'Подсказки', component: TooltipSection },
       { title: 'Модальные окна', component: ModalSection },
-      { title: 'Фильтры', component: FilterSection },
       { title: 'Скелетон', component: SkeletonSection }
+    ]
+  },
+  {
+    groupTitle: 'Утилитарные компоненты',
+    sections: [
+      { title: 'Фильтры', component: FilterSection },
+      { title: 'Быстрый набор', component: SpeedDialSection },
+      { title: 'Скроллбар', component: ScrollbarSection },
+      { title: 'Выпадающее меню', component: DropdownSection }
     ]
   }
 ];
@@ -153,29 +191,6 @@ const StyleGuide: React.FC = () => {
           )}
         </Box>
       ))}
-
-      {/* Типография как отдельная секция */}
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-          Типография
-        </Typography>
-        <Box sx={{ '& > *': { mb: 2 } }}>
-          <Typography variant="h1" gutterBottom>H1 Заголовок</Typography>
-          <Typography variant="h2" gutterBottom>H2 Заголовок</Typography>
-          <Typography variant="h3" gutterBottom>H3 Заголовок</Typography>
-          <Typography variant="h4" gutterBottom>H4 Заголовок</Typography>
-          <Typography variant="h5" gutterBottom>H5 Заголовок</Typography>
-          <Typography variant="h6" gutterBottom>H6 Заголовок</Typography>
-          <Typography variant="body1" gutterBottom>
-            Body 1. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-            Quos blanditiis tenetur unde suscipit.
-          </Typography>
-          <Typography variant="body2" gutterBottom>
-            Body 2. Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-            Quos blanditiis tenetur unde suscipit.
-          </Typography>
-        </Box>
-      </Box>
     </Container>
   );
 };
