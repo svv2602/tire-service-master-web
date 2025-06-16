@@ -159,10 +159,13 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
   async ({ email, password }) => {
     try {
       console.log('Sending login request:', { email, password: '***' });
+      console.log('DEBUG: Using direct axios call to avoid double-click issue');
       
       // Используем чистый axios без интерцепторов для авторизации
       // чтобы избежать проблемы с двойным нажатием
       const API_URL = `${config.API_URL}${config.API_PREFIX}`;
+      console.log('DEBUG: API_URL =', API_URL);
+      
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/login`, 
         { email, password },
@@ -191,9 +194,31 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
 );
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-  // Отправляем запрос к API для выхода из системы
-  await apiClient.post('/auth/logout');
-  return;
+  try {
+    console.log('DEBUG: Sending logout request with direct axios call');
+    const API_URL = `${config.API_URL}${config.API_PREFIX}`;
+    
+    // Используем чистый axios без интерцепторов для выхода
+    // так же как и для входа, чтобы избежать проблем с cookies
+    await axios.post(
+      `${API_URL}/auth/logout`,
+      {},
+      { 
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+    
+    console.log('DEBUG: Logout successful, removing local storage items');
+    localStorage.removeItem(USER_STORAGE_KEY);
+    
+    return;
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Даже если запрос не удался, очищаем локальное хранилище
+    localStorage.removeItem(USER_STORAGE_KEY);
+    return;
+  }
 });
 
 export const getCurrentUser = createAsyncThunk(
