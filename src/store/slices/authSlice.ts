@@ -5,7 +5,7 @@ import { AuthState, AuthTokens, LoginResponse } from '../../types/auth';
 import { useLoginMutation } from '../../api/auth.api';
 import { store } from '../store';
 import { UserRole } from '../../types';
-
+import axios from 'axios';
 import config from '../../config';
 
 const USER_STORAGE_KEY = 'tvoya_shina_user';
@@ -160,8 +160,18 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
     try {
       console.log('Sending login request:', { email, password: '***' });
       
-      // Исправляем путь для запроса авторизации
-      const response = await apiClient.post<LoginResponse>('/auth/login', { email, password });
+      // Используем чистый axios без интерцепторов для авторизации
+      // чтобы избежать проблемы с двойным нажатием
+      const API_URL = `${config.API_URL}${config.API_PREFIX}`;
+      const response = await axios.post<LoginResponse>(
+        `${API_URL}/auth/login`, 
+        { email, password },
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
       console.log('Login response:', JSON.stringify(response.data, null, 2));
       
       const { tokens, user } = response.data;
