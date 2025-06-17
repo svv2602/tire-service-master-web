@@ -6,7 +6,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Alert,
   FormControl,
@@ -25,8 +24,7 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
-  Pagination,
-  useTheme, // Добавлен импорт для темы
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -46,25 +44,29 @@ import {
   useToggleServiceCategoryActiveMutation,
 } from '../../api/serviceCategories.api';
 import { ServiceCategoryData } from '../../types/service';
+import { Pagination } from '../../components/ui';
 import Notification from '../../components/Notification';
-// Импорты централизованной системы стилей
-import { SIZES } from '../../styles/theme';
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getChipStyles
-} from '../../styles/components';
 
+// Импорт централизованной системы стилей
+import { getTablePageStyles, SIZES } from '../../styles';
+
+/**
+ * Страница управления категориями услуг
+ * 
+ * Функциональность:
+ * - Отображение категорий услуг в карточном виде
+ * - Поиск и фильтрация по статусу активности
+ * - Создание, редактирование и удаление категорий
+ * - Переключение статуса активности
+ * - Пагинация результатов
+ * - Централизованная система стилей для консистентного UI
+ */
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Получение темы и централизованных стилей
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const chipStyles = getChipStyles(theme) as any;
+  
+  // Централизованная система стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -103,16 +105,6 @@ const ServicesPage: React.FC = () => {
   const categories = categoriesData?.data || [];
   const totalPages = categoriesData?.pagination?.total_pages || 0;
 
-  // Отладочная информация (только в режиме разработки)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 ServicesPage Debug Info:');
-    console.log('📊 Categories Data:', categoriesData);
-    console.log('🔢 Categories Count:', categories.length);
-    console.log('📋 Categories:', categories);
-    console.log('⚠️ Error:', error);
-    console.log('⏳ Loading:', isLoading);
-  }
-
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -124,8 +116,8 @@ const ServicesPage: React.FC = () => {
     setPage(1);
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const handleDeleteClick = (category: { id: number; name: string }) => {
@@ -192,80 +184,68 @@ const ServicesPage: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  // Показываем индикатор загрузки
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: SIZES.spacing.lg }}>
-      {/* Заголовок */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: SIZES.spacing.md 
-      }}>
-        <Typography 
-          sx={{ 
-            fontSize: SIZES.fontSize.xl, 
-            fontWeight: 600,
-            color: theme.palette.text.primary
-          }}
-        >
+    <Box sx={tablePageStyles.container}>
+      {/* Заголовок с кнопкой добавления */}
+      <Box sx={tablePageStyles.headerContainer}>
+        <Typography variant="h4" sx={tablePageStyles.title}>
           Категории услуг
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/services/new')}
-          sx={buttonStyles}
+          sx={tablePageStyles.primaryButton}
         >
           Добавить категорию
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ ...cardStyles, p: SIZES.spacing.md, mb: SIZES.spacing.md }}>
-        <Box sx={{ display: 'flex', gap: SIZES.spacing.md, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField
-            placeholder="Поиск по названию категории"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearchChange}
-            sx={{ ...textFieldStyles, minWidth: 300 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <FormControl size="small" sx={{ ...textFieldStyles, minWidth: 120 }}>
-            <InputLabel>Статус</InputLabel>
-            <Select
-              value={activeFilter}
-              onChange={handleActiveFilterChange}
-              label="Статус"
-            >
-              <MenuItem value="">Все</MenuItem>
-              <MenuItem value="true">Активные</MenuItem>
-              <MenuItem value="false">Неактивные</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-      </Paper>
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по названию категории"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          sx={tablePageStyles.searchField}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <FormControl size="small" sx={tablePageStyles.filterSelect}>
+          <InputLabel>Статус</InputLabel>
+          <Select
+            value={activeFilter}
+            onChange={handleActiveFilterChange}
+            label="Статус"
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="true">Активные</MenuItem>
+            <MenuItem value="false">Неактивные</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Сообщения об ошибках */}
       {error && (
-        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
-          Произошла ошибка: {error.toString()}
+        <Alert severity="error" sx={tablePageStyles.errorAlert}>
+          Произошла ошибка при загрузке категорий
         </Alert>
       )}
 
@@ -275,38 +255,43 @@ const ServicesPage: React.FC = () => {
           <Grid item xs={12} sm={6} md={4} key={category.id}>
             <Card
               sx={{
-                ...cardStyles,
+                ...tablePageStyles.card,
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                opacity: category.is_active ? 1 : 0.8,
-                position: 'relative',
+                opacity: category.is_active ? 1 : 0.7,
                 transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  boxShadow: theme.shadows[3],
+                  boxShadow: theme.shadows[4],
                   transform: 'translateY(-2px)'
                 }
               }}
             >
               <CardContent sx={{ flexGrow: 1, p: SIZES.spacing.md }}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: SIZES.spacing.sm, mb: SIZES.spacing.sm }}>
-                  <CategoryIcon sx={{ mt: 0.5, color: theme.palette.primary.main }} />
+                {/* Заголовок с иконкой */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start', 
+                  gap: SIZES.spacing.sm, 
+                  mb: SIZES.spacing.sm 
+                }}>
+                  <CategoryIcon sx={{ 
+                    mt: 0.5, 
+                    color: theme.palette.primary.main,
+                    fontSize: SIZES.fontSize.lg
+                  }} />
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography 
-                      sx={{ 
-                        fontSize: SIZES.fontSize.lg, 
-                        fontWeight: 500, 
-                        mb: SIZES.spacing.xs,
-                        color: theme.palette.text.primary
-                      }}
+                      variant="h6"
+                      sx={tablePageStyles.cardTitle}
                     >
                       {category.name}
                     </Typography>
                     {category.description && (
                       <Typography
+                        variant="body2"
                         sx={{
-                          fontSize: SIZES.fontSize.md,
-                          color: theme.palette.text.secondary,
+                          ...tablePageStyles.cardDescription,
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical',
@@ -319,34 +304,48 @@ const ServicesPage: React.FC = () => {
                   </Box>
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs, mt: SIZES.spacing.sm }}>
+                {/* Статус и метрики */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: SIZES.spacing.xs, 
+                  mt: SIZES.spacing.sm,
+                  flexWrap: 'wrap'
+                }}>
                   <Chip 
                     label={category.is_active ? 'Активна' : 'Неактивна'}
                     color={category.is_active ? 'success' : 'default'}
                     size="small"
-                    sx={category.is_active ? chipStyles.success : chipStyles.error}
+                    sx={tablePageStyles.statusChip}
                   />
                   {category.services_count !== undefined && (
                     <Tooltip title="Количество услуг">
                       <Chip
-                        icon={<FormatListNumberedIcon />}
+                        icon={<FormatListNumberedIcon sx={{ fontSize: '16px !important' }} />}
                         label={category.services_count}
                         size="small"
                         variant="outlined"
-                        sx={{ ...chipStyles.info, variant: 'outlined' }}
+                        sx={tablePageStyles.metricChip}
                       />
                     </Tooltip>
                   )}
                 </Box>
 
+                {/* Дата создания */}
                 {category.created_at && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs, mt: SIZES.spacing.sm }}>
-                    <CalendarTodayIcon fontSize="small" color="action" />
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: SIZES.spacing.xs, 
+                    mt: SIZES.spacing.sm 
+                  }}>
+                    <CalendarTodayIcon 
+                      fontSize="small" 
+                      sx={{ color: theme.palette.text.secondary }}
+                    />
                     <Typography 
-                      sx={{ 
-                        fontSize: SIZES.fontSize.sm,
-                        color: theme.palette.text.secondary
-                      }}
+                      variant="caption"
+                      sx={tablePageStyles.dateText}
                     >
                       {new Date(category.created_at).toLocaleDateString('ru-RU', {
                         day: '2-digit',
@@ -358,48 +357,54 @@ const ServicesPage: React.FC = () => {
                 )}
               </CardContent>
 
-              <CardActions sx={{ justifyContent: 'space-between', p: SIZES.spacing.sm, pt: 0 }}>
-                <Box>
-                  <Tooltip title="Редактировать">
-                    <IconButton 
-                      size="small"
-                      onClick={() => navigate(`/services/${category.id}/edit`)}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: `${theme.palette.primary.main}15`
-                        }
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Удалить">
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleDeleteClick(category)}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: `${theme.palette.error.main}15`
-                        }
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title={category.is_active ? "Деактивировать" : "Активировать"}>
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleToggleActive(category.id, category.is_active)}
-                      sx={{
-                        '&:hover': {
-                          backgroundColor: `${theme.palette.info.main}15`
-                        }
-                      }}
-                    >
-                      {category.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+              {/* Действия */}
+              <CardActions sx={{ 
+                justifyContent: 'flex-start', 
+                p: SIZES.spacing.sm, 
+                pt: 0,
+                gap: SIZES.spacing.xs
+              }}>
+                <Tooltip title="Редактировать">
+                  <IconButton 
+                    size="small"
+                    onClick={() => navigate(`/services/${category.id}/edit`)}
+                    sx={tablePageStyles.actionButton}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Удалить">
+                  <IconButton 
+                    size="small"
+                    onClick={() => handleDeleteClick(category)}
+                    sx={{
+                      ...tablePageStyles.actionButton,
+                      '&:hover': {
+                        backgroundColor: `${theme.palette.error.main}15`,
+                        color: theme.palette.error.main
+                      }
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={category.is_active ? "Деактивировать" : "Активировать"}>
+                  <IconButton 
+                    size="small"
+                    onClick={() => handleToggleActive(category.id, category.is_active)}
+                    sx={{
+                      ...tablePageStyles.actionButton,
+                      color: category.is_active ? theme.palette.warning.main : theme.palette.success.main,
+                      '&:hover': {
+                        backgroundColor: category.is_active 
+                          ? `${theme.palette.warning.main}15`
+                          : `${theme.palette.success.main}15`
+                      }
+                    }}
+                  >
+                    {category.is_active ? <ToggleOffIcon fontSize="small" /> : <ToggleOnIcon fontSize="small" />}
+                  </IconButton>
+                </Tooltip>
               </CardActions>
             </Card>
           </Grid>
@@ -408,36 +413,12 @@ const ServicesPage: React.FC = () => {
 
       {/* Пустое состояние */}
       {categories.length === 0 && !isLoading && (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          py={SIZES.spacing.xl}
-          sx={{
-            ...cardStyles,
-            mt: SIZES.spacing.md,
-            minHeight: '200px'
-          }}
-        >
-          <CategoryIcon sx={{ fontSize: 64, color: 'text.secondary', mb: SIZES.spacing.md }} />
-          <Typography 
-            sx={{ 
-              fontSize: SIZES.fontSize.lg, 
-              fontWeight: 500,
-              mb: SIZES.spacing.sm 
-            }}
-          >
+        <Box sx={tablePageStyles.emptyStateContainer}>
+          <CategoryIcon sx={tablePageStyles.emptyStateIcon} />
+          <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
             {search || activeFilter !== '' ? 'Категории не найдены' : 'Нет категорий услуг'}
           </Typography>
-          <Typography 
-            sx={{ 
-              fontSize: SIZES.fontSize.md,
-              color: theme.palette.text.secondary,
-              textAlign: 'center',
-              mb: SIZES.spacing.md
-            }}
-          >
+          <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
             {search || activeFilter !== '' 
               ? 'Попробуйте изменить критерии поиска'
               : 'Создайте первую категорию услуг для начала работы'
@@ -448,7 +429,7 @@ const ServicesPage: React.FC = () => {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => navigate('/services/new')}
-              sx={buttonStyles}
+              sx={tablePageStyles.primaryButton}
             >
               Добавить категорию
             </Button>
@@ -458,25 +439,13 @@ const ServicesPage: React.FC = () => {
 
       {/* Пагинация */}
       {totalPages > 1 && (
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          mt={SIZES.spacing.lg}
-        >
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
             size="large"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                fontSize: SIZES.fontSize.md,
-                minWidth: '36px',
-                height: '36px',
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
           />
         </Box>
       )}
@@ -488,43 +457,30 @@ const ServicesPage: React.FC = () => {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md
-          }
+          sx: tablePageStyles.dialogPaper
         }}
       >
-        <DialogTitle sx={{ 
-          fontSize: SIZES.fontSize.lg, 
-          fontWeight: 600,
-          pt: SIZES.spacing.md
-        }}>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
           Подтверждение удаления
         </DialogTitle>
         <DialogContent sx={{ pt: SIZES.spacing.sm }}>
-          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
+          <DialogContentText sx={tablePageStyles.dialogText}>
             Вы действительно хотите удалить категорию "{selectedCategory?.name}"?
             Все услуги в этой категории также будут удалены.
             Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: SIZES.spacing.md, pt: SIZES.spacing.sm }}>
+        <DialogActions sx={tablePageStyles.dialogActions}>
           <Button 
             onClick={handleCloseDialog}
-            sx={{
-              ...getButtonStyles(theme, 'secondary'),
-              fontSize: SIZES.fontSize.md
-            }}
+            sx={tablePageStyles.secondaryButton}
           >
             Отмена
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
-            sx={{
-              ...getButtonStyles(theme, 'error'),
-              fontSize: SIZES.fontSize.md
-            }}
             variant="contained"
+            sx={tablePageStyles.dangerButton}
           >
             Удалить
           </Button>

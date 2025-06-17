@@ -278,10 +278,6 @@ export const ServiceFormPage: React.FC = () => {
                 >
                   Услуги в категории
                 </Typography>
-                <Divider sx={{ 
-                  marginBottom: SIZES.spacing.md,
-                  borderColor: theme.palette.divider,
-                }} />
                 <ServicesList categoryId={id} />
               </CardContent>
             </Card>

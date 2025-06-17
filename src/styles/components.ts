@@ -534,12 +534,23 @@ export const getDashboardStyles = (theme: Theme) => {
   };
 };
 
-// Специальные стили для страниц с таблицами
+// Специальные стили для страниц с таблицами и карточками
 export const getTablePageStyles = (theme: Theme) => {
   return {
+    // Основные контейнеры
+    container: {
+      padding: theme.spacing(SIZES.spacing.lg),
+      maxWidth: '100%',
+    },
     pageContainer: {
       padding: theme.spacing(1, 2),
       maxWidth: '100%',
+    },
+    headerContainer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing(SIZES.spacing.md),
     },
     pageHeader: {
       display: 'flex',
@@ -547,9 +558,28 @@ export const getTablePageStyles = (theme: Theme) => {
       alignItems: 'center',
       marginBottom: theme.spacing(2),
     },
+    
+    // Заголовки
+    title: {
+      fontSize: SIZES.fontSize.xl,
+      fontWeight: 600,
+      color: theme.palette.text.primary,
+    },
     pageTitle: {
       color: theme.palette.text.primary,
       fontWeight: 700,
+    },
+    
+    // Фильтры и поиск
+    filtersContainer: {
+      display: 'flex',
+      gap: theme.spacing(SIZES.spacing.md),
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      width: '100%',
+      marginBottom: theme.spacing(SIZES.spacing.md),
+      paddingTop: theme.spacing(SIZES.spacing.md),
+      paddingBottom: theme.spacing(SIZES.spacing.md),
     },
     searchContainer: {
       marginBottom: theme.spacing(2),
@@ -559,9 +589,8 @@ export const getTablePageStyles = (theme: Theme) => {
       border: `1px solid ${theme.palette.divider}`,
     },
     searchField: {
-      minWidth: 400,
+      minWidth: 300,
       flex: 1,
-      minHeight: 56, // Соответствует высоте селектов с лейблами
       '& .MuiOutlinedInput-root': {
         height: 40,
         backgroundColor: theme.palette.background.paper,
@@ -571,27 +600,13 @@ export const getTablePageStyles = (theme: Theme) => {
       },
     },
     filterSelect: {
-      minWidth: 150,
-      '& .MuiFormControl-root': {
-        minHeight: 56, // Учитываем высоту лейбла
-      },
+      minWidth: 120,
       '& .MuiOutlinedInput-root': {
         height: 40,
       },
-      '& .MuiInputLabel-root': {
-        transform: 'translate(14px, 12px) scale(1)',
-        '&.MuiInputLabel-shrink': {
-          transform: 'translate(14px, -6px) scale(0.75)',
-        },
-      },
     },
-    filtersContainer: {
-      display: 'flex',
-      gap: theme.spacing(2),
-      alignItems: 'flex-start',
-      flexWrap: 'wrap',
-      width: '100%',
-    },
+    
+    // Таблицы
     tableContainer: {
       backgroundColor: 'transparent',
       boxShadow: 'none',
@@ -631,6 +646,43 @@ export const getTablePageStyles = (theme: Theme) => {
       whiteSpace: 'normal',
       wordBreak: 'break-word',
     },
+    
+    // Карточки
+    card: {
+      ...getCardStyles(theme, 'primary'),
+      borderRadius: SIZES.borderRadius.md,
+      border: `1px solid ${theme.palette.divider}`,
+      backdropFilter: 'blur(10px)',
+      boxShadow: theme.shadows[1],
+    },
+    cardTitle: {
+      fontSize: SIZES.fontSize.lg,
+      fontWeight: 500,
+      marginBottom: theme.spacing(SIZES.spacing.xs),
+      color: theme.palette.text.primary,
+    },
+    cardDescription: {
+      fontSize: SIZES.fontSize.md,
+      color: theme.palette.text.secondary,
+      lineHeight: 1.5,
+    },
+    
+    // Чипы и статусы
+    statusChip: {
+      borderRadius: SIZES.borderRadius.sm,
+      fontWeight: 500,
+      height: 24,
+    },
+    metricChip: {
+      borderRadius: SIZES.borderRadius.sm,
+      fontWeight: 500,
+      height: 24,
+      '& .MuiChip-icon': {
+        fontSize: '16px !important',
+      },
+    },
+    
+    // Аватары и контейнеры
     avatarContainer: {
       display: 'flex',
       alignItems: 'center',
@@ -641,11 +693,15 @@ export const getTablePageStyles = (theme: Theme) => {
       justifyContent: 'flex-end',
       gap: theme.spacing(1),
     },
+    
+    // Пагинация
     paginationContainer: {
       display: 'flex',
       justifyContent: 'center',
-      padding: theme.spacing(2),
+      marginTop: theme.spacing(SIZES.spacing.lg),
     },
+    
+    // Состояния загрузки и ошибок
     loadingContainer: {
       display: 'flex',
       justifyContent: 'center',
@@ -656,7 +712,54 @@ export const getTablePageStyles = (theme: Theme) => {
       padding: theme.spacing(3),
     },
     errorAlert: {
-      marginBottom: theme.spacing(2),
+      marginBottom: theme.spacing(SIZES.spacing.md),
+      borderRadius: SIZES.borderRadius.md,
+    },
+    
+    // Пустое состояние
+    emptyStateContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: theme.spacing(SIZES.spacing.xl),
+      marginTop: theme.spacing(SIZES.spacing.md),
+      minHeight: '200px',
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: SIZES.borderRadius.md,
+      border: `1px solid ${theme.palette.divider}`,
+    },
+    emptyStateIcon: {
+      fontSize: 64,
+      color: theme.palette.text.secondary,
+      marginBottom: theme.spacing(SIZES.spacing.md),
+    },
+    emptyStateTitle: {
+      fontSize: SIZES.fontSize.lg,
+      fontWeight: 500,
+      marginBottom: theme.spacing(SIZES.spacing.sm),
+      color: theme.palette.text.primary,
+    },
+    emptyStateDescription: {
+      fontSize: SIZES.fontSize.md,
+      color: theme.palette.text.secondary,
+      textAlign: 'center',
+      marginBottom: theme.spacing(SIZES.spacing.md),
+    },
+    
+    // Кнопки
+    primaryButton: {
+      ...getButtonStyles(theme, 'primary'),
+    },
+    secondaryButton: {
+      ...getButtonStyles(theme, 'secondary'),
+    },
+    dangerButton: {
+      backgroundColor: theme.palette.error.main,
+      color: theme.palette.error.contrastText,
+      '&:hover': {
+        backgroundColor: theme.palette.error.dark,
+      },
     },
     createButton: {
       ...getButtonStyles(theme, 'primary'),
@@ -664,6 +767,39 @@ export const getTablePageStyles = (theme: Theme) => {
     actionButton: {
       minWidth: 'auto',
       padding: theme.spacing(0.5),
+      transition: 'all 0.2s ease-in-out',
+      '&:hover': {
+        backgroundColor: `${theme.palette.primary.main}15`,
+        color: theme.palette.primary.main,
+      },
+    },
+    
+    // Диалоги
+    dialogPaper: {
+      borderRadius: SIZES.borderRadius.md,
+      backdropFilter: 'blur(10px)',
+      background: theme.palette.background.paper,
+      border: `1px solid ${theme.palette.divider}`,
+    },
+    dialogTitle: {
+      fontSize: SIZES.fontSize.lg,
+      fontWeight: 600,
+      paddingTop: theme.spacing(SIZES.spacing.md),
+    },
+    dialogText: {
+      fontSize: SIZES.fontSize.md,
+      color: theme.palette.text.secondary,
+    },
+    dialogActions: {
+      padding: theme.spacing(SIZES.spacing.md),
+      paddingTop: theme.spacing(SIZES.spacing.sm),
+      gap: theme.spacing(SIZES.spacing.sm),
+    },
+    
+    // Дополнительные элементы
+    dateText: {
+      fontSize: SIZES.fontSize.sm,
+      color: theme.palette.text.secondary,
     },
   };
 };

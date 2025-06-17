@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Button,
   Dialog,
@@ -18,16 +14,19 @@ import {
   CircularProgress,
   Alert,
   DialogContentText,
-  Pagination,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
   useTheme,
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getChipStyles 
+  getTablePageStyles 
 } from '../styles/components';
 import {
   Edit as EditIcon,
@@ -44,6 +43,7 @@ import {
   useDeleteServiceMutation,
 } from '../api/servicesList.api';
 import { Service, ServiceFormData } from '../types/service';
+import { Pagination } from './ui';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -62,12 +62,7 @@ interface ServicesListProps {
 
 export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
-  const dangerButtonStyles = getButtonStyles(theme, 'error');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const chipStyles = getChipStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -97,17 +92,16 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     initialValues: {
       name: '',
       description: '',
-      default_duration: 30, // добавляем дефолтное значение
+      default_duration: 30,
       is_active: true,
       sort_order: 0,
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        // Добавляем default_duration с дефолтным значением, если не указано
         const cleanValues = { 
           ...values,
-          default_duration: values.default_duration || 30 // обеспечиваем наличие значения
+          default_duration: values.default_duration || 30
         };
         if (selectedService) {
           await updateService({
@@ -148,7 +142,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       formik.setValues({
         name: service.name,
         description: service.description || '',
-        default_duration: service.default_duration || 30, // добавляем default_duration
+        default_duration: service.default_duration || 30,
         is_active: service.is_active,
         sort_order: service.sort_order || 0,
       });
@@ -179,77 +173,43 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     setError(null);
   };
 
-  // Удаление услуги через RTK Query
   const handleDeleteService = async () => {
     if (!serviceToDelete) return;
 
     try {
-      console.log('🔍 FRONTEND: Исходные данные:', {
-        categoryIdProp: categoryId,
-        categoryIdType: typeof categoryId,
-        serviceToDelete: serviceToDelete,
-        serviceId: serviceToDelete.id,
-        serviceIdType: typeof serviceToDelete.id
-      });
-
-      // Принудительно конвертируем в строки
       const categoryIdStr = String(categoryId);
       const serviceIdStr = String(serviceToDelete.id);
       
-      console.log(`🗑️ Удаление услуги через RTK Query:`, {
-        categoryId: categoryIdStr,
-        serviceId: serviceIdStr,
-        serviceName: serviceToDelete.name,
-        categoryIdStrType: typeof categoryIdStr,
-        serviceIdStrType: typeof serviceIdStr
-      });
-
-      const deleteArgs = {
+      await deleteService({
         categoryId: categoryIdStr,
         id: serviceIdStr,
-      };
-      
-      console.log('🔍 FRONTEND: Аргументы для deleteService:', deleteArgs);
-      console.log('🔍 FRONTEND: JSON.stringify аргументов:', JSON.stringify(deleteArgs));
+      }).unwrap();
 
-      // Проверяем аргументы перед вызовом
-      if (!deleteArgs.categoryId || !deleteArgs.id) {
-        throw new Error('Отсутствуют обязательные параметры categoryId или id');
-      }
-      
-      if (deleteArgs.categoryId.includes('[object') || deleteArgs.id.includes('[object')) {
-        throw new Error('Аргументы содержат [object Object]');
-      }
-
-      console.log('🚀 FRONTEND: Вызываем deleteService...');
-      const result = await deleteService(deleteArgs).unwrap();
-      console.log('✅ FRONTEND: Результат deleteService:', result);
-
-      console.log('✅ Услуга успешно удалена через RTK Query!');
       handleCloseDeleteDialog();
     } catch (error: any) {
-      console.error('❌ Ошибка при удалении услуги:', error);
+      console.error('Ошибка при удалении услуги:', error);
       let errorMessage = 'Произошла ошибка при удалении услуги';
       
-      if (error.data?.error) {
-        errorMessage = error.data.error;
-      } else if (error.data?.message) {
+      if (error.data?.message) {
         errorMessage = error.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
       }
       
       setError(errorMessage);
     }
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-    setPage(1); // Сбрасываем страницу при поиске
+    setPage(1);
   };
 
   const formatDuration = (minutes: number): string => {
@@ -266,288 +226,253 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={SIZES.spacing.lg}>
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={cardStyles}>
-      <Box mb={SIZES.spacing.md}>
+    <Box>
+      {/* Поиск и кнопка добавления */}
+      <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          fullWidth
-          label="Поиск услуг"
+          placeholder="Поиск услуг"
           variant="outlined"
+          size="small"
           value={searchQuery}
           onChange={handleSearch}
-          size="small"
-          sx={textFieldStyles}
+          sx={tablePageStyles.searchField}
         />
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={tablePageStyles.primaryButton}
+        >
+          Добавить услугу
+        </Button>
       </Box>
 
+      {/* Ошибки */}
       {error && (
         <Alert 
           severity="error" 
-          sx={{ 
-            mb: SIZES.spacing.md,
-            borderRadius: SIZES.borderRadius.sm 
-          }} 
+          sx={tablePageStyles.errorAlert}
           onClose={() => setError(null)}
         >
           {error}
         </Alert>
       )}
 
-      <List sx={{ 
-        mb: SIZES.spacing.md,
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: SIZES.borderRadius.md,
-        overflow: 'hidden'
-      }}>
-        {services.map((service: Service) => (
-          <ListItem
-            key={service.id}
-            sx={{
-              bgcolor: theme.palette.background.paper,
-              mb: SIZES.spacing.xs,
-              opacity: service.is_active ? 1 : 0.7,
-              borderBottom: `1px solid ${theme.palette.divider}`,
-              transition: '0.2s',
-              '&:hover': {
-                bgcolor: theme.palette.action.hover
-              },
-              '&:last-child': {
-                borderBottom: 'none',
-                mb: 0
-              }
-            }}
-          >
-            <ListItemText
-              primary={
-                <Box display="flex" alignItems="center" gap={SIZES.spacing.sm}>
+      {/* Таблица услуг */}
+      <TableContainer sx={tablePageStyles.tableContainer}>
+        <Table>
+          <TableHead sx={tablePageStyles.tableHeader}>
+            <TableRow>
+              <TableCell>Название</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {services.map((service: Service) => (
+              <TableRow 
+                key={service.id}
+                sx={{
+                  ...tablePageStyles.tableRow,
+                  opacity: service.is_active ? 1 : 0.7,
+                }}
+              >
+                <TableCell sx={tablePageStyles.tableCell}>
                   <Typography 
-                    variant="body1" 
-                    component="span" 
+                    variant="body2" 
                     sx={{ 
-                      fontSize: SIZES.fontSize.md,
-                      fontWeight: 500
+                      fontWeight: 500,
+                      color: theme.palette.text.primary
                     }}
                   >
                     {service.name}
                   </Typography>
-                  <Chip
-                    icon={<ScheduleIcon />}
-                    label={formatDuration(service.default_duration)}
+                </TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Chip 
+                    label={service.is_active ? 'Активна' : 'Неактивна'}
+                    color={service.is_active ? 'success' : 'default'}
                     size="small"
-                    sx={{
-                      ...chipStyles,
-                      borderRadius: SIZES.borderRadius.sm
-                    }}
+                    sx={tablePageStyles.statusChip}
                   />
-                </Box>
-              }
-              secondary={
-                <Box>
-                  {service.description && (
-                    <Typography
-                      variant="body2"
-                      sx={{ 
-                        mb: SIZES.spacing.xs, 
-                        fontSize: SIZES.fontSize.sm,
-                        color: theme.palette.text.secondary
-                      }}
-                    >
-                      {service.description}
-                    </Typography>
-                  )}
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      color: service.is_active 
-                        ? theme.palette.success.main 
-                        : theme.palette.text.disabled,
-                      fontSize: SIZES.fontSize.xs
-                    }}
-                  >
-                    {service.is_active ? 'Активна' : 'Неактивна'}
-                  </Typography>
-                </Box>
-              }
-            />
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={() => handleOpenDialog(service)}
-                sx={{ 
-                  mr: SIZES.spacing.sm,
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.primary.main}15` 
-                  }
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleOpenDeleteDialog(service)}
-                sx={{ 
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.error.main}15` 
-                  }
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+                </TableCell>
+                <TableCell align="right" sx={tablePageStyles.tableCell}>
+                  <Box sx={tablePageStyles.actionsContainer}>
+                    <Tooltip title="Редактировать">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleOpenDialog(service)}
+                        sx={tablePageStyles.actionButton}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleOpenDeleteDialog(service)}
+                        sx={{
+                          ...tablePageStyles.actionButton,
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.error.main}15`,
+                            color: theme.palette.error.main
+                          }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
+      {/* Пустое состояние */}
       {services.length === 0 && !isLoading && (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          py={SIZES.spacing.xl}
-          sx={{
-            border: `1px solid ${theme.palette.divider}`,
-            borderRadius: SIZES.borderRadius.md,
-            backgroundColor: theme.palette.action.hover,
-          }}
-        >
-          <Typography 
-            variant="body2" 
-            align="center"
-            sx={{ 
-              color: theme.palette.text.secondary,
-              fontSize: SIZES.fontSize.md
-            }}
-          >
+        <Box sx={tablePageStyles.emptyStateContainer}>
+          <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
             {searchQuery ? 'Услуги не найдены' : 'В данной категории пока нет услуг'}
           </Typography>
+          <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
+            {searchQuery 
+              ? 'Попробуйте изменить критерии поиска'
+              : 'Добавьте первую услугу в эту категорию'
+            }
+          </Typography>
+          {!searchQuery && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={tablePageStyles.primaryButton}
+            >
+              Добавить услугу
+            </Button>
+          )}
         </Box>
       )}
 
+      {/* Пагинация */}
       {totalPages > 1 && (
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          my={SIZES.spacing.md}
-        >
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
+            size="large"
           />
         </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.md}>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          sx={buttonStyles}
-          onClick={() => handleOpenDialog()}
-        >
-          Добавить услугу
-        </Button>
-      </Box>
-
       {/* Диалог создания/редактирования услуги */}
-      <Dialog 
-        open={isDialogOpen} 
-        onClose={handleCloseDialog} 
-        maxWidth="sm" 
+      <Dialog
+        open={isDialogOpen}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            p: 0
-          }
+          sx: tablePageStyles.dialogPaper
         }}
       >
-        <form onSubmit={formik.handleSubmit}>
-          <DialogTitle sx={{ 
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            fontSize: SIZES.fontSize.lg,
-            fontWeight: 600,
-            pb: SIZES.spacing.md 
-          }}>
-            {selectedService ? 'Редактировать услугу' : 'Добавить услугу'}
-          </DialogTitle>
-          <DialogContent sx={{ pt: SIZES.spacing.md }}>
-            <Box pt={SIZES.spacing.sm}>
-              <TextField
-                fullWidth
-                id="name"
-                name="name"
-                label="Название услуги"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-              />
-              <TextField
-                fullWidth
-                id="description"
-                name="description"
-                label="Описание"
-                multiline
-                rows={3}
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-              />
-              <TextField
-                fullWidth
-                id="sort_order"
-                name="sort_order"
-                label="Порядок сортировки"
-                type="number"
-                value={formik.values.sort_order}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
-                helperText={formik.touched.sort_order && formik.errors.sort_order}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-                inputProps={{ min: 0 }}
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                    name="is_active"
-                    color="primary"
-                  />
-                }
-                label="Активна"
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
-            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
-            <Button type="submit" variant="contained" sx={buttonStyles}>
-              {selectedService ? 'Сохранить' : 'Добавить'}
-            </Button>
-          </DialogActions>
-        </form>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
+          {selectedService ? 'Редактировать услугу' : 'Новая услуга'}
+        </DialogTitle>
+        <DialogContent sx={{ pt: SIZES.spacing.sm }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: SIZES.spacing.md }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+          <Box component="form" onSubmit={formik.handleSubmit}>
+            <TextField
+              fullWidth
+              name="name"
+              label="Название услуги"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+              sx={{ mb: SIZES.spacing.md }}
+            />
+            <TextField
+              fullWidth
+              name="description"
+              label="Описание"
+              multiline
+              rows={3}
+              value={formik.values.description}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.description && Boolean(formik.errors.description)}
+              helperText={formik.touched.description && formik.errors.description}
+              sx={{ mb: SIZES.spacing.md }}
+            />
+            <TextField
+              fullWidth
+              name="default_duration"
+              label="Длительность (минуты)"
+              type="number"
+              value={formik.values.default_duration}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              sx={{ mb: SIZES.spacing.md }}
+            />
+            <TextField
+              fullWidth
+              name="sort_order"
+              label="Порядок сортировки"
+              type="number"
+              value={formik.values.sort_order}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
+              helperText={formik.touched.sort_order && formik.errors.sort_order}
+              sx={{ mb: SIZES.spacing.md }}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.is_active}
+                  onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                  name="is_active"
+                />
+              }
+              label="Активна"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={tablePageStyles.dialogActions}>
+          <Button 
+            onClick={handleCloseDialog}
+            sx={tablePageStyles.secondaryButton}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={formik.submitForm}
+            variant="contained"
+            disabled={formik.isSubmitting}
+            sx={tablePageStyles.primaryButton}
+          >
+            {selectedService ? 'Сохранить' : 'Создать'}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       {/* Диалог подтверждения удаления */}
@@ -557,31 +482,30 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400,
-            p: 0
-          }
+          sx: tablePageStyles.dialogPaper
         }}
       >
-        <DialogTitle sx={{ 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          fontSize: SIZES.fontSize.lg,
-          fontWeight: 600,
-          color: theme.palette.error.main
-        }}>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
           Подтверждение удаления
         </DialogTitle>
-        <DialogContent sx={{ pt: SIZES.spacing.md }}>
-          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
+        <DialogContent sx={{ pt: SIZES.spacing.sm }}>
+          <DialogContentText sx={tablePageStyles.dialogText}>
             Вы действительно хотите удалить услугу "{serviceToDelete?.name}"?
             Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: SIZES.spacing.md }}>
-          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
-          <Button onClick={handleDeleteService} sx={dangerButtonStyles}>
+        <DialogActions sx={tablePageStyles.dialogActions}>
+          <Button 
+            onClick={handleCloseDeleteDialog}
+            sx={tablePageStyles.secondaryButton}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteService}
+            variant="contained"
+            sx={tablePageStyles.dangerButton}
+          >
             Удалить
           </Button>
         </DialogActions>
