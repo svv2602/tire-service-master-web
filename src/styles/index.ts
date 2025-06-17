@@ -16,6 +16,7 @@ export {
   getContainerStyles,
   getAuthStyles,
   getDashboardStyles,
+  getTablePageStyles,
   type CardVariant,
   type ButtonVariant,
   type ChipVariant,

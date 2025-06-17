@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  InputAdornment,
-  CircularProgress,
+import { 
+  useTheme, 
+  InputAdornment, 
+  Menu, 
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -11,11 +11,14 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip,
-  Avatar,
-  Menu,
-  MenuItem,
+  Avatar
 } from '@mui/material';
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Tooltip,
+} from '../../components/ui';
 import {
   Search as SearchIcon,
   Edit as EditIcon,
@@ -25,6 +28,7 @@ import {
   Close as CloseIcon,
   ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
+import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
 import { 
   useGetBookingsQuery,
@@ -44,6 +48,8 @@ import { Modal } from '../../components/ui/Modal';
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
@@ -165,7 +171,7 @@ const BookingsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -173,8 +179,8 @@ const BookingsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+      <Box sx={tablePageStyles.errorContainer}>
+        <Alert severity="error" sx={tablePageStyles.errorAlert}>
           Ошибка при загрузке бронирований: {error.toString()}
         </Alert>
       </Box>
@@ -182,10 +188,10 @@ const BookingsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Бронирования</Typography>
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>Бронирования</Typography>
         <Box>
           <Button
             variant="contained"
@@ -219,10 +225,7 @@ const BookingsPage: React.FC = () => {
       </Box>
 
       {/* Поиск */}
-      <Box sx={{ 
-        p: 2, 
-        mb: 3
-      }}>
+      <Box sx={tablePageStyles.searchContainer}>
         <TextField
           placeholder="Поиск по имени, фамилии, email или номеру телефона клиента"
           variant="outlined"
@@ -230,6 +233,7 @@ const BookingsPage: React.FC = () => {
           value={search}
           onChange={handleSearchChange}
           fullWidth
+          sx={tablePageStyles.searchField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -241,13 +245,9 @@ const BookingsPage: React.FC = () => {
       </Box>
 
       {/* Таблица бронирований */}
-      <TableContainer sx={{
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
-      }}>
+      <TableContainer sx={tablePageStyles.tableContainer}>
         <Table>
-          <TableHead>
+          <TableHead sx={tablePageStyles.tableHeader}>
             <TableRow>
               <TableCell>Клиент</TableCell>
               <TableCell>Точка обслуживания</TableCell>
@@ -258,9 +258,9 @@ const BookingsPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {bookings.map((booking: Booking) => (
-              <TableRow key={booking.id}>
+              <TableRow key={booking.id} sx={tablePageStyles.tableRow}>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <Avatar>
                       {booking.client?.first_name?.charAt(0) || booking.client?.last_name?.charAt(0) || '?'}
                     </Avatar>
@@ -285,7 +285,7 @@ const BookingsPage: React.FC = () => {
                 </TableCell>
 
                 <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                  <Box sx={tablePageStyles.actionsContainer}>
                     <Tooltip title="Редактировать">
                       <IconButton
                         onClick={() => navigate(`/bookings/${booking.id}/edit`)}
@@ -318,11 +318,7 @@ const BookingsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          p: 2 
-        }}>
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={Math.ceil(totalItems / rowsPerPage)}
             page={page + 1}

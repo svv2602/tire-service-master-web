@@ -491,3 +491,87 @@ export const getDashboardStyles = (theme: Theme) => {
     },
   };
 };
+
+// Специальные стили для страниц с таблицами
+export const getTablePageStyles = (theme: Theme) => {
+  return {
+    pageContainer: {
+      padding: theme.spacing(1, 2),
+      maxWidth: '100%',
+    },
+    pageHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing(2),
+    },
+    pageTitle: {
+      color: theme.palette.text.primary,
+      fontWeight: 700,
+    },
+    searchContainer: {
+      marginBottom: theme.spacing(2),
+    },
+    searchField: {
+      '& .MuiOutlinedInput-root': {
+        backgroundColor: theme.palette.background.paper,
+        '&:hover': {
+          backgroundColor: theme.palette.action.hover,
+        },
+      },
+    },
+    tableContainer: {
+      backgroundColor: 'transparent',
+      boxShadow: 'none',
+      border: 'none',
+      borderRadius: 0,
+      overflow: 'visible',
+    },
+    tableHeader: {
+      backgroundColor: theme.palette.grey[50],
+      '& .MuiTableCell-head': {
+        fontWeight: 600,
+        color: theme.palette.text.primary,
+      },
+    },
+    tableRow: {
+      '&:hover': {
+        backgroundColor: theme.palette.action.hover,
+      },
+    },
+    avatarContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing(1),
+    },
+    actionsContainer: {
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: theme.spacing(1),
+    },
+    paginationContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      padding: theme.spacing(2),
+    },
+    loadingContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '400px',
+    },
+    errorContainer: {
+      padding: theme.spacing(3),
+    },
+    errorAlert: {
+      marginBottom: theme.spacing(2),
+    },
+    createButton: {
+      ...getButtonStyles(theme, 'primary'),
+    },
+    actionButton: {
+      minWidth: 'auto',
+      padding: theme.spacing(0.5),
+    },
+  };
+};
