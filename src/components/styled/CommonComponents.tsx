@@ -427,10 +427,10 @@ export const StyledButton: React.FC<StyledButtonProps> = ({
   return (
     <Button
       variant={variant}
-      sx={{
-        ...buttonStyles,
-        ...sx
-      }}
+      sx={[
+        buttonStyles,
+        ...(Array.isArray(sx) ? sx : [sx])
+      ]}
       {...props}
     >
       {children}

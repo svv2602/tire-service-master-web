@@ -7,11 +7,14 @@ export * from './theme';
 // Экспорт стилей компонентов
 export {
   getCardStyles,
+  getButtonStyles,
   getTextFieldStyles,
   getChipStyles,
   getFormStyles,
   getModalStyles,
   getTabStyles,
+  getContainerStyles,
+  getAuthStyles,
   type CardVariant,
   type ButtonVariant,
   type ChipVariant,

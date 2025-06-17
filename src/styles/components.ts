@@ -392,3 +392,60 @@ export const getNavigationStyles = (theme: Theme) => {
     },
   };
 };
+
+// Стили для контейнеров
+export const getContainerStyles = (theme: Theme) => {
+  return {
+    centerContent: {
+      display: 'flex',
+      height: '100vh',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pageContainer: {
+      padding: theme.spacing(SIZES.spacing.lg),
+      minHeight: '100vh',
+    },
+    sectionContainer: {
+      padding: theme.spacing(SIZES.spacing.md),
+      marginBottom: theme.spacing(SIZES.spacing.lg),
+    },
+  };
+};
+
+// Специальные стили для аутентификации
+export const getAuthStyles = (theme: Theme) => {
+  return {
+    authCard: {
+      ...getCardStyles(theme, 'primary'),
+      padding: theme.spacing(4),
+      width: '100%',
+      maxWidth: 400,
+    },
+    authHeader: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      marginBottom: theme.spacing(3),
+    },
+    authIcon: {
+      fontSize: 40,
+      marginBottom: theme.spacing(1),
+    },
+    authField: {
+      marginBottom: theme.spacing(2),
+    },
+    authSubmit: {
+      ...getButtonStyles(theme, 'primary'),
+      marginTop: theme.spacing(3),
+      marginBottom: theme.spacing(2),
+      height: 48,
+    },
+    alert: {
+      marginBottom: theme.spacing(3),
+    },
+    buttonProgress: {
+      color: '#fff',
+    },
+  };
+};

@@ -3,17 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { login } from '../../store/slices/authSlice';
+import { useTheme } from '@mui/material';
+import { Lock as LockIcon } from '@mui/icons-material';
 import {
   Container,
-  Paper,
   Typography,
   TextField,
   Button,
   Box,
   Alert,
   CircularProgress
-} from '@mui/material';
-import { Lock as LockIcon } from '@mui/icons-material';
+} from '../../components/ui';
+import { Card } from '@mui/material';
+import {
+  getAuthStyles,
+  getContainerStyles,
+  SIZES
+} from '../../styles';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -30,6 +36,10 @@ const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { loading: reduxLoading, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  const theme = useTheme();
+  const authStyles = getAuthStyles(theme);
+  const containerStyles = getContainerStyles(theme);
   
   // Отключаем форму, если пользователь уже аутентифицирован  
   useEffect(() => {
@@ -159,26 +169,42 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ display: 'flex', height: '100vh', alignItems: 'center' }}>
-      <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-          <LockIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-          <Typography variant="h4" component="h1" gutterBottom>
+    <Container 
+      maxWidth="sm" 
+      sx={containerStyles.centerContent}
+    >
+      <Card sx={authStyles.authCard}>
+        <Box sx={authStyles.authHeader}>
+          <LockIcon 
+            color="primary" 
+            sx={authStyles.authIcon} 
+          />
+          <Typography variant="h4" component="h1">
             Вход в систему
           </Typography>
-          <Typography variant="body2" color="textSecondary" align="center">
+          <Typography 
+            variant="body2" 
+            color="textSecondary" 
+            align="center"
+          >
             Введите email и пароль, чтобы войти в систему Твоя Шина
           </Typography>
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert 
+            severity="error" 
+            sx={authStyles.alert}
+          >
             {error}
           </Alert>
         )}
 
         {formErrors.submit && (
-          <Alert severity="error" sx={{ mb: 3 }}>
+          <Alert 
+            severity="error" 
+            sx={authStyles.alert}
+          >
             {formErrors.submit}
           </Alert>
         )}
@@ -188,7 +214,6 @@ const LoginPage: React.FC = () => {
             fullWidth
             label="Email"
             variant="outlined"
-            margin="normal"
             type="email"
             value={email}
             onChange={handleEmailChange}
@@ -196,9 +221,9 @@ const LoginPage: React.FC = () => {
             helperText={formErrors.email}
             disabled={loading}
             autoFocus
+            sx={authStyles.authField}
             inputProps={{
               'data-testid': 'email-input',
-              'aria-label': 'Email'
             }}
           />
 
@@ -206,16 +231,15 @@ const LoginPage: React.FC = () => {
             fullWidth
             label="Пароль"
             variant="outlined"
-            margin="normal"
             type="password"
             value={password}
             onChange={handlePasswordChange}
             error={!!formErrors.password}
             helperText={formErrors.password}
             disabled={loading}
+            sx={authStyles.authField}
             inputProps={{
               'data-testid': 'password-input',
-              'aria-label': 'Пароль'
             }}
           />
 
@@ -223,19 +247,15 @@ const LoginPage: React.FC = () => {
             type="submit"
             fullWidth
             variant="contained"
-            color="primary"
-            size="large"
             disabled={loading}
             onClick={handleButtonClick}
-            sx={{ mt: 3, mb: 2 }}
-            data-testid="submit-button"
-            key={`login-button-${requestIdRef.current}`}
+            sx={authStyles.authSubmit}
           >
             {loading ? (
-              <>
-                <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-                Вход...
-              </>
+              <CircularProgress 
+                size={24} 
+                sx={authStyles.buttonProgress} 
+              />
             ) : (
               'Войти'
             )}
@@ -250,7 +270,7 @@ const LoginPage: React.FC = () => {
             Email: admin@test.com, Пароль: admin123
           </Typography>
         </Box>
-      </Paper>
+      </Card>
     </Container>
   );
 };
