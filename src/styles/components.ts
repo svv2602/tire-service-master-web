@@ -562,12 +562,32 @@ export const getTablePageStyles = (theme: Theme) => {
       '& .MuiTableCell-head': {
         fontWeight: 600,
         color: theme.palette.text.primary,
+        padding: theme.spacing(2),
       },
     },
     tableRow: {
       '&:hover': {
         backgroundColor: theme.palette.action.hover,
       },
+      '& .MuiTableCell-root': {
+        padding: theme.spacing(1.5, 2),
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '200px',
+      },
+    },
+    tableCell: {
+      padding: theme.spacing(1.5, 2),
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: '200px',
+    },
+    tableCellWrap: {
+      padding: theme.spacing(1.5, 2),
+      whiteSpace: 'normal',
+      wordBreak: 'break-word',
     },
     avatarContainer: {
       display: 'flex',

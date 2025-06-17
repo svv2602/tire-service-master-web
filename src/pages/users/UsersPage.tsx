@@ -39,15 +39,19 @@ import { getRoleId } from '../../utils/roles.utils';
 import type { User, UserFormData } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
-import { getAdaptiveTableStyles } from '../../styles';
 
 // Импорты UI компонентов
-import { Button } from '../../components/ui/Button';
-import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
-import { Chip } from '../../components/ui/Chip';
-import { Pagination } from '../../components/ui/Pagination';
-import { Modal } from '../../components/ui/Modal';
+import {
+  Button,
+  TextField,
+  Alert,
+  Chip,
+  Pagination,
+  Modal,
+} from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
 
 // Мемоизированный компонент строки пользователя
 const UserRow = React.memo<{
@@ -56,13 +60,13 @@ const UserRow = React.memo<{
   onDelete: (id: number) => void;
   onToggleStatus: (user: User) => void;
   getRoleName: (role: string) => string;
-  getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'default';
+  getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'info';
   isDeleting: boolean;
-  tableStyles: any;
-}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting, tableStyles }) => (
-  <TableRow sx={{ ...tableStyles.tableRow, opacity: user.is_active ? 1 : 0.6 }}>
-    <TableCell sx={tableStyles.tableCell}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+  tablePageStyles: any;
+}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting, tablePageStyles }) => (
+  <TableRow sx={{ ...tablePageStyles.tableRow, opacity: user.is_active ? 1 : 0.6 }}>
+    <TableCell sx={tablePageStyles.tableCellWrap}>
+      <Box sx={tablePageStyles.avatarContainer}>
         <Avatar sx={{ width: 32, height: 32, opacity: user.is_active ? 1 : 0.5 }}>
           <PersonIcon />
         </Avatar>
@@ -77,16 +81,24 @@ const UserRow = React.memo<{
         </Box>
       </Box>
     </TableCell>
-    <TableCell sx={tableStyles.tableCell}>{user.email}</TableCell>
-    <TableCell sx={tableStyles.tableCell}>{user.phone}</TableCell>
-    <TableCell sx={tableStyles.tableCell}>
+    <TableCell sx={tablePageStyles.tableCell} title={user.email}>{user.email}</TableCell>
+    <TableCell sx={tablePageStyles.tableCell} title={user.phone}>{user.phone}</TableCell>
+    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
       <Chip
         label={getRoleName(user.role)}
         color={getRoleColor(user.role)}
-        size="small"
+        size="medium"
+        sx={{
+          fontWeight: 600,
+          fontSize: '0.875rem',
+          minWidth: 100,
+          '& .MuiChip-label': {
+            padding: '6px 12px',
+          }
+        }}
       />
     </TableCell>
-    <TableCell sx={tableStyles.tableCell}>
+    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
       <FormControlLabel
         control={
           <Switch
@@ -99,8 +111,8 @@ const UserRow = React.memo<{
         sx={{ m: 0 }}
       />
     </TableCell>
-    <TableCell sx={tableStyles.tableCell}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
         {user.email_verified ? (
           <Tooltip title="Email подтвержден">
             <CheckIcon color="success" fontSize="small" />
@@ -121,14 +133,15 @@ const UserRow = React.memo<{
         )}
       </Box>
     </TableCell>
-    <TableCell sx={tableStyles.tableCell}>
-      <Box sx={{ display: 'flex', gap: 1 }}>
+    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
+      <Box sx={tablePageStyles.actionsContainer}>
         <Tooltip title="Редактировать">
           <IconButton
             onClick={() => onEdit(user.id)}
             size="small"
             color="primary"
             disabled={isDeleting}
+            sx={tablePageStyles.actionButton}
           >
             <EditIcon />
           </IconButton>
@@ -140,6 +153,7 @@ const UserRow = React.memo<{
               size="small"
               color="error"
               disabled={isDeleting}
+              sx={tablePageStyles.actionButton}
             >
               <DeleteIcon />
             </IconButton>
@@ -151,6 +165,7 @@ const UserRow = React.memo<{
               size="small"
               color="success"
               disabled={isDeleting}
+              sx={tablePageStyles.actionButton}
             >
               <CheckIcon />
             </IconButton>
@@ -169,8 +184,8 @@ export const UsersPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
-  // Получаем адаптивные стили таблицы
-  const tableStyles = getAdaptiveTableStyles(theme, isMobile, isTablet);
+  // Получаем централизованные стили таблицы
+  const tablePageStyles = getTablePageStyles(theme);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -232,14 +247,14 @@ export const UsersPage: React.FC = () => {
     }
   }, []);
   
-  const getRoleColor = useCallback((role: string): 'error' | 'warning' | 'primary' | 'success' | 'default' => {
+  const getRoleColor = useCallback((role: string): 'error' | 'warning' | 'primary' | 'success' | 'info' => {
     switch(role) {
-      case 'admin': return 'error';
-      case 'manager': return 'warning';
-      case 'partner': return 'primary';
-      case 'operator': return 'success';
-      case 'client': return 'default';
-      default: return 'default';
+      case 'admin': return 'error';      // Красный - высший уровень доступа
+      case 'manager': return 'warning';  // Оранжевый - управленческая роль
+      case 'partner': return 'success';  // Зеленый - партнерская роль (важная бизнес-роль)
+      case 'operator': return 'primary'; // Синий - операционная роль
+      case 'client': return 'info';      // Голубой - клиентская роль
+      default: return 'info';
     }
   }, []);
 
@@ -304,70 +319,59 @@ export const UsersPage: React.FC = () => {
   }, []);
 
   return (
-    <Box>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок и кнопка создания */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" component="h1" sx={tablePageStyles.pageTitle}>
           Управление пользователями
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleCreate}
-          color="primary"
-          size="large"
+          sx={tablePageStyles.createButton}
         >
           Создать пользователя
         </Button>
       </Box>
 
       {/* Поиск и фильтры */}
-      <Box sx={{ 
-        mb: 3, 
-        display: 'flex', 
-        gap: 2, 
-        alignItems: 'center', 
-        flexWrap: 'wrap',
-        ...(isMobile && {
-          flexDirection: 'column',
-          alignItems: 'stretch',
-        })
-      }}>
-        <TextField
-          placeholder="Поиск по email, имени, фамилии или номеру телефона..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ 
-            maxWidth: isMobile ? '100%' : 400, 
-            flexGrow: 1 
-          }}
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              color="primary"
-            />
-          }
-          label={
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="body2">
-                Показать деактивированных
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {showInactive ? 'Показаны все пользователи' : 'Показаны только активные'}
-              </Typography>
-            </Box>
-          }
-        />
+      <Box sx={tablePageStyles.searchContainer}>
+        <Box sx={tablePageStyles.filtersContainer}>
+          <TextField
+            placeholder="Поиск по email, имени, фамилии или номеру телефона..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+            sx={tablePageStyles.searchField}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={
+              <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
+                <Typography variant="body2">
+                  Показать деактивированных
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {showInactive ? 'Показаны все пользователи' : 'Показаны только активные'}
+                </Typography>
+              </Box>
+            }
+            sx={{ ml: 2 }}
+          />
+        </Box>
       </Box>
 
       {/* Статистика */}
@@ -395,39 +399,35 @@ export const UsersPage: React.FC = () => {
 
       {/* Контент */}
       {isLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Box sx={tablePageStyles.loadingContainer}>
           <CircularProgress />
         </Box>
       ) : error ? (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          Ошибка при загрузке пользователей: {error.toString()}
-        </Alert>
+        <Box sx={tablePageStyles.errorContainer}>
+          <Alert severity="error" sx={tablePageStyles.errorAlert}>
+            Ошибка при загрузке пользователей: {error.toString()}
+          </Alert>
+        </Box>
       ) : (
         <>
           {/* Таблица пользователей */}
-          <TableContainer 
-            sx={{
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
-              border: 'none'
-            }}
-          >
-            <Table sx={tableStyles.table}>
-              <TableHead sx={tableStyles.tableHead}>
+          <TableContainer sx={tablePageStyles.tableContainer}>
+            <Table>
+              <TableHead sx={tablePageStyles.tableHeader}>
                 <TableRow>
-                  <TableCell sx={tableStyles.tableCell}>Пользователь</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Email</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Телефон</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Роль</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Активен</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Подтверждения</TableCell>
-                  <TableCell sx={tableStyles.tableCell}>Действия</TableCell>
+                  <TableCell sx={tablePageStyles.tableCellWrap}>Пользователь</TableCell>
+                  <TableCell sx={tablePageStyles.tableCell}>Email</TableCell>
+                  <TableCell sx={tablePageStyles.tableCell}>Телефон</TableCell>
+                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Роль</TableCell>
+                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Активен</TableCell>
+                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Подтверждения</TableCell>
+                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Действия</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {users.length === 0 ? (
-                  <TableRow sx={tableStyles.tableRow}>
-                    <TableCell colSpan={7} align="center" sx={tableStyles.tableCell}>
+                  <TableRow sx={tablePageStyles.tableRow}>
+                    <TableCell colSpan={7} align="center">
                       <Typography color="text.secondary">
                         Пользователи не найдены
                       </Typography>
@@ -444,7 +444,7 @@ export const UsersPage: React.FC = () => {
                       getRoleName={getRoleName}
                       getRoleColor={getRoleColor}
                       isDeleting={isDeleting}
-                      tableStyles={tableStyles}
+                      tablePageStyles={tablePageStyles}
                     />
                   ))
                 )}
@@ -454,11 +454,7 @@ export const UsersPage: React.FC = () => {
 
           {/* Пагинация */}
           {totalPages > 1 && (
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              mt: 3
-            }}>
+            <Box sx={tablePageStyles.paginationContainer}>
               <Pagination
                 count={totalPages}
                 page={page}

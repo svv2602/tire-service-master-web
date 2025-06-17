@@ -204,10 +204,19 @@ const textFieldStyles = getTextFieldStyles(theme);
   - [x] Выравнивание полей по верхней границе
   - 📄 **Отчет:** [`design-unification/reports/PARTNERS_PAGE_MIGRATION_REPORT.md`](./reports/PARTNERS_PAGE_MIGRATION_REPORT.md)
 
-- [ ] `PartnerFormPage.tsx`
+- [✅] `PartnerFormPage.tsx`
 
-#### Управление пользователей (`src/pages/users/`)
-- [ ] `UsersPage.tsx`
+#### Управление пользователям (`src/pages/users/`)
+- [x] `UsersPage.tsx` ✅ **ЗАВЕРШЕНО**
+  - [x] Очистка стилей
+  - [x] Применение tablePageStyles
+  - [x] Замена getAdaptiveTableStyles на getTablePageStyles
+  - [x] Унификация фильтров и поиска
+  - [x] Централизованные UI компоненты
+  - [x] Обновление компонента UserRow
+  - [x] Выравнивание полей по верхней границе
+  - 📄 **Отчет:** [`design-unification/reports/USERS_PAGE_MIGRATION_REPORT.md`](./reports/USERS_PAGE_MIGRATION_REPORT.md)
+
 - [ ] `UserForm.tsx`
 
 #### Управление услуг (`src/pages/services/`)
