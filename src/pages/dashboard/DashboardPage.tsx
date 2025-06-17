@@ -1,18 +1,20 @@
 import React from 'react';
+import { useTheme } from '@mui/material';
 import {
   Box,
   Typography,
-  Paper,
   CircularProgress,
   Alert,
   Grid,
-} from '@mui/material';
+} from '../../components/ui';
+import { Card } from '@mui/material';
 import {
   DirectionsCar as CarIcon,
   Business as BusinessIcon,
   LocationOn as LocationIcon,
   People as PeopleIcon,
 } from '@mui/icons-material';
+import { getDashboardStyles } from '../../styles';
 import { 
   useGetPartnersQuery,
   useGetServicePointsQuery,
@@ -25,6 +27,9 @@ import BookingChart from '../../components/BookingChart';
 import ServicePointMap from '../../components/ServicePointMap';
 
 const DashboardPage: React.FC = () => {
+  const theme = useTheme();
+  const dashboardStyles = getDashboardStyles(theme);
+
   // RTK Query хуки с типизацией
   const { data: partnersData, isLoading: partnersLoading, error: partnersError } = useGetPartnersQuery({
     page: 1,
@@ -74,7 +79,7 @@ const DashboardPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (partnersLoading || servicePointsLoading || clientsLoading || bookingsLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={dashboardStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -82,8 +87,8 @@ const DashboardPage: React.FC = () => {
 
   if (partnersError || servicePointsError || clientsError || bookingsError) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+      <Box sx={dashboardStyles.errorContainer}>
+        <Alert severity="error" sx={dashboardStyles.errorAlert}>
           Ошибка при загрузке данных для дашборда
         </Alert>
       </Box>
@@ -91,13 +96,13 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3 }}>
+    <Box sx={dashboardStyles.pageContainer}>
+      <Typography variant="h4" sx={dashboardStyles.pageTitle}>
         Панель управления
       </Typography>
 
       {/* Статистика */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={dashboardStyles.statsContainer}>
         <Grid container spacing={3}>
           {stats.map((stat, index) => (
             <Grid key={index} item xs={12} sm={6} md={4}>
@@ -110,21 +115,21 @@ const DashboardPage: React.FC = () => {
       {/* Графики и карта */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+          <Card sx={dashboardStyles.chartCard}>
+            <Typography variant="h6" sx={dashboardStyles.chartTitle}>
               Статистика бронирований
             </Typography>
             <BookingChart data={bookingsData?.data || []} />
-          </Paper>
+          </Card>
         </Grid>
         
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 2 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
+          <Card sx={dashboardStyles.chartCard}>
+            <Typography variant="h6" sx={dashboardStyles.chartTitle}>
               Карта точек обслуживания
             </Typography>
             <ServicePointMap servicePoints={servicePointsData?.data || []} />
-          </Paper>
+          </Card>
         </Grid>
       </Grid>
     </Box>

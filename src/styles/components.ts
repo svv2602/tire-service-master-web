@@ -449,3 +449,45 @@ export const getAuthStyles = (theme: Theme) => {
     },
   };
 };
+
+// Специальные стили для dashboard
+export const getDashboardStyles = (theme: Theme) => {
+  return {
+    pageContainer: {
+      padding: theme.spacing(3),
+    },
+    pageTitle: {
+      marginBottom: theme.spacing(3),
+      color: theme.palette.text.primary,
+      fontWeight: 700,
+    },
+    statsContainer: {
+      marginBottom: theme.spacing(4),
+    },
+    statsGrid: {
+      spacing: 3,
+    },
+    chartCard: {
+      ...getCardStyles(theme, 'primary'),
+      padding: theme.spacing(2),
+      height: '100%',
+    },
+    chartTitle: {
+      marginBottom: theme.spacing(2),
+      color: theme.palette.text.primary,
+      fontWeight: 600,
+    },
+    loadingContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '400px',
+    },
+    errorContainer: {
+      padding: theme.spacing(3),
+    },
+    errorAlert: {
+      marginBottom: theme.spacing(2),
+    },
+  };
+};
