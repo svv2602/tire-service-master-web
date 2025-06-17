@@ -18,11 +18,9 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
       if (!initializationStarted.current) {
         initializationStarted.current = true;
         
-        const hasStoredToken = !!localStorage.getItem('tvoya_shina_token');
         const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
         
         console.log('AuthInitializer: Проверяем состояние', {
-          hasStoredToken,
           hasStoredUser,
           hasTokenInState: !!accessToken,
           hasUserInState: !!user,
@@ -30,15 +28,20 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
           isInitialized
         });
 
-        if (hasStoredToken && !user) {
+        // Токены не хранятся в localStorage для безопасности
+        // Если есть пользователь в localStorage, но нет токена в состоянии,
+        // пытаемся получить пользователя через API (используя refresh токен из cookies)
+        if (hasStoredUser && !accessToken && !user) {
           try {
+            console.log('AuthInitializer: Пытаемся восстановить сессию через refresh токен');
             await dispatch(getCurrentUser()).unwrap();
-            console.log('AuthInitializer: Данные пользователя успешно получены');
+            console.log('AuthInitializer: Сессия успешно восстановлена');
           } catch (error) {
-            console.log('AuthInitializer: Ошибка при получении данных пользователя');
+            console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage');
+            localStorage.removeItem('tvoya_shina_user');
           }
-        } else if (!hasStoredToken) {
-          console.log('AuthInitializer: Токен не найден, пользователь не аутентифицирован');
+        } else if (!hasStoredUser) {
+          console.log('AuthInitializer: Пользователь не найден в localStorage');
         }
 
         dispatch(setInitialized());
@@ -47,7 +50,7 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
     };
 
     initializeAuth();
-  }, [dispatch, accessToken, user]);
+  }, [dispatch, accessToken, user, loading, isInitialized]);
 
   if (!isInitialized || loading) {
     return <LoadingScreen />;

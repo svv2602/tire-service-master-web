@@ -1,9 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiClient } from '../../api/api';
 import { User } from '../../types/user';
-import { AuthState, AuthTokens, LoginResponse } from '../../types/auth';
-import { useLoginMutation } from '../../api/auth.api';
-import { store } from '../store';
+import { AuthState, LoginResponse } from '../../types/auth';
 import { UserRole } from '../../types';
 import axios from 'axios';
 import config from '../../config';
@@ -93,10 +91,12 @@ const authSlice = createSlice({
     builder
       // Обработка login
       .addCase(login.pending, (state) => {
+        console.log('Auth: login.pending - setting loading to true');
         state.loading = true;
         state.error = null;
       })
       .addCase(login.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
+        console.log('Auth: login.fulfilled - login successful', action.payload);
         state.loading = false;
         state.accessToken = action.payload.tokens.access;
         state.user = action.payload.user;
@@ -104,11 +104,19 @@ const authSlice = createSlice({
         state.error = null;
         state.isInitialized = true;
         
+        console.log('Auth: login.fulfilled - state updated:', {
+          isAuthenticated: state.isAuthenticated,
+          hasToken: !!state.accessToken,
+          hasUser: !!state.user
+        });
+        
         setStoredUser(action.payload.user);
         
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.tokens.access}`;
+        console.log('Auth: login.fulfilled - authorization header set');
       })
       .addCase(login.rejected, (state, action) => {
+        console.log('Auth: login.rejected - login failed');
         state.loading = false;
         state.error = action.error.message || 'Ошибка при авторизации';
         state.isAuthenticated = false;

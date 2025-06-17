@@ -127,14 +127,19 @@ const ProtectedRoute: React.FC<{
     loading
   });
 
+  // Показываем загрузку если состояние еще не инициализировано или идет загрузка
   if (!isInitialized || loading) {
+    console.log('ProtectedRoute: showing loading screen');
     return <LoadingScreen />;
   }
 
-  if (!isAuthenticated || !accessToken) {
+  // Проверяем аутентификацию - пользователь должен быть аутентифицирован И иметь токен
+  if (!isAuthenticated || !accessToken || !user) {
+    console.log('ProtectedRoute: redirecting to login - not authenticated');
     return <Navigate to="/login" />;
   }
 
+  console.log('ProtectedRoute: access granted');
   return <>{children}</>;
 };
 

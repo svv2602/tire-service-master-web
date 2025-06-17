@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
@@ -11,8 +11,7 @@ import {
   Button,
   Box,
   Alert,
-  CircularProgress,
-  Snackbar
+  CircularProgress
 } from '@mui/material';
 import { Lock as LockIcon } from '@mui/icons-material';
 
@@ -20,13 +19,34 @@ const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [successMessage, setSuccessMessage] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
+  const requestIdRef = useRef(0);
+  const lastSubmitTimeRef = useRef(0);
+  const isNavigatingRef = useRef(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading: reduxLoading, error: reduxError } = useSelector((state: RootState) => state.auth);
+  const { loading: reduxLoading, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  // Отключаем форму, если пользователь уже аутентифицирован  
+  useEffect(() => {
+    if (isAuthenticated && !isNavigatingRef.current) {
+      console.log('User is authenticated, navigating to dashboard');
+      isNavigatingRef.current = true;
+      
+      const returnPath = localStorage.getItem('returnPath') || '/dashboard';
+      localStorage.removeItem('returnPath');
+      
+      console.log('Navigating to:', returnPath);
+      navigate(returnPath, { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+  
+  // Объединяем состояния загрузки
+  const loading = localLoading || reduxLoading || isSubmitting;
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -49,28 +69,78 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    event.stopPropagation();
+    
+    const now = Date.now();
+    const timeSinceLastSubmit = now - lastSubmitTimeRef.current;
+    
+    // Защита от слишком быстрых повторных нажатий (менее 1 секунды)
+    if (timeSinceLastSubmit < 1000) {
+      console.log('Submit blocked - too fast repeated clicks (', timeSinceLastSubmit, 'ms since last)');
+      return;
+    }
+    
+    // Строгая защита от множественных отправок с использованием ref
+    if (loading || isSubmitting || isSubmittingRef.current) {
+      console.log('Login already in progress, ignoring submit. States:', {
+        loading,
+        isSubmitting,
+        isSubmittingRef: isSubmittingRef.current
+      });
+      return;
+    }
+    
+    lastSubmitTimeRef.current = now;
+    requestIdRef.current = requestIdRef.current + 1;
+    const currentRequestId = requestIdRef.current;
+    console.log(`[Request ${currentRequestId}] Form submit triggered`);
+    
+    // Устанавливаем флаги блокировки немедленно
+    isSubmittingRef.current = true;
     setError('');
-    setLoading(true);
+    setIsSubmitting(true);
+    setLocalLoading(true);
 
     if (!validateForm()) {
-      setLoading(false);
+      console.log(`[Request ${currentRequestId}] Validation failed`);
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      setLocalLoading(false);
       return;
     }
 
     try {
-      console.log('Attempting login with:', { email, password: '***' });
+      console.log(`[Request ${currentRequestId}] Attempting login with:`, { email, password: '***' });
       const actionResult = await dispatch(login({ email, password })).unwrap();
-      console.log('Login result:', actionResult);
+      console.log(`[Request ${currentRequestId}] Login result:`, actionResult);
       
-      // Перенаправляем на сохраненный путь или на главную
-      const returnPath = localStorage.getItem('returnPath') || '/';
-      localStorage.removeItem('returnPath');
-      navigate(returnPath);
+      // Навигация теперь происходит в useEffect при изменении isAuthenticated
+      console.log(`[Request ${currentRequestId}] Login successful, waiting for state update`);
+      
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error(`[Request ${currentRequestId}] Login error:`, error);
       setError(error.message || 'Ошибка при входе в систему');
     } finally {
-      setLoading(false);
+      console.log(`[Request ${currentRequestId}] Cleaning up`);
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+      setLocalLoading(false);
+    }
+  };
+
+  const handleButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    console.log('Button click detected. Current states:', {
+      loading,
+      isSubmitting,
+      isSubmittingRef: isSubmittingRef.current
+    });
+    
+    // Предотвращаем множественные клики на кнопке
+    if (loading || isSubmitting || isSubmittingRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      console.log('Button click blocked - login in progress');
+      return false;
     }
   };
 
@@ -156,10 +226,19 @@ const LoginPage: React.FC = () => {
             color="primary"
             size="large"
             disabled={loading}
+            onClick={handleButtonClick}
             sx={{ mt: 3, mb: 2 }}
             data-testid="submit-button"
+            key={`login-button-${requestIdRef.current}`}
           >
-            {loading ? <CircularProgress size={24} /> : 'Войти'}
+            {loading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
+                Вход...
+              </>
+            ) : (
+              'Войти'
+            )}
           </Button>
         </form>
 
@@ -171,13 +250,6 @@ const LoginPage: React.FC = () => {
             Email: admin@test.com, Пароль: admin123
           </Typography>
         </Box>
-
-        <Snackbar
-          open={!!successMessage}
-          autoHideDuration={2000}
-          message={successMessage}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        />
       </Paper>
     </Container>
   );

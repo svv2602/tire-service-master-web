@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления двойного клика</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 10px 5px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #1976d2; color: white; }
+        .success { background: #4caf50; color: white; }
+        .info { background: #2196f3; color: white; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success { background: #e8f5e8; color: #2e7d32; }
+        .result.error { background: #ffebee; color: #c62828; }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления проблемы с двойным нажатием при входе</h1>
+        
+        <div class="instructions">
+            <h3>📋 Инструкция по тестированию:</h3>
+            <ol>
+                <li>Откройте страницу входа в новой вкладке: <a href="http://localhost:3008/login" target="_blank">http://localhost:3008/login</a></li>
+                <li>Введите данные: <strong>admin@test.com</strong> / <strong>admin123</strong></li>
+                <li>Нажмите кнопку "Войти" ОДИН раз</li>
+                <li>Проверьте в консоли браузера (F12), что запрос отправляется только один раз</li>
+                <li>Убедитесь, что вход происходит с первого нажатия</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>🔍 Что было исправлено:</h3>
+            <ul>
+                <li>✅ Добавлена защита от множественных отправок с использованием ref</li>
+                <li>✅ Добавлена временная защита от быстрых повторных кликов (1 секунда)</li>
+                <li>✅ Улучшено объединение состояний загрузки (local + redux)</li>
+                <li>✅ Добавлено логирование с уникальными ID запросов</li>
+                <li>✅ Улучшена обработка событий preventDefault и stopPropagation</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>📊 Ожидаемый результат:</h3>
+            <div class="result success">
+В консоли браузера должно быть примерно следующее:
+
+[Request 1] Form submit triggered
+Auth: login.pending - setting loading to true
+Sending login request: {email: 'admin@test.com', password: '***'}
+Login response: {...}
+Auth: login.fulfilled - login successful
+[Request 1] Login result: {...}
+[Request 1] Cleaning up
+
+❌ НЕ должно быть:
+- Дублирующихся запросов с одинаковым ID
+- Запроса [Request 2] при одном нажатии
+- Ошибок "Login already in progress"
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Быстрые ссылки:</h3>
+            <button class="primary" onclick="openLogin()">Открыть страницу входа</button>
+            <button class="info" onclick="openDevTools()">Инструкция по DevTools</button>
+            <button class="success" onclick="checkConsole()">Проверить консоль</button>
+        </div>
+
+        <div class="section">
+            <h3>📝 Отчет о тестировании:</h3>
+            <textarea id="testReport" rows="10" cols="80" placeholder="Опишите здесь результаты тестирования..."></textarea><br>
+            <button class="success" onclick="saveReport()">Сохранить отчет</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function openLogin() {
+            window.open('http://localhost:3008/login', '_blank');
+            showResult('✅ Страница входа открыта в новой вкладке');
+        }
+
+        function openDevTools() {
+            showResult(`
+🔧 Как открыть консоль разработчика:
+
+1. В Chrome/Firefox: нажмите F12 или Ctrl+Shift+I
+2. Перейдите на вкладку "Console"
+3. Очистите консоль (Ctrl+L)
+4. Выполните вход в систему
+5. Проверьте логи
+
+🔍 На что обратить внимание:
+- Количество запросов с одинаковым Request ID
+- Наличие сообщений "Login already in progress"
+- Успешность выполнения запроса с первого раза
+            `);
+        }
+
+        function checkConsole() {
+            showResult(`
+📋 Чек-лист для проверки консоли:
+
+✅ ХОРОШО (ожидаемое поведение):
+- Один запрос [Request 1] Form submit triggered
+- Один запрос Sending login request
+- Один ответ Login response
+- Один [Request 1] Login result
+- Один [Request 1] Cleaning up
+
+❌ ПЛОХО (проблема не исправлена):
+- Два запроса [Request 1] Form submit triggered
+- Сообщения "Login already in progress"
+- Дублирующиеся API запросы
+- Ошибки в консоли
+            `);
+        }
+
+        function saveReport() {
+            const report = document.getElementById('testReport').value;
+            if (!report.trim()) {
+                showResult('❌ Пожалуйста, заполните отчет о тестировании');
+                return;
+            }
+
+            const timestamp = new Date().toLocaleString();
+            const fullReport = `
+ОТЧЕТ О ТЕСТИРОВАНИИ ИСПРАВЛЕНИЯ ДВОЙНОГО КЛИКА
+================================================
+Дата: ${timestamp}
+
+${report}
+
+Техническая информация:
+- Frontend URL: http://localhost:3008/login
+- API URL: http://localhost:8000/api/v1
+- Исправленный файл: LoginPage.tsx
+- Основные изменения: защита от множественных отправок, временная защита, улучшенное логирование
+            `;
+
+            // Сохраняем в localStorage для возможного использования
+            localStorage.setItem('double_click_test_report', fullReport);
+            
+            showResult('✅ Отчет сохранен в localStorage браузера');
+            console.log('Отчет о тестировании:', fullReport);
+        }
+
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            resultDiv.innerHTML = `<div class="result success">[${timestamp}] ${message}</div>`;
+        }
+
+        // Автоматическая проверка доступности сервисов при загрузке
+        window.onload = function() {
+            showResult(`
+🚀 Страница тестирования загружена!
+
+Проверьте, что сервисы запущены:
+- Frontend: http://localhost:3008
+- Backend: http://localhost:8000
+
+Затем перейдите к тестированию входа в систему.
+            `);
+        };
+    </script>
+</body>
+</html>

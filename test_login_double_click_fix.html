@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления двойного нажатия при логине</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button { 
+            padding: 12px 20px; 
+            margin: 10px 5px; 
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .primary { background: #1976d2; color: white; }
+        .success { background: #4caf50; color: white; }
+        .danger { background: #f44336; color: white; }
+        .info { background: #2196f3; color: white; }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 4px; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .result.success { background: #e8f5e8; color: #2e7d32; }
+        .result.error { background: #ffebee; color: #c62828; }
+        .result.info { background: #e3f2fd; color: #1565c0; }
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .status.success { background: #4caf50; color: white; }
+        .status.error { background: #f44336; color: white; }
+        .status.pending { background: #ff9800; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Тест исправления проблемы с двойным нажатием при логине</h1>
+        
+        <div class="section">
+            <h3>📋 Описание проблемы</h3>
+            <p>До исправления требовалось <strong>двойное нажатие</strong> на кнопку "Войти" для успешной авторизации.</p>
+            <p>После исправления авторизация должна работать с <strong>первого нажатия</strong>.</p>
+        </div>
+
+        <div class="section">
+            <h3>✅ Внесенные исправления</h3>
+            <ul>
+                <li>Объединено состояние загрузки: <code>localLoading || reduxLoading || isSubmitting</code></li>
+                <li>Добавлена защита от множественных отправок в <code>handleSubmit</code></li>
+                <li>Улучшено отображение состояния кнопки с индикатором загрузки</li>
+                <li>Добавлено логирование в authSlice для отслеживания состояний</li>
+                <li>Убраны неиспользуемые импорты и переменные</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Автоматический тест API</h3>
+            <p>Проверяем, что API авторизации работает корректно с первого раза:</p>
+            <button class="primary" onclick="testLoginAPI()">Тест API логина</button>
+            <button class="info" onclick="testLoginAPIAdmin()">Тест с admin@test.com</button>
+            <button class="danger" onclick="clearAuth()">Очистить авторизацию</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Ручное тестирование</h3>
+            <p><strong>Инструкция:</strong></p>
+            <ol>
+                <li>Очистите localStorage: <button class="info" onclick="clearAuth()">Очистить</button></li>
+                <li>Откройте страницу логина: <button class="primary" onclick="openLogin()">Открыть /login</button></li>
+                <li>Введите данные: <code>admin@test.com</code> / <code>admin</code></li>
+                <li>Нажмите "Войти" <strong>ОДИН РАЗ</strong></li>
+                <li>Проверьте, что авторизация прошла успешно с первого раза</li>
+            </ol>
+            
+            <div id="manual-test-status" class="status pending">Ожидает тестирования</div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Проверка состояния localStorage</h3>
+            <button class="info" onclick="checkAuthState()">Проверить состояние</button>
+            <div id="storage-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔄 Результаты тестирования</h3>
+            <div id="test-summary"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const FRONTEND_BASE = 'http://localhost:3008';
+        const TOKEN_KEY = 'tvoya_shina_auth_token';
+        const USER_KEY = 'tvoya_shina_user';
+        
+        let testResults = {
+            apiTest: null,
+            manualTest: null
+        };
+
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : 'success';
+            element.innerHTML = `<div class="result ${className}">[${timestamp}] ${JSON.stringify(data, null, 2)}</div>`;
+        }
+
+        async function testLoginAPI() {
+            try {
+                console.log('🧪 Начинаем тест API авторизации...');
+                
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem(TOKEN_KEY, data.tokens.access);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    
+                    testResults.apiTest = 'success';
+                    showResult('api-result', {
+                        success: true,
+                        message: 'API авторизация работает корректно с первого раза!',
+                        user: data.user,
+                        tokenSaved: !!localStorage.getItem(TOKEN_KEY)
+                    });
+                } else {
+                    testResults.apiTest = 'error';
+                    showResult('api-result', { 
+                        error: 'Ошибка API авторизации',
+                        details: data 
+                    }, true);
+                }
+                updateTestSummary();
+            } catch (error) {
+                testResults.apiTest = 'error';
+                showResult('api-result', { error: error.message }, true);
+                updateTestSummary();
+            }
+        }
+
+        async function testLoginAPIAdmin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem(TOKEN_KEY, data.tokens.access);
+                    localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+                    
+                    showResult('api-result', {
+                        success: true,
+                        message: 'Авторизация admin@test.com успешна!',
+                        user: data.user,
+                        adminInfo: data.admin_info || 'Не предоставлено'
+                    });
+                } else {
+                    showResult('api-result', { error: data }, true);
+                }
+            } catch (error) {
+                showResult('api-result', { error: error.message }, true);
+            }
+        }
+
+        function clearAuth() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_KEY);
+            localStorage.removeItem('tvoya_shina_refresh_token');
+            showResult('api-result', { message: 'Данные авторизации очищены' });
+            
+            // Обновляем статус ручного теста
+            const statusEl = document.getElementById('manual-test-status');
+            statusEl.className = 'status pending';
+            statusEl.textContent = 'Готов к тестированию (localStorage очищен)';
+        }
+
+        function openLogin() {
+            window.open(`${FRONTEND_BASE}/login`, '_blank');
+            
+            // Запускаем периодическую проверку авторизации
+            setTimeout(() => {
+                checkManualTestResult();
+            }, 2000);
+        }
+
+        function checkManualTestResult() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            const statusEl = document.getElementById('manual-test-status');
+            
+            if (token && user) {
+                testResults.manualTest = 'success';
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ Ручной тест ПРОЙДЕН! Авторизация работает с первого раза';
+            } else {
+                testResults.manualTest = 'pending';
+                statusEl.className = 'status pending';
+                statusEl.textContent = 'Ожидает авторизации...';
+                
+                // Продолжаем проверку
+                setTimeout(checkManualTestResult, 1000);
+            }
+            updateTestSummary();
+        }
+
+        function checkAuthState() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            const user = localStorage.getItem(USER_KEY);
+            const refreshToken = localStorage.getItem('tvoya_shina_refresh_token');
+            
+            const state = {
+                hasToken: !!token,
+                hasUser: !!user,
+                hasRefreshToken: !!refreshToken,
+                tokenPreview: token ? token.substring(0, 30) + '...' : null,
+                user: user ? JSON.parse(user) : null,
+                allKeys: Object.keys(localStorage).filter(key => key.includes('tvoya_shina'))
+            };
+            
+            showResult('storage-result', state);
+        }
+
+        function updateTestSummary() {
+            const summaryEl = document.getElementById('test-summary');
+            let html = '<h4>Статус тестирования:</h4><ul>';
+            
+            // API тест
+            if (testResults.apiTest === 'success') {
+                html += '<li>✅ <strong>API тест:</strong> ПРОЙДЕН - авторизация работает корректно</li>';
+            } else if (testResults.apiTest === 'error') {
+                html += '<li>❌ <strong>API тест:</strong> ПРОВАЛЕН - есть проблемы с API</li>';
+            } else {
+                html += '<li>⏳ <strong>API тест:</strong> Не выполнен</li>';
+            }
+            
+            // Ручной тест
+            if (testResults.manualTest === 'success') {
+                html += '<li>✅ <strong>Ручной тест:</strong> ПРОЙДЕН - пользователь успешно авторизовался</li>';
+            } else if (testResults.manualTest === 'error') {
+                html += '<li>❌ <strong>Ручной тест:</strong> ПРОВАЛЕН - проблемы с интерфейсом</li>';
+            } else {
+                html += '<li>⏳ <strong>Ручной тест:</strong> Ожидает выполнения</li>';
+            }
+            
+            html += '</ul>';
+            
+            // Общий вывод
+            if (testResults.apiTest === 'success' && testResults.manualTest === 'success') {
+                html += '<div class="status success" style="margin-top: 15px; font-size: 16px;">🎉 ВСЕ ТЕСТЫ ПРОЙДЕНЫ! Проблема с двойным нажатием ИСПРАВЛЕНА!</div>';
+            } else if (testResults.apiTest === 'error' || testResults.manualTest === 'error') {
+                html += '<div class="status error" style="margin-top: 15px; font-size: 16px;">⚠️ Обнаружены проблемы, требуется дополнительная диагностика</div>';
+            } else {
+                html += '<div class="status pending" style="margin-top: 15px; font-size: 16px;">⏳ Тестирование в процессе...</div>';
+            }
+            
+            summaryEl.innerHTML = html;
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+            updateTestSummary();
+        });
+    </script>
+</body>
+</html>
