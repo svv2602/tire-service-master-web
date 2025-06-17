@@ -32,7 +32,7 @@ export const regionsApi = baseApi.injectEndpoints({
       query: (region) => ({
         url: 'regions',
         method: 'POST',
-        body: region,
+        body: { region },
       }),
       invalidatesTags: ['Region'],
     }),
@@ -42,7 +42,7 @@ export const regionsApi = baseApi.injectEndpoints({
       query: ({ id, region }) => ({
         url: `regions/${id}`,
         method: 'PUT',
-        body: region,
+        body: { region },
       }),
       invalidatesTags: ['Region'],
     }),

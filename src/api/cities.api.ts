@@ -33,7 +33,7 @@ export const citiesApi = baseApi.injectEndpoints({
       query: (city) => ({
         url: 'cities',
         method: 'POST',
-        body: city,
+        body: { city },
       }),
       invalidatesTags: ['City'],
     }),
@@ -41,7 +41,7 @@ export const citiesApi = baseApi.injectEndpoints({
       query: ({ id, city }) => ({
         url: `cities/${id}`,
         method: 'PUT',
-        body: city,
+        body: { city },
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'City', id }, 'City'],
     }),
