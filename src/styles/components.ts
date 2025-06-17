@@ -511,14 +511,44 @@ export const getTablePageStyles = (theme: Theme) => {
     },
     searchContainer: {
       marginBottom: theme.spacing(2),
+      padding: theme.spacing(2),
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: theme.shape.borderRadius,
+      border: `1px solid ${theme.palette.divider}`,
     },
     searchField: {
+      minWidth: 400,
+      flex: 1,
+      minHeight: 56, // Соответствует высоте селектов с лейблами
       '& .MuiOutlinedInput-root': {
+        height: 40,
         backgroundColor: theme.palette.background.paper,
         '&:hover': {
           backgroundColor: theme.palette.action.hover,
         },
       },
+    },
+    filterSelect: {
+      minWidth: 150,
+      '& .MuiFormControl-root': {
+        minHeight: 56, // Учитываем высоту лейбла
+      },
+      '& .MuiOutlinedInput-root': {
+        height: 40,
+      },
+      '& .MuiInputLabel-root': {
+        transform: 'translate(14px, 12px) scale(1)',
+        '&.MuiInputLabel-shrink': {
+          transform: 'translate(14px, -6px) scale(0.75)',
+        },
+      },
+    },
+    filtersContainer: {
+      display: 'flex',
+      gap: theme.spacing(2),
+      alignItems: 'flex-start',
+      flexWrap: 'wrap',
+      width: '100%',
     },
     tableContainer: {
       backgroundColor: 'transparent',

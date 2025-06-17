@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Box,
-  Typography,
+  useTheme,
   InputAdornment,
-  CircularProgress,
   Table,
   TableBody,
   TableCell,
@@ -12,13 +10,11 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip,
   TablePagination,
   FormControl,
   InputLabel,
   MenuItem,
   useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -38,16 +34,15 @@ import {
 } from '../../api';
 import type { ServicePoint } from '../../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
-import { 
-  SIZES, 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getAdaptiveTableStyles, 
-  getChipStyles 
-} from '../../styles';
+import { getTablePageStyles } from '../../styles';
 
 // Импорты UI компонентов
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Tooltip,
+} from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Select } from '../../components/ui/Select';
@@ -129,11 +124,7 @@ const ServicePointsPage: React.FC = () => {
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
   
   // Получаем стили из централизованной системы
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme);
-  const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getAdaptiveTableStyles(theme, isMobile, isTablet);
-  const chipStyles = getChipStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -225,7 +216,7 @@ const ServicePointsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -233,8 +224,8 @@ const ServicePointsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
+      <Box sx={tablePageStyles.errorContainer}>
+        <Alert severity="error" sx={tablePageStyles.errorAlert}>
           Ошибка при загрузке сервисных точек: {error.toString()}
         </Alert>
       </Box>
@@ -242,63 +233,31 @@ const ServicePointsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: SIZES.spacing.lg }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: SIZES.spacing.lg 
-      }}>
-        <Typography 
-          variant="h4"
-          sx={{ 
-            fontSize: SIZES.fontSize.xl,
-            fontWeight: 600 
-          }}
-        >
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
           Сервисные точки
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate(partnerId ? `/partners/${partnerId}/service-points/new` : '/service-points/new')}
-          sx={{
-            ...buttonStyles,
-            borderRadius: SIZES.borderRadius.sm
-          }}
         >
           Добавить сервисную точку
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Box sx={{ 
-        ...cardStyles, 
-        p: isMobile ? SIZES.spacing.md : SIZES.spacing.lg, 
-        mb: SIZES.spacing.lg
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: SIZES.spacing.md, 
-          alignItems: isMobile ? 'stretch' : 'center', 
-          flexDirection: isMobile ? 'column' : 'row',
-          flexWrap: isMobile ? 'nowrap' : 'wrap'
-        }}>
+      <Box sx={tablePageStyles.searchContainer}>
+        <Box sx={tablePageStyles.filtersContainer}>
           <TextField
             placeholder="Поиск по названию или адресу"
             variant="outlined"
             size="small"
             value={search}
             onChange={handleSearchChange}
-            sx={{ 
-              ...textFieldStyles,
-              minWidth: isMobile ? '100%' : 300,
-              width: isMobile ? '100%' : 'auto',
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
+            sx={tablePageStyles.searchField}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -308,207 +267,118 @@ const ServicePointsPage: React.FC = () => {
             }}
           />
           
-          <Box sx={{
-            display: 'flex',
-            gap: SIZES.spacing.md,
-            flexDirection: isMobile ? 'column' : 'row',
-            width: isMobile ? '100%' : 'auto',
-          }}>
-            <Select
-              label="Регион"
-              value={selectedRegionId}
-              onChange={(value) => {
-                setSelectedRegionId(value as number | '');
-                setSelectedCityId('');
-                setPage(0);
-              }}
-              options={[
-                { value: '', label: 'Все регионы' },
-                ...(regionsData?.data?.map((region) => ({
-                  value: region.id,
-                  label: region.name
-                })) || [])
-              ]}
-              size="small"
-              sx={{ 
-                minWidth: isMobile ? '100%' : 150,
-                width: isMobile ? '100%' : 150,
-              }}
-            />
+          <Select
+            label="Регион"
+            value={selectedRegionId}
+            onChange={(value) => {
+              setSelectedRegionId(value as number | '');
+              setSelectedCityId('');
+              setPage(0);
+            }}
+            options={[
+              { value: '', label: 'Все регионы' },
+              ...(regionsData?.data?.map((region) => ({
+                value: region.id,
+                label: region.name
+              })) || [])
+            ]}
+            size="small"
+            sx={tablePageStyles.filterSelect}
+          />
 
-            <Select
-              label="Город"
-              value={selectedCityId}
-              onChange={(value) => {
-                setSelectedCityId(value as number | '');
-                setPage(0);
-              }}
-              options={[
-                { value: '', label: 'Все города' },
-                ...(citiesData?.data?.map((city) => ({
-                  value: city.id,
-                  label: city.name
-                })) || [])
-              ]}
-              disabled={!selectedRegionId}
-              size="small"
-              sx={{ 
-                minWidth: isMobile ? '100%' : 150,
-                width: isMobile ? '100%' : 150,
-              }}
-            />
-          </Box>
+          <Select
+            label="Город"
+            value={selectedCityId}
+            onChange={(value) => {
+              setSelectedCityId(value as number | '');
+              setPage(0);
+            }}
+            options={[
+              { value: '', label: 'Все города' },
+              ...(citiesData?.data?.map((city) => ({
+                value: city.id,
+                label: city.name
+              })) || [])
+            ]}
+            disabled={!selectedRegionId}
+            size="small"
+            sx={tablePageStyles.filterSelect}
+          />
         </Box>
       </Box>
 
       {/* Таблица сервисных точек */}
-      <TableContainer 
-        component={Box} 
-        sx={{
-          ...tableStyles.tableContainer
-        }}
-      >
-        <Table sx={tableStyles.table}>
-          <TableHead sx={tableStyles.tableHead}>
+      <TableContainer sx={tablePageStyles.tableContainer}>
+        <Table>
+          <TableHead sx={tablePageStyles.tableHeader}>
             <TableRow>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Название
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Адрес
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Область
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Город
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                График работы
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Контакты
-              </TableCell>
-              <TableCell sx={{ 
-                fontSize: SIZES.fontSize.md, 
-                fontWeight: 600 
-              }}>
-                Статус
-              </TableCell>
-              <TableCell 
-                align="right" 
-                sx={{ 
-                  fontSize: SIZES.fontSize.md, 
-                  fontWeight: 600 
-                }}
-              >
-                Действия
-              </TableCell>
+              <TableCell>Название</TableCell>
+              <TableCell>Адрес</TableCell>
+              <TableCell>Область</TableCell>
+              <TableCell>Город</TableCell>
+              <TableCell>График работы</TableCell>
+              <TableCell>Контакты</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {servicePoints.map((servicePoint) => (
-              <TableRow key={servicePoint.id} sx={tableStyles.tableRow}>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+              <TableRow key={servicePoint.id} sx={tablePageStyles.tableRow}>
+                <TableCell>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <BusinessIcon color="action" fontSize="small" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    <Typography>
                       {servicePoint.name}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+                <TableCell>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <LocationIcon color="action" fontSize="small" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    <Typography>
                       {servicePoint.address}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+                <TableCell>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <LocationCityIcon color="action" fontSize="small" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    <Typography>
                       {servicePoint.city?.region?.name || 'Не указана'}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+                <TableCell>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <LocationCityIcon color="action" fontSize="small" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    <Typography>
                       {servicePoint.city?.name || 'Не указан'}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+                <TableCell>
+                  <Box sx={tablePageStyles.avatarContainer}>
                     <AccessTimeIcon color="action" fontSize="small" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                    <Typography>
                       {formatWorkingHours(servicePoint.working_hours)}
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
+                <TableCell>
+                  <Typography>
                     {servicePoint.contact_phone || 'Не указан'}
                   </Typography>
                 </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
+                <TableCell>
                   <Chip
                     label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
                     color={servicePoint.is_active ? 'success' : 'error'}
                     size="small"
-                    sx={{
-                      ...chipStyles,
-                      fontSize: SIZES.fontSize.xs
-                    }}
                   />
                 </TableCell>
-                <TableCell align="right" sx={tableStyles.tableCell}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'flex-end', 
-                    gap: SIZES.spacing.xs 
-                  }}>
+                <TableCell align="right">
+                  <Box sx={tablePageStyles.actionsContainer}>
                     <Tooltip title="Редактировать">
                       <IconButton 
                         onClick={() => {
@@ -522,12 +392,6 @@ const ServicePointsPage: React.FC = () => {
                           navigate(`/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
                         }}
                         size="small"
-                        sx={{ 
-                          color: theme.palette.primary.main,
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.primary.main}15`
-                          }
-                        }}
                       >
                         <EditIcon />
                       </IconButton>
@@ -537,11 +401,6 @@ const ServicePointsPage: React.FC = () => {
                         onClick={() => handleDeleteClick(servicePoint)}
                         size="small"
                         color="error"
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.error.main}15`
-                          }
-                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -552,11 +411,7 @@ const ServicePointsPage: React.FC = () => {
             ))}
           </TableBody>
         </Table>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          p: SIZES.spacing.md 
-        }}>
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={Math.ceil(totalItems / rowsPerPage)}
             page={page + 1}
@@ -594,7 +449,7 @@ const ServicePointsPage: React.FC = () => {
           </>
         }
       >
-        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+        <Typography>
           Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
           Это действие нельзя будет отменить.
         </Typography>
