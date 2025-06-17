@@ -2,24 +2,25 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useTheme } from '@mui/material';
 import {
   Box,
-  Paper,
   Typography,
-  TextField,
   Button,
-  Grid,
-  Divider,
+  TextField,
+  Paper,
+  CircularProgress,
+  Alert,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Divider,
+  Grid,
   FormControlLabel,
-  Checkbox,
-  CircularProgress,
-  Alert,
+  Switch,
+  useTheme,
 } from '@mui/material';
+import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { 
   useGetUserByIdQuery,
   useCreateUserMutation,
@@ -29,51 +30,67 @@ import {
 import { UserFormData } from '../../types/user';
 
 // Импорт централизованной системы стилей
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles,
-  SIZES 
-} from '../../styles';
+import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES } from '../../styles';
 
 /**
- * Компонент формы создания/редактирования пользователя
- * Поддерживает создание новых пользователей и редактирование существующих
- * Использует централизованную систему стилей для консистентности UI
+ * Страница формы пользователя - создание и редактирование пользователей
  * 
- * Особенности:
- * - Формат валидации с помощью Yup
- * - Интеграция с Formik для управления состоянием формы
- * - Поддержка ролевой системы доступа
- * - Обработка ошибок API с отображением в форме
- * - Централизованные стили для всех элементов интерфейса
+ * Функциональность:
+ * - Создание нового пользователя
+ * - Редактирование существующего пользователя
+ * - Валидация полей формы с помощью Yup
+ * - Управление ролями пользователей
+ * - Интеграция с RTK Query для API операций
+ * - Централизованная система стилей для консистентного UI
+ * 
+ * Разделы формы:
+ * - Основная информация (имя, фамилия, отчество, email, телефон)
+ * - Роль и статус (роль пользователя, активность)
+ * - Пароль (обязательный при создании, опциональный при редактировании)
  */
 const UserForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const isEditMode = Boolean(id); // Определяем режим: создание или редактирование
-  const userId = isEditMode ? parseInt(id!, 10) : 0;
+  const isEdit = Boolean(id);
+  const userId = isEdit ? parseInt(id!, 10) : 0;
 
   const navigate = useNavigate();
-  const theme = useTheme(); // Получаем тему MUI для стилей
+  const theme = useTheme();
   const [apiError, setApiError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
-  // Получаем стили из централизованной системы для консистентности UI
-  const cardStyles = getCardStyles(theme, 'primary'); // Стили основной карточки
-  const primaryButtonStyles = getButtonStyles(theme, 'primary'); // Стили основной кнопки
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary'); // Стили вторичной кнопки  
-  const textFieldStyles = getTextFieldStyles(theme, 'filled'); // Стили полей ввода
+  // Централизованная система стилей
+  const cardStyles = getCardStyles(theme, 'primary');
+  const textFieldStyles = getTextFieldStyles(theme, 'filled');
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
 
+  // RTK Query хуки
   const { 
     data: userData,
     isLoading: isLoadingUser,
   } = useGetUserByIdQuery(userId.toString(), {
-    skip: !isEditMode
+    skip: !isEdit
   });
 
   const [createUser, { isLoading: isCreating }] = useCreateUserMutation();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
 
   const isLoading = isLoadingUser || isCreating || isUpdating;
+
+  // Функция для извлечения сообщения об ошибке
+  const extractErrorMessage = (error: any): string => {
+    if (error?.data?.message) {
+      return error.data.message;
+    }
+    if (error?.data?.errors) {
+      const errors = Object.values(error.data.errors).flat();
+      return errors.join(', ');
+    }
+    if (error?.message) {
+      return error.message;
+    }
+    return 'Произошла неизвестная ошибка';
+  };
 
   // Схема валидации с Yup
   const validationSchema = yup.object({
@@ -83,21 +100,31 @@ const UserForm: React.FC = () => {
       .required('Email обязателен'),
     first_name: yup
       .string()
-      .required('Имя обязательно'),
+      .required('Имя обязательно')
+      .min(2, 'Имя должно быть не менее 2 символов'),
     last_name: yup
       .string()
-      .required('Фамилия обязательна'),
+      .required('Фамилия обязательна')
+      .min(2, 'Фамилия должна быть не менее 2 символов'),
+    middle_name: yup
+      .string()
+      .nullable(),
+    phone: yup
+      .string()
+      .matches(/^\+?[0-9]{10,12}$/, 'Введите корректный номер телефона')
+      .nullable(),
     role_id: yup
       .number()
       .required('Роль обязательна'),
     is_active: yup
       .boolean(),
-    password: isEditMode
-      ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов')
+    password: isEdit
+      ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов').nullable()
       : yup.string().min(6, 'Пароль должен содержать минимум 6 символов').required('Пароль обязателен'),
     password_confirmation: yup
       .string()
       .oneOf([yup.ref('password')], 'Пароли не совпадают')
+      .nullable()
   });
 
   // Начальные значения формы
@@ -123,6 +150,7 @@ const UserForm: React.FC = () => {
     onSubmit: async (values) => {
       try {
         setApiError(null);
+        setSuccessMessage(null);
         
         // Подготавливаем данные для API
         const userData: UserFormData = {
@@ -131,52 +159,34 @@ const UserForm: React.FC = () => {
           last_name: values.last_name,
           middle_name: values.middle_name || '',
           phone: values.phone || '',
-          role_id: values.role_id || 5, // Устанавливаем значение по умолчанию, если role_id не определен
+          role_id: values.role_id || 5,
           is_active: values.is_active,
           password: values.password || '',
           password_confirmation: values.password_confirmation || ''
         };
 
-        if (isEditMode) {
+        if (isEdit) {
           await updateUser({ id: userId.toString(), data: userData }).unwrap();
+          setSuccessMessage('Пользователь успешно обновлен');
         } else {
           await createUser(userData).unwrap();
+          setSuccessMessage('Пользователь успешно создан');
         }
-        navigate('/users');
+        
+        // Переходим к списку пользователей через небольшую задержку
+        setTimeout(() => {
+          navigate('/users');
+        }, 1500);
       } catch (error: any) {
         console.error('Ошибка при сохранении пользователя:', error);
-        if (error.data?.errors) {
-          const apiErrors: Record<string, string> = {};
-          
-          // Преобразование ошибок API в формат, который можно использовать с Formik
-          Object.entries(error.data.errors).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              apiErrors[key] = value.join(', ');
-            } else if (typeof value === 'string') {
-              apiErrors[key] = value as string;
-            } else if (value && typeof value === 'object') {
-              apiErrors[key] = JSON.stringify(value);
-            }
-          });
-          
-          // Устанавливаем ошибки для полей формы
-          Object.keys(apiErrors).forEach(key => {
-            formik.setFieldError(key, apiErrors[key]);
-          });
-          
-          setApiError('Пожалуйста, исправьте ошибки в форме');
-        } else if (error.message) {
-          setApiError(error.message);
-        } else {
-          setApiError('Произошла ошибка при сохранении пользователя');
-        }
+        setApiError(extractErrorMessage(error));
       }
     },
   });
   
   // Обновление значений формы при получении данных пользователя
   useEffect(() => {
-    if (isEditMode && userData?.data) {
+    if (isEdit && userData?.data) {
       const user = userData.data;
       formik.setValues({
         email: user.email || '',
@@ -191,260 +201,281 @@ const UserForm: React.FC = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditMode, userData]); // Игнорируем formik в зависимостях, так как это может вызвать бесконечные перерендеры
-  
-  // Функция для отмены редактирования
-  const handleCancel = () => {
-    navigate('/users');
-  };
+  }, [isEdit, userData]);
+
+  // Показываем индикатор загрузки при получении данных пользователя
+  if (isLoadingUser) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '400px' 
+      }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ 
-      maxWidth: 800, 
+      maxWidth: 1200, 
       mx: 'auto', 
-      mt: SIZES.spacing.lg, 
-      mb: SIZES.spacing.lg 
+      p: SIZES.spacing.lg 
     }}>
-      <Paper sx={cardStyles}>
-        <Typography 
-          variant="h5" 
-          component="h1" 
-          gutterBottom
+      {/* Заголовок с кнопкой "Назад" */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mb: SIZES.spacing.lg 
+      }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/users')}
           sx={{ 
-            fontSize: SIZES.fontSize.xl,
-            fontWeight: 600,
-            mb: SIZES.spacing.lg
+            ...secondaryButtonStyles,
+            mr: SIZES.spacing.md 
           }}
         >
-          {isEditMode ? 'Редактирование пользователя' : 'Создание пользователя'}
+          Назад
+        </Button>
+        <Typography 
+          variant="h4" 
+          sx={{ fontSize: SIZES.fontSize.xl }}
+        >
+          {isEdit ? 'Редактировать пользователя' : 'Создать пользователя'}
         </Typography>
+      </Box>
+          
+      <form onSubmit={formik.handleSubmit}>
+        <Paper sx={cardStyles}>
+          <Grid container spacing={SIZES.spacing.lg}>
+            {/* Основная информация */}
+            <Grid item xs={12}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ fontSize: SIZES.fontSize.lg }}
+              >
+                Основная информация
+              </Typography>
+              <Divider sx={{ mb: SIZES.spacing.md }} />
+            </Grid>
 
-        {isLoadingUser ? (
-          <Box 
-            display="flex" 
-            justifyContent="center" 
-            alignItems="center" 
-            minHeight="200px"
-            sx={{ p: SIZES.spacing.lg }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <form onSubmit={formik.handleSubmit}>
-            {apiError && (
-              <Alert 
-                severity="error" 
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                name="email"
+                label="Email"
+                type="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.email && Boolean(formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="phone"
+                label="Телефон"
+                placeholder="+380671234567"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                name="first_name"
+                label="Имя"
+                value={formik.values.first_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.first_name && Boolean(formik.errors.first_name)}
+                helperText={formik.touched.first_name && formik.errors.first_name}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                name="last_name"
+                label="Фамилия"
+                value={formik.values.last_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.last_name && Boolean(formik.errors.last_name)}
+                helperText={formik.touched.last_name && formik.errors.last_name}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                name="middle_name"
+                label="Отчество"
+                value={formik.values.middle_name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
+                helperText={formik.touched.middle_name && formik.errors.middle_name}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            {/* Роль и статус */}
+            <Grid item xs={12}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
                 sx={{ 
-                  mb: SIZES.spacing.lg,
-                  borderRadius: SIZES.borderRadius.md 
+                  mt: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg 
                 }}
               >
-                {apiError}
-              </Alert>
-            )}
+                Роль и статус
+              </Typography>
+              <Divider sx={{ mb: SIZES.spacing.md }} />
+            </Grid>
 
-            {/* Основные поля пользователя */}
-            <Grid container spacing={SIZES.spacing.lg}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="email"
-                  name="email"
-                  label="Email"
-                  value={formik.values.email}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth required error={formik.touched.role_id && Boolean(formik.errors.role_id)}>
+                <InputLabel>Роль *</InputLabel>
+                <Select
+                  name="role_id"
+                  value={formik.values.role_id}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.email && Boolean(formik.errors.email)}
-                  helperText={formik.touched.email && formik.errors.email}
-                  required
-                  sx={textFieldStyles}
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="phone"
-                  name="phone"
-                  label="Телефон"
-                  value={formik.values.phone}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.phone && Boolean(formik.errors.phone)}
-                  helperText={formik.touched.phone && formik.errors.phone}
-                  sx={textFieldStyles}
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="first_name"
-                  name="first_name"
-                  label="Имя"
-                  value={formik.values.first_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.first_name && Boolean(formik.errors.first_name)}
-                  helperText={formik.touched.first_name && formik.errors.first_name}
-                  required
-                  sx={textFieldStyles}
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="last_name"
-                  name="last_name"
-                  label="Фамилия"
-                  value={formik.values.last_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.last_name && Boolean(formik.errors.last_name)}
-                  helperText={formik.touched.last_name && formik.errors.last_name}
-                  required
-                  sx={textFieldStyles}
-                />
-              </Grid>
+                  error={formik.touched.role_id && Boolean(formik.errors.role_id)}
+                >
+                  <MenuItem value={1}>Администратор</MenuItem>
+                  <MenuItem value={2}>Менеджер</MenuItem>
+                  <MenuItem value={3}>Партнер</MenuItem>
+                  <MenuItem value={4}>Оператор</MenuItem>
+                  <MenuItem value={5}>Клиент</MenuItem>
+                </Select>
+                {formik.touched.role_id && formik.errors.role_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.role_id}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="middle_name"
-                  name="middle_name"
-                  label="Отчество"
-                  value={formik.values.middle_name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
-                  helperText={formik.touched.middle_name && formik.errors.middle_name}
-                  sx={textFieldStyles}
-                />
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
-                {/* Выпадающий список ролей с централизованными стилями */}
-                <FormControl fullWidth>
-                  <InputLabel id="role-label">Роль</InputLabel>
-                  <Select
-                    labelId="role-label"
-                    id="role_id"
-                    name="role_id"
-                    value={formik.values.role_id}
-                    label="Роль"
-                    onChange={formik.handleChange}
-                    error={formik.touched.role_id && Boolean(formik.errors.role_id)}
-                    sx={{ borderRadius: SIZES.borderRadius.md }}
-                  >
-                    <MenuItem value={1}>Администратор</MenuItem>
-                    <MenuItem value={2}>Менеджер</MenuItem>
-                    <MenuItem value={3}>Партнер</MenuItem>
-                    <MenuItem value={4}>Оператор</MenuItem>
-                    <MenuItem value={5}>Клиент</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              
-              <Grid item xs={12}>
-                {/* Переключатель активности пользователя */}
+            <Grid item xs={12} md={6}>
+              <Box sx={{ ml: 2, mt: 1 }}>
                 <FormControlLabel
                   control={
-                    <Checkbox
-                      id="is_active"
-                      name="is_active"
+                    <Switch
                       checked={formik.values.is_active}
-                      onChange={formik.handleChange}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
+                      name="is_active"
                     />
                   }
-                  label="Активен"
+                  label="Активный пользователь"
                 />
-              </Grid>
+              </Box>
             </Grid>
 
-            <Divider sx={{ 
-              my: SIZES.spacing.lg,
-              borderColor: theme.palette.divider 
-            }} />
+            {/* Пароль */}
+            <Grid item xs={12}>
+              <Typography 
+                variant="h6" 
+                gutterBottom 
+                sx={{ 
+                  mt: SIZES.spacing.md,
+                  fontSize: SIZES.fontSize.lg 
+                }}
+              >
+                {isEdit ? 'Изменить пароль' : 'Пароль'}
+              </Typography>
+              <Divider sx={{ mb: SIZES.spacing.md }} />
+            </Grid>
 
-            <Typography 
-              variant="h6" 
-              gutterBottom
-              sx={{ 
-                fontSize: SIZES.fontSize.lg,
-                fontWeight: 600,
-                mb: SIZES.spacing.md
-              }}
-            >
-              {isEditMode ? 'Изменить пароль' : 'Пароль'}
-            </Typography>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required={!isEdit}
+                type="password"
+                name="password"
+                label={isEdit ? "Новый пароль (оставьте пустым, если не хотите менять)" : "Пароль"}
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.password && Boolean(formik.errors.password)}
+                helperText={formik.touched.password && formik.errors.password}
+                sx={textFieldStyles}
+              />
+            </Grid>
 
-            {/* Секция настройки пароля */}
-            <Grid container spacing={SIZES.spacing.lg}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="password"
-                  name="password"
-                  type="password"
-                  label="Пароль"
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.password && Boolean(formik.errors.password)}
-                  helperText={formik.touched.password && formik.errors.password}
-                  required={!isEditMode}
-                  sx={textFieldStyles}
-                />
-              </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required={!isEdit && Boolean(formik.values.password)}
+                type="password"
+                name="password_confirmation"
+                label="Подтверждение пароля"
+                value={formik.values.password_confirmation}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
+                helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            {/* Кнопки действий */}
+            <Grid item xs={12}>
+              {apiError && (
+                <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>
+              )}
               
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  type="password"
-                  label="Подтверждение пароля"
-                  value={formik.values.password_confirmation}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
-                  helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
-                  required={!isEditMode}
-                  sx={textFieldStyles}
-                />
-              </Grid>
+              {successMessage && (
+                <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+              )}
+              
+              <Box sx={{ 
+                display: 'flex', 
+                gap: SIZES.spacing.md, 
+                justifyContent: 'flex-end', 
+                mt: SIZES.spacing.lg 
+              }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/users')}
+                  disabled={isLoading}
+                  sx={secondaryButtonStyles}
+                >
+                  Отмена
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  disabled={isLoading || !formik.isValid}
+                  sx={primaryButtonStyles}
+                >
+                  {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
+                </Button>
+              </Box>
             </Grid>
-
-            {/* Блок действий с централизованными стилями кнопок */}
-            <Box sx={{ 
-              mt: SIZES.spacing.lg, 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
-              gap: SIZES.spacing.md 
-            }}>
-              <Button 
-                onClick={handleCancel}
-                disabled={isLoading}
-                sx={secondaryButtonStyles}
-              >
-                Отмена
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading}
-                sx={primaryButtonStyles}
-              >
-                {isLoading 
-                  ? 'Сохранение...' 
-                  : (isEditMode ? 'Сохранить' : 'Создать')
-                }
-              </Button>
-            </Box>
-          </form>
-        )}
-      </Paper>
+          </Grid>
+        </Paper>
+      </form>
     </Box>
   );
 };

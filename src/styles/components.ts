@@ -312,11 +312,24 @@ export const getTableStyles = (theme: Theme) => {
 export const getFormStyles = (theme: Theme) => {
   return {
     container: {
+      maxWidth: 800,
+      mx: 'auto',
+      mt: theme.spacing(3),
+      mb: theme.spacing(3),
+    },
+    paper: {
       background: theme.palette.background.paper,
       borderRadius: SIZES.borderRadius.md,
       padding: theme.spacing(SIZES.spacing.lg),
       border: `1px solid ${theme.palette.divider}`,
       backdropFilter: 'blur(10px)',
+      boxShadow: theme.shadows[1],
+    },
+    title: {
+      fontSize: SIZES.fontSize.xl,
+      fontWeight: 600,
+      mb: theme.spacing(3),
+      color: theme.palette.text.primary,
     },
     section: {
       marginBottom: theme.spacing(SIZES.spacing.xl),
@@ -326,16 +339,45 @@ export const getFormStyles = (theme: Theme) => {
     },
     sectionTitle: {
       color: theme.palette.text.primary,
-      fontWeight: 700,
-      marginBottom: theme.spacing(SIZES.spacing.md),
-      borderBottom: `2px solid ${theme.palette.divider}`,
-      paddingBottom: theme.spacing(SIZES.spacing.sm),
+      fontWeight: 600,
+      marginBottom: theme.spacing(2),
+      fontSize: SIZES.fontSize.lg,
     },
     grid: {
       spacing: SIZES.spacing.lg,
     },
     field: {
       marginBottom: theme.spacing(SIZES.spacing.md),
+    },
+    checkboxLabel: {
+      marginTop: theme.spacing(1),
+    },
+    divider: {
+      my: theme.spacing(3),
+      borderColor: theme.palette.divider,
+    },
+    loadingContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '200px',
+      p: theme.spacing(3),
+    },
+    errorAlert: {
+      mb: theme.spacing(3),
+      borderRadius: SIZES.borderRadius.md,
+    },
+    actionsContainer: {
+      mt: theme.spacing(3),
+      display: 'flex',
+      justifyContent: 'flex-end',
+      gap: theme.spacing(2),
+    },
+    primaryButton: {
+      ...getButtonStyles(theme, 'primary'),
+    },
+    secondaryButton: {
+      ...getButtonStyles(theme, 'secondary'),
     },
   };
 };

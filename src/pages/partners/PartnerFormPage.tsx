@@ -656,14 +656,7 @@ const PartnerFormPage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
-                {/* Отладочная информация */}
-                {process.env.NODE_ENV === 'development' && (
-                  <Typography variant="caption" sx={{ mt: 0.5, ml: 1.5, color: 'info.main' }}>
-                    Отладка: regionId={regionIdForCities}, городов={citiesData?.data?.length || 0}
-                    {citiesLoading && ' (загрузка...)'}
-                    {citiesFetching && ' (обновление...)'}
-                  </Typography>
-                )}
+
                 {formik.touched.city_id && formik.errors.city_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                     {formik.errors.city_id}
@@ -688,16 +681,18 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
-                    name="is_active"
-                  />
-                }
-                label="Активный партнер"
-              />
+              <Box sx={{ ml: 2, mt: 1 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.is_active}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
+                      name="is_active"
+                    />
+                  }
+                  label="Активный партнер"
+                />
+              </Box>
             </Grid>
 
             {/* Данные пользователя (только при создании) */}
