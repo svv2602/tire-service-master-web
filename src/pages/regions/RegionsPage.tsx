@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
   InputAdornment,
   CircularProgress,
   Table,
@@ -20,7 +16,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
   FormControl,
   InputLabel,
   Select,
@@ -46,25 +41,25 @@ import {
 } from '../../api/regions.api';
 import { Region } from '../../types/models';
 import Notification from '../../components/Notification';
-import { SIZES } from '../../styles/theme';
+
+// Импорты UI компонентов
 import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getTableStyles, 
-  getChipStyles 
-} from '../../styles/components';
+  Box,
+  Button, 
+  TextField, 
+  Typography 
+} from '../../components/ui';
+import { Pagination } from '../../components/ui/Pagination';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
 
 const RegionsPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Получение темы и централизованных стилей
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
-  const chipStyles = getChipStyles(theme);
+  
+  // Инициализация централизованных стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -111,13 +106,8 @@ const RegionsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleChangePage = (newPage: number) => {
+    setPage(newPage - 1);
   };
 
   const handleDeleteClick = (region: Region) => {
@@ -190,7 +180,7 @@ const RegionsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -198,7 +188,7 @@ const RegionsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={tablePageStyles.errorContainer}>
         <Alert severity="error">
           Ошибка при загрузке регионов: {error.toString()}
         </Alert>
@@ -210,90 +200,71 @@ const RegionsPage: React.FC = () => {
   const totalItems = regionsData?.pagination?.total_count || 0;
 
   return (
-    <Box sx={{ p: SIZES.spacing.lg }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: SIZES.spacing.lg 
-      }}>
-        <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
           Регионы
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/regions/new')}
-          sx={buttonStyles}
+          sx={tablePageStyles.createButton}
         >
           Добавить регион
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Box sx={{ 
-        p: SIZES.spacing.md, 
-        mb: SIZES.spacing.lg
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: SIZES.spacing.md, 
-          alignItems: 'center', 
-          flexWrap: 'wrap' 
-        }}>
-          <TextField
-            placeholder="Поиск по названию региона"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearchChange}
-            sx={{ 
-              ...textFieldStyles,
-              minWidth: 300 
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Статус</InputLabel>
-            <Select
-              value={activeFilter}
-              onChange={handleActiveFilterChange}
-              label="Статус"
-              sx={textFieldStyles}
-            >
-              <MenuItem value="">Все</MenuItem>
-              <MenuItem value="true">Активные</MenuItem>
-              <MenuItem value="false">Неактивные</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по названию региона"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          sx={tablePageStyles.searchField}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <FormControl size="small" sx={tablePageStyles.filterSelect}>
+          <InputLabel>Статус</InputLabel>
+          <Select
+            value={activeFilter}
+            onChange={handleActiveFilterChange}
+            label="Статус"
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="true">Активные</MenuItem>
+            <MenuItem value="false">Неактивные</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       {/* Таблица регионов */}
       <Box>
-        <TableContainer sx={tableStyles.tableContainer}>
+        <TableContainer sx={tablePageStyles.tableContainer}>
           <Table>
-            <TableHead sx={tableStyles.tableHead}>
+            <TableHead sx={tablePageStyles.tableHeader}>
               <TableRow>
                 <TableCell>Регион</TableCell>
                 <TableCell>Код</TableCell>
                 <TableCell>Статус</TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <LocationCityIcon fontSize="small" />
                     Кол-во городов
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CalendarTodayIcon fontSize="small" />
                     Дата создания
                   </Box>
@@ -303,61 +274,53 @@ const RegionsPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {regions.map((region: Region) => (
-                <TableRow key={region.id} hover sx={tableStyles.tableRow}>
-                  <TableCell sx={tableStyles.tableCell}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.md }}>
+                <TableRow key={region.id} sx={tablePageStyles.tableRow}>
+                  <TableCell>
+                    <Box sx={tablePageStyles.avatarContainer}>
                       <LocationOnIcon color="action" />
-                      <Typography sx={{ fontSize: SIZES.fontSize.md }}>{region.name}</Typography>
+                      <Typography>{region.name}</Typography>
                     </Box>
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell>
                     <Chip 
                       label={region.code}
                       variant="outlined"
                       size="small"
-                      sx={chipStyles}
                     />
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell>
                     <Chip 
                       label={region.is_active ? 'Активен' : 'Неактивен'}
                       color={region.is_active ? 'success' : 'default'}
                       size="small"
-                      sx={chipStyles}
                     />
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell>
                     <Tooltip title="Количество городов">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <LocationCityIcon fontSize="small" />
-                        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                        <Typography>
                           {region.cities_count !== undefined ? region.cities_count : 'Н/Д'}
                         </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CalendarTodayIcon fontSize="small" color="action" />
-                      <Typography sx={{ fontSize: SIZES.fontSize.md, color: theme.palette.text.secondary }}>
+                      <Typography sx={{ color: theme.palette.text.secondary }}>
                         {new Date(region.created_at).toLocaleDateString('ru-RU')}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell align="right" sx={tableStyles.tableCell}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+                  <TableCell align="right">
+                    <Box sx={tablePageStyles.actionsContainer}>
                       <Tooltip title={region.is_active ? 'Деактивировать' : 'Активировать'}>
                         <IconButton
                           size="small"
                           onClick={() => handleToggleActive(region)}
                           color={region.is_active ? 'success' : 'default'}
-                          sx={{
-                            '&:hover': {
-                              backgroundColor: region.is_active 
-                                ? `${theme.palette.action.hover}`
-                                : `${theme.palette.success.main}15`
-                            }
-                          }}
+                          sx={tablePageStyles.actionButton}
                         >
                           {region.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
                         </IconButton>
@@ -366,12 +329,7 @@ const RegionsPage: React.FC = () => {
                         <IconButton
                           size="small"
                           onClick={() => navigate(`/regions/${region.id}/edit`)}
-                          sx={{ 
-                            color: theme.palette.primary.main,
-                            '&:hover': {
-                              backgroundColor: `${theme.palette.primary.main}15`
-                            }
-                          }}
+                          sx={tablePageStyles.actionButton}
                         >
                           <EditIcon />
                         </IconButton>
@@ -381,11 +339,7 @@ const RegionsPage: React.FC = () => {
                           size="small"
                           onClick={() => handleDeleteClick(region)}
                           color="error"
-                          sx={{
-                            '&:hover': {
-                              backgroundColor: `${theme.palette.error.main}15`
-                            }
-                          }}
+                          sx={tablePageStyles.actionButton}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -399,66 +353,37 @@ const RegionsPage: React.FC = () => {
         </TableContainer>
         
         {/* Пагинация */}
-        <TablePagination
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          component="div"
-          count={totalItems}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) =>
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
-          sx={{
-            borderTop: `1px solid ${theme.palette.divider}`,
-            '& .MuiTablePagination-select': {
-              fontSize: SIZES.fontSize.sm
-            },
-            '& .MuiTablePagination-displayedRows': {
-              fontSize: SIZES.fontSize.sm
-            }
-          }}
-        />
+        <Box sx={tablePageStyles.paginationContainer}>
+          <Pagination
+            count={Math.ceil(totalItems / rowsPerPage)}
+            page={page + 1}
+            onChange={handleChangePage}
+            color="primary"
+            disabled={totalItems <= rowsPerPage}
+          />
+        </Box>
       </Box>
 
       {/* Диалог подтверждения удаления */}
       <Dialog 
         open={deleteDialogOpen} 
         onClose={handleDeleteCancel}
-        PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400
-          }
-        }}
+        maxWidth="sm"
+        fullWidth
       >
-        <DialogTitle sx={{ 
-          fontSize: SIZES.fontSize.lg, 
-          fontWeight: 600, 
-          pb: SIZES.spacing.sm 
-        }}>
+        <DialogTitle>
           Подтвердите удаление
         </DialogTitle>
-        <DialogContent sx={{ pb: SIZES.spacing.md }}>
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+        <DialogContent>
+          <Typography>
             Вы уверены, что хотите удалить регион "{selectedRegion?.name}"?
             Это действие нельзя отменить.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ 
-          p: SIZES.spacing.md, 
-          gap: SIZES.spacing.sm 
-        }}>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
           <Button 
             onClick={handleDeleteCancel}
-            sx={{
-              ...buttonStyles,
-              variant: 'outlined',
-              borderRadius: SIZES.borderRadius.sm
-            }}
+            variant="outlined"
           >
             Отмена
           </Button>
@@ -466,12 +391,6 @@ const RegionsPage: React.FC = () => {
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
-            sx={{
-              borderRadius: SIZES.borderRadius.sm,
-              '&:hover': {
-                backgroundColor: theme.palette.error.dark
-              }
-            }}
           >
             Удалить
           </Button>
