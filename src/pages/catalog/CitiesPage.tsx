@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
@@ -12,7 +8,6 @@ import {
   TableRow,
   IconButton,
   Chip,
-  TextField,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,21 +15,21 @@ import {
   FormControlLabel,
   Switch,
   CircularProgress,
-  Snackbar,
-  Alert,
   Tooltip,
-  TablePagination,
   MenuItem,
   Select,
   FormControl,
   InputLabel,
   SelectChangeEvent,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  LocationOn as LocationOnIcon,
+  LocationCity as LocationCityIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -47,6 +42,20 @@ import {
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { City, Region } from '../../types/models';
 import { CityFilter } from '../../types/api';
+
+// Импорты UI компонентов
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Alert,
+} from '../../components/ui';
+import { Pagination } from '../../components/ui/Pagination';
+import Notification from '../../components/Notification';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
 
 // Схема валидации для города
 const validationSchema = yup.object({
@@ -62,16 +71,28 @@ interface CityFormData {
 
 const CitiesPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Инициализация централизованных стилей
+  const tablePageStyles = getTablePageStyles(theme);
+  
   const [openDialog, setOpenDialog] = useState(false);
   const [editingCity, setEditingCity] = useState<City | null>(null);
   const [search, setSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState<string>('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // RTK Query хуки
   const { data: citiesData, isLoading: citiesLoading, error: citiesError } = useGetCitiesQuery({
@@ -92,13 +113,8 @@ const CitiesPage: React.FC = () => {
   const regions = regionsData?.data || [];
 
   // Обработчики пагинации
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+  const handleChangePage = (newPage: number) => {
+    setPage(newPage - 1);
   };
 
   // Формик для формы города
@@ -120,10 +136,18 @@ const CitiesPage: React.FC = () => {
               is_active: values.is_active
             }
           }).unwrap();
-          setSuccessMessage('Город успешно обновлен');
+          setNotification({
+            open: true,
+            message: 'Город успешно обновлен',
+            severity: 'success'
+          });
           handleCloseDialog();
         } else {
-          setSuccessMessage('Функция создания города будет добавлена позже');
+          setNotification({
+            open: true,
+            message: 'Функция создания города будет добавлена позже',
+            severity: 'info'
+          });
           handleCloseDialog();
         }
       } catch (error) {
@@ -159,12 +183,20 @@ const CitiesPage: React.FC = () => {
   const handleDeleteCity = async (id: number) => {
     try {
       await deleteCity(Number(id)).unwrap();
-      setSuccessMessage('Город успешно удален');
+      setNotification({
+        open: true,
+        message: 'Город успешно удален',
+        severity: 'success'
+      });
       setDeleteDialogOpen(false);
       setSelectedCity(null);
     } catch (error) {
       console.error('Ошибка при удалении города:', error);
-      setErrorMessage('Не удалось удалить город');
+      setNotification({
+        open: true,
+        message: 'Не удалось удалить город',
+        severity: 'error'
+      });
     }
   };
 
@@ -181,8 +213,8 @@ const CitiesPage: React.FC = () => {
   };
 
   // Закрытие уведомления
-  const handleCloseSnackbar = () => {
-    setSuccessMessage(null);
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   const handleDeleteClick = (city: City) => {
@@ -196,14 +228,24 @@ const CitiesPage: React.FC = () => {
         id: Number(city.id),
         city: { is_active: !city.is_active }
       }).unwrap();
+      setNotification({
+        open: true,
+        message: `Город ${!city.is_active ? 'активирован' : 'деактивирован'}`,
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
+      setNotification({
+        open: true,
+        message: 'Ошибка при изменении статуса города',
+        severity: 'error'
+      });
     }
   };
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -211,59 +253,66 @@ const CitiesPage: React.FC = () => {
 
   if (error) {
     return (
-      <Alert severity="error">
-        Произошла ошибка при загрузке данных: {(error as any)?.data?.message || 'Неизвестная ошибка'}
-      </Alert>
+      <Box sx={tablePageStyles.errorContainer}>
+        <Alert severity="error">
+          Произошла ошибка при загрузке данных: {(error as any)?.data?.message || 'Неизвестная ошибка'}
+        </Alert>
+      </Box>
     );
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Управление городами</Typography>
+    <Box sx={tablePageStyles.pageContainer}>
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
+          Управление городами
+        </Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
+          sx={tablePageStyles.createButton}
         >
           Добавить город
         </Button>
       </Box>
 
-      <Paper sx={{ mb: 2, p: 2 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <TextField
-            label="Поиск"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearch}
-            InputProps={{
-              startAdornment: <SearchIcon color="action" />,
-            }}
-            sx={{ minWidth: 200 }}
-          />
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Регион</InputLabel>
-            <Select
-              value={regionFilter}
-              onChange={handleRegionFilterChange}
-              label="Регион"
-            >
-              <MenuItem value="">Все регионы</MenuItem>
-              {regions.map((region: Region) => (
-                <MenuItem key={region.id} value={region.id.toString()}>
-                  {region.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+      {/* Фильтры и поиск */}
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по названию города"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearch}
+          sx={tablePageStyles.searchField}
+          InputProps={{
+            startAdornment: <SearchIcon />,
+          }}
+        />
+        
+        <FormControl size="small" sx={tablePageStyles.filterSelect}>
+          <InputLabel>Регион</InputLabel>
+          <Select
+            value={regionFilter}
+            onChange={handleRegionFilterChange}
+            label="Регион"
+          >
+            <MenuItem value="">Все регионы</MenuItem>
+            {regions.map((region: Region) => (
+              <MenuItem key={region.id} value={region.id.toString()}>
+                {region.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
-        <TableContainer>
+      {/* Таблица городов */}
+      <Box>
+        <TableContainer sx={tablePageStyles.tableContainer}>
           <Table>
-            <TableHead>
+            <TableHead sx={tablePageStyles.tableHeader}>
               <TableRow>
                 <TableCell>Название</TableCell>
                 <TableCell>Регион</TableCell>
@@ -273,29 +322,35 @@ const CitiesPage: React.FC = () => {
             </TableHead>
             <TableBody>
               {cities.map((city: City) => (
-                <TableRow key={city.id}>
-                  <TableCell>{city.name}</TableCell>
+                <TableRow key={city.id} sx={tablePageStyles.tableRow}>
                   <TableCell>
-                    {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
+                    <Box sx={tablePageStyles.avatarContainer}>
+                      <LocationCityIcon color="action" />
+                      <Typography>{city.name}</Typography>
+                    </Box>
                   </TableCell>
                   <TableCell>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={city.is_active}
-                          onChange={() => handleToggleStatus(city)}
-                          color="primary"
-                        />
-                      }
+                    <Box sx={tablePageStyles.avatarContainer}>
+                      <LocationOnIcon color="action" />
+                      <Typography>
+                        {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
                       label={city.is_active ? 'Активен' : 'Неактивен'}
+                      color={city.is_active ? 'success' : 'default'}
+                      size="small"
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                    <Box sx={tablePageStyles.actionsContainer}>
                       <Tooltip title="Редактировать">
                         <IconButton
                           size="small"
                           onClick={() => handleOpenDialog(city)}
+                          sx={tablePageStyles.actionButton}
                         >
                           <EditIcon />
                         </IconButton>
@@ -303,8 +358,9 @@ const CitiesPage: React.FC = () => {
                       <Tooltip title="Удалить">
                         <IconButton
                           size="small"
-                          color="error"
                           onClick={() => handleDeleteClick(city)}
+                          color="error"
+                          sx={tablePageStyles.actionButton}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -316,17 +372,18 @@ const CitiesPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-        />
-      </Paper>
+        
+        {/* Пагинация */}
+        <Box sx={tablePageStyles.paginationContainer}>
+          <Pagination
+            count={Math.ceil(totalItems / rowsPerPage)}
+            page={page + 1}
+            onChange={handleChangePage}
+            color="primary"
+            disabled={totalItems <= rowsPerPage}
+          />
+        </Box>
+      </Box>
 
       {/* Диалог создания/редактирования */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
@@ -403,17 +460,13 @@ const CitiesPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Уведомление об успехе */}
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={handleCloseSnackbar} severity="success">
-          {successMessage}
-        </Alert>
-      </Snackbar>
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };
