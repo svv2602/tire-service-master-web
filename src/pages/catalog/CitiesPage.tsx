@@ -254,9 +254,9 @@ const CitiesPage: React.FC = () => {
   if (error) {
     return (
       <Box sx={tablePageStyles.errorContainer}>
-        <Alert severity="error">
-          Произошла ошибка при загрузке данных: {(error as any)?.data?.message || 'Неизвестная ошибка'}
-        </Alert>
+      <Alert severity="error">
+        Произошла ошибка при загрузке данных: {(error as any)?.data?.message || 'Неизвестная ошибка'}
+      </Alert>
       </Box>
     );
   }
@@ -279,34 +279,34 @@ const CitiesPage: React.FC = () => {
 
       {/* Фильтры и поиск */}
       <Box sx={tablePageStyles.filtersContainer}>
-        <TextField
+          <TextField
           placeholder="Поиск по названию города"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={handleSearch}
+            variant="outlined"
+            size="small"
+            value={search}
+            onChange={handleSearch}
           sx={tablePageStyles.searchField}
-          InputProps={{
+            InputProps={{
             startAdornment: <SearchIcon />,
-          }}
-        />
+            }}
+          />
         
         <FormControl size="small" sx={tablePageStyles.filterSelect}>
-          <InputLabel>Регион</InputLabel>
-          <Select
-            value={regionFilter}
-            onChange={handleRegionFilterChange}
-            label="Регион"
-          >
-            <MenuItem value="">Все регионы</MenuItem>
-            {regions.map((region: Region) => (
-              <MenuItem key={region.id} value={region.id.toString()}>
-                {region.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
+            <InputLabel>Регион</InputLabel>
+            <Select
+              value={regionFilter}
+              onChange={handleRegionFilterChange}
+              label="Регион"
+            >
+              <MenuItem value="">Все регионы</MenuItem>
+              {regions.map((region: Region) => (
+                <MenuItem key={region.id} value={region.id.toString()}>
+                  {region.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
       {/* Таблица городов */}
       <Box>
@@ -333,7 +333,7 @@ const CitiesPage: React.FC = () => {
                     <Box sx={tablePageStyles.avatarContainer}>
                       <LocationOnIcon color="action" />
                       <Typography>
-                        {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
+                    {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -372,7 +372,7 @@ const CitiesPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        
+
         {/* Пагинация */}
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
@@ -381,7 +381,7 @@ const CitiesPage: React.FC = () => {
             onChange={handleChangePage}
             color="primary"
             disabled={totalItems <= rowsPerPage}
-          />
+        />
         </Box>
       </Box>
 

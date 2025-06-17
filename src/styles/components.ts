@@ -386,7 +386,7 @@ export const getFormStyles = (theme: Theme) => {
     actionsContainer: {
       mt: theme.spacing(3),
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       gap: theme.spacing(2),
     },
     primaryButton: {
@@ -394,6 +394,71 @@ export const getFormStyles = (theme: Theme) => {
     },
     secondaryButton: {
       ...getButtonStyles(theme, 'secondary'),
+    },
+    pageContainer: {
+      maxWidth: 1000,
+      margin: '0 auto',
+      padding: theme.spacing(SIZES.spacing.lg),
+    },
+    pageTitle: {
+      fontSize: SIZES.fontSize.xl,
+      fontWeight: 600,
+      color: theme.palette.text.primary,
+    },
+    backButton: {
+      marginRight: theme.spacing(SIZES.spacing.md),
+      '&:hover': {
+        backgroundColor: theme.palette.action.hover,
+      },
+    },
+    switchContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+    },
+    logoPreview: {
+      width: 100,
+      height: 100,
+      border: `2px solid ${theme.palette.divider}`,
+    },
+    logoError: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      bgcolor: 'rgba(0, 0, 0, 0.5)',
+      borderRadius: SIZES.borderRadius.md,
+    },
+    logoPlaceholder: {
+      width: 100,
+      height: 100,
+      bgcolor: theme.palette.grey[200],
+      border: `2px solid ${theme.palette.divider}`,
+    },
+    logoActions: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: theme.spacing(SIZES.spacing.sm),
+    },
+    helperText: {
+      marginTop: theme.spacing(SIZES.spacing.sm),
+      display: 'block',
+      fontSize: SIZES.fontSize.sm,
+      color: theme.palette.text.secondary,
+    },
+    errorText: {
+      marginTop: theme.spacing(SIZES.spacing.sm),
+      display: 'block',
+      fontSize: SIZES.fontSize.sm,
+      color: theme.palette.error.main,
+    },
+    sectionDivider: {
+      marginY: theme.spacing(SIZES.spacing.xl),
+      borderColor: theme.palette.divider,
     },
   };
 };

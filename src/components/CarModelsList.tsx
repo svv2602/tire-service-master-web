@@ -1,11 +1,21 @@
+/**
+ * CarModelsList - Компонент списка моделей автомобилей для конкретного бренда
+ * 
+ * Функциональность:
+ * - Отображение моделей в табличном виде
+ * - Поиск моделей по названию
+ * - Создание новых моделей
+ * - Редактирование существующих моделей
+ * - Удаление моделей с подтверждением
+ * - Переключение статуса активности
+ * - Пагинация результатов
+ * - Централизованная система стилей
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Button,
   Dialog,
@@ -18,17 +28,16 @@ import {
   CircularProgress,
   Alert,
   DialogContentText,
-  Pagination,
-  Stack,
+  Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
   useTheme,
 } from '@mui/material';
-import { SIZES } from '../styles/theme';
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles,
-  getChipStyles
-} from '../styles/components';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -43,7 +52,12 @@ import {
   useDeleteCarModelMutation,
 } from '../api/carModels.api';
 import { CarModel, CarModelFormData } from '../types/car';
+import { Pagination } from './ui';
+import { getTablePageStyles, SIZES } from '../styles';
 
+/**
+ * Схема валидации формы модели автомобиля
+ */
 const validationSchema = Yup.object({
   name: Yup.string()
     .required('Название модели обязательно')
@@ -57,13 +71,12 @@ interface CarModelsListProps {
   brandId: string;
 }
 
+/**
+ * CarModelsList - Основной компонент списка моделей автомобилей
+ */
 const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
-  const dangerButtonStyles = getButtonStyles(theme, 'error');
-  const textFieldStyles = getTextFieldStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -74,6 +87,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const PER_PAGE = 10;
 
+  // RTK Query хуки для работы с API моделей
   const { data: response, isLoading } = useGetCarModelsByBrandIdQuery({
     brandId,
     params: {
@@ -89,6 +103,9 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [updateModel] = useUpdateCarModelMutation();
   const [deleteModel] = useDeleteCarModelMutation();
 
+  /**
+   * Конфигурация Formik для управления состоянием формы
+   */
   const formik = useFormik<CarModelFormData>({
     initialValues: {
       name: '',
@@ -131,6 +148,9 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     },
   });
 
+  /**
+   * Обработчик открытия диалога создания/редактирования
+   */
   const handleOpenDialog = (model?: CarModel) => {
     if (model) {
       setSelectedModel(model);
@@ -147,6 +167,9 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     setError(null);
   };
 
+  /**
+   * Обработчик закрытия диалога создания/редактирования
+   */
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedModel(null);
@@ -154,18 +177,27 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     setError(null);
   };
 
+  /**
+   * Обработчик открытия диалога удаления
+   */
   const handleOpenDeleteDialog = (model: CarModel) => {
     setModelToDelete(model);
     setIsDeleteDialogOpen(true);
     setError(null);
   };
 
+  /**
+   * Обработчик закрытия диалога удаления
+   */
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
     setModelToDelete(null);
     setError(null);
   };
 
+  /**
+   * Обработчик удаления модели
+   */
   const handleDeleteModel = async () => {
     if (!modelToDelete) return;
 
@@ -189,247 +221,273 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     }
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
-    setPage(value);
+  /**
+   * Обработчик изменения страницы пагинации
+   */
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
+  /**
+   * Обработчик поиска моделей
+   */
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
-    setPage(1); // Сбрасываем страницу при поиске
+    setPage(1);
   };
 
+  // Состояние загрузки
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" p={SIZES.spacing.lg}>
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={cardStyles}>
-      <Box mb={SIZES.spacing.md}>
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            fontSize: SIZES.fontSize.lg,
-            fontWeight: 600
-          }}
-        >
-          Модели
-        </Typography>
-      </Box>
-
-      <Box mb={SIZES.spacing.md}>
+    <Box>
+      {/* Поиск и кнопка добавления */}
+      <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          fullWidth
-          label="Поиск моделей"
+          placeholder="Поиск моделей"
           variant="outlined"
+          size="small"
           value={searchQuery}
           onChange={handleSearch}
-          size="small"
-          sx={textFieldStyles}
+          sx={tablePageStyles.searchField}
         />
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={tablePageStyles.primaryButton}
+        >
+          Добавить модель
+        </Button>
       </Box>
 
+      {/* Ошибки */}
       {error && (
         <Alert 
           severity="error" 
-          sx={{ 
-            mb: SIZES.spacing.md,
-            borderRadius: SIZES.borderRadius.sm
-          }}
+          sx={tablePageStyles.errorAlert}
           onClose={() => setError(null)}
         >
           {error}
         </Alert>
       )}
 
-      <List sx={{ 
-        mb: SIZES.spacing.md, 
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: SIZES.borderRadius.md,
-        overflow: 'hidden'
-      }}>
-        {models.map((model) => (
-          <ListItem
-            key={model.id}
-            sx={{
-              bgcolor: theme.palette.background.paper,
-              borderBottom: `1px solid ${theme.palette.divider}`,
-              opacity: model.is_active ? 1 : 0.7,
-              transition: '0.2s',
-              '&:hover': {
-                bgcolor: theme.palette.action.hover
-              },
-              '&:last-child': {
-                borderBottom: 'none'
-              }
-            }}
-          >
-            <ListItemText
-              primary={
-                <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
-                  {model.name}
-                </Typography>
-              }
-              secondary={
-                <Typography 
-                  sx={{ 
-                    fontSize: SIZES.fontSize.sm,
-                    color: model.is_active ? theme.palette.success.main : theme.palette.text.disabled 
-                  }}
-                >
-                  {model.is_active ? 'Активна' : 'Неактивна'}
-                </Typography>
-              }
-            />
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={() => handleOpenDialog(model)}
-                sx={{ 
-                  mr: SIZES.spacing.sm,
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.primary.main}15` 
-                  }
+      {/* Таблица моделей */}
+      <TableContainer sx={tablePageStyles.tableContainer}>
+        <Table>
+          <TableHead sx={tablePageStyles.tableHeader}>
+            <TableRow>
+              <TableCell>Название</TableCell>
+              <TableCell>Статус</TableCell>
+              <TableCell align="right">Действия</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {models.map((model: CarModel) => (
+              <TableRow 
+                key={model.id}
+                sx={{
+                  ...tablePageStyles.tableRow,
+                  opacity: model.is_active ? 1 : 0.7,
                 }}
               >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleOpenDeleteDialog(model)}
-                sx={{ 
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.error.main}15` 
-                  }
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 500,
+                      color: theme.palette.text.primary
+                    }}
+                  >
+                    {model.name}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Chip 
+                    label={model.is_active ? 'Активна' : 'Неактивна'}
+                    color={model.is_active ? 'success' : 'default'}
+                    size="small"
+                    sx={tablePageStyles.statusChip}
+                  />
+                </TableCell>
+                <TableCell align="right" sx={tablePageStyles.tableCell}>
+                  <Box sx={tablePageStyles.actionsContainer}>
+                    <Tooltip title="Редактировать">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleOpenDialog(model)}
+                        sx={tablePageStyles.actionButton}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Удалить">
+                      <IconButton 
+                        size="small"
+                        onClick={() => handleOpenDeleteDialog(model)}
+                        sx={{
+                          ...tablePageStyles.actionButton,
+                          '&:hover': {
+                            backgroundColor: `${theme.palette.error.main}15`,
+                            color: theme.palette.error.main
+                          }
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
+      {/* Пустое состояние */}
+      {models.length === 0 && !isLoading && (
+        <Box sx={tablePageStyles.emptyStateContainer}>
+          <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
+            {searchQuery ? 'Модели не найдены' : 'В данном бренде пока нет моделей'}
+          </Typography>
+          <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
+            {searchQuery 
+              ? 'Попробуйте изменить критерии поиска'
+              : 'Добавьте первую модель в этот бренд'
+            }
+          </Typography>
+          {!searchQuery && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={tablePageStyles.primaryButton}
+            >
+              Добавить модель
+            </Button>
+          )}
+        </Box>
+      )}
+
+      {/* Пагинация */}
       {totalPages > 1 && (
-        <Box display="flex" justifyContent="center" mb={SIZES.spacing.md}>
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                borderRadius: SIZES.borderRadius.sm
-              }
-            }}
+            size="large"
           />
         </Box>
       )}
 
-      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.lg}>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          sx={buttonStyles}
-          onClick={() => handleOpenDialog()}
-        >
-          Добавить модель
-        </Button>
-      </Box>
-
-      <Dialog 
-        open={isDialogOpen} 
-        onClose={handleCloseDialog} 
-        maxWidth="sm" 
-        fullWidth
-        PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            p: 0
-          }
-        }}
-      >
-        <form onSubmit={formik.handleSubmit}>
-          <DialogTitle sx={{ 
-            borderBottom: `1px solid ${theme.palette.divider}`,
-            fontSize: SIZES.fontSize.lg,
-            fontWeight: 600,
-            pb: SIZES.spacing.md
-          }}>
-            {selectedModel ? 'Редактировать модель' : 'Добавить модель'}
-          </DialogTitle>
-          <DialogContent sx={{ pt: SIZES.spacing.md }}>
-            <Box pt={SIZES.spacing.sm}>
-              <TextField
-                fullWidth
-                id="name"
-                name="name"
-                label="Название модели"
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-                sx={{ ...textFieldStyles, mb: SIZES.spacing.md }}
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                    name="is_active"
-                    color="primary"
-                  />
-                }
-                label="Активна"
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions sx={{ p: SIZES.spacing.md, pt: 0 }}>
-            <Button onClick={handleCloseDialog} sx={secondaryButtonStyles}>Отмена</Button>
-            <Button type="submit" variant="contained" sx={buttonStyles}>
-              {selectedModel ? 'Сохранить' : 'Добавить'}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-
+      {/* Диалог создания/редактирования модели */}
       <Dialog
-        open={isDeleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
+        open={isDialogOpen}
+        onClose={handleCloseDialog}
         maxWidth="sm"
         fullWidth
         PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400,
-            p: 0
-          }
+          sx: tablePageStyles.dialogPaper
         }}
       >
-        <DialogTitle sx={{ 
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          fontSize: SIZES.fontSize.lg,
-          fontWeight: 600,
-          color: theme.palette.error.main
-        }}>
-          Подтверждение удаления
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
+          {selectedModel ? 'Редактировать модель' : 'Новая модель'}
         </DialogTitle>
-        <DialogContent sx={{ pt: SIZES.spacing.md }}>
-          <DialogContentText sx={{ fontSize: SIZES.fontSize.md }}>
-            Вы действительно хотите удалить модель "{modelToDelete?.name}"?
-            Это действие нельзя будет отменить.
-          </DialogContentText>
+        <DialogContent sx={{ pt: SIZES.spacing.sm }}>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: SIZES.spacing.md }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+          
+          <Box component="form" onSubmit={formik.handleSubmit}>
+            <TextField
+              fullWidth
+              name="name"
+              label="Название модели"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+              sx={{ mb: SIZES.spacing.md }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formik.values.is_active}
+                  onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                  name="is_active"
+                />
+              }
+              label="Активная модель"
+            />
+          </Box>
         </DialogContent>
-        <DialogActions sx={{ p: SIZES.spacing.md }}>
-          <Button onClick={handleCloseDeleteDialog} sx={secondaryButtonStyles}>Отмена</Button>
-          <Button onClick={handleDeleteModel} sx={dangerButtonStyles}>
+        <DialogActions sx={tablePageStyles.dialogActions}>
+          <Button onClick={handleCloseDialog}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={formik.submitForm}
+            variant="contained"
+            disabled={formik.isSubmitting}
+          >
+            {selectedModel ? 'Сохранить' : 'Создать'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: tablePageStyles.dialogPaper
+        }}
+      >
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
+          Подтвердите удаление
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Вы уверены, что хотите удалить модель "{modelToDelete?.name}"?
+            Это действие нельзя отменить.
+          </DialogContentText>
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mt: SIZES.spacing.md }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions sx={tablePageStyles.dialogActions}>
+          <Button onClick={handleCloseDeleteDialog}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleDeleteModel}
+            variant="contained"
+            color="error"
+          >
             Удалить
           </Button>
         </DialogActions>
