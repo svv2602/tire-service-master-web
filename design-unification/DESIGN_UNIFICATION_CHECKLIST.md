@@ -170,7 +170,15 @@ const textFieldStyles = getTextFieldStyles(theme);
   - [x] Интеграция с CitiesList сохранена
   - 📄 **Отчет:** [`design-unification/reports/REGION_FORM_PAGE_MIGRATION_REPORT.md`](./reports/REGION_FORM_PAGE_MIGRATION_REPORT.md)
 
-- [ ] `RegionsManagementPage.tsx`
+- [x] `RegionsManagementPage.tsx` ✅ **ЗАВЕРШЕНО**
+  - [x] Очистка стилей
+  - [x] Применение tablePageStyles
+  - [x] Замена Paper на Card
+  - [x] Замена TablePagination на кастомный Pagination
+  - [x] Централизованные UI компоненты
+  - [x] Сохранение развертываемых строк с CitiesList
+  - [x] Унификация фильтров и поиска
+  - 📄 **Отчет:** [`design-unification/reports/REGIONS_MANAGEMENT_PAGE_MIGRATION_REPORT.md`](./reports/REGIONS_MANAGEMENT_PAGE_MIGRATION_REPORT.md)
 
 #### Управление городами (`src/pages/cities/`)
 - [x] `CitiesPage.tsx` ✅ **ЗАВЕРШЕНО**
@@ -183,9 +191,105 @@ const textFieldStyles = getTextFieldStyles(theme);
   - [x] Убраны Paper компоненты
   - 📄 **Отчет:** [`design-unification/reports/CITIES_PAGE_MIGRATION_REPORT.md`](./reports/CITIES_PAGE_MIGRATION_REPORT.md)
 
-- [ ] `CityFormPage.tsx`
+- [x] `CityFormPage.tsx` ❌ **НЕ СУЩЕСТВУЕТ** (форма интегрирована в CitiesPage.tsx)
 
-[Продолжение списка страниц...]
+#### Управление партнерами (`src/pages/partners/`)
+- [ ] `PartnersPage.tsx`
+- [ ] `PartnerFormPage.tsx`
+
+#### Управление пользователей (`src/pages/users/`)
+- [ ] `UsersPage.tsx`
+- [ ] `UserForm.tsx`
+
+#### Управление услуг (`src/pages/services/`)
+- [ ] `ServicesPage.tsx`
+- [ ] `NewServicesPage.tsx`
+- [ ] `ServiceFormPage.tsx`
+
+#### Управление брендов автомобилей (`src/pages/car-brands/`)
+- [ ] `CarBrandsPage.tsx`
+- [ ] `CarBrandFormPage.tsx`
+
+#### Управление отзывов (`src/pages/reviews/`)
+- [ ] `ReviewsPage.tsx`
+- [ ] `ReviewFormPage.tsx`
+- [ ] `ReviewReplyPage.tsx`
+- [ ] `MyReviewsPage.tsx`
+
+#### Точки обслуживания - дополнительные страницы (`src/pages/service-points/`)
+- [ ] `ServicePointDetailPage.tsx`
+- [ ] `ServicePointDetailsPage.tsx`
+- [ ] `ServicePointFormPage.tsx`
+- [ ] `ServicePointFormPageNew.tsx`
+- [ ] `ServicePointPhotosPage.tsx`
+- [ ] `ServicePointServicesPage.tsx`
+
+### 🎯 Приоритет 3: Клиентские страницы
+
+#### Клиентская панель (`src/pages/client/`)
+- [ ] `ClientMainPage.tsx`
+- [ ] `ClientBookingPage.tsx`
+- [ ] `ClientProfilePage.tsx`
+- [ ] `ClientSearchPage.tsx`
+- [ ] `ClientServicesPage.tsx`
+- [ ] `MyBookingsPage.tsx`
+- [ ] `BookingDetailsPage.tsx`
+- [ ] `BookingSuccessPage.tsx`
+- [ ] `RescheduleBookingPage.tsx`
+- [ ] `ReviewFormPage.tsx`
+
+#### Мои автомобили (`src/pages/my-cars/`)
+- [ ] `MyCarsList.tsx`
+- [ ] `NewCarForm.tsx`
+
+#### Мои бронирования (`src/pages/my-bookings/`)
+- [ ] `MyBookingsList.tsx`
+
+#### Управление автомобилями клиентов (`src/pages/clients/`)
+- [ ] `ClientCarsPage.tsx`
+- [ ] `ClientCarFormPage.tsx`
+
+#### Профиль (`src/pages/profile/`)
+- [ ] `ProfilePage.tsx`
+
+#### Каталог (`src/pages/catalog/`)
+- [ ] `CarBrandsPage.tsx` (дубликат с car-brands)
+- [ ] `RegionsPage.tsx` (дубликат с regions)
+
+### 🎯 Приоритет 4: Контентные и вспомогательные страницы
+
+#### Статьи и контент (`src/pages/articles/`)
+- [ ] `ArticlesPage.tsx`
+- [ ] `ArticleViewPage.tsx`
+- [ ] `CreateArticlePage.tsx`
+- [ ] `EditArticlePage.tsx`
+- [ ] `ArticlesPageTest.tsx`
+
+#### База знаний (`src/pages/knowledge-base/`)
+- [ ] `KnowledgeBasePage.tsx`
+- [ ] `ArticleDetailPage.tsx`
+
+#### Управление контентом (`src/pages/page-content/`)
+- [ ] `PageContentPage.tsx`
+- [ ] `PageContentFormPage.tsx`
+
+#### Административные страницы (`src/pages/admin/`)
+- [ ] `ArticlesPage.tsx`
+- [ ] `PageContentManagement.tsx`
+
+#### Бронирования - дополнительные страницы (`src/pages/bookings/`)
+- [ ] `BookingFormPage.tsx`
+- [ ] `BookingFormPageWithAvailability.tsx`
+
+#### Настройки (`src/pages/settings/`)
+- [ ] `SettingsPage.tsx`
+
+#### Дублирующие страницы (`src/pages/cities/`)
+- [ ] `CitiesPage.tsx` (дубликат основной CitiesPage.tsx)
+
+#### Дополнительные компоненты точек обслуживания
+- [ ] `src/pages/service-points/favorites/FavoriteServicePoints.tsx`
+- [ ] `src/pages/service-points/search/ServicePointsSearch.tsx`
 
 ## 🎯 Критерии проверки каждой страницы
 
@@ -226,17 +330,21 @@ const textFieldStyles = getTextFieldStyles(theme);
 ## 📊 Прогресс миграции
 
 ### Общий прогресс
-- Всего страниц: 48
-- Мигрировано: 9 ✅
+- Всего страниц: 63
+- Мигрировано: 10 ✅
 - В процессе: 0
-- Осталось: 39
-- **Прогресс: 18.75%** 📊
+- Осталось: 53
+- **Прогресс: 15.87%** 📊
 
 ### По приоритетам
-- Приоритет 1: 4/4 ✅ (100% завершено)
-- Приоритет 2: 5/18 ✅ (27.78% завершено)
-- Приоритет 3: 0/20
-- Приоритет 4: 0/6
+- **Приоритет 1:** 4/4 ✅ (100% завершено)
+  - Критические страницы: auth, dashboard, bookings, service-points
+- **Приоритет 2:** 6/18 ✅ (33.33% завершено)
+  - Административные страницы: clients, regions, cities, partners, users, services, car-brands, reviews + дополнительные service-points
+- **Приоритет 3:** 0/20 ⏳
+  - Клиентские страницы: client, my-cars, my-bookings, profile, catalog
+- **Приоритет 4:** 0/21 ⏳
+  - Контентные страницы: articles, knowledge-base, page-content, admin, settings + дополнительные bookings + дубликаты
 
 ## 🔍 Проверка результатов
 
@@ -267,6 +375,18 @@ const textFieldStyles = getTextFieldStyles(theme);
   - Улучшена адаптивность
   - Добавлена поддержка темной темы
 ```
+
+#### 2025-06-12
+- ✅ **Мигрирована страница RegionsManagementPage.tsx** ⭐ **КОМПЛЕКСНАЯ ТАБЛИЦА С РАЗВЕРТЫВАЕМЫМИ СТРОКАМИ**
+  - Полная замена прямых импортов MUI на централизованные UI компоненты
+  - Применены централизованные стили getTablePageStyles для унификации
+  - Замена Paper на Card для консистентности дизайна
+  - Замена TablePagination на кастомный Pagination компонент
+  - Сохранена сложная функциональность: развертываемые строки с CitiesList компонентом
+  - Унификация фильтров, поиска и системы уведомлений
+  - Сохранены все CRUD операции: создание, редактирование, удаление, переключение статуса
+  - 📄 Отчет: `design-unification/reports/REGIONS_MANAGEMENT_PAGE_MIGRATION_REPORT.md`
+  - 🎯 **ИТОГ: Приоритет 2 - 6/18 страниц (33.33%)**
 
 #### 2025-06-17
 - ✅ **Мигрирована страница RegionFormPage.tsx** ⭐ **УНИФИКАЦИЯ ФОРМ**

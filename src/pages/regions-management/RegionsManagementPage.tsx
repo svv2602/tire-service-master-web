@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -15,18 +9,16 @@ import {
   TableRow,
   IconButton,
   Tooltip,
-  Chip,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Divider,
+  InputAdornment,
+  useTheme,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -48,11 +40,30 @@ import {
   useUpdateRegionMutation,
 } from '../../api/regions.api';
 import { Region } from '../../types/models';
-import Notification from '../../components/Notification';
 import CitiesList from '../../components/CitiesList';
+
+// Импорты UI компонентов
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Alert,
+  Chip,
+  Pagination,
+  Card,
+} from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
+import Notification from '../../components/Notification';
 
 const RegionsManagementPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Инициализация централизованных стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -178,7 +189,7 @@ const RegionsManagementPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -186,7 +197,7 @@ const RegionsManagementPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={tablePageStyles.pageContainer}>
         <Alert severity="error">
           Ошибка при загрузке регионов: {error.toString()}
         </Alert>
@@ -198,9 +209,9 @@ const RegionsManagementPage: React.FC = () => {
   const totalItems = regionsData?.pagination?.total_count || 0;
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок и кнопка добавления */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={tablePageStyles.pageHeader}>
         <Typography variant="h4">Управление регионами и городами</Typography>
         <Button
           variant="contained"
@@ -212,15 +223,15 @@ const RegionsManagementPage: React.FC = () => {
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Card sx={tablePageStyles.searchContainer}>
+        <Box sx={tablePageStyles.filtersContainer}>
           <TextField
             placeholder="Поиск по названию региона"
             variant="outlined"
             size="small"
             value={search}
             onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
+            sx={tablePageStyles.searchField}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -230,7 +241,7 @@ const RegionsManagementPage: React.FC = () => {
             }}
           />
           
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+          <FormControl size="small" sx={tablePageStyles.filterSelect}>
             <InputLabel>Статус</InputLabel>
             <Select
               value={activeFilter}
@@ -243,10 +254,10 @@ const RegionsManagementPage: React.FC = () => {
             </Select>
           </FormControl>
         </Box>
-      </Paper>
+      </Card>
 
       {/* Таблица регионов */}
-      <Paper>
+      <Card>
         <TableContainer>
           <Table>
             <TableHead>
@@ -356,20 +367,15 @@ const RegionsManagementPage: React.FC = () => {
           </Table>
         </TableContainer>
 
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50]}
-          labelRowsPerPage="Строк на странице:"
-          labelDisplayedRows={({ from, to, count }) => 
-            `${from}-${to} из ${count !== -1 ? count : `более чем ${to}`}`
-          }
-        />
-      </Paper>
+        <Box sx={tablePageStyles.paginationContainer}>
+          <Pagination
+            count={Math.ceil(totalItems / rowsPerPage)}
+            page={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            disabled={isLoading}
+          />
+        </Box>
+      </Card>
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
