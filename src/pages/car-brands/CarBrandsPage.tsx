@@ -1,11 +1,24 @@
+/**
+ * CarBrandsPage - Страница управления брендами автомобилей
+ * 
+ * Функциональность:
+ * - Просмотр всех брендов автомобилей в табличном формате
+ * - Поиск брендов по названию
+ * - Фильтрация по статусу активности
+ * - Создание новых брендов
+ * - Редактирование существующих брендов
+ * - Удаление брендов с подтверждением
+ * - Переключение статуса активности
+ * - Пагинация результатов
+ * - Централизованная система стилей для консистентного дизайна
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Button,
   TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -21,7 +34,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
   Avatar,
   FormControl,
   InputLabel,
@@ -47,32 +59,25 @@ import {
   useToggleCarBrandActiveMutation,
 } from '../../api';
 import { CarBrand } from '../../types/car';
+import { Button } from '../../components/ui';
+import { Pagination } from '../../components/ui';
 import Notification from '../../components/Notification';
-import { SIZES } from '../../styles/theme';
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getTableStyles, 
-  getChipStyles 
-} from '../../styles/components';
+import { getTablePageStyles, SIZES } from '../../styles';
 
+const PER_PAGE = 25;
+
+/**
+ * Компонент страницы управления брендами автомобилей
+ */
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Получение темы и централизованных стилей
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
-  const chipStyles = getChipStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
   
   // Состояние для диалогов и уведомлений
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -96,37 +101,46 @@ const CarBrandsPage: React.FC = () => {
     query: search || undefined,
     is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
     page: page + 1,
-    per_page: rowsPerPage,
+    per_page: PER_PAGE,
   });
 
   const [deleteBrand] = useDeleteCarBrandMutation();
   const [toggleActive] = useToggleCarBrandActiveMutation();
 
-  // Обработчики событий
+  /**
+   * Обработчик изменения поискового запроса
+   */
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0);
   };
 
+  /**
+   * Обработчик изменения фильтра по статусу
+   */
   const handleActiveFilterChange = (event: any) => {
     setActiveFilter(event.target.value);
     setPage(0);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+  /**
+   * Обработчик смены страницы пагинации
+   */
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage - 1);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
+  /**
+   * Обработчик открытия диалога удаления
+   */
   const handleDeleteClick = (brand: { id: number; name: string }) => {
     setSelectedBrand(brand);
     setDeleteDialogOpen(true);
   };
 
+  /**
+   * Обработчик подтверждения удаления бренда
+   */
   const handleDeleteConfirm = async () => {
     if (selectedBrand) {
       try {
@@ -154,11 +168,17 @@ const CarBrandsPage: React.FC = () => {
     }
   };
 
+  /**
+   * Обработчик закрытия диалога удаления
+   */
   const handleCloseDialog = () => {
     setDeleteDialogOpen(false);
     setSelectedBrand(null);
   };
 
+  /**
+   * Обработчик переключения статуса активности бренда
+   */
   const handleToggleActive = async (id: number, currentActive: boolean) => {
     try {
       await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
@@ -182,35 +202,36 @@ const CarBrandsPage: React.FC = () => {
     }
   };
 
+  /**
+   * Обработчик закрытия уведомлений
+   */
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
+  };
+
+  /**
+   * Обработчик перехода к созданию нового бренда
+   */
+  const handleAddBrand = () => {
+    navigate('/car-brands/new');
   };
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
-        minHeight="400px" 
-        sx={{ p: SIZES.spacing.lg }}
-      >
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
+        <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
+          Загрузка брендов...
+        </Typography>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ p: SIZES.spacing.lg }}>
-        <Alert 
-          severity="error"
-          sx={{
-            borderRadius: SIZES.borderRadius.sm,
-            fontSize: SIZES.fontSize.md
-          }}
-        >
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error" sx={tablePageStyles.errorAlert}>
           Ошибка при загрузке брендов: {error.toString()}
         </Alert>
       </Box>
@@ -221,102 +242,81 @@ const CarBrandsPage: React.FC = () => {
   const totalItems = brandsData?.pagination?.total_count || 0;
 
   return (
-    <Box sx={{ p: SIZES.spacing.lg }}>
-      {/* Заголовок и кнопка добавления */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: SIZES.spacing.lg 
-      }}>
-        <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
+    <Box sx={tablePageStyles.pageContainer}>
+      {/* Заголовок страницы */}
+      <Box sx={tablePageStyles.headerContainer}>
+        <Typography variant="h4" component="h1" sx={tablePageStyles.pageTitle}>
           Бренды автомобилей
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/car-brands/new')}
-          sx={buttonStyles}
+          onClick={handleAddBrand}
         >
           Добавить бренд
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
-      <Paper sx={{ 
-        ...cardStyles,
-        p: SIZES.spacing.md,
-        mb: SIZES.spacing.lg
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: SIZES.spacing.md, 
-          alignItems: 'center', 
-          flexWrap: 'wrap' 
-        }}>
-          <TextField
-            placeholder="Поиск по названию бренда"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearchChange}
-            sx={{ 
-              ...textFieldStyles, 
-              minWidth: 300 
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Статус</InputLabel>
-            <Select
-              value={activeFilter}
-              onChange={handleActiveFilterChange}
-              label="Статус"
-              sx={textFieldStyles}
-            >
-              <MenuItem value="">Все</MenuItem>
-              <MenuItem value="true">Активные</MenuItem>
-              <MenuItem value="false">Неактивные</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-      </Paper>
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по названию бренда"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          sx={tablePageStyles.searchField}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <FormControl size="small" sx={tablePageStyles.filterSelect}>
+          <InputLabel>Статус</InputLabel>
+          <Select
+            value={activeFilter}
+            onChange={handleActiveFilterChange}
+            label="Статус"
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="true">Активные</MenuItem>
+            <MenuItem value="false">Неактивные</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
       {/* Таблица брендов */}
-      <Paper sx={cardStyles}>
-        <TableContainer sx={tableStyles.tableContainer}>
+      <Box sx={tablePageStyles.tableContainer}>
+        <TableContainer>
           <Table>
-            <TableHead sx={tableStyles.tableHead}>
-              <TableRow>
-                <TableCell>Бренд</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell>
+            <TableHead>
+              <TableRow sx={tablePageStyles.tableHeader}>
+                <TableCell sx={tablePageStyles.tableCell}>Бренд</TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>Статус</TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <FormatListNumberedIcon fontSize="small" />
                     Кол-во моделей
                   </Box>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <CalendarTodayIcon fontSize="small" />
                     Дата создания
                   </Box>
                 </TableCell>
-                <TableCell align="right">Действия</TableCell>
+                <TableCell align="right" sx={tablePageStyles.tableCell}>Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {brands.map((brand: CarBrand) => (
-                <TableRow key={brand.id} hover sx={tableStyles.tableRow}>
-                  <TableCell sx={tableStyles.tableCell}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.md }}>
+                <TableRow key={brand.id} sx={tablePageStyles.tableRow}>
+                  <TableCell sx={tablePageStyles.tableCell}>
+                    <Box sx={tablePageStyles.avatarContainer}>
                       {brand.logo ? (
                         <Avatar 
                           src={brand.logo} 
@@ -342,49 +342,46 @@ const CarBrandsPage: React.FC = () => {
                           <CarIcon />
                         </Avatar>
                       )}
-                      <Typography sx={{ fontSize: SIZES.fontSize.md }}>{brand.name}</Typography>
+                      <Typography variant="body1" fontWeight={500}>
+                        {brand.name}
+                      </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell sx={tablePageStyles.tableCell}>
                     <Chip 
                       label={brand.is_active ? 'Активен' : 'Неактивен'}
                       color={brand.is_active ? 'success' : 'default'}
                       size="small"
-                      sx={chipStyles}
+                      sx={tablePageStyles.statusChip}
                     />
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell sx={tablePageStyles.tableCell}>
                     <Tooltip title="Количество моделей">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <FormatListNumberedIcon fontSize="small" />
-                        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                        <Typography variant="body2">
                           {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
                         </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={tableStyles.tableCell}>
+                  <TableCell sx={tablePageStyles.tableCell}>
                     <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} arrow>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <CalendarTodayIcon fontSize="small" color="action" />
-                        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+                        <Typography variant="body2" sx={tablePageStyles.dateText}>
                           {new Date(brand.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                         </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell align="right" sx={tableStyles.tableCell}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+                  <TableCell align="right" sx={tablePageStyles.tableCell}>
+                    <Box sx={tablePageStyles.actionsContainer}>
                       <Tooltip title="Редактировать">
                         <IconButton 
                           size="small"
                           onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
-                          sx={{ 
-                            color: theme.palette.primary.main,
-                            '&:hover': {
-                              backgroundColor: `${theme.palette.primary.main}15`
-                            }
-                          }}
+                          sx={tablePageStyles.actionButton}
                         >
                           <EditIcon />
                         </IconButton>
@@ -393,12 +390,7 @@ const CarBrandsPage: React.FC = () => {
                         <IconButton 
                           size="small"
                           onClick={() => handleDeleteClick(brand)}
-                          color="error"
-                          sx={{
-                            '&:hover': {
-                              backgroundColor: `${theme.palette.error.main}15`
-                            }
-                          }}
+                          sx={tablePageStyles.dangerButton}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -407,13 +399,9 @@ const CarBrandsPage: React.FC = () => {
                         <IconButton 
                           size="small"
                           onClick={() => handleToggleActive(brand.id, brand.is_active)}
-                          color={brand.is_active ? "default" : "success"}
                           sx={{
-                            '&:hover': {
-                              backgroundColor: brand.is_active 
-                                ? `${theme.palette.action.hover}` 
-                                : `${theme.palette.success.main}15`
-                            }
+                            ...tablePageStyles.actionButton,
+                            color: brand.is_active ? theme.palette.warning.main : theme.palette.success.main,
                           }}
                         >
                           {brand.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
@@ -426,62 +414,43 @@ const CarBrandsPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50, 100]}
-          sx={{
-            borderTop: `1px solid ${theme.palette.divider}`,
-            '& .MuiTablePagination-select': {
-              fontSize: SIZES.fontSize.sm
-            },
-            '& .MuiTablePagination-displayedRows': {
-              fontSize: SIZES.fontSize.sm
-            }
-          }}
-        />
-      </Paper>
+
+        {/* Пагинация */}
+        {totalItems > PER_PAGE && (
+          <Box sx={tablePageStyles.paginationContainer}>
+            <Pagination
+              count={Math.ceil(totalItems / PER_PAGE)}
+              page={page + 1}
+              onChange={handlePageChange}
+              disabled={isLoading}
+            />
+          </Box>
+        )}
+      </Box>
 
       {/* Диалог подтверждения удаления */}
       <Dialog 
         open={deleteDialogOpen} 
         onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
         PaperProps={{
-          sx: {
-            ...cardStyles,
-            borderRadius: SIZES.borderRadius.md,
-            minWidth: 400
-          }
+          sx: tablePageStyles.dialogPaper
         }}
       >
-        <DialogTitle sx={{ 
-          fontSize: SIZES.fontSize.lg, 
-          fontWeight: 600,
-          pb: SIZES.spacing.sm
-        }}>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
           Подтверждение удаления
         </DialogTitle>
-        <DialogContent sx={{ pb: SIZES.spacing.md }}>
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+        <DialogContent>
+          <Typography>
             Вы действительно хотите удалить бренд "{selectedBrand?.name}"?
             Это действие нельзя будет отменить.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ 
-          p: SIZES.spacing.lg, 
-          gap: SIZES.spacing.sm 
-        }}>
+        <DialogActions sx={tablePageStyles.dialogActions}>
           <Button 
-            onClick={handleCloseDialog} 
-            sx={{
-              ...buttonStyles,
-              variant: 'outlined',
-              borderRadius: SIZES.borderRadius.sm
-            }}
+            variant="outlined"
+            onClick={handleCloseDialog}
           >
             Отмена
           </Button>
@@ -489,12 +458,6 @@ const CarBrandsPage: React.FC = () => {
             onClick={handleDeleteConfirm} 
             color="error" 
             variant="contained"
-            sx={{
-              borderRadius: SIZES.borderRadius.sm,
-              '&:hover': {
-                backgroundColor: theme.palette.error.dark
-              }
-            }}
           >
             Удалить
           </Button>

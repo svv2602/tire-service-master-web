@@ -258,7 +258,15 @@ const textFieldStyles = getTextFieldStyles(theme);
   - 📄 **Отчет:** [`design-unification/reports/SERVICE_FORM_PAGE_MIGRATION_REPORT.md`](./reports/SERVICE_FORM_PAGE_MIGRATION_REPORT.md)
 
 #### Управление брендов автомобилей (`src/pages/car-brands/`)
-- [ ] `CarBrandsPage.tsx`
+- [x] `CarBrandsPage.tsx` ✅ **ЗАВЕРШЕНО**
+  - [x] Замена прямых импортов MUI на централизованные UI компоненты
+  - [x] Применение getTablePageStyles для консистентности
+  - [x] Унификация пагинации (TablePagination → Pagination)
+  - [x] Добавление подробной JSDoc документации на русском языке
+  - [x] Улучшение обработчиков событий и типизации
+  - [x] Сохранение функциональности (поиск, фильтрация, CRUD, переключение статуса)
+  - [x] Унификация диалогов и уведомлений
+  - 📄 **Отчет:** [`design-unification/reports/CAR_BRANDS_PAGE_MIGRATION_REPORT.md`](./reports/CAR_BRANDS_PAGE_MIGRATION_REPORT.md)
 - [ ] `CarBrandFormPage.tsx`
 
 #### Управление отзывов (`src/pages/reviews/`)
@@ -409,16 +417,16 @@ const textFieldStyles = getTextFieldStyles(theme);
 
 ### Общий прогресс
 - Всего страниц: 63
-- Мигрировано: 18 ✅
+- Мигрировано: 19 ✅
 - В процессе: 0
-- Осталось: 45
-- **Прогресс: 28.57%** 📊
+- Осталось: 44
+- **Прогресс: 30.16%** 📊
 
 ### По приоритетам
 - **Приоритет 1:** 4/4 ✅ (100% завершено)
   - Критические страницы: auth, dashboard, bookings, service-points
-- **Приоритет 2:** 13/18 ✅ (72.22% завершено)
-  - Административные страницы: clients, regions, cities, partners, users + UserForm, services + NewServicesPage + ServiceFormPage, car-brands, reviews + дополнительные service-points (ServicePointPhotosPage)
+- **Приоритет 2:** 14/18 ✅ (77.78% завершено)
+  - Административные страницы: clients, regions, cities, partners, users + UserForm, services + NewServicesPage + ServiceFormPage, car-brands (CarBrandsPage), reviews + дополнительные service-points (ServicePointPhotosPage)
 - **Приоритет 3:** 0/20 ⏳
   - Клиентские страницы: client, my-cars, my-bookings, profile, catalog
 - **Приоритет 4:** 0/21 ⏳
