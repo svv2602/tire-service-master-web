@@ -1,11 +1,22 @@
+/**
+ * NewServicesPage - Страница управления категориями услуг
+ * 
+ * Функциональность:
+ * - Просмотр всех категорий услуг в табличном формате
+ * - Поиск категорий по названию
+ * - Создание новых категорий
+ * - Редактирование существующих категорий
+ * - Удаление категорий (с проверкой наличия услуг)
+ * - Пагинация результатов
+ * - Централизованная система стилей для консистентного дизайна
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Button,
   TextField,
   InputAdornment,
-  Paper,
   CircularProgress,
   Table,
   TableBody,
@@ -21,7 +32,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TablePagination,
   useTheme,
 } from '@mui/material';
 import {
@@ -40,13 +50,22 @@ import {
   useDeleteServiceCategoryMutation,
 } from '../../api/services.api';
 import { ServiceCategoryData } from '../../types/service';
+import { Button } from '../../components/ui';
+import { Pagination } from '../../components/ui';
 import Notification from '../../components/Notification';
+import { getTablePageStyles, SIZES } from '../../styles';
 
 const PER_PAGE = 10;
 
+/**
+ * Компонент страницы управления категориями услуг
+ */
 export const ServicesPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const tablePageStyles = getTablePageStyles(theme);
+  
+  // Состояния компонента
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -61,6 +80,7 @@ export const ServicesPage: React.FC = () => {
     severity: 'success',
   });
 
+  // API хуки
   const { 
     data: response, 
     isLoading, 
@@ -74,19 +94,29 @@ export const ServicesPage: React.FC = () => {
 
   const [deleteCategory] = useDeleteServiceCategoryMutation();
 
+  // Извлечение данных из ответа API
   const categories = response?.data || [];
   const totalCount = response?.pagination?.total_count || 0;
 
+  /**
+   * Обработчик поиска категорий
+   */
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     setPage(0);
   };
 
+  /**
+   * Обработчик открытия диалога удаления
+   */
   const handleDeleteClick = (category: ServiceCategoryData) => {
     setCategoryToDelete(category);
     setDeleteDialogOpen(true);
   };
 
+  /**
+   * Обработчик подтверждения удаления категории
+   */
   const handleDeleteConfirm = async () => {
     if (categoryToDelete) {
       try {
@@ -110,17 +140,31 @@ export const ServicesPage: React.FC = () => {
     }
   };
 
+  /**
+   * Обработчик перехода к созданию новой категории
+   */
   const handleAddCategory = () => {
     navigate('/services/new');
   };
 
+  /**
+   * Обработчик перехода к редактированию категории
+   */
   const handleEditCategory = (categoryId: number) => {
     navigate(`/services/${categoryId}/edit`);
   };
 
+  /**
+   * Обработчик смены страницы пагинации
+   */
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage - 1);
+  };
+
+  // Обработка ошибки загрузки
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={tablePageStyles.pageContainer}>
         <Alert severity="error">
           Ошибка при загрузке категорий услуг
         </Alert>
@@ -129,18 +173,10 @@ export const ServicesPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Заголовок и кнопка добавления */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 3 
-      }}>
-        <Typography variant="h4" component="h1" sx={{ 
-          fontWeight: 600,
-          color: theme.palette.text.primary 
-        }}>
+    <Box sx={tablePageStyles.pageContainer}>
+      {/* Заголовок страницы */}
+      <Box sx={tablePageStyles.headerContainer}>
+        <Typography variant="h4" component="h1" sx={tablePageStyles.pageTitle}>
           Категории услуг
         </Typography>
         <Button
@@ -152,13 +188,15 @@ export const ServicesPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Поиск */}
-      <Box sx={{ mb: 3 }}>
+      {/* Фильтры и поиск */}
+      <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          fullWidth
           placeholder="Поиск по названию категории..."
+          variant="outlined"
+          size="small"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
+          sx={tablePageStyles.searchField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -169,33 +207,33 @@ export const ServicesPage: React.FC = () => {
         />
       </Box>
 
-      {/* Таблица */}
-      <Paper sx={{ overflow: 'hidden' }}>
+      {/* Таблица категорий */}
+      <Box sx={tablePageStyles.tableContainer}>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TableRow sx={tablePageStyles.tableHeader}>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <CategoryIcon fontSize="small" />
                     Название
                   </Box>
                 </TableCell>
-                <TableCell>Описание</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tablePageStyles.tableCell}>Описание</TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <ToggleOnIcon fontSize="small" />
                     Статус
                   </Box>
                 </TableCell>
-                <TableCell>Количество услуг</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TableCell sx={tablePageStyles.tableCell}>Количество услуг</TableCell>
+                <TableCell sx={tablePageStyles.tableCell}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                     <CalendarTodayIcon fontSize="small" />
                     Дата создания
                   </Box>
                 </TableCell>
-                <TableCell align="center">
+                <TableCell align="center" sx={tablePageStyles.tableCell}>
                   Действия
                 </TableCell>
               </TableRow>
@@ -203,13 +241,13 @@ export const ServicesPage: React.FC = () => {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={tablePageStyles.loadingCell}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={6} align="center" sx={tablePageStyles.emptyCell}>
                     <Typography variant="body1" color="text.secondary">
                       {searchQuery ? 'Категории не найдены' : 'Категории услуг отсутствуют'}
                     </Typography>
@@ -217,13 +255,13 @@ export const ServicesPage: React.FC = () => {
                 </TableRow>
               ) : (
                 categories.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell>
+                  <TableRow key={category.id} sx={tablePageStyles.tableRow}>
+                    <TableCell sx={tablePageStyles.tableCell}>
                       <Typography variant="body1" fontWeight={500}>
                         {category.name}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={tablePageStyles.tableCell}>
                       <Typography 
                         variant="body2" 
                         color="text.secondary"
@@ -237,7 +275,7 @@ export const ServicesPage: React.FC = () => {
                         {category.description || '—'}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={tablePageStyles.tableCell}>
                       <Chip
                         label={category.is_active ? 'Активна' : 'Неактивна'}
                         color={category.is_active ? 'success' : 'default'}
@@ -245,12 +283,12 @@ export const ServicesPage: React.FC = () => {
                         icon={category.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={tablePageStyles.tableCell}>
                       <Typography variant="body2">
                         {category.services_count || 0}
                       </Typography>
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={tablePageStyles.tableCell}>
                       <Typography variant="body2" color="text.secondary">
                         {category.created_at 
                           ? new Date(category.created_at).toLocaleDateString('ru-RU')
@@ -258,12 +296,13 @@ export const ServicesPage: React.FC = () => {
                         }
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                    <TableCell align="center" sx={tablePageStyles.tableCell}>
+                      <Box sx={tablePageStyles.actionsContainer}>
                         <Tooltip title="Редактировать">
                           <IconButton
                             size="small"
                             onClick={() => handleEditCategory(category.id)}
+                            sx={tablePageStyles.actionButton}
                           >
                             <EditIcon />
                           </IconButton>
@@ -273,7 +312,7 @@ export const ServicesPage: React.FC = () => {
                             size="small"
                             onClick={() => handleDeleteClick(category)}
                             disabled={!!(category.services_count && category.services_count > 0)}
-                            color="error"
+                            sx={tablePageStyles.dangerButton}
                           >
                             <DeleteIcon />
                           </IconButton>
@@ -288,28 +327,17 @@ export const ServicesPage: React.FC = () => {
         </TableContainer>
 
         {/* Пагинация */}
-        {totalCount > 0 && (
-          <TablePagination
-            component="div"
-            count={totalCount}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            rowsPerPage={PER_PAGE}
-            onRowsPerPageChange={() => {}} // Фиксированное количество строк
-            rowsPerPageOptions={[PER_PAGE]}
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}–${to} из ${count !== -1 ? count : `больше чем ${to}`}`
-            }
-            labelRowsPerPage="Строк на странице:"
-            sx={{
-              borderTop: `1px solid ${theme.palette.divider}`,
-              '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
-                color: theme.palette.text.secondary,
-              },
-            }}
-          />
+        {totalCount > PER_PAGE && (
+          <Box sx={tablePageStyles.paginationContainer}>
+            <Pagination
+              count={Math.ceil(totalCount / PER_PAGE)}
+              page={page + 1}
+              onChange={handlePageChange}
+              disabled={isLoading}
+            />
+          </Box>
         )}
-      </Paper>
+      </Box>
 
       {/* Диалог подтверждения удаления */}
       <Dialog
@@ -320,20 +348,26 @@ export const ServicesPage: React.FC = () => {
         }}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: tablePageStyles.dialogPaper
+        }}
       >
-        <DialogTitle>Удалить категорию услуг</DialogTitle>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
+          Удалить категорию услуг
+        </DialogTitle>
         <DialogContent>
           <Typography>
             Вы уверены, что хотите удалить категорию "{categoryToDelete?.name}"?
           </Typography>
           {categoryToDelete?.services_count && categoryToDelete.services_count > 0 && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
+            <Alert severity="warning" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
               В этой категории есть услуги. Удаление невозможно.
             </Alert>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={tablePageStyles.dialogActions}>
           <Button
+            variant="outlined"
             onClick={() => {
               setDeleteDialogOpen(false);
               setCategoryToDelete(null);
@@ -343,8 +377,8 @@ export const ServicesPage: React.FC = () => {
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
-            color="error" 
             variant="contained"
+            color="error"
             disabled={!!(categoryToDelete?.services_count && categoryToDelete.services_count > 0)}
           >
             Удалить

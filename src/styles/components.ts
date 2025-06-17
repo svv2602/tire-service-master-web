@@ -646,6 +646,12 @@ export const getTablePageStyles = (theme: Theme) => {
       whiteSpace: 'normal',
       wordBreak: 'break-word',
     },
+    loadingCell: {
+      padding: theme.spacing(4),
+    },
+    emptyCell: {
+      padding: theme.spacing(4),
+    },
     
     // Карточки
     card: {
