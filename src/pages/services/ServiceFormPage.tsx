@@ -1,12 +1,13 @@
 /**
  * ServiceFormPage - Страница формы создания/редактирования категории услуг
  * 
- * Основные функции:
+ * Функциональность:
  * - Создание новой категории услуг
  * - Редактирование существующей категории услуг  
- * - Валидация данных формы
+ * - Валидация данных формы с использованием Yup
  * - Отображение списка услуг в категории (только при редактировании)
- * - Использование централизованной системы стилей для консистентного дизайна
+ * - Централизованная система стилей для консистентного дизайна
+ * - Двухколоночная раскладка при редактировании
  */
 
 import React, { useState } from 'react';
@@ -15,16 +16,13 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   TextField,
-  Button,
   FormControlLabel,
   Switch,
   Grid,
   Alert,
-  Divider,
+  CircularProgress,
   useTheme,
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
@@ -34,15 +32,9 @@ import {
   useUpdateServiceCategoryMutation,
 } from '../../api/serviceCategories.api';
 import { ServiceCategoryFormData } from '../../types/service';
+import { Button } from '../../components/ui';
 import ServicesList from '../../components/ServicesList';
-
-// Импорт централизованной системы стилей для консистентного дизайна
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles,
-  SIZES 
-} from '../../styles';
+import { getFormStyles, SIZES } from '../../styles';
 
 /**
  * Схема валидации формы категории услуг
@@ -62,17 +54,11 @@ const validationSchema = Yup.object({
 export const ServiceFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const formStyles = getFormStyles(theme);
+  
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
-
-  // Хук темы для использования централизованных стилей
-  const theme = useTheme();
-  
-  // Получаем стили из централизованной системы для консистентного дизайна
-  const cardStyles = getCardStyles(theme, 'primary'); // Стили для основных карточек
-  const primaryButtonStyles = getButtonStyles(theme, 'primary'); // Стили для основных кнопок  
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary'); // Стили для вторичных кнопок
-  const textFieldStyles = getTextFieldStyles(theme, 'filled'); // Стили для полей ввода
 
   // RTK Query хуки для работы с API категорий услуг
   const { data: category, isLoading } = useGetServiceCategoryByIdQuery(id!, {
@@ -110,177 +96,140 @@ export const ServiceFormPage: React.FC = () => {
     },
   });
 
+  /**
+   * Обработчик возврата к списку категорий
+   */
+  const handleBack = () => {
+    navigate('/services');
+  };
+
   // Состояние загрузки для режима редактирования
   if (isEditing && isLoading) {
     return (
-      <Box sx={{ padding: SIZES.spacing.xl }}>
-        <Typography>Загрузка...</Typography>
+      <Box sx={formStyles.loadingContainer}>
+        <CircularProgress />
+        <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
+          Загрузка категории...
+        </Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ padding: SIZES.spacing.xl }}>
+    <Box sx={formStyles.container}>
       {/* Заголовок страницы с кнопкой "Назад" */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        marginBottom: SIZES.spacing.xl 
-      }}>
+      <Box sx={formStyles.headerContainer}>
         <Button
+          variant="outlined"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/services')}
-          sx={{
-            ...secondaryButtonStyles,
-            marginRight: SIZES.spacing.md,
-          }}
+          onClick={handleBack}
+          sx={{ mr: theme.spacing(SIZES.spacing.md) }}
         >
           Назад
         </Button>
-        <Typography 
-          variant="h4" 
-          component="h1"
-          sx={{
-            fontSize: SIZES.fontSize.xl,
-            fontWeight: 700,
-          }}
-        >
+        <Typography variant="h4" component="h1" sx={formStyles.title}>
           {isEditing ? 'Редактировать категорию услуг' : 'Новая категория услуг'}
         </Typography>
       </Box>
 
-      <Grid container spacing={SIZES.spacing.xl}>
+      <Grid container spacing={theme.spacing(SIZES.spacing.xl)}>
         {/* Основная форма категории */}
         <Grid item xs={12} md={isEditing ? 6 : 12}>
-          <Card sx={cardStyles}>
-            <CardContent sx={{ padding: SIZES.spacing.xl }}>
-              <Typography 
-                variant="h6" 
-                sx={{
-                  marginBottom: SIZES.spacing.lg,
-                  fontSize: SIZES.fontSize.lg,
-                  fontWeight: 600,
-                }}
+          <Box sx={formStyles.formCard}>
+            <Typography variant="h6" sx={formStyles.sectionTitle}>
+              Информация о категории
+            </Typography>
+
+            {/* Отображение ошибок отправки формы */}
+            {submitError && (
+              <Alert 
+                severity="error" 
+                sx={formStyles.errorAlert}
               >
-                Информация о категории
-              </Typography>
+                {submitError}
+              </Alert>
+            )}
 
-              {/* Отображение ошибок отправки формы */}
-              {submitError && (
-                <Alert 
-                  severity="error" 
-                  sx={{ 
-                    marginBottom: SIZES.spacing.md,
-                    borderRadius: SIZES.borderRadius.md,
-                  }}
+            <Box component="form" onSubmit={formik.handleSubmit}>
+              {/* Поле ввода названия категории */}
+              <TextField
+                fullWidth
+                name="name"
+                label="Название"
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+                sx={formStyles.field}
+              />
+
+              {/* Поле ввода описания категории */}
+              <TextField
+                fullWidth
+                name="description"
+                label="Описание"
+                multiline
+                rows={3}
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={formik.touched.description && formik.errors.description}
+                sx={formStyles.field}
+              />
+
+              {/* Поле ввода порядка сортировки */}
+              <TextField
+                fullWidth
+                name="sort_order"
+                label="Порядок сортировки"
+                type="number"
+                value={formik.values.sort_order}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
+                helperText={formik.touched.sort_order && formik.errors.sort_order}
+                sx={formStyles.field}
+              />
+
+              {/* Переключатель активности категории */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
+                label="Активна"
+                sx={formStyles.switchField}
+              />
+
+              {/* Кнопка сохранения формы */}
+              <Box sx={formStyles.actionsContainer}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  disabled={formik.isSubmitting}
                 >
-                  {submitError}
-                </Alert>
-              )}
-
-              <Box component="form" onSubmit={formik.handleSubmit}>
-                {/* Поле ввода названия категории */}
-                <TextField
-                  fullWidth
-                  name="name"
-                  label="Название"
-                  value={formik.values.name}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.name && Boolean(formik.errors.name)}
-                  helperText={formik.touched.name && formik.errors.name}
-                  sx={{
-                    ...textFieldStyles,
-                    marginBottom: SIZES.spacing.md,
-                  }}
-                />
-
-                {/* Поле ввода описания категории */}
-                <TextField
-                  fullWidth
-                  name="description"
-                  label="Описание"
-                  multiline
-                  rows={3}
-                  value={formik.values.description}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.description && Boolean(formik.errors.description)}
-                  helperText={formik.touched.description && formik.errors.description}
-                  sx={{
-                    ...textFieldStyles,
-                    marginBottom: SIZES.spacing.md,
-                  }}
-                />
-
-                {/* Поле ввода порядка сортировки */}
-                <TextField
-                  fullWidth
-                  name="sort_order"
-                  label="Порядок сортировки"
-                  type="number"
-                  value={formik.values.sort_order}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
-                  helperText={formik.touched.sort_order && formik.errors.sort_order}
-                  sx={{
-                    ...textFieldStyles,
-                    marginBottom: SIZES.spacing.md,
-                  }}
-                />
-
-                {/* Переключатель активности категории */}
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formik.values.is_active}
-                      onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                      name="is_active"
-                    />
-                  }
-                  label="Активна"
-                  sx={{ 
-                    marginTop: SIZES.spacing.md,
-                    marginBottom: SIZES.spacing.lg,
-                  }}
-                />
-
-                {/* Кнопка сохранения формы */}
-                <Box>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    startIcon={<SaveIcon />}
-                    disabled={formik.isSubmitting}
-                    sx={primaryButtonStyles}
-                  >
-                    {isEditing ? 'Сохранить' : 'Создать'}
-                  </Button>
-                </Box>
+                  {isEditing ? 'Сохранить' : 'Создать'}
+                </Button>
               </Box>
-            </CardContent>
-          </Card>
+            </Box>
+          </Box>
         </Grid>
 
         {/* Список услуг в категории (только при редактировании) */}
         {isEditing && id && (
           <Grid item xs={12} md={6}>
-            <Card sx={cardStyles}>
-              <CardContent sx={{ padding: SIZES.spacing.xl }}>
-                <Typography 
-                  variant="h6" 
-                  sx={{
-                    marginBottom: SIZES.spacing.md,
-                    fontSize: SIZES.fontSize.lg,
-                    fontWeight: 600,
-                  }}
-                >
-                  Услуги в категории
-                </Typography>
-                <ServicesList categoryId={id} />
-              </CardContent>
-            </Card>
+            <Box sx={formStyles.formCard}>
+              <Typography variant="h6" sx={formStyles.sectionTitle}>
+                Услуги в категории
+              </Typography>
+              <ServicesList categoryId={id} />
+            </Box>
           </Grid>
         )}
       </Grid>

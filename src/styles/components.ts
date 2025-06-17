@@ -312,10 +312,21 @@ export const getTableStyles = (theme: Theme) => {
 export const getFormStyles = (theme: Theme) => {
   return {
     container: {
-      maxWidth: 800,
-      mx: 'auto',
-      mt: theme.spacing(3),
-      mb: theme.spacing(3),
+      padding: theme.spacing(SIZES.spacing.xl),
+      maxWidth: '100%',
+    },
+    headerContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: theme.spacing(SIZES.spacing.xl),
+    },
+    formCard: {
+      background: theme.palette.background.paper,
+      borderRadius: SIZES.borderRadius.md,
+      padding: theme.spacing(SIZES.spacing.xl),
+      border: `1px solid ${theme.palette.divider}`,
+      backdropFilter: 'blur(10px)',
+      boxShadow: theme.shadows[1],
     },
     paper: {
       background: theme.palette.background.paper,
@@ -349,6 +360,10 @@ export const getFormStyles = (theme: Theme) => {
     field: {
       marginBottom: theme.spacing(SIZES.spacing.md),
     },
+    switchField: {
+      marginTop: theme.spacing(SIZES.spacing.md),
+      marginBottom: theme.spacing(SIZES.spacing.lg),
+    },
     checkboxLabel: {
       marginTop: theme.spacing(1),
     },
@@ -358,10 +373,11 @@ export const getFormStyles = (theme: Theme) => {
     },
     loadingContainer: {
       display: 'flex',
+      flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '200px',
-      p: theme.spacing(3),
+      minHeight: '400px',
+      padding: theme.spacing(SIZES.spacing.xl),
     },
     errorAlert: {
       mb: theme.spacing(3),
