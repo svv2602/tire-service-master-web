@@ -269,6 +269,7 @@ export interface PartnerFilter extends PaginationFilter {
 export interface ClientFilter extends PaginationFilter {
   query?: string;
   client_id?: string;
+  active?: boolean;
 }
 
 export interface CityFilter extends PaginationFilter {

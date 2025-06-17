@@ -8,6 +8,8 @@ import {
   CircularProgress,
   useTheme,
   Alert,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation, clientsApi } from '../../api/clients.api';
 import { ClientFormData } from '../../types/client';
@@ -114,6 +116,7 @@ const ClientFormPage: React.FC = () => {
               middle_name: values.middle_name || '',
               phone: values.phone || '',
               email: values.email || '',
+              is_active: values.is_active,
             }
           };
           
@@ -247,6 +250,30 @@ const ClientFormPage: React.FC = () => {
                 helperText={formik.touched.email && formik.errors.email}
                 sx={formStyles.field}
               />
+            </Grid>
+
+            {/* Переключатель активности */}
+            <Grid item xs={12} sm={6}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                height: '100%',
+                paddingTop: theme.spacing(1)
+              }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.is_active}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                        formik.setFieldValue('is_active', e.target.checked)
+                      }
+                      name="is_active"
+                      color="primary"
+                    />
+                  }
+                  label="Активный клиент"
+                />
+              </Box>
             </Grid>
 
             <Grid item xs={12}>

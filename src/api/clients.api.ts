@@ -21,6 +21,7 @@ interface ClientUpdateData {
     middle_name?: string;
     phone?: string;
     email?: string;
+    is_active?: boolean;
   };
   client?: {
     preferred_notification_method?: string;

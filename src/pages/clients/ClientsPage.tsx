@@ -12,6 +12,9 @@ import {
   IconButton,
   Tooltip,
   Avatar,
+  Chip,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -26,6 +29,7 @@ import { useTheme } from '@mui/material/styles';
 import { 
   useGetClientsQuery, 
   useDeleteClientMutation,
+  useUpdateClientMutation,
 } from '../../api/clients.api';
 import { Client } from '../../types/client';
 import { ClientFilter } from '../../types/models';
@@ -45,29 +49,50 @@ import {
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
 
+// Константы
+const PER_PAGE = 25;
+
 // Мемоизированный компонент строки клиента с кастомным сравнением
 const ClientRow = React.memo<{
   client: Client;
   onEdit: (id: string) => void;
   onDelete: (client: Client) => void;
   onViewCars: (id: string) => void;
+  onToggleStatus: (client: Client) => void;
   tablePageStyles: any;
 }>(
-  ({ client, onEdit, onDelete, onViewCars, tablePageStyles }) => (
-    <TableRow sx={tablePageStyles.tableRow}>
+  ({ client, onEdit, onDelete, onViewCars, onToggleStatus, tablePageStyles }) => (
+    <TableRow sx={{ ...tablePageStyles.tableRow, opacity: client.is_active ? 1 : 0.6 }}>
       <TableCell>
         <Box sx={tablePageStyles.avatarContainer}>
-          <Avatar>
+          <Avatar sx={{ opacity: client.is_active ? 1 : 0.5 }}>
             <PersonIcon />
           </Avatar>
-          <Typography>
-            {client.first_name} {client.last_name}
-          </Typography>
+          <Box>
+            <Typography color={client.is_active ? 'text.primary' : 'text.secondary'}>
+              {client.first_name} {client.last_name}
+              {!client.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
+            </Typography>
+          </Box>
         </Box>
       </TableCell>
 
       <TableCell>{client.phone}</TableCell>
       <TableCell>{client.email}</TableCell>
+      
+      <TableCell align="center">
+        <FormControlLabel
+          control={
+            <Switch
+              checked={client.is_active}
+              onChange={() => onToggleStatus(client)}
+              size="small"
+            />
+          }
+          label=""
+          sx={{ m: 0 }}
+        />
+      </TableCell>
 
       <TableCell align="right">
         <Box sx={tablePageStyles.actionsContainer}>
@@ -104,19 +129,7 @@ const ClientRow = React.memo<{
       </TableCell>
     </TableRow>
   ),
-  (prevProps: {
-    client: Client;
-    onEdit: (id: string) => void;
-    onDelete: (client: Client) => void;
-    onViewCars: (id: string) => void;
-    tablePageStyles: any;
-  }, nextProps: {
-    client: Client;
-    onEdit: (id: string) => void;
-    onDelete: (client: Client) => void;
-    onViewCars: (id: string) => void;
-    tablePageStyles: any;
-  }) => {
+  (prevProps, nextProps) => {
     // Кастомная функция сравнения для мемоизации
     // Перерендериваем если изменились данные клиента
     return (
@@ -142,7 +155,7 @@ const ClientsPage: React.FC = () => {
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [showInactive, setShowInactive] = useState(false);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -151,12 +164,13 @@ const ClientsPage: React.FC = () => {
   // Дебаунсированный поиск
   const debouncedSearch = useDebounce(search, 300);
 
-  // Мемоизированные параметры запроса
+  // Формируем параметры запроса
   const queryParams = useMemo(() => ({
-    query: debouncedSearch || undefined,
+    query: debouncedSearch,
     page: page + 1,
-    per_page: rowsPerPage,
-  } as ClientFilter), [debouncedSearch, page, rowsPerPage]);
+    per_page: PER_PAGE,
+    active: showInactive ? undefined : true,
+  } as ClientFilter), [debouncedSearch, page, showInactive]);
 
   // RTK Query хуки
   const { 
@@ -168,6 +182,7 @@ const ClientsPage: React.FC = () => {
   });
 
   const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
+  const [updateClient] = useUpdateClientMutation();
 
   const isLoading = clientsLoading || deleteLoading;
   const error = clientsError;
@@ -182,11 +197,6 @@ const ClientsPage: React.FC = () => {
 
   const handleChangePage = useCallback((event: unknown, newPage: number) => {
     setPage(newPage);
-  }, []);
-
-  const handleChangeRowsPerPage = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
   }, []);
 
   const handleDeleteClick = useCallback((client: Client) => {
@@ -222,6 +232,23 @@ const ClientsPage: React.FC = () => {
   const handleViewCars = useCallback((id: string) => {
     navigate(`/clients/${id}/cars`);
   }, [navigate]);
+
+  const handleToggleStatus = useCallback(async (client: Client) => {
+    try {
+      const updateData = {
+        user: {
+          is_active: !client.is_active,
+        }
+      };
+      
+      await updateClient({ 
+        id: client.id.toString(), 
+        client: updateData 
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса клиента:', error);
+    }
+  }, [updateClient]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -276,6 +303,49 @@ const ClientsPage: React.FC = () => {
             ),
           }}
         />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              color="primary"
+            />
+          }
+          label={
+            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
+              <Typography variant="body2">
+                Показать деактивированных
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {showInactive ? 'Показаны все клиенты' : 'Показаны только активные'}
+              </Typography>
+            </Box>
+          }
+          sx={{ ml: 2 }}
+        />
+      </Box>
+
+      {/* Статистика */}
+      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Найдено клиентов: <strong>{totalItems}</strong>
+        </Typography>
+        {clients.length > 0 && (
+          <>
+            <Typography variant="body2" color="success.main">
+              Активных: <strong>{clients.filter(client => client.is_active).length}</strong>
+            </Typography>
+            {clients.filter(client => !client.is_active).length > 0 && (
+              <Typography variant="body2" color="error.main">
+                Деактивированных: <strong>{clients.filter(client => !client.is_active).length}</strong>
+              </Typography>
+            )}
+          </>
+        )}
+        <Typography variant="caption" color="text.secondary">
+          {!showInactive && '(только активные)'}
+          {showInactive && '(включая деактивированных)'}
+        </Typography>
       </Box>
 
       {/* Таблица клиентов */}
@@ -286,6 +356,7 @@ const ClientsPage: React.FC = () => {
               <TableCell>Клиент</TableCell>
               <TableCell>Телефон</TableCell>
               <TableCell>Email</TableCell>
+              <TableCell align="center">Статус</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -297,6 +368,7 @@ const ClientsPage: React.FC = () => {
                 onEdit={handleEditClient}
                 onDelete={handleDeleteClick}
                 onViewCars={handleViewCars}
+                onToggleStatus={handleToggleStatus}
                 tablePageStyles={tablePageStyles}
               />
             ))}
@@ -304,11 +376,11 @@ const ClientsPage: React.FC = () => {
         </Table>
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
-            count={Math.ceil(totalItems / rowsPerPage)}
+            count={Math.ceil(totalItems / PER_PAGE)}
             page={page + 1}
             onChange={(newPage) => setPage(newPage - 1)}
             color="primary"
-            disabled={totalItems <= rowsPerPage}
+            disabled={totalItems <= PER_PAGE}
           />
         </Box>
       </TableContainer>
