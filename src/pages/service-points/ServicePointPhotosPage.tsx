@@ -1,23 +1,30 @@
+/**
+ * ServicePointPhotosPage - Страница управления фотографиями точки обслуживания
+ * 
+ * Функциональность:
+ * - Просмотр всех фотографий точки обслуживания
+ * - Загрузка новых фотографий
+ * - Удаление существующих фотографий
+ * - Просмотр фотографий в полном размере
+ * - Централизованная система стилей для консистентного дизайна
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Grid,
   CircularProgress,
-  Alert,
-  Button,
   IconButton,
-  Card,
   CardMedia,
   CardContent,
   CardActions,
-  Divider,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  useTheme,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -25,8 +32,6 @@ import {
   Delete as DeleteIcon,
   OpenInNew as OpenInNewIcon,
   CloudUpload as CloudUploadIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -35,11 +40,44 @@ import {
   useDeleteServicePointPhotoMutation,
 } from '../../api';
 import { ServicePointPhoto } from '../../types/servicePoint';
-import { HiddenElement } from '../../components/styled/CommonComponents';
+
+// Импорт централизованной системы стилей
+import { 
+  getTablePageStyles,
+  SIZES 
+} from '../../styles';
+
+// Импорт UI компонентов
+import { Button } from '../../components/ui/Button';
+import { Alert } from '../../components/ui/Alert';
+import { Card } from '../../components/ui/Card';
+
+/**
+ * Компонент скрытого элемента для загрузки файлов
+ */
+const HiddenElement: React.FC<{
+  component: string;
+  accept: string;
+  id: string;
+  type: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled: boolean;
+}> = ({ component, accept, id, type, onChange, disabled }) => (
+  <input
+    style={{ display: 'none' }}
+    accept={accept}
+    id={id}
+    type={type}
+    onChange={onChange}
+    disabled={disabled}
+  />
+);
 
 const ServicePointPhotosPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const tablePageStyles = getTablePageStyles(theme);
   
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
@@ -105,7 +143,7 @@ const ServicePointPhotosPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70vh' }}>
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -113,11 +151,15 @@ const ServicePointPhotosPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box>
-        <Alert severity="error" sx={{ mb: 2 }}>
+      <Box sx={tablePageStyles.container}>
+        <Alert severity="error" sx={tablePageStyles.errorAlert}>
           {error.toString()}
         </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          onClick={handleBack}
+          sx={tablePageStyles.secondaryButton}
+        >
           Вернуться назад
         </Button>
       </Box>
@@ -126,133 +168,257 @@ const ServicePointPhotosPage: React.FC = () => {
 
   if (!photos || !photos.data || !Array.isArray(photos.data) || photos.data.length === 0) {
     return (
-      <Box>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Нет загруженных фотографий
-        </Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/service-points')}>
-          Вернуться к списку
-        </Button>
+      <Box sx={tablePageStyles.container}>
+        <Box sx={tablePageStyles.emptyStateContainer}>
+          <PhotoCameraIcon sx={tablePageStyles.emptyStateIcon} />
+          <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
+            Нет загруженных фотографий
+          </Typography>
+          <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
+            Загрузите первую фотографию для этой точки обслуживания
+          </Typography>
+          <Button 
+            startIcon={<ArrowBackIcon />} 
+            onClick={() => navigate('/service-points')}
+            sx={tablePageStyles.primaryButton}
+          >
+            Вернуться к списку
+          </Button>
+        </Box>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          Фотографии: {id}
+    <Box sx={tablePageStyles.container}>
+      {/* Заголовок страницы */}
+      <Box sx={tablePageStyles.headerContainer}>
+        <Typography 
+          variant="h4" 
+          sx={tablePageStyles.title}
+        >
+          Фотографии точки обслуживания
         </Typography>
-        <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
+        <Button 
+          startIcon={<ArrowBackIcon />} 
+          onClick={handleBack}
+          sx={tablePageStyles.secondaryButton}
+        >
           Назад к точке
         </Button>
       </Box>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <PhotoCameraIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h6">Загрузить новую фотографию</Typography>
-        </Box>
-        <Divider sx={{ mb: 2 }} />
-        
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <HiddenElement
-            component="input"
-            accept="image/*"
-            id="photo-upload"
-            type="file"
-            onChange={handleFileChange}
-            disabled={isUploading}
-          />
-          <label htmlFor="photo-upload">
-            <Button
-              variant="contained"
-              component="span"
-              startIcon={<CloudUploadIcon />}
-              disabled={isUploading}
+      {/* Блок загрузки новой фотографии */}
+      <Card sx={{ 
+        ...tablePageStyles.card, 
+        marginBottom: SIZES.spacing.lg 
+      }}>
+        <CardContent sx={{ padding: SIZES.spacing.lg }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            marginBottom: SIZES.spacing.md 
+          }}>
+            <PhotoCameraIcon sx={{ 
+              marginRight: SIZES.spacing.sm, 
+              color: theme.palette.primary.main,
+              fontSize: SIZES.fontSize.lg
+            }} />
+            <Typography 
+              variant="h6" 
+              sx={{
+                fontSize: SIZES.fontSize.lg,
+                fontWeight: 600
+              }}
             >
-              Выбрать фото
-            </Button>
-          </label>
+              Загрузить новую фотографию
+            </Typography>
+          </Box>
           
-          {isUploading && (
-            <Box sx={{ mt: 2, width: '100%' }}>
-              <CircularProgress />
-            </Box>
-          )}
-        </Box>
-      </Paper>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center',
+            padding: SIZES.spacing.md,
+            border: `2px dashed ${theme.palette.divider}`,
+            borderRadius: SIZES.borderRadius.md,
+            backgroundColor: theme.palette.action.hover
+          }}>
+            <HiddenElement
+              component="input"
+              accept="image/*"
+              id="photo-upload"
+              type="file"
+              onChange={handleFileChange}
+              disabled={isUploading}
+            />
+            <label htmlFor="photo-upload">
+              <Button
+                variant="contained"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+                disabled={isUploading}
+                sx={tablePageStyles.primaryButton}
+              >
+                Выбрать фото
+              </Button>
+            </label>
+            
+            {isUploading && (
+              <Box sx={{ 
+                marginTop: SIZES.spacing.md, 
+                display: 'flex',
+                alignItems: 'center',
+                gap: SIZES.spacing.sm
+              }}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" color="text.secondary">
+                  Загрузка...
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </CardContent>
+      </Card>
 
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Фотографии сервисной точки
+      {/* Заголовок галереи */}
+      <Box sx={{ marginBottom: SIZES.spacing.lg }}>
+        <Typography 
+          variant="h6" 
+          sx={{
+            fontSize: SIZES.fontSize.lg,
+            fontWeight: 600,
+            marginBottom: SIZES.spacing.sm
+          }}
+        >
+          Галерея фотографий ({photos.data.length})
         </Typography>
-        <Divider />
       </Box>
 
+      {/* Галерея фотографий */}
       {photosLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <Box sx={tablePageStyles.loadingContainer}>
           <CircularProgress />
         </Box>
       ) : photos && photos.data && Array.isArray(photos.data) && photos.data.length > 0 ? (
-        <Grid container spacing={3}>
+        <Grid container spacing={SIZES.spacing.md}>
           {photos.data.map((photo: any) => (
-            <Grid item xs={12} sm={6} md={4} key={photo.id}>
-              <Card>
+            <Grid item xs={12} sm={6} md={4} lg={3} key={photo.id}>
+              <Card sx={{
+                ...tablePageStyles.card,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  boxShadow: theme.shadows[4],
+                  transform: 'translateY(-2px)'
+                }
+              }}>
                 <CardMedia
                   component="img"
                   height="200"
-                  image={photo.url}
-                  alt={`Фото ${photo.id}`}
+                  image={photo.url || photo.photo_url}
+                  alt={photo.description || 'Фото точки обслуживания'}
+                  sx={{
+                    objectFit: 'cover',
+                    borderRadius: `${SIZES.borderRadius.md}px ${SIZES.borderRadius.md}px 0 0`
+                  }}
                 />
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary">
-                    {photo.description || `Фото #${photo.id}`}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <IconButton 
-                    href={photo.url} 
-                    target="_blank" 
-                    size="small" 
-                    color="primary"
-                    aria-label="открыть полное изображение"
+                <CardContent sx={{ 
+                  flexGrow: 1, 
+                  padding: SIZES.spacing.md 
+                }}>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{
+                      fontSize: SIZES.fontSize.sm,
+                      lineHeight: 1.4
+                    }}
                   >
-                    <OpenInNewIcon />
+                    {photo.description || 'Без описания'}
+                  </Typography>
+                  {photo.is_main && (
+                    <Typography 
+                      variant="caption" 
+                      sx={{
+                        color: theme.palette.primary.main,
+                        fontWeight: 600,
+                        marginTop: SIZES.spacing.xs,
+                        display: 'block'
+                      }}
+                    >
+                      Главное фото
+                    </Typography>
+                  )}
+                </CardContent>
+                <CardActions sx={{ 
+                  justifyContent: 'space-between',
+                  padding: SIZES.spacing.sm
+                }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => window.open(photo.url || photo.photo_url, '_blank')}
+                    sx={{
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        backgroundColor: `${theme.palette.primary.main}15`
+                      }
+                    }}
+                  >
+                    <OpenInNewIcon fontSize="small" />
                   </IconButton>
                   <IconButton
                     size="small"
-                    color="error"
                     onClick={() => handleDeleteClick(photo.id)}
-                    aria-label="удалить фото"
+                    sx={{
+                      color: theme.palette.error.main,
+                      '&:hover': {
+                        backgroundColor: `${theme.palette.error.main}15`
+                      }
+                    }}
                   >
-                    <DeleteIcon />
+                    <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>
               </Card>
             </Grid>
           ))}
         </Grid>
-      ) : (
-        <Typography variant="body1" color="text.secondary" align="center">
-          Нет загруженных фотографий
-        </Typography>
-      )}
+      ) : null}
 
       {/* Диалог подтверждения удаления */}
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: tablePageStyles.dialogPaper
+        }}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle sx={tablePageStyles.dialogTitle}>
+          Подтверждение удаления
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Вы действительно хотите удалить это фото? Это действие нельзя будет отменить.
+          <DialogContentText sx={tablePageStyles.dialogText}>
+            Вы действительно хотите удалить эту фотографию?
+            Это действие нельзя будет отменить.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+        <DialogActions sx={tablePageStyles.dialogActions}>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            sx={tablePageStyles.secondaryButton}
+          >
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete}
+            variant="contained"
+            sx={tablePageStyles.dangerButton}
+          >
             Удалить
           </Button>
         </DialogActions>
