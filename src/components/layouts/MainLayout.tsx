@@ -198,6 +198,13 @@ const MainLayout: React.FC = () => {
             description: 'Управление пользователями системы',
           },
           {
+            text: 'Клиенты',
+            icon: <UserIcon />,
+            path: '/clients',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: 'Управление клиентами',
+          },
+          {
             text: 'Партнеры',
             icon: <CompanyIcon />,
             path: '/partners',

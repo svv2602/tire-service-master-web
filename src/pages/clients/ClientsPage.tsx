@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   Box,
-  Typography,
   InputAdornment,
   CircularProgress,
   Table,
@@ -23,6 +22,7 @@ import {
   DirectionsCar as CarIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import { 
   useGetClientsQuery, 
   useDeleteClientMutation,
@@ -32,11 +32,17 @@ import { ApiResponse } from '../../types/models';
 import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
-import { Button } from '../../components/ui/Button';
-import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
-import { Pagination } from '../../components/ui/Pagination';
-import { Modal } from '../../components/ui/Modal';
+import { 
+  Button, 
+  TextField, 
+  Alert, 
+  Pagination, 
+  Modal,
+  Typography 
+} from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
 
 // Мемоизированный компонент строки клиента
 const ClientRow = React.memo<{
@@ -44,10 +50,11 @@ const ClientRow = React.memo<{
   onEdit: (id: string) => void;
   onDelete: (client: Client) => void;
   onViewCars: (id: string) => void;
-}>(({ client, onEdit, onDelete, onViewCars }) => (
-  <TableRow>
+  tablePageStyles: any;
+}>(({ client, onEdit, onDelete, onViewCars, tablePageStyles }) => (
+  <TableRow sx={tablePageStyles.tableRow}>
     <TableCell>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={tablePageStyles.avatarContainer}>
         <Avatar>
           <PersonIcon />
         </Avatar>
@@ -61,12 +68,13 @@ const ClientRow = React.memo<{
     <TableCell>{client.email}</TableCell>
 
     <TableCell align="right">
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Box sx={tablePageStyles.actionsContainer}>
         <Tooltip title="Автомобили">
           <IconButton
             onClick={() => onViewCars(client.id.toString())}
             size="small"
             color="primary"
+            sx={tablePageStyles.actionButton}
           >
             <CarIcon />
           </IconButton>
@@ -75,6 +83,7 @@ const ClientRow = React.memo<{
           <IconButton
             onClick={() => onEdit(client.id.toString())}
             size="small"
+            sx={tablePageStyles.actionButton}
           >
             <EditIcon />
           </IconButton>
@@ -84,6 +93,7 @@ const ClientRow = React.memo<{
             onClick={() => onDelete(client)}
             size="small"
             color="error"
+            sx={tablePageStyles.actionButton}
           >
             <DeleteIcon />
           </IconButton>
@@ -97,6 +107,10 @@ ClientRow.displayName = 'ClientRow';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Инициализация стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
@@ -183,7 +197,7 @@ const ClientsPage: React.FC = () => {
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
@@ -191,7 +205,7 @@ const ClientsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
+      <Box sx={tablePageStyles.errorContainer}>
         <Alert severity="error">
           Ошибка при загрузке клиентов: {error.toString()}
         </Alert>
@@ -200,31 +214,31 @@ const ClientsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Клиенты</Typography>
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
+          Клиенты
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleAddClient}
+          sx={tablePageStyles.createButton}
         >
           Добавить клиента
         </Button>
       </Box>
 
       {/* Поиск */}
-      <Box sx={{ 
-        p: 2, 
-        mb: 3
-      }}>
+      <Box sx={tablePageStyles.filtersContainer}>
         <TextField
           placeholder="Поиск по имени, фамилии, email или номеру телефона..."
           variant="outlined"
           size="small"
           value={search}
           onChange={handleSearchChange}
-          fullWidth
+          sx={tablePageStyles.searchField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -236,13 +250,9 @@ const ClientsPage: React.FC = () => {
       </Box>
 
       {/* Таблица клиентов */}
-      <TableContainer sx={{
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
-      }}>
+      <TableContainer sx={tablePageStyles.tableContainer}>
         <Table>
-          <TableHead>
+          <TableHead sx={tablePageStyles.tableHeader}>
             <TableRow>
               <TableCell>Клиент</TableCell>
               <TableCell>Телефон</TableCell>
@@ -258,15 +268,12 @@ const ClientsPage: React.FC = () => {
                 onEdit={handleEditClient}
                 onDelete={handleDeleteClick}
                 onViewCars={handleViewCars}
+                tablePageStyles={tablePageStyles}
               />
             ))}
           </TableBody>
         </Table>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          p: 2 
-        }}>
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={Math.ceil(totalItems / rowsPerPage)}
             page={page + 1}
