@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
+import {
   useTheme, 
-  InputAdornment, 
+  InputAdornment,
   Menu, 
   MenuItem,
   Table,

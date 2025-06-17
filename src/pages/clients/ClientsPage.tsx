@@ -27,7 +27,8 @@ import {
   useGetClientsQuery, 
   useDeleteClientMutation,
 } from '../../api/clients.api';
-import { Client, ClientFilter } from '../../types/client';
+import { Client } from '../../types/client';
+import { ClientFilter } from '../../types/models';
 import { ApiResponse } from '../../types/models';
 import { useDebounce } from '../../hooks/useDebounce';
 
@@ -44,64 +45,90 @@ import {
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
 
-// Мемоизированный компонент строки клиента
+// Мемоизированный компонент строки клиента с кастомным сравнением
 const ClientRow = React.memo<{
   client: Client;
   onEdit: (id: string) => void;
   onDelete: (client: Client) => void;
   onViewCars: (id: string) => void;
   tablePageStyles: any;
-}>(({ client, onEdit, onDelete, onViewCars, tablePageStyles }) => (
-  <TableRow sx={tablePageStyles.tableRow}>
-    <TableCell>
-      <Box sx={tablePageStyles.avatarContainer}>
-        <Avatar>
-          <PersonIcon />
-        </Avatar>
-        <Typography>
-          {client.first_name} {client.last_name}
-        </Typography>
-      </Box>
-    </TableCell>
+}>(
+  ({ client, onEdit, onDelete, onViewCars, tablePageStyles }) => (
+    <TableRow sx={tablePageStyles.tableRow}>
+      <TableCell>
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar>
+            <PersonIcon />
+          </Avatar>
+          <Typography>
+            {client.first_name} {client.last_name}
+          </Typography>
+        </Box>
+      </TableCell>
 
-    <TableCell>{client.phone}</TableCell>
-    <TableCell>{client.email}</TableCell>
+      <TableCell>{client.phone}</TableCell>
+      <TableCell>{client.email}</TableCell>
 
-    <TableCell align="right">
-      <Box sx={tablePageStyles.actionsContainer}>
-        <Tooltip title="Автомобили">
-          <IconButton
-            onClick={() => onViewCars(client.id.toString())}
-            size="small"
-            color="primary"
-            sx={tablePageStyles.actionButton}
-          >
-            <CarIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Редактировать">
-          <IconButton
-            onClick={() => onEdit(client.id.toString())}
-            size="small"
-            sx={tablePageStyles.actionButton}
-          >
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Удалить">
-          <IconButton
-            onClick={() => onDelete(client)}
-            size="small"
-            color="error"
-            sx={tablePageStyles.actionButton}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </TableCell>
-  </TableRow>
-));
+      <TableCell align="right">
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Автомобили">
+            <IconButton
+              onClick={() => onViewCars(client.id.toString())}
+              size="small"
+              color="primary"
+              sx={tablePageStyles.actionButton}
+            >
+              <CarIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => onEdit(client.id.toString())}
+              size="small"
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => onDelete(client)}
+              size="small"
+              color="error"
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </TableCell>
+    </TableRow>
+  ),
+  (prevProps: {
+    client: Client;
+    onEdit: (id: string) => void;
+    onDelete: (client: Client) => void;
+    onViewCars: (id: string) => void;
+    tablePageStyles: any;
+  }, nextProps: {
+    client: Client;
+    onEdit: (id: string) => void;
+    onDelete: (client: Client) => void;
+    onViewCars: (id: string) => void;
+    tablePageStyles: any;
+  }) => {
+    // Кастомная функция сравнения для мемоизации
+    // Перерендериваем если изменились данные клиента
+    return (
+      prevProps.client.id === nextProps.client.id &&
+      prevProps.client.first_name === nextProps.client.first_name &&
+      prevProps.client.last_name === nextProps.client.last_name &&
+      prevProps.client.phone === nextProps.client.phone &&
+      prevProps.client.email === nextProps.client.email &&
+      prevProps.client.is_active === nextProps.client.is_active
+    );
+  }
+);
 
 ClientRow.displayName = 'ClientRow';
 
@@ -136,7 +163,9 @@ const ClientsPage: React.FC = () => {
     data: clientsData, 
     isLoading: clientsLoading, 
     error: clientsError 
-  } = useGetClientsQuery(queryParams);
+  } = useGetClientsQuery(queryParams, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
 

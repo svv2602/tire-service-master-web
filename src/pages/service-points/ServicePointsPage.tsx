@@ -267,43 +267,43 @@ const ServicePointsPage: React.FC = () => {
             }}
           />
           
-          <Select
-            label="Регион"
-            value={selectedRegionId}
-            onChange={(value) => {
-              setSelectedRegionId(value as number | '');
-              setSelectedCityId('');
-              setPage(0);
-            }}
-            options={[
-              { value: '', label: 'Все регионы' },
-              ...(regionsData?.data?.map((region) => ({
-                value: region.id,
-                label: region.name
-              })) || [])
-            ]}
-            size="small"
+            <Select
+              label="Регион"
+              value={selectedRegionId}
+              onChange={(value) => {
+                setSelectedRegionId(value as number | '');
+                setSelectedCityId('');
+                setPage(0);
+              }}
+              options={[
+                { value: '', label: 'Все регионы' },
+                ...(regionsData?.data?.map((region) => ({
+                  value: region.id,
+                  label: region.name
+                })) || [])
+              ]}
+              size="small"
             sx={tablePageStyles.filterSelect}
-          />
+            />
 
-          <Select
-            label="Город"
-            value={selectedCityId}
-            onChange={(value) => {
-              setSelectedCityId(value as number | '');
-              setPage(0);
-            }}
-            options={[
-              { value: '', label: 'Все города' },
-              ...(citiesData?.data?.map((city) => ({
-                value: city.id,
-                label: city.name
-              })) || [])
-            ]}
-            disabled={!selectedRegionId}
-            size="small"
+            <Select
+              label="Город"
+              value={selectedCityId}
+              onChange={(value) => {
+                setSelectedCityId(value as number | '');
+                setPage(0);
+              }}
+              options={[
+                { value: '', label: 'Все города' },
+                ...(citiesData?.data?.map((city) => ({
+                  value: city.id,
+                  label: city.name
+                })) || [])
+              ]}
+              disabled={!selectedRegionId}
+              size="small"
             sx={tablePageStyles.filterSelect}
-          />
+            />
         </Box>
       </Box>
 

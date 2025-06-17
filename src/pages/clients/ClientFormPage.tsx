@@ -1,13 +1,15 @@
 import React, { useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
   Grid,
   CircularProgress,
   useTheme,
+  Alert,
 } from '@mui/material';
-import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation } from '../../api/clients.api';
+import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation, clientsApi } from '../../api/clients.api';
 import { ClientFormData } from '../../types/client';
 
 // Импорты UI компонентов
@@ -49,8 +51,13 @@ const validationSchema = Yup.object({
 const ClientFormPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
+
+  // Состояния для уведомлений
+  const [apiError, setApiError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
   // Инициализация централизованных стилей
   const formStyles = getFormStyles(theme);
@@ -58,6 +65,7 @@ const ClientFormPage: React.FC = () => {
   // RTK Query хуки
   const { data: client, isLoading: isLoadingClient } = useGetClientByIdQuery(id || '', {
     skip: !isEditMode,
+    refetchOnMountOrArgChange: true,
   });
 
   const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
@@ -89,19 +97,44 @@ const ClientFormPage: React.FC = () => {
 
   // Инициализация формы
   const formik = useFormik<ClientFormData>({
-    initialValues,
-    enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
-    validationSchema,
+    initialValues: initialValues,
+    validationSchema: validationSchema,
+    enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        setApiError(null);
+        setSuccessMessage(null);
+        
         if (isEditMode && id) {
-          await updateClient({ id, client: values }).unwrap();
+          // Для обновления клиента отправляем данные в формате { user: {...} }
+          const updateData = {
+            user: {
+              first_name: values.first_name,
+              last_name: values.last_name,
+              middle_name: values.middle_name || '',
+              phone: values.phone || '',
+              email: values.email || '',
+            }
+          };
+          
+          await updateClient({ id, client: updateData }).unwrap();
+          // Принудительно инвалидируем кэш
+          dispatch(clientsApi.util.invalidateTags([{ type: 'Client', id }, 'Client']));
+          setSuccessMessage('Клиент успешно обновлен');
         } else {
           await createClient(values).unwrap();
+          // Принудительно инвалидируем кэш
+          dispatch(clientsApi.util.invalidateTags(['Client']));
+          setSuccessMessage('Клиент успешно создан');
         }
-        navigate('/clients');
-      } catch (error) {
+        
+        // Переходим к списку клиентов через небольшую задержку
+        setTimeout(() => {
+          navigate('/clients');
+        }, 1500);
+      } catch (error: any) {
         console.error('Ошибка при сохранении клиента:', error);
+        setApiError(extractErrorMessage(error));
       }
     },
   });
@@ -110,6 +143,21 @@ const ClientFormPage: React.FC = () => {
   const handleCancel = useCallback(() => {
     navigate('/clients');
   }, [navigate]);
+
+  // Функция для извлечения сообщения об ошибке
+  const extractErrorMessage = useCallback((error: any): string => {
+    if (error?.data?.message) {
+      return error.data.message;
+    }
+    if (error?.data?.errors) {
+      const errors = Object.values(error.data.errors).flat();
+      return errors.join(', ');
+    }
+    if (error?.message) {
+      return error.message;
+    }
+    return 'Произошла неизвестная ошибка';
+  }, []);
 
   if (isLoading) {
     return (
@@ -202,6 +250,19 @@ const ClientFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12}>
+              {/* Уведомления */}
+              {apiError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {apiError}
+                </Alert>
+              )}
+              
+              {successMessage && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  {successMessage}
+                </Alert>
+              )}
+              
               <Box sx={{ 
                 display: 'flex', 
                 gap: 2, 
@@ -211,6 +272,7 @@ const ClientFormPage: React.FC = () => {
                 <Button
                   variant="outlined"
                   onClick={handleCancel}
+                  disabled={isLoading}
                 >
                   Отмена
                 </Button>
@@ -219,7 +281,7 @@ const ClientFormPage: React.FC = () => {
                   variant="contained"
                   disabled={isLoading}
                 >
-                  {isEditMode ? 'Сохранить' : 'Создать'}
+                  {isLoading ? 'Сохранение...' : (isEditMode ? 'Сохранить' : 'Создать')}
                 </Button>
               </Box>
             </Grid>

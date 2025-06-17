@@ -35,22 +35,13 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${API_BASE_URL}/api/v1`,
     prepareHeaders: (headers, { getState }) => {
-      // Пытаемся получить токен из Redux state
+      // При cookie-based аутентификации:
+      // - Access токен передается в заголовке Authorization (из Redux state)
+      // - Refresh токен автоматически передается через HttpOnly cookies
       const token = (getState() as any).auth?.accessToken;
       
-      // Если токена нет в Redux, пытаемся получить из localStorage с правильным ключом
-      const fallbackToken = token || localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
-      
-      // Отладочная информация
-      console.log('BaseAPI prepareHeaders:', {
-        reduxToken: token ? `${token.substring(0, 20)}...` : 'отсутствует',
-        localStorageToken: localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY) ? 
-          `${localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY)!.substring(0, 20)}...` : 'отсутствует',
-        finalToken: fallbackToken ? `${fallbackToken.substring(0, 20)}...` : 'отсутствует'
-      });
-      
-      if (fallbackToken) {
-        headers.set('authorization', `Bearer ${fallbackToken}`);
+      if (token) {
+        headers.set('authorization', `Bearer ${token}`);
       }
       
       // Устанавливаем Content-Type для JSON запросов
@@ -58,8 +49,19 @@ export const baseApi = createApi({
         headers.set('content-type', 'application/json');
       }
       
+      // Отладочная информация только в режиме разработки
+      if (process.env.NODE_ENV === 'development') {
+        console.log('BaseAPI prepareHeaders:', {
+          hasAccessToken: !!token,
+          tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
+          url: (getState() as any).api?.config?.url || 'unknown',
+          method: (getState() as any).api?.config?.method || 'unknown'
+        });
+      }
+      
       return headers;
     },
+    // Включаем cookies для всех запросов (используется для refresh токена)
     credentials: 'include',
   }),
   tagTypes: [

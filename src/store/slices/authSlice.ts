@@ -71,20 +71,29 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isInitialized = true;
       setStoredUser(user);
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      // При cookie-based аутентификации не устанавливаем Bearer токены в заголовки
+      // Refresh токен автоматически передается через cookies
     },
-    logout: (state) => {
-      state.accessToken = null;
-      state.refreshToken = null;
-      state.user = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      state.isInitialized = true;
-      setStoredUser(null);
-      delete apiClient.defaults.headers.common['Authorization'];
-    },
+          logout: (state) => {
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.error = null;
+        state.isInitialized = true;
+        setStoredUser(null);
+        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
+        // Refresh токен автоматически очищается через cookies на сервере
+      },
     setInitialized: (state) => {
       state.isInitialized = true;
+    },
+    updateAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      // При обновлении access токена пользователь остается аутентифицированным
+      if (state.user) {
+        state.isAuthenticated = true;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -112,8 +121,9 @@ const authSlice = createSlice({
         
         setStoredUser(action.payload.user);
         
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.tokens.access}`;
-        console.log('Auth: login.fulfilled - authorization header set');
+        // При cookie-based аутентификации не устанавливаем Bearer токены в заголовки
+        // Refresh токен автоматически сохраняется через cookies на сервере
+        console.log('Auth: login.fulfilled - используем cookie-based аутентификацию');
       })
       .addCase(login.rejected, (state, action) => {
         console.log('Auth: login.rejected - login failed');
@@ -132,7 +142,7 @@ const authSlice = createSlice({
         state.error = null;
         state.isInitialized = true;
         setStoredUser(null);
-        delete apiClient.defaults.headers.common['Authorization'];
+        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
       })
       
       // Обработка getCurrentUser
@@ -156,7 +166,7 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isInitialized = true;
         setStoredUser(null);
-        delete apiClient.defaults.headers.common['Authorization'];
+        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
       });
   },
 });
@@ -246,7 +256,7 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
-export const { setCredentials, logout, setInitialized } = authSlice.actions;
+export const { setCredentials, logout, setInitialized, updateAccessToken } = authSlice.actions;
 
 // Селектор для получения текущего пользователя
 export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;

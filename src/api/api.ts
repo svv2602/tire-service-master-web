@@ -4,7 +4,6 @@ import { checkApiAvailability } from './baseQuery';
 import { handleLogout, refreshTokens } from '../services/authService';
 
 // Константы
-const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
 const API_URL = `${config.API_URL}${config.API_PREFIX}`;
 
 // Создаем экземпляр axios с базовыми настройками
@@ -14,42 +13,36 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  withCredentials: true // Включаем поддержку куки
+  withCredentials: true // Включаем поддержку куки для refresh токена
 });
 
-// Request interceptor
+// Request interceptor - добавляем access токен из Redux state
 apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem(STORAGE_KEY);
-
+  // Получаем access токен из Redux state
+  const store = require('../store/store').store;
+  const token = store.getState()?.auth?.accessToken;
+  
   if (token && config.headers) {
-    // Remove any existing auth header to avoid duplicates
-    delete config.headers.Authorization;
-    delete config.headers.authorization;
-
-    // Add token with correct Bearer format
-    const formattedToken = token.replace(/^Bearer\s+/i, '').trim();
-    config.headers.Authorization = `Bearer ${formattedToken}`;
-    
-    // Отладочное логирование
-    console.log('🔐 Отправка запроса с токеном:', {
+    // Добавляем access токен в заголовок Authorization
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  // Отладочное логирование только в режиме разработки
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔐 ApiClient запрос:', {
       url: config.url,
-      token: formattedToken.substring(0, 10) + '...',
-      headers: config.headers
+      hasAccessToken: !!token,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
+      withCredentials: config.withCredentials
     });
   }
 
   return config;
 });
 
-// Response interceptor
+// Response interceptor - обработка ошибок авторизации
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Обновляем токены если они пришли в ответе при логине
-    if (response.config.url?.includes('/auth/login') && response.data.tokens) {
-      const { access } = response.data.tokens;
-      // Сохраняем только access токен в Redux через заголовок
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-    }
     return response;
   },
   async (error) => {
@@ -74,11 +67,14 @@ apiClient.interceptors.response.use(
     try {
       originalRequest._retry = true;
       
-      // Используем refreshTokens из authService (без передачи refresh токена)
+      // Используем refreshTokens из authService (refresh токен передается через cookies)
       const { access_token } = await refreshTokens(apiClient);
       
-      // Обновляем токен в заголовках
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      // Обновляем access токен в Redux state и повторяем запрос
+      const store = require('../store/store').store;
+      store.dispatch({ type: 'auth/updateAccessToken', payload: access_token });
+      
+      // Добавляем новый токен в заголовок повторного запроса
       originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
       
       // Повторяем оригинальный запрос

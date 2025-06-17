@@ -1,6 +1,7 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Client, ClientCar, ClientFilter, ApiResponse } from '../types/models';
+import { Client, ClientCar } from '../types/client';
+import { ApiResponse, ClientFilter } from '../types/models';
 
 // Типы для форм
 interface ClientFormData {
@@ -10,6 +11,21 @@ interface ClientFormData {
   phone?: string;
   email?: string;
   is_active?: boolean;
+}
+
+// Тип для обновления клиента (соответствует ожиданиям бэкенда)
+interface ClientUpdateData {
+  user?: {
+    first_name?: string;
+    last_name?: string;
+    middle_name?: string;
+    phone?: string;
+    email?: string;
+  };
+  client?: {
+    preferred_notification_method?: string;
+    marketing_consent?: boolean;
+  };
 }
 
 interface ClientCarFormData {
@@ -57,13 +73,16 @@ export const clientsApi = baseApi.injectEndpoints({
       invalidatesTags: ['Client'],
     }),
 
-    updateClient: builder.mutation<Client, { id: string; client: Partial<ClientFormData> }>({
+    updateClient: builder.mutation<Client, { id: string; client: ClientUpdateData }>({
       query: ({ id, client }) => ({
         url: `clients/${id}`,
         method: 'PUT',
         body: client,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Client', id }],
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Client', id },
+        'Client',
+      ],
     }),
 
     deleteClient: builder.mutation<void, string>({
@@ -71,7 +90,10 @@ export const clientsApi = baseApi.injectEndpoints({
         url: `clients/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Client'],
+      invalidatesTags: (result, error, id) => [
+        { type: 'Client', id },
+        'Client',
+      ],
     }),
 
     getClientCars: builder.query<ClientCar[], string>({
