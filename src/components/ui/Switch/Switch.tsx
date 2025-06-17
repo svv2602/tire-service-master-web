@@ -68,7 +68,7 @@ const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'larg
         transform: `translateX(${size.width - size.thumbSize - 4}px)`,
         color: '#fff',
         '& + .MuiSwitch-track': {
-          backgroundColor: themeColors.primary,
+          backgroundColor: '#1976d2', // Яркий синий цвет
           opacity: 1,
           border: 0,
         },
@@ -77,7 +77,7 @@ const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'larg
         },
       },
       '&.Mui-focusVisible .MuiSwitch-thumb': {
-        color: themeColors.primary,
+        color: '#1976d2', // Яркий синий цвет для фокуса
         border: `6px solid ${themeColors.backgroundPrimary}`,
       },
       '&.Mui-disabled .MuiSwitch-thumb': {

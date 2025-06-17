@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Box,
-  Typography,
   CircularProgress,
   IconButton,
   Divider,
@@ -22,14 +20,18 @@ import {
 } from '../../api/regions.api';
 import { RegionFormData } from '../../types/models';
 import CitiesList from '../../components/CitiesList';
-import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
-import { SIZES } from '../../styles/theme';
 
 // Импорты UI компонентов
-import { TextField } from '../../components/ui/TextField';
-import { Button } from '../../components/ui/Button';
-import { Switch } from '../../components/ui/Switch';
-import { Snackbar } from '../../components/ui/Snackbar';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Switch,
+} from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getFormStyles } from '../../styles/components';
 
 /**
  * Схема валидации для формы региона
@@ -70,11 +72,8 @@ const RegionFormPage: React.FC = () => {
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
-  // Централизованные стили
-  const cardStyles = getCardStyles(theme);
-  const primaryButtonStyles = getButtonStyles(theme, 'primary');
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
-  const textFieldStyles = getTextFieldStyles(theme);
+  // Инициализация централизованных стилей
+  const formStyles = getFormStyles(theme);
 
   // Состояние для уведомлений
   const [notification, setNotification] = useState<{
@@ -166,7 +165,12 @@ const RegionFormPage: React.FC = () => {
   // Отображение состояния загрузки
   if (isEditMode && isLoadingRegion) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px'
+      }}>
         <CircularProgress />
       </Box>
     );
@@ -175,49 +179,41 @@ const RegionFormPage: React.FC = () => {
   const isSaving = isCreating || isUpdating;
 
   return (
-    <Box sx={{ padding: SIZES.spacing.xl }}>
+    <Box sx={{ padding: theme.spacing(3) }}>
       {/* Заголовок и кнопка назад */}
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
-        marginBottom: SIZES.spacing.xl 
+        marginBottom: theme.spacing(3)
       }}>
         <IconButton
           onClick={handleBack}
           sx={{ 
-            marginRight: SIZES.spacing.sm,
-            ...secondaryButtonStyles,
+            marginRight: theme.spacing(1),
           }}
         >
           <ArrowBackIcon />
         </IconButton>
         <Typography 
           variant="h4"
-          sx={{
-            fontSize: SIZES.fontSize.xl,
-            fontWeight: 600,
-          }}
+          sx={formStyles.sectionTitle}
         >
           {isEditMode ? 'Редактирование региона' : 'Создание региона'}
         </Typography>
       </Box>
 
-      <Grid container spacing={SIZES.spacing.xl}>
+      <Grid container spacing={3}>
         {/* Форма региона */}
         <Grid item xs={12} md={isEditMode ? 6 : 12}>
-          <Box sx={cardStyles}>
+          <Box sx={formStyles.container}>
             <Typography 
               variant="h6" 
-              sx={{
-                marginBottom: SIZES.spacing.lg,
-                fontSize: SIZES.fontSize.lg,
-                fontWeight: 600,
-              }}
+              sx={formStyles.sectionTitle}
             >
               Информация о регионе
             </Typography>
             
-            <Box component="form" onSubmit={formik.handleSubmit} sx={{ marginTop: SIZES.spacing.lg }}>
+            <Box component="form" onSubmit={formik.handleSubmit} sx={formStyles.section}>
               <TextField
                 fullWidth
                 id="name"
@@ -230,7 +226,7 @@ const RegionFormPage: React.FC = () => {
                 helperText={formik.touched.name && formik.errors.name}
                 margin="normal"
                 required
-                sx={textFieldStyles}
+                sx={formStyles.field}
               />
 
               <TextField
@@ -245,29 +241,28 @@ const RegionFormPage: React.FC = () => {
                 helperText={formik.touched.code && formik.errors.code}
                 margin="normal"
                 required
-                sx={textFieldStyles}
+                sx={formStyles.field}
               />
 
               <Switch
                 id="is_active"
                 name="is_active"
                 checked={formik.values.is_active}
-                onChange={(checked) => formik.setFieldValue('is_active', checked)}
+                onChange={(event, checked) => formik.setFieldValue('is_active', checked)}
                 label="Активен"
-                sx={{ marginTop: SIZES.spacing.lg }}
+                sx={{ marginTop: theme.spacing(2) }}
               />
 
               <Box sx={{ 
-                marginTop: SIZES.spacing.xl, 
+                marginTop: theme.spacing(3), 
                 display: 'flex', 
-                gap: SIZES.spacing.md 
+                gap: 2
               }}>
                 <Button
                   type="submit"
                   variant="contained"
                   startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
                   disabled={isSaving}
-                  sx={primaryButtonStyles}
                 >
                   {isSaving ? 'Сохранение...' : 'Сохранить'}
                 </Button>
@@ -275,7 +270,6 @@ const RegionFormPage: React.FC = () => {
                   variant="outlined"
                   onClick={handleBack}
                   disabled={isSaving}
-                  sx={secondaryButtonStyles}
                 >
                   Отмена
                 </Button>
@@ -287,31 +281,34 @@ const RegionFormPage: React.FC = () => {
         {/* Список городов (только при редактировании) */}
         {isEditMode && id && (
           <Grid item xs={12} md={6}>
-            <Box sx={cardStyles}>
-              <Typography 
-                variant="h6" 
-                sx={{
-                  marginBottom: SIZES.spacing.lg,
-                  fontSize: SIZES.fontSize.lg,
-                  fontWeight: 600,
-                }}
-              >
-                Города региона
-              </Typography>
-              <Divider sx={{ marginBottom: SIZES.spacing.lg }} />
-              <CitiesList regionId={id} />
-            </Box>
+            <CitiesList regionId={id} />
           </Grid>
         )}
       </Grid>
 
-      {/* Уведомления */}
-      <Snackbar
-        open={notification.open}
-        message={notification.message}
-        severity={notification.severity}
-        onClose={handleCloseNotification}
-      />
+      {/* Уведомления - используем старый Snackbar пока не создадим централизованную систему */}
+      {notification.open && (
+        <Box sx={{
+          position: 'fixed',
+          top: theme.spacing(2),
+          right: theme.spacing(2),
+          zIndex: 9999,
+          padding: theme.spacing(2),
+          backgroundColor: notification.severity === 'error' ? theme.palette.error.main : theme.palette.success.main,
+          color: theme.palette.common.white,
+          borderRadius: theme.shape.borderRadius,
+          minWidth: 300,
+        }}>
+          <Typography>{notification.message}</Typography>
+          <Button 
+            size="small" 
+            onClick={handleCloseNotification}
+            sx={{ color: 'inherit', marginTop: 1 }}
+          >
+            Закрыть
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
