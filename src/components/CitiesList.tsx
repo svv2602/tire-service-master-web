@@ -162,7 +162,27 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         setError(null);
       } catch (err: any) {
         console.error('Ошибка при удалении города:', err);
-        setError(err?.data?.message || 'Произошла ошибка при удалении города');
+        let errorMessage = 'Произошла ошибка при удалении города';
+        
+        // Обрабатываем различные форматы ошибок от API
+        if (err?.data?.error) {
+          // Основной формат ошибок с ограничениями
+          errorMessage = err.data.error;
+        } else if (err?.data?.message) {
+          // Альтернативный формат
+          errorMessage = err.data.message;
+        } else if (err?.data?.errors) {
+          // Ошибки валидации
+          const errors = err.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (err?.message) {
+          // Общие ошибки
+          errorMessage = err.message;
+        }
+        
+        setError(errorMessage);
         handleCloseDeleteDialog();
       }
     }

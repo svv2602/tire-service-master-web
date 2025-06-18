@@ -155,11 +155,19 @@ const CarBrandsPage: React.FC = () => {
       setSelectedBrand(null);
     } catch (error: any) {
       let errorMessage = 'Ошибка при удалении бренда';
-      if (error.data?.message) {
+      
+      // Обрабатываем различные форматы ошибок от API
+      if (error.data?.error) {
+        // Основной формат ошибок с ограничениями
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        // Альтернативный формат
         errorMessage = error.data.message;
       } else if (error.data?.errors) {
+        // Ошибки валидации
         errorMessage = Object.values(error.data.errors).join(', ');
       }
+      
       setNotification({
         open: true,
         message: errorMessage,

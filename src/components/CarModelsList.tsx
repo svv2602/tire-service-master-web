@@ -132,14 +132,21 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         console.error('Error saving model:', error);
         let errorMessage = 'Произошла ошибка при сохранении модели';
         
-        if (error.data?.errors) {
+        // Обрабатываем различные форматы ошибок от API
+        if (error.data?.error) {
+          // Основной формат ошибок с ограничениями
+          errorMessage = error.data.error;
+        } else if (error.data?.errors) {
+          // Ошибки валидации
           const errors = error.data.errors as Record<string, string[]>;
           errorMessage = Object.entries(errors)
             .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
             .join('; ');
         } else if (error.data?.message) {
+          // Альтернативный формат
           errorMessage = error.data.message;
         } else if (error.message) {
+          // Общие ошибки
           errorMessage = error.message;
         }
         
@@ -211,9 +218,21 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       console.error('Error deleting model:', error);
       let errorMessage = 'Произошла ошибка при удалении модели';
       
-      if (error.data?.message) {
+      // Обрабатываем различные форматы ошибок от API
+      if (error.data?.error) {
+        // Основной формат ошибок с ограничениями
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        // Альтернативный формат
         errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        // Ошибки валидации
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
       } else if (error.message) {
+        // Общие ошибки
         errorMessage = error.message;
       }
       
