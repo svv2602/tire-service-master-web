@@ -387,11 +387,11 @@ const ClientsPage: React.FC = () => {
       <Table 
         columns={columns} 
         rows={clients}
-        sx={{
-          '& .MuiTableRow-root': {
-            opacity: (row: Client) => row.is_active ? 1 : 0.6
+        getRowProps={(row: Client) => ({
+          sx: {
+            opacity: row.is_active ? 1 : 0.6
           }
-        }}
+        })}
       />
 
       {/* Пагинация */}

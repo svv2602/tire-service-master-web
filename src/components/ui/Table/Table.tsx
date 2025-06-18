@@ -36,6 +36,8 @@ export interface TableProps extends MuiTableProps {
   maxHeight?: number;
   pagination?: boolean;
   rowsPerPage?: number;
+  /** Функция для получения дополнительных пропсов строки */
+  getRowProps?: (row: any, index: number) => Record<string, any>;
 }
 
 // Стилизованный Paper для контейнера таблицы
@@ -111,6 +113,7 @@ export const Table: React.FC<TableProps> = ({
   maxHeight,
   pagination = false,
   rowsPerPage = 10,
+  getRowProps,
   ...props
 }) => {
   return (
@@ -131,22 +134,31 @@ export const Table: React.FC<TableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row, index) => (
-              <StyledTableRow hover role="checkbox" tabIndex={-1} key={index}>
-                {columns.map((column) => {
-                  const value = row[column.id];
-                  return (
-                    <StyledTableCell 
-                      key={column.id} 
-                      align={column.align}
-                      wrap={column.wrap}
-                    >
-                      {column.format ? column.format(value, row) : value}
-                    </StyledTableCell>
-                  );
-                })}
-              </StyledTableRow>
-            ))}
+            {rows.map((row, index) => {
+              const rowProps = getRowProps ? getRowProps(row, index) : {};
+              return (
+                <StyledTableRow 
+                  hover 
+                  role="checkbox" 
+                  tabIndex={-1} 
+                  key={index}
+                  {...rowProps}
+                >
+                  {columns.map((column) => {
+                    const value = row[column.id];
+                    return (
+                      <StyledTableCell 
+                        key={column.id} 
+                        align={column.align}
+                        wrap={column.wrap}
+                      >
+                        {column.format ? column.format(value, row) : value}
+                      </StyledTableCell>
+                    );
+                  })}
+                </StyledTableRow>
+              );
+            })}
           </TableBody>
         </MuiTable>
       </TableContainer>

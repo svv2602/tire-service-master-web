@@ -13,30 +13,23 @@
  * - Централизованная система стилей для консистентного дизайна
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Avatar,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   useTheme,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -64,7 +57,9 @@ import {
   Box,
   Button, 
   TextField, 
-  Typography 
+  Typography,
+  Table,
+  type Column
 } from '../../components/ui';
 import { Pagination } from '../../components/ui/Pagination';
 
@@ -121,27 +116,51 @@ const CarBrandsPage: React.FC = () => {
   const [deleteBrand] = useDeleteCarBrandMutation();
   const [toggleActive] = useToggleCarBrandActiveMutation();
 
-  // Обработчики событий
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Мемоизированные обработчики событий
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0);
-  };
+  }, []);
 
-  const handleActiveFilterChange = (event: any) => {
+  const handleActiveFilterChange = useCallback((event: any) => {
     setActiveFilter(event.target.value);
     setPage(0);
-  };
+  }, []);
 
-  const handleChangePage = (newPage: number) => {
+  const handleChangePage = useCallback((newPage: number) => {
     setPage(newPage - 1);
-  };
+  }, []);
 
-  const handleDeleteClick = (brand: CarBrand) => {
+  const handleDeleteClick = useCallback((brand: CarBrand) => {
     setSelectedBrand({ id: brand.id, name: brand.name });
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleEditClick = useCallback((brandId: number) => {
+    navigate(`/car-brands/${brandId}/edit`);
+  }, [navigate]);
+
+  const handleToggleActive = useCallback(async (brand: CarBrand) => {
+    try {
+      await toggleActive({ 
+        id: brand.id.toString(), 
+        is_active: !brand.is_active 
+      }).unwrap();
+      setNotification({
+        open: true,
+        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`,
+        severity: 'success'
+      });
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Ошибка при изменении статуса бренда',
+        severity: 'error'
+      });
+    }
+  }, [toggleActive]);
+
+  const handleDeleteConfirm = useCallback(async () => {
     if (!selectedBrand) return;
     
     try {
@@ -156,15 +175,11 @@ const CarBrandsPage: React.FC = () => {
     } catch (error: any) {
       let errorMessage = 'Ошибка при удалении бренда';
       
-      // Обрабатываем различные форматы ошибок от API
       if (error.data?.error) {
-        // Основной формат ошибок с ограничениями
         errorMessage = error.data.error;
       } else if (error.data?.message) {
-        // Альтернативный формат
         errorMessage = error.data.message;
       } else if (error.data?.errors) {
-        // Ошибки валидации
         errorMessage = Object.values(error.data.errors).join(', ');
       }
       
@@ -174,42 +189,126 @@ const CarBrandsPage: React.FC = () => {
         severity: 'error'
       });
     }
-  };
+  }, [selectedBrand, deleteBrand]);
 
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setDeleteDialogOpen(false);
     setSelectedBrand(null);
-  };
+  }, []);
 
-  const handleToggleActive = async (brand: CarBrand) => {
-    try {
-      await toggleActive({
-        id: brand.id.toString(),
-        is_active: !brand.is_active
-      }).unwrap();
-      setNotification({
-        open: true,
-        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`,
-        severity: 'success'
-      });
-    } catch (error: any) {
-      let errorMessage = 'Ошибка при изменении статуса';
-      if (error.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error.data?.errors) {
-        errorMessage = Object.values(error.data.errors).join(', ');
-      }
-      setNotification({
-        open: true,
-        message: errorMessage,
-        severity: 'error'
-      });
-    }
-  };
-
-  const handleCloseNotification = () => {
+  const handleCloseNotification = useCallback(() => {
     setNotification(prev => ({ ...prev, open: false }));
-  };
+  }, []);
+
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'brand',
+      label: 'Бренд',
+      wrap: true,
+      format: (value, row: CarBrand) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          {row.logo ? (
+            <Avatar 
+              src={getLogoUrl(row.logo)} 
+              alt={row.name}
+              variant="rounded"
+              sx={{ 
+                width: SIZES.icon.medium * 1.5, 
+                height: SIZES.icon.medium * 1.5,
+                borderRadius: SIZES.borderRadius.xs
+              }}
+            />
+          ) : (
+            <Avatar
+              variant="rounded"
+              sx={{ 
+                width: SIZES.icon.medium * 1.5, 
+                height: SIZES.icon.medium * 1.5,
+                borderRadius: SIZES.borderRadius.xs,
+                bgcolor: 'grey.200'
+              }}
+            >
+              <CarIcon color="disabled" />
+            </Avatar>
+          )}
+          <Typography variant="body2" fontWeight="medium">
+            {row.name}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value, row: CarBrand) => (
+        <Tooltip title={`Нажмите чтобы ${row.is_active ? 'деактивировать' : 'активировать'}`}>
+          <IconButton
+            onClick={() => handleToggleActive(row)}
+            color={row.is_active ? 'success' : 'default'}
+            size="small"
+          >
+            {row.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+          </IconButton>
+        </Tooltip>
+      )
+    },
+    {
+      id: 'models_count',
+      label: 'Кол-во моделей',
+      align: 'center',
+      format: (value, row: CarBrand) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          <FormatListNumberedIcon fontSize="small" color="action" />
+          <Typography variant="body2">
+            {row.models_count || 0}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата создания',
+      align: 'center',
+      format: (value, row: CarBrand) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          <CalendarTodayIcon fontSize="small" color="action" />
+          <Typography variant="body2">
+            {new Date(row.created_at).toLocaleDateString('ru-RU')}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (value, row: CarBrand) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => handleEditClick(row.id)}
+              size="small"
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [tablePageStyles, getLogoUrl, handleToggleActive, handleEditClick, handleDeleteClick]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -283,128 +382,11 @@ const CarBrandsPage: React.FC = () => {
       </Box>
 
       {/* Таблица брендов */}
-      <Box>
-        <TableContainer sx={tablePageStyles.tableContainer}>
-          <Table>
-            <TableHead sx={tablePageStyles.tableHeader}>
-              <TableRow>
-                <TableCell>Бренд</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <FormatListNumberedIcon fontSize="small" />
-                    Кол-во моделей
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarTodayIcon fontSize="small" />
-                    Дата создания
-                  </Box>
-                </TableCell>
-                <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {brands.map((brand: CarBrand) => (
-                <TableRow key={brand.id} sx={tablePageStyles.tableRow}>
-                  <TableCell sx={tablePageStyles.tableCellWrap}>
-                    <Box sx={tablePageStyles.avatarContainer}>
-                      {brand.logo ? (
-                        <Avatar 
-                          src={getLogoUrl(brand.logo)} 
-                          alt={brand.name}
-                          variant="rounded"
-                          sx={{ 
-                            width: SIZES.icon.medium * 1.5, 
-                            height: SIZES.icon.medium * 1.5,
-                            borderRadius: SIZES.borderRadius.xs
-                          }}
-                        >
-                          <CarIcon />
-                        </Avatar>
-                      ) : (
-                        <Avatar 
-                          variant="rounded" 
-                          sx={{ 
-                            width: SIZES.icon.medium * 1.5, 
-                            height: SIZES.icon.medium * 1.5,
-                            borderRadius: SIZES.borderRadius.xs
-                          }}
-                        >
-                          <CarIcon />
-                        </Avatar>
-                      )}
-                      <Typography variant="body1" fontWeight="medium">
-                        {brand.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={brand.is_active ? 'Активен' : 'Неактивен'}
-                      color={brand.is_active ? 'success' : 'default'}
-                      size="small"
-                      sx={tablePageStyles.statusChip}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Количество моделей">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                        <FormatListNumberedIcon fontSize="small" />
-                        <Typography variant="body2">
-                          {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} arrow>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                        <CalendarTodayIcon fontSize="small" color="action" />
-                        <Typography variant="body2" sx={tablePageStyles.dateText}>
-                          {new Date(brand.created_at).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box sx={tablePageStyles.actionsContainer}>
-                      <Tooltip title="Редактировать">
-                        <IconButton 
-                          size="small"
-                          onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
-                          sx={tablePageStyles.actionButton}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Удалить">
-                        <IconButton 
-                          size="small"
-                          onClick={() => handleDeleteClick(brand)}
-                          sx={tablePageStyles.dangerButton}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={brand.is_active ? 'Деактивировать' : 'Активировать'}>
-                        <IconButton 
-                          size="small"
-                          onClick={() => handleToggleActive(brand)}
-                          color={brand.is_active ? 'success' : 'default'}
-                          sx={tablePageStyles.actionButton}
-                        >
-                          {brand.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table
+          columns={columns}
+          rows={brands}
+        />
         
         {/* Пагинация */}
         {totalItems > rowsPerPage && (

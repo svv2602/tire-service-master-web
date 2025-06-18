@@ -1,3 +1,16 @@
+/**
+ * Страница управления партнерами
+ * 
+ * Функциональность:
+ * - Отображение списка партнеров в табличном формате
+ * - Поиск партнеров по названию компании
+ * - Пагинация результатов
+ * - Редактирование партнеров (переход к форме редактирования)
+ * - Удаление партнеров с подтверждением
+ * - Изменение статуса активности партнеров
+ * - Централизованная система стилей для консистентного UI
+ */
+
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   CircularProgress,
@@ -5,13 +18,6 @@ import {
   Tooltip,
   Avatar,
   useTheme,
-  useMediaQuery,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   InputAdornment,
 } from '@mui/material';
 import {
@@ -39,32 +45,13 @@ import {
   Alert,
   Pagination,
   Chip,
-  Card,
+  Table,
+  type Column,
 } from '../../components/ui';
 import { Modal } from '../../components/ui/Modal';
 
 // Импорты централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
-
-/**
- * Страница управления партнерами
- * 
- * Функциональность:
- * - Отображение списка партнеров в табличном формате
- * - Поиск партнеров по названию компании
- * - Пагинация результатов
- * - Редактирование партнеров (переход к форме редактирования)
- * - Удаление партнеров с подтверждением
- * - Изменение статуса активности партнеров
- * - Создание тестовых партнеров для разработки
- * - Централизованная система стилей для консистентного UI
- * 
- * Особенности:
- * - Debounce поиска для оптимизации запросов к API
- * - Мемоизация компонентов и обработчиков для производительности
- * - Обработка ошибок загрузки и состояний
- * - Responsive дизайн с централизованными стилями
- */
 
 // Хук для debounce поиска партнеров
 const useDebounce = (value: string, delay: number) => {
@@ -82,89 +69,6 @@ const useDebounce = (value: string, delay: number) => {
 
   return debouncedValue;
 };
-
-// Мемоизированный компонент строки партнера с централизованными стилями
-const PartnerRow = React.memo(({ 
-  partner, 
-  onEdit, 
-  onToggleStatus, 
-  onDelete, 
-  getInitials,
-  tablePageStyles
-}: {
-  partner: Partner;
-  onEdit: (id: number) => void;
-  onToggleStatus: (partner: Partner) => void;
-  onDelete: (partner: Partner) => void;
-  getInitials: (partner: Partner) => string;
-  tablePageStyles: any;
-}) => {
-  return (
-    <TableRow key={partner.id}>
-      <TableCell sx={tablePageStyles.tableCellWrap}>
-        <Box sx={tablePageStyles.avatarContainer}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
-            {getInitials(partner)}
-          </Avatar>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {partner.company_name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {partner.company_description}
-            </Typography>
-          </Box>
-        </Box>
-      </TableCell>
-
-      <TableCell sx={tablePageStyles.tableCellWrap}>
-        <Typography variant="body2">
-          {partner.contact_person}
-        </Typography>
-      </TableCell>
-      <TableCell>
-        <Typography variant="body2">
-          {partner.user?.phone}
-        </Typography>
-      </TableCell>
-      <TableCell>
-        <Typography variant="body2">
-          {partner.user?.email}
-        </Typography>
-      </TableCell>
-
-      <TableCell>
-        <Chip
-          label={partner.is_active ? 'Активен' : 'Неактивен'}
-          color={partner.is_active ? 'success' : 'error'}
-          size="small"
-        />
-      </TableCell>
-
-      <TableCell align="right">
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton
-              onClick={() => onEdit(partner.id)}
-              size="small"
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton
-              onClick={() => onDelete(partner)}
-              size="small"
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </TableCell>
-    </TableRow>
-  );
-});
 
 const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -200,16 +104,11 @@ const PartnersPage: React.FC = () => {
     error 
   } = useGetPartnersQuery(queryParams);
 
-  const [deletePartner, { isLoading: deleteLoading }] = useDeletePartnerMutation();
-  const [togglePartnerActive, { isLoading: toggleLoading }] = useTogglePartnerActiveMutation();
+  const [deletePartner] = useDeletePartnerMutation();
+  const [togglePartnerActive] = useTogglePartnerActiveMutation();
 
   const partners = partnersData?.data || [];
-  // Если нет пагинации в ответе, используем длину массива
   const totalItems = partnersData?.pagination?.total_count || partners.length;
-
-
-
-
 
   // Вспомогательная функция для получения текста ошибки
   const getErrorMessage = (error: FetchBaseQueryError | SerializedError): string => {
@@ -236,13 +135,17 @@ const PartnersPage: React.FC = () => {
     setDeleteDialogOpen(true);
   }, []);
 
+  const handleEditPartner = useCallback((id: number) => {
+    navigate(`/partners/${id}/edit`);
+  }, [navigate]);
+
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedPartner) {
       try {
         await deletePartner(selectedPartner.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedPartner(null);
-        setErrorMessage(null); // Clear any previous errors
+        setErrorMessage(null);
       } catch (error: any) {
         let errorMessage = 'Ошибка при удалении партнера';
         
@@ -271,7 +174,7 @@ const PartnersPage: React.FC = () => {
         id: partner.id,
         isActive: !partner.is_active
       }).unwrap();
-      setErrorMessage(null); // Clear any previous errors
+      setErrorMessage(null);
     } catch (error: any) {
       let errorMessage = 'Ошибка при изменении статуса партнера';
       
@@ -297,12 +200,97 @@ const PartnersPage: React.FC = () => {
     return partner.company_name.charAt(0).toUpperCase() || 'П';
   }, []);
 
-  // Мемоизированные обработчики для PartnerRow
-  const handleEditPartner = useCallback((id: number) => {
-    navigate(`/partners/${id}/edit`);
-  }, [navigate]);
-
-
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'company',
+      label: 'Партнер',
+      wrap: true,
+      format: (value, row: Partner) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar sx={{ bgcolor: 'primary.main' }}>
+            {getPartnerInitials(row)}
+          </Avatar>
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {row.company_name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {row.company_description}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    },
+    {
+      id: 'contact_person',
+      label: 'Контактное лицо',
+      wrap: true,
+      format: (value, row: Partner) => (
+        <Typography variant="body2">
+          {row.contact_person}
+        </Typography>
+      )
+    },
+    {
+      id: 'phone',
+      label: 'Телефон',
+      format: (value, row: Partner) => (
+        <Typography variant="body2">
+          {row.user?.phone || 'Не указан'}
+        </Typography>
+      )
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      format: (value, row: Partner) => (
+        <Typography variant="body2">
+          {row.user?.email || 'Не указан'}
+        </Typography>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value, row: Partner) => (
+        <Chip
+          label={row.is_active ? 'Активен' : 'Неактивен'}
+          color={row.is_active ? 'success' : 'error'}
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (value, row: Partner) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => handleEditPartner(row.id)}
+              size="small"
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [tablePageStyles, getPartnerInitials, handleEditPartner, handleDeleteClick]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading && !partnersData) {
@@ -336,36 +324,28 @@ const PartnersPage: React.FC = () => {
 
       {/* Заголовок и кнопки действий */}
       <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4">
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
           Партнеры
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/partners/new')}
+          sx={tablePageStyles.createButton}
         >
           Добавить партнера
         </Button>
       </Box>
 
       {/* Поиск */}
-      <Box sx={{ 
-        mb: 3, 
-        display: 'flex', 
-        gap: 2, 
-        alignItems: 'center', 
-        flexWrap: 'wrap'
-      }}>
+      <Box sx={tablePageStyles.filtersContainer}>
         <TextField
           placeholder="Поиск по названию компании, контактному лицу или номеру телефона..."
           variant="outlined"
           size="small"
           value={search}
           onChange={handleSearchChange}
-          sx={{ 
-            maxWidth: 400, 
-            flexGrow: 1 
-          }}
+          sx={tablePageStyles.searchField}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -394,66 +374,24 @@ const PartnersPage: React.FC = () => {
       </Box>
 
       {/* Таблица партнеров */}
-      <TableContainer 
-        sx={{
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          border: 'none'
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Партнер</TableCell>
-              <TableCell>Контактное лицо</TableCell>
-              <TableCell>Телефон</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-            <TableBody>
-              {partners.length > 0 ? (
-                partners.map((partner: Partner) => (
-                  <PartnerRow
-                    key={partner.id}
-                    partner={partner}
-                    onEdit={handleEditPartner}
-                    onDelete={handleDeleteClick}
-                    onToggleStatus={handleToggleStatus}
-                    getInitials={getPartnerInitials}
-                    tablePageStyles={tablePageStyles}
-                  />
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={6} align="center">
-                    <Typography variant="body1" color="text.secondary">
-                      {page > 0 ? "На этой странице нет данных" : "Нет данных для отображения"}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Пагинация */}
-      {Math.ceil(totalItems / pageSize) > 1 && (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mt: 3
-        }}>
-          <Pagination
-            count={Math.ceil(totalItems / pageSize)}
-            page={page + 1}
-            onChange={(newPage) => handlePageChange(newPage)}
-            disabled={isLoading}
-            color="primary"
-          />
-        </Box>
-      )}
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table
+          columns={columns}
+          rows={partners}
+        />
+        
+        {/* Пагинация */}
+        {Math.ceil(totalItems / pageSize) > 1 && (
+          <Box sx={tablePageStyles.paginationContainer}>
+            <Pagination
+              count={Math.ceil(totalItems / pageSize)}
+              page={page + 1}
+              onChange={handlePageChange}
+              disabled={isLoading}
+            />
+          </Box>
+        )}
+      </Box>
 
       {/* Модальное окно подтверждения удаления */}
       <Modal
@@ -485,4 +423,4 @@ const PartnersPage: React.FC = () => {
   );
 };
 
-export default PartnersPage; 
+export default PartnersPage;
