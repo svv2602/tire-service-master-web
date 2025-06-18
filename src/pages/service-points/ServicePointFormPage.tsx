@@ -8,7 +8,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  SelectChangeEvent,
   FormControlLabel,
   InputAdornment,
   FormHelperText,
@@ -158,6 +157,9 @@ const ServicePointFormPage: React.FC = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   
+  // Состояние для отображения ошибок валидации
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  
   // Добавляем состояние для предпросмотра фотографий
   const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([]);
 
@@ -200,7 +202,7 @@ const ServicePointFormPage: React.FC = () => {
   // Определяем region_id для загрузки городов: из selectedRegionId, servicePoint или 0
   const regionIdForCities = selectedRegionId || servicePoint?.city?.region_id || 0;
   
-  const { data: cities, isLoading: citiesLoading, refetch: refetchCities } = useGetCitiesQuery(
+  const { data: cities, isLoading: citiesLoading } = useGetCitiesQuery(
     { region_id: regionIdForCities },
     { 
       skip: !regionIdForCities, // Загружаем города если есть region_id
@@ -291,8 +293,24 @@ const ServicePointFormPage: React.FC = () => {
     }
   }, [servicePoint, servicePointServicesData, photosData, initialValues]);
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: FormValues, { setTouched }: any) => {
     try {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setShowValidationErrors(false);
+      
+      // Проверяем валидность формы
+      if (!formik.isValid) {
+        // Помечаем все поля как затронутые для показа ошибок
+        const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+          acc[field] = true;
+          return acc;
+        }, {} as Record<string, any>);
+        setTouched(touchedFields);
+        setShowValidationErrors(true);
+        return;
+      }
+      
       // Всегда используем JSON для основных данных, фотографии загружаем отдельно
       const servicePointData = {
         name: values.name,
@@ -462,6 +480,42 @@ const ServicePointFormPage: React.FC = () => {
       ),
   }), []);
 
+  // Функция для получения списка незаполненных обязательных полей
+  const getRequiredFieldErrors = () => {
+    const requiredFields = {
+      name: 'Название точки',
+      partner_id: 'Партнер',
+      address: 'Адрес',
+      region_id: 'Регион',
+      city_id: 'Город',
+      contact_phone: 'Контактный телефон',
+      work_status: 'Статус работы'
+    };
+
+    const errors: string[] = [];
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      const value = formik.values[field as keyof FormValues];
+      if (!value || (typeof value === 'number' && value === 0) || 
+          (typeof value === 'string' && value.trim() === '')) {
+        errors.push(label);
+      }
+    });
+    return errors;
+  };
+
+  // Функция для обработки клика по заблокированной кнопке
+  const handleDisabledButtonClick = () => {
+    if (!formik.isValid) {
+      // Помечаем все поля как затронутые для показа ошибок
+      const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+        acc[field] = true;
+        return acc;
+      }, {} as Record<string, any>);
+      formik.setTouched(touchedFields);
+      setShowValidationErrors(true);
+    }
+  };
+
   const formik = useFormik<FormValues>({
     initialValues,
     validationSchema,
@@ -476,25 +530,6 @@ const ServicePointFormPage: React.FC = () => {
       formik.setFieldValue('region_id', servicePoint.city.region_id);
     }
   }, [servicePoint, formik, selectedRegionId]);
-
-  // Обработчик изменения региона
-  const handleRegionChange = useCallback((event: SelectChangeEvent<string>) => {
-    const regionId = Number(event.target.value);
-    setSelectedRegionId(regionId);
-    formik.setFieldValue('region_id', regionId);
-    formik.setFieldValue('city_id', 0); // Сбрасываем город при смене региона
-    
-    // Принудительно обновляем список городов
-    if (regionId > 0) {
-      refetchCities();
-    }
-  }, [formik, refetchCities]);
-
-  // Обработчик изменения города
-  const handleCityChange = useCallback((event: SelectChangeEvent<string>) => {
-    const cityId = Number(event.target.value);
-    formik.setFieldValue('city_id', cityId);
-  }, [formik]);
 
   const handleCloseSnackbar = useCallback(() => {
     setSuccessMessage(null);
@@ -1978,6 +2013,43 @@ const ServicePointFormPage: React.FC = () => {
             </Accordion>
 
             {/* Кнопки управления формой - применение централизованных стилей для кнопок */}
+            
+            {/* Уведомления */}
+            {errorMessage && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {errorMessage}
+              </Alert>
+            )}
+            
+            {successMessage && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {successMessage}
+              </Alert>
+            )}
+
+            {/* Уведомление о незаполненных обязательных полях */}
+            {(!formik.isValid && showValidationErrors) && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Заполните все обязательные поля:
+                </Typography>
+                <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                  {getRequiredFieldErrors().map((field, index) => (
+                    <Typography variant="body2" component="li" key={index}>
+                      {field}
+                    </Typography>
+                  ))}
+                </Box>
+              </Alert>
+            )}
+
+            {/* Информационное сообщение о блокировке кнопки */}
+            {!formik.isValid && !showValidationErrors && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Заполните все обязательные поля для активации кнопки сохранения
+              </Alert>
+            )}
+            
             <Box sx={{ 
               display: 'flex', 
               gap: SIZES.spacing.md, 
@@ -1994,43 +2066,26 @@ const ServicePointFormPage: React.FC = () => {
                 Отмена
               </Button>
               <Button
-                type="submit"
+                type={formik.isValid ? "submit" : "button"}
                 variant="contained"
                 color="primary"
                 startIcon={<SaveIcon />}
-                disabled={formik.isSubmitting || !formik.isValid}
+                disabled={formik.isSubmitting}
+                onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
                 sx={{
                   ...buttonStyles,
-                  borderRadius: SIZES.borderRadius.sm
+                  borderRadius: SIZES.borderRadius.sm,
+                  ...((!formik.isValid && !formik.isSubmitting) && {
+                    backgroundColor: theme.palette.warning.main,
+                    '&:hover': {
+                      backgroundColor: theme.palette.warning.dark,
+                    }
+                  })
                 }}
               >
                 {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
               </Button>
             </Box>
-
-            {/* Отображение ошибок валидации */}
-              {Object.keys(formik.errors).length > 0 && (
-                  <Alert severity="error" sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">Пожалуйста, исправьте следующие ошибки:</Typography>
-                    <ul>
-                      {Object.entries(formik.errors).map(([field, error]) => {
-                        // Проверяем, является ли ошибка объектом
-                        if (typeof error === 'object' && error !== null) {
-                          return Object.entries(error as Record<string, unknown>).map(([subField, subError]) => (
-                            <li key={`${field}.${subField}`}>
-                              {typeof subError === 'string' ? subError : JSON.stringify(subError)}
-                            </li>
-                          ));
-                        }
-                        return (
-                          <li key={field}>
-                            {typeof error === 'string' ? error : JSON.stringify(error)}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </Alert>
-              )}
           </form>
         )}
       </Box>

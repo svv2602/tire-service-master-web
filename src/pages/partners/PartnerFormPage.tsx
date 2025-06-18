@@ -181,7 +181,7 @@ const PartnerFormPage: React.FC = () => {
   
   console.log('regionIdForCities:', regionIdForCities, 'selectedRegionId:', selectedRegionId, 'partner.region_id:', partner?.region_id);
   
-  const { data: citiesData, refetch: refetchCities, isLoading: citiesLoading, isFetching: citiesFetching } = useGetCitiesQuery(
+  const { data: citiesData, isLoading: citiesLoading, isFetching: citiesFetching } = useGetCitiesQuery(
     { 
       region_id: regionIdForCities || undefined,
       page: 1,
@@ -201,35 +201,67 @@ const PartnerFormPage: React.FC = () => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Функция для извлечения понятного сообщения об ошибке из API ответа
-  const extractErrorMessage = (error: any): string => {
-    if (!error) return 'Произошла неизвестная ошибка';
-    
-    // Если ошибка уже в нужном формате
-    if (typeof error === 'string') return error;
-    
-    // Обрабатываем различные форматы ошибок
-    if (error.data) {
-      if (typeof error.data === 'string') {
-        return error.data;
+  // Состояние для отображения ошибок валидации
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  // Функция для получения списка незаполненных обязательных полей
+  const getRequiredFieldErrors = () => {
+    const requiredFields = {
+      company_name: 'Название компании',
+      contact_person: 'Контактное лицо',
+      legal_address: 'Юридический адрес',
+      region_id: 'Регион',
+      city_id: 'Город',
+      ...((!isEdit) && {
+        'user.email': 'Email пользователя',
+        'user.phone': 'Телефон пользователя',
+        'user.first_name': 'Имя пользователя',
+        'user.last_name': 'Фамилия пользователя'
+      })
+    };
+
+    const errors: string[] = [];
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.');
+        if (parent === 'user') {
+          const userValue = formik.values.user;
+          if (!userValue || !userValue[child as keyof FormUserData] || 
+              (typeof userValue[child as keyof FormUserData] === 'string' && 
+               userValue[child as keyof FormUserData] === '')) {
+            errors.push(label);
+          }
+        }
+      } else {
+        const value = formik.values[field as keyof FormValues];
+        if (!value || 
+            (typeof value === 'string' && value.trim() === '') ||
+            (field === 'region_id' && !formik.values.region_id) ||
+            (field === 'city_id' && !formik.values.city_id)) {
+          errors.push(label);
+        }
       }
-      
-      if (error.data.errors) {
-        return Object.entries(error.data.errors)
-          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-          .join('; ');
-      }
-      
-      if (error.data.message) {
-        return error.data.message;
-      }
+    });
+    return errors;
+  };
+
+  // Функция для обработки клика по заблокированной кнопке
+  const handleDisabledButtonClick = () => {
+    if (!formik.isValid) {
+      // Помечаем все поля как затронутые для показа ошибок
+      const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+        acc[field] = true;
+        if (field === 'user' && formik.values.user) {
+          acc.user = Object.keys(formik.values.user).reduce((userAcc, userField) => {
+            userAcc[userField] = true;
+            return userAcc;
+          }, {} as Record<string, boolean>);
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      formik.setTouched(touchedFields);
+      setShowValidationErrors(true);
     }
-    
-    if (error.error) {
-      return error.error;
-    }
-    
-    return 'Произошла неизвестная ошибка при обработке запроса';
   };
 
   // Функция для форматирования данных перед отправкой
@@ -263,10 +295,29 @@ const PartnerFormPage: React.FC = () => {
   };
 
   // Обработчик отправки формы
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: FormValues, { setTouched }: any) => {
     try {
       setApiError(null);
       setSuccessMessage(null);
+      setShowValidationErrors(false);
+      
+      // Проверяем валидность формы
+      if (!formik.isValid) {
+        // Помечаем все поля как затронутые для показа ошибок
+        const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+          acc[field] = true;
+          if (field === 'user' && formik.values.user) {
+            acc.user = Object.keys(formik.values.user).reduce((userAcc, userField) => {
+              userAcc[userField] = true;
+              return userAcc;
+            }, {} as Record<string, boolean>);
+          }
+          return acc;
+        }, {} as Record<string, any>);
+        setTouched(touchedFields);
+        setShowValidationErrors(true);
+        return;
+      }
       
       const formattedData = formatPartnerData(values);
       console.log('Отправляемые данные:', formattedData);
@@ -485,8 +536,8 @@ const PartnerFormPage: React.FC = () => {
                 value={formik.values.company_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.company_name && Boolean(formik.errors.company_name)}
-                helperText={formik.touched.company_name && formik.errors.company_name}
+                error={(formik.touched.company_name || showValidationErrors) && Boolean(formik.errors.company_name)}
+                helperText={(formik.touched.company_name || showValidationErrors) && formik.errors.company_name}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -494,13 +545,14 @@ const PartnerFormPage: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
+                required
                 name="contact_person"
                 label="Контактное лицо"
                 value={formik.values.contact_person}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
-                helperText={formik.touched.contact_person && formik.errors.contact_person}
+                error={(formik.touched.contact_person || showValidationErrors) && Boolean(formik.errors.contact_person)}
+                helperText={(formik.touched.contact_person || showValidationErrors) && formik.errors.contact_person}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -590,8 +642,8 @@ const PartnerFormPage: React.FC = () => {
                 value={formik.values.legal_address}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.legal_address && Boolean(formik.errors.legal_address)}
-                helperText={formik.touched.legal_address && formik.errors.legal_address}
+                error={(formik.touched.legal_address || showValidationErrors) && Boolean(formik.errors.legal_address)}
+                helperText={(formik.touched.legal_address || showValidationErrors) && formik.errors.legal_address}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -612,14 +664,14 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
+              <FormControl fullWidth required error={(formik.touched.region_id || showValidationErrors) && Boolean(formik.errors.region_id)}>
                 <InputLabel>Регион *</InputLabel>
                 <Select
                   name="region_id"
                   value={formik.values.region_id?.toString() || ''}
                   onChange={handleRegionChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.region_id && Boolean(formik.errors.region_id)}
+                  error={(formik.touched.region_id || showValidationErrors) && Boolean(formik.errors.region_id)}
                 >
                   <MenuItem value="">Не выбран</MenuItem>
                   {regionsData?.data?.map((region) => (
@@ -628,7 +680,7 @@ const PartnerFormPage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </Select>
-                {formik.touched.region_id && formik.errors.region_id && (
+                {(formik.touched.region_id || showValidationErrors) && formik.errors.region_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                     {formik.errors.region_id}
                   </Typography>
@@ -637,14 +689,14 @@ const PartnerFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={formik.touched.city_id && Boolean(formik.errors.city_id)}>
+              <FormControl fullWidth required error={(formik.touched.city_id || showValidationErrors) && Boolean(formik.errors.city_id)}>
                 <InputLabel>Город *</InputLabel>
                 <Select
                   name="city_id"
                   value={formik.values.city_id?.toString() || ''}
                   onChange={handleCityChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.city_id && Boolean(formik.errors.city_id)}
+                  error={(formik.touched.city_id || showValidationErrors) && Boolean(formik.errors.city_id)}
                   disabled={!formik.values.region_id || citiesLoading || citiesFetching}
                 >
                   <MenuItem value="">
@@ -657,7 +709,7 @@ const PartnerFormPage: React.FC = () => {
                   ))}
                 </Select>
 
-                {formik.touched.city_id && formik.errors.city_id && (
+                {(formik.touched.city_id || showValidationErrors) && formik.errors.city_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                     {formik.errors.city_id}
                   </Typography>
@@ -722,11 +774,11 @@ const PartnerFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      (formik.touched as FormikTouchedValues).user?.first_name && 
+                      ((formik.touched as FormikTouchedValues).user?.first_name || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.first_name
                     )}
                     helperText={
-                      ((formik.touched as FormikTouchedValues).user?.first_name && 
+                      (((formik.touched as FormikTouchedValues).user?.first_name || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.first_name) || ''
                     }
                     sx={textFieldStyles}
@@ -743,11 +795,11 @@ const PartnerFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      (formik.touched as FormikTouchedValues).user?.last_name && 
+                      ((formik.touched as FormikTouchedValues).user?.last_name || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.last_name
                     )}
                     helperText={
-                      ((formik.touched as FormikTouchedValues).user?.last_name && 
+                      (((formik.touched as FormikTouchedValues).user?.last_name || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.last_name) || ''
                     }
                     sx={textFieldStyles}
@@ -765,11 +817,11 @@ const PartnerFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      (formik.touched as FormikTouchedValues).user?.email && 
+                      ((formik.touched as FormikTouchedValues).user?.email || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.email
                     )}
                     helperText={
-                      ((formik.touched as FormikTouchedValues).user?.email && 
+                      (((formik.touched as FormikTouchedValues).user?.email || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.email) || ''
                     }
                     sx={textFieldStyles}
@@ -787,11 +839,11 @@ const PartnerFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={Boolean(
-                      (formik.touched as FormikTouchedValues).user?.phone && 
+                      ((formik.touched as FormikTouchedValues).user?.phone || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.phone
                     )}
                     helperText={
-                      ((formik.touched as FormikTouchedValues).user?.phone && 
+                      (((formik.touched as FormikTouchedValues).user?.phone || showValidationErrors) && 
                       (formik.errors as FormikErrorsValues).user?.phone) || ''
                     }
                     sx={textFieldStyles}
@@ -830,6 +882,29 @@ const PartnerFormPage: React.FC = () => {
               {successMessage && (
                 <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
               )}
+
+              {/* Уведомление о незаполненных обязательных полях */}
+              {(!formik.isValid && showValidationErrors) && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Заполните все обязательные поля:
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                    {getRequiredFieldErrors().map((field, index) => (
+                      <Typography variant="body2" component="li" key={index}>
+                        {field}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Alert>
+              )}
+
+              {/* Информационное сообщение о блокировке кнопки */}
+              {!formik.isValid && !showValidationErrors && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Заполните все обязательные поля для активации кнопки сохранения
+                </Alert>
+              )}
               
               <Box sx={{ 
                 display: 'flex', 
@@ -846,11 +921,20 @@ const PartnerFormPage: React.FC = () => {
                   Отмена
                 </Button>
                 <Button
-                  type="submit"
+                  type={formik.isValid ? "submit" : "button"}
                   variant="contained"
                   startIcon={<SaveIcon />}
-                  disabled={isLoading || !formik.isValid}
-                  sx={primaryButtonStyles}
+                  disabled={isLoading}
+                  onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
+                  sx={{
+                    ...primaryButtonStyles,
+                    ...((!formik.isValid && !isLoading) && {
+                      backgroundColor: theme.palette.warning.main,
+                      '&:hover': {
+                        backgroundColor: theme.palette.warning.dark,
+                      }
+                    })
+                  }}
                 >
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
                 </Button>
