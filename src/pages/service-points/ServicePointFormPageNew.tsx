@@ -342,6 +342,23 @@ const ServicePointFormPageNew: React.FC = () => {
             photo.id === 0 && (photo as any).file
           ) || [];
           
+          console.log('=== Проверка новых фотографий для загрузки при обновлении ===');
+          console.log('Общее количество фотографий в formik:', formik.values.photos?.length || 0);
+          console.log('Фотографии с id === 0:', formik.values.photos?.filter(p => p.id === 0).length || 0);
+          console.log('Фотографии с файлами:', formik.values.photos?.filter(p => (p as any).file).length || 0);
+          console.log('Новые фотографии для загрузки:', newPhotosToUpload.length);
+          
+          // Отладочная информация о каждой фотографии
+          formik.values.photos?.forEach((photo, index) => {
+            console.log(`Фотография ${index}:`, {
+              id: photo.id,
+              hasFile: !!(photo as any).file,
+              fileName: (photo as any).file?.name,
+              isMain: photo.is_main,
+              _destroy: (photo as any)._destroy
+            });
+          });
+          
           if (newPhotosToUpload.length > 0) {
             console.log('Загружаем новые фотографии:', newPhotosToUpload.length);
             console.log('ID для загрузки фотографий:', id);
@@ -368,6 +385,8 @@ const ServicePointFormPageNew: React.FC = () => {
                 console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
               }
             }
+          } else {
+            console.log('Нет новых фотографий для загрузки при обновлении');
           }
           
           setSuccessMessage('Точка обслуживания успешно обновлена');

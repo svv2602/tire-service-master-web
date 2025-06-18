@@ -91,6 +91,13 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
 
     const filesArray = Array.from(files);
     
+    console.log('=== Загрузка новых фотографий ===');
+    console.log('isEditMode:', isEditMode);
+    console.log('Выбрано файлов:', filesArray.length);
+    console.log('Текущее количество фотографий:', totalPhotosCount);
+    console.log('Существующие фотографии:', existingPhotos.length);
+    console.log('Новые фотографии:', newPhotos.length);
+    
     // Проверяем лимит фотографий
     if (totalPhotosCount + filesArray.length > MAX_PHOTOS) {
       alert(`Максимальное количество фотографий: ${MAX_PHOTOS}`);
@@ -107,11 +114,18 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       sort_order: totalPhotosCount + index,
     }));
 
-    setNewPhotos(prev => [...prev, ...newPhotoData]);
+    console.log('Создано новых фотографий:', newPhotoData.length);
+    console.log('Новые фотографии:', newPhotoData.map(p => ({ tempId: p.tempId, fileName: p.file.name, isMain: p.is_main })));
+
+    setNewPhotos(prev => {
+      const updated = [...prev, ...newPhotoData];
+      console.log('Обновленное состояние newPhotos:', updated.length);
+      return updated;
+    });
     
     // Очищаем input для повторной загрузки
     event.target.value = '';
-  }, [totalPhotosCount]);
+  }, [totalPhotosCount, isEditMode, existingPhotos.length, newPhotos.length]);
 
   // Обработчик удаления существующей фотографии
   const handleDeleteExistingPhoto = useCallback((photoIndex: number) => {
@@ -186,7 +200,14 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
 
   // Сохранение новых фотографий в формик при изменении
   React.useEffect(() => {
-    if (newPhotos.length === 0) return; // Не обновляем, если нет новых фотографий
+    console.log('=== useEffect для сохранения новых фотографий в formik ===');
+    console.log('newPhotos.length:', newPhotos.length);
+    console.log('isEditMode:', isEditMode);
+    
+    if (newPhotos.length === 0) {
+      console.log('Нет новых фотографий для сохранения');
+      return; // Не обновляем, если нет новых фотографий
+    }
 
     // Преобразуем новые фотографии в формат для отправки на сервер
     const newPhotosData: ServicePointPhoto[] = newPhotos.map(photo => ({
@@ -201,11 +222,24 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       file: photo.file as any // Добавляем файл для загрузки
     }));
 
+    console.log('Преобразованные новые фотографии:', newPhotosData.length);
+    console.log('Детали новых фотографий:', newPhotosData.map(p => ({ 
+      id: p.id, 
+      fileName: (p as any).file?.name, 
+      isMain: p.is_main,
+      hasFile: !!(p as any).file 
+    })));
+
     // Получаем только существующие фотографии (без временных)
     const existingPhotosOnly = (formik.values.photos || []).filter(photo => photo.id > 0 || photo._destroy);
     
+    console.log('Существующие фотографии (без временных):', existingPhotosOnly.length);
+    
     // Объединяем существующие и новые фотографии
     const allPhotos = [...existingPhotosOnly, ...newPhotosData];
+    
+    console.log('Общее количество фотографий для formik:', allPhotos.length);
+    console.log('Фотографии с файлами:', allPhotos.filter(p => (p as any).file).length);
     
     formik.setFieldValue('photos', allPhotos);
   }, [newPhotos]); // Убираем formik из зависимостей чтобы избежать бесконечного цикла
