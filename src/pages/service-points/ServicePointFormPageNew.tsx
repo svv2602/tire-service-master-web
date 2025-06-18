@@ -569,6 +569,32 @@ const ServicePointFormPageNew: React.FC = () => {
     return true;
   };
 
+  // Проверка готовности всей формы к сохранению
+  const isFormReadyToSubmit = () => {
+    return isBasicInfoComplete() && 
+           isLocationComplete() && 
+           isContactComplete() && 
+           isSettingsComplete() && 
+           isScheduleComplete() && 
+           isPostsComplete() && 
+           isServicesComplete();
+  };
+
+  // Получение списка незаполненных шагов
+  const getIncompleteSteps = () => {
+    const incompleteSteps: string[] = [];
+    
+    if (!isBasicInfoComplete()) incompleteSteps.push('Основная информация');
+    if (!isLocationComplete()) incompleteSteps.push('Адрес и местоположение');
+    if (!isContactComplete()) incompleteSteps.push('Контактная информация');
+    if (!isSettingsComplete()) incompleteSteps.push('Настройки');
+    if (!isScheduleComplete()) incompleteSteps.push('Расписание работы');
+    if (!isPostsComplete()) incompleteSteps.push('Рабочие посты');
+    if (!isServicesComplete()) incompleteSteps.push('Услуги');
+    
+    return incompleteSteps;
+  };
+
   // Проверка валидности текущего шага
   const isStepValid = (stepIndex: number): boolean => {
     const step = FORM_STEPS[stepIndex];
@@ -947,23 +973,55 @@ const ServicePointFormPageNew: React.FC = () => {
                   Далее
                 </Button>
               ) : (
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<SaveIcon />}
-                  disabled={formik.isSubmitting || !formik.isValid}
-                  size={isMobile ? 'large' : 'medium'}
-                  sx={{
-                    ...getButtonStyles(theme, 'primary'),
-                    minHeight: isMobile ? 48 : 42,
-                    minWidth: isMobile ? '100%' : 160,
-                    px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
-                    mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
-                  }}
-                >
-                  {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
-                </Button>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'stretch' : 'flex-end' }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    startIcon={<SaveIcon />}
+                    disabled={formik.isSubmitting || !isFormReadyToSubmit()}
+                    size={isMobile ? 'large' : 'medium'}
+                    sx={{
+                      ...getButtonStyles(theme, 'primary'),
+                      minHeight: isMobile ? 48 : 42,
+                      minWidth: isMobile ? '100%' : 160,
+                      px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
+                      mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
+                    }}
+                  >
+                    {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                  </Button>
+                  
+                  {/* Индикатор незаполненных шагов */}
+                  {!isFormReadyToSubmit() && (
+                    <Box sx={{ 
+                      mt: 1, 
+                      p: 1.5,
+                      backgroundColor: theme.palette.warning.light,
+                      borderRadius: SIZES.borderRadius.sm,
+                      border: `1px solid ${theme.palette.warning.main}`,
+                      maxWidth: isMobile ? '100%' : 300,
+                    }}>
+                      <Typography variant="caption" sx={{ 
+                        color: theme.palette.warning.dark,
+                        fontWeight: 600,
+                        display: 'block',
+                        mb: 0.5,
+                      }}>
+                        Для сохранения заполните:
+                      </Typography>
+                      {getIncompleteSteps().map((step, index) => (
+                        <Typography key={index} variant="caption" sx={{ 
+                          color: theme.palette.warning.dark,
+                          display: 'block',
+                          fontSize: SIZES.fontSize.xs,
+                        }}>
+                          • {step}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
               )}
             </Box>
           </Box>
