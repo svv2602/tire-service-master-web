@@ -27,7 +27,6 @@ const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 
 // Ленивая загрузка страниц сервисных точек
 const ServicePointsPage = lazy(() => import('./pages/service-points/ServicePointsPage'));
-const ServicePointFormPage = lazy(() => import('./pages/service-points/ServicePointFormPage'));
 const ServicePointFormPageNew = lazy(() => import('./pages/service-points/ServicePointFormPageNew'));
 const ServicePointDetailPage = lazy(() => import('./pages/service-points/ServicePointDetailPage'));
 const ServicePointPhotosPage = lazy(() => import('./pages/service-points/ServicePointPhotosPage'));
@@ -145,10 +144,18 @@ const ProtectedRoute: React.FC<{
 
 function App() {
   return (
-    <ThemeProvider>
-      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-        <AuthInitializer>
-          <Router>
+    <Provider store={store}>
+      <ThemeProvider>
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+          <CssBaseline />
+          <GlobalUIStyles />
+          <AuthInitializer>
+          <Router 
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true
+            }}
+          >
             <Suspense fallback={<LoadingSpinner fullScreen />}>
               <Routes>
                 {/* Публичные маршруты */}
@@ -280,6 +287,7 @@ function App() {
         </AuthInitializer>
       </LocalizationProvider>
     </ThemeProvider>
+  </Provider>
   );
 }
 

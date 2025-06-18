@@ -1,13 +1,11 @@
 import React from 'react';
-import { Grid as MuiGrid, useTheme } from '@mui/material';
+import { Grid as MuiGrid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { GridProps } from './types';
 import { tokens } from '../../../styles/theme/tokens';
 
 // Стилизованный Grid с поддержкой темной темы и адаптивности
 const StyledGrid = styled(MuiGrid)(({ theme }) => {
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
   return {
     display: 'flex',
     flexWrap: 'wrap',
@@ -65,25 +63,30 @@ export const Grid: React.FC<GridProps> = ({
   className,
   ...props
 }) => {
-  const theme = useTheme();
+  // Создаем объект пропсов, которые передаем в MUI Grid
+  const gridProps: any = {
+    container,
+    item,
+    justifyContent,
+    alignItems,
+    xs,
+    sm,
+    md,
+    lg,
+    xl,
+    className,
+    ...props
+  };
+
+  // Добавляем пропсы только для container
+  if (container) {
+    gridProps.spacing = spacing;
+    gridProps.direction = direction;
+    gridProps.wrap = wrap;
+  }
 
   return (
-    <StyledGrid
-      container={container}
-      item={item}
-      spacing={spacing}
-      justifyContent={justifyContent}
-      alignItems={alignItems}
-      direction={direction}
-      wrap={wrap}
-      xs={xs}
-      sm={sm}
-      md={md}
-      lg={lg}
-      xl={xl}
-      className={className}
-      {...props}
-    >
+    <StyledGrid {...gridProps}>
       {children}
     </StyledGrid>
   );
