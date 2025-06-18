@@ -51,7 +51,7 @@ const PER_PAGE = 25;
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-
+  
   // Инициализация стилей
   const tablePageStyles = getTablePageStyles(theme);
   
@@ -142,12 +142,12 @@ const ClientsPage: React.FC = () => {
     navigate('/clients/new');
   }, [navigate]);
 
-  const handleEditClient = useCallback((clientId: string) => {
-    navigate(`/clients/${clientId}/edit`);
+  const handleEditClient = useCallback((id: string) => {
+    navigate(`/clients/${id}/edit`);
   }, [navigate]);
 
-  const handleViewCars = useCallback((clientId: string) => {
-    navigate(`/clients/${clientId}/cars`);
+  const handleViewCars = useCallback((id: string) => {
+    navigate(`/clients/${id}/cars`);
   }, [navigate]);
 
   const handleToggleStatus = useCallback(async (client: Client) => {
@@ -190,99 +190,90 @@ const ClientsPage: React.FC = () => {
       label: 'Клиент',
       minWidth: 200,
       wrap: true,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <Box sx={tablePageStyles.avatarContainer}>
-            <Avatar sx={{ opacity: client.is_active ? 1 : 0.5 }}>
-              <PersonIcon />
-            </Avatar>
-            <Box>
-              <Typography color={client.is_active ? 'text.primary' : 'text.secondary'}>
-                {client.first_name} {client.last_name}
-                {!client.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
-              </Typography>
-            </Box>
+      format: (_, row: Client) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar sx={{ opacity: row.is_active ? 1 : 0.5 }}>
+            <PersonIcon />
+          </Avatar>
+          <Box>
+            <Typography color={row.is_active ? 'text.primary' : 'text.secondary'}>
+              {row.first_name} {row.last_name}
+              {!row.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
+            </Typography>
           </Box>
-        );
-      },
+        </Box>
+      )
     },
     {
       id: 'phone',
       label: 'Телефон',
-      minWidth: 130,
-      wrap: true,
+      minWidth: 150,
+      wrap: true
     },
     {
       id: 'email',
       label: 'Email',
-      minWidth: 180,
-      wrap: true,
+      minWidth: 200,
+      wrap: true
     },
     {
-      id: 'is_active',
+      id: 'status',
       label: 'Статус',
       minWidth: 100,
       align: 'center' as const,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={client.is_active}
-                onChange={() => handleToggleStatus(client)}
-                size="small"
-              />
-            }
-            label=""
-            sx={{ m: 0 }}
-          />
-        );
-      },
+      format: (_, row: Client) => (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={row.is_active}
+              onChange={() => handleToggleStatus(row)}
+              size="small"
+            />
+          }
+          label=""
+          sx={{ m: 0 }}
+        />
+      )
     },
     {
       id: 'actions',
       label: 'Действия',
       minWidth: 150,
       align: 'right' as const,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <Box sx={tablePageStyles.actionsContainer}>
-            <Tooltip title="Автомобили">
-              <IconButton
-                onClick={() => handleViewCars(client.id.toString())}
-                size="small"
-                color="primary"
-                sx={tablePageStyles.actionButton}
-              >
-                <CarIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Редактировать">
-              <IconButton
-                onClick={() => handleEditClient(client.id.toString())}
-                size="small"
-                sx={tablePageStyles.actionButton}
-              >
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Удалить">
-              <IconButton
-                onClick={() => handleDeleteClick(client)}
-                size="small"
-                color="error"
-                sx={tablePageStyles.actionButton}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        );
-      },
-    },
+      format: (_, row: Client) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Автомобили">
+            <IconButton
+              onClick={() => handleViewCars(row.id.toString())}
+              size="small"
+              color="primary"
+              sx={tablePageStyles.actionButton}
+            >
+              <CarIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => handleEditClient(row.id.toString())}
+              size="small"
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
   ], [tablePageStyles, handleToggleStatus, handleViewCars, handleEditClient, handleDeleteClick]);
 
   // Отображение состояний загрузки и ошибок
@@ -392,21 +383,26 @@ const ClientsPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Таблица клиентов с UI Table компонентом */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <Table 
-          columns={columns} 
-          rows={clients}
+      {/* Новая UI таблица клиентов */}
+      <Table 
+        columns={columns} 
+        rows={clients}
+        sx={{
+          '& .MuiTableRow-root': {
+            opacity: (row: Client) => row.is_active ? 1 : 0.6
+          }
+        }}
+      />
+
+      {/* Пагинация */}
+      <Box sx={tablePageStyles.paginationContainer}>
+        <Pagination
+          count={Math.ceil(totalItems / PER_PAGE)}
+          page={page + 1}
+          onChange={(newPage) => setPage(newPage - 1)}
+          color="primary"
+          disabled={totalItems <= PER_PAGE}
         />
-        <Box sx={tablePageStyles.paginationContainer}>
-          <Pagination
-            count={Math.ceil(totalItems / PER_PAGE)}
-            page={page + 1}
-            onChange={(newPage) => setPage(newPage - 1)}
-            color="primary"
-            disabled={totalItems <= PER_PAGE}
-          />
-        </Box>
       </Box>
 
       {/* Модальное окно подтверждения удаления */}

@@ -1,15 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   useTheme, 
   InputAdornment,
   Menu, 
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Avatar
 } from '@mui/material';
@@ -18,6 +12,8 @@ import {
   Typography,
   CircularProgress,
   Tooltip,
+  Table,
+  type Column
 } from '../../components/ui';
 import {
   Search as SearchIcon,
@@ -35,8 +31,8 @@ import {
   useDeleteBookingMutation,
   useUpdateBookingMutation,
 } from '../../api/bookings.api';
-import { Booking, ApiResponse } from '../../types/models';
-import { BookingStatusEnum, BookingFilter } from '../../types/booking';
+import { Booking } from '../../types/models';
+import { BookingFilter } from '../../types/booking';
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
@@ -54,8 +50,7 @@ const BookingsPage: React.FC = () => {
   // Состояние для поиска и пагинации
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const rowsPerPage = 25;
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -83,7 +78,6 @@ const BookingsPage: React.FC = () => {
   const error = bookingsError;
   const bookings = bookingsData?.data || [];
   const totalItems = bookingsData?.pagination?.total_count || 0;
-  const totalPages = bookingsData?.pagination?.total_pages || 0;
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,21 +85,12 @@ const BookingsPage: React.FC = () => {
     setPage(0);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleDeleteClick = (booking: Booking) => {
+  const handleDeleteClick = useCallback((booking: Booking) => {
     setSelectedBooking(booking);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (selectedBooking) {
       try {
         await deleteBooking(selectedBooking.id.toString()).unwrap();
@@ -115,9 +100,9 @@ const BookingsPage: React.FC = () => {
         console.error('Ошибка при удалении бронирования:', error);
       }
     }
-  };
+  }, [selectedBooking, deleteBooking]);
 
-  const handleToggleStatus = async (booking: Booking) => {
+  const handleToggleStatus = useCallback(async (booking: Booking) => {
     try {
       await updateBooking({
         id: booking.id.toString(),
@@ -128,7 +113,7 @@ const BookingsPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
-  };
+  }, [updateBooking]);
 
   const handleCloseDialog = () => {
     setDeleteDialogOpen(false);
@@ -148,6 +133,110 @@ const BookingsPage: React.FC = () => {
     navigate(path);
     handleCreateMenuClose();
   };
+
+  // Определение колонок для UI Table
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'client',
+      label: 'Клиент',
+      minWidth: 200,
+      wrap: true,
+      format: (value: any, row: any) => {
+        const booking = row as Booking;
+        return (
+          <Box sx={tablePageStyles.avatarContainer}>
+            <Avatar>
+              {booking.client?.first_name?.charAt(0) || booking.client?.last_name?.charAt(0) || '?'}
+            </Avatar>
+            <Typography>
+              {booking.client ? `${booking.client.first_name} ${booking.client.last_name}` : 'Неизвестный клиент'}
+            </Typography>
+          </Box>
+        );
+      },
+    },
+    {
+      id: 'service_point',
+      label: 'Точка обслуживания',
+      minWidth: 180,
+      wrap: true,
+      format: (value: any, row: any) => {
+        const booking = row as Booking;
+        return <Typography>{booking.service_point?.name}</Typography>;
+      },
+    },
+    {
+      id: 'booking_date',
+      label: 'Дата и время',
+      minWidth: 160,
+      format: (value: any, row: any) => {
+        const booking = row as Booking;
+        return (
+          <Typography>
+            {new Date(booking.booking_date).toLocaleDateString()} {new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      minWidth: 120,
+      align: 'center' as const,
+      format: (value: any, row: any) => {
+        const booking = row as Booking;
+        return (
+          <Chip
+            label={getStatusLabel(booking.status_id)}
+            color={getStatusColor(booking.status_id)}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 150,
+      align: 'right' as const,
+      format: (value: any, row: any) => {
+        const booking = row as Booking;
+        return (
+          <Box sx={tablePageStyles.actionsContainer}>
+            <Tooltip title="Редактировать">
+              <IconButton
+                onClick={() => navigate(`/bookings/${booking.id}/edit`)}
+                size="small"
+                sx={tablePageStyles.actionButton}
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное'}>
+              <IconButton
+                onClick={() => handleToggleStatus(booking)}
+                size="small"
+                color={booking.status_id === 2 ? 'warning' : 'success'}
+                sx={tablePageStyles.actionButton}
+              >
+                {booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <IconButton
+                onClick={() => handleDeleteClick(booking)}
+                size="small"
+                color="error"
+                sx={tablePageStyles.actionButton}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
+    },
+  ], [tablePageStyles, navigate, handleToggleStatus, handleDeleteClick]);
 
   // Вспомогательные функции
   const getStatusLabel = (statusId: number): string => {
@@ -244,80 +333,12 @@ const BookingsPage: React.FC = () => {
         />
       </Box>
 
-      {/* Таблица бронирований */}
-      <TableContainer sx={tablePageStyles.tableContainer}>
-        <Table>
-          <TableHead sx={tablePageStyles.tableHeader}>
-            <TableRow>
-              <TableCell>Клиент</TableCell>
-              <TableCell>Точка обслуживания</TableCell>
-              <TableCell>Дата и время</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {bookings.map((booking: Booking) => (
-              <TableRow key={booking.id} sx={tablePageStyles.tableRow}>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <Avatar>
-                      {booking.client?.first_name?.charAt(0) || booking.client?.last_name?.charAt(0) || '?'}
-                    </Avatar>
-                    <Typography>
-                      {booking.client ? `${booking.client.first_name} ${booking.client.last_name}` : 'Неизвестный клиент'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell>{booking.service_point?.name}</TableCell>
-
-                <TableCell>
-                  {new Date(booking.booking_date).toLocaleDateString()} {new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </TableCell>
-
-                <TableCell>
-                  <Chip
-                    label={getStatusLabel(booking.status_id)}
-                    color={getStatusColor(booking.status_id)}
-                    size="small"
-                  />
-                </TableCell>
-
-                <TableCell align="right">
-                  <Box sx={tablePageStyles.actionsContainer}>
-                    <Tooltip title="Редактировать">
-                      <IconButton
-                        onClick={() => navigate(`/bookings/${booking.id}/edit`)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное'}>
-                      <IconButton
-                        onClick={() => handleToggleStatus(booking)}
-                        size="small"
-                        color={booking.status_id === 2 ? 'warning' : 'success'}
-                      >
-                        {booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(booking)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      {/* Таблица бронирований с UI Table компонентом */}
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table 
+          columns={columns}
+          rows={bookings}
+        />
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={Math.ceil(totalItems / rowsPerPage)}
@@ -327,7 +348,7 @@ const BookingsPage: React.FC = () => {
             disabled={totalItems <= rowsPerPage}
           />
         </Box>
-      </TableContainer>
+      </Box>
 
       {/* Модальное окно подтверждения удаления */}
       <Modal 

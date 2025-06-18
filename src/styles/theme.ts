@@ -592,6 +592,19 @@ export const getTableStyles = (theme: Theme) => {
       fontSize: SIZES.fontSize.md,
     },
     
+    // Ячейки с переносом слов
+    tableCellWrap: {
+      color: colors.textPrimary,
+      borderBottom: `1px solid ${colors.borderPrimary}`,
+      padding: '12px',
+      fontSize: SIZES.fontSize.md,
+      whiteSpace: 'normal',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word',
+      hyphens: 'auto',
+      wordWrap: 'break-word', // Для старых браузеров
+    },
+    
     // Оставляю старые названия для обратной совместимости
     container: {
       backgroundColor: colors.backgroundTable,
@@ -629,6 +642,19 @@ export const getTableStyles = (theme: Theme) => {
       borderBottom: `1px solid ${colors.borderPrimary}`,
       padding: '12px',
       fontSize: SIZES.fontSize.md,
+    },
+    
+    // Ячейки с переносом слов (для обратной совместимости)
+    cellWrap: {
+      color: colors.textPrimary,
+      borderBottom: `1px solid ${colors.borderPrimary}`,
+      padding: '12px',
+      fontSize: SIZES.fontSize.md,
+      whiteSpace: 'normal',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word',
+      hyphens: 'auto',
+      wordWrap: 'break-word', // Для старых браузеров
     },
     
     // Статусные ячейки (например, "Доступно")

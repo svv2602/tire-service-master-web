@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Chip,
@@ -47,7 +41,9 @@ import {
   Box,
   Button, 
   TextField, 
-  Typography 
+  Typography,
+  Table,
+  type Column
 } from '../../components/ui';
 import { Pagination } from '../../components/ui/Pagination';
 
@@ -65,7 +61,7 @@ const RegionsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const rowsPerPage = 25;
   
   // Состояние для диалогов и уведомлений
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -110,12 +106,12 @@ const RegionsPage: React.FC = () => {
     setPage(newPage - 1);
   };
 
-  const handleDeleteClick = (region: Region) => {
+  const handleDeleteClick = useCallback((region: Region) => {
     setSelectedRegion({ id: region.id, name: region.name });
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (!selectedRegion) return;
     
     try {
@@ -140,14 +136,9 @@ const RegionsPage: React.FC = () => {
         severity: 'error'
       });
     }
-  };
+  }, [selectedRegion, deleteRegion]);
 
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setSelectedRegion(null);
-  };
-
-  const handleToggleActive = async (region: Region) => {
+  const handleToggleActive = useCallback(async (region: Region) => {
     try {
       await toggleActive({
         id: region.id,
@@ -171,11 +162,142 @@ const RegionsPage: React.FC = () => {
         severity: 'error'
       });
     }
-  };
+  }, [toggleActive]);
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteDialogOpen(false);
+    setSelectedRegion(null);
+  }, []);
 
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
+
+  // Определение колонок для UI Table
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'region',
+      label: 'Регион',
+      minWidth: 200,
+      wrap: true,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Box sx={tablePageStyles.avatarContainer}>
+            <LocationOnIcon color="action" />
+            <Typography>{region.name}</Typography>
+          </Box>
+        );
+      },
+    },
+    {
+      id: 'code',
+      label: 'Код',
+      minWidth: 100,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Chip 
+            label={region.code}
+            variant="outlined"
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      minWidth: 120,
+      align: 'center' as const,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Chip 
+            label={region.is_active ? 'Активен' : 'Неактивен'}
+            color={region.is_active ? 'success' : 'default'}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      id: 'cities_count',
+      label: 'Кол-во городов',
+      minWidth: 140,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Tooltip title="Количество городов">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LocationCityIcon fontSize="small" />
+              <Typography>
+                {region.cities_count !== undefined ? region.cities_count : 'Н/Д'}
+              </Typography>
+            </Box>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      id: 'created_at',
+      label: 'Дата создания',
+      minWidth: 140,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CalendarTodayIcon fontSize="small" color="action" />
+            <Typography sx={{ color: theme.palette.text.secondary }}>
+              {new Date(region.created_at).toLocaleDateString('ru-RU')}
+            </Typography>
+          </Box>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 150,
+      align: 'right' as const,
+      format: (value: any, row: any) => {
+        const region = row as Region;
+        return (
+          <Box sx={tablePageStyles.actionsContainer}>
+            <Tooltip title={region.is_active ? 'Деактивировать' : 'Активировать'}>
+              <IconButton
+                size="small"
+                onClick={() => handleToggleActive(region)}
+                color={region.is_active ? 'success' : 'default'}
+                sx={tablePageStyles.actionButton}
+              >
+                {region.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Редактировать">
+              <IconButton
+                size="small"
+                onClick={() => navigate(`/regions/${region.id}/edit`)}
+                sx={tablePageStyles.actionButton}
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteClick(region)}
+                color="error"
+                sx={tablePageStyles.actionButton}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
+    },
+  ], [tablePageStyles, theme.palette.text.secondary, handleToggleActive, navigate, handleDeleteClick]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -248,109 +370,12 @@ const RegionsPage: React.FC = () => {
         </FormControl>
       </Box>
 
-      {/* Таблица регионов */}
-      <Box>
-        <TableContainer sx={tablePageStyles.tableContainer}>
-          <Table>
-            <TableHead sx={tablePageStyles.tableHeader}>
-              <TableRow>
-                <TableCell>Регион</TableCell>
-                <TableCell>Код</TableCell>
-                <TableCell>Статус</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <LocationCityIcon fontSize="small" />
-                    Кол-во городов
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarTodayIcon fontSize="small" />
-                    Дата создания
-                  </Box>
-                </TableCell>
-                <TableCell align="right">Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {regions.map((region: Region) => (
-                <TableRow key={region.id} sx={tablePageStyles.tableRow}>
-                  <TableCell>
-                    <Box sx={tablePageStyles.avatarContainer}>
-                      <LocationOnIcon color="action" />
-                      <Typography>{region.name}</Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={region.code}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={region.is_active ? 'Активен' : 'Неактивен'}
-                      color={region.is_active ? 'success' : 'default'}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title="Количество городов">
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LocationCityIcon fontSize="small" />
-                        <Typography>
-                          {region.cities_count !== undefined ? region.cities_count : 'Н/Д'}
-                        </Typography>
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CalendarTodayIcon fontSize="small" color="action" />
-                      <Typography sx={{ color: theme.palette.text.secondary }}>
-                        {new Date(region.created_at).toLocaleDateString('ru-RU')}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Box sx={tablePageStyles.actionsContainer}>
-                      <Tooltip title={region.is_active ? 'Деактивировать' : 'Активировать'}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleToggleActive(region)}
-                          color={region.is_active ? 'success' : 'default'}
-                          sx={tablePageStyles.actionButton}
-                        >
-                          {region.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Редактировать">
-                        <IconButton
-                          size="small"
-                          onClick={() => navigate(`/regions/${region.id}/edit`)}
-                          sx={tablePageStyles.actionButton}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Удалить">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDeleteClick(region)}
-                          color="error"
-                          sx={tablePageStyles.actionButton}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+      {/* Таблица регионов с UI Table компонентом */}
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table 
+          columns={columns}
+          rows={regions}
+        />
         
         {/* Пагинация */}
         <Box sx={tablePageStyles.paginationContainer}>

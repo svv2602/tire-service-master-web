@@ -60,6 +60,9 @@ const RegionsPage = lazy(() => import('./pages/regions/RegionsPage'));
 const RegionFormPage = lazy(() => import('./pages/regions/RegionFormPage'));
 const CitiesPage = lazy(() => import('./pages/catalog/CitiesPage'));
 
+// Тестовые страницы
+const WordWrapTestPage = lazy(() => import('./pages/testing/WordWrapTestPage'));
+
 // Ленивая загрузка страниц брендов автомобилей
 const CarBrandsPage = lazy(() => import('./pages/car-brands/CarBrandsPage'));
 const CarBrandFormPage = lazy(() => import('./pages/car-brands/CarBrandFormPage'));
@@ -278,6 +281,8 @@ function App() {
                   <Route path="page-content/new" element={<PageContentFormPage />} />
                   <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
                   <Route path="page-content/management" element={<PageContentManagement />} />
+                  {/* Тестовые маршруты */}
+                  <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
                 </Route>
                 
                 {/* Маршрут по умолчанию */}

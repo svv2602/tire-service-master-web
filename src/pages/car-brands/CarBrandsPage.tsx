@@ -308,7 +308,7 @@ const CarBrandsPage: React.FC = () => {
             <TableBody>
               {brands.map((brand: CarBrand) => (
                 <TableRow key={brand.id} sx={tablePageStyles.tableRow}>
-                  <TableCell>
+                  <TableCell sx={tablePageStyles.tableCellWrap}>
                     <Box sx={tablePageStyles.avatarContainer}>
                       {brand.logo ? (
                         <Avatar 

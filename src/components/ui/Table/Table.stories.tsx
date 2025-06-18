@@ -179,4 +179,40 @@ export const CustomStyling = () => (
       }}
     />
   </Box>
-); 
+);
+
+// Пример с переносом слов
+const columnsWithWrap: Column[] = [
+  { id: 'title', label: 'Заголовок', minWidth: 200, wrap: true },
+  { id: 'description', label: 'Описание', minWidth: 300, wrap: true },
+  { id: 'status', label: 'Статус', minWidth: 100, align: 'center' },
+  { id: 'date', label: 'Дата', minWidth: 120 },
+];
+
+const rowsWithLongText = [
+  {
+    title: 'Очень длинный заголовок статьи который не помещается в одну строку',
+    description: 'Это очень длинное описание которое демонстрирует как текст переносится по словам в ячейках таблицы. Текст автоматически разбивается на несколько строк.',
+    status: 'Активно',
+    date: '2025-06-18'
+  },
+  {
+    title: 'Краткий заголовок',
+    description: 'Короткое описание.',
+    status: 'Неактивно',
+    date: '2025-06-17'
+  },
+  {
+    title: 'Сверхдлинныйзаголовокбезпробеловкоторыйдолженразрываться',
+    description: 'Описание с очень-очень-очень-длинными-словами-через-дефисы которые тоже должны корректно переноситься в ячейках таблицы.',
+    status: 'В процессе',
+    date: '2025-06-16'
+  },
+];
+
+export const WithWordWrap = Template.bind({});
+WithWordWrap.args = {
+  columns: columnsWithWrap,
+  rows: rowsWithLongText,
+};
+WithWordWrap.storyName = 'С переносом слов';

@@ -1,17 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Button,
-  Paper,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Dialog,
@@ -19,6 +11,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  useTheme,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -28,12 +21,25 @@ import {
 } from '@mui/icons-material';
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarsQuery, useDeleteClientCarMutation } from '../../api/clients.api';
-import { Client, ClientCar } from '../../types/client';
-import { FlexBox, CenteredBox, StyledAlert } from '../../components/styled/CommonComponents';
+import { ClientCar } from '../../types/client';
+
+// Импорты UI компонентов
+import {
+  Button,
+  Table,
+  type Column
+} from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
 
 const ClientCarsPage: React.FC = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Получаем централизованные стили таблицы
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -45,69 +51,120 @@ const ClientCarsPage: React.FC = () => {
   const { data: cars, isLoading: isLoadingCars } = useGetClientCarsQuery(clientId || '');
   const [deleteCar, { isLoading: isDeleting }] = useDeleteClientCarMutation();
 
-  const isLoading = isLoadingClient || isLoadingCars || isDeleting;
+  const isLoading = isLoadingClient || isLoadingCars;
 
-  // Обработчики событий
-  const handleDeleteClick = (car: ClientCar) => {
+  // Мемоизированные обработчики событий
+  const handleDeleteClick = useCallback((car: ClientCar) => {
     setSelectedCar(car);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
-    if (selectedCar && clientId) {
-      try {
-        await deleteCar({ clientId, carId: selectedCar.id.toString() }).unwrap();
-        setDeleteDialogOpen(false);
-        setSelectedCar(null);
-        setErrorMessage(null); // Clear any previous errors
-      } catch (error: any) {
-        let errorMessage = 'Ошибка при удалении автомобиля';
-        
-        if (error.data?.error) {
-          errorMessage = error.data.error;
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.data?.errors) {
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        setErrorMessage(errorMessage);
-        setDeleteDialogOpen(false);
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedCar || !clientId) return;
+
+    try {
+      await deleteCar({ clientId, carId: selectedCar.id.toString() }).unwrap();
+      setDeleteDialogOpen(false);
+      setSelectedCar(null);
+      setErrorMessage(null);
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при удалении автомобиля';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      setErrorMessage(errorMessage);
+      setDeleteDialogOpen(false);
     }
-  };
+  }, [selectedCar, deleteCar, clientId]);
 
-  const handleCloseDialog = () => {
-    setDeleteDialogOpen(false);
-    setSelectedCar(null);
-  };
+  const handleEditClick = useCallback((carId: number) => {
+    navigate(`/clients/${clientId}/cars/${carId}/edit`);
+  }, [navigate, clientId]);
 
-  // Отображение состояний загрузки и ошибок
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'brand',
+      label: 'Марка',
+      wrap: true,
+      format: (value, row: ClientCar) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <CarIcon />
+          <Typography>{row.brand}</Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'model',
+      label: 'Модель',
+      wrap: true
+    },
+    {
+      id: 'year',
+      label: 'Год',
+      align: 'center'
+    },
+    {
+      id: 'license_plate',
+      label: 'Гос. номер',
+      wrap: true
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (value, row: ClientCar) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              size="small"
+              onClick={() => handleEditClick(row.id)}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              size="small"
+              color="error"
+              onClick={() => handleDeleteClick(row)}
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [handleEditClick, handleDeleteClick, tablePageStyles]);
+
+  // Обработка загрузки
   if (isLoading) {
     return (
-      <CenteredBox minHeight="400px">
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
-      </CenteredBox>
+      </Box>
     );
   }
 
+  // Обработка случая, когда клиент не найден
   if (!client) {
     return (
       <Box sx={{ p: 3 }}>
-        <StyledAlert severity="error">
+        <Alert severity="error">
           Клиент не найден
-        </StyledAlert>
+        </Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={tablePageStyles.container}>
       {/* Отображение ошибок */}
       {errorMessage && (
         <Box sx={{ mb: 2 }}>
@@ -118,84 +175,46 @@ const ClientCarsPage: React.FC = () => {
       )}
 
       {/* Заголовок */}
-      <FlexBox justifyContent="space-between" alignItems="center" my={3}>
-        <Typography variant="h4">
+      <Box sx={tablePageStyles.headerContainer}>
+        <Typography variant="h4" sx={tablePageStyles.title}>
           Автомобили клиента {client.first_name} {client.last_name}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate(`/clients/${clientId}/cars/new`)}
+          sx={tablePageStyles.createButton}
         >
           Добавить автомобиль
         </Button>
-      </FlexBox>
+      </Box>
 
       {/* Таблица автомобилей */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Марка</TableCell>
-              <TableCell>Модель</TableCell>
-              <TableCell>Год</TableCell>
-              <TableCell>Гос. номер</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {cars?.map((car: ClientCar) => (
-              <TableRow key={car.id}>
-                <TableCell>
-                  <FlexBox alignItems="center" gap={1}>
-                    <CarIcon />
-                    <Typography>
-                      {car.brand}
-                    </Typography>
-                  </FlexBox>
-                </TableCell>
-                <TableCell>{car.model}</TableCell>
-                <TableCell>{car.year}</TableCell>
-                <TableCell>{car.license_plate}</TableCell>
-                <TableCell align="right">
-                  <FlexBox justifyContent="flex-end" gap={1}>
-                    <Tooltip title="Редактировать">
-                      <IconButton
-                        onClick={() => navigate(`/clients/${clientId}/cars/${car.id}/edit`)}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(car)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </FlexBox>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Table 
+        columns={columns} 
+        rows={cars || []}
+      />
 
       {/* Диалог подтверждения удаления */}
-      <Dialog open={deleteDialogOpen} onClose={handleCloseDialog}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить автомобиль {selectedCar?.brand} {selectedCar?.model}?
-            Это действие нельзя будет отменить.
+            Вы уверены, что хотите удалить автомобиль {selectedCar?.brand} {selectedCar?.model}?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Отмена</Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+          <Button onClick={() => setDeleteDialogOpen(false)}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error"
+            disabled={isDeleting}
+          >
             Удалить
           </Button>
         </DialogActions>
@@ -204,4 +223,4 @@ const ClientCarsPage: React.FC = () => {
   );
 };
 
-export default ClientCarsPage; 
+export default ClientCarsPage;

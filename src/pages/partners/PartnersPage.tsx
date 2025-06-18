@@ -101,7 +101,7 @@ const PartnerRow = React.memo(({
 }) => {
   return (
     <TableRow key={partner.id}>
-      <TableCell>
+      <TableCell sx={tablePageStyles.tableCellWrap}>
         <Box sx={tablePageStyles.avatarContainer}>
           <Avatar sx={{ bgcolor: 'primary.main' }}>
             {getInitials(partner)}
@@ -117,7 +117,7 @@ const PartnerRow = React.memo(({
         </Box>
       </TableCell>
 
-      <TableCell>
+      <TableCell sx={tablePageStyles.tableCellWrap}>
         <Typography variant="body2">
           {partner.contact_person}
         </Typography>

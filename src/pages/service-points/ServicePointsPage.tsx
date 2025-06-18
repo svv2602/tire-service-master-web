@@ -3,12 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useTheme,
   InputAdornment,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Avatar,
 } from '@mui/material';
@@ -40,6 +34,8 @@ import {
   Chip,
   Pagination,
   Modal,
+  Table,
+  type Column
 } from '../../components/ui';
 import { Select } from '../../components/ui/Select';
 
@@ -117,94 +113,7 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
   return result || 'График работы не указан';
 };
 
-// Мемоизированный компонент строки сервисной точки с централизованными стилями
-const ServicePointRow = React.memo(({ 
-  servicePoint, 
-  onEdit, 
-  onDelete, 
-  tablePageStyles
-}: {
-  servicePoint: ServicePoint;
-  onEdit: (servicePoint: ServicePoint) => void;
-  onDelete: (servicePoint: ServicePoint) => void;
-  tablePageStyles: any;
-}) => {
-  return (
-    <TableRow key={servicePoint.id} sx={tablePageStyles.tableRow}>
-      <TableCell>
-        <Box sx={tablePageStyles.avatarContainer}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
-            <BusinessIcon />
-          </Avatar>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {servicePoint.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {servicePoint.address}
-            </Typography>
-          </Box>
-        </Box>
-      </TableCell>
-
-      <TableCell>
-        <Typography variant="body2">
-          {servicePoint.city?.region?.name || 'Не указана'}
-        </Typography>
-      </TableCell>
-
-      <TableCell>
-        <Typography variant="body2">
-          {servicePoint.city?.name || 'Не указан'}
-        </Typography>
-      </TableCell>
-
-      <TableCell>
-        <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {formatWorkingHours(servicePoint.working_hours)}
-        </Typography>
-      </TableCell>
-
-      <TableCell>
-        <Typography variant="body2">
-          {servicePoint.contact_phone || 'Не указан'}
-        </Typography>
-      </TableCell>
-
-      <TableCell>
-        <Chip
-          label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
-          color={servicePoint.is_active ? 'success' : 'error'}
-          size="small"
-        />
-      </TableCell>
-
-      <TableCell align="right">
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton
-              onClick={() => onEdit(servicePoint)}
-              size="small"
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton
-              onClick={() => onDelete(servicePoint)}
-              size="small"
-              color="error"
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </TableCell>
-    </TableRow>
-  );
-});
-
-ServicePointRow.displayName = 'ServicePointRow';
+// Мемоизированный компонент строки сервисной точки удален - заменен на колонки UI Table
 
 /**
  * Компонент страницы списка сервисных точек
@@ -342,6 +251,135 @@ const ServicePointsPage: React.FC = () => {
     setSelectedServicePoint(null);
   }, []);
 
+  // Определение колонок для UI Table
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'servicePoint',
+      label: 'Сервисная точка',
+      minWidth: 250,
+      wrap: true,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Box sx={tablePageStyles.avatarContainer}>
+            <Avatar sx={{ bgcolor: 'primary.main' }}>
+              <BusinessIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {servicePoint.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {servicePoint.address}
+              </Typography>
+            </Box>
+          </Box>
+        );
+      },
+    },
+    {
+      id: 'region',
+      label: 'Область',
+      minWidth: 120,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Typography variant="body2">
+            {servicePoint.city?.region?.name || 'Не указана'}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'city',
+      label: 'Город', 
+      minWidth: 120,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Typography variant="body2">
+            {servicePoint.city?.name || 'Не указан'}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'working_hours',
+      label: 'График работы',
+      minWidth: 200,
+      wrap: true,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Typography variant="body2">
+            {formatWorkingHours(servicePoint.working_hours)}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'contact_phone', 
+      label: 'Контакты',
+      minWidth: 130,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Typography variant="body2">
+            {servicePoint.contact_phone || 'Не указан'}
+          </Typography>
+        );
+      },
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      minWidth: 100,
+      align: 'center' as const,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Chip
+            label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
+            color={servicePoint.is_active ? 'success' : 'error'}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 120,
+      align: 'right' as const,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        return (
+          <Box sx={tablePageStyles.actionsContainer}>
+            <Tooltip title="Редактировать">
+              <IconButton
+                onClick={() => handleEditClick(servicePoint)}
+                size="small"
+                sx={tablePageStyles.actionButton}
+              >
+                <EditIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <IconButton
+                onClick={() => handleDeleteClick(servicePoint)}
+                size="small"
+                color="error"
+                sx={tablePageStyles.actionButton}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
+    },
+  ], [tablePageStyles, handleEditClick, handleDeleteClick]);
+
   // Отображение состояний загрузки и ошибок
   if (isLoading && !servicePointsData) {
     return (
@@ -464,49 +502,20 @@ const ServicePointsPage: React.FC = () => {
         )}
       </Box>
 
-      {/* Таблица сервисных точек */}
-      <TableContainer 
-        sx={{
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          border: 'none'
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Сервисная точка</TableCell>
-              <TableCell>Область</TableCell>
-              <TableCell>Город</TableCell>
-              <TableCell>График работы</TableCell>
-              <TableCell>Контакты</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {servicePoints.length > 0 ? (
-              servicePoints.map((servicePoint) => (
-                <ServicePointRow
-                  key={servicePoint.id}
-                  servicePoint={servicePoint}
-                  onEdit={handleEditClick}
-                  onDelete={handleDeleteClick}
-                  tablePageStyles={tablePageStyles}
-                />
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography variant="body1" color="text.secondary">
-                    {page > 0 ? "На этой странице нет данных" : "Нет данных для отображения"}
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Таблица сервисных точек с UI Table компонентом */}
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table 
+          columns={columns}
+          rows={servicePoints.length > 0 ? servicePoints : []}
+        />
+        {servicePoints.length === 0 && (
+          <Box sx={{ p: 3, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              {page > 0 ? "На этой странице нет данных" : "Нет данных для отображения"}
+            </Typography>
+          </Box>
+        )}
+      </Box>
 
       {/* Пагинация */}
       {Math.ceil(totalItems / pageSize) > 1 && (

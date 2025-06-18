@@ -8,8 +8,7 @@ import {
   TableRow,
   Paper,
   TableProps as MuiTableProps,
-  styled,
-  useTheme
+  styled
 } from '@mui/material';
 import { tokens } from '../../../styles/theme/tokens';
 
@@ -23,8 +22,10 @@ export interface Column {
   minWidth?: number;
   /** Выравнивание */
   align?: 'left' | 'right' | 'center';
+  /** Перенос по словам */
+  wrap?: boolean;
   /** Форматирование значения */
-  format?: (value: any) => string | React.ReactNode;
+  format?: (value: any, row?: any) => string | React.ReactNode;
 }
 
 /** Пропсы таблицы */
@@ -51,7 +52,7 @@ const StyledPaper = styled(Paper)(({ theme }) => {
   };
 });
 
-const StyledTableCell = styled(TableCell)(({ theme }) => {
+const StyledTableCell = styled(TableCell)<{ wrap?: boolean }>(({ theme, wrap }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {
@@ -61,6 +62,18 @@ const StyledTableCell = styled(TableCell)(({ theme }) => {
     fontSize: tokens.typography.fontSize.sm,
     fontFamily: tokens.typography.fontFamily,
     transition: tokens.transitions.duration.normal,
+    // Стили переноса слов
+    ...(wrap ? {
+      whiteSpace: 'normal',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word',
+      hyphens: 'auto',
+      wordWrap: 'break-word', // Для старых браузеров
+    } : {
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    }),
   };
 });
 
@@ -100,9 +113,6 @@ export const Table: React.FC<TableProps> = ({
   rowsPerPage = 10,
   ...props
 }) => {
-  const theme = useTheme();
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-
   return (
     <StyledPaper>
       <TableContainer sx={{ maxHeight }}>
@@ -126,8 +136,12 @@ export const Table: React.FC<TableProps> = ({
                 {columns.map((column) => {
                   const value = row[column.id];
                   return (
-                    <StyledTableCell key={column.id} align={column.align}>
-                      {column.format ? column.format(value) : value}
+                    <StyledTableCell 
+                      key={column.id} 
+                      align={column.align}
+                      wrap={column.wrap}
+                    >
+                      {column.format ? column.format(value, row) : value}
                     </StyledTableCell>
                   );
                 })}

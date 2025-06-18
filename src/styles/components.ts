@@ -5,10 +5,8 @@ import { Theme, SxProps } from '@mui/material';
 import { 
   SIZES, 
   ANIMATIONS, 
-  GRADIENTS, 
-  THEME_COLORS,
-  getThemeColors,
-  getGradient
+  GRADIENTS,
+  getThemeColors
 } from './theme';
 import { getTabStyles as getTabStylesInternal } from './components/tabStyles';
 
@@ -304,6 +302,16 @@ export const getTableStyles = (theme: Theme) => {
     },
     tableCell: {
       borderBottom: `1px solid ${theme.palette.divider}`,
+      padding: theme.spacing(1.5, 2),
+    },
+    tableCellWithWrap: {
+      borderBottom: `1px solid ${theme.palette.divider}`,
+      padding: theme.spacing(1.5, 2),
+      whiteSpace: 'normal',
+      wordBreak: 'break-word',
+      overflowWrap: 'break-word',
+      hyphens: 'auto',
+      wordWrap: 'break-word', // Для старых браузеров
     },
   };
 };
@@ -726,6 +734,9 @@ export const getTablePageStyles = (theme: Theme) => {
       padding: theme.spacing(1.5, 2),
       whiteSpace: 'normal',
       wordBreak: 'break-word',
+      overflowWrap: 'break-word',
+      hyphens: 'auto',
+      wordWrap: 'break-word', // Для старых браузеров
     },
     loadingCell: {
       padding: theme.spacing(4),

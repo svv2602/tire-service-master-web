@@ -1,24 +1,15 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Таблица пользователей обновлена для использования единых адаптивных стилей
-// с минимальными закруглениями (2px) и горизонтальными скроллбарами
 import {
   Box,
   Typography,
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Avatar,
   FormControlLabel,
   Switch,
   Tooltip,
-  useMediaQuery,
   useTheme
 } from '@mui/material';
 import {
@@ -35,7 +26,6 @@ import {
   useDeleteUserMutation,
   useUpdateUserMutation
 } from '../../api/users.api';
-import { getRoleId } from '../../utils/roles.utils';
 import type { User, UserFormData } from '../../types/user';
 import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -48,141 +38,16 @@ import {
   Chip,
   Pagination,
   Modal,
+  Table,
+  type Column
 } from '../../components/ui';
 
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
 
-// Мемоизированный компонент строки пользователя
-const UserRow = React.memo<{
-  user: User;
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onToggleStatus: (user: User) => void;
-  getRoleName: (role: string) => string;
-  getRoleColor: (role: string) => 'error' | 'warning' | 'primary' | 'success' | 'info';
-  isDeleting: boolean;
-  tablePageStyles: any;
-}>(({ user, onEdit, onDelete, onToggleStatus, getRoleName, getRoleColor, isDeleting, tablePageStyles }) => (
-  <TableRow sx={{ ...tablePageStyles.tableRow, opacity: user.is_active ? 1 : 0.6 }}>
-    <TableCell sx={tablePageStyles.tableCellWrap}>
-      <Box sx={tablePageStyles.avatarContainer}>
-        <Avatar sx={{ width: 32, height: 32, opacity: user.is_active ? 1 : 0.5 }}>
-          <PersonIcon />
-        </Avatar>
-        <Box>
-          <Typography variant="body2" fontWeight="medium" color={user.is_active ? 'text.primary' : 'text.secondary'}>
-            {user.first_name} {user.last_name}
-            {!user.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            ID: {user.id}
-          </Typography>
-        </Box>
-      </Box>
-    </TableCell>
-    <TableCell sx={tablePageStyles.tableCell} title={user.email}>{user.email}</TableCell>
-    <TableCell sx={tablePageStyles.tableCell} title={user.phone}>{user.phone}</TableCell>
-    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
-      <Chip
-        label={getRoleName(user.role)}
-        color={getRoleColor(user.role)}
-        size="medium"
-        sx={{
-          fontWeight: 600,
-          fontSize: '0.875rem',
-          minWidth: 100,
-          '& .MuiChip-label': {
-            padding: '6px 12px',
-          }
-        }}
-      />
-    </TableCell>
-    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={user.is_active}
-            onChange={() => onToggleStatus(user)}
-            size="small"
-          />
-        }
-        label=""
-        sx={{ m: 0 }}
-      />
-    </TableCell>
-    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-        {user.email_verified ? (
-          <Tooltip title="Email подтвержден">
-            <CheckIcon color="success" fontSize="small" />
-          </Tooltip>
-        ) : (
-          <Tooltip title="Email не подтвержден">
-            <CloseIcon color="error" fontSize="small" />
-          </Tooltip>
-        )}
-        {user.phone_verified ? (
-          <Tooltip title="Телефон подтвержден">
-            <CheckIcon color="success" fontSize="small" />
-          </Tooltip>
-        ) : (
-          <Tooltip title="Телефон не подтвержден">
-            <CloseIcon color="error" fontSize="small" />
-          </Tooltip>
-        )}
-      </Box>
-    </TableCell>
-    <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>
-      <Box sx={tablePageStyles.actionsContainer}>
-        <Tooltip title="Редактировать">
-          <IconButton
-            onClick={() => onEdit(user.id)}
-            size="small"
-            color="primary"
-            disabled={isDeleting}
-            sx={tablePageStyles.actionButton}
-          >
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        {user.is_active ? (
-          <Tooltip title="Деактивировать">
-            <IconButton
-              onClick={() => onDelete(user.id)}
-              size="small"
-              color="error"
-              disabled={isDeleting}
-              sx={tablePageStyles.actionButton}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        ) : (
-          <Tooltip title="Реактивировать">
-            <IconButton
-              onClick={() => onToggleStatus(user)}
-              size="small"
-              color="success"
-              disabled={isDeleting}
-              sx={tablePageStyles.actionButton}
-            >
-              <CheckIcon />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
-    </TableCell>
-  </TableRow>
-));
-
-UserRow.displayName = 'UserRow';
-
 export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
   // Получаем централизованные стили таблицы
   const tablePageStyles = getTablePageStyles(theme);
@@ -214,8 +79,7 @@ export const UsersPage: React.FC = () => {
   const {
     data: usersData,
     isLoading,
-    error,
-    refetch
+    error
   } = useGetUsersQuery({
     page,
     per_page: 25,
@@ -263,31 +127,16 @@ export const UsersPage: React.FC = () => {
     navigate('/users/new');
   }, [navigate]);
 
-  const handleEdit = (id: number) => {
+  const handleEdit = useCallback((id: number) => {
     navigate(`/users/${id}/edit`);
-  };
+  }, [navigate]);
 
-  const handleDelete = (id: number) => {
+  const handleDelete = useCallback((id: number) => {
     setUserToDelete(id);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = async () => {
-    if (!userToDelete) return;
-
-    try {
-      await deleteUser(userToDelete.toString()).unwrap();
-      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
-    } catch (error) {
-      console.error('Ошибка при деактивации пользователя:', error);
-      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
-    } finally {
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  };
-
-  const handleToggleStatus = async (user: User) => {
+  const handleToggleStatus = useCallback(async (user: User) => {
     try {
       const updateData: UserFormData = {
         email: user.email,
@@ -305,17 +154,185 @@ export const UsersPage: React.FC = () => {
         id: user.id.toString(),
         data: updateData
       }).unwrap();
-      
-      const action = user.is_active ? 'деактивирован' : 'активирован';
-      enqueueSnackbar(`Пользователь ${action}`, { variant: 'success' });
+
+      enqueueSnackbar(
+        user.is_active ? 'Пользователь деактивирован' : 'Пользователь активирован',
+        { variant: 'success' }
+      );
     } catch (error) {
       console.error('Ошибка при изменении статуса пользователя:', error);
       enqueueSnackbar('Ошибка при изменении статуса пользователя', { variant: 'error' });
     }
-  };
+  }, [updateUser, enqueueSnackbar]);
 
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'user',
+      label: 'Пользователь',
+      wrap: true,
+      format: (value, row: User) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar sx={{ width: 32, height: 32, opacity: row.is_active ? 1 : 0.5 }}>
+            <PersonIcon />
+          </Avatar>
+          <Box>
+            <Typography 
+              variant="body2" 
+              fontWeight="medium" 
+              color={row.is_active ? 'text.primary' : 'text.secondary'}
+            >
+              {row.first_name} {row.last_name}
+              {!row.is_active && (
+                <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />
+              )}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              ID: {row.id}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      wrap: true
+    },
+    {
+      id: 'phone',
+      label: 'Телефон',
+      wrap: true
+    },
+    {
+      id: 'role',
+      label: 'Роль',
+      align: 'center',
+      format: (value, row: User) => (
+        <Chip
+          label={getRoleName(row.role)}
+          color={getRoleColor(row.role)}
+          size="medium"
+          sx={{
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            minWidth: 100,
+            '& .MuiChip-label': {
+              padding: '6px 12px',
+            }
+          }}
+        />
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Активен',
+      align: 'center',
+      format: (value, row: User) => (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={row.is_active}
+              onChange={() => handleToggleStatus(row)}
+              size="small"
+            />
+          }
+          label=""
+          sx={{ m: 0 }}
+        />
+      )
+    },
+    {
+      id: 'verifications',
+      label: 'Подтверждения',
+      align: 'center',
+      format: (value, row: User) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          {row.email_verified ? (
+            <Tooltip title="Email подтвержден">
+              <CheckIcon color="success" fontSize="small" />
+            </Tooltip>
+          ) : (
+            <Tooltip title="Email не подтвержден">
+              <CloseIcon color="error" fontSize="small" />
+            </Tooltip>
+          )}
+          {row.phone_verified ? (
+            <Tooltip title="Телефон подтвержден">
+              <CheckIcon color="success" fontSize="small" />
+            </Tooltip>
+          ) : (
+            <Tooltip title="Телефон не подтвержден">
+              <CloseIcon color="error" fontSize="small" />
+            </Tooltip>
+          )}
+        </Box>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'center',
+      format: (value, row: User) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => handleEdit(row.id)}
+              size="small"
+              color="primary"
+              disabled={isDeleting}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          {row.is_active ? (
+            <Tooltip title="Деактивировать">
+              <IconButton
+                onClick={() => handleDelete(row.id)}
+                size="small"
+                color="error"
+                disabled={isDeleting}
+                sx={tablePageStyles.actionButton}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+          ) : (
+            <Tooltip title="Реактивировать">
+              <IconButton
+                onClick={() => handleToggleStatus(row)}
+                size="small"
+                color="success"
+                disabled={isDeleting}
+                sx={tablePageStyles.actionButton}
+              >
+                <CheckIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
+      )
+    }
+  ], [handleEdit, handleDelete, handleToggleStatus, getRoleName, getRoleColor, isDeleting, tablePageStyles]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteUser(userToDelete.toString()).unwrap();
+      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
+    } catch (error) {
+      console.error('Ошибка при деактивации пользователя:', error);
+      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
+    } finally {
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    }
+  }, [userToDelete, deleteUser, enqueueSnackbar]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setPage(page);
   }, []);
 
   return (
@@ -411,46 +428,11 @@ export const UsersPage: React.FC = () => {
       ) : (
         <>
           {/* Таблица пользователей */}
-          <TableContainer sx={tablePageStyles.tableContainer}>
-            <Table>
-              <TableHead sx={tablePageStyles.tableHeader}>
-                <TableRow>
-                  <TableCell sx={tablePageStyles.tableCellWrap}>Пользователь</TableCell>
-                  <TableCell sx={tablePageStyles.tableCell}>Email</TableCell>
-                  <TableCell sx={tablePageStyles.tableCell}>Телефон</TableCell>
-                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Роль</TableCell>
-                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Активен</TableCell>
-                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Подтверждения</TableCell>
-                  <TableCell sx={{ ...tablePageStyles.tableCell, textAlign: 'center' }}>Действия</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {users.length === 0 ? (
-                  <TableRow sx={tablePageStyles.tableRow}>
-                    <TableCell colSpan={7} align="center">
-                      <Typography color="text.secondary">
-                        Пользователи не найдены
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <UserRow
-                      key={user.id}
-                      user={user}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onToggleStatus={handleToggleStatus}
-                      getRoleName={getRoleName}
-                      getRoleColor={getRoleColor}
-                      isDeleting={isDeleting}
-                      tablePageStyles={tablePageStyles}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <Table 
+            columns={columns} 
+            rows={users} 
+            sx={{ opacity: isDeleting ? 0.6 : 1 }}
+          />
 
           {/* Пагинация */}
           {totalPages > 1 && (
