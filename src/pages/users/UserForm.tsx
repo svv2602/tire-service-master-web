@@ -77,6 +77,42 @@ const UserForm: React.FC = () => {
 
   const isLoading = isLoadingUser || isCreating || isUpdating;
 
+  // Состояние для отображения ошибок валидации
+  const [showValidationErrors, setShowValidationErrors] = React.useState(false);
+
+  // Функция для получения списка незаполненных обязательных полей
+  const getRequiredFieldErrors = () => {
+    const requiredFields = {
+      email: 'Email',
+      first_name: 'Имя', 
+      last_name: 'Фамилия',
+      role_id: 'Роль',
+      ...((!isEdit) && { password: 'Пароль' })
+    };
+
+    const errors: string[] = [];
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!formik.values[field as keyof UserFormData] || 
+          (field === 'role_id' && !formik.values.role_id)) {
+        errors.push(label);
+      }
+    });
+    return errors;
+  };
+
+  // Функция для обработки клика по заблокированной кнопке
+  const handleDisabledButtonClick = () => {
+    if (!formik.isValid) {
+      // Помечаем все поля как затронутые для показа ошибок
+      const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+        acc[field] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+      formik.setTouched(touchedFields);
+      setShowValidationErrors(true);
+    }
+  };
+
   // Функция для извлечения сообщения об ошибке
   const extractErrorMessage = (error: any): string => {
     if (error?.data?.message) {
@@ -147,10 +183,23 @@ const UserForm: React.FC = () => {
     validateOnChange: true,
     validateOnBlur: true,
     enableReinitialize: true,
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setTouched }) => {
       try {
         setApiError(null);
         setSuccessMessage(null);
+        setShowValidationErrors(false);
+        
+        // Проверяем валидность формы
+        if (!formik.isValid) {
+          // Помечаем все поля как затронутые для показа ошибок
+          const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
+            acc[field] = true;
+            return acc;
+          }, {} as Record<string, boolean>);
+          setTouched(touchedFields);
+          setShowValidationErrors(true);
+          return;
+        }
         
         // Подготавливаем данные для API
         const userData: UserFormData = {
@@ -272,8 +321,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.email && Boolean(formik.errors.email)}
-                helperText={formik.touched.email && formik.errors.email}
+                error={(formik.touched.email || showValidationErrors) && Boolean(formik.errors.email)}
+                helperText={(formik.touched.email || showValidationErrors) && formik.errors.email}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -287,8 +336,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.phone}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                helperText={formik.touched.phone && formik.errors.phone}
+                error={(formik.touched.phone || showValidationErrors) && Boolean(formik.errors.phone)}
+                helperText={(formik.touched.phone || showValidationErrors) && formik.errors.phone}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -302,8 +351,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.first_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.first_name && Boolean(formik.errors.first_name)}
-                helperText={formik.touched.first_name && formik.errors.first_name}
+                error={(formik.touched.first_name || showValidationErrors) && Boolean(formik.errors.first_name)}
+                helperText={(formik.touched.first_name || showValidationErrors) && formik.errors.first_name}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -317,8 +366,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.last_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.last_name && Boolean(formik.errors.last_name)}
-                helperText={formik.touched.last_name && formik.errors.last_name}
+                error={(formik.touched.last_name || showValidationErrors) && Boolean(formik.errors.last_name)}
+                helperText={(formik.touched.last_name || showValidationErrors) && formik.errors.last_name}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -331,8 +380,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.middle_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
-                helperText={formik.touched.middle_name && formik.errors.middle_name}
+                error={(formik.touched.middle_name || showValidationErrors) && Boolean(formik.errors.middle_name)}
+                helperText={(formik.touched.middle_name || showValidationErrors) && formik.errors.middle_name}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -353,14 +402,14 @@ const UserForm: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={formik.touched.role_id && Boolean(formik.errors.role_id)}>
+              <FormControl fullWidth required error={(formik.touched.role_id || showValidationErrors) && Boolean(formik.errors.role_id)}>
                 <InputLabel>Роль *</InputLabel>
                 <Select
                   name="role_id"
                   value={formik.values.role_id}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={formik.touched.role_id && Boolean(formik.errors.role_id)}
+                  error={(formik.touched.role_id || showValidationErrors) && Boolean(formik.errors.role_id)}
                 >
                   <MenuItem value={1}>Администратор</MenuItem>
                   <MenuItem value={2}>Менеджер</MenuItem>
@@ -368,7 +417,7 @@ const UserForm: React.FC = () => {
                   <MenuItem value={4}>Оператор</MenuItem>
                   <MenuItem value={5}>Клиент</MenuItem>
                 </Select>
-                {formik.touched.role_id && formik.errors.role_id && (
+                {(formik.touched.role_id || showValidationErrors) && formik.errors.role_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
                     {formik.errors.role_id}
                   </Typography>
@@ -416,8 +465,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.password && Boolean(formik.errors.password)}
-                helperText={formik.touched.password && formik.errors.password}
+                error={(formik.touched.password || showValidationErrors) && Boolean(formik.errors.password)}
+                helperText={(formik.touched.password || showValidationErrors) && formik.errors.password}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -432,8 +481,8 @@ const UserForm: React.FC = () => {
                 value={formik.values.password_confirmation}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
-                helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
+                error={(formik.touched.password_confirmation || showValidationErrors) && Boolean(formik.errors.password_confirmation)}
+                helperText={(formik.touched.password_confirmation || showValidationErrors) && formik.errors.password_confirmation}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -446,6 +495,29 @@ const UserForm: React.FC = () => {
               
               {successMessage && (
                 <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+              )}
+
+              {/* Уведомление о незаполненных обязательных полях */}
+              {(!formik.isValid && showValidationErrors) && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Заполните все обязательные поля:
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                    {getRequiredFieldErrors().map((field, index) => (
+                      <Typography variant="body2" component="li" key={index}>
+                        {field}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Alert>
+              )}
+
+              {/* Информационное сообщение о блокировке кнопки */}
+              {!formik.isValid && !showValidationErrors && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Заполните все обязательные поля для активации кнопки сохранения
+                </Alert>
               )}
               
               <Box sx={{ 
@@ -463,11 +535,20 @@ const UserForm: React.FC = () => {
                   Отмена
                 </Button>
                 <Button
-                  type="submit"
+                  type={formik.isValid ? "submit" : "button"}
                   variant="contained"
                   startIcon={<SaveIcon />}
-                  disabled={isLoading || !formik.isValid}
-                  sx={primaryButtonStyles}
+                  disabled={isLoading}
+                  onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
+                  sx={{
+                    ...primaryButtonStyles,
+                    ...((!formik.isValid && !isLoading) && {
+                      backgroundColor: theme.palette.warning.main,
+                      '&:hover': {
+                        backgroundColor: theme.palette.warning.dark,
+                      }
+                    })
+                  }}
                 >
                   {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
                 </Button>
