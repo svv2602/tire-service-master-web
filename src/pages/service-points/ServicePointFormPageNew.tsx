@@ -43,6 +43,7 @@ import {
   useUploadServicePointPhotoV2Mutation,
 } from '../../api/servicePoints.api';
 import { useDeleteServicePointPhotoMutation } from '../../api/service-point-photos.api';
+import { useInvalidateCache } from '../../api/baseApi';
 
 // Типы
 import type { ServicePointFormDataNew, ServicePoint } from '../../types/models';
@@ -139,6 +140,7 @@ const ServicePointFormPageNew: React.FC = () => {
   const [uploadServicePointPhoto] = useUploadServicePointPhotoMutation();
   const [uploadServicePointPhotoV2] = useUploadServicePointPhotoV2Mutation();
   const [deleteServicePointPhoto] = useDeleteServicePointPhotoMutation();
+  const { invalidateTag, invalidateList } = useInvalidateCache();
 
   // Функция для прямой загрузки фотографий через fetch API
   const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false) => {
@@ -183,6 +185,13 @@ const ServicePointFormPageNew: React.FC = () => {
     
     const result = await response.json();
     console.log('Фотография загружена успешно:', result);
+    
+    // ИНВАЛИДАЦИЯ КЭША RTK Query после успешной загрузки
+    console.log('Инвалидируем кэш RTK Query для фотографий и сервисной точки');
+    invalidateTag('ServicePointPhoto', servicePointId);
+    invalidateTag('ServicePoint', servicePointId);
+    invalidateList('ServicePointPhoto');
+    
     return result;
   };
 
@@ -359,6 +368,12 @@ const ServicePointFormPageNew: React.FC = () => {
                   photoId: String(photo.id)
                 }).unwrap();
                 console.log('Фотография удалена успешно:', photo.id);
+                
+                // ИНВАЛИДАЦИЯ КЭША RTK Query после успешного удаления
+                console.log('Инвалидируем кэш RTK Query после удаления фотографии');
+                invalidateTag('ServicePointPhoto', String(id));
+                invalidateTag('ServicePoint', String(id));
+                invalidateList('ServicePointPhoto');
               } catch (deleteError) {
                 console.error('Ошибка удаления фотографии:', photo.id, deleteError);
               }

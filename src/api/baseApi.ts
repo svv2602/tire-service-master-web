@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { useDispatch } from 'react-redux';
 import config from '../config';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -112,7 +113,7 @@ export const baseApi = createApi({
 
 // Хук для инвалидации кэша при изменениях
 export const useInvalidateCache = () => {
-  const { dispatch } = require('../store/store').store;
+  const dispatch = useDispatch();
   
   return {
     // Инвалидация кэша для конкретного типа и ID
