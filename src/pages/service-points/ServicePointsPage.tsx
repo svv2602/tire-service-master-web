@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useTheme,
@@ -10,21 +10,14 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  TablePagination,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  useMediaQuery,
+  Avatar,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  LocationOn as LocationIcon,
-  AccessTime as AccessTimeIcon,
   Business as BusinessIcon,
-  LocationCity as LocationCityIcon,
 } from '@mui/icons-material';
 import {
   useGetServicePointsQuery,
@@ -34,7 +27,6 @@ import {
 } from '../../api';
 import type { ServicePoint } from '../../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
-import { getTablePageStyles } from '../../styles';
 
 // Импорты UI компонентов
 import {
@@ -42,14 +34,34 @@ import {
   Typography,
   CircularProgress,
   Tooltip,
+  Button,
+  TextField,
+  Alert,
+  Chip,
+  Pagination,
+  Modal,
 } from '../../components/ui';
-import { Button } from '../../components/ui/Button';
-import { TextField } from '../../components/ui/TextField';
 import { Select } from '../../components/ui/Select';
-import { Modal } from '../../components/ui/Modal';
-import { Alert } from '../../components/ui/Alert';
-import { Chip } from '../../components/ui/Chip';
-import { Pagination } from '../../components/ui/Pagination';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles/components';
+
+// Хук для debounce поиска сервисных точек
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
 
 // Функция для форматирования рабочих часов
 const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
@@ -105,6 +117,95 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
   return result || 'График работы не указан';
 };
 
+// Мемоизированный компонент строки сервисной точки с централизованными стилями
+const ServicePointRow = React.memo(({ 
+  servicePoint, 
+  onEdit, 
+  onDelete, 
+  tablePageStyles
+}: {
+  servicePoint: ServicePoint;
+  onEdit: (servicePoint: ServicePoint) => void;
+  onDelete: (servicePoint: ServicePoint) => void;
+  tablePageStyles: any;
+}) => {
+  return (
+    <TableRow key={servicePoint.id} sx={tablePageStyles.tableRow}>
+      <TableCell>
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar sx={{ bgcolor: 'primary.main' }}>
+            <BusinessIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {servicePoint.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {servicePoint.address}
+            </Typography>
+          </Box>
+        </Box>
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2">
+          {servicePoint.city?.region?.name || 'Не указана'}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2">
+          {servicePoint.city?.name || 'Не указан'}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {formatWorkingHours(servicePoint.working_hours)}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <Typography variant="body2">
+          {servicePoint.contact_phone || 'Не указан'}
+        </Typography>
+      </TableCell>
+
+      <TableCell>
+        <Chip
+          label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
+          color={servicePoint.is_active ? 'success' : 'error'}
+          size="small"
+        />
+      </TableCell>
+
+      <TableCell align="right">
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => onEdit(servicePoint)}
+              size="small"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => onDelete(servicePoint)}
+              size="small"
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </TableCell>
+    </TableRow>
+  );
+});
+
+ServicePointRow.displayName = 'ServicePointRow';
+
 /**
  * Компонент страницы списка сервисных точек
  * Отображает таблицу всех сервисных точек с возможностями поиска, фильтрации и управления
@@ -114,16 +215,9 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
 const ServicePointsPage: React.FC = () => {
   const navigate = useNavigate();
   const { id: partnerId } = useParams<{ id: string }>();
-  
-  // Хук темы для использования централизованных стилей
   const theme = useTheme();
   
-  // Адаптивность
-  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
-  
-  // Получаем стили из централизованной системы
+  // Получаем централизованные стили из системы стилей
   const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
@@ -131,12 +225,24 @@ const ServicePointsPage: React.FC = () => {
   const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
   const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [pageSize] = useState(25);
   
   // Состояние для диалогов и ошибок
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Debounce для поиска
+  const debouncedSearch = useDebounce(search, 300);
+
+  // Мемоизированные параметры запроса
+  const queryParams = useMemo(() => ({
+    query: debouncedSearch || undefined,
+    city_id: selectedCityId || undefined,
+    region_id: selectedRegionId || undefined,
+    page: page + 1,
+    per_page: pageSize,
+  }), [debouncedSearch, selectedCityId, selectedRegionId, page, pageSize]);
 
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
@@ -148,52 +254,54 @@ const ServicePointsPage: React.FC = () => {
     },
     { skip: !selectedRegionId }
   );
-  const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery({
-    query: search,
-    city_id: selectedCityId || undefined,
-    region_id: selectedRegionId || undefined,
-    page: page + 1,
-    per_page: rowsPerPage,
-  });
+  const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint, { isLoading: isDeleting }] = useDeleteServicePointMutation();
 
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
   const totalItems = servicePointsData?.pagination?.total_count || 0;
 
-  // Обработчики событий
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Мемоизированные обработчики событий
+  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0); // Сбрасываем на первую страницу при поиске
-  };
+  }, []);
 
-  const handleRegionChange = (event: any) => {
-    const regionId = event.target.value;
+  const handleRegionChange = useCallback((value: string | number) => {
+    const regionId = value === '' ? '' : Number(value);
     setSelectedRegionId(regionId);
     setSelectedCityId(''); // Сбрасываем выбранный город
     setPage(0);
-  };
+  }, []);
 
-  const handleCityChange = (event: any) => {
-    setSelectedCityId(event.target.value);
+  const handleCityChange = useCallback((value: string | number) => {
+    const cityId = value === '' ? '' : Number(value);
+    setSelectedCityId(cityId);
     setPage(0);
-  };
+  }, []);
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage - 1);
+    window.scrollTo(0, 0);
+  }, []);
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleDeleteClick = (servicePoint: ServicePoint) => {
+  const handleDeleteClick = useCallback((servicePoint: ServicePoint) => {
     setSelectedServicePoint(servicePoint);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
-  const handleDeleteConfirm = async () => {
+  const handleEditClick = useCallback((servicePoint: ServicePoint) => {
+    // partner_id обязателен для сервисной точки
+    const partnerId = servicePoint.partner_id || servicePoint.partner?.id;
+    if (!partnerId) {
+      console.error('КРИТИЧЕСКАЯ ОШИБКА: Сервисная точка без partner_id!', servicePoint);
+      alert('Ошибка: Сервисная точка не связана с партнером. Обратитесь к администратору.');
+      return;
+    }
+    navigate(`/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
+  }, [navigate]);
+
+  const handleDeleteConfirm = useCallback(async () => {
     if (selectedServicePoint && !isDeleting) {
       try {
         await deleteServicePoint({
@@ -224,17 +332,18 @@ const ServicePointsPage: React.FC = () => {
           errorMsg = error.message;
         }
         setErrorMessage(errorMsg);
+        setDeleteDialogOpen(false);
       }
     }
-  };
+  }, [selectedServicePoint, isDeleting, deleteServicePoint]);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setDeleteDialogOpen(false);
     setSelectedServicePoint(null);
-  };
+  }, []);
 
   // Отображение состояний загрузки и ошибок
-  if (isLoading) {
+  if (isLoading && !servicePointsData) {
     return (
       <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
@@ -244,8 +353,8 @@ const ServicePointsPage: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={tablePageStyles.errorContainer}>
-        <Alert severity="error" sx={tablePageStyles.errorAlert}>
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
           Ошибка при загрузке сервисных точек: {error.toString()}
         </Alert>
       </Box>
@@ -254,9 +363,18 @@ const ServicePointsPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
+
       {/* Заголовок и кнопка добавления */}
       <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
+        <Typography variant="h4">
           Сервисные точки
         </Typography>
         <Button
@@ -268,81 +386,96 @@ const ServicePointsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Отображение ошибок */}
-      {errorMessage && (
-        <Box sx={{ mb: 2 }}>
-          <Alert severity="error" onClose={() => setErrorMessage(null)}>
-            {errorMessage}
-          </Alert>
-        </Box>
-      )}
-
       {/* Фильтры и поиск */}
-      <Box sx={tablePageStyles.searchContainer}>
-        <Box sx={tablePageStyles.filtersContainer}>
-          <TextField
-            placeholder="Поиск по названию или адресу"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearchChange}
-            sx={tablePageStyles.searchField}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-            <Select
-              label="Регион"
-              value={selectedRegionId}
-              onChange={(value) => {
-                setSelectedRegionId(value as number | '');
-                setSelectedCityId('');
-                setPage(0);
-              }}
-              options={[
-                { value: '', label: 'Все регионы' },
-                ...(regionsData?.data?.map((region) => ({
-                  value: region.id,
-                  label: region.name
-                })) || [])
-              ]}
-              size="small"
-            sx={tablePageStyles.filterSelect}
-            />
+      <Box sx={{ 
+        mb: 3, 
+        display: 'flex', 
+        gap: 2, 
+        alignItems: 'center', 
+        flexWrap: 'wrap'
+      }}>
+        <TextField
+          placeholder="Поиск по названию или адресу"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          sx={{ 
+            maxWidth: 400, 
+            flexGrow: 1 
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <Select
+          label="Регион"
+          value={selectedRegionId}
+          onChange={handleRegionChange}
+          options={[
+            { value: '', label: 'Все регионы' },
+            ...(regionsData?.data?.map((region) => ({
+              value: region.id,
+              label: region.name
+            })) || [])
+          ]}
+          size="small"
+          sx={{ minWidth: 150 }}
+        />
 
-            <Select
-              label="Город"
-              value={selectedCityId}
-              onChange={(value) => {
-                setSelectedCityId(value as number | '');
-                setPage(0);
-              }}
-              options={[
-                { value: '', label: 'Все города' },
-                ...(citiesData?.data?.map((city) => ({
-                  value: city.id,
-                  label: city.name
-                })) || [])
-              ]}
-              disabled={!selectedRegionId}
-              size="small"
-            sx={tablePageStyles.filterSelect}
-            />
-        </Box>
+        <Select
+          label="Город"
+          value={selectedCityId}
+          onChange={handleCityChange}
+          options={[
+            { value: '', label: 'Все города' },
+            ...(citiesData?.data?.map((city) => ({
+              value: city.id,
+              label: city.name
+            })) || [])
+          ]}
+          disabled={!selectedRegionId}
+          size="small"
+          sx={{ minWidth: 150 }}
+        />
+      </Box>
+
+      {/* Статистика */}
+      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          Найдено сервисных точек: <strong>{totalItems}</strong>
+        </Typography>
+        {servicePoints.length > 0 && (
+          <>
+            <Typography variant="body2" color="success.main">
+              Активных: <strong>{servicePoints.filter(sp => sp.is_active).length}</strong>
+            </Typography>
+            {servicePoints.filter(sp => !sp.is_active).length > 0 && (
+              <Typography variant="body2" color="error.main">
+                Неактивных: <strong>{servicePoints.filter(sp => !sp.is_active).length}</strong>
+              </Typography>
+            )}
+          </>
+        )}
       </Box>
 
       {/* Таблица сервисных точек */}
-      <TableContainer sx={tablePageStyles.tableContainer}>
+      <TableContainer 
+        sx={{
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
+          border: 'none'
+        }}
+      >
         <Table>
-          <TableHead sx={tablePageStyles.tableHeader}>
+          <TableHead>
             <TableRow>
-              <TableCell>Название</TableCell>
-              <TableCell>Адрес</TableCell>
+              <TableCell>Сервисная точка</TableCell>
               <TableCell>Область</TableCell>
               <TableCell>Город</TableCell>
               <TableCell>График работы</TableCell>
@@ -352,104 +485,45 @@ const ServicePointsPage: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {servicePoints.map((servicePoint) => (
-              <TableRow key={servicePoint.id} sx={tablePageStyles.tableRow}>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <BusinessIcon color="action" fontSize="small" />
-                    <Typography>
-                      {servicePoint.name}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <LocationIcon color="action" fontSize="small" />
-                    <Typography>
-                      {servicePoint.address}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <LocationCityIcon color="action" fontSize="small" />
-                    <Typography>
-                      {servicePoint.city?.region?.name || 'Не указана'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <LocationCityIcon color="action" fontSize="small" />
-                    <Typography>
-                      {servicePoint.city?.name || 'Не указан'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Box sx={tablePageStyles.avatarContainer}>
-                    <AccessTimeIcon color="action" fontSize="small" />
-                    <Typography>
-                      {formatWorkingHours(servicePoint.working_hours)}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography>
-                    {servicePoint.contact_phone || 'Не указан'}
+            {servicePoints.length > 0 ? (
+              servicePoints.map((servicePoint) => (
+                <ServicePointRow
+                  key={servicePoint.id}
+                  servicePoint={servicePoint}
+                  onEdit={handleEditClick}
+                  onDelete={handleDeleteClick}
+                  tablePageStyles={tablePageStyles}
+                />
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  <Typography variant="body1" color="text.secondary">
+                    {page > 0 ? "На этой странице нет данных" : "Нет данных для отображения"}
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Chip
-                    label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
-                    color={servicePoint.is_active ? 'success' : 'error'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <Box sx={tablePageStyles.actionsContainer}>
-                    <Tooltip title="Редактировать">
-                      <IconButton 
-                        onClick={() => {
-                          // partner_id обязателен для сервисной точки
-                          const partnerId = servicePoint.partner_id || servicePoint.partner?.id;
-                          if (!partnerId) {
-                            console.error('КРИТИЧЕСКАЯ ОШИБКА: Сервисная точка без partner_id!', servicePoint);
-                            alert('Ошибка: Сервисная точка не связана с партнером. Обратитесь к администратору.');
-                            return;
-                          }
-                          navigate(`/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
-                        }}
-                        size="small"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(servicePoint)}
-                        size="small"
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
-        <Box sx={tablePageStyles.paginationContainer}>
+      </TableContainer>
+
+      {/* Пагинация */}
+      {Math.ceil(totalItems / pageSize) > 1 && (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mt: 3
+        }}>
           <Pagination
-            count={Math.ceil(totalItems / rowsPerPage)}
+            count={Math.ceil(totalItems / pageSize)}
             page={page + 1}
-            onChange={(newPage) => setPage(newPage - 1)}
+            onChange={handlePageChange}
+            disabled={isLoading}
             color="primary"
-            disabled={totalItems <= rowsPerPage}
           />
         </Box>
-      </TableContainer>
+      )}
 
       {/* Модальное окно подтверждения удаления */}
       <Modal
@@ -462,7 +536,6 @@ const ServicePointsPage: React.FC = () => {
             <Button
               onClick={handleCloseDialog}
               disabled={isDeleting}
-              variant="outlined"
             >
               Отмена
             </Button>
