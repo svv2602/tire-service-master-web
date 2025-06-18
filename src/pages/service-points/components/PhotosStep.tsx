@@ -27,6 +27,7 @@ import {
   Star as StarIcon,
   StarBorder as StarBorderIcon,
   CloudUpload as UploadIcon,
+  Restore as RestoreIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePointPhoto, ServicePoint } from '../../../types/models';
@@ -55,8 +56,18 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
   // Максимальное количество фотографий
   const MAX_PHOTOS = 10;
 
-  // Получаем существующие фотографии из формы
+  // Получаем существующие фотографии из формы (включая помеченные для удаления)
   const existingPhotos = useMemo(() => {
+    return formik.values.photos?.filter(photo => photo.id && photo.id > 0) || [];
+  }, [formik.values.photos]);
+
+  // Получаем фотографии помеченные для удаления
+  const photosMarkedForDeletion = useMemo(() => {
+    return formik.values.photos?.filter(photo => photo.id && photo.id > 0 && (photo as any)._destroy) || [];
+  }, [formik.values.photos]);
+
+  // Получаем активные (не помеченные для удаления) существующие фотографии
+  const activeExistingPhotos = useMemo(() => {
     return formik.values.photos?.filter(photo => !photo._destroy && photo.id && photo.id > 0) || [];
   }, [formik.values.photos]);
 
@@ -81,8 +92,8 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
     }
   }, []); // Выполняется только при монтировании
 
-  // Общее количество фотографий
-  const totalPhotosCount = existingPhotos.length + newPhotos.length;
+  // Общее количество фотографий (только активные, не помеченные для удаления)
+  const totalPhotosCount = activeExistingPhotos.length + newPhotos.length;
 
   // Обработчик загрузки новых фотографий
   const handlePhotoUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,16 +140,31 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
 
   // Обработчик удаления существующей фотографии
   const handleDeleteExistingPhoto = useCallback((photoIndex: number) => {
+    console.log('=== Удаление существующей фотографии ===');
+    console.log('photoIndex:', photoIndex);
+    
     const updatedPhotos = [...(formik.values.photos || [])];
     const photoToDelete = updatedPhotos[photoIndex];
     
+    console.log('Фотография для удаления:', {
+      id: photoToDelete.id,
+      url: photoToDelete.url,
+      description: photoToDelete.description,
+      isMain: photoToDelete.is_main
+    });
+    
     // Если фотография имеет ID (существует в БД), помечаем для удаления
     if (photoToDelete.id) {
+      console.log('Помечаем существующую фотографию для удаления (ID > 0)');
       updatedPhotos[photoIndex] = { ...photoToDelete, _destroy: true };
     } else {
+      console.log('Удаляем новую фотографию из массива (ID = 0)');
       // Удаляем из массива если это новая фотография без ID
       updatedPhotos.splice(photoIndex, 1);
     }
+    
+    console.log('Обновленный массив фотографий:', updatedPhotos.length);
+    console.log('Фотографии помеченные для удаления:', updatedPhotos.filter(p => (p as any)._destroy).length);
     
     formik.setFieldValue('photos', updatedPhotos);
   }, [formik]);
@@ -153,6 +179,22 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       return prev.filter(p => p.tempId !== tempId);
     });
   }, []);
+
+  // Обработчик отмены удаления фотографии
+  const handleCancelDeletePhoto = useCallback((photoIndex: number) => {
+    console.log('=== Отмена удаления фотографии ===');
+    console.log('photoIndex:', photoIndex);
+    
+    const updatedPhotos = [...(formik.values.photos || [])];
+    const photo = updatedPhotos[photoIndex];
+    
+    if (photo && (photo as any)._destroy) {
+      console.log('Отменяем удаление фотографии с ID:', photo.id);
+      // Убираем флаг _destroy
+      updatedPhotos[photoIndex] = { ...photo, _destroy: false };
+      formik.setFieldValue('photos', updatedPhotos);
+    }
+  }, [formik]);
 
   // Обработчик установки главной фотографии среди существующих
   const handleSetMainExistingPhoto = useCallback((photoIndex: number) => {
@@ -244,12 +286,12 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
     formik.setFieldValue('photos', allPhotos);
   }, [newPhotos]); // Убираем formik из зависимостей чтобы избежать бесконечного цикла
 
-  // Проверка имеет ли точка главную фотографию
+  // Проверка имеет ли точка главную фотографию (только среди активных)
   const hasMainPhoto = useMemo(() => {
-    const existingMain = existingPhotos.some(photo => photo.is_main);
+    const existingMain = activeExistingPhotos.some(photo => photo.is_main);
     const newMain = newPhotos.some(photo => photo.is_main);
     return existingMain || newMain;
-  }, [existingPhotos, newPhotos]);
+  }, [activeExistingPhotos, newPhotos]);
 
   // Очистка URL preview при размонтировании
   React.useEffect(() => {
@@ -353,97 +395,110 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           </Typography>
           <Grid container spacing={3}>
             {/* Существующие фотографии */}
-            {existingPhotos.map((photo, index) => (
-              <Grid item xs={12} sm={6} md={4} key={`existing-${photo.id || index}`}>
-                <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <Box sx={{ position: 'relative' }}>
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={photo.url}
-                      alt={photo.description || 'Фотография сервисной точки'}
-                      sx={{ objectFit: 'cover' }}
-                    />
-                    
-                    {/* Индикатор главной фотографии */}
-                    {photo.is_main && (
-                      <Chip
-                        icon={<StarIcon />}
-                        label="Главная"
-                        color="primary"
-                        size="small"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          left: 8,
+            {existingPhotos.map((photo, index) => {
+              const isMarkedForDeletion = (photo as any)._destroy;
+              return (
+                <Grid item xs={12} sm={6} md={4} key={`existing-${photo.id || index}`}>
+                  <Card sx={{ 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    opacity: isMarkedForDeletion ? 0.6 : 1,
+                    border: isMarkedForDeletion ? '2px dashed #f44336' : 'none'
+                  }}>
+                    <Box sx={{ position: 'relative' }}>
+                      <CardMedia
+                        component="img"
+                        height="200"
+                        image={photo.url}
+                        alt={photo.description || 'Фотография сервисной точки'}
+                        sx={{ 
+                          objectFit: 'cover',
+                          filter: isMarkedForDeletion ? 'grayscale(100%)' : 'none'
                         }}
                       />
-                    )}
-                    
-                    {/* Индикатор существующей фотографии */}
-                    <Chip
-                      label="Загружена"
-                      color="success"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 48,
-                      }}
-                    />
-                    
-                    {/* Кнопка удаления */}
-                    <Tooltip title="Удалить фотографию">
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteExistingPhoto(index)}
+                      
+                      {/* Индикатор главной фотографии */}
+                      {photo.is_main && !isMarkedForDeletion && (
+                        <Chip
+                          icon={<StarIcon />}
+                          label="Главная"
+                          color="primary"
+                          size="small"
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                          }}
+                        />
+                      )}
+                      
+                      {/* Индикатор статуса фотографии */}
+                      <Chip
+                        label={isMarkedForDeletion ? "Будет удалена" : "Загружена"}
+                        color={isMarkedForDeletion ? "error" : "success"}
+                        size="small"
                         sx={{
                           position: 'absolute',
                           top: 8,
-                          right: 8,
-                          bgcolor: 'rgba(255, 255, 255, 0.9)',
-                          '&:hover': {
-                            bgcolor: 'rgba(255, 255, 255, 1)',
-                          },
+                          right: 48,
                         }}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                  
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <TextField
-                      fullWidth
-                      label="Описание фотографии"
-                      value={photo.description || ''}
-                      onChange={(e) => handleUpdateExistingPhotoDescription(index, e.target.value)}
-                      multiline
-                      rows={2}
-                      size="small"
-                      placeholder="Краткое описание фотографии"
-                    />
-                  </CardContent>
-                  
-                  <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
-                    <Button
-                      startIcon={photo.is_main ? <StarIcon /> : <StarBorderIcon />}
-                      onClick={() => handleSetMainExistingPhoto(index)}
-                      color={photo.is_main ? 'primary' : 'inherit'}
-                      size="small"
-                      disabled={photo.is_main}
-                    >
-                      {photo.is_main ? 'Главная' : 'Сделать главной'}
-                    </Button>
+                      />
+                      
+                      {/* Кнопка удаления или восстановления */}
+                      <Tooltip title={isMarkedForDeletion ? "Отменить удаление" : "Удалить фотографию"}>
+                        <IconButton
+                          color={isMarkedForDeletion ? "primary" : "error"}
+                          onClick={() => isMarkedForDeletion ? handleCancelDeletePhoto(index) : handleDeleteExistingPhoto(index)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            '&:hover': {
+                              bgcolor: 'rgba(255, 255, 255, 1)',
+                            },
+                          }}
+                          size="small"
+                        >
+                          {isMarkedForDeletion ? <RestoreIcon /> : <DeleteIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                     
-                    <Typography variant="caption" color="text.secondary">
-                      #{photo.sort_order || index + 1}
-                    </Typography>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <TextField
+                        fullWidth
+                        label="Описание фотографии"
+                        value={photo.description || ''}
+                        onChange={(e) => handleUpdateExistingPhotoDescription(index, e.target.value)}
+                        multiline
+                        rows={2}
+                        size="small"
+                        placeholder="Краткое описание фотографии"
+                        disabled={isMarkedForDeletion}
+                      />
+                    </CardContent>
+                    
+                    <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                      <Button
+                        startIcon={photo.is_main ? <StarIcon /> : <StarBorderIcon />}
+                        onClick={() => handleSetMainExistingPhoto(index)}
+                        color={photo.is_main ? 'primary' : 'inherit'}
+                        size="small"
+                        disabled={photo.is_main || isMarkedForDeletion}
+                      >
+                        {photo.is_main ? 'Главная' : 'Сделать главной'}
+                      </Button>
+                      
+                      <Typography variant="caption" color="text.secondary">
+                        #{photo.sort_order || index + 1}
+                      </Typography>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              );
+            })}
 
             {/* Новые фотографии */}
             {newPhotos.map((photo) => (

@@ -42,6 +42,7 @@ import {
   useUploadServicePointPhotoMutation,
   useUploadServicePointPhotoV2Mutation,
 } from '../../api/servicePoints.api';
+import { useDeleteServicePointPhotoMutation } from '../../api/service-point-photos.api';
 
 // Типы
 import type { ServicePointFormDataNew, ServicePoint } from '../../types/models';
@@ -137,6 +138,7 @@ const ServicePointFormPageNew: React.FC = () => {
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
   const [uploadServicePointPhoto] = useUploadServicePointPhotoMutation();
   const [uploadServicePointPhotoV2] = useUploadServicePointPhotoV2Mutation();
+  const [deleteServicePointPhoto] = useDeleteServicePointPhotoMutation();
 
   // Функция для прямой загрузки фотографий через fetch API
   const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false) => {
@@ -237,7 +239,7 @@ const ServicePointFormPageNew: React.FC = () => {
     work_status: servicePoint?.work_status || 'working',
     working_hours: normalizedWorkingHours,
     services: servicePoint?.services || [],
-    photos: servicePoint?.photos || [],
+    photos: (servicePoint.photos || []).filter(photo => !(photo as any)._destroy),
     service_posts: servicePoint?.service_posts || [],
   }), [servicePoint, partnerId, normalizedWorkingHours]); // Правильные зависимости
 
@@ -337,7 +339,35 @@ const ServicePointFormPageNew: React.FC = () => {
             servicePoint: updateData
           }).unwrap();
           
-          // После успешного обновления основных данных загружаем новые фотографии
+          // После успешного обновления основных данных обрабатываем фотографии
+          
+          // 1. Сначала удаляем фотографии помеченные для удаления
+          const photosToDelete = formik.values.photos?.filter(photo => 
+            photo.id && photo.id > 0 && (photo as any)._destroy
+          ) || [];
+          
+          console.log('=== Проверка фотографий для удаления ===');
+          console.log('Фотографии для удаления:', photosToDelete.length);
+          
+          if (photosToDelete.length > 0) {
+            console.log('Удаляем фотографии:', photosToDelete.length);
+            for (const photo of photosToDelete) {
+              try {
+                console.log('Удаляем фотографию с ID:', photo.id);
+                await deleteServicePointPhoto({
+                  servicePointId: String(id),
+                  photoId: String(photo.id)
+                }).unwrap();
+                console.log('Фотография удалена успешно:', photo.id);
+              } catch (deleteError) {
+                console.error('Ошибка удаления фотографии:', photo.id, deleteError);
+              }
+            }
+          } else {
+            console.log('Нет фотографий для удаления');
+          }
+          
+          // 2. Затем загружаем новые фотографии
           const newPhotosToUpload = formik.values.photos?.filter(photo => 
             photo.id === 0 && (photo as any).file
           ) || [];
@@ -494,6 +524,24 @@ const ServicePointFormPageNew: React.FC = () => {
       console.log('=== Инициализация формы данными с сервера ===');
       console.log('servicePoint данные:', servicePoint);
       
+      // Отладочная информация о фотографиях
+      const allPhotos = servicePoint.photos || [];
+      const photosToDelete = allPhotos.filter(photo => (photo as any)._destroy);
+      const activePhotos = allPhotos.filter(photo => !(photo as any)._destroy);
+      
+      console.log('=== Анализ фотографий при инициализации ===');
+      console.log('Всего фотографий с сервера:', allPhotos.length);
+      console.log('Фотографии помеченные для удаления:', photosToDelete.length);
+      console.log('Активные фотографии:', activePhotos.length);
+      
+      if (photosToDelete.length > 0) {
+        console.log('Фотографии помеченные для удаления:', photosToDelete.map(p => ({
+          id: p.id,
+          url: p.url,
+          _destroy: (p as any)._destroy
+        })));
+      }
+      
       // Обновляем все поля формы
       formik.setValues({
         name: servicePoint.name || '',
@@ -509,7 +557,7 @@ const ServicePointFormPageNew: React.FC = () => {
         work_status: servicePoint.work_status || 'working',
         working_hours: normalizedWorkingHours,
         services: servicePoint.services || [],
-        photos: servicePoint.photos || [],
+        photos: (servicePoint.photos || []).filter(photo => !(photo as any)._destroy),
         service_posts: servicePoint.service_posts || [],
       });
     }
