@@ -74,9 +74,12 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
     setSelectedRegionId(regionId);
     formik.setFieldValue('city_id', 0); // Сбрасываем город при смене региона
     
-    // Принудительно обновляем список городов
+    // Принудительно обновляем список городов только если запрос активен
+    // Проверяем что regionId > 0 и запрос не пропущен (skip: false)
     if (regionId > 0) {
-      refetchCities();
+      // Не вызываем refetch сразу, позволим RTK Query автоматически
+      // перезапустить запрос при изменении regionIdForCities
+      console.log('Регион изменен на:', regionId, 'Города будут загружены автоматически');
     }
   };
 
