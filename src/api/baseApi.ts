@@ -38,10 +38,23 @@ export const baseApi = createApi({
       // При cookie-based аутентификации:
       // - Access токен передается в заголовке Authorization (из Redux state)
       // - Refresh токен автоматически передается через HttpOnly cookies
-      const token = (getState() as any).auth?.accessToken;
+      const state = getState() as any;
+      const token = state.auth?.accessToken;
+      const isInitialized = state.auth?.isInitialized;
       
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
+      } else {
+        // Если токен отсутствует, но есть пользователь в localStorage,
+        // возможно нужно восстановить сессию
+        const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
+        if (hasStoredUser && isInitialized) {
+          console.warn('BaseAPI: Токен отсутствует, но пользователь есть в localStorage. Возможно нужен refresh.');
+        } else if (!isInitialized) {
+          console.log('BaseAPI: Аутентификация еще не инициализирована');
+        } else {
+          console.warn('BaseAPI: Токен отсутствует в Redux state');
+        }
       }
       
       // Устанавливаем Content-Type для JSON запросов

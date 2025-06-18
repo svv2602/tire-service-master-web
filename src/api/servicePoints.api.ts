@@ -126,23 +126,28 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Обновление сервисной точки
-    updateServicePoint: builder.mutation<ServicePoint, { id: string; servicePoint: FormData | any }>({
-      query: ({ id, servicePoint }) => {
+    updateServicePoint: builder.mutation<ServicePoint, { id: string; partnerId?: string | number; servicePoint: FormData | any }>({
+      query: ({ id, partnerId, servicePoint }) => {
         // Извлекаем partner_id из FormData или объекта
-        let partnerId;
+        let finalPartnerId = partnerId;
         if (servicePoint instanceof FormData) {
           // Для FormData partner_id теперь в основных полях
-          partnerId = servicePoint.get('service_point[partner_id]');
-          console.log('partner_id from FormData:', partnerId);
+          const formPartnerId = servicePoint.get('service_point[partner_id]');
+          finalPartnerId = finalPartnerId || (formPartnerId ? String(formPartnerId) : undefined);
+          console.log('partner_id from FormData:', finalPartnerId);
           
           return {
-            url: `/partners/${partnerId}/service_points/${id}`,
+            url: `/partners/${finalPartnerId}/service_points/${id}`,
             method: 'PATCH',
             body: servicePoint,
           };
         } else {
+          finalPartnerId = finalPartnerId || servicePoint.partner_id;
+          const url = `/partners/${finalPartnerId}/service_points/${id}`;
+          console.log('updateServicePoint URL:', url);
+          console.log('updateServicePoint body:', { service_point: servicePoint });
           return {
-            url: `/partners/${servicePoint.partner_id}/service_points/${id}`,
+            url,
             method: 'PATCH',
             body: { service_point: servicePoint },
           };
@@ -172,20 +177,75 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Добавление фотографии
     uploadServicePointPhoto: builder.mutation<void, { id: string; file: File; is_main?: boolean }>({
       query: ({ id, file, is_main }) => {
+        console.log('=== uploadServicePointPhoto query start ===');
+        console.log('Received id:', id);
+        console.log('Type of id:', typeof id);
+        console.log('id === undefined:', id === undefined);
+        console.log('id === null:', id === null);
+        console.log('id === "":', id === '');
+        console.log('String(id):', String(id));
+        
+        if (!id || id === 'undefined' || id === 'null') {
+          console.error('КРИТИЧЕСКАЯ ОШИБКА: Некорректный ID для загрузки фотографии:', id);
+          throw new Error(`Некорректный ID для загрузки фотографии: ${id}`);
+        }
+        
         const formData = new FormData();
         formData.append('photo', file);
         if (is_main !== undefined) {
           formData.append('is_main', is_main.toString());
         }
+        
+        // Строим URL более явно
+        const servicePointId = String(id);
+        const url = `service_points/${servicePointId}/photos`;
+        console.log('servicePointId after String():', servicePointId);
+        console.log('uploadServicePointPhoto final URL:', url);
+        console.log('=== uploadServicePointPhoto query end ===');
+        
         return {
-          url: `/service_points/${id}/upload_photo`,
-          method: 'POST',
+          url: url,
+          method: 'POST' as const,
           body: formData,
         };
       },
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'ServicePoint' as const, id },
         { type: 'ServicePointPhoto' as const, id: `LIST_${id}` }
+      ],
+    }),
+
+    // Добавление фотографии (версия 2 для тестирования)
+    uploadServicePointPhotoV2: builder.mutation<void, { servicePointId: string; file: File; is_main?: boolean }>({
+      query: ({ servicePointId, file, is_main }) => {
+        console.log('=== uploadServicePointPhotoV2 query start ===');
+        console.log('Received servicePointId:', servicePointId);
+        console.log('Type of servicePointId:', typeof servicePointId);
+        
+        if (!servicePointId || servicePointId === 'undefined' || servicePointId === 'null') {
+          console.error('КРИТИЧЕСКАЯ ОШИБКА V2: Некорректный ID для загрузки фотографии:', servicePointId);
+          throw new Error(`Некорректный ID для загрузки фотографии: ${servicePointId}`);
+        }
+        
+        const formData = new FormData();
+        formData.append('photo', file);
+        if (is_main !== undefined) {
+          formData.append('is_main', is_main.toString());
+        }
+        
+        const url = `service_points/${servicePointId}/photos`;
+        console.log('uploadServicePointPhotoV2 final URL:', url);
+        console.log('=== uploadServicePointPhotoV2 query end ===');
+        
+        return {
+          url: url,
+          method: 'POST' as const,
+          body: formData,
+        };
+      },
+      invalidatesTags: (_result, _error, { servicePointId }) => [
+        { type: 'ServicePoint' as const, id: servicePointId },
+        { type: 'ServicePointPhoto' as const, id: `LIST_${servicePointId}` }
       ],
     }),
 
@@ -315,6 +375,7 @@ export const {
   useUpdateServicePointMutation,
   useDeleteServicePointMutation,
   useUploadServicePointPhotoMutation,
+  useUploadServicePointPhotoV2Mutation,
   useGetServicePointStatusesQuery,
   useGetWorkStatusesQuery,
   useGetServicePostsQuery,

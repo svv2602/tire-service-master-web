@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -59,6 +59,27 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
   const existingPhotos = useMemo(() => {
     return formik.values.photos?.filter(photo => !photo._destroy && photo.id && photo.id > 0) || [];
   }, [formik.values.photos]);
+
+  // Восстанавливаем локальное состояние newPhotos из данных formik при монтировании
+  useEffect(() => {
+    const temporaryPhotos = formik.values.photos?.filter(photo => 
+      photo.id === 0 && (photo as any).file
+    ) || [];
+    
+    if (temporaryPhotos.length > 0) {
+      const restoredNewPhotos: NewPhotoData[] = temporaryPhotos.map((photo, index) => ({
+        tempId: `restored-${Date.now()}-${index}`,
+        file: (photo as any).file,
+        preview: photo.url,
+        description: photo.description || '',
+        is_main: photo.is_main,
+        sort_order: photo.sort_order || 0,
+      }));
+      
+      setNewPhotos(restoredNewPhotos);
+      console.log('Восстановлено новых фотографий:', restoredNewPhotos.length);
+    }
+  }, []); // Выполняется только при монтировании
 
   // Общее количество фотографий
   const totalPhotosCount = existingPhotos.length + newPhotos.length;

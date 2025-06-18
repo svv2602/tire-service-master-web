@@ -19,6 +19,7 @@ import { ArrowBack as ArrowBackIcon, Save as SaveIcon, CheckCircle as CheckCircl
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useSelector } from 'react-redux';
 
 // Импорты стилей
 import { SIZES, getButtonStyles, getCardStyles } from '../../styles';
@@ -38,6 +39,8 @@ import {
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,
+  useUploadServicePointPhotoMutation,
+  useUploadServicePointPhotoV2Mutation,
 } from '../../api/servicePoints.api';
 
 // Типы
@@ -96,6 +99,15 @@ const ServicePointFormPageNew: React.FC = () => {
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   
+  // Получаем токен из Redux state
+  const authToken = useSelector((state: any) => state.auth?.accessToken);
+  
+  // Отладочная информация для проверки параметров URL
+  console.log('=== URL параметры ===');
+  console.log('partnerId:', partnerId);
+  console.log('id:', id);
+  console.log('isEditMode:', isEditMode);
+  
   // Хуки для темы и адаптивности
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px - Мобильные устройства
@@ -107,12 +119,14 @@ const ServicePointFormPageNew: React.FC = () => {
   
   // Состояние
   const [activeStep, setActiveStep] = useState(0);
+  
+  // Состояние для уведомлений и UI
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+  
   // Ref для контейнера чипов степпера
   const chipContainerRef = useRef<HTMLDivElement>(null);
-
+  
   // API хуки
   const { data: servicePoint, isLoading } = useGetServicePointByIdQuery(
     { partner_id: Number(partnerId) || 0, id: id ?? '' },
@@ -121,6 +135,54 @@ const ServicePointFormPageNew: React.FC = () => {
   
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
   const [updateServicePoint, { isLoading: isUpdating }] = useUpdateServicePointMutation();
+  const [uploadServicePointPhoto] = useUploadServicePointPhotoMutation();
+  const [uploadServicePointPhotoV2] = useUploadServicePointPhotoV2Mutation();
+
+  // Функция для прямой загрузки фотографий через fetch API
+  const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false) => {
+    const formData = new FormData();
+    // Исправляем: бэкенд ожидает поле 'file', а не 'photo'
+    formData.append('file', file);
+    formData.append('is_main', isMain.toString());
+    
+    if (!authToken) {
+      throw new Error('Токен авторизации не найден');
+    }
+    
+    const url = `http://localhost:8000/api/v1/service_points/${servicePointId}/photos`;
+    console.log('=== Прямая загрузка фотографии ===');
+    console.log('URL:', url);
+    console.log('servicePointId:', servicePointId);
+    console.log('file:', file);
+    console.log('file.name:', file.name);
+    console.log('file.size:', file.size);
+    console.log('file.type:', file.type);
+    console.log('isMain:', isMain);
+    console.log('FormData содержимое:');
+    // Исправляем итерацию для совместимости с TypeScript
+    Array.from(formData.entries()).forEach(([key, value]) => {
+      console.log('  ', key, ':', value);
+    });
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+      },
+      body: formData,
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Ошибка загрузки фотографии:', response.status, errorData);
+      throw new Error(`Ошибка загрузки фотографии: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('Фотография загружена успешно:', result);
+    return result;
+  };
 
   // Проверяем корректность данных
   useEffect(() => {
@@ -263,130 +325,88 @@ const ServicePointFormPageNew: React.FC = () => {
           });
         });
 
-        // Создаем FormData для отправки файлов
-        const formData = new FormData();
-        
-        // Добавляем основные поля напрямую в FormData (не как JSON)
-        formData.append('service_point[name]', servicePointData.name);
-        formData.append('service_point[description]', servicePointData.description || '');
-        formData.append('service_point[address]', servicePointData.address);
-        formData.append('service_point[city_id]', servicePointData.city_id.toString());
-        formData.append('service_point[partner_id]', servicePointData.partner_id.toString());
-        formData.append('service_point[contact_phone]', servicePointData.contact_phone);
-        formData.append('service_point[is_active]', servicePointData.is_active.toString());
-        formData.append('service_point[work_status]', servicePointData.work_status);
-        
-        if (servicePointData.latitude) {
-          formData.append('service_point[latitude]', servicePointData.latitude.toString());
-        }
-        if (servicePointData.longitude) {
-          formData.append('service_point[longitude]', servicePointData.longitude.toString());
-        }
-        
-        // Добавляем расписание работы
-        Object.entries(servicePointData.working_hours).forEach(([day, hours]) => {
-          const workingHours = hours as WorkingHours;
-          formData.append(`service_point[working_hours][${day}][start]`, workingHours.start);
-          formData.append(`service_point[working_hours][${day}][end]`, workingHours.end);
-          formData.append(`service_point[working_hours][${day}][is_working_day]`, workingHours.is_working_day.toString());
-        });
-        
-        // Добавляем посты обслуживания
-        servicePointData.service_posts_attributes.forEach((post: any, index: number) => {
-          formData.append(`service_point[service_posts_attributes][${index}][name]`, post.name);
-          formData.append(`service_point[service_posts_attributes][${index}][description]`, post.description || '');
-          formData.append(`service_point[service_posts_attributes][${index}][slot_duration]`, post.slot_duration.toString());
-          formData.append(`service_point[service_posts_attributes][${index}][is_active]`, post.is_active.toString());
-          formData.append(`service_point[service_posts_attributes][${index}][post_number]`, post.post_number.toString());
-          formData.append(`service_point[service_posts_attributes][${index}][_destroy]`, post._destroy.toString());
-          
-          // Добавляем поля индивидуального расписания
-          formData.append(`service_point[service_posts_attributes][${index}][has_custom_schedule]`, (post.has_custom_schedule || false).toString());
-          
-          // Отправляем working_days и custom_hours только если включено индивидуальное расписание
-          if (post.has_custom_schedule && post.working_days) {
-            // Проверяем что есть хотя бы один рабочий день
-            const hasWorkingDays = Object.values(post.working_days).some((isWorking: any) => isWorking === true);
-            
-            if (hasWorkingDays) {
-              Object.entries(post.working_days).forEach(([day, isWorking]) => {
-                formData.append(`service_point[service_posts_attributes][${index}][working_days][${day}]`, (isWorking as boolean).toString());
-              });
-            } else {
-              // Если нет рабочих дней, отключаем индивидуальное расписание
-              formData.set(`service_point[service_posts_attributes][${index}][has_custom_schedule]`, 'false');
-              console.warn(`Пост ${post.name}: отключено индивидуальное расписание из-за отсутствия рабочих дней`);
-            }
-          }
-          
-          if (post.has_custom_schedule && post.custom_hours) {
-            formData.append(`service_point[service_posts_attributes][${index}][custom_hours][start]`, post.custom_hours.start);
-            formData.append(`service_point[service_posts_attributes][${index}][custom_hours][end]`, post.custom_hours.end);
-          }
-          
-          if (post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000) {
-            formData.append(`service_point[service_posts_attributes][${index}][id]`, post.id.toString());
-          }
-        });
-
-        // Добавляем существующие услуги в FormData
-        if (values.services && values.services.length > 0) {
-          values.services.forEach((service, index) => {
-            formData.append(`service_point[services_attributes][${index}][service_id]`, service.service_id.toString());
-            formData.append(`service_point[services_attributes][${index}][price]`, service.price.toString());
-            formData.append(`service_point[services_attributes][${index}][duration]`, service.duration.toString());
-            formData.append(`service_point[services_attributes][${index}][is_available]`, service.is_available.toString());
-            formData.append(`service_point[services_attributes][${index}][_destroy]`, (service._destroy || false).toString());
-            
-            if (service.id && typeof service.id === 'number' && service.id > 0) {
-              formData.append(`service_point[services_attributes][${index}][id]`, service.id.toString());
-            }
-          });
-        }
-
-        // Добавляем фотографии в FormData
-        if (values.photos && values.photos.length > 0) {
-          values.photos.forEach((photo, index) => {
-            // Если фотография имеет реальный ID (существует в БД), добавляем его
-            if (photo.id && typeof photo.id === 'number' && photo.id > 0) {
-              formData.append(`service_point[photos_attributes][${index}][id]`, photo.id.toString());
-              formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
-              formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
-              formData.append(`service_point[photos_attributes][${index}][sort_order]`, (photo.sort_order || 0).toString());
-              formData.append(`service_point[photos_attributes][${index}][_destroy]`, ((photo as any)._destroy || false).toString());
-            } else if ((photo as any).file && (photo as any).file instanceof File) {
-              // Для новых фотографий отправляем файл и метаданные
-              formData.append(`service_point[photos_attributes][${index}][file]`, (photo as any).file);
-              formData.append(`service_point[photos_attributes][${index}][description]`, photo.description || '');
-              formData.append(`service_point[photos_attributes][${index}][is_main]`, photo.is_main.toString());
-              formData.append(`service_point[photos_attributes][${index}][sort_order]`, (photo.sort_order || 0).toString());
-            }
-          });
-        }
-
-        // Отладочная информация
-        console.log('=== Отправляемые данные ===');
-        console.log('servicePointData object:', servicePointData);
-        console.log('FormData содержимое:');
-        // Используем более совместимый способ итерации FormData
-        const entries: string[] = [];
-        formData.forEach((value, key) => {
-          entries.push(`${key}: ${value instanceof File ? `[File: ${value.name}]` : value}`);
-        });
-        console.log(entries.join('\n'));
-
         if (isEditMode && id) {
-          // Для обновления используем JSON вместо FormData, чтобы избежать проблем с парсингом
+          // Для обновления всегда используем JSON, не отправляем фотографии в основном запросе
+          const { photos_attributes, ...updateData } = servicePointData;
+          
+          console.log('Отправляемые данные для обновления:', JSON.stringify({ servicePoint: updateData }, null, 2));
+          
           await updateServicePoint({
             id,
-            servicePoint: servicePointData
+            partnerId: String(updateData.partner_id),
+            servicePoint: updateData
           }).unwrap();
+          
+          // После успешного обновления основных данных загружаем новые фотографии
+          const newPhotosToUpload = formik.values.photos?.filter(photo => 
+            photo.id === 0 && (photo as any).file
+          ) || [];
+          
+          if (newPhotosToUpload.length > 0) {
+            console.log('Загружаем новые фотографии:', newPhotosToUpload.length);
+            console.log('ID для загрузки фотографий:', id);
+            console.log('Тип ID:', typeof id);
+            
+            if (!id) {
+              console.error('ОШИБКА: ID не определен для загрузки фотографий');
+              throw new Error('ID сервисной точки не определен для загрузки фотографий');
+            }
+            
+            for (const photo of newPhotosToUpload) {
+              try {
+                console.log('=== Перед вызовом uploadServicePointPhoto ===');
+                console.log('id parameter:', id);
+                console.log('typeof id:', typeof id);
+                console.log('String(id):', String(id));
+                console.log('photo.file:', (photo as any).file);
+                console.log('photo.is_main:', photo.is_main);
+                
+                // Попробуем прямую загрузку через fetch API
+                await uploadPhotoDirectly(String(id), (photo as any).file, photo.is_main);
+                console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
+              } catch (photoError) {
+                console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
+              }
+            }
+          }
+          
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
-          await createServicePoint({
-            partnerId: partnerId || '1', // fallback на партнера с ID 1
-            servicePoint: formData
+          // Для создания используем JSON без фотографий, фотографии загрузим отдельно
+          const { photos_attributes, ...createData } = servicePointData;
+          
+          console.log('Отправляемые данные для создания:', JSON.stringify({ servicePoint: createData }, null, 2));
+          
+          const result = await createServicePoint({
+            partnerId: partnerId || '1',
+            servicePoint: createData
           }).unwrap();
+          
+          // После успешного создания загружаем фотографии
+          const newPhotosToUpload = formik.values.photos?.filter(photo => 
+            photo.id === 0 && (photo as any).file
+          ) || [];
+          
+          if (newPhotosToUpload.length > 0 && result?.id) {
+            console.log('Загружаем фотографии для новой точки:', newPhotosToUpload.length);
+            for (const photo of newPhotosToUpload) {
+              try {
+                console.log('=== Перед вызовом uploadServicePointPhoto ===');
+                console.log('id parameter:', result.id);
+                console.log('typeof id:', typeof result.id);
+                console.log('String(id):', String(result.id));
+                console.log('photo.file:', (photo as any).file);
+                console.log('photo.is_main:', photo.is_main);
+                
+                // Попробуем прямую загрузку через fetch API
+                await uploadPhotoDirectly(String(result.id), (photo as any).file, photo.is_main);
+                console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
+              } catch (photoError) {
+                console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
+              }
+            }
+          }
+          
           setSuccessMessage('Точка обслуживания успешно создана');
         }
 

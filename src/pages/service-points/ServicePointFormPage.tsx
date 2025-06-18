@@ -157,6 +157,9 @@ const ServicePointFormPage: React.FC = () => {
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  
+  // Добавляем состояние для предпросмотра фотографий
+  const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([]);
 
   // Получаем стили из централизованной системы для консистентного дизайна
   const cardStyles = getCardStyles(theme, 'primary');
@@ -290,7 +293,7 @@ const ServicePointFormPage: React.FC = () => {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      // Создаем объект данных вместо FormData
+      // Всегда используем JSON для основных данных, фотографии загружаем отдельно
       const servicePointData = {
         name: values.name,
         description: values.description,
@@ -312,40 +315,35 @@ const ServicePointFormPage: React.FC = () => {
           _destroy: service._destroy || false
         })),
         service_posts_attributes: values.service_posts.map(post => ({
-          id: post.id && post.id < 1000000000000 ? post.id : undefined, // Если ID меньше временного ID (Date.now()), то это реальный ID
+          id: post.id && post.id < 1000000000000 ? post.id : undefined,
           name: post.name,
           description: post.description,
           slot_duration: post.slot_duration,
           is_active: post.is_active,
           post_number: post.post_number,
-          _destroy: post._destroy || false // Добавляем поле _destroy
+          _destroy: post._destroy || false
         }))
       };
 
       console.log('Отправляемые данные:', JSON.stringify({ servicePoint: servicePointData }, null, 2));
-      console.log('Values.working_hours:', values.working_hours);
-      console.log('Working hours в servicePointData:', servicePointData.working_hours);
-      console.log('Values.service_posts:', values.service_posts);
-      console.log('PhotoUploads для загрузки:', photoUploads);
 
       let servicePointResult: ServicePoint;
-
-        if (isEditMode && id) {
+      
+      if (isEditMode && id) {
         servicePointResult = await updateServicePoint({
-            id,
+          id,
           servicePoint: servicePointData
-          }).unwrap();
-        
-          setSuccessMessage('Точка обслуживания успешно обновлена');
-        } else {
+        }).unwrap();
+        setSuccessMessage('Точка обслуживания успешно обновлена');
+      } else {
         servicePointResult = await createServicePoint({
           partnerId: partnerId || values.partner_id.toString(),
           servicePoint: servicePointData
         }).unwrap();
-          setSuccessMessage('Точка обслуживания успешно создана');
+        setSuccessMessage('Точка обслуживания успешно создана');
       }
 
-      // Загружаем фотографии после успешного сохранения точки обслуживания
+      // Загружаем фотографии после успешного сохранения основных данных
       if (photoUploads.length > 0) {
         console.log('Начинаем загрузку фотографий...');
         try {
@@ -367,7 +365,7 @@ const ServicePointFormPage: React.FC = () => {
         }
       }
 
-          setTimeout(() => {
+      setTimeout(() => {
         navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
       }, 1000);
     } catch (error: any) {
@@ -505,9 +503,6 @@ const ServicePointFormPage: React.FC = () => {
   const handleBack = useCallback(() => {
     navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
   }, [navigate, partnerId]);
-
-  // Добавляем состояние для предпросмотра фотографий
-  const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([]);
 
   // Обработчик загрузки фотографий
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
