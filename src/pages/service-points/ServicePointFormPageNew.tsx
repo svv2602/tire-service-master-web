@@ -239,7 +239,7 @@ const ServicePointFormPageNew: React.FC = () => {
     work_status: servicePoint?.work_status || 'working',
     working_hours: normalizedWorkingHours,
     services: servicePoint?.services || [],
-    photos: (servicePoint.photos || []).filter(photo => !(photo as any)._destroy),
+    photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
     service_posts: servicePoint?.service_posts || [],
   }), [servicePoint, partnerId, normalizedWorkingHours]); // Правильные зависимости
 
@@ -248,8 +248,8 @@ const ServicePointFormPageNew: React.FC = () => {
     if (servicePoint && isEditMode) {
       console.log('=== Загруженные данные сервисной точки ===');
       console.log('servicePoint:', servicePoint);
-      console.log('service_posts:', servicePoint.service_posts);
-      if (servicePoint.service_posts) {
+      console.log('service_posts:', servicePoint?.service_posts);
+      if (servicePoint?.service_posts) {
         servicePoint.service_posts.forEach((post, index) => {
           console.log(`Post ${index + 1}:`, {
             id: post.id,
@@ -525,7 +525,7 @@ const ServicePointFormPageNew: React.FC = () => {
       console.log('servicePoint данные:', servicePoint);
       
       // Отладочная информация о фотографиях
-      const allPhotos = servicePoint.photos || [];
+      const allPhotos = servicePoint?.photos || [];
       const photosToDelete = allPhotos.filter(photo => (photo as any)._destroy);
       const activePhotos = allPhotos.filter(photo => !(photo as any)._destroy);
       
@@ -544,21 +544,21 @@ const ServicePointFormPageNew: React.FC = () => {
       
       // Обновляем все поля формы
       formik.setValues({
-        name: servicePoint.name || '',
-        partner_id: servicePoint.partner_id || (partnerId ? Number(partnerId) : 0),
-        city_id: servicePoint.city?.id || 0,
-        region_id: servicePoint.city?.region_id || 0, // Добавляем region_id
-        address: servicePoint.address || '',
-        contact_phone: servicePoint.contact_phone || '',
-        description: servicePoint.description || '',
-        latitude: servicePoint.latitude || null,
-        longitude: servicePoint.longitude || null,
-        is_active: servicePoint.is_active ?? true,
-        work_status: servicePoint.work_status || 'working',
+        name: servicePoint?.name || '',
+        partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
+        city_id: servicePoint?.city?.id || 0,
+        region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
+        address: servicePoint?.address || '',
+        contact_phone: servicePoint?.contact_phone || '',
+        description: servicePoint?.description || '',
+        latitude: servicePoint?.latitude || null,
+        longitude: servicePoint?.longitude || null,
+        is_active: servicePoint?.is_active ?? true,
+        work_status: servicePoint?.work_status || 'working',
         working_hours: normalizedWorkingHours,
-        services: servicePoint.services || [],
-        photos: (servicePoint.photos || []).filter(photo => !(photo as any)._destroy),
-        service_posts: servicePoint.service_posts || [],
+        services: servicePoint?.services || [],
+        photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
+        service_posts: servicePoint?.service_posts || [],
       });
     }
   }, [servicePoint?.id, isEditMode, normalizedWorkingHours, partnerId]); // Добавляем все нужные зависимости
