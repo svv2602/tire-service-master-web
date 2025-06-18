@@ -38,6 +38,7 @@ const ClientCarsPage: React.FC = () => {
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<ClientCar | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // RTK Query хуки
   const { data: client, isLoading: isLoadingClient } = useGetClientByIdQuery(clientId || '');
@@ -58,8 +59,25 @@ const ClientCarsPage: React.FC = () => {
         await deleteCar({ clientId, carId: selectedCar.id.toString() }).unwrap();
         setDeleteDialogOpen(false);
         setSelectedCar(null);
-      } catch (error) {
-        console.error('Ошибка при удалении автомобиля:', error);
+        setErrorMessage(null); // Clear any previous errors
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении автомобиля';
+        
+        if (error.data?.error) {
+          errorMessage = error.data.error;
+        } else if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setErrorMessage(errorMessage);
+        setDeleteDialogOpen(false);
       }
     }
   };
@@ -90,6 +108,15 @@ const ClientCarsPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
+
       {/* Заголовок */}
       <FlexBox justifyContent="space-between" alignItems="center" my={3}>
         <Typography variant="h4">

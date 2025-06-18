@@ -178,9 +178,10 @@ const PartnersPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
   
-  // Состояние для диалогов
+  // Состояние для диалогов и ошибок
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Debounce для поиска
   const debouncedSearch = useDebounce(search, 300);
@@ -241,8 +242,25 @@ const PartnersPage: React.FC = () => {
         await deletePartner(selectedPartner.id).unwrap();
         setDeleteDialogOpen(false);
         setSelectedPartner(null);
-      } catch (error) {
-        console.error('Ошибка при удалении партнера:', error);
+        setErrorMessage(null); // Clear any previous errors
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении партнера';
+        
+        if (error.data?.error) {
+          errorMessage = error.data.error;
+        } else if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setErrorMessage(errorMessage);
+        setDeleteDialogOpen(false);
       }
     }
   }, [selectedPartner, deletePartner]);
@@ -253,8 +271,24 @@ const PartnersPage: React.FC = () => {
         id: partner.id,
         isActive: !partner.is_active
       }).unwrap();
-    } catch (error) {
-      console.error('Ошибка при изменении статуса:', error);
+      setErrorMessage(null); // Clear any previous errors
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при изменении статуса партнера';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrorMessage(errorMessage);
     }
   }, [togglePartnerActive]);
 
@@ -291,6 +325,15 @@ const PartnersPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
+
       {/* Заголовок и кнопки действий */}
       <Box sx={tablePageStyles.pageHeader}>
         <Typography variant="h4">

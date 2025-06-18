@@ -160,6 +160,7 @@ const ClientsPage: React.FC = () => {
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Дебаунсированный поиск
   const debouncedSearch = useDebounce(search, 300);
@@ -210,8 +211,25 @@ const ClientsPage: React.FC = () => {
         await deleteClient(selectedClient.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedClient(null);
-      } catch (error) {
-        console.error('Ошибка при удалении клиента:', error);
+        setErrorMessage(null); // Clear any previous errors
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при удалении клиента';
+        
+        if (error.data?.error) {
+          errorMessage = error.data.error;
+        } else if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setErrorMessage(errorMessage);
+        setDeleteDialogOpen(false);
       }
     }
   }, [selectedClient, deleteClient]);
@@ -245,8 +263,24 @@ const ClientsPage: React.FC = () => {
         id: client.id.toString(), 
         client: updateData 
       }).unwrap();
-    } catch (error) {
-      console.error('Ошибка при изменении статуса клиента:', error);
+      setErrorMessage(null); // Clear any previous errors
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при изменении статуса клиента';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrorMessage(errorMessage);
     }
   }, [updateClient]);
 
@@ -271,6 +305,15 @@ const ClientsPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
+
       {/* Заголовок */}
       <Box sx={tablePageStyles.pageHeader}>
         <Typography variant="h4" sx={tablePageStyles.pageTitle}>

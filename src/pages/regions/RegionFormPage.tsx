@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   CircularProgress,
   IconButton,
-  Divider,
   Grid,
   useTheme,
 } from '@mui/material';
@@ -29,6 +28,7 @@ import {
   Button,
   Switch,
 } from '../../components/ui';
+import { useSnackbar } from '../../components/ui/Snackbar';
 
 // Импорт централизованных стилей
 import { getFormStyles } from '../../styles/components';
@@ -75,16 +75,8 @@ const RegionFormPage: React.FC = () => {
   // Инициализация централизованных стилей
   const formStyles = getFormStyles(theme);
 
-  // Состояние для уведомлений
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error' | 'info' | 'warning';
-  }>({
-    open: false,
-    message: '',
-    severity: 'info',
-  });
+  // Snackbar для уведомлений
+  const { showSuccess, showError } = useSnackbar();
 
   // RTK Query хуки
   const { data: regionData, isLoading: isLoadingRegion } = useGetRegionByIdQuery(parseInt(id ?? '0'), {
@@ -106,18 +98,10 @@ const RegionFormPage: React.FC = () => {
       try {
         if (isEditMode && id) {
           await updateRegion({ id: parseInt(id), region: values }).unwrap();
-          setNotification({
-            open: true,
-            message: 'Регион успешно обновлен',
-            severity: 'success',
-          });
+          showSuccess('Регион успешно обновлен');
         } else {
           await createRegion(values).unwrap();
-          setNotification({
-            open: true,
-            message: 'Регион успешно создан',
-            severity: 'success',
-          });
+          showSuccess('Регион успешно создан');
         }
         // Возвращаемся к списку после успешного сохранения
         setTimeout(() => navigate('/regions'), 1500);
@@ -145,18 +129,10 @@ const RegionFormPage: React.FC = () => {
           errorMessage = error.message;
         }
         
-        setNotification({
-          open: true,
-          message: errorMessage,
-          severity: 'error',
-        });
+        showError(errorMessage);
       }
     },
   });
-
-  const handleCloseNotification = () => {
-    setNotification(prev => ({ ...prev, open: false }));
-  };
 
   const handleBack = () => {
     navigate('/regions');
@@ -285,30 +261,6 @@ const RegionFormPage: React.FC = () => {
           </Grid>
         )}
       </Grid>
-
-      {/* Уведомления - используем старый Snackbar пока не создадим централизованную систему */}
-      {notification.open && (
-        <Box sx={{
-          position: 'fixed',
-          top: theme.spacing(2),
-          right: theme.spacing(2),
-          zIndex: 9999,
-          padding: theme.spacing(2),
-          backgroundColor: notification.severity === 'error' ? theme.palette.error.main : theme.palette.success.main,
-          color: theme.palette.common.white,
-          borderRadius: theme.shape.borderRadius,
-          minWidth: 300,
-        }}>
-          <Typography>{notification.message}</Typography>
-          <Button 
-            size="small" 
-            onClick={handleCloseNotification}
-            sx={{ color: 'inherit', marginTop: 1 }}
-          >
-            Закрыть
-          </Button>
-        </Box>
-      )}
     </Box>
   );
 };

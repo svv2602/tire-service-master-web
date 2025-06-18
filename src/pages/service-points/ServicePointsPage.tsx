@@ -133,9 +133,10 @@ const ServicePointsPage: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   
-  // Состояние для диалогов
+  // Состояние для диалогов и ошибок
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
@@ -199,11 +200,30 @@ const ServicePointsPage: React.FC = () => {
           partner_id: selectedServicePoint.partner_id,
           id: selectedServicePoint.id
         }).unwrap();
-      } catch (error) {
-        console.error('Ошибка при удалении сервисной точки:', error);
-      } finally {
+        setErrorMessage(null);
         setDeleteDialogOpen(false);
         setSelectedServicePoint(null);
+      } catch (error: any) {
+        console.error('Ошибка при удалении сервисной точки:', error);
+        let errorMsg = 'Произошла ошибка при удалении сервисной точки';
+        
+        // Обрабатываем различные форматы ошибок от API
+        if (error.data?.error) {
+          // Основной формат ошибок с ограничениями
+          errorMsg = error.data.error;
+        } else if (error.data?.message) {
+          // Альтернативный формат
+          errorMsg = error.data.message;
+        } else if (error.data?.errors) {
+          // Ошибки валидации
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMsg = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+        setErrorMessage(errorMsg);
       }
     }
   };
@@ -247,6 +267,15 @@ const ServicePointsPage: React.FC = () => {
           Добавить сервисную точку
         </Button>
       </Box>
+
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
 
       {/* Фильтры и поиск */}
       <Box sx={tablePageStyles.searchContainer}>

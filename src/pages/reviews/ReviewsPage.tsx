@@ -193,14 +193,35 @@ const ReviewsPage: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleDeleteConfirm = async () => {
     if (selectedReview) {
       try {
         await deleteReview(selectedReview.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedReview(null);
-      } catch (error) {
-        console.error('Ошибка при удалении отзыва:', error);
+        setErrorMessage(null);
+      } catch (error: any) {
+        let errorMessage = 'Произошла ошибка при удалении отзыва';
+        
+        // Обрабатываем различные форматы ошибок от API
+        if (error.data?.error) {
+          // Основной формат ошибок с ограничениями
+          errorMessage = error.data.error;
+        } else if (error.data?.message) {
+          // Альтернативный формат
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          // Ошибки валидации
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        setErrorMessage(errorMessage);
       }
     }
   };
@@ -211,8 +232,24 @@ const ReviewsPage: React.FC = () => {
         id: review.id.toString(),
         data: { status } as Partial<ReviewFormData>
       }).unwrap();
-    } catch (error) {
-      console.error('Ошибка при изменении статуса:', error);
+      setErrorMessage(null);
+    } catch (error: any) {
+      let errorMessage = 'Произошла ошибка при изменении статуса отзыва';
+      
+      // Обрабатываем различные форматы ошибок от API
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setErrorMessage(errorMessage);
     }
   };
 
@@ -274,6 +311,15 @@ const ReviewsPage: React.FC = () => {
           Отзывы
         </Typography>
       </Box>
+
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: SIZES.spacing.md }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
 
       {/* Фильтры и поиск */}
       <Box sx={{ 
