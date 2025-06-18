@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест авторизации API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест авторизации API</h1>
+    
+    <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" value="admin@test.com">
+    </div>
+    
+    <div class="form-group">
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" value="admin123">
+    </div>
+    
+    <button id="loginBtn">Войти</button>
+    <button id="meBtn" disabled>Получить данные пользователя</button>
+    <button id="logoutBtn" disabled>Выйти</button>
+    
+    <h2>Результат:</h2>
+    <pre id="result">Результат будет здесь...</pre>
+    
+    <script>
+        // Элементы DOM
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const meBtn = document.getElementById('meBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const resultEl = document.getElementById('result');
+        
+        // API URL
+        const API_URL = 'http://localhost:8000/api/v1';
+        let token = null;
+        
+        // Функция для отображения результата
+        function showResult(data) {
+            resultEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+        
+        // Функция для авторизации
+        loginBtn.addEventListener('click', async () => {
+            try {
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                
+                showResult(`Отправка запроса на ${API_URL}/auth/login...`);
+                
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = data.tokens.access;
+                    meBtn.disabled = false;
+                    logoutBtn.disabled = false;
+                    showResult({ status: 'success', message: 'Авторизация успешна', data });
+                } else {
+                    showResult({ status: 'error', message: 'Ошибка авторизации', data });
+                }
+            } catch (error) {
+                showResult({ status: 'error', message: error.message });
+            }
+        });
+        
+        // Функция для получения данных пользователя
+        meBtn.addEventListener('click', async () => {
+            if (!token) {
+                showResult('Сначала авторизуйтесь!');
+                return;
+            }
+            
+            try {
+                showResult(`Отправка запроса на ${API_URL}/auth/me...`);
+                
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult({ status: 'success', message: 'Данные получены', data });
+                } else {
+                    showResult({ status: 'error', message: 'Ошибка получения данных', data });
+                }
+            } catch (error) {
+                showResult({ status: 'error', message: error.message });
+            }
+        });
+        
+        // Функция для выхода
+        logoutBtn.addEventListener('click', async () => {
+            if (!token) {
+                showResult('Сначала авторизуйтесь!');
+                return;
+            }
+            
+            try {
+                showResult(`Отправка запроса на ${API_URL}/auth/logout...`);
+                
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = null;
+                    meBtn.disabled = true;
+                    logoutBtn.disabled = true;
+                    showResult({ status: 'success', message: 'Выход выполнен успешно', data });
+                } else {
+                    showResult({ status: 'error', message: 'Ошибка выхода', data });
+                }
+            } catch (error) {
+                showResult({ status: 'error', message: error.message });
+            }
+        });
+    </script>
+</body>
+</html> 

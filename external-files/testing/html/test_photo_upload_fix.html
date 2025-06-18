@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления загрузки фотографий</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .before {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+        }
+        .after {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .before h4, .after h4 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления загрузки фотографий сервисных точек</h1>
+        <p><strong>Дата:</strong> 18 июня 2025</p>
+        <p><strong>Проблема:</strong> Ошибка 400 Bad Request при загрузке фотографий в форме редактирования сервисной точки</p>
+        
+        <div class="comparison">
+            <div class="before">
+                <h4>❌ ДО исправления</h4>
+                <div class="code-block">formData.append('photo', file);  // Неправильное поле!
+formData.append('is_main', is_main.toString());</div>
+                <p>Бэкенд ожидал поле <code>file</code>, а получал <code>photo</code></p>
+            </div>
+            <div class="after">
+                <h4>✅ ПОСЛЕ исправления</h4>
+                <div class="code-block">formData.append('file', file);  // ИСПРАВЛЕНО!
+formData.append('description', description);
+formData.append('is_main', is_main.toString());</div>
+                <p>Теперь используется правильное поле <code>file</code></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>1. Авторизация</h3>
+            <button onclick="login()">Войти как admin@test.com</button>
+            <div id="authStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Тест загрузки фотографии через исправленное API</h3>
+            <div class="form-group">
+                <label for="photoFile">Выберите изображение для тестирования:</label>
+                <input type="file" id="photoFile" accept="image/*">
+            </div>
+            <button onclick="testPhotoUpload()" id="uploadBtn" disabled>Загрузить фотографию</button>
+            <div id="uploadStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Проверка FormData структуры</h3>
+            <button onclick="inspectFormData()">Проверить структуру FormData</button>
+            <div id="formDataStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Сравнение с рабочим API брендов автомобилей</h3>
+            <button onclick="compareApis()">Сравнить API структуры</button>
+            <div id="comparisonStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('auth_token');
+        
+        // Обновляем кнопку загрузки при выборе файла
+        document.getElementById('photoFile').addEventListener('change', function() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = !this.files[0] || !authToken;
+        });
+
+        async function login() {
+            const statusDiv = document.getElementById('authStatus');
+            statusDiv.innerHTML = '<div class="status info">Авторизация...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'password123'
+                    }),
+                    credentials: 'include',
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Ошибка авторизации: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                authToken = data.access_token;
+                localStorage.setItem('auth_token', authToken);
+                
+                statusDiv.innerHTML = '<div class="status success">✅ Авторизация успешна</div>';
+                
+                // Активируем кнопку загрузки если файл выбран
+                const fileInput = document.getElementById('photoFile');
+                const uploadBtn = document.getElementById('uploadBtn');
+                uploadBtn.disabled = !fileInput.files[0];
+                
+            } catch (error) {
+                console.error('Ошибка авторизации:', error);
+                statusDiv.innerHTML = `<div class="status error">❌ Ошибка авторизации: ${error.message}</div>`;
+            }
+        }
+
+        async function testPhotoUpload() {
+            const statusDiv = document.getElementById('uploadStatus');
+            const fileInput = document.getElementById('photoFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                statusDiv.innerHTML = '<div class="status error">❌ Выберите файл для загрузки</div>';
+                return;
+            }
+            
+            if (!authToken) {
+                statusDiv.innerHTML = '<div class="status error">❌ Сначала необходимо авторизоваться</div>';
+                return;
+            }
+            
+            statusDiv.innerHTML = '<div class="status info">📤 Загрузка фотографии...</div>';
+            
+            try {
+                // Создаем FormData с исправленными полями
+                const formData = new FormData();
+                formData.append('file', file);  // ИСПРАВЛЕНО: используем 'file' вместо 'photo'
+                formData.append('description', 'Тестовая фотография через исправленное API');
+                formData.append('is_main', 'false');
+                formData.append('sort_order', '1');
+                
+                console.log('=== Тест исправленного API ===');
+                console.log('Поля FormData:');
+                for (let [key, value] of formData.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
+                
+                const response = await fetch('http://localhost:8000/api/v1/service_points/11/photos', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        // НЕ указываем Content-Type, пусть браузер установит для FormData
+                    },
+                    body: formData,
+                    credentials: 'include',
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Upload result:', result);
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ Фотография успешно загружена!<br>
+                            <strong>ID:</strong> ${result.id}<br>
+                            <strong>URL:</strong> ${result.url}<br>
+                            <strong>Описание:</strong> ${result.description}
+                        </div>`;
+                } else {
+                    const errorText = await response.text();
+                    console.error('Upload error:', errorText);
+                    statusDiv.innerHTML = `
+                        <div class="status error">
+                            ❌ Ошибка загрузки: ${response.status}<br>
+                            <div class="code-block">${errorText}</div>
+                        </div>`;
+                }
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке:', error);
+                statusDiv.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        function inspectFormData() {
+            const statusDiv = document.getElementById('formDataStatus');
+            
+            // Создаем тестовую FormData
+            const formData = new FormData();
+            const testFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+            
+            // ИСПРАВЛЕННАЯ структура
+            formData.append('file', testFile);
+            formData.append('description', 'Тестовое описание');
+            formData.append('is_main', 'false');
+            formData.append('sort_order', '1');
+            
+            let output = '<div class="status success">✅ Структура исправленной FormData:</div>';
+            output += '<div class="code-block">';
+            
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    output += `${key}: File(${value.name}, ${value.size} bytes, ${value.type})\n`;
+                } else {
+                    output += `${key}: ${value}\n`;
+                }
+            }
+            
+            output += '</div>';
+            
+            // Сравнение с ожиданиями бэкенда
+            output += '<div class="status info">📋 Бэкенд ожидает (ServicePointPhotosController#photo_params):</div>';
+            output += '<div class="code-block">params.permit(:sort_order, :description, :is_main, :file)</div>';
+            
+            statusDiv.innerHTML = output;
+        }
+
+        function compareApis() {
+            const statusDiv = document.getElementById('comparisonStatus');
+            
+            let output = '<div class="status info">🔍 Сравнение API структур:</div>';
+            
+            output += '<div class="comparison">';
+            
+            // Car Brands (работает)
+            output += '<div class="after">';
+            output += '<h4>✅ Car Brands API (работает)</h4>';
+            output += '<div class="code-block">';
+            output += `formData.append('car_brand[name]', data.name);
+formData.append('car_brand[logo]', data.logo);
+formData.append('car_brand[is_active]', String(data.is_active));
+
+// Бэкенд ожидает:
+params.require(:car_brand).permit(:name, :logo, :is_active)`;
+            output += '</div>';
+            output += '</div>';
+            
+            // Service Point Photos (исправлено)
+            output += '<div class="after">';
+            output += '<h4>✅ Service Point Photos API (исправлено)</h4>';
+            output += '<div class="code-block">';
+            output += `formData.append('file', file);  // ИСПРАВЛЕНО!
+formData.append('description', description);
+formData.append('is_main', is_main.toString());
+formData.append('sort_order', sort_order.toString());
+
+// Бэкенд ожидает:
+params.permit(:sort_order, :description, :is_main, :file)`;
+            output += '</div>';
+            output += '</div>';
+            
+            output += '</div>';
+            
+            output += '<div class="status success">✅ Ключевое исправление: поле "photo" заменено на "file"</div>';
+            
+            statusDiv.innerHTML = output;
+        }
+
+        // Проверяем авторизацию при загрузке страницы
+        if (authToken) {
+            document.getElementById('authStatus').innerHTML = '<div class="status success">✅ Токен авторизации найден</div>';
+            
+            // Активируем кнопку загрузки если файл уже выбран
+            const fileInput = document.getElementById('photoFile');
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = !fileInput.files[0];
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест аутентификации при обновлении страницы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        #results { margin-top: 20px; }
+        .step { margin: 10px 0; padding: 10px; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест аутентификации при обновлении страницы</h1>
+    
+    <div class="test-section info">
+        <h3>Инструкции по тестированию:</h3>
+        <ol>
+            <li>Нажмите "Открыть страницу логина"</li>
+            <li>Войдите в систему (admin@test.com / admin123)</li>
+            <li>Нажмите "Открыть дашборд"</li>
+            <li>Нажмите "Обновить страницу дашборда"</li>
+            <li>Проверьте, остались ли вы на дашборде или перекинуло на логин</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>Шаги тестирования:</h3>
+        
+        <div class="step">
+            <strong>Шаг 1:</strong> Открыть страницу логина
+            <br>
+            <button onclick="openLogin()">Открыть страницу логина</button>
+        </div>
+
+        <div class="step">
+            <strong>Шаг 2:</strong> После логина - открыть дашборд
+            <br>
+            <button onclick="openDashboard()">Открыть дашборд</button>
+        </div>
+
+        <div class="step">
+            <strong>Шаг 3:</strong> Обновить страницу дашборда
+            <br>
+            <button onclick="refreshDashboard()">Обновить страницу дашборда</button>
+        </div>
+
+        <div class="step">
+            <strong>Шаг 4:</strong> Проверить текущий URL
+            <br>
+            <button onclick="checkCurrentUrl()">Проверить текущий URL</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>Автоматический тест:</h3>
+        <button onclick="runAutoTest()">Запустить автоматический тест</button>
+        <button onclick="checkAuthState()">Проверить состояние аутентификации</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        let dashboardWindow = null;
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function openLogin() {
+            window.open('http://localhost:3008/login', '_blank');
+            log('Открыта страница логина. Пожалуйста, войдите в систему.', 'info');
+        }
+
+        function openDashboard() {
+            dashboardWindow = window.open('http://localhost:3008/dashboard', '_blank');
+            log('Открыта страница дашборда. Проверьте, что вы вошли в систему.', 'info');
+        }
+
+        function refreshDashboard() {
+            if (dashboardWindow && !dashboardWindow.closed) {
+                dashboardWindow.location.reload();
+                log('Страница дашборда обновлена. Проверьте URL в окне дашборда.', 'info');
+            } else {
+                log('Окно дашборда не открыто. Сначала откройте дашборд.', 'error');
+            }
+        }
+
+        function checkCurrentUrl() {
+            if (dashboardWindow && !dashboardWindow.closed) {
+                try {
+                    const url = dashboardWindow.location.href;
+                    if (url.includes('/dashboard')) {
+                        log(`✅ УСПЕХ: Пользователь остался на дашборде: ${url}`, 'success');
+                    } else if (url.includes('/login')) {
+                        log(`❌ ОШИБКА: Пользователя перекинуло на логин: ${url}`, 'error');
+                    } else {
+                        log(`ℹ️ INFO: Текущий URL: ${url}`, 'info');
+                    }
+                } catch (error) {
+                    log('Не удалось получить URL (возможно из-за CORS)', 'error');
+                }
+            } else {
+                log('Окно дашборда не открыто или закрыто.', 'error');
+            }
+        }
+
+        function checkAuthState() {
+            // Проверяем localStorage
+            const storedUser = localStorage.getItem('tvoya_shina_user');
+            if (storedUser) {
+                try {
+                    const user = JSON.parse(storedUser);
+                    log(`✅ Пользователь найден в localStorage: ${user.email} (${user.role})`, 'success');
+                } catch (error) {
+                    log('❌ Ошибка парсинга пользователя из localStorage', 'error');
+                }
+            } else {
+                log('❌ Пользователь не найден в localStorage', 'error');
+            }
+
+            // Проверяем cookies
+            const cookies = document.cookie.split(';').map(c => c.trim());
+            const authCookies = cookies.filter(c => c.includes('refresh') || c.includes('token'));
+            if (authCookies.length > 0) {
+                log(`✅ Найдены auth cookies: ${authCookies.join(', ')}`, 'success');
+            } else {
+                log('❌ Auth cookies не найдены', 'error');
+            }
+        }
+
+        async function runAutoTest() {
+            log('🚀 Запуск автоматического теста...', 'info');
+            
+            // Проверяем текущее состояние
+            checkAuthState();
+            
+            try {
+                // Пытаемся проверить API напрямую
+                const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+                    credentials: 'include' // Включаем cookies
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ API ответил успешно: пользователь ${data.user.email} аутентифицирован`, 'success');
+                } else {
+                    log(`❌ API вернул ошибку: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка запроса к API: ${error.message}`, 'error');
+            }
+        }
+
+        // Автоматически проверяем состояние при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Страница тестирования загружена. Готов к тестированию!', 'info');
+        });
+    </script>
+</body>
+</html>

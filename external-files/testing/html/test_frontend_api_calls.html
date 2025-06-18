@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест API вызовов фронтенда</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.success {
+            background: #28a745;
+        }
+        .button.error {
+            background: #dc3545;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        h2 {
+            color: #343a40;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест API вызовов фронтенда</h1>
+    
+    <div class="container">
+        <h2>1. Аутентификация</h2>
+        <button class="button" onclick="testLogin()">🔐 Войти в систему</button>
+        <button class="button" onclick="testGetMe()">👤 Получить текущего пользователя</button>
+        <button class="button" onclick="testLogout()">🚪 Выйти из системы</button>
+        <div id="auth-status" class="section"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. Загрузка данных</h2>
+        <button class="button" onclick="testGetUsers()">👥 Получить пользователей</button>
+        <button class="button" onclick="testGetClients()">🏢 Получить клиентов</button>
+        <button class="button" onclick="testGetPartners()">🤝 Получить партнеров</button>
+        <button class="button" onclick="testGetServicePoints()">📍 Получить сервисные точки</button>
+        <div id="data-status" class="section"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. Логи запросов</h2>
+        <button class="button" onclick="clearLog()">🗑️ Очистить логи</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            logDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<span class="status ${type}">${message}</span>`;
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        async function makeRequest(url, options = {}) {
+            const config = {
+                credentials: 'include', // Важно для cookie-based аутентификации
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+
+            if (authToken && !options.skipAuth) {
+                config.headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            log(`📤 ${config.method || 'GET'} ${url}`);
+            
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`📥 ${response.status} - Успешный ответ`, 'success');
+                    console.log('Response data:', data);
+                    return { success: true, data, status: response.status };
+                } else {
+                    log(`📥 ${response.status} - Ошибка: ${data.error || data.message || 'Неизвестная ошибка'}`, 'error');
+                    return { success: false, error: data, status: response.status };
+                }
+            } catch (error) {
+                log(`📥 Ошибка сети: ${error.message}`, 'error');
+                return { success: false, error: error.message, status: 0 };
+            }
+        }
+
+        async function testLogin() {
+            updateStatus('auth-status', 'Выполняется вход...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'admin@test.com',
+                    password: 'admin123'
+                }),
+                skipAuth: true
+            });
+
+            if (result.success) {
+                authToken = result.data.tokens?.access;
+                updateStatus('auth-status', '✅ Успешный вход в систему', 'success');
+                log(`🔑 Получен токен: ${authToken ? authToken.substring(0, 20) + '...' : 'отсутствует'}`, 'success');
+            } else {
+                updateStatus('auth-status', `❌ Ошибка входа: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testGetMe() {
+            updateStatus('auth-status', 'Получение данных пользователя...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/auth/me`);
+
+            if (result.success) {
+                updateStatus('auth-status', `✅ Пользователь: ${result.data.user?.email || 'неизвестно'}`, 'success');
+            } else {
+                updateStatus('auth-status', `❌ Ошибка получения пользователя: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testLogout() {
+            updateStatus('auth-status', 'Выполняется выход...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/auth/logout`, {
+                method: 'POST'
+            });
+
+            if (result.success) {
+                authToken = null;
+                updateStatus('auth-status', '✅ Успешный выход из системы', 'success');
+            } else {
+                updateStatus('auth-status', `❌ Ошибка выхода: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testGetUsers() {
+            updateStatus('data-status', 'Загрузка пользователей...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/users?page=1&per_page=5`);
+
+            if (result.success) {
+                const count = result.data.data?.length || 0;
+                updateStatus('data-status', `✅ Загружено пользователей: ${count}`, 'success');
+            } else {
+                updateStatus('data-status', `❌ Ошибка загрузки пользователей: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testGetClients() {
+            updateStatus('data-status', 'Загрузка клиентов...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/clients?page=1&per_page=5`);
+
+            if (result.success) {
+                const count = result.data.data?.length || 0;
+                updateStatus('data-status', `✅ Загружено клиентов: ${count}`, 'success');
+            } else {
+                updateStatus('data-status', `❌ Ошибка загрузки клиентов: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testGetPartners() {
+            updateStatus('data-status', 'Загрузка партнеров...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/partners?page=1&per_page=5`);
+
+            if (result.success) {
+                const count = result.data.data?.length || 0;
+                updateStatus('data-status', `✅ Загружено партнеров: ${count}`, 'success');
+            } else {
+                updateStatus('data-status', `❌ Ошибка загрузки партнеров: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        async function testGetServicePoints() {
+            updateStatus('data-status', 'Загрузка сервисных точек...', 'pending');
+            
+            const result = await makeRequest(`${API_BASE}/service_points?page=1&per_page=5`);
+
+            if (result.success) {
+                const count = result.data.data?.length || 0;
+                updateStatus('data-status', `✅ Загружено сервисных точек: ${count}`, 'success');
+            } else {
+                updateStatus('data-status', `❌ Ошибка загрузки сервисных точек: ${result.error?.error || result.error}`, 'error');
+            }
+        }
+
+        // Автоматически проверяем статус при загрузке страницы
+        window.addEventListener('load', () => {
+            log('🚀 Тестирование API вызовов запущено');
+            log('💡 Сначала выполните вход в систему, затем тестируйте загрузку данных');
+        });
+    </script>
+</body>
+</html>
