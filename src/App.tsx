@@ -132,8 +132,9 @@ const ProtectedRoute: React.FC<{
     return <LoadingScreen />;
   }
 
-  // Проверяем аутентификацию - пользователь должен быть аутентифицирован И иметь токен
-  if (!isAuthenticated || !accessToken || !user) {
+  // Для cookie-based аутентификации достаточно проверить isAuthenticated и user
+  // accessToken может отсутствовать, так как используются refresh токены в cookies
+  if (!isAuthenticated || !user) {
     console.log('ProtectedRoute: redirecting to login - not authenticated');
     return <Navigate to="/login" />;
   }

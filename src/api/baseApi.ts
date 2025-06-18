@@ -34,28 +34,18 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: `${API_BASE_URL}/api/v1`,
+    credentials: 'include', // Включаем передачу cookies для cookie-based аутентификации
     prepareHeaders: (headers, { getState }) => {
       // При cookie-based аутентификации:
-      // - Access токен передается в заголовке Authorization (из Redux state)
-      // - Refresh токен автоматически передается через HttpOnly cookies
+      // - Access токен может передаваться в заголовке Authorization (из Redux state) ИЛИ через cookies
+      // - Cookies автоматически отправляются благодаря credentials: 'include'
       const state = getState() as any;
       const token = state.auth?.accessToken;
-      const isInitialized = state.auth?.isInitialized;
       
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
-      } else {
-        // Если токен отсутствует, но есть пользователь в localStorage,
-        // возможно нужно восстановить сессию
-        const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
-        if (hasStoredUser && isInitialized) {
-          console.warn('BaseAPI: Токен отсутствует, но пользователь есть в localStorage. Возможно нужен refresh.');
-        } else if (!isInitialized) {
-          console.log('BaseAPI: Аутентификация еще не инициализирована');
-        } else {
-          console.warn('BaseAPI: Токен отсутствует в Redux state');
-        }
       }
+      // Если токена нет в состоянии, API попытается использовать токен из cookies
       
       // ВАЖНО: НЕ устанавливаем Content-Type для FormData!
       // RTK Query автоматически определит FormData и не установит Content-Type,
@@ -66,15 +56,13 @@ export const baseApi = createApi({
         console.log('BaseAPI prepareHeaders:', {
           hasAccessToken: !!token,
           tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
-          url: (getState() as any).api?.config?.url || 'unknown',
-          method: (getState() as any).api?.config?.method || 'unknown'
+          url: 'unknown',
+          method: 'unknown'
         });
       }
       
       return headers;
     },
-    // Включаем cookies для всех запросов (используется для refresh токена)
-    credentials: 'include',
   }),
   tagTypes: [
     'Article', 

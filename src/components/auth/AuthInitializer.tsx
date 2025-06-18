@@ -10,47 +10,47 @@ import { LoadingScreen } from '../LoadingScreen';
  */
 const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { accessToken, user, loading, isInitialized } = useSelector((state: RootState) => state.auth);
+  const { user, loading, isInitialized, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const initializationStarted = useRef(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
-      if (!initializationStarted.current) {
+      if (!initializationStarted.current && !isInitialized) {
         initializationStarted.current = true;
         
         const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
         
         console.log('AuthInitializer: Проверяем состояние', {
           hasStoredUser,
-          hasTokenInState: !!accessToken,
           hasUserInState: !!user,
+          isAuthenticated,
           loading,
           isInitialized
         });
 
-        // Токены не хранятся в localStorage для безопасности
-        // Если есть пользователь в localStorage, но нет токена в состоянии,
-        // пытаемся получить пользователя через API (используя refresh токен из cookies)
-        if (hasStoredUser && !accessToken && !user) {
+        // Если есть пользователь в localStorage, но нет в состоянии,
+        // пытаемся восстановить сессию через API (используя токены из HttpOnly cookies)
+        if (hasStoredUser && !user) {
           try {
-            console.log('AuthInitializer: Пытаемся восстановить сессию через refresh токен');
+            console.log('AuthInitializer: Пытаемся восстановить сессию через HttpOnly cookies');
             await dispatch(getCurrentUser()).unwrap();
             console.log('AuthInitializer: Сессия успешно восстановлена');
           } catch (error) {
             console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage');
             localStorage.removeItem('tvoya_shina_user');
           }
-        } else if (!hasStoredUser) {
-          console.log('AuthInitializer: Пользователь не найден в localStorage');
+        } else {
+          // Если нет сохраненных данных или уже есть данные в состоянии
+          console.log('AuthInitializer: Инициализация без восстановления сессии');
+          dispatch(setInitialized());
         }
 
-        dispatch(setInitialized());
         console.log('AuthInitializer: Инициализация завершена');
       }
     };
 
     initializeAuth();
-  }, [dispatch, accessToken, user, loading, isInitialized]);
+  }, [dispatch, user, loading, isInitialized, isAuthenticated]);
 
   if (!isInitialized || loading) {
     return <LoadingScreen />;
@@ -59,4 +59,4 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <>{children}</>;
 };
 
-export default AuthInitializer; 
+export default AuthInitializer;

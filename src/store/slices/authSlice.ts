@@ -7,6 +7,7 @@ import axios from 'axios';
 import config from '../../config';
 
 const USER_STORAGE_KEY = 'tvoya_shina_user';
+// Удаляем TOKEN_STORAGE_KEY - теперь токены хранятся в HttpOnly cookies
 
 // Функции для работы с localStorage только для пользователя
 const getStoredUser = (): User | null => {
@@ -33,10 +34,10 @@ const setStoredUser = (user: User | null): void => {
 
 // Начальное состояние
 const initialState: AuthState = {
-  accessToken: null, // Токен теперь не хранится в localStorage
-  refreshToken: null, // Refresh токен теперь не хранится в localStorage
+  accessToken: null, // При cookie-based аутентификации токен не загружаем из localStorage
+  refreshToken: null, // Refresh токен хранится в HttpOnly cookies
   user: getStoredUser(),
-  isAuthenticated: false, // Будет определяться при первом запросе к API
+  isAuthenticated: !!getStoredUser(), // Проверяем только наличие пользователя
   loading: false,
   error: null,
   isInitialized: false,
@@ -71,25 +72,24 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.isInitialized = true;
       setStoredUser(user);
-      // При cookie-based аутентификации не устанавливаем Bearer токены в заголовки
-      // Refresh токен автоматически передается через cookies
+      // Токен не сохраняем в localStorage - он автоматически сохраняется в HttpOnly cookies API
     },
-          logout: (state) => {
-        state.accessToken = null;
-        state.refreshToken = null;
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = null;
-        state.isInitialized = true;
-        setStoredUser(null);
-        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
-        // Refresh токен автоматически очищается через cookies на сервере
-      },
+    logout: (state) => {
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.user = null;
+      state.isAuthenticated = false;
+      state.error = null;
+      state.isInitialized = true;
+      setStoredUser(null);
+      // Токен из localStorage не удаляем - он в HttpOnly cookies и будет удален через API
+    },
     setInitialized: (state) => {
       state.isInitialized = true;
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
+      // Новый токен автоматически сохраняется в HttpOnly cookies через API
       // При обновлении access токена пользователь остается аутентифицированным
       if (state.user) {
         state.isAuthenticated = true;
@@ -155,6 +155,7 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.error = null;
         state.isAuthenticated = true; // Если получили пользователя, значит аутентифицированы
+        state.isInitialized = true; // Устанавливаем флаг инициализации
         setStoredUser(action.payload);
         console.log('User role after getCurrentUser:', action.payload.role);
       })
@@ -166,7 +167,7 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isInitialized = true;
         setStoredUser(null);
-        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
+        // Токен из localStorage не удаляем - он в HttpOnly cookies и будет удален через API logout
       });
   },
 });
