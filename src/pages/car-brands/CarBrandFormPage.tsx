@@ -99,13 +99,43 @@ export const CarBrandFormPage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         setSubmitError('');
+        
         if (isEditing && id) {
-          await updateBrand({ id, data: values }).unwrap();
+          // Для редактирования используем только измененные поля
+          const updateData: Partial<CarBrandFormData> = {
+            name: values.name,
+            is_active: values.is_active,
+          };
+          
+          // Добавляем logo только если это файл
+          if (values.logo instanceof File) {
+            updateData.logo = values.logo;
+            console.log('Logo is a File, will use FormData');
+          } else {
+            console.log('Logo is not a File, will use JSON');
+          }
+          
+          console.log('Update data:', {
+            ...updateData,
+            logo: updateData.logo ? 'File object' : updateData.logo
+          });
+          console.log('Logo type:', typeof values.logo, values.logo?.constructor?.name);
+          
+          await updateBrand({ id, data: updateData }).unwrap();
         } else {
-          await createBrand(values).unwrap();
+          // Для создания используем полный объект
+          const createData: CarBrandFormData = {
+            name: values.name,
+            is_active: values.is_active,
+            logo: values.logo instanceof File ? values.logo : null,
+          };
+          
+          console.log('Sending create data:', createData);
+          await createBrand(createData).unwrap();
         }
         navigate('/car-brands');
       } catch (error: any) {
+        console.error('Submit error:', error);
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
       }
     },
@@ -250,10 +280,10 @@ export const CarBrandFormPage: React.FC = () => {
                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: theme.spacing(SIZES.spacing.sm) }}>
                      <input
                        accept="image/*"
-                       style={{ display: 'none' }}
                        id="logo-upload"
                        type="file"
                        onChange={handleLogoChange}
+                       style={{ display: 'none' }}
                      />
                      <label htmlFor="logo-upload">
                        <Box sx={{ display: 'flex', alignItems: 'center', gap: theme.spacing(SIZES.spacing.sm), cursor: 'pointer' }}>

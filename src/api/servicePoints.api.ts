@@ -175,15 +175,15 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Добавление фотографии
-    uploadServicePointPhoto: builder.mutation<void, { id: string; file: File; is_main?: boolean }>({
-      query: ({ id, file, is_main }) => {
+    uploadServicePointPhoto: builder.mutation<void, { id: string; file: File; is_main?: boolean; description?: string }>({
+      query: ({ id, file, is_main, description }) => {
         console.log('=== uploadServicePointPhoto query start ===');
         console.log('Received id:', id);
         console.log('Type of id:', typeof id);
-        console.log('id === undefined:', id === undefined);
-        console.log('id === null:', id === null);
-        console.log('id === "":', id === '');
-        console.log('String(id):', String(id));
+        console.log('File name:', file.name);
+        console.log('File size:', file.size);
+        console.log('Is main:', is_main);
+        console.log('Description:', description);
         
         if (!id || id === 'undefined' || id === 'null') {
           console.error('КРИТИЧЕСКАЯ ОШИБКА: Некорректный ID для загрузки фотографии:', id);
@@ -191,7 +191,10 @@ export const servicePointsApi = baseApi.injectEndpoints({
         }
         
         const formData = new FormData();
-        formData.append('photo', file);
+        formData.append('file', file);  // ИСПРАВЛЕНО: используем 'file' вместо 'photo'
+        if (description) {
+          formData.append('description', description);
+        }
         if (is_main !== undefined) {
           formData.append('is_main', is_main.toString());
         }
@@ -216,11 +219,15 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Добавление фотографии (версия 2 для тестирования)
-    uploadServicePointPhotoV2: builder.mutation<void, { servicePointId: string; file: File; is_main?: boolean }>({
-      query: ({ servicePointId, file, is_main }) => {
+    uploadServicePointPhotoV2: builder.mutation<void, { servicePointId: string; file: File; is_main?: boolean; description?: string }>({
+      query: ({ servicePointId, file, is_main, description }) => {
         console.log('=== uploadServicePointPhotoV2 query start ===');
         console.log('Received servicePointId:', servicePointId);
         console.log('Type of servicePointId:', typeof servicePointId);
+        console.log('File name:', file.name);
+        console.log('File size:', file.size);
+        console.log('Is main:', is_main);
+        console.log('Description:', description);
         
         if (!servicePointId || servicePointId === 'undefined' || servicePointId === 'null') {
           console.error('КРИТИЧЕСКАЯ ОШИБКА V2: Некорректный ID для загрузки фотографии:', servicePointId);
@@ -228,7 +235,10 @@ export const servicePointsApi = baseApi.injectEndpoints({
         }
         
         const formData = new FormData();
-        formData.append('photo', file);
+        formData.append('file', file);  // ИСПРАВЛЕНО: используем 'file' вместо 'photo'
+        if (description) {
+          formData.append('description', description);
+        }
         if (is_main !== undefined) {
           formData.append('is_main', is_main.toString());
         }

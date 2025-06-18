@@ -1,6 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { useDispatch } from 'react-redux';
-import config from '../config';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -58,10 +57,9 @@ export const baseApi = createApi({
         }
       }
       
-      // Устанавливаем Content-Type для JSON запросов
-      if (!headers.get('content-type')) {
-        headers.set('content-type', 'application/json');
-      }
+      // ВАЖНО: НЕ устанавливаем Content-Type для FormData!
+      // RTK Query автоматически определит FormData и не установит Content-Type,
+      // позволяя браузеру установить правильные заголовки multipart/form-data
       
       // Отладочная информация только в режиме разработки
       if (process.env.NODE_ENV === 'development') {

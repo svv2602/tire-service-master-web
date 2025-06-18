@@ -15,9 +15,6 @@
 
 import React, { useState } from 'react';
 import {
-  Box,
-  Typography,
-  TextField,
   InputAdornment,
   CircularProgress,
   Table,
@@ -53,31 +50,48 @@ import {
   FormatListNumbered as FormatListNumberedIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useGetCarBrandsQuery, 
+import {
+  useGetCarBrandsQuery,
   useDeleteCarBrandMutation,
   useToggleCarBrandActiveMutation,
-} from '../../api';
+} from '../../api/carBrands.api';
 import { CarBrand } from '../../types/car';
-import { Button } from '../../components/ui';
-import { Pagination } from '../../components/ui';
 import Notification from '../../components/Notification';
+import config from '../../config';
+
+// Импорты UI компонентов
+import { 
+  Box,
+  Button, 
+  TextField, 
+  Typography 
+} from '../../components/ui';
+import { Pagination } from '../../components/ui/Pagination';
+
+// Импорт централизованных стилей
 import { getTablePageStyles, SIZES } from '../../styles';
 
-const PER_PAGE = 25;
-
-/**
- * Компонент страницы управления брендами автомобилей
- */
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  
+  // Инициализация централизованных стилей
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // Функция для формирования URL логотипа
+  const getLogoUrl = (logo: string | null): string | undefined => {
+    if (!logo) return undefined;
+    if (logo.startsWith('http') || logo.startsWith('/storage/')) {
+      return logo;
+    }
+    return `${config.API_URL}${logo}`;
+  };
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(0);
+  const rowsPerPage = 25;
   
   // Состояние для диалогов и уведомлений
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -101,90 +115,73 @@ const CarBrandsPage: React.FC = () => {
     query: search || undefined,
     is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
     page: page + 1,
-    per_page: PER_PAGE,
+    per_page: rowsPerPage,
   });
 
   const [deleteBrand] = useDeleteCarBrandMutation();
   const [toggleActive] = useToggleCarBrandActiveMutation();
 
-  /**
-   * Обработчик изменения поискового запроса
-   */
+  // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
     setPage(0);
   };
 
-  /**
-   * Обработчик изменения фильтра по статусу
-   */
   const handleActiveFilterChange = (event: any) => {
     setActiveFilter(event.target.value);
     setPage(0);
   };
 
-  /**
-   * Обработчик смены страницы пагинации
-   */
-  const handlePageChange = (newPage: number) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage - 1);
   };
 
-  /**
-   * Обработчик открытия диалога удаления
-   */
-  const handleDeleteClick = (brand: { id: number; name: string }) => {
-    setSelectedBrand(brand);
+  const handleDeleteClick = (brand: CarBrand) => {
+    setSelectedBrand({ id: brand.id, name: brand.name });
     setDeleteDialogOpen(true);
   };
 
-  /**
-   * Обработчик подтверждения удаления бренда
-   */
   const handleDeleteConfirm = async () => {
-    if (selectedBrand) {
-      try {
-        await deleteBrand(selectedBrand.id.toString()).unwrap();
-        setNotification({
-          open: true,
-          message: `Бренд "${selectedBrand.name}" успешно удален`,
-          severity: 'success'
-        });
-        setDeleteDialogOpen(false);
-        setSelectedBrand(null);
-      } catch (error: any) {
-        let errorMessage = 'Ошибка при удалении бренда';
-        if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.data?.errors) {
-          errorMessage = Object.values(error.data.errors).join(', ');
-        }
-        setNotification({
-          open: true,
-          message: errorMessage,
-          severity: 'error'
-        });
+    if (!selectedBrand) return;
+    
+    try {
+      await deleteBrand(selectedBrand.id.toString()).unwrap();
+      setNotification({
+        open: true,
+        message: 'Бренд успешно удален',
+        severity: 'success'
+      });
+      setDeleteDialogOpen(false);
+      setSelectedBrand(null);
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при удалении бренда';
+      if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        errorMessage = Object.values(error.data.errors).join(', ');
       }
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     }
   };
 
-  /**
-   * Обработчик закрытия диалога удаления
-   */
-  const handleCloseDialog = () => {
+  const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setSelectedBrand(null);
   };
 
-  /**
-   * Обработчик переключения статуса активности бренда
-   */
-  const handleToggleActive = async (id: number, currentActive: boolean) => {
+  const handleToggleActive = async (brand: CarBrand) => {
     try {
-      await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
+      await toggleActive({
+        id: brand.id.toString(),
+        is_active: !brand.is_active
+      }).unwrap();
       setNotification({
         open: true,
-        message: `Статус бренда успешно изменен`,
+        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`,
         severity: 'success'
       });
     } catch (error: any) {
@@ -202,18 +199,8 @@ const CarBrandsPage: React.FC = () => {
     }
   };
 
-  /**
-   * Обработчик закрытия уведомлений
-   */
   const handleCloseNotification = () => {
     setNotification(prev => ({ ...prev, open: false }));
-  };
-
-  /**
-   * Обработчик перехода к созданию нового бренда
-   */
-  const handleAddBrand = () => {
-    navigate('/car-brands/new');
   };
 
   // Отображение состояний загрузки и ошибок
@@ -221,17 +208,14 @@ const CarBrandsPage: React.FC = () => {
     return (
       <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
-        <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
-          Загрузка брендов...
-        </Typography>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={tablePageStyles.pageContainer}>
-        <Alert severity="error" sx={tablePageStyles.errorAlert}>
+      <Box sx={tablePageStyles.errorContainer}>
+        <Alert severity="error">
           Ошибка при загрузке брендов: {error.toString()}
         </Alert>
       </Box>
@@ -243,15 +227,16 @@ const CarBrandsPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      {/* Заголовок страницы */}
-      <Box sx={tablePageStyles.headerContainer}>
-        <Typography variant="h4" component="h1" sx={tablePageStyles.pageTitle}>
+      {/* Заголовок и кнопка добавления */}
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
           Бренды автомобилей
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={handleAddBrand}
+          onClick={() => navigate('/car-brands/new')}
+          sx={tablePageStyles.createButton}
         >
           Добавить бренд
         </Button>
@@ -290,36 +275,36 @@ const CarBrandsPage: React.FC = () => {
       </Box>
 
       {/* Таблица брендов */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <TableContainer>
+      <Box>
+        <TableContainer sx={tablePageStyles.tableContainer}>
           <Table>
-            <TableHead>
-              <TableRow sx={tablePageStyles.tableHeader}>
-                <TableCell sx={tablePageStyles.tableCell}>Бренд</TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>Статус</TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+            <TableHead sx={tablePageStyles.tableHeader}>
+              <TableRow>
+                <TableCell>Бренд</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <FormatListNumberedIcon fontSize="small" />
                     Кол-во моделей
                   </Box>
                 </TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+                <TableCell>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <CalendarTodayIcon fontSize="small" />
                     Дата создания
                   </Box>
                 </TableCell>
-                <TableCell align="right" sx={tablePageStyles.tableCell}>Действия</TableCell>
+                <TableCell align="right">Действия</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {brands.map((brand: CarBrand) => (
                 <TableRow key={brand.id} sx={tablePageStyles.tableRow}>
-                  <TableCell sx={tablePageStyles.tableCell}>
+                  <TableCell>
                     <Box sx={tablePageStyles.avatarContainer}>
                       {brand.logo ? (
                         <Avatar 
-                          src={brand.logo} 
+                          src={getLogoUrl(brand.logo)} 
                           alt={brand.name}
                           variant="rounded"
                           sx={{ 
@@ -342,12 +327,12 @@ const CarBrandsPage: React.FC = () => {
                           <CarIcon />
                         </Avatar>
                       )}
-                      <Typography variant="body1" fontWeight={500}>
+                      <Typography variant="body1" fontWeight="medium">
                         {brand.name}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell sx={tablePageStyles.tableCell}>
+                  <TableCell>
                     <Chip 
                       label={brand.is_active ? 'Активен' : 'Неактивен'}
                       color={brand.is_active ? 'success' : 'default'}
@@ -355,7 +340,7 @@ const CarBrandsPage: React.FC = () => {
                       sx={tablePageStyles.statusChip}
                     />
                   </TableCell>
-                  <TableCell sx={tablePageStyles.tableCell}>
+                  <TableCell>
                     <Tooltip title="Количество моделей">
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <FormatListNumberedIcon fontSize="small" />
@@ -365,7 +350,7 @@ const CarBrandsPage: React.FC = () => {
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell sx={tablePageStyles.tableCell}>
+                  <TableCell>
                     <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} arrow>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
                         <CalendarTodayIcon fontSize="small" color="action" />
@@ -375,7 +360,7 @@ const CarBrandsPage: React.FC = () => {
                       </Box>
                     </Tooltip>
                   </TableCell>
-                  <TableCell align="right" sx={tablePageStyles.tableCell}>
+                  <TableCell align="right">
                     <Box sx={tablePageStyles.actionsContainer}>
                       <Tooltip title="Редактировать">
                         <IconButton 
@@ -395,16 +380,14 @@ const CarBrandsPage: React.FC = () => {
                           <DeleteIcon />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={brand.is_active ? "Деактивировать" : "Активировать"}>
+                      <Tooltip title={brand.is_active ? 'Деактивировать' : 'Активировать'}>
                         <IconButton 
                           size="small"
-                          onClick={() => handleToggleActive(brand.id, brand.is_active)}
-                          sx={{
-                            ...tablePageStyles.actionButton,
-                            color: brand.is_active ? theme.palette.warning.main : theme.palette.success.main,
-                          }}
+                          onClick={() => handleToggleActive(brand)}
+                          color={brand.is_active ? 'success' : 'default'}
+                          sx={tablePageStyles.actionButton}
                         >
-                          {brand.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />}
+                          {brand.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -414,14 +397,14 @@ const CarBrandsPage: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-
+        
         {/* Пагинация */}
-        {totalItems > PER_PAGE && (
+        {totalItems > rowsPerPage && (
           <Box sx={tablePageStyles.paginationContainer}>
             <Pagination
-              count={Math.ceil(totalItems / PER_PAGE)}
+              count={Math.ceil(totalItems / rowsPerPage)}
               page={page + 1}
-              onChange={handlePageChange}
+              onChange={handleChangePage}
               disabled={isLoading}
             />
           </Box>
@@ -431,26 +414,23 @@ const CarBrandsPage: React.FC = () => {
       {/* Диалог подтверждения удаления */}
       <Dialog 
         open={deleteDialogOpen} 
-        onClose={handleCloseDialog}
+        onClose={handleDeleteCancel}
         maxWidth="sm"
         fullWidth
-        PaperProps={{
-          sx: tablePageStyles.dialogPaper
-        }}
       >
-        <DialogTitle sx={tablePageStyles.dialogTitle}>
-          Подтверждение удаления
+        <DialogTitle>
+          Подтвердите удаление
         </DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить бренд "{selectedBrand?.name}"?
-            Это действие нельзя будет отменить.
+            Вы уверены, что хотите удалить бренд "{selectedBrand?.name}"?
+            Это действие нельзя отменить.
           </Typography>
         </DialogContent>
-        <DialogActions sx={tablePageStyles.dialogActions}>
+        <DialogActions sx={{ gap: 1, p: 2 }}>
           <Button 
+            onClick={handleDeleteCancel}
             variant="outlined"
-            onClick={handleCloseDialog}
           >
             Отмена
           </Button>

@@ -143,11 +143,14 @@ const ServicePointFormPageNew: React.FC = () => {
   const { invalidateTag, invalidateList } = useInvalidateCache();
 
   // Функция для прямой загрузки фотографий через fetch API
-  const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false) => {
+  const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false, description?: string) => {
     const formData = new FormData();
-    // Исправляем: бэкенд ожидает поле 'file', а не 'photo'
+    // ИСПРАВЛЕНО: бэкенд ожидает поле 'file', а не 'photo'
     formData.append('file', file);
     formData.append('is_main', isMain.toString());
+    if (description) {
+      formData.append('description', description);
+    }
     
     if (!authToken) {
       throw new Error('Токен авторизации не найден');
@@ -424,7 +427,7 @@ const ServicePointFormPageNew: React.FC = () => {
                 console.log('photo.is_main:', photo.is_main);
                 
                 // Попробуем прямую загрузку через fetch API
-                await uploadPhotoDirectly(String(id), (photo as any).file, photo.is_main);
+                await uploadPhotoDirectly(String(id), (photo as any).file, photo.is_main, photo.description);
                 console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
               } catch (photoError) {
                 console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
@@ -475,7 +478,7 @@ const ServicePointFormPageNew: React.FC = () => {
                 console.log('photo.is_main:', photo.is_main);
                 
                 // Попробуем прямую загрузку через fetch API
-                await uploadPhotoDirectly(String(result.id), (photo as any).file, photo.is_main);
+                await uploadPhotoDirectly(String(result.id), (photo as any).file, photo.is_main, photo.description);
                 console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
               } catch (photoError) {
                 console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);

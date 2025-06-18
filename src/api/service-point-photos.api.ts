@@ -13,12 +13,18 @@ export const servicePointPhotosApi = baseApi.injectEndpoints({
     }),
 
     // Загрузка фотографии
-    uploadServicePointPhoto: builder.mutation<ServicePointPhoto, { servicePointId: string; file: File; description?: string }>({
-      query: ({ servicePointId, file, description }) => {
+    uploadServicePointPhoto: builder.mutation<ServicePointPhoto, { servicePointId: string; file: File; description?: string; is_main?: boolean; sort_order?: number }>({
+      query: ({ servicePointId, file, description, is_main, sort_order }) => {
         const formData = new FormData();
-        formData.append('photo', file);
+        formData.append('file', file);  // ИСПРАВЛЕНО: используем 'file' вместо 'photo'
         if (description) {
           formData.append('description', description);
+        }
+        if (is_main !== undefined) {
+          formData.append('is_main', is_main.toString());
+        }
+        if (sort_order !== undefined) {
+          formData.append('sort_order', sort_order.toString());
         }
         return {
           url: `service_points/${servicePointId}/photos`,

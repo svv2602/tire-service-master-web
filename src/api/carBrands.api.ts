@@ -1,4 +1,3 @@
-import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
 import { CarBrand, CarBrandFormData } from '../types/car';
 import { ApiResponse } from '../types/models';
@@ -61,42 +60,81 @@ export const carBrandsApi = baseApi.injectEndpoints({
     
     createCarBrand: build.mutation<CarBrand, CarBrandFormData>({
       query: (data) => {
-        const formData = new FormData();
-        formData.append('car_brand[name]', data.name);
-        if (data.logo) {
+        console.log('=== createCarBrand API query ===');
+        console.log('Data:', data);
+        console.log('Has logo file:', data.logo instanceof File);
+        
+        // Если есть файл логотипа, используем FormData
+        if (data.logo instanceof File) {
+          console.log('Using FormData because logo is a File');
+          const formData = new FormData();
+          formData.append('car_brand[name]', data.name);
           formData.append('car_brand[logo]', data.logo);
+          if (data.is_active !== undefined) {
+            formData.append('car_brand[is_active]', String(data.is_active));
+          }
+          return {
+            url: 'car_brands',
+            method: 'POST',
+            body: formData,
+          };
+        } else {
+          // Если нет файла, используем JSON
+          console.log('Using JSON because no file upload');
+          return {
+            url: 'car_brands',
+            method: 'POST',
+            body: { 
+              car_brand: {
+                name: data.name,
+                is_active: data.is_active
+              }
+            },
+          };
         }
-        if (data.is_active !== undefined) {
-          formData.append('car_brand[is_active]', String(data.is_active));
-        }
-        return {
-          url: 'car_brands',
-          method: 'POST',
-          body: formData,
-          // Не указываем formData: true, так как это не нужно
-        };
       },
       invalidatesTags: ['CarBrands'],
     }),
     
     updateCarBrand: build.mutation<CarBrand, { id: string; data: Partial<CarBrandFormData> }>({
       query: ({ id, data }) => {
-        const formData = new FormData();
-        if (data.name !== undefined) {
-          formData.append('car_brand[name]', data.name);
-        }
-        if (data.logo) {
+        console.log('=== updateCarBrand API query ===');
+        console.log('ID:', id);
+        console.log('Data:', data);
+        console.log('Has logo file:', data.logo instanceof File);
+        
+        // Если есть файл логотипа, используем FormData
+        if (data.logo instanceof File) {
+          console.log('Using FormData because logo is a File');
+          const formData = new FormData();
+          if (data.name !== undefined) {
+            formData.append('car_brand[name]', data.name);
+          }
           formData.append('car_brand[logo]', data.logo);
+          if (data.is_active !== undefined) {
+            formData.append('car_brand[is_active]', String(data.is_active));
+          }
+          return {
+            url: `car_brands/${id}`,
+            method: 'PATCH',
+            body: formData,
+          };
+        } else {
+          // Если нет файла, используем JSON
+          console.log('Using JSON because no file upload');
+          const jsonData: any = {};
+          if (data.name !== undefined) {
+            jsonData.name = data.name;
+          }
+          if (data.is_active !== undefined) {
+            jsonData.is_active = data.is_active;
+          }
+          return {
+            url: `car_brands/${id}`,
+            method: 'PATCH',
+            body: { car_brand: jsonData },
+          };
         }
-        if (data.is_active !== undefined) {
-          formData.append('car_brand[is_active]', String(data.is_active));
-        }
-        return {
-          url: `car_brands/${id}`,
-          method: 'PATCH',
-          body: formData,
-          // Не указываем formData: true, так как это не нужно
-        };
       },
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'CarBrands' as const, id },
