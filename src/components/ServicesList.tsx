@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
-  getTablePageStyles 
+  getTablePageStyles
 } from '../styles/components';
 // UI компоненты
 import { Table, Column } from './ui/Table';
@@ -29,6 +29,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  Build as BuildIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -296,6 +297,22 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
 
   return (
     <Box>
+      <Typography 
+        variant="h6" 
+        gutterBottom 
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: SIZES.spacing.sm,
+          fontSize: SIZES.fontSize.lg,
+          fontWeight: 600,
+          mb: SIZES.spacing.md
+        }}
+      >
+        <BuildIcon />
+        Услуги в категории
+      </Typography>
+
       {/* Поиск и кнопка добавления */}
       <Box sx={tablePageStyles.filtersContainer}>
         <TextField

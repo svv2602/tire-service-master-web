@@ -41,10 +41,16 @@ import { getFormStyles, SIZES } from '../../styles';
  * Определяет правила валидации для всех полей формы
  */
 const validationSchema = Yup.object({
-  name: Yup.string().required('Название обязательно'),
-  description: Yup.string(),
+  name: Yup.string()
+    .required('Название обязательно')
+    .min(2, 'Название должно содержать минимум 2 символа')
+    .max(100, 'Название не должно превышать 100 символов'),
+  description: Yup.string()
+    .max(500, 'Описание не должно превышать 500 символов'),
   is_active: Yup.boolean(),
-  sort_order: Yup.number().min(0, 'Порядок сортировки должен быть неотрицательным'),
+  sort_order: Yup.number()
+    .min(0, 'Порядок сортировки должен быть неотрицательным')
+    .max(9999, 'Порядок сортировки не должен превышать 9999'),
 });
 
 /**
@@ -224,12 +230,7 @@ export const ServiceFormPage: React.FC = () => {
         {/* Список услуг в категории (только при редактировании) */}
         {isEditing && id && (
           <Grid item xs={12} md={6}>
-            <Box sx={formStyles.formCard}>
-              <Typography variant="h6" sx={formStyles.sectionTitle}>
-                Услуги в категории
-              </Typography>
-              <ServicesList categoryId={id} />
-            </Box>
+            <ServicesList categoryId={id} />
           </Grid>
         )}
       </Grid>

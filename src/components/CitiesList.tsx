@@ -2,31 +2,20 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   IconButton,
-  FormControlLabel,
   CircularProgress,
-  DialogContentText,
   useTheme,
-  Skeleton
+  Tooltip,
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getChipStyles,
-  getCardStyles
+  getTablePageStyles
 } from '../styles/components';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
   LocationCity as LocationCityIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -46,6 +35,7 @@ import { Alert } from '../components/ui/Alert';
 import { Switch } from '../components/ui/Switch';
 import { Chip } from '../components/ui/Chip';
 import { Pagination } from '../components/ui/Pagination';
+import { Table, Column } from '../components/ui/Table';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -62,11 +52,7 @@ interface CitiesListProps {
 
 const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
-  const dangerButtonStyles = getButtonStyles(theme, 'error');
-  const textFieldStyles = getTextFieldStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -192,16 +178,86 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
     setPage(newPage);
   };
 
+  /**
+   * Конфигурация колонок для UI Table
+   */
+  const columns: Column[] = [
+    {
+      id: 'name',
+      label: 'Название',
+      minWidth: 200,
+      wrap: true,
+      format: (value: string) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            color: theme.palette.text.primary
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value: boolean) => (
+        <Chip 
+          label={value ? 'Активен' : 'Неактивен'}
+          color={value ? 'success' : 'default'}
+          size="small"
+          sx={tablePageStyles.statusChip}
+        />
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      minWidth: 120,
+      format: (value: any, row: City) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDialog(row)}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDeleteDialog(row)}
+              sx={{
+                ...tablePageStyles.actionButton,
+                '&:hover': {
+                  backgroundColor: `${theme.palette.error.main}15`,
+                  color: theme.palette.error.main
+                }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" p={SIZES.spacing.lg}>
+      <Box sx={tablePageStyles.loadingContainer}>
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={cardStyles}>
+    <Box>
       <Typography 
         variant="h6" 
         gutterBottom 
@@ -218,124 +274,73 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         Города в регионе
       </Typography>
 
+      {/* Поиск и кнопка добавления */}
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск городов"
+          variant="outlined"
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={tablePageStyles.searchField}
+        />
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpenDialog()}
+          sx={tablePageStyles.primaryButton}
+        >
+          Добавить город
+        </Button>
+      </Box>
+
+      {/* Ошибки */}
       {error && (
         <Alert 
           severity="error" 
-          sx={{ mb: SIZES.spacing.md }} 
+          sx={tablePageStyles.errorAlert}
           onClose={() => setError(null)}
         >
           {error}
         </Alert>
       )}
 
-      <TextField
-        fullWidth
-        variant="outlined"
-        placeholder="Поиск городов..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        sx={{ mb: SIZES.spacing.md }}
-      />
+      {/* Таблица городов с UI Table */}
+      <Box sx={{ mb: 3 }}>
+        <Table
+          columns={columns}
+          rows={cities}
+        />
+      </Box>
 
-      <List sx={{ 
-          bgcolor: theme.palette.background.paper,
-          borderRadius: SIZES.borderRadius.md,
-          border: `1px solid ${theme.palette.divider}`,
-          overflow: 'hidden'
-        }}>
-        {cities.map((city) => (
-          <ListItem 
-            key={city.id} 
-            divider 
-            sx={{
-              transition: '0.2s',
-              '&:hover': {
-                bgcolor: theme.palette.action.hover
-              }
-            }}
-          >
-            <ListItemText
-              primary={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.sm }}>
-                  <Typography 
-                    variant="subtitle1"
-                    sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}
-                  >
-                    {city.name}
-                  </Typography>
-                  <Chip 
-                    icon={city.is_active ? <CheckIcon /> : <CloseIcon />}
-                    label={city.is_active ? 'Активен' : 'Неактивен'}
-                    color={city.is_active ? 'success' : 'error'}
-                    size="small"
-                  />
-                </Box>
-              }
-              secondary={
-                <Typography 
-                  variant="body2" 
-                  sx={{ fontSize: SIZES.fontSize.sm, color: theme.palette.text.secondary }}
-                >
-                  ID: {city.id}
-                </Typography>
-              }
-            />
-            <ListItemSecondaryAction>
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={() => handleOpenDialog(city)}
-                sx={{ 
-                  mr: SIZES.spacing.sm,
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.primary.main}15` 
-                  }
-                }}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => handleOpenDeleteDialog(city)}
-                color="error"
-                sx={{ 
-                  '&:hover': { 
-                    backgroundColor: `${theme.palette.error.main}15` 
-                  }
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
+      {/* Пустое состояние */}
+      {cities.length === 0 && !isLoading && (
+        <Box sx={tablePageStyles.emptyStateContainer}>
+          <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
+            {searchQuery ? 'Города не найдены' : 'В данном регионе пока нет городов'}
+          </Typography>
+          <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
+            {searchQuery 
+              ? 'Попробуйте изменить критерии поиска'
+              : 'Добавьте первый город в этот регион'
+            }
+          </Typography>
+          {!searchQuery && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={tablePageStyles.primaryButton}
+            >
+              Добавить город
+            </Button>
+          )}
+        </Box>
+      )}
 
-        {cities.length === 0 && (
-          <ListItem>
-            <ListItemText
-              primary={
-                <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
-                  Города не найдены
-                </Typography>
-              }
-              secondary={
-                <Typography sx={{ fontSize: SIZES.fontSize.sm, color: theme.palette.text.secondary }}>
-                  В этом регионе пока нет городов
-                </Typography>
-              }
-            />
-          </ListItem>
-        )}
-      </List>
-
+      {/* Пагинация */}
       {totalPages > 1 && (
-        <Box 
-          display="flex" 
-          justifyContent="center" 
-          mb={SIZES.spacing.md}
-          mt={SIZES.spacing.md}
-        >
+        <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
             count={totalPages}
             page={page}
@@ -344,16 +349,6 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
           />
         </Box>
       )}
-
-      <Box display="flex" justifyContent="flex-end" mt={SIZES.spacing.md}>
-        <Button
-          startIcon={<AddIcon />}
-          variant="contained"
-          onClick={() => handleOpenDialog()}
-        >
-          Добавить город
-        </Button>
-      </Box>
 
       {/* Модальное окно создания/редактирования города */}
       <Modal 

@@ -1,9 +1,27 @@
-import React from 'react';
+/**
+ * RegionFormPage - Страница формы создания/редактирования региона
+ * ТЕСТ: Проверка применения изменений - границы удалены
+ * 
+ * Функциональность:
+ * - Создание нового региона
+ * - Редактирование существующего региона
+ * - Валидация данных формы с использованием Yup
+ * - Отображение списка городов в регионе (только при редактировании)
+ * - Централизованная система стилей для консистентного дизайна
+ * - Двухколоночная раскладка при редактировании
+ */
+
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  CircularProgress,
-  IconButton,
+  Box,
+  Typography,
+  TextField,
+  FormControlLabel,
+  Switch,
   Grid,
+  Alert,
+  CircularProgress,
   useTheme,
 } from '@mui/material';
 import {
@@ -18,27 +36,13 @@ import {
   useGetRegionByIdQuery,
 } from '../../api/regions.api';
 import { RegionFormData } from '../../types/models';
+import { Button } from '../../components/ui';
 import CitiesList from '../../components/CitiesList';
-
-// Импорты UI компонентов
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Switch,
-} from '../../components/ui';
-import { useSnackbar } from '../../components/ui/Snackbar';
-
-// Импорт централизованных стилей
-import { getFormStyles } from '../../styles/components';
+import { getFormStyles, SIZES } from '../../styles';
 
 /**
- * Схема валидации для формы региона
- * Определяет правила валидации полей региона:
- * - Название: от 2 до 100 символов (обязательно)
- * - Код: от 2 до 10 символов (обязательно)
- * - Статус активности: булево значение
+ * Схема валидации формы региона
+ * Определяет правила валидации для всех полей формы
  */
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -53,146 +57,111 @@ const validationSchema = Yup.object({
 });
 
 /**
- * Компонент формы создания/редактирования региона
- * Поддерживает два режима работы:
- * - Создание нового региона (без ID в URL)
- * - Редактирование существующего региона (с ID в URL + список городов)
- * 
- * Особенности:
- * - В режиме редактирования показывает список городов региона
- * - Уведомления об успешном сохранении/ошибках
- * - Валидация полей с помощью Yup
- * 
- * Использует централизованную систему стилей для консистентного UI
+ * RegionFormPage - Основной компонент страницы формы региона
+ * Поддерживает создание новых регионов и редактирование существующих
  */
-
-const RegionFormPage: React.FC = () => {
-  const theme = useTheme();
+export const RegionFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isEditMode = Boolean(id);
-
-  // Инициализация централизованных стилей
+  const theme = useTheme();
   const formStyles = getFormStyles(theme);
+  
+  const isEditing = Boolean(id);
+  const [submitError, setSubmitError] = useState<string>('');
 
-  // Snackbar для уведомлений
-  const { showSuccess, showError } = useSnackbar();
-
-  // RTK Query хуки
-  const { data: regionData, isLoading: isLoadingRegion } = useGetRegionByIdQuery(parseInt(id ?? '0'), {
-    skip: !isEditMode,
+  // RTK Query хуки для работы с API регионов
+  const { data: regionData, isLoading } = useGetRegionByIdQuery(parseInt(id ?? '0'), {
+    skip: !isEditing,
   });
-  const [createRegion, { isLoading: isCreating }] = useCreateRegionMutation();
-  const [updateRegion, { isLoading: isUpdating }] = useUpdateRegionMutation();
+  const [createRegion] = useCreateRegionMutation();
+  const [updateRegion] = useUpdateRegionMutation();
 
-  // Formik
+  /**
+   * Конфигурация Formik для управления состоянием формы
+   * Включает валидацию, обработку отправки и начальные значения
+   */
   const formik = useFormik<RegionFormData>({
     initialValues: {
       name: regionData?.name || '',
       code: regionData?.code || '',
       is_active: regionData?.is_active ?? true,
     },
-    enableReinitialize: true, // Позволяет переинициализировать форму при изменении regionData
     validationSchema,
+    enableReinitialize: true, // Автоматически перезагружает значения при изменении initialValues
     onSubmit: async (values) => {
       try {
-        if (isEditMode && id) {
+        setSubmitError('');
+        if (isEditing && id) {
           await updateRegion({ id: parseInt(id), region: values }).unwrap();
-          showSuccess('Регион успешно обновлен');
         } else {
           await createRegion(values).unwrap();
-          showSuccess('Регион успешно создан');
         }
-        // Возвращаемся к списку после успешного сохранения
-        setTimeout(() => navigate('/regions'), 1500);
+        navigate('/regions');
       } catch (error: any) {
-        console.error('Error saving region:', error);
-        let errorMessage = 'Произошла ошибка при сохранении региона';
-        
-        if (error.data?.errors) {
-          // Обработка ошибок валидации от Rails
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-            
-          // Устанавливаем ошибки в форму
-          formik.setErrors(
-            Object.entries(errors).reduce((acc, [field, messages]) => ({
-              ...acc,
-              [field.replace('region.', '')]: messages[0]
-            }), {} as Record<string, string>)
-          );
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        showError(errorMessage);
+        console.error('Submit error:', error);
+        setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
       }
     },
   });
 
+  /**
+   * Обработчик возврата к списку регионов
+   */
   const handleBack = () => {
     navigate('/regions');
   };
 
-  // Отображение состояния загрузки
-  if (isEditMode && isLoadingRegion) {
+  // Состояние загрузки для режима редактирования
+  if (isEditing && isLoading) {
     return (
-      <Box sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '400px'
-      }}>
+      <Box sx={formStyles.loadingContainer}>
         <CircularProgress />
+        <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
+          Загрузка региона...
+        </Typography>
       </Box>
     );
   }
 
-  const isSaving = isCreating || isUpdating;
-
   return (
-    <Box sx={{ padding: theme.spacing(3) }}>
-      {/* Заголовок и кнопка назад */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        marginBottom: theme.spacing(3)
-      }}>
-        <IconButton
+    <Box sx={formStyles.container}>
+      {/* Заголовок страницы с кнопкой "Назад" */}
+      <Box sx={formStyles.headerContainer}>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
           onClick={handleBack}
-          sx={{ 
-            marginRight: theme.spacing(1),
-          }}
+          sx={{ mr: theme.spacing(SIZES.spacing.md) }}
         >
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography 
-          variant="h4"
-          sx={formStyles.sectionTitle}
-        >
-          {isEditMode ? 'Редактирование региона' : 'Создание региона'}
+          Назад
+        </Button>
+        <Typography variant="h4" component="h1" sx={formStyles.title}>
+          {isEditing ? 'Редактировать регион' : 'Новый регион'}
         </Typography>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* Форма региона */}
-        <Grid item xs={12} md={isEditMode ? 6 : 12}>
-          <Box sx={formStyles.container}>
-            <Typography 
-              variant="h6" 
-              sx={formStyles.sectionTitle}
-            >
+      <Grid container spacing={theme.spacing(SIZES.spacing.xl)}>
+        {/* Основная форма региона */}
+        <Grid item xs={12} md={isEditing ? 6 : 12}>
+          <Box sx={formStyles.formCard}>
+            <Typography variant="h6" sx={formStyles.sectionTitle}>
               Информация о регионе
             </Typography>
-            
-            <Box component="form" onSubmit={formik.handleSubmit} sx={formStyles.section}>
+
+            {/* Отображение ошибок отправки формы */}
+            {submitError && (
+              <Alert 
+                severity="error" 
+                sx={formStyles.errorAlert}
+              >
+                {submitError}
+              </Alert>
+            )}
+
+            <Box component="form" onSubmit={formik.handleSubmit}>
+              {/* Поле ввода названия региона */}
               <TextField
                 fullWidth
-                id="name"
                 name="name"
                 label="Название региона"
                 value={formik.values.name}
@@ -200,14 +169,12 @@ const RegionFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
-                margin="normal"
-                required
                 sx={formStyles.field}
               />
 
+              {/* Поле ввода кода региона */}
               <TextField
                 fullWidth
-                id="code"
                 name="code"
                 label="Код региона"
                 value={formik.values.code}
@@ -215,47 +182,39 @@ const RegionFormPage: React.FC = () => {
                 onBlur={formik.handleBlur}
                 error={formik.touched.code && Boolean(formik.errors.code)}
                 helperText={formik.touched.code && formik.errors.code}
-                margin="normal"
-                required
                 sx={formStyles.field}
               />
 
-              <Switch
-                id="is_active"
-                name="is_active"
-                checked={formik.values.is_active}
-                onChange={(event, checked) => formik.setFieldValue('is_active', checked)}
+              {/* Переключатель активности региона */}
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
                 label="Активен"
-                sx={{ marginTop: theme.spacing(2) }}
+                sx={formStyles.switchField}
               />
 
-              <Box sx={{ 
-                marginTop: theme.spacing(3), 
-                display: 'flex', 
-                gap: 2
-              }}>
+              {/* Кнопка сохранения формы */}
+              <Box sx={formStyles.actionsContainer}>
                 <Button
                   type="submit"
                   variant="contained"
-                  startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
-                  disabled={isSaving}
+                  startIcon={<SaveIcon />}
+                  disabled={formik.isSubmitting}
                 >
-                  {isSaving ? 'Сохранение...' : 'Сохранить'}
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={handleBack}
-                  disabled={isSaving}
-                >
-                  Отмена
+                  {isEditing ? 'Сохранить' : 'Создать'}
                 </Button>
               </Box>
             </Box>
           </Box>
         </Grid>
 
-        {/* Список городов (только при редактировании) */}
-        {isEditMode && id && (
+        {/* Список городов региона (только при редактировании) */}
+        {isEditing && id && (
           <Grid item xs={12} md={6}>
             <CitiesList regionId={id} />
           </Grid>
