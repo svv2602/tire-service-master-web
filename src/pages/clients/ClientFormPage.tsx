@@ -29,16 +29,18 @@ import { getFormStyles } from '../../styles/components';
  * Схема валидации для формы клиента
  * Определяет правила валидации полей клиента:
  * - Имя и фамилия: обязательные поля
- * - Телефон: проверка формата (10-15 цифр с возможным +)
- * - Email: проверка формата email
+ * - Телефон: обязательное поле, проверка формата (10-15 цифр с возможным +)
+ * - Email: необязательное поле, проверка формата email если заполнено
  */
 const validationSchema = Yup.object({
   first_name: Yup.string().required('Обязательное поле'),
   last_name: Yup.string().required('Обязательное поле'),
   phone: Yup.string()
+    .required('Обязательное поле')
     .matches(/^\+?[0-9]{10,15}$/, 'Неверный формат телефона'),
   email: Yup.string()
-    .email('Неверный формат email'),
+    .email('Неверный формат email')
+    .notRequired(),
 });
 
 /**
@@ -125,7 +127,24 @@ const ClientFormPage: React.FC = () => {
           dispatch(clientsApi.util.invalidateTags([{ type: 'Client', id }, 'Client']));
           setSuccessMessage('Клиент успешно обновлен');
         } else {
-          await createClient(values).unwrap();
+          // Для создания клиента отправляем данные в формате { user: {...}, client: {...} }
+          const createData = {
+            user: {
+              first_name: values.first_name,
+              last_name: values.last_name,
+              middle_name: values.middle_name || '',
+              phone: values.phone || '',
+              email: values.email || '',
+              password: 'default_password', // Временный пароль
+              password_confirmation: 'default_password'
+            },
+            client: {
+              preferred_notification_method: 'email', // Значение по умолчанию
+              marketing_consent: true // Значение по умолчанию
+            }
+          };
+          
+          await createClient(createData).unwrap();
           // Принудительно инвалидируем кэш
           dispatch(clientsApi.util.invalidateTags(['Client']));
           setSuccessMessage('Клиент успешно создан');
@@ -191,12 +210,13 @@ const ClientFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="first_name"
-                label="Имя"
+                label="Имя *"
                 value={formik.values.first_name}
                 onChange={formik.handleChange}
                 error={formik.touched.first_name && Boolean(formik.errors.first_name)}
                 helperText={formik.touched.first_name && formik.errors.first_name}
                 sx={formStyles.field}
+                required
               />
             </Grid>
 
@@ -204,12 +224,13 @@ const ClientFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="last_name"
-                label="Фамилия"
+                label="Фамилия *"
                 value={formik.values.last_name}
                 onChange={formik.handleChange}
                 error={formik.touched.last_name && Boolean(formik.errors.last_name)}
                 helperText={formik.touched.last_name && formik.errors.last_name}
                 sx={formStyles.field}
+                required
               />
             </Grid>
 
@@ -230,12 +251,13 @@ const ClientFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="phone"
-                label="Телефон"
+                label="Телефон *"
                 value={formik.values.phone}
                 onChange={formik.handleChange}
                 error={formik.touched.phone && Boolean(formik.errors.phone)}
                 helperText={formik.touched.phone && formik.errors.phone}
                 sx={formStyles.field}
+                required
               />
             </Grid>
 
@@ -243,7 +265,7 @@ const ClientFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="email"
-                label="Email"
+                label="Email (необязательно)"
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 error={formik.touched.email && Boolean(formik.errors.email)}

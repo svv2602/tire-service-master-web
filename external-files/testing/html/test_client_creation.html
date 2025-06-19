@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест API создания клиентов</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #response {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+      white-space: pre-wrap;
+    }
+    .required:after {
+      content: " *";
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Тест API создания клиентов</h1>
+  
+  <div class="form-group">
+    <label for="token">Токен авторизации:</label>
+    <input type="text" id="token" placeholder="Вставьте токен авторизации">
+  </div>
+  
+  <form id="clientForm">
+    <h2>Данные пользователя</h2>
+    <div class="form-group">
+      <label for="first_name" class="required">Имя:</label>
+      <input type="text" id="first_name" name="first_name" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="last_name" class="required">Фамилия:</label>
+      <input type="text" id="last_name" name="last_name" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="middle_name">Отчество:</label>
+      <input type="text" id="middle_name" name="middle_name">
+    </div>
+    
+    <div class="form-group">
+      <label for="phone" class="required">Телефон:</label>
+      <input type="text" id="phone" name="phone" placeholder="+380501234567" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="email">Email (необязательно):</label>
+      <input type="email" id="email" name="email">
+    </div>
+    
+    <div class="form-group">
+      <label for="password" class="required">Пароль:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="password_confirmation" class="required">Подтверждение пароля:</label>
+      <input type="password" id="password_confirmation" name="password_confirmation" required>
+    </div>
+    
+    <h2>Настройки клиента</h2>
+    <div class="form-group">
+      <label for="preferred_notification_method">Предпочтительный способ уведомлений:</label>
+      <select id="preferred_notification_method" name="preferred_notification_method">
+        <option value="push">Push-уведомления</option>
+        <option value="email">Email</option>
+        <option value="sms">SMS</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label>
+        <input type="checkbox" id="marketing_consent" name="marketing_consent" checked>
+        Согласие на маркетинговые рассылки
+      </label>
+    </div>
+    
+    <button type="submit">Создать клиента</button>
+  </form>
+  
+  <div>
+    <h2>Ответ сервера:</h2>
+    <pre id="response"></pre>
+  </div>
+  
+  <script>
+    document.getElementById('clientForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const token = document.getElementById('token').value;
+      if (!token) {
+        alert('Пожалуйста, введите токен авторизации');
+        return;
+      }
+      
+      // Собираем данные формы
+      const userData = {
+        first_name: document.getElementById('first_name').value,
+        last_name: document.getElementById('last_name').value,
+        middle_name: document.getElementById('middle_name').value || '',
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value || '',
+        password: document.getElementById('password').value,
+        password_confirmation: document.getElementById('password_confirmation').value
+      };
+      
+      const clientData = {
+        preferred_notification_method: document.getElementById('preferred_notification_method').value,
+        marketing_consent: document.getElementById('marketing_consent').checked
+      };
+      
+      // Формируем запрос
+      const requestData = {
+        user: userData,
+        client: clientData
+      };
+      
+      // Отправляем запрос
+      try {
+        const response = await fetch('http://localhost:8000/api/v1/clients', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify(requestData)
+        });
+        
+        const responseData = await response.json();
+        
+        // Выводим результат
+        document.getElementById('response').textContent = 
+          `Статус: ${response.status} ${response.statusText}\n\n` +
+          JSON.stringify(responseData, null, 2);
+      } catch (error) {
+        document.getElementById('response').textContent = 
+          `Ошибка: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html> 
