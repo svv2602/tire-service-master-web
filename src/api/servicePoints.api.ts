@@ -41,8 +41,34 @@ export interface SchedulePreviewResponse {
 }
 
 // Инжектируем эндпоинты в baseApi
+// Тип для поиска сервисных точек
+export interface ServicePointSearchParams {
+  city?: string;
+  query?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface ServicePointSearchResponse {
+  data: ServicePoint[];
+  total: number;
+  city_found: boolean;
+}
+
 export const servicePointsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    // Поиск сервисных точек по городу (для клиентского интерфейса)
+    searchServicePoints: builder.query<ServicePointSearchResponse, ServicePointSearchParams>({
+      query: (params) => ({
+        url: '/service_points/search',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['ServicePoint'],
+      // Кэширование на 5 минут
+      keepUnusedDataFor: 300,
+    }),
+
     // Получение списка сервисных точек
     getServicePoints: builder.query<ApiResponse<ServicePoint>, { 
       query?: string;
@@ -378,6 +404,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useSearchServicePointsQuery,
   useGetServicePointsQuery,
   useGetServicePointBasicInfoQuery,
   useGetServicePointByIdQuery,

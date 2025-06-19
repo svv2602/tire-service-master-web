@@ -13,7 +13,7 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/index';
 import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
-import { extendClients } from './utils/clientExtensions';
+// import { extendClients } from './utils/clientExtensions';
 import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
 
@@ -48,6 +48,7 @@ const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage')
 const BookingsPage = lazy(() => import('./pages/bookings/BookingsPage'));
 const BookingFormPage = lazy(() => import('./pages/bookings/BookingFormPage'));
 const BookingFormPageWithAvailability = lazy(() => import('./pages/bookings/BookingFormPageWithAvailability'));
+const NewBookingWithAvailabilityPage = lazy(() => import('./pages/bookings/NewBookingWithAvailabilityPage'));
 
 // Ленивая загрузка страниц настроек
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
@@ -191,6 +192,7 @@ function App() {
                     <Route path="/client/services" element={<ClientServicesPage />} />
                     <Route path="/client/search" element={<ClientSearchPage />} />
                     <Route path="/client/booking" element={<ClientBookingPage />} />
+                    <Route path="/client/booking/new-with-availability" element={<NewBookingWithAvailabilityPage />} />
                     <Route path="/client/booking/success" element={<BookingSuccessPage />} />
                     <Route path="/client/profile" element={<ClientProfilePage />} />
                     
@@ -241,6 +243,7 @@ function App() {
                       <Route path="bookings" element={<BookingsPage />} />
                       <Route path="bookings/new" element={<BookingFormPage />} />
                       <Route path="bookings/new-with-availability" element={<BookingFormPageWithAvailability />} />
+                      <Route path="bookings/new-multi-step" element={<NewBookingWithAvailabilityPage />} />
                       <Route path="bookings/:id/edit" element={<BookingFormPage />} />
                       <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
                       <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
