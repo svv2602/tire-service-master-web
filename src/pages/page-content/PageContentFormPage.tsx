@@ -53,7 +53,6 @@ import {
   PageContent,
   CreatePageContentRequest
 } from '../../api/pageContent.api';
-import { PageContentBlock } from '../../types';
 
 interface TabPanelProps {
   children?: React.ReactNode;

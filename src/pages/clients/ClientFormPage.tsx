@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
@@ -12,7 +12,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation, clientsApi } from '../../api/clients.api';
-import { ClientFormData } from '../../types/client';
+import { ClientFormData, ClientUpdateData, ClientCreateData } from '../../types/client';
+import { clientToFormData } from '../../utils/clientExtensions';
 
 // Импорты UI компонентов
 import {
@@ -62,6 +63,10 @@ const ClientFormPage: React.FC = () => {
   // Состояния для уведомлений
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   // Инициализация централизованных стилей
   const formStyles = getFormStyles(theme);
@@ -77,25 +82,22 @@ const ClientFormPage: React.FC = () => {
 
   const isLoading = isLoadingClient || isCreating || isUpdating;
 
-  // Мемоизированные начальные значения
+  // Получение начальных значений формы
   const initialValues = useMemo(() => {
     if (client && isEditMode) {
-      return {
-        first_name: client.first_name,
-        last_name: client.last_name,
-        middle_name: client.middle_name || '',
-        phone: client.phone || '',
-        email: client.email || '',
-        is_active: client.is_active,
-      };
+      return clientToFormData(client);
     }
     return {
-      first_name: '',
-      last_name: '',
-      middle_name: '',
-      phone: '',
-      email: '',
-      is_active: true,
+      user_attributes: {
+        first_name: '',
+        last_name: '',
+        middle_name: '',
+        phone: '',
+        email: '',
+        is_active: true
+      },
+      preferred_notification_method: 'push',
+      marketing_consent: false
     };
   }, [client, isEditMode]);
 
@@ -105,58 +107,60 @@ const ClientFormPage: React.FC = () => {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setIsSubmitting(true);
       try {
-        setApiError(null);
-        setSuccessMessage(null);
-        
-        if (isEditMode && id) {
-          // Для обновления клиента отправляем данные в формате { user: {...} }
-          const updateData = {
+        if (isEditMode && client) {
+          // Обновление существующего клиента
+          const updateData: ClientUpdateData = {
             user: {
-              first_name: values.first_name,
-              last_name: values.last_name,
-              middle_name: values.middle_name || '',
-              phone: values.phone || '',
-              email: values.email || '',
-              is_active: values.is_active,
+              first_name: values.user_attributes.first_name,
+              last_name: values.user_attributes.last_name,
+              middle_name: values.user_attributes.middle_name || '',
+              phone: values.user_attributes.phone || '',
+              email: values.user_attributes.email || '',
+              is_active: values.user_attributes.is_active,
             }
           };
           
-          await updateClient({ id, client: updateData }).unwrap();
-          // Принудительно инвалидируем кэш
-          dispatch(clientsApi.util.invalidateTags([{ type: 'Client', id }, 'Client']));
-          setSuccessMessage('Клиент успешно обновлен');
+          await updateClient({
+            id: client.id.toString(),
+            client: updateData
+          }).unwrap();
+          
+          setSnackbarMessage('Клиент успешно обновлен');
+          setSnackbarOpen(true);
+          navigate('/clients');
         } else {
-          // Для создания клиента отправляем данные в формате { user: {...}, client: {...} }
-          const createData = {
+          // Создание нового клиента
+          const createData: ClientCreateData = {
             user: {
-              first_name: values.first_name,
-              last_name: values.last_name,
-              middle_name: values.middle_name || '',
-              phone: values.phone || '',
-              email: values.email || '',
+              first_name: values.user_attributes.first_name,
+              last_name: values.user_attributes.last_name,
+              middle_name: values.user_attributes.middle_name || '',
+              phone: values.user_attributes.phone || '',
+              email: values.user_attributes.email || '',
               password: 'default_password', // Временный пароль
               password_confirmation: 'default_password'
             },
             client: {
-              preferred_notification_method: 'email', // Значение по умолчанию
-              marketing_consent: true // Значение по умолчанию
+              preferred_notification_method: values.preferred_notification_method,
+              marketing_consent: values.marketing_consent
             }
           };
           
           await createClient(createData).unwrap();
-          // Принудительно инвалидируем кэш
-          dispatch(clientsApi.util.invalidateTags(['Client']));
-          setSuccessMessage('Клиент успешно создан');
-        }
-        
-        // Переходим к списку клиентов через небольшую задержку
-        setTimeout(() => {
+          
+          setSnackbarMessage('Клиент успешно создан');
+          setSnackbarOpen(true);
           navigate('/clients');
-        }, 1500);
-      } catch (error: any) {
-        console.error('Ошибка при сохранении клиента:', error);
-        setApiError(extractErrorMessage(error));
+        }
+      } catch (error) {
+        console.error('Error saving client:', error);
+        setSnackbarMessage('Ошибка при сохранении клиента');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      } finally {
+        setIsSubmitting(false);
       }
     },
   });
@@ -209,12 +213,13 @@ const ClientFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="first_name"
+                id="first_name"
+                name="user_attributes.first_name"
                 label="Имя *"
-                value={formik.values.first_name}
+                value={formik.values.user_attributes.first_name}
                 onChange={formik.handleChange}
-                error={formik.touched.first_name && Boolean(formik.errors.first_name)}
-                helperText={formik.touched.first_name && formik.errors.first_name}
+                error={formik.touched.user_attributes?.first_name && Boolean(formik.errors.user_attributes?.first_name)}
+                helperText={formik.touched.user_attributes?.first_name && formik.errors.user_attributes?.first_name}
                 sx={formStyles.field}
                 required
               />
@@ -223,12 +228,13 @@ const ClientFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="last_name"
+                id="last_name"
+                name="user_attributes.last_name"
                 label="Фамилия *"
-                value={formik.values.last_name}
+                value={formik.values.user_attributes.last_name}
                 onChange={formik.handleChange}
-                error={formik.touched.last_name && Boolean(formik.errors.last_name)}
-                helperText={formik.touched.last_name && formik.errors.last_name}
+                error={formik.touched.user_attributes?.last_name && Boolean(formik.errors.user_attributes?.last_name)}
+                helperText={formik.touched.user_attributes?.last_name && formik.errors.user_attributes?.last_name}
                 sx={formStyles.field}
                 required
               />
@@ -237,12 +243,13 @@ const ClientFormPage: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                name="middle_name"
+                id="middle_name"
+                name="user_attributes.middle_name"
                 label="Отчество"
-                value={formik.values.middle_name}
+                value={formik.values.user_attributes.middle_name}
                 onChange={formik.handleChange}
-                error={formik.touched.middle_name && Boolean(formik.errors.middle_name)}
-                helperText={formik.touched.middle_name && formik.errors.middle_name}
+                error={formik.touched.user_attributes?.middle_name && Boolean(formik.errors.user_attributes?.middle_name)}
+                helperText={formik.touched.user_attributes?.middle_name && formik.errors.user_attributes?.middle_name}
                 sx={formStyles.field}
               />
             </Grid>
@@ -250,12 +257,13 @@ const ClientFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="phone"
+                id="phone"
+                name="user_attributes.phone"
                 label="Телефон *"
-                value={formik.values.phone}
+                value={formik.values.user_attributes.phone}
                 onChange={formik.handleChange}
-                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                helperText={formik.touched.phone && formik.errors.phone}
+                error={formik.touched.user_attributes?.phone && Boolean(formik.errors.user_attributes?.phone)}
+                helperText={formik.touched.user_attributes?.phone && formik.errors.user_attributes?.phone}
                 sx={formStyles.field}
                 required
               />
@@ -264,12 +272,13 @@ const ClientFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="email"
+                id="email"
+                name="user_attributes.email"
                 label="Email (необязательно)"
-                value={formik.values.email}
+                value={formik.values.user_attributes.email}
                 onChange={formik.handleChange}
-                error={formik.touched.email && Boolean(formik.errors.email)}
-                helperText={formik.touched.email && formik.errors.email}
+                error={formik.touched.user_attributes?.email && Boolean(formik.errors.user_attributes?.email)}
+                helperText={formik.touched.user_attributes?.email && formik.errors.user_attributes?.email}
                 sx={formStyles.field}
               />
             </Grid>
@@ -285,11 +294,11 @@ const ClientFormPage: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={formik.values.is_active}
+                      checked={formik.values.user_attributes.is_active}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                        formik.setFieldValue('is_active', e.target.checked)
+                        formik.setFieldValue('user_attributes.is_active', e.target.checked)
                       }
-                      name="is_active"
+                      name="user_attributes.is_active"
                       color="primary"
                     />
                   }

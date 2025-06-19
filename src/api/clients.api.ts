@@ -1,6 +1,6 @@
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { baseApi } from './baseApi';
-import { Client, ClientCar } from '../types/client';
+import { Client, ClientCar, ClientCarFormData } from '../types/client';
 import { ApiResponse, ClientFilter } from '../types/models';
 
 // Типы для форм
@@ -44,13 +44,6 @@ interface ClientUpdateData {
     preferred_notification_method?: string;
     marketing_consent?: boolean;
   };
-}
-
-interface ClientCarFormData {
-  brand: string;
-  model: string;
-  year: number;
-  license_plate: string;
 }
 
 export const clientsApi = baseApi.injectEndpoints({

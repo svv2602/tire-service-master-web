@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -7,14 +7,15 @@ import { ru } from 'date-fns/locale';
 import { Provider } from 'react-redux';
 import { store } from './store/index';
 import MainLayout from './components/layouts/MainLayout';
-import AuthInitializer from './components/auth/AuthInitializer';
-import { GlobalUIStyles } from './components/styled/CommonComponents';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LoadingScreen } from './components/LoadingScreen';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/index';
 import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
+import { extendClients } from './utils/clientExtensions';
+import AuthInitializer from './components/auth/AuthInitializer';
+import { GlobalUIStyles } from './components/styled/CommonComponents';
 
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -148,6 +149,13 @@ const ProtectedRoute: React.FC<{
 };
 
 function App() {
+  // Инициализация расширений для клиентов
+  useEffect(() => {
+    // Здесь мы будем инициализировать расширения для клиентов
+    // при необходимости в будущем
+    console.debug('Client extensions ready');
+  }, []);
+
   return (
     <Provider store={store}>
       <ThemeProvider>
@@ -156,146 +164,147 @@ function App() {
             <CssBaseline />
             <GlobalUIStyles />
             <AuthInitializer>
-            <Router 
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true
-              }}
-            >
-            <Suspense fallback={<LoadingSpinner fullScreen />}>
-              <Routes>
-                {/* Публичные маршруты */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/styleguide" element={
-                  <ThemeProvider>
-                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-                      <StyleGuide />
-                    </LocalizationProvider>
-                  </ThemeProvider>
-                } />
-                
-                {/* Главная страница для клиентов (без авторизации) */}
-                <Route path="/client" element={
-                  <ClientMainPage />
-                } />
-                
-                {/* Клиентские маршруты */}
-                <Route path="/client/services" element={<ClientServicesPage />} />
-                <Route path="/client/search" element={<ClientSearchPage />} />
-                <Route path="/client/booking" element={<ClientBookingPage />} />
-                <Route path="/client/booking/success" element={<BookingSuccessPage />} />
-                <Route path="/client/profile" element={<ClientProfilePage />} />
-                
-                {/* Новые маршруты для управления записями клиента */}
-                <Route path="/client/bookings" element={<MyBookingsPage />} />
-                <Route path="/client/bookings/:id" element={<BookingDetailsPage />} />
-                <Route path="/client/bookings/:id/reschedule" element={<RescheduleBookingPage />} />
-                
-                {/* Новые маршруты для отзывов клиента */}
-                <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
-                <Route path="/client/reviews/new" element={<ClientReviewFormPage />} />
-                <Route path="/client/reviews/new/:servicePointId" element={<ClientReviewFormPage />} />
-                
-                {/* Публичная база знаний (без авторизации) */}
-                <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
-                <Route path="/knowledge-base/:id" element={<ArticleDetailPage />} />
-                
-                {/* Защищенные маршруты в главном лейауте */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <MainLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
-                  <Route path="dashboard" element={<DashboardPage />} />
-                  {/* Маршруты для партнеров */}
-                  <Route path="partners" element={<PartnersPage />} />
-                  <Route path="partners/new" element={<PartnerFormPage />} />
-                  <Route path="partners/:id/edit" element={<PartnerFormPage />} />
-                  <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
-                  <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
-                  <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
-                  {/* Маршруты для сервисных точек */}
-                  <Route path="service-points" element={<ServicePointsPage />} />
-                  <Route path="service-points/new" element={<ServicePointFormPageNew />} />
-                  <Route path="service-points/:id" element={<ServicePointDetailPage />} />
-                  <Route path="service-points/:id/edit" element={<ServicePointFormPageNew />} />
-                  <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
-                  <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
-                  {/* Маршруты для клиентов */}
-                  <Route path="clients" element={<ClientsPage />} />
-                  <Route path="clients/new" element={<ClientFormPage />} />
-                  <Route path="clients/:id/edit" element={<ClientFormPage />} />
-                  <Route path="clients/:clientId/cars" element={<ClientCarsPage />} />
-                  <Route path="clients/:clientId/cars/new" element={<ClientCarFormPage />} />
-                  <Route path="clients/:clientId/cars/:carId/edit" element={<ClientCarFormPage />} />
-                  {/* Маршруты для бронирований */}
-                  <Route path="bookings" element={<BookingsPage />} />
-                  <Route path="bookings/new" element={<BookingFormPage />} />
-                  <Route path="bookings/new-with-availability" element={<BookingFormPageWithAvailability />} />
-                  <Route path="bookings/:id/edit" element={<BookingFormPage />} />
-                  <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
-                  <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
-                  {/* Маршруты для отзывов */}
-                  <Route path="reviews" element={<ReviewsPage />} />
-                  <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
-                  <Route path="reviews/new" element={<ReviewFormPage />} />
-                  <Route path="my-reviews" element={<MyReviewsPage />} />
-                  {/* Маршруты для брендов и моделей автомобилей */}
-                  <Route path="car-brands" element={<CarBrandsPage />} />
-                  <Route path="car-brands/new" element={<CarBrandFormPage />} />
-                  <Route path="car-brands/:id/edit" element={<CarBrandFormPage />} />
-                  {/* Маршруты для клиентских автомобилей */}
-                  <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
-                  <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
-                  <Route path="my-bookings" element={<div>Мои записи на шиномонтаж (в разработке)</div>} />
-                  {/* Маршруты для сервисных центров клиента */}
-                  <Route path="service-points/search" element={<div>Поиск центров (в разработке)</div>} />
-                  <Route path="service-points/favorites" element={<div>Избранные центры (в разработке)</div>} />
-                  {/* Маршруты для справочников */}
-                  <Route path="cars" element={<div>Управление автомобилями (в разработке)</div>} />
-                  <Route path="services" element={<ServicesPage />} />
-                  <Route path="services/new" element={<ServiceFormPage />} />
-                  <Route path="services/:id/edit" element={<ServiceFormPage />} />
-                  {/* Маршруты для отчетов */}
-                  <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
-                  <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
-                  {/* Маршрут для пользователей */}
-                  <Route path="users" element={<UsersPage />} />
-                  <Route path="users/new" element={<UserForm />} />
-                  <Route path="users/:id/edit" element={<UserForm />} />
-                  <Route path="users/:id" element={<div>Информация о пользователе (в разработке)</div>} />
-                  {/* Другие маршруты */}
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="profile" element={<ProfilePage />} />
-                  {/* Справочники */}
-                  <Route path="regions" element={<RegionsPage />} />
-                  <Route path="regions/new" element={<RegionFormPage />} />
-                  <Route path="regions/:id/edit" element={<RegionFormPage />} />
-                  <Route path="cities" element={<CitiesPage />} />
-                  {/* Маршруты для статей */}
-                  <Route path="articles" element={<ArticlesPage />} />
-                  <Route path="articles/new" element={<CreateArticlePage />} />
-                  <Route path="articles/:id/edit" element={<EditArticlePage />} />
-                  <Route path="articles/:id" element={<ArticleViewPage />} />
-                  {/* Маршруты для управления контентом страниц */}
-                  <Route path="page-content" element={<PageContentPage />} />
-                  <Route path="page-content/new" element={<PageContentFormPage />} />
-                  <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
-                  <Route path="page-content/management" element={<PageContentManagement />} />
-                  {/* Тестовые маршруты */}
-                  <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
-                </Route>
-                
-                {/* Маршрут по умолчанию */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </Suspense>            </Router>
-        </AuthInitializer>
-      </LocalizationProvider>
-    </SnackbarProvider>
-  </ThemeProvider>
-</Provider>
+              <Router 
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true
+                }}
+              >
+                <Suspense fallback={<LoadingSpinner fullScreen />}>
+                  <Routes>
+                    {/* Публичные маршруты */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/styleguide" element={
+                      <ThemeProvider>
+                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+                          <StyleGuide />
+                        </LocalizationProvider>
+                      </ThemeProvider>
+                    } />
+                    
+                    {/* Главная страница для клиентов (без авторизации) */}
+                    <Route path="/client" element={
+                      <ClientMainPage />
+                    } />
+                    
+                    {/* Клиентские маршруты */}
+                    <Route path="/client/services" element={<ClientServicesPage />} />
+                    <Route path="/client/search" element={<ClientSearchPage />} />
+                    <Route path="/client/booking" element={<ClientBookingPage />} />
+                    <Route path="/client/booking/success" element={<BookingSuccessPage />} />
+                    <Route path="/client/profile" element={<ClientProfilePage />} />
+                    
+                    {/* Новые маршруты для управления записями клиента */}
+                    <Route path="/client/bookings" element={<MyBookingsPage />} />
+                    <Route path="/client/bookings/:id" element={<BookingDetailsPage />} />
+                    <Route path="/client/bookings/:id/reschedule" element={<RescheduleBookingPage />} />
+                    
+                    {/* Новые маршруты для отзывов клиента */}
+                    <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
+                    <Route path="/client/reviews/new" element={<ClientReviewFormPage />} />
+                    <Route path="/client/reviews/new/:servicePointId" element={<ClientReviewFormPage />} />
+                    
+                    {/* Публичная база знаний (без авторизации) */}
+                    <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
+                    <Route path="/knowledge-base/:id" element={<ArticleDetailPage />} />
+                    
+                    {/* Защищенные маршруты в главном лейауте */}
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <MainLayout />
+                      </ProtectedRoute>
+                    }>
+                      <Route index element={<Navigate to="/dashboard" replace />} />
+                      <Route path="dashboard" element={<DashboardPage />} />
+                      {/* Маршруты для партнеров */}
+                      <Route path="partners" element={<PartnersPage />} />
+                      <Route path="partners/new" element={<PartnerFormPage />} />
+                      <Route path="partners/:id/edit" element={<PartnerFormPage />} />
+                      <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
+                      <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
+                      <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
+                      {/* Маршруты для сервисных точек */}
+                      <Route path="service-points" element={<ServicePointsPage />} />
+                      <Route path="service-points/new" element={<ServicePointFormPageNew />} />
+                      <Route path="service-points/:id" element={<ServicePointDetailPage />} />
+                      <Route path="service-points/:id/edit" element={<ServicePointFormPageNew />} />
+                      <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
+                      <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
+                      {/* Маршруты для клиентов */}
+                      <Route path="clients" element={<ClientsPage />} />
+                      <Route path="clients/new" element={<ClientFormPage />} />
+                      <Route path="clients/:id/edit" element={<ClientFormPage />} />
+                      <Route path="clients/:clientId/cars" element={<ClientCarsPage />} />
+                      <Route path="clients/:clientId/cars/new" element={<ClientCarFormPage />} />
+                      <Route path="clients/:clientId/cars/:carId/edit" element={<ClientCarFormPage />} />
+                      {/* Маршруты для бронирований */}
+                      <Route path="bookings" element={<BookingsPage />} />
+                      <Route path="bookings/new" element={<BookingFormPage />} />
+                      <Route path="bookings/new-with-availability" element={<BookingFormPageWithAvailability />} />
+                      <Route path="bookings/:id/edit" element={<BookingFormPage />} />
+                      <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
+                      <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
+                      {/* Маршруты для отзывов */}
+                      <Route path="reviews" element={<ReviewsPage />} />
+                      <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
+                      <Route path="reviews/new" element={<ReviewFormPage />} />
+                      <Route path="my-reviews" element={<MyReviewsPage />} />
+                      {/* Маршруты для брендов и моделей автомобилей */}
+                      <Route path="car-brands" element={<CarBrandsPage />} />
+                      <Route path="car-brands/new" element={<CarBrandFormPage />} />
+                      <Route path="car-brands/:id/edit" element={<CarBrandFormPage />} />
+                      {/* Маршруты для клиентских автомобилей */}
+                      <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
+                      <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
+                      <Route path="my-bookings" element={<div>Мои записи на шиномонтаж (в разработке)</div>} />
+                      {/* Маршруты для сервисных центров клиента */}
+                      <Route path="service-points/search" element={<div>Поиск центров (в разработке)</div>} />
+                      <Route path="service-points/favorites" element={<div>Избранные центры (в разработке)</div>} />
+                      {/* Маршруты для справочников */}
+                      <Route path="cars" element={<div>Управление автомобилями (в разработке)</div>} />
+                      <Route path="services" element={<ServicesPage />} />
+                      <Route path="services/new" element={<ServiceFormPage />} />
+                      <Route path="services/:id/edit" element={<ServiceFormPage />} />
+                      {/* Маршруты для отчетов */}
+                      <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
+                      <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
+                      {/* Маршрут для пользователей */}
+                      <Route path="users" element={<UsersPage />} />
+                      <Route path="users/new" element={<UserForm />} />
+                      <Route path="users/:id/edit" element={<UserForm />} />
+                      <Route path="users/:id" element={<div>Информация о пользователе (в разработке)</div>} />
+                      {/* Другие маршруты */}
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      {/* Справочники */}
+                      <Route path="regions" element={<RegionsPage />} />
+                      <Route path="regions/new" element={<RegionFormPage />} />
+                      <Route path="regions/:id/edit" element={<RegionFormPage />} />
+                      <Route path="cities" element={<CitiesPage />} />
+                      {/* Маршруты для статей */}
+                      <Route path="articles" element={<ArticlesPage />} />
+                      <Route path="articles/new" element={<CreateArticlePage />} />
+                      <Route path="articles/:id/edit" element={<EditArticlePage />} />
+                      <Route path="articles/:id" element={<ArticleViewPage />} />
+                      {/* Маршруты для управления контентом страниц */}
+                      <Route path="page-content" element={<PageContentPage />} />
+                      <Route path="page-content/new" element={<PageContentFormPage />} />
+                      <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
+                      <Route path="page-content/management" element={<PageContentManagement />} />
+                      {/* Тестовые маршруты */}
+                      <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
+                    </Route>
+                    
+                    {/* Маршрут по умолчанию */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </Suspense>
+              </Router>
+            </AuthInitializer>
+          </LocalizationProvider>
+        </SnackbarProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }
 

@@ -14,18 +14,25 @@ import {
   Alert,
   Grid,
   useTheme,
+  FormHelperText,
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
-import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
+import { useCreateBookingMutation, useUpdateBookingMutation, useGetBookingByIdQuery } from '../../api/bookings.api';
 import { 
   BookingStatusEnum, 
-  BookingService
+  BookingService,
+  BookingFormData,
+  BookingServiceDetails
 } from '../../types/booking';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { useGetCarsQuery } from '../../api/cars.api';
+import { useGetClientsQuery } from '../../api/clients.api';
+import { useGetCarTypesQuery } from '../../api/carTypes.api';
 import { ServicePoint, ApiResponse } from '../../types/models';
+import { Client } from '../../types/client';
+import { Car, CarType } from '../../types/car';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -43,12 +50,30 @@ interface ServiceSelection {
   quantity: number;
 }
 
+// Расширенный интерфейс для данных бронирования с API
+interface BookingDetails {
+  id: string;
+  client_id: string;
+  service_point_id: string;
+  car_id: string | null;
+  car_type_id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  notes: string;
+  status_id: number;
+  booking_services: BookingServiceDetails[];
+}
+
 // Схема валидации для формы бронирования
 const validationSchema = yup.object({
   service_point_id: yup.number().required('Выберите точку обслуживания'),
-  car_id: yup.number().required('Выберите автомобиль'),
-  scheduled_at: yup.date().required('Выберите дату и время'),
-  services: yup.array().of(yup.number()).min(1, 'Выберите хотя бы одну услугу'),
+  client_id: yup.number().required('Выберите клиента'),
+  car_id: yup.number().nullable(),
+  car_type_id: yup.number().required('Выберите тип автомобиля'),
+  booking_date: yup.string().required('Выберите дату'),
+  start_time: yup.string().required('Выберите время начала'),
+  end_time: yup.string().required('Выберите время окончания'),
   notes: yup.string(),
 });
 
@@ -72,22 +97,44 @@ const BookingFormPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Данные бронирования для обработки услуг (пока не используется в форме, но может понадобиться)
+  // Данные бронирования для обработки услуг
   const [services, setServices] = useState<ServiceSelection[]>([]);
   
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
   const { data: carsData, isLoading: carsLoading } = useGetCarsQuery({} as any);
+  const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({} as any);
+  const { data: carTypesData, isLoading: carTypesLoading } = useGetCarTypesQuery();
+  const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   
-  const isLoading = servicePointsLoading || carsLoading || loading;
+  const isLoading = servicePointsLoading || carsLoading || clientsLoading || carTypesLoading || (isEditMode && bookingLoading) || loading;
+
+  // Функция для форматирования даты и времени
+  const formatDateTime = (date: Date): { date: string, time: string } => {
+    const formattedDate = date.toISOString().split('T')[0];
+    const formattedTime = date.toTimeString().substring(0, 5);
+    return { date: formattedDate, time: formattedTime };
+  };
+
+  // Функция для расчета времени окончания (по умолчанию +1 час)
+  const calculateEndTime = (startDate: Date): string => {
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    return endDate.toTimeString().substring(0, 5);
+  };
 
   // Мемоизированные начальные значения
   const initialValues = useMemo(() => ({
     service_point_id: '',
+    client_id: '',
     car_id: '',
-    scheduled_at: new Date(),
-    services: [] as BookingService[],
+    car_type_id: '',
+    booking_date: new Date().toISOString().split('T')[0],
+    start_time: new Date().toTimeString().substring(0, 5),
+    end_time: calculateEndTime(new Date()),
+    status_id: BookingStatusEnum.PENDING,
     notes: '',
+    services: [] as BookingService[],
+    total_price: '0',
   }), []);
 
   const formik = useFormik({
@@ -96,115 +143,117 @@ const BookingFormPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        if (id) {
+        setLoading(true);
+        
+        // Подготовка данных для API
+        const bookingData: BookingFormData = {
+          client_id: Number(values.client_id),
+          service_point_id: Number(values.service_point_id),
+          car_id: values.car_id ? Number(values.car_id) : null,
+          car_type_id: Number(values.car_type_id),
+          booking_date: values.booking_date,
+          start_time: values.start_time,
+          end_time: values.end_time,
+          status_id: values.status_id,
+          notes: values.notes || '',
+          services: services.map(service => ({
+            service_id: service.service_id,
+            quantity: service.quantity,
+            price: service.price
+          })),
+          total_price: services.reduce((sum, service) => sum + (service.price * service.quantity), 0).toString()
+        };
+
+        if (isEditMode && id) {
           await updateBooking({ 
             id: id.toString(), 
-            booking: {
-              client_id: 1, // TODO: получить из контекста
-              service_point_id: Number(values.service_point_id),
-              car_id: Number(values.car_id),
-              car_type_id: 1, // TODO: получить из формы
-              booking_date: values.scheduled_at.toISOString().split('T')[0],
-              start_time: values.scheduled_at.toISOString(),
-              end_time: new Date(values.scheduled_at.getTime() + 60 * 60 * 1000).toISOString(),
-              status_id: BookingStatusEnum.PENDING,
-              notes: values.notes || '',
-              services: services.map(service => ({
-                service_id: service.service_id,
-                quantity: service.quantity,
-                price: service.price
-              }))
-            }
+            booking: bookingData
           }).unwrap();
+          setSuccess('Бронирование успешно обновлено');
         } else {
-          await createBooking({
-            client_id: 1, // TODO: получить из контекста
-            service_point_id: Number(values.service_point_id),
-            car_id: Number(values.car_id),
-            car_type_id: 1, // TODO: получить из формы
-            booking_date: values.scheduled_at.toISOString().split('T')[0],
-            start_time: values.scheduled_at.toISOString(),
-            end_time: new Date(values.scheduled_at.getTime() + 60 * 60 * 1000).toISOString(),
-            status_id: BookingStatusEnum.PENDING,
-            notes: values.notes || '',
-            services: services.map(service => ({
-              service_id: service.service_id,
-              quantity: service.quantity,
-              price: service.price
-            }))
-          }).unwrap();
+          await createBooking(bookingData).unwrap();
+          setSuccess('Бронирование успешно создано');
         }
         
-        setSuccess('Бронирование успешно сохранено');
-        navigate('/bookings');
+        setTimeout(() => {
+          navigate('/bookings');
+        }, 1500);
       } catch (err) {
-        setError('Ошибка при сохранении бронирования');
+        console.error('Ошибка при сохранении бронирования:', err);
+        setError('Ошибка при сохранении бронирования. Проверьте данные и попробуйте снова.');
+      } finally {
+        setLoading(false);
       }
     },
   });
 
-  // Загрузка справочных данных при монтировании компонента
+  // Загрузка данных существующего бронирования при редактировании
   useEffect(() => {
-    const fetchReferenceData = async () => {
-      setLoading(true);
-      try {
-        // Загружаем данные о существующем бронировании при редактировании
-        if (isEditMode && id) {
-          // Здесь должен быть запрос к API для загрузки данных бронирования
-          // Временно используем моковые данные
-          const mockBooking = {
-            id: parseInt(id),
-            client_id: 1,
-            service_point_id: 1,
-            car_id: 1,
-            car_type_id: 1,
-            booking_date: '2023-07-15',
-            start_time: '14:30',
-            end_time: '15:30',
-            notes: 'Примечание к бронированию',
-            services: [
-              { service_id: 1, name: 'Замена шин', price: 400, quantity: 4 },
-              { service_id: 2, name: 'Балансировка', price: 200, quantity: 4 },
-            ],
-          };
-          
-          // Заполняем форму данными
-          formik.setFieldValue('service_point_id', mockBooking.service_point_id);
-          formik.setFieldValue('car_id', mockBooking.car_id);
-          formik.setFieldValue('scheduled_at', new Date(mockBooking.booking_date));
-          formik.setFieldValue('notes', mockBooking.notes);
-          setServices(mockBooking.services);
-        }
-      } catch (error) {
-        console.error('Error fetching reference data:', error);
-        setError('Не удалось загрузить данные. Пожалуйста, попробуйте снова позже.');
-      } finally {
-        setLoading(false);
+    if (isEditMode && bookingData) {
+      const booking = bookingData as unknown as BookingDetails;
+      
+      formik.setFieldValue('service_point_id', booking.service_point_id);
+      formik.setFieldValue('client_id', booking.client_id);
+      formik.setFieldValue('car_id', booking.car_id);
+      formik.setFieldValue('car_type_id', booking.car_type_id);
+      formik.setFieldValue('booking_date', booking.booking_date);
+      formik.setFieldValue('start_time', booking.start_time);
+      formik.setFieldValue('end_time', booking.end_time);
+      formik.setFieldValue('status_id', booking.status_id);
+      formik.setFieldValue('notes', booking.notes || '');
+      
+      // Загрузка услуг бронирования, если они есть
+      if (booking.booking_services && booking.booking_services.length > 0) {
+        const loadedServices = booking.booking_services.map(bs => ({
+          service_id: bs.service_id,
+          name: bs.service_name,
+          price: bs.price,
+          quantity: bs.quantity
+        }));
+        setServices(loadedServices);
       }
-    };
-    
-    fetchReferenceData();
-  }, [id, isEditMode, formik]);
-  
-  // Загрузка временных слотов при выборе даты и сервисной точки (упрощенная версия)
-  useEffect(() => {
-    // Этот useEffect можно расширить для загрузки реальных временных слотов
-    // когда будет добавлена соответствующая функциональность
-  }, []);
+    }
+  }, [isEditMode, bookingData, formik]);
 
   // Мемоизированные обработчики
   const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('service_point_id', event.target.value);
   }, [formik]);
 
+  const handleClientChange = useCallback((event: SelectChangeEvent<string>) => {
+    formik.setFieldValue('client_id', event.target.value);
+  }, [formik]);
+
   const handleCarChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('car_id', event.target.value);
   }, [formik]);
 
-  const handleDateTimeChange = useCallback((date: Date | null) => {
+  const handleCarTypeChange = useCallback((event: SelectChangeEvent<string>) => {
+    formik.setFieldValue('car_type_id', event.target.value);
+  }, [formik]);
+
+  const handleDateChange = useCallback((date: Date | null) => {
     if (date) {
-      formik.setFieldValue('scheduled_at', date);
+      const { date: formattedDate } = formatDateTime(date);
+      formik.setFieldValue('booking_date', formattedDate);
     }
+  }, [formik]);
+
+  const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const startTime = event.target.value;
+    formik.setFieldValue('start_time', startTime);
+    
+    // Автоматически устанавливаем время окончания (+1 час)
+    if (startTime) {
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours + 1, minutes);
+      formik.setFieldValue('end_time', endDate.toTimeString().substring(0, 5));
+    }
+  }, [formik]);
+
+  const handleEndTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    formik.setFieldValue('end_time', event.target.value);
   }, [formik]);
 
   const handleNotesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,7 +322,7 @@ const BookingFormPage: React.FC = () => {
             Основная информация
           </Typography>
           
-          <Grid container spacing={SIZES.spacing.lg}>
+          <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <FormControl 
                 fullWidth 
@@ -287,12 +336,40 @@ const BookingFormPage: React.FC = () => {
                   onChange={handleServicePointChange}
                   label="Точка обслуживания"
                 >
-                  {(servicePointsData as ApiResponse<ServicePoint>)?.data?.map((point: ServicePoint) => (
-                    <MenuItem key={point.id} value={point.id}>
-                      {point.name}
+                  {servicePointsData?.data?.map((servicePoint: ServicePoint) => (
+                    <MenuItem key={servicePoint.id} value={servicePoint.id}>
+                      {servicePoint.name} ({servicePoint.address})
                     </MenuItem>
                   ))}
                 </Select>
+                {formik.touched.service_point_id && formik.errors.service_point_id && (
+                  <FormHelperText>{formik.errors.service_point_id as string}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <FormControl 
+                fullWidth 
+                error={formik.touched.client_id && Boolean(formik.errors.client_id)}
+                sx={textFieldStyles}
+              >
+                <InputLabel id="client-label">Клиент</InputLabel>
+                <Select
+                  labelId="client-label"
+                  value={formik.values.client_id}
+                  onChange={handleClientChange}
+                  label="Клиент"
+                >
+                  {clientsData?.data?.map((client: Client) => (
+                    <MenuItem key={client.id} value={client.id}>
+                      {client.name || `${client.first_name} ${client.last_name}`} ({client.phone || client.email})
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.client_id && formik.errors.client_id && (
+                  <FormHelperText>{formik.errors.client_id as string}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
             
@@ -309,28 +386,91 @@ const BookingFormPage: React.FC = () => {
                   onChange={handleCarChange}
                   label="Автомобиль"
                 >
-                  {carsData?.map((car: any) => (
+                  <MenuItem value="">
+                    <em>Не выбран</em>
+                  </MenuItem>
+                  {carsData?.map((car: Car) => (
                     <MenuItem key={car.id} value={car.id}>
-                      {car.brand} {car.model} ({car.license_plate})
+                      {car.brand} {car.model} ({car.license_plate || 'Без номера'})
                     </MenuItem>
                   ))}
                 </Select>
+                {formik.touched.car_id && formik.errors.car_id && (
+                  <FormHelperText>{formik.errors.car_id as string}</FormHelperText>
+                )}
               </FormControl>
             </Grid>
             
             <Grid item xs={12} md={6}>
-              <DateTimePicker
-                label="Дата и время"
-                value={formik.values.scheduled_at}
-                onChange={handleDateTimeChange}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: formik.touched.scheduled_at && Boolean(formik.errors.scheduled_at),
-                    helperText: formik.touched.scheduled_at && formik.errors.scheduled_at ? String(formik.errors.scheduled_at) : '',
-                    sx: textFieldStyles,
-                  },
-                }}
+              <FormControl 
+                fullWidth 
+                error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
+                sx={textFieldStyles}
+              >
+                <InputLabel id="car-type-label">Тип автомобиля</InputLabel>
+                <Select
+                  labelId="car-type-label"
+                  value={formik.values.car_type_id}
+                  onChange={handleCarTypeChange}
+                  label="Тип автомобиля"
+                >
+                  {carTypesData?.data?.map((carType: CarType) => (
+                    <MenuItem key={carType.id} value={carType.id}>
+                      {carType.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.car_type_id && formik.errors.car_type_id && (
+                  <FormHelperText>{formik.errors.car_type_id as string}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" sx={{ mt: SIZES.spacing.md, mb: SIZES.spacing.sm }}>
+                Дата и время
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Дата"
+                type="date"
+                value={formik.values.booking_date}
+                onChange={(e) => formik.setFieldValue('booking_date', e.target.value)}
+                error={formik.touched.booking_date && Boolean(formik.errors.booking_date)}
+                helperText={formik.touched.booking_date && formik.errors.booking_date}
+                InputLabelProps={{ shrink: true }}
+                sx={textFieldStyles}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Время начала"
+                type="time"
+                value={formik.values.start_time}
+                onChange={handleStartTimeChange}
+                error={formik.touched.start_time && Boolean(formik.errors.start_time)}
+                helperText={formik.touched.start_time && formik.errors.start_time}
+                InputLabelProps={{ shrink: true }}
+                sx={textFieldStyles}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Время окончания"
+                type="time"
+                value={formik.values.end_time}
+                onChange={handleEndTimeChange}
+                error={formik.touched.end_time && Boolean(formik.errors.end_time)}
+                helperText={formik.touched.end_time && formik.errors.end_time}
+                InputLabelProps={{ shrink: true }}
+                sx={textFieldStyles}
               />
             </Grid>
             
@@ -350,6 +490,8 @@ const BookingFormPage: React.FC = () => {
           </Grid>
         </Paper>
         
+        {/* Здесь можно добавить секцию для выбора услуг */}
+        
         <Box sx={{ 
           display: 'flex', 
           gap: SIZES.spacing.md, 
@@ -366,10 +508,10 @@ const BookingFormPage: React.FC = () => {
           <Button
             type="submit"
             variant="contained"
-            disabled={formik.isSubmitting}
+            disabled={formik.isSubmitting || loading}
             sx={buttonStyles}
           >
-            {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
+            {formik.isSubmitting || loading ? 'Сохранение...' : 'Сохранить'}
           </Button>
         </Box>
       </form>

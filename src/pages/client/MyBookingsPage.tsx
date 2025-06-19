@@ -24,6 +24,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
     start_time: modelBooking.start_time,
     end_time: modelBooking.end_time,
     notes: modelBooking.notes,
+    status_id: modelBooking.status_id,
     services: modelBooking.services?.map(s => ({
       service_id: String(s.service_id),
       quantity: s.quantity,

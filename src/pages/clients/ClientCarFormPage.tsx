@@ -22,20 +22,23 @@ import { useGetClientCarByIdQuery, useCreateClientCarMutation, useUpdateClientCa
 import { ClientCarFormData } from '../../types/client';
 import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
+import { getBrandName, getModelName } from '../../utils/carUtils';
 
 /**
  * Схема валидации полей формы автомобиля
  * Проверяет обязательность полей и форматы данных
  */
 const validationSchema = Yup.object({
-  brand: Yup.string().required('Обязательное поле'),
-  model: Yup.string().required('Обязательное поле'),
+  brand_id: Yup.number().required('Обязательное поле'),
+  model_id: Yup.number().required('Обязательное поле'),
   year: Yup.number()
     .min(1900, 'Год должен быть не раньше 1900')
     .max(new Date().getFullYear(), 'Год не может быть больше текущего')
     .required('Обязательное поле'),
   license_plate: Yup.string()
     .required('Обязательное поле'),
+  color: Yup.string(),
+  vin: Yup.string(),
 });
 
 /**
@@ -75,34 +78,30 @@ const ClientCarFormPage: React.FC = () => {
   const isLoading = isLoadingClient || isLoadingCar || isCreating || isUpdating;
 
   /**
-   * Вспомогательные функции для извлечения строковых значений
-   */
-  const getBrandName = (brand: string | { id: number; name: string }): string => {
-    return typeof brand === 'object' && brand !== null ? brand.name : brand;
-  };
-  
-  const getModelName = (model: string | { id: number; name: string }): string => {
-    return typeof model === 'object' && model !== null ? model.name : model;
-  };
-
-  /**
    * Мемоизированные начальные значения формы
    * В режиме редактирования используются данные автомобиля, иначе пустые значения
    */
-  const initialValues = useMemo(() => {
+  const initialValues = useMemo((): ClientCarFormData => {
     if (car && isEditMode) {
+      // Преобразуем данные из ClientCar в ClientCarFormData
       return {
-        brand: getBrandName(car.brand),
-        model: getModelName(car.model),
+        brand_id: car.brand_id,
+        model_id: car.model_id,
         year: car.year,
-        license_plate: car.license_plate,
+        license_plate: car.license_plate || '',
+        // Эти поля есть в ClientCarFormData, но отсутствуют в ClientCar
+        // Используем пустые значения по умолчанию
+        color: '',
+        vin: '',
       };
     }
     return {
-      brand: '',
-      model: '',
+      brand_id: 0,
+      model_id: 0,
       year: new Date().getFullYear(),
       license_plate: '',
+      color: '',
+      vin: '',
     };
   }, [car, isEditMode]);
 
@@ -185,12 +184,13 @@ const ClientCarFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="brand"
-                label="Марка"
-                value={formik.values.brand}
+                name="brand_id"
+                label="Марка (ID)"
+                type="number"
+                value={formik.values.brand_id}
                 onChange={formik.handleChange}
-                error={formik.touched.brand && Boolean(formik.errors.brand)}
-                helperText={formik.touched.brand && formik.errors.brand}
+                error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
+                helperText={formik.touched.brand_id && formik.errors.brand_id}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -199,12 +199,13 @@ const ClientCarFormPage: React.FC = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="model"
-                label="Модель"
-                value={formik.values.model}
+                name="model_id"
+                label="Модель (ID)"
+                type="number"
+                value={formik.values.model_id}
                 onChange={formik.handleChange}
-                error={formik.touched.model && Boolean(formik.errors.model)}
-                helperText={formik.touched.model && formik.errors.model}
+                error={formik.touched.model_id && Boolean(formik.errors.model_id)}
+                helperText={formik.touched.model_id && formik.errors.model_id}
                 sx={textFieldStyles}
               />
             </Grid>
@@ -224,8 +225,6 @@ const ClientCarFormPage: React.FC = () => {
               />
             </Grid>
 
-
-
             {/* Поле государственного номера */}
             <Grid item xs={12} sm={6}>
               <TextField
@@ -236,6 +235,34 @@ const ClientCarFormPage: React.FC = () => {
                 onChange={formik.handleChange}
                 error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
                 helperText={formik.touched.license_plate && formik.errors.license_plate}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            {/* Поле цвета автомобиля */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="color"
+                label="Цвет"
+                value={formik.values.color}
+                onChange={formik.handleChange}
+                error={formik.touched.color && Boolean(formik.errors.color)}
+                helperText={formik.touched.color && formik.errors.color}
+                sx={textFieldStyles}
+              />
+            </Grid>
+
+            {/* Поле VIN номера */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="vin"
+                label="VIN"
+                value={formik.values.vin}
+                onChange={formik.handleChange}
+                error={formik.touched.vin && Boolean(formik.errors.vin)}
+                helperText={formik.touched.vin && formik.errors.vin}
                 sx={textFieldStyles}
               />
             </Grid>

@@ -103,6 +103,7 @@ export type ApiTags =
   | 'CarBrands'
   | 'CarModels'
   | 'ClientCars'
+  | 'CarType'
   | 'Schedule'
   | 'ServicePointPhoto'
   | 'ServiceCategory'
@@ -134,6 +135,7 @@ export const baseApi = createApi({
     'CarBrands',
     'CarModels',
     'ClientCars',
+    'CarType',
     'Schedule',
     'ServicePointPhoto',
     'ServiceCategory',

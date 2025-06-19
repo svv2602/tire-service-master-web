@@ -23,12 +23,14 @@ export interface Booking {
   start_time: string;
   end_time: string;
   notes: string;
+  status_id: number;
   services: {
     service_id: string;
     quantity: number;
     price: number;
   }[];
   status: BookingStatus;
+  booking_services?: BookingServiceDetails[];
   scheduled_at: string;
   created_at: string;
   updated_at: string;
@@ -40,15 +42,23 @@ export interface BookingService {
   price: number;
 }
 
+export interface BookingServiceDetails {
+  id: number;
+  service_id: number;
+  service_name: string;
+  price: number;
+  quantity: number;
+  total_price: number;
+}
+
 export interface BookingFormData {
   service_point_id: number;
   client_id: number;
-  car_id: number;
+  car_id: number | null;
   booking_date: string;
   start_time: string;
   end_time: string;
   status_id?: number;
-  payment_status_id?: number;
   total_price?: string;
   payment_method?: string;
   notes?: string;
@@ -68,18 +78,6 @@ export interface BookingFilter extends PaginationFilter {
 
 // Типы статусов бронирования
 export interface BookingStatusConfig {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  is_active: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Типы статусов платежей
-export interface PaymentStatus {
   id: string;
   name: string;
   description?: string;

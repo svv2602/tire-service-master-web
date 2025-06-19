@@ -146,10 +146,10 @@ const BookingsPage: React.FC = () => {
         return (
           <Box sx={tablePageStyles.avatarContainer}>
             <Avatar>
-              {booking.client?.first_name?.charAt(0) || booking.client?.last_name?.charAt(0) || '?'}
+              {booking.client?.user?.first_name?.charAt(0) || booking.client?.user?.last_name?.charAt(0) || '?'}
             </Avatar>
             <Typography>
-              {booking.client ? `${booking.client.first_name} ${booking.client.last_name}` : 'Неизвестный клиент'}
+              {booking.client?.user ? `${booking.client.user.first_name} ${booking.client.user.last_name}` : 'Неизвестный клиент'}
             </Typography>
           </Box>
         );

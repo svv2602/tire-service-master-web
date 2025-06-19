@@ -22,6 +22,7 @@ import {
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarsQuery, useDeleteClientCarMutation } from '../../api/clients.api';
 import { ClientCar } from '../../types/client';
+import { getBrandName, getModelName } from '../../utils/carUtils';
 
 // Импорты UI компонентов
 import {
@@ -40,15 +41,6 @@ const ClientCarsPage: React.FC = () => {
   
   // Получаем централизованные стили таблицы
   const tablePageStyles = getTablePageStyles(theme);
-  
-  // Вспомогательные функции для безопасного извлечения имен
-  const getBrandName = (brand: string | { id: number; name: string }): string => {
-    return typeof brand === 'object' && brand !== null ? brand.name : brand;
-  };
-  
-  const getModelName = (model: string | { id: number; name: string }): string => {
-    return typeof model === 'object' && model !== null ? model.name : model;
-  };
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
