@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -10,12 +10,6 @@ import {
   Tooltip,
   useTheme,
   InputAdornment,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -37,6 +31,7 @@ import { Select } from '../../components/ui/Select';
 import { Alert } from '../../components/ui/Alert';
 import { Pagination } from '../../components/ui/Pagination';
 import { Chip } from '../../components/ui/Chip';
+import { Table, type Column } from '../../components/ui';
 
 // Локальные импорты
 import { useGetArticlesQuery, useGetCategoriesQuery } from '../../api/articles.api';
@@ -44,9 +39,6 @@ import { useArticleActions } from '../../hooks/useArticles';
 import { ArticleSummary } from '../../types/articles';
 import { SIZES } from '../../styles/theme';
 import { 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getChipStyles,
   getCardStyles
 } from '../../styles/components';
 
@@ -61,8 +53,6 @@ const ArticlesPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
   
   // Состояние для фильтров
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,26 +61,26 @@ const ArticlesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Подготовка фильтров для API
-  const filters = {
+  const filters = useMemo(() => ({
     query: searchQuery || undefined,
     category: selectedCategory || undefined,
     page: currentPage,
     per_page: 12
-  };
+  }), [searchQuery, selectedCategory, currentPage]);
 
   // Хуки для данных
   const { data, error, isLoading, refetch } = useGetArticlesQuery(filters);
   const { data: categoriesData } = useGetCategoriesQuery();
-  const { deleteArticle, loading: deleting } = useArticleActions();
+  const { deleteArticle } = useArticleActions();
 
   // Данные для отображения
-  const displayArticles = data?.data || [];
-  const displayPagination = data?.meta || {
+  const displayArticles = useMemo(() => data?.data || [], [data?.data]);
+  const displayPagination = useMemo(() => data?.meta || {
     current_page: 1,
     per_page: 12,
     total_pages: 0,
     total_count: 0,
-  };
+  }, [data?.meta]);
   const categories = categoriesData || [];
 
   // Добавляем логирование для отладки
@@ -137,7 +127,7 @@ const ArticlesPage: React.FC = () => {
     });
   };
 
-  const handleDeleteArticle = async (articleId: number) => {
+  const handleDeleteArticle = useCallback(async (articleId: number) => {
     if (window.confirm('Вы уверены, что хотите удалить эту статью?')) {
       try {
         console.log('Удаление статьи:', articleId);
@@ -155,7 +145,171 @@ const ArticlesPage: React.FC = () => {
         alert('Произошла ошибка при удалении статьи');
       }
     }
-  };
+  }, [deleteArticle, refetch]);
+
+  /**
+   * Конфигурация колонок таблицы
+   */
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'title',
+      label: 'Статья',
+      wrap: true,
+      format: (value, row: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                color: theme.palette.text.primary,
+                cursor: 'pointer',
+                fontSize: SIZES.fontSize.md,
+                '&:hover': { color: theme.palette.primary.main }
+              }}
+              onClick={() => navigate(`/articles/${row.id}`)}
+            >
+              {row.title}
+              {row.featured && (
+                <Chip
+                  icon={<StarIcon />}
+                  label="Рекомендуемая"
+                  size="small"
+                  color="warning"
+                  sx={{ ml: 1 }}
+                />
+              )}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: theme.palette.text.secondary,
+                mt: 0.5,
+                fontSize: SIZES.fontSize.sm,
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden'
+              }}
+            >
+              {row.excerpt}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TimeIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                <Typography variant="caption" sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontSize: SIZES.fontSize.xs 
+                }}>
+                  {row.reading_time || 5} мин
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <PersonIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+                <Typography variant="caption" sx={{ 
+                  color: theme.palette.text.secondary,
+                  fontSize: SIZES.fontSize.xs 
+                }}>
+                  {row.author?.name || 'Автор'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      )
+    },
+    {
+      id: 'category',
+      label: 'Категория',
+      format: (value, row: ArticleSummary) => (
+        <Typography variant="body2" sx={{ 
+          color: theme.palette.text.primary,
+          fontSize: SIZES.fontSize.sm 
+        }}>
+          {row.category_name || row.category}
+        </Typography>
+      )
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      align: 'center',
+      format: (value, row: ArticleSummary) => (
+        <Chip
+          label={ARTICLE_STATUS_LABELS[row.status as keyof typeof ARTICLE_STATUS_LABELS]}
+          color={row.status === 'published' ? 'success' : row.status === 'draft' ? 'warning' : 'default'}
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'views_count',
+      label: 'Просмотры',
+      align: 'center',
+      format: (value, row: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <ViewIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+          <Typography variant="body2" sx={{ 
+            color: theme.palette.text.primary,
+            fontSize: SIZES.fontSize.sm 
+          }}>
+            {row.views_count || 0}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата',
+      format: (value, row: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <CalendarIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
+          <Typography variant="body2" sx={{ 
+            color: theme.palette.text.primary,
+            fontSize: SIZES.fontSize.sm 
+          }}>
+            {formatDate(row.created_at)}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (value, row: ArticleSummary) => (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+          <Tooltip title="Просмотр">
+            <IconButton
+              size="small"
+              onClick={() => navigate(`/articles/${row.id}`)}
+              sx={{ color: theme.palette.primary.main }}
+            >
+              <ViewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Редактировать">
+            <IconButton
+              size="small"
+              onClick={() => navigate(`/articles/${row.id}/edit`)}
+              sx={{ color: theme.palette.success.main }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteArticle(row.id)}
+              sx={{ color: theme.palette.error.main }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [theme, navigate, handleDeleteArticle]);
 
   return (
     <Container maxWidth="xl" sx={{ py: SIZES.spacing.lg }}>
@@ -338,156 +492,10 @@ const ArticlesPage: React.FC = () => {
         ) : (
           <>
             {/* Таблица */}
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Статья</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Категория</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Статус</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Просмотры</TableCell>
-                    <TableCell sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Дата</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700, fontSize: SIZES.fontSize.md }}>Действия</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {displayArticles.map((article: ArticleSummary) => (
-                    <TableRow key={article.id} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography
-                              variant="subtitle1"
-                              sx={{
-                                fontWeight: 600,
-                                color: theme.palette.text.primary,
-                                cursor: 'pointer',
-                                fontSize: SIZES.fontSize.md,
-                                '&:hover': { color: theme.palette.primary.main }
-                              }}
-                              onClick={() => navigate(`/articles/${article.id}`)}
-                            >
-                              {article.title}
-                              {article.featured && (
-                                <Chip
-                                  icon={<StarIcon />}
-                                  label="Рекомендуемая"
-                                  size="small"
-                                  color="warning"
-                                  sx={{ ml: 1 }}
-                                />
-                              )}
-                            </Typography>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                color: theme.palette.text.secondary,
-                                mt: 0.5,
-                                fontSize: SIZES.fontSize.sm,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden'
-                              }}
-                            >
-                              {article.excerpt}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <TimeIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-                                <Typography variant="caption" sx={{ 
-                                  color: theme.palette.text.secondary,
-                                  fontSize: SIZES.fontSize.xs 
-                                }}>
-                                  {article.reading_time || 5} мин
-                                </Typography>
-                              </Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <PersonIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-                                <Typography variant="caption" sx={{ 
-                                  color: theme.palette.text.secondary,
-                                  fontSize: SIZES.fontSize.xs 
-                                }}>
-                                  {article.author?.name || 'Автор'}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" sx={{ 
-                          color: theme.palette.text.primary,
-                          fontSize: SIZES.fontSize.sm 
-                        }}>
-                          {article.category_name || article.category}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={ARTICLE_STATUS_LABELS[article.status as keyof typeof ARTICLE_STATUS_LABELS]}
-                          color={article.status === 'published' ? 'success' : article.status === 'draft' ? 'warning' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <ViewIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-                          <Typography variant="body2" sx={{ 
-                            color: theme.palette.text.primary,
-                            fontSize: SIZES.fontSize.sm 
-                          }}>
-                            {article.views_count || 0}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <CalendarIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-                          <Typography variant="body2" sx={{ 
-                            color: theme.palette.text.primary,
-                            fontSize: SIZES.fontSize.sm 
-                          }}>
-                            {formatDate(article.created_at)}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-                          <Tooltip title="Просмотр">
-                            <IconButton
-                              size="small"
-                              onClick={() => navigate(`/articles/${article.id}`)}
-                              sx={{ color: theme.palette.primary.main }}
-                            >
-                              <ViewIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Редактировать">
-                            <IconButton
-                              size="small"
-                              onClick={() => navigate(`/articles/${article.id}/edit`)}
-                              sx={{ color: theme.palette.success.main }}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Удалить">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteArticle(article.id)}
-                              sx={{ color: theme.palette.error.main }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <Table
+              columns={columns}
+              rows={displayArticles}
+            />
 
             {/* Пагинация */}
             {displayPagination.total_pages > 1 && (

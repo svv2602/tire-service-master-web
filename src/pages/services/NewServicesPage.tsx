@@ -11,19 +11,13 @@
  * - Централизованная система стилей для консистентного дизайна
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Box,
   Typography,
   TextField,
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Chip,
@@ -50,7 +44,7 @@ import {
   useDeleteServiceCategoryMutation,
 } from '../../api/services.api';
 import { ServiceCategoryData } from '../../types/service';
-import { Button } from '../../components/ui';
+import { Button, Table, type Column } from '../../components/ui';
 import { Pagination } from '../../components/ui';
 import Notification from '../../components/Notification';
 import { getTablePageStyles, SIZES } from '../../styles';
@@ -107,12 +101,120 @@ export const ServicesPage: React.FC = () => {
   };
 
   /**
-   * Обработчик открытия диалога удаления
+   * Мемоизированные обработчики событий
    */
-  const handleDeleteClick = (category: ServiceCategoryData) => {
+  const handleDeleteClick = useCallback((category: ServiceCategoryData) => {
     setCategoryToDelete(category);
     setDeleteDialogOpen(true);
-  };
+  }, []);
+
+  const handleEditCategory = useCallback((categoryId: number) => {
+    navigate(`/services/${categoryId}/edit`);
+  }, [navigate]);
+
+  /**
+   * Конфигурация колонок таблицы
+   */
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'name',
+      label: 'Название',
+      wrap: true,
+      format: (value, row: ServiceCategoryData) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <CategoryIcon sx={{ color: 'primary.main', mr: 1 }} />
+          <Typography variant="body1" fontWeight={500}>
+            {row.name}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'description',
+      label: 'Описание',
+      wrap: true,
+      format: (value, row: ServiceCategoryData) => (
+        <Typography 
+          variant="body2" 
+          color="text.secondary"
+          sx={{ 
+            maxWidth: 200,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          {row.description || '—'}
+        </Typography>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value, row: ServiceCategoryData) => (
+        <Chip
+          label={row.is_active ? 'Активна' : 'Неактивна'}
+          color={row.is_active ? 'success' : 'default'}
+          size="small"
+          icon={row.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+        />
+      )
+    },
+    {
+      id: 'services_count',
+      label: 'Количество услуг',
+      align: 'center',
+      format: (value, row: ServiceCategoryData) => (
+        <Typography variant="body2">
+          {row.services_count || 0}
+        </Typography>
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата создания',
+      format: (value, row: ServiceCategoryData) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CalendarTodayIcon fontSize="small" color="action" />
+          <Typography variant="body2" color="text.secondary">
+            {row.created_at 
+              ? new Date(row.created_at).toLocaleDateString('ru-RU')
+              : '—'
+            }
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'center',
+      format: (value, row: ServiceCategoryData) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton
+              size="small"
+              onClick={() => handleEditCategory(row.id)}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteClick(row)}
+              disabled={!!(row.services_count && row.services_count > 0)}
+              sx={tablePageStyles.dangerButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [tablePageStyles, handleDeleteClick, handleEditCategory]);
 
   /**
    * Обработчик подтверждения удаления категории
@@ -145,13 +247,6 @@ export const ServicesPage: React.FC = () => {
    */
   const handleAddCategory = () => {
     navigate('/services/new');
-  };
-
-  /**
-   * Обработчик перехода к редактированию категории
-   */
-  const handleEditCategory = (categoryId: number) => {
-    navigate(`/services/${categoryId}/edit`);
   };
 
   /**
@@ -209,122 +304,22 @@ export const ServicesPage: React.FC = () => {
 
       {/* Таблица категорий */}
       <Box sx={tablePageStyles.tableContainer}>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={tablePageStyles.tableHeader}>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                    <CategoryIcon fontSize="small" />
-                    Название
-                  </Box>
-                </TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>Описание</TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                    <ToggleOnIcon fontSize="small" />
-                    Статус
-                  </Box>
-                </TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>Количество услуг</TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                    <CalendarTodayIcon fontSize="small" />
-                    Дата создания
-                  </Box>
-                </TableCell>
-                <TableCell align="center" sx={tablePageStyles.tableCell}>
-                  Действия
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={tablePageStyles.loadingCell}>
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : categories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={tablePageStyles.emptyCell}>
-                    <Typography variant="body1" color="text.secondary">
-                      {searchQuery ? 'Категории не найдены' : 'Категории услуг отсутствуют'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                categories.map((category) => (
-                  <TableRow key={category.id} sx={tablePageStyles.tableRow}>
-                    <TableCell sx={tablePageStyles.tableCell}>
-                      <Typography variant="body1" fontWeight={500}>
-                        {category.name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={tablePageStyles.tableCell}>
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{ 
-                          maxWidth: 200,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}
-                      >
-                        {category.description || '—'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={tablePageStyles.tableCell}>
-                      <Chip
-                        label={category.is_active ? 'Активна' : 'Неактивна'}
-                        color={category.is_active ? 'success' : 'default'}
-                        size="small"
-                        icon={category.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
-                      />
-                    </TableCell>
-                    <TableCell sx={tablePageStyles.tableCell}>
-                      <Typography variant="body2">
-                        {category.services_count || 0}
-                      </Typography>
-                    </TableCell>
-                    <TableCell sx={tablePageStyles.tableCell}>
-                      <Typography variant="body2" color="text.secondary">
-                        {category.created_at 
-                          ? new Date(category.created_at).toLocaleDateString('ru-RU')
-                          : '—'
-                        }
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="center" sx={tablePageStyles.tableCell}>
-                      <Box sx={tablePageStyles.actionsContainer}>
-                        <Tooltip title="Редактировать">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleEditCategory(category.id)}
-                            sx={tablePageStyles.actionButton}
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Удалить">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteClick(category)}
-                            disabled={!!(category.services_count && category.services_count > 0)}
-                            sx={tablePageStyles.dangerButton}
-                          >
-                            <DeleteIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        {isLoading ? (
+          <Box sx={tablePageStyles.loadingContainer}>
+            <CircularProgress />
+          </Box>
+        ) : categories.length === 0 ? (
+          <Box sx={tablePageStyles.loadingContainer}>
+            <Typography variant="body1" color="text.secondary">
+              {searchQuery ? 'Категории не найдены' : 'Категории услуг отсутствуют'}
+            </Typography>
+          </Box>
+        ) : (
+          <Table
+            columns={columns}
+            rows={categories}
+          />
+        )}
 
         {/* Пагинация */}
         {totalCount > PER_PAGE && (

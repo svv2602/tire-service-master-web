@@ -1,20 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
   Typography,
   Paper,
   Button,
-  Grid,
   CircularProgress,
-  Divider,
   Alert,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Dialog,
   DialogTitle,
@@ -26,16 +18,27 @@ import {
   MenuItem,
   TextField,
   InputAdornment,
+  useTheme,
+  Tooltip,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Add as AddIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
+  Category as CategoryIcon,
+  Schedule as ScheduleIcon,
+  AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchWithAuth } from '../../api/apiUtils';
-import { Service, ServiceCategory } from '../../types';
+import { ServiceCategory } from '../../types';
+
+// Импорты UI компонентов
+import { Table, type Column } from '../../components/ui';
+
+// Импорт централизованных стилей
+import { getTablePageStyles } from '../../styles';
 
 interface ServicePointService {
   id: number;
@@ -48,24 +51,16 @@ interface ServicePointService {
   current_price_for_service_point?: number;
 }
 
-interface ApiResponse<T> {
-  data: T[];
-  pagination?: {
-    total_count: number;
-    total_pages: number;
-    current_page: number;
-    per_page: number;
-  };
-}
-
 const ServicePointServicesPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  
+  // Инициализация централизованных стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   const [servicePoint, setServicePoint] = useState<any>(null);
   const [services, setServices] = useState<ServicePointService[]>([]);
-  const [allServices, setAllServices] = useState<Service[]>([]);
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +73,109 @@ const ServicePointServicesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<number | ''>('');
   
+  // Мемоизированные обработчики событий
+  const handleDeleteClick = useCallback((service: ServicePointService) => {
+    setServiceToDelete(service);
+    setDeleteDialogOpen(true);
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  const handleCategoryChange = useCallback((e: any) => {
+    setCategoryFilter(e.target.value);
+  }, []);
+
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
+    {
+      id: 'id',
+      label: 'ID',
+      minWidth: 50,
+      align: 'center',
+    },
+    {
+      id: 'name',
+      label: 'Название',
+      wrap: true,
+      format: (value, row: ServicePointService) => (
+        <Box sx={tablePageStyles.avatarContainer}>
+          <CategoryIcon sx={{ color: 'primary.main', mr: 1 }} />
+          <Typography variant="body2" fontWeight="medium">
+            {row.name}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'category',
+      label: 'Категория',
+      wrap: true,
+      format: (value, row: ServicePointService) => (
+        <Chip 
+          label={row.category?.name || 'Без категории'} 
+          variant="outlined" 
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'description',
+      label: 'Описание',
+      wrap: true,
+      format: (value, row: ServicePointService) => (
+        <Typography variant="body2" color="text.secondary">
+          {row.description || '—'}
+        </Typography>
+      )
+    },
+    {
+      id: 'default_duration',
+      label: 'Длительность',
+      align: 'center',
+      format: (value, row: ServicePointService) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          <ScheduleIcon fontSize="small" color="action" />
+          <Typography variant="body2">
+            {row.default_duration} мин
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'price',
+      label: 'Цена',
+      align: 'center',
+      format: (value, row: ServicePointService) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+          <MoneyIcon fontSize="small" color="action" />
+          <Typography variant="body2" fontWeight="medium">
+            {row.current_price_for_service_point || row.price || 'По запросу'} ₽
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (value, row: ServicePointService) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Удалить услугу">
+            <IconButton
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+              sx={tablePageStyles.actionButton}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ], [tablePageStyles, handleDeleteClick]);
   const fetchServicePoint = useCallback(async () => {
     try {
       const response = await fetchWithAuth(`/api/v1/service_points/${id}`);
@@ -106,32 +204,6 @@ const ServicePointServicesPage: React.FC = () => {
       setLoading(false);
     }
   }, [id]);
-  
-  const fetchAllServices = async () => {
-    try {
-      const response = await fetchWithAuth('/api/v1/services');
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить список услуг');
-      }
-      const data = await response.json();
-      setAllServices(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Ошибка при загрузке списка услуг:', err);
-    }
-  };
-  
-  const fetchCategories = async () => {
-    try {
-      const response = await fetchWithAuth('/api/v1/service_categories');
-      if (!response.ok) {
-        throw new Error('Не удалось загрузить категории услуг');
-      }
-      const data = await response.json();
-      setCategories(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Ошибка при загрузке категорий услуг:', err);
-    }
-  };
   
   useEffect(() => {
     if (id) {
@@ -205,25 +277,8 @@ const ServicePointServicesPage: React.FC = () => {
     return filtered;
   };
   
-  // Фильтрация всех услуг для диалога добавления
-  const getFilteredAllServices = () => {
-    // Получаем ID уже добавленных услуг
-    const existingServiceIds = services.map(s => s.id);
-    
-    // Фильтруем услуги, которые еще не добавлены
-    return allServices.filter(service => !existingServiceIds.includes(service.id));
-  };
-  
   const handleBack = () => {
     navigate(`/service-points/${id}`);
-  };
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-  
-  const handleCategoryChange = (e: any) => {
-    setCategoryFilter(e.target.value);
   };
   
   if (loading && !servicePoint) {
@@ -296,71 +351,26 @@ const ServicePointServicesPage: React.FC = () => {
                 label="Категория"
               >
                 <MenuItem value="">Все категории</MenuItem>
-                {categories.map(category => (
-                  <MenuItem key={category.id} value={category.id}>
-                    {category.name}
-                  </MenuItem>
-                ))}
+                {/* TODO: Load categories from API */}
               </Select>
             </FormControl>
           </Box>
         </Box>
       </Paper>
       
-      <Paper>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Название</TableCell>
-                <TableCell>Категория</TableCell>
-                <TableCell>Описание</TableCell>
-                <TableCell>Длительность (мин)</TableCell>
-                <TableCell>Цена (₽)</TableCell>
-                <TableCell>Действия</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    <CircularProgress size={30} />
-                  </TableCell>
-                </TableRow>
-              ) : filteredServices.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center">
-                    Услуги не найдены
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredServices.map(service => (
-                  <TableRow key={service.id}>
-                    <TableCell>{service.id}</TableCell>
-                    <TableCell>{service.name}</TableCell>
-                    <TableCell>{service.category?.name || 'Без категории'}</TableCell>
-                    <TableCell>{service.description || '—'}</TableCell>
-                    <TableCell>{service.default_duration}</TableCell>
-                    <TableCell>{service.current_price_for_service_point || service.price || 'По запросу'} ₽</TableCell>
-                    <TableCell>
-                      <IconButton 
-                        color="error" 
-                        onClick={() => {
-                          setServiceToDelete(service);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      {/* Таблица услуг */}
+      <Box sx={tablePageStyles.tableContainer}>
+        {loading ? (
+          <Box sx={tablePageStyles.loadingContainer}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <Table
+            columns={columns}
+            rows={filteredServices}
+          />
+        )}
+      </Box>
       
       {/* Диалог добавления услуги */}
       <Dialog 
@@ -381,11 +391,7 @@ const ServicePointServicesPage: React.FC = () => {
                 label="Услуга"
               >
                 <MenuItem value="">Выберите услугу</MenuItem>
-                {getFilteredAllServices().map(service => (
-                  <MenuItem key={service.id} value={service.id}>
-                    {service.name} ({service.default_duration} мин)
-                  </MenuItem>
-                ))}
+                {/* TODO: Load available services from API */}
               </Select>
             </FormControl>
           </Box>
