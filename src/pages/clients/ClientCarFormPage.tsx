@@ -34,9 +34,7 @@ const validationSchema = Yup.object({
     .min(1900, 'Год должен быть не раньше 1900')
     .max(new Date().getFullYear(), 'Год не может быть больше текущего')
     .required('Обязательное поле'),
-  vin: Yup.string().required('Обязательное поле'),
   license_plate: Yup.string()
-    .matches(/^[АВЕКМНОРСТУХ]\d{3}[АВЕКМНОРСТУХ]{2}\d{2,3}$/, 'Неверный формат номера')
     .required('Обязательное поле'),
 });
 
@@ -77,16 +75,26 @@ const ClientCarFormPage: React.FC = () => {
   const isLoading = isLoadingClient || isLoadingCar || isCreating || isUpdating;
 
   /**
+   * Вспомогательные функции для извлечения строковых значений
+   */
+  const getBrandName = (brand: string | { id: number; name: string }): string => {
+    return typeof brand === 'object' && brand !== null ? brand.name : brand;
+  };
+  
+  const getModelName = (model: string | { id: number; name: string }): string => {
+    return typeof model === 'object' && model !== null ? model.name : model;
+  };
+
+  /**
    * Мемоизированные начальные значения формы
    * В режиме редактирования используются данные автомобиля, иначе пустые значения
    */
   const initialValues = useMemo(() => {
     if (car && isEditMode) {
       return {
-        brand: car.brand,
-        model: car.model,
+        brand: getBrandName(car.brand),
+        model: getModelName(car.model),
         year: car.year,
-        vin: car.vin,
         license_plate: car.license_plate,
       };
     }
@@ -94,7 +102,6 @@ const ClientCarFormPage: React.FC = () => {
       brand: '',
       model: '',
       year: new Date().getFullYear(),
-      vin: '',
       license_plate: '',
     };
   }, [car, isEditMode]);
@@ -217,19 +224,7 @@ const ClientCarFormPage: React.FC = () => {
               />
             </Grid>
 
-            {/* Поле VIN номера */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="vin"
-                label="VIN номер"
-                value={formik.values.vin}
-                onChange={formik.handleChange}
-                error={formik.touched.vin && Boolean(formik.errors.vin)}
-                helperText={formik.touched.vin && formik.errors.vin}
-                sx={textFieldStyles}
-              />
-            </Grid>
+
 
             {/* Поле государственного номера */}
             <Grid item xs={12} sm={6}>

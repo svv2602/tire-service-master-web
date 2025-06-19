@@ -34,10 +34,9 @@ export interface ClientFilter {
 // Интерфейс автомобиля клиента
 export interface ClientCar extends BaseModel {
   clientId: string;
-  brand: string;
-  model: string;
+  brand: string | { id: number; name: string }; // Может быть строкой или объектом
+  model: string | { id: number; name: string }; // Может быть строкой или объектом
   year: number;
-  vin: string;
   license_plate: string;
   client_id?: number;
 }
@@ -47,7 +46,6 @@ export interface ClientCarFormData {
   brand: string;
   model: string;
   year: number;
-  vin: string;
   license_plate: string;
 }
 

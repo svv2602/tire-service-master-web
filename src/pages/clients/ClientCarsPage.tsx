@@ -41,6 +41,15 @@ const ClientCarsPage: React.FC = () => {
   // Получаем централизованные стили таблицы
   const tablePageStyles = getTablePageStyles(theme);
   
+  // Вспомогательные функции для безопасного извлечения имен
+  const getBrandName = (brand: string | { id: number; name: string }): string => {
+    return typeof brand === 'object' && brand !== null ? brand.name : brand;
+  };
+  
+  const getModelName = (model: string | { id: number; name: string }): string => {
+    return typeof model === 'object' && model !== null ? model.name : model;
+  };
+  
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<ClientCar | null>(null);
@@ -94,14 +103,17 @@ const ClientCarsPage: React.FC = () => {
       format: (value, row: ClientCar) => (
         <Box sx={tablePageStyles.avatarContainer}>
           <CarIcon />
-          <Typography>{row.brand}</Typography>
+          <Typography>{getBrandName(row.brand)}</Typography>
         </Box>
       )
     },
     {
       id: 'model',
       label: 'Модель',
-      wrap: true
+      wrap: true,
+      format: (value, row: ClientCar) => (
+        <Typography>{getModelName(row.model)}</Typography>
+      )
     },
     {
       id: 'year',
@@ -141,7 +153,7 @@ const ClientCarsPage: React.FC = () => {
         </Box>
       )
     }
-  ], [handleEditClick, handleDeleteClick, tablePageStyles]);
+  ], [handleEditClick, handleDeleteClick, tablePageStyles, getBrandName, getModelName]);
 
   // Обработка загрузки
   if (isLoading) {
@@ -203,7 +215,7 @@ const ClientCarsPage: React.FC = () => {
         <DialogTitle>Подтверждение удаления</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить автомобиль {selectedCar?.brand} {selectedCar?.model}?
+            Вы уверены, что хотите удалить автомобиль {selectedCar ? getBrandName(selectedCar.brand) : ''} {selectedCar ? getModelName(selectedCar.model) : ''}?
           </Typography>
         </DialogContent>
         <DialogActions>

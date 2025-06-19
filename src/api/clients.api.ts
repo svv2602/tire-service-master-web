@@ -13,6 +13,23 @@ interface ClientFormData {
   is_active?: boolean;
 }
 
+// Тип для создания клиента (соответствует ожиданиям бэкенда)
+interface ClientCreateData {
+  user: {
+    first_name: string;
+    last_name: string;
+    middle_name?: string;
+    phone?: string;
+    email?: string;
+    password: string;
+    password_confirmation: string;
+  };
+  client: {
+    preferred_notification_method?: string;
+    marketing_consent?: boolean;
+  };
+}
+
 // Тип для обновления клиента (соответствует ожиданиям бэкенда)
 interface ClientUpdateData {
   user?: {
@@ -33,7 +50,6 @@ interface ClientCarFormData {
   brand: string;
   model: string;
   year: number;
-  vin: string;
   license_plate: string;
 }
 
@@ -65,7 +81,7 @@ export const clientsApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: 'Client', id }],
     }),
 
-    createClient: builder.mutation<Client, ClientFormData>({
+    createClient: builder.mutation<Client, ClientCreateData>({
       query: (client) => ({
         url: 'clients',
         method: 'POST',

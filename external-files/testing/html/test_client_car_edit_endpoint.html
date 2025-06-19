@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест эндпоинта редактирования автомобиля клиента</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .endpoint-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .response {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .field-analysis {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Тест эндпоинта редактирования автомобиля клиента</h1>
+        <p>Проверяем что отдает и ожидает эндпоинт <code>GET/PUT /api/v1/clients/10/cars/15</code></p>
+        
+        <div class="endpoint-section">
+            <h3>🔍 1. Получение данных автомобиля (GET)</h3>
+            <div class="form-group">
+                <label>Client ID:</label>
+                <input type="number" id="clientId" value="10" min="1">
+            </div>
+            <div class="form-group">
+                <label>Car ID:</label>
+                <input type="number" id="carId" value="15" min="1">
+            </div>
+            <button onclick="getClientCar()">Получить данные автомобиля</button>
+            <div id="getCarResponse" class="response"></div>
+        </div>
+
+        <div class="endpoint-section">
+            <h3>📝 2. Обновление данных автомобиля (PUT)</h3>
+            <div class="form-group">
+                <label>Brand ID:</label>
+                <input type="number" id="brandId" value="1">
+            </div>
+            <div class="form-group">
+                <label>Model ID:</label>
+                <input type="number" id="modelId" value="1">
+            </div>
+            <div class="form-group">
+                <label>Year:</label>
+                <input type="number" id="year" value="2020" min="1900" max="2025">
+            </div>
+            <div class="form-group">
+                <label>Registration Number:</label>
+                <input type="text" id="registrationNumber" value="AA1234BB" placeholder="AA1234BB">
+            </div>
+
+            <div class="form-group">
+                <label>License Plate:</label>
+                <input type="text" id="licensePlate" value="AA1234BB" placeholder="Любой формат">
+            </div>
+            <div class="form-group">
+                <label>Is Active:</label>
+                <select id="isActive">
+                    <option value="true">Активный</option>
+                    <option value="false">Неактивный</option>
+                </select>
+            </div>
+            <button onclick="updateClientCar()">Обновить автомобиль</button>
+            <div id="updateCarResponse" class="response"></div>
+        </div>
+
+        <div class="endpoint-section">
+            <h3>🔍 3. Анализ полей</h3>
+            <div class="field-analysis">
+                <h4>Поля в контроллере car_params:</h4>
+                <ul>
+                    <li><strong>brand_id</strong> - ID марки автомобиля (foreign key)</li>
+                    <li><strong>model_id</strong> - ID модели автомобиля (foreign key)</li>
+                    <li><strong>year</strong> - Год выпуска</li>
+                    <li><strong>registration_number</strong> - Регистрационный номер</li>
+                    <li><strong>tire_r, tire_width, tire_height</strong> - Параметры шин</li>
+                    <li><strong>name</strong> - Название/имя автомобиля</li>
+                    <li><strong>is_active</strong> - Активность записи</li>
+                </ul>
+                
+                <h4>Поля в схеме client_cars:</h4>
+                <ul>
+                    <li><strong>client_id</strong> - ID клиента (foreign key)</li>
+                    <li><strong>brand_id</strong> - ID марки (foreign key)</li>
+                    <li><strong>model_id</strong> - ID модели (foreign key)</li>
+                    <li><strong>year</strong> - Год выпуска</li>
+                    <li><strong>tire_type_id</strong> - ID типа шин (foreign key)</li>
+                    <li><strong>tire_size</strong> - Размер шин</li>
+                    <li><strong>notes</strong> - Заметки</li>
+                    <li><strong>is_primary</strong> - Основной автомобиль</li>
+                    <li><strong>car_type_id</strong> - ID типа автомобиля (foreign key)</li>
+                    <li><strong>license_plate</strong> - Номерной знак</li>
+                </ul>
+                
+                <h4>Поля на фронтенде ClientCarFormData:</h4>
+                <ul>
+                    <li><strong>brand</strong> - Марка (строка)</li>
+                    <li><strong>model</strong> - Модель (строка)</li>
+                    <li><strong>year</strong> - Год выпуска</li>
+                    <li><strong>license_plate</strong> - Номерной знак</li>
+                </ul>
+                
+                <div class="error">
+                    <strong>⚠️ ПРОБЛЕМА:</strong> Несоответствие между фронтендом и бэкендом!
+                    <ul>
+                        <li>Фронтенд отправляет <code>brand</code> и <code>model</code> как строки</li>
+                        <li>Бэкенд ожидает <code>brand_id</code> и <code>model_id</code> как числа</li>
+                        <li>Фронтенд не отправляет <code>registration_number</code>, но бэкенд его ожидает</li>
+                        <li><s>Поле <code>vin</code> есть в car_params, но НЕТ в схеме client_cars!</s> ✅ ИСПРАВЛЕНО</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-section">
+            <h3>🔧 4. Проверка доступных брендов и моделей</h3>
+            <button onclick="getCarBrands()">Получить бренды автомобилей</button>
+            <div id="brandsResponse" class="response"></div>
+            
+            <button onclick="getCarModels()">Получить модели автомобилей</button>
+            <div id="modelsResponse" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                console.log(`🔄 Запрос: ${options.method || 'GET'} ${url}`);
+                if (options.body) {
+                    console.log('📤 Тело запроса:', options.body);
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        // Добавляем заголовки авторизации если есть токен
+                        ...(localStorage.getItem('authToken') && {
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        })
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                console.log(`📥 Ответ (${response.status}):`, data);
+                
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data: data
+                };
+            } catch (error) {
+                console.error('❌ Ошибка запроса:', error);
+                return {
+                    ok: false,
+                    status: 0,
+                    error: error.message
+                };
+            }
+        }
+        
+        async function getClientCar() {
+            const clientId = document.getElementById('clientId').value;
+            const carId = document.getElementById('carId').value;
+            
+            if (!clientId || !carId) {
+                alert('Укажите Client ID и Car ID');
+                return;
+            }
+            
+            const result = await makeRequest(`${API_BASE}/clients/${clientId}/cars/${carId}`);
+            
+            const responseDiv = document.getElementById('getCarResponse');
+            if (result.ok) {
+                responseDiv.innerHTML = `<div class="success">✅ Успешно получены данные автомобиля</div>` +
+                    `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+                
+                // Заполняем форму полученными данными
+                if (result.data) {
+                    document.getElementById('brandId').value = result.data.brand_id || '';
+                    document.getElementById('modelId').value = result.data.model_id || '';
+                    document.getElementById('year').value = result.data.year || '';
+                    document.getElementById('registrationNumber').value = result.data.registration_number || '';
+                    document.getElementById('licensePlate').value = result.data.license_plate || '';
+                    document.getElementById('isActive').value = result.data.is_active ? 'true' : 'false';
+                }
+            } else {
+                responseDiv.innerHTML = `<div class="error">❌ Ошибка ${result.status}</div>` +
+                    `<pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>`;
+            }
+        }
+        
+        async function updateClientCar() {
+            const clientId = document.getElementById('clientId').value;
+            const carId = document.getElementById('carId').value;
+            
+            if (!clientId || !carId) {
+                alert('Укажите Client ID и Car ID');
+                return;
+            }
+            
+            const carData = {
+                car: {
+                    brand_id: parseInt(document.getElementById('brandId').value) || null,
+                    model_id: parseInt(document.getElementById('modelId').value) || null,
+                    year: parseInt(document.getElementById('year').value) || null,
+                    registration_number: document.getElementById('registrationNumber').value || null,
+                    license_plate: document.getElementById('licensePlate').value || null,
+                    is_active: document.getElementById('isActive').value === 'true'
+                }
+            };
+            
+            const result = await makeRequest(`${API_BASE}/clients/${clientId}/cars/${carId}`, {
+                method: 'PUT',
+                body: JSON.stringify(carData)
+            });
+            
+            const responseDiv = document.getElementById('updateCarResponse');
+            if (result.ok) {
+                responseDiv.innerHTML = `<div class="success">✅ Автомобиль успешно обновлен</div>` +
+                    `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+            } else {
+                responseDiv.innerHTML = `<div class="error">❌ Ошибка ${result.status}</div>` +
+                    `<pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>`;
+            }
+        }
+        
+        async function getCarBrands() {
+            const result = await makeRequest(`${API_BASE}/car_brands`);
+            
+            const responseDiv = document.getElementById('brandsResponse');
+            if (result.ok) {
+                responseDiv.innerHTML = `<div class="success">✅ Бренды автомобилей</div>` +
+                    `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+            } else {
+                responseDiv.innerHTML = `<div class="error">❌ Ошибка ${result.status}</div>` +
+                    `<pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>`;
+            }
+        }
+        
+        async function getCarModels() {
+            const result = await makeRequest(`${API_BASE}/car_models`);
+            
+            const responseDiv = document.getElementById('modelsResponse');
+            if (result.ok) {
+                responseDiv.innerHTML = `<div class="success">✅ Модели автомобилей</div>` +
+                    `<pre>${JSON.stringify(result.data, null, 2)}</pre>`;
+            } else {
+                responseDiv.innerHTML = `<div class="error">❌ Ошибка ${result.status}</div>` +
+                    `<pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>`;
+            }
+        }
+        
+        // Проверяем наличие токена авторизации
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('⚠️ Токен авторизации не найден. Некоторые запросы могут не работать.');
+            }
+        });
+    </script>
+</body>
+</html> 
