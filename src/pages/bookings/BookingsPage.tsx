@@ -2,8 +2,6 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   useTheme, 
   InputAdornment,
-  Menu, 
-  MenuItem,
   IconButton,
   Avatar
 } from '@mui/material';
@@ -22,7 +20,6 @@ import {
   Add as AddIcon,
   Check as CheckIcon,
   Close as CloseIcon,
-  ArrowDropDown as ArrowDropDownIcon,
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
@@ -56,10 +53,6 @@ const BookingsPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   
-  // Состояние для меню создания бронирования
-  const [createMenuAnchor, setCreateMenuAnchor] = useState<null | HTMLElement>(null);
-  const createMenuOpen = Boolean(createMenuAnchor);
-
   // RTK Query хуки
   const { 
     data: bookingsData, 
@@ -120,18 +113,8 @@ const BookingsPage: React.FC = () => {
     setSelectedBooking(null);
   };
 
-  const handleCreateMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setCreateMenuAnchor(event.currentTarget);
-  };
-
-  const handleCreateMenuClose = () => {
-    setCreateMenuAnchor(null);
-  };
-
-  const handleCreateBooking = (withAvailability: boolean) => {
-    const path = withAvailability ? '/bookings/new-with-availability' : '/bookings/new';
-    navigate(path);
-    handleCreateMenuClose();
+  const handleCreateBooking = () => {
+    navigate('/bookings/new-with-availability');
   };
 
   // Определение колонок для UI Table
@@ -285,31 +268,10 @@ const BookingsPage: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            endIcon={<ArrowDropDownIcon />}
-            onClick={handleCreateMenuOpen}
+            onClick={handleCreateBooking}
           >
             Новое бронирование
           </Button>
-          <Menu
-            anchorEl={createMenuAnchor}
-            open={createMenuOpen}
-            onClose={handleCreateMenuClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-          >
-            <MenuItem onClick={() => handleCreateBooking(false)}>
-              Простая форма
-            </MenuItem>
-            <MenuItem onClick={() => handleCreateBooking(true)}>
-              С системой доступности
-            </MenuItem>
-          </Menu>
         </Box>
       </Box>
 
