@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления загрузки данных</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #2196F3;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .api-test {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { border-color: #4CAF50; background-color: #f8fff8; }
+        .error { border-color: #f44336; background-color: #fff8f8; }
+        .loading { border-color: #ff9800; background-color: #fffaf0; }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #1976D2; }
+        .log {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Тест исправления ошибок загрузки данных</h1>
+    
+    <div class="test-section">
+        <h2 class="test-title">📊 Проверка исправлений</h2>
+        <p><strong>Исправленные проблемы:</strong></p>
+        <ul>
+            <li>✅ Добавлены отсутствующие теги RTK Query ('Clients', 'CTAContent')</li>
+            <li>✅ Реализован автоматический refresh токенов в baseQuery</li>
+            <li>✅ Улучшена обработка 401 ошибок</li>
+            <li>✅ Исправлена логика dispatch в baseQueryWithReauth</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🧪 Тесты API endpoints</h2>
+        
+        <div id="users-test" class="api-test">
+            <h3>👥 Пользователи (/users)</h3>
+            <button onclick="testUsers()">Тестировать загрузку пользователей</button>
+            <div id="users-result"></div>
+        </div>
+
+        <div id="clients-test" class="api-test">
+            <h3>👤 Клиенты (/clients)</h3>
+            <button onclick="testClients()">Тестировать загрузку клиентов</button>
+            <div id="clients-result"></div>
+        </div>
+
+        <div id="articles-test" class="api-test">
+            <h3>📰 Статьи (/articles)</h3>
+            <button onclick="testArticles()">Тестировать загрузку статей</button>
+            <div id="articles-result"></div>
+        </div>
+
+        <div id="auth-test" class="api-test">
+            <h3>🔐 Авторизация (/auth/me)</h3>
+            <button onclick="testAuth()">Тестировать текущего пользователя</button>
+            <div id="auth-result"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">📝 Логи тестирования</h2>
+        <div id="test-logs" class="log"></div>
+        <button onclick="clearLogs()">Очистить логи</button>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        
+        function log(message) {
+            const logsDiv = document.getElementById('test-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('test-logs').innerHTML = '';
+        }
+
+        function setTestResult(testId, status, message) {
+            const testDiv = document.getElementById(testId);
+            testDiv.className = `api-test ${status}`;
+            const resultDiv = testDiv.querySelector(`#${testId.replace('-test', '-result')}`);
+            resultDiv.innerHTML = `<strong>${status.toUpperCase()}:</strong> ${message}`;
+        }
+
+        async function testApiEndpoint(endpoint, testId, description) {
+            log(`🧪 Начинаем тест: ${description}`);
+            setTestResult(testId, 'loading', 'Загрузка данных...');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'GET',
+                    credentials: 'include', // Важно для cookie-based auth
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ ${description}: успешно загружено`);
+                    setTestResult(testId, 'success', 
+                        `Данные загружены. Статус: ${response.status}. ` +
+                        `Записей: ${Array.isArray(data.data) ? data.data.length : 'N/A'}`
+                    );
+                    return data;
+                } else {
+                    log(`❌ ${description}: ошибка ${response.status} - ${data.message || data.error}`);
+                    setTestResult(testId, 'error', 
+                        `Ошибка ${response.status}: ${data.message || data.error || 'Неизвестная ошибка'}`
+                    );
+                    return null;
+                }
+            } catch (error) {
+                log(`💥 ${description}: исключение - ${error.message}`);
+                setTestResult(testId, 'error', `Исключение: ${error.message}`);
+                return null;
+            }
+        }
+
+        async function testUsers() {
+            await testApiEndpoint('/users', 'users-test', 'Загрузка пользователей');
+        }
+
+        async function testClients() {
+            await testApiEndpoint('/clients', 'clients-test', 'Загрузка клиентов');
+        }
+
+        async function testArticles() {
+            await testApiEndpoint('/articles', 'articles-test', 'Загрузка статей');
+        }
+
+        async function testAuth() {
+            await testApiEndpoint('/auth/me', 'auth-test', 'Проверка текущего пользователя');
+        }
+
+        // Автоматический тест при загрузке страницы
+        window.addEventListener('load', () => {
+            log('🚀 Страница загружена, готов к тестированию');
+            log('💡 Нажмите кнопки для тестирования конкретных endpoints');
+            log('🔍 Проверьте консоль браузера для дополнительной информации');
+        });
+    </script>
+</body>
+</html> 

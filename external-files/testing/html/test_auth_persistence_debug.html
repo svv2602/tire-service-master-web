@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Диагностика авторизации при обновлении страницы</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .test-result {
+            min-height: 100px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Диагностика авторизации при обновлении страницы</h1>
+            <p>Проверяем, почему слетает авторизация при обновлении страницы в React приложении</p>
+        </div>
+
+        <div class="section">
+            <h3>🔐 Шаг 1: Авторизация</h3>
+            <button onclick="login()">Войти в систему</button>
+            <button onclick="checkCurrentAuth()">Проверить текущее состояние</button>
+            <div id="auth-status" class="test-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>💾 Шаг 2: Проверка localStorage</h3>
+            <button onclick="checkLocalStorage()">Проверить localStorage</button>
+            <button onclick="clearLocalStorage()">Очистить localStorage</button>
+            <div id="localStorage-status" class="test-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🍪 Шаг 3: Проверка Cookies</h3>
+            <button onclick="checkCookies()">Проверить Cookies</button>
+            <button onclick="clearCookies()">Очистить Cookies</button>
+            <div id="cookies-status" class="test-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔄 Шаг 4: Симуляция обновления страницы</h3>
+            <button onclick="simulateRefresh()">Симулировать обновление</button>
+            <button onclick="testUserEndpoint()">Тест /auth/me</button>
+            <div id="refresh-status" class="test-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>🌐 Шаг 5: Тест React приложения</h3>
+            <button onclick="openReactApp()">Открыть React приложение</button>
+            <button onclick="testReactAuth()">Тест авторизации в React</button>
+            <div id="react-status" class="test-result"></div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Диагностическая информация</h3>
+            <div id="diagnostic-info" class="test-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const REACT_BASE = 'http://localhost:3008';
+        let authToken = null;
+        let userData = null;
+
+        function log(elementId, message, data = null, isError = false) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : 'success';
+            
+            let content = `<div class="status ${className}">
+                <strong>[${timestamp}]</strong> ${message}
+            </div>`;
+            
+            if (data) {
+                content += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            element.innerHTML = content;
+            console.log(`[${timestamp}] ${message}`, data);
+        }
+
+        async function login() {
+            log('auth-status', '🔄 Выполняется авторизация...', null, false);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Важно для cookies
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                authToken = data.tokens?.access;
+                userData = data.user;
+                
+                // Сохраняем данные как в React приложении
+                if (userData) {
+                    localStorage.setItem('tvoya_shina_user', JSON.stringify(userData));
+                }
+                
+                log('auth-status', '✅ Авторизация успешна!', {
+                    hasToken: !!authToken,
+                    tokenPreview: authToken ? `${authToken.substring(0, 30)}...` : null,
+                    user: userData,
+                    savedToLocalStorage: !!localStorage.getItem('tvoya_shina_user')
+                });
+                
+                // Автоматически проверяем состояние
+                setTimeout(() => {
+                    checkLocalStorage();
+                    checkCookies();
+                }, 1000);
+                
+            } catch (error) {
+                log('auth-status', '❌ Ошибка авторизации', { error: error.message }, true);
+            }
+        }
+
+        async function checkCurrentAuth() {
+            const storedUser = localStorage.getItem('tvoya_shina_user');
+            const cookies = document.cookie;
+            
+            log('auth-status', '📊 Текущее состояние авторизации', {
+                hasStoredUser: !!storedUser,
+                storedUser: storedUser ? JSON.parse(storedUser) : null,
+                hasAuthToken: !!authToken,
+                hasCookies: !!cookies,
+                cookiesPreview: cookies ? cookies.substring(0, 100) + '...' : null
+            });
+        }
+
+        function checkLocalStorage() {
+            const keys = ['tvoya_shina_user', 'tvoya_shina_token', 'auth_token', 'token'];
+            const localStorageData = {};
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                localStorageData[key] = value ? (key.includes('token') ? `${value.substring(0, 20)}...` : JSON.parse(value)) : null;
+            });
+            
+            log('localStorage-status', '💾 Состояние localStorage', {
+                allKeys: Object.keys(localStorage).filter(key => key.includes('tvoya') || key.includes('auth') || key.includes('token')),
+                specificKeys: localStorageData
+            });
+        }
+
+        function clearLocalStorage() {
+            const keys = ['tvoya_shina_user', 'tvoya_shina_token', 'auth_token', 'token'];
+            keys.forEach(key => localStorage.removeItem(key));
+            log('localStorage-status', '🗑️ localStorage очищен', null);
+        }
+
+        function checkCookies() {
+            const cookies = document.cookie;
+            const cookieArray = cookies.split('; ').filter(cookie => 
+                cookie.includes('refresh') || 
+                cookie.includes('access') || 
+                cookie.includes('auth') ||
+                cookie.includes('token')
+            );
+            
+            log('cookies-status', '🍪 Состояние Cookies', {
+                allCookies: cookies,
+                authRelatedCookies: cookieArray,
+                cookieCount: cookieArray.length
+            });
+        }
+
+        function clearCookies() {
+            // Очищаем все возможные cookies
+            const cookiesToClear = ['refresh_token', 'access_token', 'auth_token', 'token'];
+            cookiesToClear.forEach(name => {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost;`;
+            });
+            
+            log('cookies-status', '🗑️ Cookies очищены', null);
+        }
+
+        async function simulateRefresh() {
+            log('refresh-status', '🔄 Симуляция обновления страницы...', null);
+            
+            // Сохраняем состояние ДО "обновления"
+            const beforeRefresh = {
+                localStorage: {
+                    user: localStorage.getItem('tvoya_shina_user'),
+                    token: localStorage.getItem('tvoya_shina_token')
+                },
+                cookies: document.cookie,
+                memoryToken: authToken,
+                memoryUser: userData
+            };
+            
+            // Симулируем "обновление" - очищаем память, но не localStorage/cookies
+            authToken = null;
+            userData = null;
+            
+            // Проверяем состояние ПОСЛЕ "обновления"
+            const afterRefresh = {
+                localStorage: {
+                    user: localStorage.getItem('tvoya_shina_user'),
+                    token: localStorage.getItem('tvoya_shina_token')
+                },
+                cookies: document.cookie,
+                memoryToken: authToken,
+                memoryUser: userData
+            };
+            
+            log('refresh-status', '📊 Результат симуляции обновления', {
+                before: beforeRefresh,
+                after: afterRefresh,
+                persistentData: {
+                    userPersisted: !!afterRefresh.localStorage.user,
+                    cookiesPersisted: afterRefresh.cookies === beforeRefresh.cookies
+                }
+            });
+        }
+
+        async function testUserEndpoint() {
+            log('refresh-status', '🔄 Тестируем endpoint /auth/me...', null);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include', // Важно для cookies
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (response.ok) {
+                    const userData = await response.json();
+                    log('refresh-status', '✅ Endpoint /auth/me работает!', {
+                        user: userData,
+                        status: response.status
+                    });
+                } else {
+                    log('refresh-status', '❌ Endpoint /auth/me вернул ошибку', {
+                        status: response.status,
+                        statusText: response.statusText
+                    }, true);
+                }
+            } catch (error) {
+                log('refresh-status', '❌ Ошибка при вызове /auth/me', {
+                    error: error.message
+                }, true);
+            }
+        }
+
+        function openReactApp() {
+            window.open(REACT_BASE, '_blank');
+            log('react-status', '🌐 React приложение открыто в новой вкладке', {
+                url: REACT_BASE,
+                instruction: 'Проверьте авторизацию в новой вкладке'
+            });
+        }
+
+        async function testReactAuth() {
+            log('react-status', '🔄 Тестируем состояние React приложения...', null);
+            
+            try {
+                // Проверяем доступность React приложения
+                const response = await fetch(REACT_BASE, {
+                    method: 'GET',
+                    mode: 'no-cors' // Чтобы избежать CORS ошибок
+                });
+                
+                log('react-status', '✅ React приложение доступно', {
+                    reactUrl: REACT_BASE,
+                    hasLocalStorageUser: !!localStorage.getItem('tvoya_shina_user'),
+                    hasCookies: !!document.cookie,
+                    recommendation: 'Откройте React приложение и проверьте авторизацию'
+                });
+            } catch (error) {
+                log('react-status', '❌ React приложение недоступно', {
+                    error: error.message,
+                    reactUrl: REACT_BASE
+                }, true);
+            }
+        }
+
+        function updateDiagnosticInfo() {
+            const info = {
+                timestamp: new Date().toISOString(),
+                browser: navigator.userAgent,
+                localStorage: {
+                    supported: typeof(Storage) !== "undefined",
+                    keys: Object.keys(localStorage),
+                    authKeys: Object.keys(localStorage).filter(key => 
+                        key.includes('tvoya') || key.includes('auth') || key.includes('token')
+                    )
+                },
+                cookies: {
+                    supported: navigator.cookieEnabled,
+                    content: document.cookie,
+                    authCookies: document.cookie.split('; ').filter(cookie => 
+                        cookie.includes('refresh') || cookie.includes('access') || cookie.includes('auth')
+                    )
+                },
+                network: {
+                    apiBase: API_BASE,
+                    reactBase: REACT_BASE,
+                    online: navigator.onLine
+                }
+            };
+            
+            document.getElementById('diagnostic-info').innerHTML = 
+                `<pre>${JSON.stringify(info, null, 2)}</pre>`;
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDiagnosticInfo();
+            checkCurrentAuth();
+            
+            // Обновляем диагностическую информацию каждые 10 секунд
+            setInterval(updateDiagnosticInfo, 10000);
+        });
+    </script>
+</body>
+</html>

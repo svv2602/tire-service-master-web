@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
-import { getCurrentUser, setInitialized } from '../../store/slices/authSlice';
+import { getCurrentUser, setInitialized, refreshAuthTokens } from '../../store/slices/authSlice';
 import { LoadingScreen } from '../LoadingScreen';
 
 /**
@@ -29,15 +29,22 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
         });
 
         // Если есть пользователь в localStorage, но нет в состоянии,
-        // пытаемся восстановить сессию через API (используя токены из HttpOnly cookies)
+        // пытаемся восстановить сессию через API (используя refresh токены из HttpOnly cookies)
         if (hasStoredUser && !user) {
           try {
             console.log('AuthInitializer: Пытаемся восстановить сессию через HttpOnly cookies');
+            
+            // Сначала пытаемся обновить токен через refresh endpoint
+            await dispatch(refreshAuthTokens()).unwrap();
+            console.log('AuthInitializer: Refresh токен успешно обновлен');
+            
+            // Теперь получаем данные пользователя с новым токеном
             await dispatch(getCurrentUser()).unwrap();
             console.log('AuthInitializer: Сессия успешно восстановлена');
           } catch (error) {
-            console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage');
+            console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage', error);
             localStorage.removeItem('tvoya_shina_user');
+            dispatch(setInitialized());
           }
         } else {
           // Если нет сохраненных данных или уже есть данные в состоянии

@@ -145,6 +145,27 @@ const authSlice = createSlice({
         // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
       })
       
+      // Обработка refreshAuthTokens
+      .addCase(refreshAuthTokens.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(refreshAuthTokens.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        
+        // Обновляем access токен
+        if (action.payload.access_token || action.payload.tokens?.access) {
+          state.accessToken = action.payload.access_token || action.payload.tokens.access;
+          console.log('AuthSlice: Access токен обновлен');
+        }
+      })
+      .addCase(refreshAuthTokens.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        console.log('AuthSlice: Ошибка обновления токена');
+      })
+      
       // Обработка getCurrentUser
       .addCase(getCurrentUser.pending, (state) => {
         state.loading = true;
@@ -152,12 +173,18 @@ const authSlice = createSlice({
       })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload;
+        state.user = action.payload.user || action.payload; // Поддерживаем оба формата ответа
         state.error = null;
         state.isAuthenticated = true; // Если получили пользователя, значит аутентифицированы
         state.isInitialized = true; // Устанавливаем флаг инициализации
-        setStoredUser(action.payload);
-        console.log('User role after getCurrentUser:', action.payload.role);
+        
+        // Если в ответе есть новый access токен, сохраняем его
+        if (action.payload.tokens?.access) {
+          state.accessToken = action.payload.tokens.access;
+        }
+        
+        setStoredUser(state.user);
+        console.log('User role after getCurrentUser:', state.user?.role);
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = false;
@@ -240,17 +267,51 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
   }
 });
 
+export const refreshAuthTokens = createAsyncThunk(
+  'auth/refreshTokens',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('DEBUG: Обновляем токены через refresh endpoint');
+      const API_URL = `${config.API_URL}${config.API_PREFIX}`;
+      
+      const response = await axios.post(
+        `${API_URL}/auth/refresh`,
+        {},
+        { 
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+      
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Не удалось обновить токены');
+    }
+  }
+);
+
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
       const response = await apiClient.get('/auth/me');
-      const userData = response.data.user;
+      const userData = response.data.user || response.data;
       
-      return {
+      // Возвращаем данные пользователя с правильной ролью
+      const user = {
         ...userData,
         role: userData.role ? mapRoleToEnum(userData.role) : UserRole.ADMIN
       };
+      
+      // Если в ответе есть токены (например, после refresh), возвращаем их тоже
+      if (response.data.tokens) {
+        return {
+          user,
+          tokens: response.data.tokens
+        };
+      }
+      
+      return user;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Не удалось получить данные пользователя');
     }
