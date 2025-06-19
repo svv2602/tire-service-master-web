@@ -29,15 +29,13 @@ import {
   Alert,
   DialogContentText,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   useTheme,
 } from '@mui/material';
+
+// UI компоненты
+import { Table, Column } from '../components/ui/Table';
+import { Pagination as UIPagination } from '../components/ui/Pagination';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -52,7 +50,6 @@ import {
   useDeleteCarModelMutation,
 } from '../api/carModels.api';
 import { CarModel, CarModelFormData } from '../types/car';
-import { Pagination } from './ui';
 import { getTablePageStyles, SIZES } from '../styles';
 
 /**
@@ -102,6 +99,74 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [createModel] = useCreateCarModelMutation();
   const [updateModel] = useUpdateCarModelMutation();
   const [deleteModel] = useDeleteCarModelMutation();
+
+  // Конфигурация колонок для UI Table
+  const columns: Column[] = [
+    { 
+      id: 'name', 
+      label: 'Название', 
+      minWidth: 200,
+      format: (value: string, row: CarModel) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            color: theme.palette.text.primary,
+            opacity: row.is_active ? 1 : 0.7,
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    { 
+      id: 'is_active', 
+      label: 'Статус', 
+      minWidth: 120,
+      format: (value: boolean) => (
+        <Chip 
+          label={value ? 'Активна' : 'Неактивна'}
+          color={value ? 'success' : 'default'}
+          size="small"
+          sx={tablePageStyles.statusChip}
+        />
+      )
+    },
+    { 
+      id: 'actions', 
+      label: 'Действия', 
+      minWidth: 120,
+      align: 'right',
+      format: (value: any, row: CarModel) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDialog(row)}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDeleteDialog(row)}
+              sx={{
+                ...tablePageStyles.actionButton,
+                color: theme.palette.error.main,
+                '&:hover': {
+                  backgroundColor: `${theme.palette.error.main}15`,
+                }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
 
   /**
    * Конфигурация Formik для управления состоянием формы
@@ -297,77 +362,13 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         </Alert>
       )}
 
-      {/* Таблица моделей */}
-      <TableContainer sx={tablePageStyles.tableContainer}>
-        <Table>
-          <TableHead sx={tablePageStyles.tableHeader}>
-            <TableRow>
-              <TableCell>Название</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {models.map((model: CarModel) => (
-              <TableRow 
-                key={model.id}
-                sx={{
-                  ...tablePageStyles.tableRow,
-                  opacity: model.is_active ? 1 : 0.7,
-                }}
-              >
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 500,
-                      color: theme.palette.text.primary
-                    }}
-                  >
-                    {model.name}
-                  </Typography>
-                </TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Chip 
-                    label={model.is_active ? 'Активна' : 'Неактивна'}
-                    color={model.is_active ? 'success' : 'default'}
-                    size="small"
-                    sx={tablePageStyles.statusChip}
-                  />
-                </TableCell>
-                <TableCell align="right" sx={tablePageStyles.tableCell}>
-                  <Box sx={tablePageStyles.actionsContainer}>
-                    <Tooltip title="Редактировать">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleOpenDialog(model)}
-                        sx={tablePageStyles.actionButton}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleOpenDeleteDialog(model)}
-                        sx={{
-                          ...tablePageStyles.actionButton,
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.error.main}15`,
-                            color: theme.palette.error.main
-                          }
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Таблица моделей с UI Table */}
+      <Box sx={{ mb: 3 }}>
+        <Table
+          columns={columns}
+          rows={models}
+        />
+      </Box>
 
       {/* Пустое состояние */}
       {models.length === 0 && !isLoading && (
@@ -394,15 +395,14 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         </Box>
       )}
 
-      {/* Пагинация */}
+      {/* Пагинация с UI Pagination */}
       {totalPages > 1 && (
         <Box sx={tablePageStyles.paginationContainer}>
-          <Pagination
+          <UIPagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
-            size="large"
           />
         </Box>
       )}

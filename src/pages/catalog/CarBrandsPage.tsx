@@ -4,20 +4,12 @@ import {
   Typography,
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Avatar,
   FormControl,
-  InputLabel,
   MenuItem,
   useTheme,
-  SelectChangeEvent,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -37,10 +29,6 @@ import {
 import { CarBrand } from '../../types/car';
 import { 
   SIZES,
-  getCardStyles,
-  getButtonStyles,
-  getTextFieldStyles,
-  getTableStyles,
 } from '../../styles';
 
 // Импорты UI компонентов
@@ -52,6 +40,7 @@ import { Select } from '../../components/ui/Select';
 import { Switch } from '../../components/ui/Switch';
 import { Pagination } from '../../components/ui/Pagination';
 import { Snackbar } from '../../components/ui/Snackbar';
+import { Table, Column } from '../../components/ui/Table';
 
 interface CarBrandsState {
   open: boolean;
@@ -63,17 +52,11 @@ const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   
-  // Получаем централизованные стили
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
-  
   // Состояния
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [rowsPerPage] = useState(25);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
   const [notification, setNotification] = useState<CarBrandsState>({
@@ -176,6 +159,143 @@ const CarBrandsPage: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  // Конфигурация колонок для таблицы
+  const columns: Column[] = [
+    {
+      id: 'name',
+      label: 'Бренд',
+      minWidth: 200,
+      align: 'left',
+      format: (value: any, brand: CarBrand) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.md }}>
+          {brand.logo ? (
+            <Avatar 
+              src={brand.logo} 
+              alt={brand.name}
+              variant="rounded"
+              sx={{ 
+                width: SIZES.icon.medium * 1.5, 
+                height: SIZES.icon.medium * 1.5,
+                borderRadius: SIZES.borderRadius.xs
+              }}
+            >
+              <CarIcon />
+            </Avatar>
+          ) : (
+            <Avatar 
+              variant="rounded" 
+              sx={{ 
+                width: SIZES.icon.medium * 1.5, 
+                height: SIZES.icon.medium * 1.5,
+                borderRadius: SIZES.borderRadius.xs
+              }}
+            >
+              <CarIcon />
+            </Avatar>
+          )}
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>{brand.name}</Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      minWidth: 150,
+      align: 'left',
+      format: (value: any, brand: CarBrand) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Switch
+            checked={brand.is_active}
+            onChange={() => handleToggleActive(brand.id, brand.is_active)}
+          />
+          <Typography sx={{ ml: SIZES.spacing.sm }}>
+            {brand.is_active ? 'Активен' : 'Неактивен'}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'models_count',
+      label: 'Кол-во моделей',
+      minWidth: 140,
+      align: 'left',
+      format: (value: any, brand: CarBrand) => (
+        <Tooltip title="Количество моделей">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+            <FormatListNumberedIcon fontSize="small" />
+            <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+              {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
+            </Typography>
+          </Box>
+        </Tooltip>
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата создания',
+      minWidth: 150,
+      align: 'left',
+      format: (value: any, brand: CarBrand) => (
+        <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        })} arrow>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+            <CalendarTodayIcon fontSize="small" color="action" />
+            <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+              {new Date(brand.created_at).toLocaleDateString('ru-RU', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+              })}
+            </Typography>
+          </Box>
+        </Tooltip>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 120,
+      align: 'right',
+      format: (value: any, brand: CarBrand) => (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+          <Tooltip title="Редактировать">
+            <IconButton 
+              size="small"
+              onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
+              sx={{ 
+                color: theme.palette.primary.main,
+                '&:hover': {
+                  backgroundColor: `${theme.palette.primary.main}15`
+                }
+              }}
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton 
+              size="small"
+              onClick={() => handleDeleteClick(brand)}
+              color="error"
+              sx={{
+                '&:hover': {
+                  backgroundColor: `${theme.palette.error.main}15`
+                }
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   if (isLoading) {
     return (
       <Box 
@@ -203,7 +323,6 @@ const CarBrandsPage: React.FC = () => {
   }
 
   const brands = brandsData?.data || [];
-  const totalItems = brandsData?.pagination?.total_count || 0;
   const totalPages = brandsData?.pagination?.total_pages || 1;
 
   return (
@@ -273,142 +392,17 @@ const CarBrandsPage: React.FC = () => {
       </Box>
 
       {/* Таблица брендов */}
-      <TableContainer sx={{
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
-      }}>
-        <Table>
-          <TableHead sx={tableStyles.tableHead}>
-            <TableRow>
-              <TableCell>Бренд</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                  <FormatListNumberedIcon fontSize="small" />
-                  Кол-во моделей
-                </Box>
-              </TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                  <CalendarTodayIcon fontSize="small" />
-                  Дата создания
-                </Box>
-              </TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {brands.map((brand: CarBrand) => (
-              <TableRow key={brand.id} hover sx={tableStyles.tableRow}>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.md }}>
-                    {brand.logo ? (
-                      <Avatar 
-                        src={brand.logo} 
-                        alt={brand.name}
-                        variant="rounded"
-                        sx={{ 
-                          width: SIZES.icon.medium * 1.5, 
-                          height: SIZES.icon.medium * 1.5,
-                          borderRadius: SIZES.borderRadius.xs
-                        }}
-                      >
-                        <CarIcon />
-                      </Avatar>
-                    ) : (
-                      <Avatar 
-                        variant="rounded" 
-                        sx={{ 
-                          width: SIZES.icon.medium * 1.5, 
-                          height: SIZES.icon.medium * 1.5,
-                          borderRadius: SIZES.borderRadius.xs
-                        }}
-                      >
-                        <CarIcon />
-                      </Avatar>
-                    )}
-                    <Typography sx={{ fontSize: SIZES.fontSize.md }}>{brand.name}</Typography>
-                  </Box>
-                </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Switch
-                      checked={brand.is_active}
-                      onChange={() => handleToggleActive(brand.id, brand.is_active)}
-                    />
-                    <Typography sx={{ ml: SIZES.spacing.sm }}>
-                      {brand.is_active ? 'Активен' : 'Неактивен'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Tooltip title="Количество моделей">
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                      <FormatListNumberedIcon fontSize="small" />
-                      <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-                        {brand.models_count !== undefined ? brand.models_count : 'Н/Д'}
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                </TableCell>
-                <TableCell sx={tableStyles.tableCell}>
-                  <Tooltip title={new Date(brand.created_at).toLocaleString('ru-RU', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })} arrow>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                      <CalendarTodayIcon fontSize="small" color="action" />
-                      <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-                        {new Date(brand.created_at).toLocaleDateString('ru-RU', { 
-                          day: '2-digit', 
-                          month: '2-digit', 
-                          year: 'numeric' 
-                        })}
-                      </Typography>
-                    </Box>
-                  </Tooltip>
-                </TableCell>
-                <TableCell align="right" sx={tableStyles.tableCell}>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
-                    <Tooltip title="Редактировать">
-                      <IconButton 
-                        size="small"
-                        onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
-                        sx={{ 
-                          color: theme.palette.primary.main,
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.primary.main}15`
-                          }
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleDeleteClick(brand)}
-                        color="error"
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.error.main}15`
-                          }
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Table
+        columns={columns}
+        rows={brands}
+        sx={{
+          '& .MuiTable-root': {
+            backgroundColor: 'transparent',
+          }
+        }}
+      />
+      
+      {/* Пагинация */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'center', 

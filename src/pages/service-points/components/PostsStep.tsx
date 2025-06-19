@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
   FormControlLabel,
   Switch,
   IconButton,
@@ -17,7 +16,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Table,
+  Table as MuiTable,
   TableBody,
   TableCell,
   TableContainer,
@@ -942,7 +941,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
             </Box>
 
             <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
+              <MuiTable size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell><strong>Время</strong></TableCell>
@@ -1018,7 +1017,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+              </MuiTable>
             </TableContainer>
 
             <Alert severity="info" sx={{ mt: 2 }}>

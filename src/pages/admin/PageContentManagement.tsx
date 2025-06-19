@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -14,27 +14,18 @@ import {
   InputLabel,
   Switch,
   FormControlLabel,
-  Card,
-  CardContent,
-  CardActions,
   Grid,
   Chip,
   IconButton,
   Alert,
   Snackbar,
-  Tabs,
-  Tab,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
   Tooltip,
-  Fab
 } from '@mui/material';
+
+// UI компоненты  
+import { Table, Column } from '../../components/ui/Table';
+import { Pagination } from '../../components/ui/Pagination';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -43,10 +34,6 @@ import {
   VisibilityOff as VisibilityOffIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  Image as ImageIcon,
-  Article as ArticleIcon,
-  Settings as SettingsIcon,
-  DragIndicator as DragIcon
 } from '@mui/icons-material';
 import {
   useGetPageContentsQuery,
@@ -75,34 +62,12 @@ const PAGE_SECTIONS = {
   about: 'Про нас'
 };
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`content-tabpanel-${index}`}
-      aria-labelledby={`content-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
 const PageContentManagement: React.FC = () => {
   // Стан компонента
-  const [currentTab, setCurrentTab] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingContent, setEditingContent] = useState<PageContent | null>(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
   const [filterSection, setFilterSection] = useState('');
   const [filterType, setFilterType] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -130,10 +95,6 @@ const PageContentManagement: React.FC = () => {
   const [deleteContent] = useDeletePageContentMutation();
 
   // Обробники подій
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
-  };
-
   const handleOpenDialog = (content?: PageContent) => {
     if (content) {
       setEditingContent(content);
@@ -223,6 +184,98 @@ const PageContentManagement: React.FC = () => {
     }
   };
 
+  // Конфигурация колонок для UI Table
+  const columns: Column[] = [
+    { id: 'id', label: 'ID', minWidth: 50, align: 'left' },
+    { 
+      id: 'section', 
+      label: 'Секція', 
+      minWidth: 120,
+      format: (value: string) => (
+        <Chip 
+          label={PAGE_SECTIONS[value as keyof typeof PAGE_SECTIONS] || value}
+          size="small"
+          color="primary"
+          variant="outlined"
+        />
+      )
+    },
+    { 
+      id: 'content_type', 
+      label: 'Тип', 
+      minWidth: 120,
+      format: (value: string) => (
+        <Chip 
+          label={CONTENT_TYPES[value as keyof typeof CONTENT_TYPES] || value}
+          size="small"
+          color="secondary"
+          variant="outlined"
+        />
+      )
+    },
+    { 
+      id: 'title', 
+      label: 'Заголовок', 
+      minWidth: 200, 
+      wrap: true,
+      format: (value: string) => (
+        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+          {value}
+        </Typography>
+      )
+    },
+    { id: 'position', label: 'Позиція', minWidth: 80, align: 'center' },
+    { 
+      id: 'active', 
+      label: 'Статус', 
+      minWidth: 100,
+      format: (value: boolean) => (
+        <Chip 
+          label={value ? 'Активний' : 'Неактивний'}
+          size="small"
+          color={value ? 'success' : 'default'}
+        />
+      )
+    },
+    { 
+      id: 'actions', 
+      label: 'Дії', 
+      minWidth: 150,
+      align: 'center',
+      format: (value: any, row: PageContent) => (
+        <Box display="flex" gap={1} justifyContent="center">
+          <Tooltip title="Редагувати">
+            <IconButton
+              size="small"
+              onClick={() => handleOpenDialog(row)}
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={row.active ? 'Деактивувати' : 'Активувати'}>
+            <IconButton
+              size="small"
+              onClick={() => handleToggleActive(row)}
+              color={row.active ? 'warning' : 'success'}
+            >
+              {row.active ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Видалити">
+            <IconButton
+              size="small"
+              onClick={() => handleDelete(row.id)}
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   // Фільтрований контент
   const filteredContents = contents?.data || [];
 
@@ -231,15 +284,6 @@ const PageContentManagement: React.FC = () => {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
 
   if (isLoading) {
     return (
@@ -322,100 +366,28 @@ const PageContentManagement: React.FC = () => {
         </Grid>
       </Paper>
 
-      {/* Таблиця контенту */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Секція</TableCell>
-              <TableCell>Тип</TableCell>
-              <TableCell>Заголовок</TableCell>
-              <TableCell>Позиція</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell>Дії</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedContents.map((content) => (
-              <TableRow key={content.id}>
-                <TableCell>{content.id}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={PAGE_SECTIONS[content.section as keyof typeof PAGE_SECTIONS] || content.section}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={CONTENT_TYPES[content.content_type as keyof typeof CONTENT_TYPES] || content.content_type}
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                    {content.title}
-                  </Typography>
-                </TableCell>
-                <TableCell>{content.position}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={content.active ? 'Активний' : 'Неактивний'}
-                    size="small"
-                    color={content.active ? 'success' : 'default'}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Box display="flex" gap={1}>
-                    <Tooltip title="Редагувати">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleOpenDialog(content)}
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={content.active ? 'Деактивувати' : 'Активувати'}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleToggleActive(content)}
-                        color={content.active ? 'warning' : 'success'}
-                      >
-                        {content.active ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Видалити">
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDelete(content.id)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={filteredContents.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Рядків на сторінці:"
-          labelDisplayedRows={({ from, to, count }) => `${from}-${to} з ${count}`}
+      {/* Таблиця контенту з UI Table */}
+      <Box sx={{ mb: 3 }}>
+        <Table
+          columns={columns}
+          rows={paginatedContents}
         />
-      </TableContainer>
+        
+        {/* Пагинация с UI Pagination */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          mt: 2 
+        }}>
+          <Pagination
+            count={Math.ceil(filteredContents.length / rowsPerPage)}
+            page={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            color="primary"
+            disabled={filteredContents.length <= rowsPerPage}
+          />
+        </Box>
+      </Box>
 
       {/* Діалог створення/редагування */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>

@@ -14,6 +14,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/index';
+import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
 
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -150,16 +151,17 @@ function App() {
   return (
     <Provider store={store}>
       <ThemeProvider>
-        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-          <CssBaseline />
-          <GlobalUIStyles />
-          <AuthInitializer>
-          <Router 
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true
-            }}
-          >
+        <SnackbarProvider>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+            <CssBaseline />
+            <GlobalUIStyles />
+            <AuthInitializer>
+            <Router 
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true
+              }}
+            >
             <Suspense fallback={<LoadingSpinner fullScreen />}>
               <Routes>
                 {/* Публичные маршруты */}
@@ -288,12 +290,12 @@ function App() {
                 {/* Маршрут по умолчанию */}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
-            </Suspense>
-          </Router>
+            </Suspense>            </Router>
         </AuthInitializer>
       </LocalizationProvider>
-    </ThemeProvider>
-  </Provider>
+    </SnackbarProvider>
+  </ThemeProvider>
+</Provider>
   );
 }
 

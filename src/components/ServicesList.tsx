@@ -15,12 +15,6 @@ import {
   Alert,
   DialogContentText,
   Chip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   useTheme,
 } from '@mui/material';
@@ -28,11 +22,13 @@ import { SIZES } from '../styles/theme';
 import { 
   getTablePageStyles 
 } from '../styles/components';
+// UI компоненты
+import { Table, Column } from './ui/Table';
+import { Pagination as UIPagination } from './ui';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -43,7 +39,6 @@ import {
   useDeleteServiceMutation,
 } from '../api/servicesList.api';
 import { Service, ServiceFormData } from '../types/service';
-import { Pagination } from './ui';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -221,17 +216,75 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     setPage(1);
   };
 
-  const formatDuration = (minutes: number): string => {
-    if (minutes < 60) {
-      return `${minutes} мин`;
+  /**
+   * Конфигурация колонок для UI Table
+   */
+  const columns: Column[] = [
+    {
+      id: 'name',
+      label: 'Название',
+      minWidth: 200,
+      wrap: true,
+      format: (value: string) => (
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            fontWeight: 500,
+            color: theme.palette.text.primary
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value: boolean) => (
+        <Chip 
+          label={value ? 'Активна' : 'Неактивна'}
+          color={value ? 'success' : 'default'}
+          size="small"
+          sx={tablePageStyles.statusChip}
+        />
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      minWidth: 120,
+      format: (value: any, row: Service) => (
+        <Box sx={tablePageStyles.actionsContainer}>
+          <Tooltip title="Редактировать">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDialog(row)}
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton 
+              size="small"
+              onClick={() => handleOpenDeleteDialog(row)}
+              sx={{
+                ...tablePageStyles.actionButton,
+                '&:hover': {
+                  backgroundColor: `${theme.palette.error.main}15`,
+                  color: theme.palette.error.main
+                }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
     }
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours} ч`;
-    }
-    return `${hours} ч ${remainingMinutes} мин`;
-  };
+  ];
 
   if (isLoading) {
     return (
@@ -274,77 +327,13 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         </Alert>
       )}
 
-      {/* Таблица услуг */}
-      <TableContainer sx={tablePageStyles.tableContainer}>
-        <Table>
-          <TableHead sx={tablePageStyles.tableHeader}>
-            <TableRow>
-              <TableCell>Название</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {services.map((service: Service) => (
-              <TableRow 
-                key={service.id}
-                sx={{
-                  ...tablePageStyles.tableRow,
-                  opacity: service.is_active ? 1 : 0.7,
-                }}
-              >
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      fontWeight: 500,
-                      color: theme.palette.text.primary
-                    }}
-                  >
-                    {service.name}
-                  </Typography>
-                </TableCell>
-                <TableCell sx={tablePageStyles.tableCell}>
-                  <Chip 
-                    label={service.is_active ? 'Активна' : 'Неактивна'}
-                    color={service.is_active ? 'success' : 'default'}
-                    size="small"
-                    sx={tablePageStyles.statusChip}
-                  />
-                </TableCell>
-                <TableCell align="right" sx={tablePageStyles.tableCell}>
-                  <Box sx={tablePageStyles.actionsContainer}>
-                    <Tooltip title="Редактировать">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleOpenDialog(service)}
-                        sx={tablePageStyles.actionButton}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton 
-                        size="small"
-                        onClick={() => handleOpenDeleteDialog(service)}
-                        sx={{
-                          ...tablePageStyles.actionButton,
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.error.main}15`,
-                            color: theme.palette.error.main
-                          }
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      {/* Таблица услуг с UI Table */}
+      <Box sx={{ mb: 3 }}>
+        <Table
+          columns={columns}
+          rows={services}
+        />
+      </Box>
 
       {/* Пустое состояние */}
       {services.length === 0 && !isLoading && (
@@ -372,14 +361,14 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       )}
 
       {/* Пагинация */}
+      {/* Пагинация с UI Pagination */}
       {totalPages > 1 && (
         <Box sx={tablePageStyles.paginationContainer}>
-          <Pagination
+          <UIPagination
             count={totalPages}
             page={page}
             onChange={handlePageChange}
             color="primary"
-            size="large"
           />
         </Box>
       )}

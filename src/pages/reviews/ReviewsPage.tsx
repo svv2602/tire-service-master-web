@@ -5,29 +5,20 @@ import {
   Typography,
   InputAdornment,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Avatar,
   Rating,
   FormControl,
-  InputLabel,
   MenuItem,
   useTheme, // Добавлен импорт темы
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Reply as ReplyIcon,
   Star as StarIcon,
   Business as BusinessIcon,
-  DirectionsCar as CarIcon,
   Check as CheckIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
@@ -38,18 +29,10 @@ import {
   useUpdateReviewMutation,
   useGetServicePointsQuery,
 } from '../../api';
-import { Review as ModelReview, ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
-import { ServicePoint, Review as DBReview } from '../../types/models';
-import { SelectChangeEvent } from '@mui/material/Select';
+import { ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
+
 // Импорты централизованной системы стилей
 import { SIZES } from '../../styles/theme';
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getTextFieldStyles, 
-  getTableStyles, 
-  getChipStyles 
-} from '../../styles/components';
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
@@ -59,6 +42,7 @@ import { Chip } from '../../components/ui/Chip';
 import { Select } from '../../components/ui/Select';
 import { Pagination } from '../../components/ui/Pagination';
 import { Modal } from '../../components/ui/Modal';
+import { Table, Column } from '../../components/ui/Table';
 
 // Расширяем интерфейс для отображения, не наследуя от ModelReview
 interface ReviewWithClient {
@@ -111,20 +95,15 @@ const REVIEW_STATUSES: Record<ReviewStatus, {
 const ReviewsPage: React.FC = () => {
   const navigate = useNavigate();
   
-  // Получение темы и централизованных стилей
+  // Получение темы
   const theme = useTheme();
-  const cardStyles = getCardStyles(theme);
-  const buttonStyles = getButtonStyles(theme, 'primary');
-  const textFieldStyles = getTextFieldStyles(theme);
-  const tableStyles = getTableStyles(theme);
-  const chipStyles = getChipStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReviewStatus | ''>('');
   const [servicePointId, setServicePointId] = useState<string>('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(25);
+  const [rowsPerPage] = useState(25);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -258,6 +237,206 @@ const ReviewsPage: React.FC = () => {
     setSelectedReview(null);
   };
 
+  // Конфигурация колонок для таблицы
+  const columns: Column[] = [
+    {
+      id: 'client',
+      label: 'Клиент',
+      minWidth: 200,
+      align: 'left',
+      format: (value: any, review: ReviewWithClient) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+          <Avatar sx={{ 
+            bgcolor: theme.palette.primary.main,
+            width: 36,
+            height: 36,
+            fontSize: SIZES.fontSize.md
+          }}>
+            {getClientInitials(review)}
+          </Avatar>
+          <Box>
+            <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
+              {review.client?.first_name || review.user?.first_name} {review.client?.last_name || review.user?.last_name}
+            </Typography>
+            <Typography 
+              sx={{ 
+                fontSize: SIZES.fontSize.sm, 
+                color: theme.palette.text.secondary 
+              }}
+            >
+              {review.booking?.client?.car?.carBrand?.name} {review.booking?.client?.car?.carModel?.name}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    },
+    {
+      id: 'service_point',
+      label: 'Сервисная точка',
+      minWidth: 180,
+      align: 'left',
+      format: (value: any, review: ReviewWithClient) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+          <BusinessIcon color="action" />
+          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+            {review.service_point?.name}
+          </Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'comment',
+      label: 'Отзыв',
+      minWidth: 350,
+      align: 'left',
+      wrap: true,
+      format: (value: any, review: ReviewWithClient) => (
+        <Box>
+          <Typography
+            sx={{
+              fontSize: SIZES.fontSize.md,
+              maxWidth: 300,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}
+          >
+            {review.text || review.comment}
+          </Typography>
+          {review.response && (
+            <Box sx={{ mt: SIZES.spacing.xs, display: 'flex', alignItems: 'flex-start', gap: SIZES.spacing.xs }}>
+              <ReplyIcon color="action" sx={{ fontSize: '1rem' }} />
+              <Typography
+                sx={{
+                  fontSize: SIZES.fontSize.sm,
+                  color: theme.palette.text.secondary,
+                  maxWidth: 280,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
+                {review.response}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      )
+    },
+    {
+      id: 'rating',
+      label: 'Оценка',
+      minWidth: 120,
+      align: 'left',
+      format: (value: any, review: ReviewWithClient) => (
+        <Rating 
+          value={review.rating} 
+          readOnly 
+          size="small" 
+          sx={{
+            '& .MuiRating-iconFilled': {
+              color: theme.palette.warning.main
+            }
+          }} 
+        />
+      )
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      minWidth: 120,
+      align: 'left',
+      format: (value: any, review: ReviewWithClient) => (
+        <Chip
+          label={REVIEW_STATUSES[review.status as ReviewStatus].label}
+          color={REVIEW_STATUSES[review.status as ReviewStatus].color}
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата',
+      minWidth: 120,
+      align: 'left',
+      format: (value: any, review: ReviewWithClient) => (
+        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+          {formatDate(review.created_at)}
+        </Typography>
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 180,
+      align: 'right',
+      format: (value: any, review: ReviewWithClient) => (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+          {review.status === 'pending' && (
+            <>
+              <Tooltip title="Одобрить">
+                <IconButton
+                  onClick={() => handleStatusChange(review, 'published')}
+                  size="small"
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: `${theme.palette.success.main}15`
+                    }
+                  }}
+                >
+                  <CheckIcon color="success" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Отклонить">
+                <IconButton
+                  onClick={() => handleStatusChange(review, 'rejected')}
+                  size="small"
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: `${theme.palette.error.main}15`
+                    }
+                  }}
+                >
+                  <CloseIcon color="error" />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+          <Tooltip title="Ответить">
+            <IconButton 
+              onClick={() => navigate(`/reviews/${review.id}/reply`)}
+              size="small"
+              sx={{
+                '&:hover': {
+                  backgroundColor: `${theme.palette.primary.main}15`
+                }
+              }}
+            >
+              <ReplyIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => handleDeleteClick(review)}
+              size="small"
+              sx={{
+                '&:hover': {
+                  backgroundColor: `${theme.palette.error.main}15`
+                }
+              }}
+            >
+              <DeleteIcon color="error" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   // Вспомогательные функции
   const getClientInitials = (review: ReviewWithClient) => {
     const firstName = review.client?.first_name || review.user?.first_name || '';
@@ -378,201 +557,30 @@ const ReviewsPage: React.FC = () => {
       </Box>
 
       {/* Таблица отзывов */}
-      <TableContainer sx={{
-        backgroundColor: 'transparent',
-        boxShadow: 'none',
-        border: 'none'
+      <Table
+        columns={columns}
+        rows={reviews}
+        sx={{
+          '& .MuiTable-root': {
+            backgroundColor: 'transparent',
+          }
+        }}
+      />
+      
+      {/* Пагинация */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        p: 2 
       }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Клиент</TableCell>
-              <TableCell>Сервисная точка</TableCell>
-              <TableCell>Отзыв</TableCell>
-              <TableCell>Оценка</TableCell>
-              <TableCell>Статус</TableCell>
-              <TableCell>Дата</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reviews.map((review: ReviewWithClient) => (
-              <TableRow key={review.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                    <Avatar sx={{ 
-                      bgcolor: theme.palette.primary.main,
-                      width: 36,
-                      height: 36,
-                      fontSize: SIZES.fontSize.md
-                    }}>
-                      {getClientInitials(review)}
-                    </Avatar>
-                    <Box>
-                      <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
-                        {review.client?.first_name || review.user?.first_name} {review.client?.last_name || review.user?.last_name}
-                      </Typography>
-                      <Typography 
-                        sx={{ 
-                          fontSize: SIZES.fontSize.sm, 
-                          color: theme.palette.text.secondary 
-                        }}
-                      >
-                        {review.booking?.client?.car?.carBrand?.name} {review.booking?.client?.car?.carModel?.name}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-                    <BusinessIcon color="action" />
-                    <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-                      {review.service_point?.name}
-                    </Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Typography
-                    sx={{
-                      fontSize: SIZES.fontSize.md,
-                      maxWidth: 300,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
-                    {review.text || review.comment}
-                  </Typography>
-                  {review.response && (
-                    <Box sx={{ mt: SIZES.spacing.xs, display: 'flex', alignItems: 'flex-start', gap: SIZES.spacing.xs }}>
-                      <ReplyIcon color="action" sx={{ fontSize: '1rem' }} />
-                      <Typography
-                        sx={{
-                          fontSize: SIZES.fontSize.sm,
-                          color: theme.palette.text.secondary,
-                          maxWidth: 280,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        {review.response}
-                      </Typography>
-                    </Box>
-                  )}
-                </TableCell>
-
-                <TableCell>
-                  <Rating 
-                    value={review.rating} 
-                    readOnly 
-                    size="small" 
-                    sx={{
-                      '& .MuiRating-iconFilled': {
-                        color: theme.palette.warning.main
-                      }
-                    }} 
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <Chip
-                    label={REVIEW_STATUSES[review.status as ReviewStatus].label}
-                    color={REVIEW_STATUSES[review.status as ReviewStatus].color}
-                    size="small"
-                  />
-                </TableCell>
-
-                <TableCell>
-                  <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-                    {formatDate(review.created_at)}
-                  </Typography>
-                </TableCell>
-
-                <TableCell align="right">
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
-                    {review.status === 'pending' && (
-                      <>
-                        <Tooltip title="Одобрить">
-                          <IconButton
-                            onClick={() => handleStatusChange(review, 'published')}
-                            size="small"
-                            sx={{
-                              '&:hover': {
-                                backgroundColor: `${theme.palette.success.main}15`
-                              }
-                            }}
-                          >
-                            <CheckIcon color="success" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Отклонить">
-                          <IconButton
-                            onClick={() => handleStatusChange(review, 'rejected')}
-                            size="small"
-                            sx={{
-                              '&:hover': {
-                                backgroundColor: `${theme.palette.error.main}15`
-                              }
-                            }}
-                          >
-                            <CloseIcon color="error" />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
-                    <Tooltip title="Ответить">
-                      <IconButton 
-                        onClick={() => navigate(`/reviews/${review.id}/reply`)}
-                        size="small"
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.primary.main}15`
-                          }
-                        }}
-                      >
-                        <ReplyIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Удалить">
-                      <IconButton
-                        onClick={() => handleDeleteClick(review)}
-                        size="small"
-                        sx={{
-                          '&:hover': {
-                            backgroundColor: `${theme.palette.error.main}15`
-                          }
-                        }}
-                      >
-                        <DeleteIcon color="error" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          p: 2 
-        }}>
-          <Pagination
-            count={Math.ceil(totalItems / rowsPerPage)}
-            page={page + 1}
-            onChange={handleChangePage}
-            color="primary"
-            disabled={totalItems <= rowsPerPage}
-          />
-        </Box>
-      </TableContainer>
+        <Pagination
+          count={Math.ceil(totalItems / rowsPerPage)}
+          page={page + 1}
+          onChange={handleChangePage}
+          color="primary"
+          disabled={totalItems <= rowsPerPage}
+        />
+      </Box>
 
       {/* Модальное окно подтверждения удаления */}
       <Modal 

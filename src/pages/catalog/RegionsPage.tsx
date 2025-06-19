@@ -4,12 +4,6 @@ import {
   Typography,
   Button,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Chip,
   TextField,
@@ -23,8 +17,9 @@ import {
   Snackbar,
   Alert,
   Tooltip,
-  TablePagination,
 } from '@mui/material';
+import { Table, Column } from '../../components/ui/Table';
+import { Pagination } from '../../components/ui/Pagination';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -35,14 +30,13 @@ import {
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
-import { useNavigate } from 'react-router-dom';
 import { 
   useGetRegionsQuery,
   useCreateRegionMutation,
   useUpdateRegionMutation,
   useDeleteRegionMutation
 } from '../../api';
-import { Region, RegionFilter, RegionFormData, ApiResponse } from '../../types/models';
+import { Region, RegionFilter, RegionFormData } from '../../types/models';
 
 // Схема валидации для региона
 const validationSchema = yup.object({
@@ -57,12 +51,10 @@ const initialValues: RegionFormData = {
 };
 
 const RegionsPage: React.FC = () => {
-  const navigate = useNavigate();
   const [openDialog, setOpenDialog] = useState(false);
   const [editingRegion, setEditingRegion] = useState<Region | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
@@ -71,22 +63,17 @@ const RegionsPage: React.FC = () => {
   const { data: regionsData, isLoading: regionsLoading, error: regionsError } = useGetRegionsQuery({
     query: searchQuery || undefined,
     page: page + 1,
-    per_page: rowsPerPage,
+    per_page: 10, // Фиксированное значение
   } as RegionFilter);
 
   const [createRegion] = useCreateRegionMutation();
   const [updateRegion] = useUpdateRegionMutation();
   const [deleteRegion] = useDeleteRegionMutation();
 
-  // Обработчики пагинации
-  const handleChangePage = (_: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  // Извлекаем данные из response
+  const regions = regionsData?.data || [];
+  const totalPages = regionsData?.pagination?.total_pages || 0;
+  const isLoading = regionsLoading;
 
   // Формик для формы региона
   const formik = useFormik({
@@ -134,16 +121,9 @@ const RegionsPage: React.FC = () => {
     setEditingRegion(null);
   };
 
-  // Удаление региона
-  const handleDeleteRegion = async (id: number) => {
-    if (window.confirm('Вы уверены, что хотите удалить этот регион?')) {
-      try {
-        await deleteRegion(id).unwrap();
-        setSuccessMessage('Регион успешно удален');
-      } catch (error: any) {
-        console.error('Ошибка при удалении:', error);
-      }
-    }
+  // Закрытие уведомления
+  const handleCloseSnackbar = () => {
+    setSuccessMessage(null);
   };
 
   // Обработчик поиска
@@ -151,16 +131,6 @@ const RegionsPage: React.FC = () => {
     setSearchQuery(event.target.value);
     setPage(0);
   };
-
-  // Закрытие уведомления
-  const handleCloseSnackbar = () => {
-    setSuccessMessage(null);
-  };
-
-  const isLoading = regionsLoading;
-  const error = regionsError;
-  const regions = (regionsData as unknown as ApiResponse<Region>)?.data || [];
-  const totalItems = (regionsData as unknown as ApiResponse<Region>)?.pagination?.total_count || 0;
 
   const handleDeleteClick = (region: Region) => {
     setSelectedRegion(region);
@@ -192,6 +162,82 @@ const RegionsPage: React.FC = () => {
     }
   };
 
+  // Конфигурация колонок для UI Table
+  const columns: Column[] = [
+    {
+      id: 'id',
+      label: 'ID',
+      minWidth: 70,
+      format: (value: number) => value.toString()
+    },
+    {
+      id: 'name',
+      label: 'Название',
+      minWidth: 200,
+      wrap: true,
+      format: (value: string) => (
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'code',
+      label: 'Код',
+      minWidth: 100,
+      format: (value: string) => value || '-'
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      align: 'center',
+      format: (value: boolean) => (
+        <Chip
+          label={value ? 'Активен' : 'Неактивен'}
+          color={value ? 'success' : 'error'}
+          size="small"
+        />
+      )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      minWidth: 150,
+      format: (value: any, row: Region) => (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Tooltip title={row.is_active ? 'Деактивировать' : 'Активировать'}>
+            <IconButton
+              onClick={() => handleToggleStatus(row)}
+              size="small"
+              color={row.is_active ? 'error' : 'success'}
+            >
+              {row.is_active ? <CloseIcon /> : <CheckIcon />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Редактировать">
+            <IconButton
+              onClick={() => handleOpenDialog(row)}
+              size="small"
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -205,9 +251,9 @@ const RegionsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {error && (
+      {regionsError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error.toString()}
+          {regionsError.toString()}
         </Alert>
       )}
 
@@ -227,93 +273,39 @@ const RegionsPage: React.FC = () => {
         </Box>
       </Paper>
 
-      <TableContainer component={Paper}>
+      <Box sx={{ mb: 3 }}>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
         ) : (
           <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Название</TableCell>
-                  <TableCell>Код</TableCell>
-                  <TableCell>Статус</TableCell>
-                  <TableCell align="right">Действия</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {regions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      Регионы не найдены
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  regions.map((region) => (
-                    <TableRow key={region.id}>
-                      <TableCell>{region.id}</TableCell>
-                      <TableCell>{region.name}</TableCell>
-                      <TableCell>{region.code}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={region.is_active ? 'Активен' : 'Неактивен'}
-                          color={region.is_active ? 'success' : 'error'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                          <Tooltip title={region.is_active ? 'Деактивировать' : 'Активировать'}>
-                            <IconButton
-                              onClick={() => handleToggleStatus(region)}
-                              size="small"
-                              color={region.is_active ? 'error' : 'success'}
-                            >
-                              {region.is_active ? <CloseIcon /> : <CheckIcon />}
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Редактировать">
-                            <IconButton
-                              onClick={() => handleOpenDialog(region)}
-                              size="small"
-                              color="primary"
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Удалить">
-                            <IconButton
-                              onClick={() => handleDeleteClick(region)}
-                              size="small"
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-            <TablePagination
-              component="div"
-              count={totalItems}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="Строк на странице:"
-              labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
+            <Table
+              columns={columns}
+              rows={regions}
             />
+            {regions.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  Регионы не найдены
+                </Typography>
+              </Box>
+            )}
           </>
         )}
-      </TableContainer>
+      </Box>
+
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages}
+            page={page + 1}
+            onChange={(newPage: number) => setPage(newPage - 1)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       {/* Диалог создания/редактирования */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>

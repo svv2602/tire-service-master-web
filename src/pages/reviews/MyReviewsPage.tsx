@@ -2,20 +2,11 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Tooltip,
   Rating,
   Alert,
-  TablePagination,
-  Avatar,
   Button,
   Dialog,
   DialogTitle,
@@ -23,11 +14,12 @@ import {
   DialogActions,
   TextField,
 } from '@mui/material';
+import { Table, Column } from '../../components/ui/Table';
+import { Pagination } from '../../components/ui/Pagination';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Business as BusinessIcon,
-  DirectionsCar as CarIcon,
   Add as AddIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -48,7 +40,7 @@ const MyReviewsPage: React.FC = () => {
   
   // Состояние для пагинации
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage] = useState(10);
   
   // Состояние для диалогов
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -68,20 +60,11 @@ const MyReviewsPage: React.FC = () => {
   const [updateReview, { isLoading: updateLoading }] = useUpdateReviewMutation();
 
   const isLoading = reviewsLoading || deleteLoading || updateLoading;
-  const error = reviewsError;
   const reviews = reviewsData?.data || [];
   const totalItems = reviewsData?.pagination?.total_count || 0;
+  const totalPages = Math.ceil(totalItems / rowsPerPage);
 
   // Обработчики событий
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const handleDeleteClick = (review: Review) => {
     setSelectedReview(review);
     setDeleteDialogOpen(true);
@@ -141,6 +124,83 @@ const MyReviewsPage: React.FC = () => {
     });
   };
 
+  // Конфигурация колонок для UI Table
+  const columns: Column[] = [
+    {
+      id: 'service_point',
+      label: 'Сервисная точка',
+      minWidth: 200,
+      wrap: true,
+      format: (value: any, row: Review) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <BusinessIcon color="action" />
+          <Typography>{row.service_point?.name}</Typography>
+        </Box>
+      )
+    },
+    {
+      id: 'comment',
+      label: 'Отзыв',
+      minWidth: 300,
+      wrap: true,
+      format: (value: string) => (
+        <Typography
+          sx={{
+            maxWidth: 300,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'rating',
+      label: 'Оценка',
+      align: 'center',
+      format: (value: number) => (
+        <Rating value={value} readOnly size="small" />
+      )
+    },
+    {
+      id: 'created_at',
+      label: 'Дата',
+      format: (value: string) => formatDate(value)
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      minWidth: 120,
+      format: (value: any, row: Review) => (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Tooltip title="Редактировать">
+            <IconButton 
+              onClick={() => handleEditClick(row)}
+              size="small"
+              color="primary"
+            >
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <IconButton 
+              onClick={() => handleDeleteClick(row)}
+              size="small"
+              color="error"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      )
+    }
+  ];
+
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
     return (
@@ -150,11 +210,11 @@ const MyReviewsPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (reviewsError) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке отзывов: {error.toString()}
+          Ошибка при загрузке отзывов: {reviewsError.toString()}
         </Alert>
       </Box>
     );
@@ -175,77 +235,31 @@ const MyReviewsPage: React.FC = () => {
       </Box>
 
       {/* Таблица отзывов */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Сервисная точка</TableCell>
-              <TableCell>Отзыв</TableCell>
-              <TableCell>Оценка</TableCell>
-              <TableCell>Дата</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {reviews.map((review: Review) => (
-              <TableRow key={review.id}>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <BusinessIcon color="action" />
-                    <Typography>{review.service_point?.name}</Typography>
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Typography
-                    sx={{
-                      maxWidth: 300,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
-                    {review.comment}
-                  </Typography>
-                </TableCell>
-
-                <TableCell>
-                  <Rating value={review.rating} readOnly size="small" />
-                </TableCell>
-
-                <TableCell>
-                  {formatDate(review.created_at)}
-                </TableCell>
-
-                <TableCell align="right">
-                  <Tooltip title="Редактировать">
-                    <IconButton onClick={() => handleEditClick(review)} size="small">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Удалить">
-                    <IconButton onClick={() => handleDeleteClick(review)} color="error" size="small">
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        <TablePagination
-          component="div"
-          count={totalItems}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[10, 25, 50]}
+      <Box sx={{ mb: 3 }}>
+        <Table
+          columns={columns}
+          rows={reviews}
         />
-      </TableContainer>
+        {reviews.length === 0 && (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              У вас пока нет отзывов
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages}
+            page={page + 1}
+            onChange={(newPage: number) => setPage(newPage - 1)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       {/* Диалог удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDialogs}>
@@ -294,4 +308,4 @@ const MyReviewsPage: React.FC = () => {
   );
 };
 
-export default MyReviewsPage; 
+export default MyReviewsPage;
