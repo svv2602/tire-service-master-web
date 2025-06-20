@@ -364,11 +364,9 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       </Grid>
       
       {/* Информация о следующем шаге */}
-      <Paper sx={{ ...getCardStyles(theme), p: 2, mt: 3, bgcolor: 'success.50' }}>
-        <Typography variant="body2" color="success.main">
-          ✅ Этап выбора услуг завершен. На следующем шаге вы сможете проверить все данные перед подтверждением записи.
-        </Typography>
-      </Paper>
+      <Alert severity="success" sx={{ mt: 3 }}>
+        ✅ Этап выбора услуг завершен
+      </Alert>
     </Box>
   );
 };

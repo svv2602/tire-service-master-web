@@ -5,19 +5,17 @@ import {
   Box,
   Typography,
   Grid,
-  Alert,
-  Paper,
-  FormHelperText,
   InputAdornment,
   FormControlLabel,
   Checkbox,
+  Alert,
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
+  ContactPage as ContactPageIcon,
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 
@@ -26,9 +24,6 @@ import { TextField } from '../../../components/ui/TextField';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
-
-// Импорт стилей
-import { getCardStyles } from '../../../styles/components';
 
 interface ClientInfoStepProps {
   formData: BookingFormData;
@@ -43,7 +38,6 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   setFormData,
   isValid,
 }) => {
-  const theme = useTheme();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
   const [errors, setErrors] = useState({
@@ -122,9 +116,17 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   
   return (
     <Box>
-      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Контактная информация
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <ContactPageIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
+        <Box>
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Контактная информация
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Шаг 3 из 4: Укажите ваши контактные данные для связи
+          </Typography>
+        </Box>
+      </Box>
       
       {/* Информация для аутентифицированных пользователей */}
       {isAuthenticated && user && (
@@ -136,28 +138,23 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       
       {/* Информация для неаутентифицированных пользователей */}
       {!isAuthenticated && (
-        <Paper sx={{ ...getCardStyles(theme), p: 2, mb: 3, bgcolor: 'warning.50' }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: 1 }}>
-            💡 Регистрация не требуется
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Вы можете записаться без регистрации. Укажите ваши контактные данные 
-            для связи и подтверждения бронирования.
-          </Typography>
-        </Paper>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          💡 Регистрация не требуется. Вы можете записаться без регистрации. 
+          Укажите ваши контактные данные для связи и подтверждения бронирования.
+        </Alert>
       )}
       
       <Grid container spacing={3}>
         {/* Имя и фамилия */}
         <Grid item xs={12}>
           <TextField
-            label="Имя и фамилия"
+            label="Имя и фамилия *"
             value={formData.client_name}
             onChange={handleFieldChange('client_name')}
-            placeholder="Введите ваше имя и фамилию"
+            placeholder="Например: Иван Иванов"
             required
             error={!!errors.client_name}
-            helperText={errors.client_name}
+            helperText={errors.client_name || 'Ваше полное имя для записи'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -172,7 +169,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {/* Телефон */}
         <Grid item xs={12} sm={6}>
           <TextField
-            label="Телефон"
+            label="Телефон *"
             value={formData.client_phone}
             onChange={handleFieldChange('client_phone')}
             placeholder="+380 67 123 45 67"
@@ -193,13 +190,13 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {/* Email */}
         <Grid item xs={12} sm={6}>
           <TextField
-            label="Email (необязательно)"
+            label="Email"
             value={formData.client_email}
             onChange={handleFieldChange('client_email')}
             placeholder="your.email@example.com"
             type="email"
             error={!!errors.client_email}
-            helperText={errors.client_email || 'Для отправки подтверждения'}
+            helperText={errors.client_email || 'Необязательно. Для отправки подтверждения'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -213,11 +210,8 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       </Grid>
       
       {/* Настройки уведомлений */}
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Настройки уведомлений
-        </Typography>
-        
+      <Alert severity="info" sx={{ mt: 3 }}>
+        📧 Настройки уведомлений
         <FormControlLabel
           control={
             <Checkbox
@@ -227,37 +221,33 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             />
           }
           label="Получать SMS и email уведомления о статусе записи"
+          sx={{ mt: 1, display: 'block' }}
         />
-      </Box>
+      </Alert>
       
       {/* Информация о конфиденциальности */}
-      <Paper sx={{ ...getCardStyles(theme), p: 2, mt: 3, bgcolor: 'grey.50' }}>
-        <Typography variant="body2" color="text.secondary">
-          🔒 Ваши персональные данные используются только для обработки бронирования 
-          и не передаются третьим лицам. Подробнее в{' '}
-          <Typography component="span" color="primary" sx={{ cursor: 'pointer' }}>
-            политике конфиденциальности
-          </Typography>
+      <Alert severity="info" sx={{ mt: 3 }}>
+        🔒 Ваши персональные данные используются только для обработки бронирования 
+        и не передаются третьим лицам. Подробнее в{' '}
+        <Typography component="span" color="primary" sx={{ cursor: 'pointer', textDecoration: 'underline' }}>
+          политике конфиденциальности
         </Typography>
-      </Paper>
+      </Alert>
       
-      {/* Валидация */}
-      {!formData.client_name && (
-        <FormHelperText error sx={{ mt: 1 }}>
-          Заполните имя для продолжения
-        </FormHelperText>
-      )}
-      
-      {!formData.client_phone && (
-        <FormHelperText error sx={{ mt: 1 }}>
-          Заполните телефон для продолжения
-        </FormHelperText>
+      {/* Сообщения валидации */}
+      {(!formData.client_name || !formData.client_phone) && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          ⚠️ Требуется заполнить обязательные поля:
+          {!formData.client_name && ' имя'}
+          {!formData.client_name && !formData.client_phone && ','}
+          {!formData.client_phone && ' телефон'}
+        </Alert>
       )}
       
       {/* Подтверждение заполнения */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Контактная информация заполнена. Теперь укажите информацию об автомобиле.
+          ✅ Контактная информация заполнена. Теперь можно перейти к следующему шагу для указания информации об автомобиле.
         </Alert>
       )}
     </Box>

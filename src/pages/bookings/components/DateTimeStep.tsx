@@ -193,17 +193,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Подтверждение выбора */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Дата и время выбраны: {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: ru })} в {selectedTimeSlot}
+          ✅ Дата и время выбраны: {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: ru })} в {selectedTimeSlot}. Теперь можно перейти к заполнению контактной информации.
         </Alert>
-      )}
-      
-      {/* Информация о следующем шаге */}
-      {isValid && (
-        <Paper sx={{ ...getCardStyles(theme), p: 2, mt: 2, bgcolor: 'info.50' }}>
-          <Typography variant="body2" color="info.main">
-            💡 На следующем шаге укажите ваши контактные данные
-          </Typography>
-        </Paper>
       )}
     </Box>
   );

@@ -23,7 +23,6 @@ import {
   DirectionsCar as CarIcon,
   Build as ServiceIcon,
   Comment as CommentIcon,
-  CheckCircle as CheckIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { format, parseISO } from 'date-fns';
@@ -202,7 +201,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
               
               <ListItem>
                 <ListItemIcon>
-                  <CheckIcon color="action" />
+                  <CarIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
                   primary="Номер"
@@ -213,7 +212,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
               {formData.car_brand && (
                 <ListItem>
                   <ListItemIcon>
-                    <CheckIcon color="action" />
+                    <CarIcon color="action" />
                   </ListItemIcon>
                   <ListItemText
                     primary="Марка и модель"
@@ -289,25 +288,14 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       </Grid>
       
       {/* Важная информация */}
-      <Alert severity="info" sx={{ mt: 4 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-          Важная информация:
-        </Typography>
-        <Box component="ul" sx={{ mt: 0, pl: 2.5 }}>
-          <Box component="li" sx={{ mb: 0.5 }}>После подтверждения записи вам будет отправлено SMS с деталями</Box>
-          <Box component="li" sx={{ mb: 0.5 }}>Рекомендуем прибыть за 5-10 минут до назначенного времени</Box>
-          <Box component="li" sx={{ mb: 0.5 }}>При необходимости изменения времени звоните заранее</Box>
-          <Box component="li" sx={{ mb: 0.5 }}>Стоимость услуг может отличаться от предварительной</Box>
-        </Box>
+      <Alert severity="warning" sx={{ mt: 4 }}>
+        ⚠️ После подтверждения записи вам будет отправлено SMS с деталями
       </Alert>
       
       {/* Согласие с условиями */}
-      <Paper sx={{ ...getCardStyles(theme), p: 2, mt: 3, bgcolor: 'success.50' }}>
-        <Typography variant="body2" color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <CheckIcon />
-          Нажимая "Подтвердить бронирование", вы соглашаетесь с условиями предоставления услуг
-        </Typography>
-      </Paper>
+      <Alert severity="info" sx={{ mt: 3 }}>
+        🔒 Нажимая "Подтвердить бронирование", вы соглашаетесь с условиями предоставления услуг
+      </Alert>
     </Box>
   );
 };
