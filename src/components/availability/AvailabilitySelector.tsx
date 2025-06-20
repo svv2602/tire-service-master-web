@@ -1,6 +1,5 @@
 import React from 'react';
-import { Box, Paper, Alert, Typography } from '@mui/material';
-import { Phone as PhoneIcon, Warning as WarningIcon } from '@mui/icons-material';
+import { Box, Paper } from '@mui/material';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { DayDetailsPanel } from './DayDetailsPanel';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
@@ -83,63 +82,30 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   }, [selectedDate, availableTimeSlots, dayDetailsData]);
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-      <Paper 
-        sx={{ 
-          flex: '1 1 300px',
-          p: 2,
-          borderRadius: 2,
-          boxShadow: theme.shadows[1]
-        }}
-      >
-        <AvailabilityCalendar
-          selectedDate={selectedDate}
-          onDateChange={onDateChange}
-          isLoading={isLoading}
-        />
-        
-        {/* Предупреждение о бронировании на сегодня */}
-        <Alert 
-          severity="warning" 
-          sx={{ mt: 2 }}
-          icon={<WarningIcon />}
-        >
-          <Box>
-            <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-              Бронирование на сегодняшний день доступно только по телефону
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <PhoneIcon sx={{ fontSize: 16 }} />
-              <Typography variant="body2">
-                {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
-              </Typography>
-            </Box>
-          </Box>
-        </Alert>
-      </Paper>
-
-      <Box sx={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Верхняя строка: календарь и информация */}
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <Paper 
           sx={{ 
+            flex: '1 1 300px',
             p: 2,
             borderRadius: 2,
             boxShadow: theme.shadows[1]
           }}
         >
-          <TimeSlotPicker
-            selectedTimeSlot={selectedTimeSlot}
-            onTimeSlotChange={onTimeSlotChange}
-            availableTimeSlots={availableTimeSlots}
+          <AvailabilityCalendar
+            selectedDate={selectedDate}
+            onDateChange={onDateChange}
             isLoading={isLoading}
           />
         </Paper>
 
         <Paper 
           sx={{ 
+            flex: '1 1 300px',
             p: 2,
             borderRadius: 2,
-            boxShadow: theme.shadows[1],
-            flex: 1
+            boxShadow: theme.shadows[1]
           }}
         >
           <DayDetailsPanel
@@ -149,9 +115,26 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             occupancyPercentage={dayStats.occupancyPercentage}
             totalPosts={dayStats.totalSlots}
             availablePosts={dayStats.availableSlots}
+            servicePointPhone={servicePointPhone}
           />
         </Paper>
       </Box>
+
+      {/* Нижняя строка: выбор времени на всю ширину */}
+      <Paper 
+        sx={{ 
+          p: 2,
+          borderRadius: 2,
+          boxShadow: theme.shadows[1]
+        }}
+      >
+        <TimeSlotPicker
+          selectedTimeSlot={selectedTimeSlot}
+          onTimeSlotChange={onTimeSlotChange}
+          availableTimeSlots={availableTimeSlots}
+          isLoading={isLoading}
+        />
+      </Paper>
     </Box>
   );
 };

@@ -9,12 +9,10 @@ import {
   FormHelperText,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { format, parseISO, isToday, addDays } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   LocationOn as LocationIcon,
-  Phone as PhoneIcon,
-  Warning as WarningIcon,
 } from '@mui/icons-material';
 
 // Импорт компонентов доступности
@@ -115,7 +113,6 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   };
 
   // Проверяем, является ли выбранная дата сегодняшним днем
-  const isSelectedDateToday = selectedDate ? isToday(selectedDate) : false;
   
   if (!formData.service_point_id) {
     return (
@@ -161,27 +158,6 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {availabilityError && (
         <Alert severity="error" sx={{ mb: 3 }}>
           Ошибка загрузки доступного времени. Попробуйте обновить страницу.
-        </Alert>
-      )}
-      
-      {/* Предупреждение о бронировании на сегодня */}
-      {isSelectedDateToday && (
-        <Alert 
-          severity="warning" 
-          sx={{ mb: 3 }}
-          icon={<WarningIcon />}
-        >
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 500, mb: 1 }}>
-              Бронирование на сегодняшний день доступно только по телефону
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <PhoneIcon sx={{ fontSize: 20 }} />
-              <Typography variant="body2">
-                {servicePointData?.contact_phone || servicePointData?.phone || '+7 (XXX) XXX-XX-XX'}
-              </Typography>
-            </Box>
-          </Box>
         </Alert>
       )}
 

@@ -5,14 +5,17 @@ import {
   Skeleton, 
   Divider,
   LinearProgress,
-  Tooltip
+  Tooltip,
+  Alert
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors } from '../../styles';
 import { 
   InfoOutlined as InfoIcon,
   EventAvailable as EventAvailableIcon,
-  EventBusy as EventBusyIcon
+  EventBusy as EventBusyIcon,
+  Phone as PhoneIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -24,6 +27,7 @@ interface DayDetailsPanelProps {
   occupancyPercentage?: number;
   totalPosts?: number;
   availablePosts?: number;
+  servicePointPhone?: string;
 }
 
 export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
@@ -33,6 +37,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
   occupancyPercentage = 0,
   totalPosts = 0,
   availablePosts = 0,
+  servicePointPhone,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -162,6 +167,25 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
               </Typography>
             </Box>
           </Box>
+          
+          {/* Предупреждение о бронировании на сегодня */}
+          <Alert 
+            severity="warning" 
+            sx={{ mt: 3 }}
+            icon={<WarningIcon />}
+          >
+            <Box>
+              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
+                Бронирование на сегодня только по телефону
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <PhoneIcon sx={{ fontSize: 16 }} />
+                <Typography variant="body2">
+                  {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
+                </Typography>
+              </Box>
+            </Box>
+          </Alert>
         </>
       )}
     </Box>
