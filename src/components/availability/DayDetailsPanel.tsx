@@ -143,7 +143,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
             <Box sx={{ textAlign: 'center', flex: 1 }}>
               <EventAvailableIcon sx={{ color: colors.success, mb: 0.5 }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                Свободно
+                Свободно слотов
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {availablePosts}
@@ -155,7 +155,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
             <Box sx={{ textAlign: 'center', flex: 1 }}>
               <EventBusyIcon sx={{ color: colors.error, mb: 0.5 }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                Занято
+                Занято слотов
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 700 }}>
                 {totalPosts - availablePosts}
