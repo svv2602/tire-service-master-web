@@ -62,7 +62,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   );
   
   // Получаем данные из API
-  const carTypes = carTypesData?.data || [];
+  const carTypes = carTypesData || [];
   const brands = useMemo(() => brandsData?.data || [], [brandsData]);
   const models = modelsData?.car_models || [];
   

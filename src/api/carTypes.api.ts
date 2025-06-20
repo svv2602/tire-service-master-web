@@ -1,10 +1,9 @@
 import { baseApi } from './baseApi';
-import { ApiResponse } from '../types/models';
 import { CarType } from '../types/car';
 
 export const carTypesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getCarTypes: builder.query<ApiResponse<CarType>, void>({
+    getCarTypes: builder.query<CarType[], void>({
       query: () => 'car_types',
       providesTags: ['CarType'],
     }),

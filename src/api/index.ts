@@ -8,6 +8,7 @@ export * from './availability.api';
 export * from './bookings.api';
 export * from './carBrands.api';
 export * from './carModels.api';
+export * from './carTypes.api';
 export * from './cars.api';
 export * from './cities.api';
 export * from './clients.api';

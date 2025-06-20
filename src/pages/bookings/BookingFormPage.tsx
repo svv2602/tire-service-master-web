@@ -30,10 +30,9 @@ import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { useGetCarsQuery } from '../../api/cars.api';
 import { useGetClientsQuery } from '../../api/clients.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
-import { ServicePoint, ApiResponse } from '../../types/models';
+import { ServicePoint } from '../../types/models';
 import { Client } from '../../types/client';
 import { Car, CarType } from '../../types/car';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { SelectChangeEvent } from '@mui/material';
@@ -108,13 +107,6 @@ const BookingFormPage: React.FC = () => {
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   
   const isLoading = servicePointsLoading || carsLoading || clientsLoading || carTypesLoading || (isEditMode && bookingLoading) || loading;
-
-  // Функция для форматирования даты и времени
-  const formatDateTime = (date: Date): { date: string, time: string } => {
-    const formattedDate = date.toISOString().split('T')[0];
-    const formattedTime = date.toTimeString().substring(0, 5);
-    return { date: formattedDate, time: formattedTime };
-  };
 
   // Функция для расчета времени окончания (по умолчанию +1 час)
   const calculateEndTime = (startDate: Date): string => {
@@ -230,13 +222,6 @@ const BookingFormPage: React.FC = () => {
 
   const handleCarTypeChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('car_type_id', event.target.value);
-  }, [formik]);
-
-  const handleDateChange = useCallback((date: Date | null) => {
-    if (date) {
-      const { date: formattedDate } = formatDateTime(date);
-      formik.setFieldValue('booking_date', formattedDate);
-    }
   }, [formik]);
 
   const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -414,7 +399,7 @@ const BookingFormPage: React.FC = () => {
                   onChange={handleCarTypeChange}
                   label="Тип автомобиля"
                 >
-                  {carTypesData?.data?.map((carType: CarType) => (
+                  {carTypesData?.map((carType: CarType) => (
                     <MenuItem key={carType.id} value={carType.id}>
                       {carType.name}
                     </MenuItem>
