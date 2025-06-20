@@ -3,8 +3,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
 import {
   Box,
   Paper,
@@ -20,17 +18,13 @@ import {
   Card,
   CardContent,
   Grid,
-  Autocomplete,
   Divider,
   Chip
 } from '@mui/material';
 import { 
   Save as SaveIcon, 
   ArrowBack as ArrowBackIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  AccessTime as TimeIcon,
-  LocationOn as LocationIcon
+  AccessTime as TimeIcon
 } from '@mui/icons-material';
 import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
@@ -42,18 +36,6 @@ interface ServiceSelection {
   name: string;
   price: number;
   quantity: number;
-}
-
-interface BookingFormData {
-  client_id: number;
-  service_point_id: number;
-  car_id: number;
-  car_type_id?: number;
-  booking_date: string;
-  start_time: string;
-  end_time: string;
-  notes: string;
-  services: ServiceSelection[];
 }
 
 // Промежуточный интерфейс для состояния формы (с опциональными полями)
@@ -72,7 +54,6 @@ interface BookingFormState {
 const BookingFormPageWithAvailability: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
   
   const [createBooking] = useCreateBookingMutation();
   const [updateBooking] = useUpdateBookingMutation();
@@ -80,7 +61,6 @@ const BookingFormPageWithAvailability: React.FC = () => {
   const isEditMode = !!id;
   
   // Состояния формы
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -106,7 +86,6 @@ const BookingFormPageWithAvailability: React.FC = () => {
   // Справочные данные
   const [clients, setClients] = useState<any[]>([]);
   const [cars, setCars] = useState<any[]>([]);
-  const [carTypes, setCarTypes] = useState<any[]>([]);
   const [availableServices, setAvailableServices] = useState<any[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   
@@ -126,12 +105,6 @@ const BookingFormPageWithAvailability: React.FC = () => {
     { id: 3, brand: 'BMW', model: 'X5', number: 'КА9999ХХ', client_id: 3 },
   ], []);
   
-  const mockCarTypes = useMemo(() => [
-    { id: 1, name: 'Легковой' },
-    { id: 2, name: 'Кроссовер/SUV' },
-    { id: 3, name: 'Внедорожник' },
-  ], []);
-  
   const mockAvailableServices = useMemo(() => [
     { id: 1, name: 'Замена шин', price: 400, duration: 30 },
     { id: 2, name: 'Балансировка', price: 200, duration: 15 },
@@ -143,9 +116,8 @@ const BookingFormPageWithAvailability: React.FC = () => {
   useEffect(() => {
     setClients(mockClients);
     setCars(mockCars);
-    setCarTypes(mockCarTypes);
     setAvailableServices(mockAvailableServices);
-  }, [mockClients, mockCars, mockCarTypes, mockAvailableServices]);
+  }, [mockClients, mockCars, mockAvailableServices]);
 
   // Расчет общей продолжительности услуг
   useEffect(() => {
@@ -297,7 +269,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
     }
   };
 
-  const isLoading = servicePointsLoading || loading;
+  const isLoading = servicePointsLoading;
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
@@ -487,8 +459,16 @@ const BookingFormPageWithAvailability: React.FC = () => {
                 selectedTimeSlot={selectedTime}
                 onTimeSlotChange={setSelectedTime}
                 availableTimeSlots={[
-                  '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
-                  '15:00', '16:00', '17:00', '18:00'
+                  { time: '09:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '10:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '11:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '12:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '13:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '14:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '15:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '16:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '17:00', available_posts: 1, total_posts: 1, can_book: true },
+                  { time: '18:00', available_posts: 1, total_posts: 1, can_book: true }
                 ]}
                 isLoading={isLoading}
               />

@@ -14,7 +14,6 @@ import {
   Step, 
   StepLabel,
   Paper,
-  Grid,
   CircularProgress,
   Alert
 } from '@mui/material';
@@ -30,13 +29,13 @@ import {
 import { getButtonStyles, getThemeColors } from '../../styles';
 import { useTheme } from '@mui/material';
 import { AvailabilitySelector } from '../../components/availability';
+import type { AvailableTimeSlot } from '../../types/availability';
 import { useGetAvailableTimesQuery, useCheckTimeAvailabilityMutation } from '../../api/availability.api';
 import { useCreateBookingMutation } from '../../api/bookings.api';
 import CarInfoForm from '../../components/booking/CarInfoForm';
 import ClientInfoForm from '../../components/booking/ClientInfoForm';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 
 // Шаги процесса бронирования
 const steps = [
@@ -63,7 +62,7 @@ const ClientBookingPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<AvailableTimeSlot[]>([]);
   const [carInfo, setCarInfo] = useState({
     brand: '',
     model: '',
@@ -78,7 +77,7 @@ const ClientBookingPage: React.FC = () => {
     notes: '',
     receive_notifications: true
   });
-  const [services, setServices] = useState([
+  const [services] = useState([
     { service_id: 1, quantity: 1, price: 1000 } // Пример услуги
   ]);
   const [bookingError, setBookingError] = useState<string | null>(null);
@@ -99,8 +98,7 @@ const ClientBookingPage: React.FC = () => {
   useEffect(() => {
     if (availabilityData?.available_times) {
       const slots = availabilityData.available_times
-        .filter(slot => slot.can_book)
-        .map(slot => slot.time);
+        .filter(slot => slot.can_book);
       setAvailableTimeSlots(slots);
     }
   }, [availabilityData]);

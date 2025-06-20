@@ -4,6 +4,7 @@ import { TimeSlotPicker } from './TimeSlotPicker';
 import { DayDetailsPanel } from './DayDetailsPanel';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { useTheme } from '@mui/material/styles';
+import type { AvailableTimeSlot } from '../../types/availability';
 
 interface AvailabilitySelectorProps {
   servicePointId?: number;
@@ -11,7 +12,7 @@ interface AvailabilitySelectorProps {
   onDateChange: (date: Date | null) => void;
   selectedTimeSlot: string | null;
   onTimeSlotChange: (timeSlot: string | null) => void;
-  availableTimeSlots: string[];
+  availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
 }
 

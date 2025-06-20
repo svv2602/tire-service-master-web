@@ -66,11 +66,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     { skip: !formData.service_point_id || !selectedDate }
   );
   
-  // Получаем доступные временные слоты и преобразуем их в формат строк
+  // Получаем доступные временные слоты
   const availableTimeSlots = useMemo(() => {
     return (availabilityData?.available_times || [])
-      .filter(slot => slot.can_book)
-      .map(slot => slot.time);
+      .filter(slot => slot.can_book);
   }, [availabilityData]);
   
   // Обработчик изменения даты
