@@ -126,13 +126,13 @@ const MyBookingsPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : isError ? (
-          <Alert severity="error">{t('Произошла ошибка при загрузке записей')}</Alert>
+          <Alert severity="error">❌ {t('Произошла ошибка при загрузке записей')}</Alert>
         ) : convertedBookings.length > 0 ? (
           <BookingsList 
             bookings={convertedBookings} 
           />
         ) : (
-          <Alert severity="info">{t('У вас нет записей с выбранными параметрами')}</Alert>
+          <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
         )}
       </Box>
     </Container>

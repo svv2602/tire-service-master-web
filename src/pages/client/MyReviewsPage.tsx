@@ -113,7 +113,7 @@ const MyReviewsPage: React.FC = () => {
             <CircularProgress />
           </Box>
         ) : isError ? (
-          <Alert severity="error">{t('Произошла ошибка при загрузке отзывов')}</Alert>
+          <Alert severity="error">❌ {t('Произошла ошибка при загрузке отзывов')}</Alert>
         ) : convertedReviews.length > 0 ? (
           <ReviewsList 
             reviews={convertedReviews} 
