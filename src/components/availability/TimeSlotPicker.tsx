@@ -70,12 +70,12 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                     onClick={() => onTimeSlotChange(slot.time)}
                     sx={{
                       p: 2,
-                      borderColor: isSelected ? colors.primary : colors.backgroundSecondary,
-                      backgroundColor: isSelected ? colors.primary : 'transparent',
-                      color: isSelected ? 'white' : colors.textPrimary,
+                      borderColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
+                      backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
+                      color: isSelected ? theme.palette.primary.contrastText : colors.textPrimary,
                       '&:hover': {
-                        backgroundColor: isSelected ? colors.primary : colors.backgroundSecondary,
-                        borderColor: isSelected ? colors.primary : colors.backgroundSecondary,
+                        backgroundColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
+                        borderColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
                       },
                       display: 'flex',
                       flexDirection: 'column',
@@ -101,7 +101,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                           top: 4, 
                           right: 4, 
                           fontSize: 16,
-                          color: 'white',
+                          color: theme.palette.primary.contrastText,
                           bgcolor: colors.success,
                           borderRadius: '50%',
                           p: 0.5
