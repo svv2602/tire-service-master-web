@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, 
   Box, 
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -25,7 +26,6 @@ import { GridContainer, GridItem } from '../../components/styled/CommonComponent
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
-import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Card } from '../../components/ui/Card';
 
@@ -154,12 +154,13 @@ const MyBookingsList: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
-        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
-          {error}
+        <Alert severity="error">
+          ❌ {error}
         </Alert>
         <Button 
           variant="outlined" 
           onClick={fetchBookings} 
+          sx={{ mt: 2 }}
         >
           Попробовать снова
         </Button>

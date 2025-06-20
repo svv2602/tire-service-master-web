@@ -10,6 +10,7 @@ import {
   ListItemText,
   ListItemIcon,
   useTheme,
+  Alert,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -27,7 +28,6 @@ import { UserRole } from '../../types';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Snackbar } from '../../components/ui/Snackbar';
 import { Card } from '../../components/ui/Card';
@@ -371,14 +371,8 @@ const ProfilePage: React.FC = () => {
             borderRadius: SIZES.borderRadius.md
           }}>
             {error && (
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: SIZES.spacing.lg,
-                  borderRadius: SIZES.borderRadius.sm 
-                }}
-              >
-                {error}
+              <Alert severity="error" sx={{ mb: SIZES.spacing.lg }}>
+                ❌ {error}
               </Alert>
             )}
             

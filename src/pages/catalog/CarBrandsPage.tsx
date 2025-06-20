@@ -10,6 +10,7 @@ import {
   FormControl,
   MenuItem,
   useTheme,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -35,7 +36,6 @@ import {
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Modal } from '../../components/ui/Modal';
-import { Alert } from '../../components/ui/Alert';
 import { Select } from '../../components/ui/Select';
 import { Switch } from '../../components/ui/Switch';
 import { Pagination } from '../../components/ui/Pagination';
@@ -313,10 +313,8 @@ const CarBrandsPage: React.FC = () => {
   if (queryError) {
     return (
       <Box sx={{ p: SIZES.spacing.lg }}>
-        <Alert 
-          severity="error"
-        >
-          Ошибка при загрузке брендов: {queryError.toString()}
+        <Alert severity="error">
+          ❌ Ошибка при загрузке брендов: {queryError.toString()}
         </Alert>
       </Box>
     );

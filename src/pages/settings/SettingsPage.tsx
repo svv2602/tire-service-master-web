@@ -11,6 +11,7 @@ import {
   CircularProgress,
   SelectChangeEvent,
   useTheme,
+  Alert,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -34,7 +35,6 @@ import {
 import { TextField } from '../../components/ui/TextField';
 import { Button } from '../../components/ui/Button';
 import { Select } from '../../components/ui/Select';
-import { Alert } from '../../components/ui/Alert';
 import { Tabs, TabPanel } from '../../components/ui/Tabs';
 import { Switch } from '../../components/ui/Switch';
 import { Snackbar } from '../../components/ui/Snackbar';
@@ -417,11 +417,8 @@ const SettingsPage: React.FC = () => {
                 py: SIZES.spacing.lg,
                 px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
-                <Alert 
-                  severity="info" 
-                  sx={{ mb: SIZES.spacing.lg }}
-                >
-                  Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
+                <Alert severity="info">
+                  💡 Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
                 </Alert>
                 
                 <Typography variant="body1" sx={{ 

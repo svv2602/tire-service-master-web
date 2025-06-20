@@ -7,7 +7,8 @@ import {
   Divider, 
   Grid,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -26,7 +27,6 @@ import { GridContainer, GridItem, CenteredBox, StyledAlert } from '../../compone
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
-import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Card } from '../../components/ui/Card';
 
@@ -153,20 +153,13 @@ const MyCarsList: React.FC = () => {
   if (error) {
     return (
       <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
-        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
-          <Typography variant="h6" sx={{
-            fontSize: SIZES.fontSize.lg,
-            fontWeight: 600
-          }}>
-            Ошибка загрузки данных
-          </Typography>
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-            {error}
-          </Typography>
+        <Alert severity="error">
+          ❌ Ошибка загрузки данных: {error}
         </Alert>
         <Button 
           variant="outlined" 
-          onClick={fetchCars} 
+          onClick={fetchCars}
+          sx={{ mt: 2 }}
         >
           Попробовать снова
         </Button>

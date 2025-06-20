@@ -323,7 +323,7 @@ const CarBrandsPage: React.FC = () => {
     return (
       <Box sx={tablePageStyles.errorContainer}>
         <Alert severity="error">
-          Ошибка при загрузке брендов: {error.toString()}
+          ❌ Ошибка при загрузке брендов: {error.toString()}
         </Alert>
       </Box>
     );

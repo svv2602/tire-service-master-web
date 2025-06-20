@@ -11,7 +11,8 @@ import {
   Fade,
   Divider,
   IconButton,
-  useTheme
+  useTheme,
+  Alert
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -51,7 +52,6 @@ import { Button } from '../ui/Button';
 import { Select } from '../ui/Select';
 import { Switch } from '../ui/Switch';
 import { Tabs } from '../ui/Tabs';
-import { Alert } from '../ui/Alert';
 import { Chip } from '../ui/Chip';
 
 interface ArticleFormProps {
@@ -341,13 +341,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
 
           {/* Уведомления */}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-              {error}
+            <Alert severity="error" onClose={() => setError(null)}>
+              ❌ {error}
             </Alert>
           )}
           {success && (
-            <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-              {success}
+            <Alert severity="success" onClose={() => setSuccess(null)}>
+              ✅ {success}
             </Alert>
           )}
         </Box>

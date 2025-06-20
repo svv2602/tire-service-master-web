@@ -3,7 +3,8 @@ import {
   useTheme, 
   InputAdornment,
   IconButton,
-  Avatar
+  Avatar,
+  Alert
 } from '@mui/material';
 import {
   Box,
@@ -34,7 +35,6 @@ import { BookingFilter } from '../../types/booking';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Pagination } from '../../components/ui/Pagination';
 import { Modal } from '../../components/ui/Modal';
@@ -252,8 +252,8 @@ const BookingsPage: React.FC = () => {
   if (error) {
     return (
       <Box sx={tablePageStyles.errorContainer}>
-        <Alert severity="error" sx={tablePageStyles.errorAlert}>
-          Ошибка при загрузке бронирований: {error.toString()}
+        <Alert severity="error">
+          ❌ Ошибка при загрузке бронирований: {error.toString()}
         </Alert>
       </Box>
     );

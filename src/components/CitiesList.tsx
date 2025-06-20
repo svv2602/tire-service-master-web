@@ -6,6 +6,7 @@ import {
   CircularProgress,
   useTheme,
   Tooltip,
+  Alert,
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
@@ -31,7 +32,6 @@ import { City, CityFormData } from '../types/models';
 import { Button } from '../components/ui/Button';
 import { TextField } from '../components/ui/TextField';
 import { Modal } from '../components/ui/Modal';
-import { Alert } from '../components/ui/Alert';
 import { Switch } from '../components/ui/Switch';
 import { Chip } from '../components/ui/Chip';
 import { Pagination } from '../components/ui/Pagination';
@@ -298,10 +298,9 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       {error && (
         <Alert 
           severity="error" 
-          sx={tablePageStyles.errorAlert}
           onClose={() => setError(null)}
         >
-          {error}
+          ❌ {error}
         </Alert>
       )}
 

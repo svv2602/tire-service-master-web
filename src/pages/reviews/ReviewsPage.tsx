@@ -12,6 +12,7 @@ import {
   FormControl,
   MenuItem,
   useTheme, // Добавлен импорт темы
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -37,7 +38,6 @@ import { SIZES } from '../../styles/theme';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
 import { Chip } from '../../components/ui/Chip';
 import { Select } from '../../components/ui/Select';
 import { Pagination } from '../../components/ui/Pagination';
@@ -465,7 +465,7 @@ const ReviewsPage: React.FC = () => {
     return (
       <Box sx={{ p: SIZES.spacing.lg }}>
         <Alert severity="error">
-          Ошибка при загрузке отзывов: {error.toString()}
+          ❌ Ошибка при загрузке отзывов: {error.toString()}
         </Alert>
       </Box>
     );
@@ -495,7 +495,7 @@ const ReviewsPage: React.FC = () => {
       {errorMessage && (
         <Box sx={{ mb: SIZES.spacing.md }}>
           <Alert severity="error" onClose={() => setErrorMessage(null)}>
-            {errorMessage}
+            ❌ {errorMessage}
           </Alert>
         </Box>
       )}

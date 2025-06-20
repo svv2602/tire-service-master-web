@@ -10,6 +10,7 @@ import {
   Tooltip,
   useTheme,
   InputAdornment,
+  Alert,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,7 +29,6 @@ import {
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Select } from '../../components/ui/Select';
-import { Alert } from '../../components/ui/Alert';
 import { Pagination } from '../../components/ui/Pagination';
 import { Chip } from '../../components/ui/Chip';
 import { Table, type Column } from '../../components/ui';
@@ -468,8 +468,8 @@ const ArticlesPage: React.FC = () => {
           </Box>
         ) : error ? (
           <Box sx={{ p: SIZES.spacing.lg }}>
-            <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
-              Ошибка при загрузке статей
+            <Alert severity="error">
+              ❌ Ошибка при загрузке статей
             </Alert>
           </Box>
         ) : displayArticles.length === 0 ? (

@@ -17,7 +17,8 @@ import {
   Chip,
   FormControlLabel,
   Switch,
-  TextField
+  TextField,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -46,7 +47,6 @@ import {
 } from '../../api/pageContent.api';
 
 // Импорты UI компонентов
-import { Alert } from '../../components/ui/Alert';
 
 const PageContentPage: React.FC = () => {
   const navigate = useNavigate();
@@ -164,8 +164,8 @@ const PageContentPage: React.FC = () => {
   if (error) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 4 }}>
-          Ошибка при загрузке контента страниц
+        <Alert severity="error">
+          ❌ Ошибка при загрузке контента страниц
         </Alert>
       </Container>
     );

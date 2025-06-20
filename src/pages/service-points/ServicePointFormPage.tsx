@@ -16,6 +16,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   useTheme,
+  Alert,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -76,7 +77,6 @@ import { SIZES } from '../../styles/theme';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
-import { Alert } from '../../components/ui/Alert';
 import { Snackbar } from '../../components/ui/Snackbar';
 // import { Select } from '../../components/ui/Select'; // Заменено на стандартный MUI Select
 import { Switch } from '../../components/ui/Switch';
@@ -732,8 +732,9 @@ const ServicePointFormPage: React.FC = () => {
 
       {/* Отображение ошибок */}
       {error && (
-        <Alert severity="error" sx={{ mb: SIZES.spacing.md }}>
-          {error}
+        <Alert severity="error">
+                    ❌ 
+          ❌ {error}
         </Alert>
       )}
 
@@ -756,7 +757,7 @@ const ServicePointFormPage: React.FC = () => {
             formik.handleSubmit(e);
           }}>
             {/* Основная информация - остается без аккордеона для быстрого доступа */}
-            <Box sx={{ mb: SIZES.spacing.lg }}>
+            <Box >
               <Typography 
                 variant="h6" 
                 gutterBottom 
@@ -844,7 +845,7 @@ const ServicePointFormPage: React.FC = () => {
             <Accordion 
               expanded={expandedAccordions.location} 
               onChange={handleAccordionChange('location')}
-              sx={{ mb: SIZES.spacing.md }}
+              
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
@@ -1376,7 +1377,7 @@ const ServicePointFormPage: React.FC = () => {
                                       Рабочие дни:
                                     </Typography>
                                     
-                                    <Grid container spacing={SIZES.spacing.xs} sx={{ mb: SIZES.spacing.md }}>
+                                    <Grid container spacing={SIZES.spacing.xs} >
                                       {Object.entries({
                                         monday: 'Пн',
                                         tuesday: 'Вт', 
@@ -1488,7 +1489,8 @@ const ServicePointFormPage: React.FC = () => {
                   </Grid>
                 ) : (
                   <Alert severity="info">
-                    {isEditMode 
+                    💡 
+                    💡 {isEditMode 
                       ? "У данной сервисной точки пока нет постов обслуживания. Нажмите 'Добавить пост' для создания первого поста." 
                       : "Посты обслуживания будут созданы после сохранения сервисной точки. Добавьте хотя бы один пост."
                     }
@@ -1741,6 +1743,7 @@ const ServicePointFormPage: React.FC = () => {
                   </Grid>
                 ) : (
                   <Alert severity="info">
+                    💡 
                     Нажмите "Добавить услугу" для создания первой услуги.
                   </Alert>
                 )}
@@ -1778,7 +1781,7 @@ const ServicePointFormPage: React.FC = () => {
                 </Box>
               </AccordionSummary>
               <AccordionDetails sx={{ px: SIZES.spacing.lg, pb: SIZES.spacing.lg }}>
-                <Box sx={{ mb: SIZES.spacing.md }}>
+                <Box >
                   <Box
                     component="input"
                     sx={{ display: 'none' }}
@@ -1873,6 +1876,7 @@ const ServicePointFormPage: React.FC = () => {
                   </Grid>
                 ) : (
                   <Alert severity="info">
+                    💡 
                     Загрузите фотографии сервисной точки для лучшего представления.
                   </Alert>
                 )}
@@ -2016,20 +2020,20 @@ const ServicePointFormPage: React.FC = () => {
             
             {/* Уведомления */}
             {errorMessage && (
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity="error" >
                 {errorMessage}
               </Alert>
             )}
             
             {successMessage && (
-              <Alert severity="success" sx={{ mb: 2 }}>
+              <Alert severity="success" >
                 {successMessage}
               </Alert>
             )}
 
             {/* Уведомление о незаполненных обязательных полях */}
             {(!formik.isValid && showValidationErrors) && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
+              <Alert severity="warning" >
                 <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
                   Заполните все обязательные поля:
                 </Typography>
@@ -2045,7 +2049,7 @@ const ServicePointFormPage: React.FC = () => {
 
             {/* Информационное сообщение о блокировке кнопки */}
             {!formik.isValid && !showValidationErrors && (
-              <Alert severity="info" sx={{ mb: 2 }}>
+              <Alert severity="info" >
                 Заполните все обязательные поля для активации кнопки сохранения
               </Alert>
             )}

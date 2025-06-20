@@ -25,6 +25,7 @@ import {
   DialogContentText,
   DialogTitle,
   useTheme,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -49,7 +50,6 @@ import {
 
 // Импорт UI компонентов
 import { Button } from '../../components/ui/Button';
-import { Alert } from '../../components/ui/Alert';
 import { Card } from '../../components/ui/Card';
 
 /**
@@ -152,13 +152,13 @@ const ServicePointPhotosPage: React.FC = () => {
   if (error) {
     return (
       <Box sx={tablePageStyles.container}>
-        <Alert severity="error" sx={tablePageStyles.errorAlert}>
-          {error.toString()}
+        <Alert severity="error">
+          ❌ {error.toString()}
         </Alert>
         <Button 
           startIcon={<ArrowBackIcon />} 
           onClick={handleBack}
-          sx={tablePageStyles.secondaryButton}
+          sx={{ ...tablePageStyles.secondaryButton, mt: 2 }}
         >
           Вернуться назад
         </Button>
