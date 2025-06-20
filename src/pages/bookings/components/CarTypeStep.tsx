@@ -26,8 +26,7 @@ import { Select } from '../../../components/ui/Select';
 
 // Импорт API хуков
 import { useGetCarTypesQuery } from '../../../api/carTypes.api';
-import { useGetCarBrandsQuery } from '../../../api/car-brands.api';
-import { useGetCarModelsByBrandQuery } from '../../../api/car-models.api';
+import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery } from '../../../api';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
@@ -58,15 +57,15 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   // Загрузка данных
   const { data: carTypesData, isLoading: isLoadingCarTypes, error: carTypesError } = useGetCarTypesQuery();
   const { data: brandsData } = useGetCarBrandsQuery({});
-  const { data: modelsData } = useGetCarModelsByBrandQuery(
-    selectedBrandId?.toString() || '',
+  const { data: modelsData } = useGetCarModelsByBrandIdQuery(
+    { brandId: selectedBrandId?.toString() || '' },
     { skip: !selectedBrandId }
   );
   
   // Получаем данные из API
   const carTypes = carTypesData?.data || [];
   const brands = useMemo(() => brandsData?.data || [], [brandsData]);
-  const models = modelsData?.data || [];
+  const models = modelsData?.car_models || [];
   
   // Валидация номера автомобиля
   const validateLicensePlate = (value: string) => {

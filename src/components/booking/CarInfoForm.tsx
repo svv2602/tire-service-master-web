@@ -7,8 +7,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useGetCarBrandsQuery } from '../../api/car-brands.api';
-import { useGetCarModelsByBrandQuery } from '../../api/car-models.api';
+import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery } from '../../api';
 import { TextField } from '../ui/TextField';
 import { Select } from '../ui/Select';
 import { CarBrand, CarModel } from '../../types';
@@ -38,8 +37,8 @@ const CarInfoForm: React.FC<CarInfoFormProps> = ({ carInfo, setCarInfo }) => {
   const { data: brandsData, isLoading: isLoadingBrands } = useGetCarBrandsQuery({});
   
   // Получаем модели для выбранного бренда
-  const { data: modelsData, isLoading: isLoadingModels } = useGetCarModelsByBrandQuery(
-    selectedBrandId,
+  const { data: modelsData, isLoading: isLoadingModels } = useGetCarModelsByBrandIdQuery(
+    { brandId: selectedBrandId },
     { skip: !selectedBrandId }
   );
   
@@ -62,7 +61,7 @@ const CarInfoForm: React.FC<CarInfoFormProps> = ({ carInfo, setCarInfo }) => {
     const modelId = String(value);
     
     // Находим выбранную модель
-    const selectedModel = modelsData?.data.find((model: CarModel) => model.id.toString() === modelId);
+    const selectedModel = modelsData?.car_models.find((model: CarModel) => model.id.toString() === modelId);
     
     setCarInfo(prev => ({
       ...prev,
@@ -128,7 +127,7 @@ const CarInfoForm: React.FC<CarInfoFormProps> = ({ carInfo, setCarInfo }) => {
             required
           >
             <MenuItem value="">{t('Выберите модель')}</MenuItem>
-            {modelsData?.data.map((model: CarModel) => (
+            {modelsData?.car_models.map((model: CarModel) => (
               <MenuItem key={model.id} value={model.id.toString()}>
                 {model.name}
               </MenuItem>
