@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 
 const LoginPrompt: React.FC = () => {
   const { t } = useTranslation();
@@ -15,6 +16,11 @@ const LoginPrompt: React.FC = () => {
 
   const handleRegister = () => {
     navigate('/register');
+  };
+
+  const handleContinueWithoutAuth = () => {
+    // Возвращаемся на предыдущую страницу или на главную
+    navigate(-1);
   };
 
   return (
@@ -49,25 +55,38 @@ const LoginPrompt: React.FC = () => {
               </Typography>
             </Box>
             
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                startIcon={<LockOutlinedIcon />}
-                onClick={handleLogin}
-              >
-                {t('Войти')}
-              </Button>
+            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  startIcon={<LockOutlinedIcon />}
+                  onClick={handleLogin}
+                >
+                  {t('Войти')}
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="large"
+                  startIcon={<PersonAddOutlinedIcon />}
+                  onClick={handleRegister}
+                >
+                  {t('Зарегистрироваться')}
+                </Button>
+              </Box>
               
               <Button
-                variant="outlined"
-                color="primary"
-                size="large"
-                startIcon={<PersonAddOutlinedIcon />}
-                onClick={handleRegister}
+                variant="text"
+                color="secondary"
+                size="medium"
+                startIcon={<CloseIcon />}
+                onClick={handleContinueWithoutAuth}
+                sx={{ alignSelf: 'center', mt: 1 }}
               >
-                {t('Зарегистрироваться')}
+                {t('Продолжить без регистрации')}
               </Button>
             </Box>
           </Grid>

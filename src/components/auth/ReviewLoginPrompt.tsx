@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import RateReviewOutlinedIcon from '@mui/icons-material/RateReviewOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ReviewLoginPromptProps {
   servicePointId?: string | number;
@@ -20,6 +21,11 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
 
   const handleRegister = () => {
     navigate('/register');
+  };
+
+  const handleSkipAuth = () => {
+    // Возвращаемся на предыдущую страницу или на главную
+    navigate(-1);
   };
 
   return (
@@ -56,23 +62,36 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
             </Typography>
           </Box>
           
-          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<LockOutlinedIcon />}
-              onClick={handleLogin}
-            >
-              {t('Войти')}
-            </Button>
+          <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<LockOutlinedIcon />}
+                onClick={handleLogin}
+              >
+                {t('Войти')}
+              </Button>
+              
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<PersonAddOutlinedIcon />}
+                onClick={handleRegister}
+              >
+                {t('Зарегистрироваться')}
+              </Button>
+            </Box>
             
             <Button
-              variant="outlined"
-              color="primary"
-              startIcon={<PersonAddOutlinedIcon />}
-              onClick={handleRegister}
+              variant="text"
+              color="secondary"
+              size="small"
+              startIcon={<CloseIcon />}
+              onClick={handleSkipAuth}
+              sx={{ alignSelf: 'center', mt: 1 }}
             >
-              {t('Зарегистрироваться')}
+              {t('Пропустить отзыв')}
             </Button>
           </Box>
         </Grid>

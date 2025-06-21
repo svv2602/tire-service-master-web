@@ -44,6 +44,7 @@ import {
   getThemeColors,
   ANIMATIONS
 } from '../../styles';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ClientServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -174,6 +175,7 @@ const ClientServicesPage: React.FC = () => {
             <Button color="inherit" component={Link} to="/knowledge-base" sx={{ color: colors.textSecondary }}>
               База знаний
             </Button>
+            <ThemeToggle />
             <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
               Войти
             </Button>

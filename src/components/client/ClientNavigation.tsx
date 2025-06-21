@@ -29,6 +29,7 @@ import {
 import { RootState, AppDispatch } from '../../store';
 import { logoutUser } from '../../store/slices/authSlice';
 import { UserRole } from '../../types';
+import ThemeToggle from '../ui/ThemeToggle';
 
 interface ClientNavigationProps {
   colors: any;
@@ -110,6 +111,9 @@ const ClientNavigation: React.FC<ClientNavigationProps> = ({
           >
             Записатися
           </Button>
+          
+          {/* Переключатель тем */}
+          <ThemeToggle />
           
           {/* Авторизация/Профиль */}
           {!isAuthenticated ? (

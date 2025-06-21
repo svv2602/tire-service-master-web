@@ -5,7 +5,7 @@ const THEME_STORAGE_KEY = 'tvoya_shina_theme_mode';
 export type ThemeMode = 'light' | 'dark';
 
 export const useThemeMode = () => {
-  // Получаем сохраненную тему или определяем системную
+  // Получаем сохраненную тему или используем темную по умолчанию
   const getInitialTheme = (): ThemeMode => {
     // Сначала проверяем localStorage
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode;
@@ -13,12 +13,8 @@ export const useThemeMode = () => {
       return savedTheme;
     }
 
-    // Если нет сохраненной темы, используем системную
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-
-    return 'light';
+    // По умолчанию используем темную тему
+    return 'dark';
   };
 
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialTheme);

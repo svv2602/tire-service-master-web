@@ -1,10 +1,11 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { Switch } from '../../../../components/ui/Switch';
-import { useAppTheme } from '../../../../App';
+import { useThemeMode } from '../../../../contexts/ThemeContext';
 
 export const ThemeSection = () => {
-  const { toggleTheme, isDarkMode } = useAppTheme();
+  const { toggleTheme, mode } = useThemeMode();
+  const isDarkMode = mode === 'dark';
 
   return (
     <Box mb={4}>

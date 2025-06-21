@@ -26,8 +26,8 @@ const THEME_MODE_KEY = 'themeMode';
  * Провайдер темы для приложения
  */
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Состояние для режима темы
-  const [mode, setMode] = useState<ThemeMode>('light');
+  // Состояние для режима темы - по умолчанию темная тема
+  const [mode, setMode] = useState<ThemeMode>('dark');
   
   // Загрузка предпочтений пользователя при инициализации
   useEffect(() => {
@@ -36,9 +36,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (savedMode && (savedMode === 'light' || savedMode === 'dark')) {
       setMode(savedMode);
     } else {
-      // Определение предпочтений системы
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setMode(prefersDark ? 'dark' : 'light');
+      // По умолчанию устанавливаем темную тему вместо определения системных предпочтений
+      setMode('dark');
     }
   }, []);
   

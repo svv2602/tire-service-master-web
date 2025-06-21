@@ -26,6 +26,7 @@ import { useTheme } from '@mui/material';
 import { useGetBookingByIdQuery } from '../../api/bookings.api';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const BookingSuccessPage: React.FC = () => {
   const theme = useTheme();
@@ -65,6 +66,7 @@ const BookingSuccessPage: React.FC = () => {
             <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
               Главная
             </Button>
+            <ThemeToggle />
             <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
               Войти
             </Button>

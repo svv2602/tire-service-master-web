@@ -107,17 +107,6 @@ const PageContentManagement = lazy(() => import('./pages/admin/PageContentManage
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
-// Компонент для тем
-const ThemeContext = React.createContext<{
-  toggleTheme: () => void;
-  isDarkMode: boolean;
-}>({
-  toggleTheme: () => {},
-  isDarkMode: false,
-});
-
-export const useAppTheme = () => React.useContext(ThemeContext);
-
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;

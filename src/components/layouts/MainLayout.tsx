@@ -53,6 +53,7 @@ import {
   Edit as EditIcon,
   Add as AddIcon,
   ManageAccounts as ManageIcon,
+  Palette as StyleGuideIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -290,6 +291,13 @@ const MainLayout: React.FC = () => {
             path: '/seo',
             roles: [UserRole.ADMIN],
             description: 'Управление SEO-параметрами',
+          },
+          {
+            text: 'StyleGuide',
+            icon: <StyleGuideIcon />,
+            path: '/styleguide',
+            roles: [UserRole.ADMIN],
+            description: 'Руководство по стилям и компонентам UI',
           },
         ],
       },

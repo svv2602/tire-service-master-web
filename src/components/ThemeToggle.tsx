@@ -5,11 +5,12 @@ import {
   Brightness7 as LightModeIcon 
 } from '@mui/icons-material';
 import { getInteractiveStyles } from '../styles';
-import { useAppTheme } from '../App';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 const ThemeToggle: React.FC = () => {
   const theme = useTheme();
-  const { toggleTheme, isDarkMode } = useAppTheme();
+  const { toggleTheme, mode } = useThemeMode();
+  const isDarkMode = mode === 'dark';
   const interactiveStyles = getInteractiveStyles(theme);
 
   return (

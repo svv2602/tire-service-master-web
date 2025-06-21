@@ -813,7 +813,7 @@ export const SHADOWS = {
 };
 
 // Функция создания темы с поддержкой темного/светлого режима
-export const createAppTheme = (mode: 'light' | 'dark' = 'light'): Theme => {
+export const createAppTheme = (mode: 'light' | 'dark' = 'dark'): Theme => {
   const colors = mode === 'dark' ? THEME_COLORS.dark : THEME_COLORS.light;
   
   const themeOptions = {

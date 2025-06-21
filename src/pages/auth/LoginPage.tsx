@@ -17,9 +17,9 @@ import {
 import { Card } from '@mui/material';
 import {
   getAuthStyles,
-  getContainerStyles,
-  SIZES
+  getContainerStyles
 } from '../../styles';
+import CloseIcon from '@mui/icons-material/Close';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -168,6 +168,11 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleSkipLogin = () => {
+    // Возвращаемся на предыдущую страницу или на главную
+    navigate(-1);
+  };
+
   return (
     <Container 
       maxWidth="sm" 
@@ -263,6 +268,17 @@ const LoginPage: React.FC = () => {
         </form>
 
         <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button
+            variant="text"
+            color="secondary"
+            size="small"
+            startIcon={<CloseIcon />}
+            onClick={handleSkipLogin}
+            sx={{ mb: 2 }}
+          >
+            Продолжить без входа
+          </Button>
+          
           <Typography variant="body2" color="textSecondary">
             Тестовые данные для входа в систему:
           </Typography>

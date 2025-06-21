@@ -4,6 +4,7 @@ import { Box, Container, Typography, Button, AppBar, Toolbar, Breadcrumbs } from
 import { Home as HomeIcon, NavigateNext as NavigateNextIcon, Map as MapIcon } from '@mui/icons-material';
 import { getButtonStyles, getThemeColors } from '../../styles';
 import { useTheme } from '@mui/material';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ClientSearchPage: React.FC = () => {
   const theme = useTheme();
@@ -21,6 +22,7 @@ const ClientSearchPage: React.FC = () => {
             <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
               Главная
             </Button>
+            <ThemeToggle />
             <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
               Войти
             </Button>

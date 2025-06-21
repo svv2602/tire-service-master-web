@@ -36,6 +36,7 @@ import CarInfoForm from '../../components/booking/CarInfoForm';
 import ClientInfoForm from '../../components/booking/ClientInfoForm';
 import BookingSummary from '../../components/booking/BookingSummary';
 import { format } from 'date-fns';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 // Шаги процесса бронирования
 const steps = [
@@ -241,6 +242,7 @@ const ClientBookingPage: React.FC = () => {
             <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
               Главная
             </Button>
+            <ThemeToggle />
             <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
               Войти
             </Button>
