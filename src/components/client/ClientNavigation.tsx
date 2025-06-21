@@ -62,7 +62,7 @@ const ClientNavigation: React.FC<ClientNavigationProps> = ({
   
   const handleNavigateToAdmin = () => {
     handleProfileMenuClose();
-    navigate('/admin');
+    navigate('/dashboard');
   };
   
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
