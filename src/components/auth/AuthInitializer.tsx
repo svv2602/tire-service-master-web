@@ -19,30 +19,52 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
         initializationStarted.current = true;
         
         const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
+        const hasStoredToken = !!localStorage.getItem('tvoya_shina_token');
         
         console.log('AuthInitializer: Проверяем состояние', {
           hasStoredUser,
+          hasStoredToken,
           hasUserInState: !!user,
           isAuthenticated,
           loading,
           isInitialized
         });
 
-        // Если есть пользователь в localStorage, но нет в состоянии,
-        // пытаемся восстановить сессию через API (используя refresh токены из HttpOnly cookies)
-        if (hasStoredUser && !user) {
+        // Если есть пользователь и токен в localStorage, но нет в состоянии,
+        // пытаемся восстановить сессию
+        if (hasStoredUser && hasStoredToken && !user) {
           try {
-            console.log('AuthInitializer: Пытаемся восстановить сессию через HttpOnly cookies');
+            console.log('AuthInitializer: Пытаемся восстановить сессию');
             
-            // Сначала пытаемся обновить токен через refresh endpoint
-            await dispatch(refreshAuthTokens()).unwrap();
-            console.log('AuthInitializer: Refresh токен успешно обновлен');
-            
-            // Теперь получаем данные пользователя с новым токеном
-            await dispatch(getCurrentUser()).unwrap();
-            console.log('AuthInitializer: Сессия успешно восстановлена');
+            // Сначала пытаемся получить пользователя с существующим токеном
+            try {
+              await dispatch(getCurrentUser()).unwrap();
+              console.log('AuthInitializer: Сессия восстановлена с существующим токеном');
+            } catch (userError) {
+              console.log('AuthInitializer: Существующий токен недействителен, обновляем');
+              
+              // Если текущий токен недействителен, пытаемся обновить через refresh
+              await dispatch(refreshAuthTokens()).unwrap();
+              console.log('AuthInitializer: Refresh токен успешно обновлен');
+              
+              // Теперь получаем данные пользователя с новым токеном
+              await dispatch(getCurrentUser()).unwrap();
+              console.log('AuthInitializer: Сессия восстановлена с новым токеном');
+            }
           } catch (error) {
             console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage', error);
+            localStorage.removeItem('tvoya_shina_user');
+            localStorage.removeItem('tvoya_shina_token');
+            dispatch(setInitialized());
+          }
+        } else if (hasStoredUser && !hasStoredToken) {
+          console.log('AuthInitializer: Есть пользователь, но нет токена - пытаемся обновить токен');
+          try {
+            await dispatch(refreshAuthTokens()).unwrap();
+            await dispatch(getCurrentUser()).unwrap();
+            console.log('AuthInitializer: Сессия восстановлена через refresh');
+          } catch (error) {
+            console.log('AuthInitializer: Не удалось восстановить сессию, очищаем данные');
             localStorage.removeItem('tvoya_shina_user');
             dispatch(setInitialized());
           }

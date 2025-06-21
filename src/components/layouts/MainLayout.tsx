@@ -150,7 +150,7 @@ const MainLayout: React.FC = () => {
   const handleLogout = async () => {
     handleUserMenuClose();
     await dispatch(logoutUser());
-    navigate('/login');
+    navigate('/client');
   };
 
   const handleNavigate = (path: string) => {
@@ -580,6 +580,22 @@ const MainLayout: React.FC = () => {
           >
             Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
           </Typography>
+          
+          {/* Кнопка возврата на сайт */}
+          <Button
+            color="inherit"
+            onClick={() => navigate('/client')}
+            startIcon={<WebIcon />}
+            sx={{
+              mr: 2,
+              textTransform: 'none',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              }
+            }}
+          >
+            На сайт
+          </Button>
           {user ? (
             <>
               <Button 

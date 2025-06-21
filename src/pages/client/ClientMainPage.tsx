@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import {
   Box,
   Container,
@@ -276,42 +277,8 @@ const ClientMainPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      {/* Навигация */}
-      <AppBar position="static" sx={{ bgcolor: colors.backgroundCard, boxShadow: 1 }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: colors.textPrimary, fontWeight: 700 }}>
-            🚗 Твоя Шина
-          </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button 
-              color="inherit" 
-              component={Link} 
-              to="/knowledge-base"
-              sx={{ color: colors.textSecondary }}
-            >
-              База знань
-            </Button>
-            <Button 
-              color="inherit" 
-              component={Link} 
-              to="/client/services"
-              sx={{ color: colors.textSecondary }}
-            >
-              Послуги
-            </Button>
-            <Button 
-              variant="outlined" 
-              component={Link} 
-              to="/login"
-              startIcon={<LoginIcon />}
-              sx={secondaryButtonStyles}
-            >
-              Увійти
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      {/* Новая навигация */}
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
 
       {/* Hero секция */}
       <Fade in timeout={500}>

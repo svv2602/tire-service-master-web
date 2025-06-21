@@ -216,7 +216,7 @@ function App() {
                         <MainLayout />
                       </ProtectedRoute>
                     }>
-                      <Route index element={<Navigate to="/dashboard" replace />} />
+                      <Route index element={<Navigate to="/client" replace />} />
                       <Route path="dashboard" element={<DashboardPage />} />
                       {/* Маршруты для партнеров */}
                       <Route path="partners" element={<PartnersPage />} />
@@ -299,7 +299,7 @@ function App() {
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/client" replace />} />
                   </Routes>
                 </Suspense>
               </Router>

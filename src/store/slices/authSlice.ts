@@ -7,7 +7,7 @@ import axios from 'axios';
 import config from '../../config';
 
 const USER_STORAGE_KEY = 'tvoya_shina_user';
-// Удаляем TOKEN_STORAGE_KEY - теперь токены хранятся в HttpOnly cookies
+const TOKEN_STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY; // 'tvoya_shina_token'
 
 // Функции для работы с localStorage только для пользователя
 const getStoredUser = (): User | null => {
@@ -32,12 +32,34 @@ const setStoredUser = (user: User | null): void => {
   }
 };
 
+// Функции для работы с токеном
+const getStoredToken = (): string | null => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch (error) {
+    console.error('Ошибка при чтении токена из localStorage:', error);
+    return null;
+  }
+};
+
+const setStoredToken = (token: string | null): void => {
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Ошибка при сохранении токена в localStorage:', error);
+  }
+};
+
 // Начальное состояние
 const initialState: AuthState = {
-  accessToken: null, // При cookie-based аутентификации токен не загружаем из localStorage
+  accessToken: getStoredToken(), // Загружаем токен из localStorage при инициализации
   refreshToken: null, // Refresh токен хранится в HttpOnly cookies
   user: getStoredUser(),
-  isAuthenticated: !!getStoredUser(), // Проверяем только наличие пользователя
+  isAuthenticated: !!(getStoredToken() && getStoredUser()), // Аутентифицированы если есть и токен и пользователь
   loading: false,
   error: null,
   isInitialized: false,
@@ -120,10 +142,9 @@ const authSlice = createSlice({
         });
         
         setStoredUser(action.payload.user);
+        setStoredToken(action.payload.tokens.access); // Сохраняем токен в localStorage
         
-        // При cookie-based аутентификации не устанавливаем Bearer токены в заголовки
-        // Refresh токен автоматически сохраняется через cookies на сервере
-        console.log('Auth: login.fulfilled - используем cookie-based аутентификацию');
+        console.log('Auth: login.fulfilled - токен и пользователь сохранены в localStorage');
       })
       .addCase(login.rejected, (state, action) => {
         console.log('Auth: login.rejected - login failed');
@@ -142,7 +163,7 @@ const authSlice = createSlice({
         state.error = null;
         state.isInitialized = true;
         setStoredUser(null);
-        // При cookie-based аутентификации не нужно очищать Bearer токены из заголовков
+        setStoredToken(null); // Удаляем токен из localStorage
       })
       
       // Обработка refreshAuthTokens
@@ -156,8 +177,10 @@ const authSlice = createSlice({
         
         // Обновляем access токен
         if (action.payload.access_token || action.payload.tokens?.access) {
-          state.accessToken = action.payload.access_token || action.payload.tokens.access;
-          console.log('AuthSlice: Access токен обновлен');
+          const newToken = action.payload.access_token || action.payload.tokens.access;
+          state.accessToken = newToken;
+          setStoredToken(newToken); // Сохраняем новый токен в localStorage
+          console.log('AuthSlice: Access токен обновлен и сохранен');
         }
       })
       .addCase(refreshAuthTokens.rejected, (state, action) => {
@@ -181,6 +204,7 @@ const authSlice = createSlice({
         // Если в ответе есть новый access токен, сохраняем его
         if (action.payload.tokens?.access) {
           state.accessToken = action.payload.tokens.access;
+          setStoredToken(action.payload.tokens.access); // Сохраняем токен в localStorage
         }
         
         setStoredUser(state.user);
@@ -194,7 +218,7 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isInitialized = true;
         setStoredUser(null);
-        // Токен из localStorage не удаляем - он в HttpOnly cookies и будет удален через API logout
+        setStoredToken(null); // Удаляем токен из localStorage при ошибке
       });
   },
 });
