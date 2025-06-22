@@ -6,7 +6,7 @@ import { LoadingScreen } from '../LoadingScreen';
 
 /**
  * Компонент для инициализации аутентификации при загрузке приложения
- * Проверяет наличие токена и восстанавливает состояние аутентификации
+ * Проверяет наличие HttpOnly cookie с refresh токеном и восстанавливает состояние аутентификации
  */
 const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,58 +18,41 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
       if (!initializationStarted.current && !isInitialized) {
         initializationStarted.current = true;
         
-        const hasStoredUser = !!localStorage.getItem('tvoya_shina_user');
-        const hasStoredToken = !!localStorage.getItem('tvoya_shina_token');
+        const hasRefreshCookie = document.cookie.includes('refresh_token=');
         
         console.log('AuthInitializer: Проверяем состояние', {
-          hasStoredUser,
-          hasStoredToken,
+          hasRefreshCookie,
           hasUserInState: !!user,
           isAuthenticated,
           loading,
           isInitialized
         });
 
-        // Если есть пользователь и токен в localStorage, но нет в состоянии,
+        // Если есть refresh cookie, но нет пользователя в состоянии,
         // пытаемся восстановить сессию
-        if (hasStoredUser && hasStoredToken && !user) {
+        if (hasRefreshCookie && !user) {
           try {
-            console.log('AuthInitializer: Пытаемся восстановить сессию');
+            console.log('AuthInitializer: Обнаружен refresh cookie, пытаемся восстановить сессию');
             
-            // Сначала пытаемся получить пользователя с существующим токеном
-            try {
-              await dispatch(getCurrentUser()).unwrap();
-              console.log('AuthInitializer: Сессия восстановлена с существующим токеном');
-            } catch (userError) {
-              console.log('AuthInitializer: Существующий токен недействителен, обновляем');
-              
-              // Если текущий токен недействителен, пытаемся обновить через refresh
-              await dispatch(refreshAuthTokens()).unwrap();
-              console.log('AuthInitializer: Refresh токен успешно обновлен');
-              
-              // Теперь получаем данные пользователя с новым токеном
-              await dispatch(getCurrentUser()).unwrap();
-              console.log('AuthInitializer: Сессия восстановлена с новым токеном');
-            }
-          } catch (error) {
-            console.log('AuthInitializer: Ошибка восстановления сессии, очищаем localStorage', error);
-            localStorage.removeItem('tvoya_shina_user');
-            localStorage.removeItem('tvoya_shina_token');
-            dispatch(setInitialized());
-          }
-        } else if (hasStoredUser && !hasStoredToken) {
-          console.log('AuthInitializer: Есть пользователь, но нет токена - пытаемся обновить токен');
-          try {
+            // Пытаемся получить новый access token через refresh
             await dispatch(refreshAuthTokens()).unwrap();
+            console.log('AuthInitializer: Refresh токен успешно обновлен');
+            
+            // Теперь получаем данные пользователя с новым токеном
             await dispatch(getCurrentUser()).unwrap();
-            console.log('AuthInitializer: Сессия восстановлена через refresh');
+            console.log('AuthInitializer: Сессия восстановлена через refresh cookie');
           } catch (error) {
-            console.log('AuthInitializer: Не удалось восстановить сессию, очищаем данные');
-            localStorage.removeItem('tvoya_shina_user');
+            console.log('AuthInitializer: Ошибка восстановления сессии через refresh cookie', error);
+            // Cookie будет автоматически очищен, если refresh не удался
             dispatch(setInitialized());
           }
+        } else if (!hasRefreshCookie && user) {
+          // Если нет refresh cookie, но есть пользователь в состоянии - очищаем состояние
+          console.log('AuthInitializer: Нет refresh cookie, очищаем состояние пользователя');
+          // Очистим cookies через вызов logout API или просто установим инициализацию
+          dispatch(setInitialized());
         } else {
-          // Если нет сохраненных данных или уже есть данные в состоянии
+          // Если нет refresh cookie и нет пользователя в состоянии - просто инициализируемся
           console.log('AuthInitializer: Инициализация без восстановления сессии');
           dispatch(setInitialized());
         }
