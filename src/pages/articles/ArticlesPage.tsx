@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import {
   Box,
   Container,
@@ -54,6 +56,9 @@ const ArticlesPage: React.FC = () => {
   const navigate = useNavigate();
   const cardStyles = getCardStyles(theme);
   
+  // Redux state
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
   // Состояние для фильтров
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -95,9 +100,8 @@ const ArticlesPage: React.FC = () => {
     });
     
     // Дополнительная отладка для проверки авторизации
-    const token = localStorage.getItem('authToken');
-    console.log('🔑 Токен авторизации:', token ? `${token.substring(0, 20)}...` : 'отсутствует');
-  }, [displayArticles, displayPagination, filters, error, isLoading]);
+    console.log('🔑 Статус авторизации:', isAuthenticated ? 'авторизован' : 'не авторизован');
+  }, [displayArticles, displayPagination, filters, error, isLoading, isAuthenticated]);
 
   // Обработчики событий
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import {
   Box,
   Container,
@@ -53,6 +55,9 @@ const PageContentPage: React.FC = () => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
+  // Redux state
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
@@ -98,7 +103,7 @@ const PageContentPage: React.FC = () => {
     console.log('🔢 Filtered Count:', filteredPages.length);
     console.log('❌ Inactive Pages:', pageContentData?.data?.filter(p => !p.active));
     console.log('✅ Active Pages:', pageContentData?.data?.filter(p => p.active));
-    console.log('🔑 Auth Token:', localStorage.getItem('tvoya_shina_token') ? 'присутствует' : 'отсутствует');
+    console.log('🔑 Auth State:', isAuthenticated ? 'аутентифицирован' : 'не аутентифицирован');
     console.log('📡 API Response:', pageContentData);
     console.log('⚠️ API Error:', error);
   }

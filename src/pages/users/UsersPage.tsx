@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import {
   Box,
   Typography,
@@ -49,6 +51,9 @@ export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   
+  // Redux state
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
   // Получаем централизованные стили таблицы
   const tablePageStyles = getTablePageStyles(theme);
   
@@ -64,11 +69,10 @@ export const UsersPage: React.FC = () => {
 
   // Отладочная информация
   React.useEffect(() => {
-    const token = localStorage.getItem('tvoya_shina_token');
-    console.log('UsersPage: проверка токена в localStorage:', token ? `${token.substring(0, 20)}...` : 'не найден');
+    console.log('UsersPage: статус авторизации:', isAuthenticated ? 'авторизован' : 'не авторизован');
     console.log('UsersPage: фильтр showInactive:', showInactive);
     console.log('UsersPage: параметр active для API:', showInactive ? undefined : true);
-  }, [showInactive]);
+  }, [showInactive, isAuthenticated]);
 
   // Сброс страницы при изменении фильтра
   React.useEffect(() => {
