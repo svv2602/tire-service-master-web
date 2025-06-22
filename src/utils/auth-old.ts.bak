@@ -1,0 +1,120 @@
+import { User } from '../types/models';
+import { cookieAuth } from './cookies';
+
+/**
+ * Утилиты аутентификации для cookie-based системы
+ * Все токены теперь хранятся в HttpOnly куки
+ */
+
+// Интерфейс для хранения данных аутентификации
+export interface AuthData {
+  token: string;
+  user: User;
+}
+
+// Функции для работы с токеном (deprecated - токены в HttpOnly куки)
+export const getToken = (): string | null => {
+  console.warn('getToken deprecated: токены теперь в HttpOnly куки, используйте Redux состояние');
+  return null;
+};
+
+export const setToken = (token: string): void => {
+  console.warn('setToken deprecated: токены управляются сервером через HttpOnly куки');
+};
+
+export const removeToken = (): void => {
+  console.warn('removeToken deprecated: используйте logout через API');
+};
+
+// Функции для работы с данными пользователя (обновлены для поддержки миграции)
+export const getUser = (): User | null => {
+  try {
+    const authData = getAuthData();
+    return authData.user;
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
+    return null;
+  }
+};
+
+export const setUser = (user: User): void => {
+  try {
+    // Новая логика: если есть токен, сохраняем в куки
+    const currentToken = getToken();
+    if (currentToken) {
+      migrateToAuthCookies(currentToken, user);
+    } else {
+      console.warn('Сохранение пользователя без токена - используется legacy режим');
+      localStorage.setItem('tvoya_shina_user', JSON.stringify(user));
+    }
+  } catch (error) {
+    console.error('Ошибка при сохранении пользователя:', error);
+  }
+};
+
+export const removeUser = (): void => {
+  try {
+    clearAllAuthData();
+  } catch (error) {
+    console.error('Ошибка при удалении пользователя:', error);
+  }
+};
+
+// Функция для проверки аутентификации
+export const isAuthenticated = (): boolean => {
+  const token = getToken();
+  const user = getUser();
+  return token !== null && user !== null;
+};
+
+// Функция для сохранения данных аутентификации
+export const setAuthData = (data: AuthData): void => {
+  try {
+    // Сохраняем данные вместе через миграционную утилиту
+    migrateToAuthCookies(data.token, data.user);
+  } catch (error) {
+    console.error('Ошибка при сохранении данных аутентификации:', error);
+  }
+};
+
+// Функция для очистки данных аутентификации
+export const clearAuthData = (): void => {
+  try {
+    clearAllAuthData();
+  } catch (error) {
+    console.error('Ошибка при очистке данных аутентификации:', error);
+  }
+};
+
+// Функция для обновления данных пользователя
+export const updateUser = (userData: Partial<User>): void => {
+  const currentUser = getUser();
+  const currentToken = getToken();
+  
+  if (currentUser && currentToken) {
+    const updatedUser = { ...currentUser, ...userData };
+    migrateToAuthCookies(currentToken, updatedUser);
+  }
+};
+
+// Функция для проверки роли пользователя
+export const hasRole = (role: string): boolean => {
+  const user = getUser();
+  return user !== null && user.role === role;
+};
+
+// Функция для проверки активности пользователя
+export const isUserActive = (): boolean => {
+  const user = getUser();
+  return user !== null && user.is_active;
+};
+
+// Функция для автоматической миграции при инициализации
+export const initializeAuth = () => {
+  try {
+    return autoMigrateIfNeeded();
+  } catch (error) {
+    console.error('Ошибка при инициализации аутентификации:', error);
+    return { accessToken: null, user: null, source: 'none' as const };
+  }
+}; 
