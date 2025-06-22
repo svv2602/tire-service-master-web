@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Cookie-Based Аутентификации</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+        }
+        input[type="email"], input[type="password"] { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-right: 10px; 
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        .result { 
+            margin-top: 20px; 
+            padding: 10px; 
+            border-radius: 4px; 
+        }
+        .success { 
+            background: #d4edda; 
+            border: 1px solid #c3e6cb; 
+            color: #155724; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            color: #721c24; 
+        }
+        .info { 
+            background: #d1ecf1; 
+            border: 1px solid #bee5eb; 
+            color: #0c5460; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест Cookie-Based Аутентификации</h1>
+    
+    <div class="form-group">
+        <h2>Вход в систему</h2>
+        <label for="email">Email:</label>
+        <input type="email" id="email" value="admin@test.com">
+        
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" value="admin123">
+        
+        <button onclick="login()">Войти</button>
+        <button onclick="refresh()">Обновить токен</button>
+        <button onclick="getCurrentUser()">Получить пользователя</button>
+        <button onclick="logout()">Выйти</button>
+        <button onclick="checkCookies()">Проверить cookies</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let accessToken = null;
+
+        function showResult(message, type = 'info') {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = `<pre>${message}</pre>`;
+        }
+
+        async function login() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                showResult('Выполняется вход...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include', // Важно для HttpOnly cookies!
+                    body: JSON.stringify({
+                        auth: {
+                            login: email,
+                            password: password
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access_token;
+                    showResult(`✅ Вход успешен!
+Access Token: ${accessToken ? accessToken.substring(0, 50) + '...' : 'Получен'}
+User: ${JSON.stringify(data.user, null, 2)}`, 'success');
+                } else {
+                    const error = await response.json();
+                    showResult(`❌ Ошибка входа: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function refresh() {
+            try {
+                showResult('Обновление токена...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include' // Важно для HttpOnly cookies!
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    accessToken = data.access_token;
+                    showResult(`✅ Токен обновлен!
+Новый Access Token: ${accessToken ? accessToken.substring(0, 50) + '...' : 'Получен'}`, 'success');
+                } else {
+                    const error = await response.json();
+                    showResult(`❌ Ошибка обновления: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function getCurrentUser() {
+            try {
+                if (!accessToken) {
+                    showResult('❌ Нет access токена. Сначала войдите в систему или обновите токен.', 'error');
+                    return;
+                }
+
+                showResult('Получение данных пользователя...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    showResult(`✅ Данные пользователя получены:
+${JSON.stringify(user, null, 2)}`, 'success');
+                } else {
+                    const error = await response.json();
+                    showResult(`❌ Ошибка получения пользователя: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                showResult('Выход из системы...', 'info');
+                
+                const response = await fetch(`${API_BASE}/auth/logout`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include' // Важно для очистки HttpOnly cookies!
+                });
+
+                if (response.ok) {
+                    accessToken = null;
+                    showResult('✅ Выход выполнен. HttpOnly cookies очищены.', 'success');
+                } else {
+                    const error = await response.json();
+                    showResult(`❌ Ошибка выхода: ${error.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        function checkCookies() {
+            const cookies = document.cookie;
+            const hasRefreshToken = cookies.includes('refresh_token=');
+            
+            showResult(`🍪 Состояние cookies:
+Все cookies: ${cookies || 'Пусто'}
+
+HttpOnly refresh_token доступен через JavaScript: ${hasRefreshToken ? 'ДА (это плохо!)' : 'НЕТ (это хорошо!)'}
+
+Примечание: HttpOnly cookies не должны быть доступны через JavaScript из соображений безопасности.
+Refresh token хранится в HttpOnly cookie и управляется только сервером.`, 
+                hasRefreshToken ? 'error' : 'success');
+        }
+
+        // Проверим cookies при загрузке страницы
+        window.onload = function() {
+            checkCookies();
+        };
+    </script>
+</body>
+</html>
