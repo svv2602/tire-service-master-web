@@ -1,7 +1,10 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
-import config from '../config';
 
-const STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY;
+/**
+ * Интерцепторы для cookie-based аутентификации
+ * Токены теперь управляются через Redux состояние и HttpOnly куки
+ */
+
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
 
@@ -16,22 +19,17 @@ function onTokenRefreshed(token: string) {
   refreshSubscribers = [];
 }
 
-// Интерцептор для добавления токена
+// Интерцептор для добавления токена из Redux состояния
 export const requestInterceptor = (config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem(STORAGE_KEY);
+  // Получаем токен из Redux состояния, а не из localStorage
+  const store = require('../store/store').store;
+  const token = store.getState()?.auth?.accessToken;
+  
   console.log('Перехватчик запросов - URL:', config.url);
   
   if (token && config.headers) {
-    try {
-      // Пробуем распарсить токен как JSON
-      const tokenData = JSON.parse(token);
-      const actualToken = tokenData.auth_token || tokenData.token || token;
-      config.headers.Authorization = `Bearer ${actualToken}`;
-    } catch {
-      // Если не получилось распарсить как JSON, используем как есть
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log('Перехватчик запросов - Токен добавлен');
+    config.headers.Authorization = `Bearer ${token}`;
+    console.log('Перехватчик запросов - Токен добавлен из Redux');
   }
   return config;
 };
@@ -46,13 +44,6 @@ export const requestErrorInterceptor = (error: any) => {
 export const responseInterceptor = (response: any) => {
   if (response.config.url !== '/api/v1/health') {
     console.log('Перехватчик ответов - Успешный запрос:', response.config.url);
-    
-    const newToken = response.headers['authorization'] || response.headers['Authorization'];
-    if (newToken) {
-      const token = newToken.replace('Bearer ', '');
-      localStorage.setItem(STORAGE_KEY, token);
-      console.log('Токен обновлен из ответа сервера');
-    }
   }
   return response;
 };
@@ -70,7 +61,7 @@ export const responseErrorInterceptor = async (error: any) => {
   if (error.response?.status === 401) {
     console.log('Обнаружена ошибка авторизации (401):', error.config?.url);
     
-    const isAuthRequest = originalRequest.url.includes('/auth/') || originalRequest.url.includes('/authenticate');
+    const isAuthRequest = originalRequest.url.includes('/auth/');
     
     if (!isAuthRequest && !originalRequest._retry) {
       if (isRefreshing) {
@@ -89,29 +80,18 @@ export const responseErrorInterceptor = async (error: any) => {
       originalRequest._retry = true;
       isRefreshing = true;
 
-      // Получаем сохраненные учетные данные
-      const email = localStorage.getItem('userEmail');
-      const password = localStorage.getItem('userPassword');
-
-      if (!email || !password) {
-        // Если учетные данные отсутствуют, пользователь должен войти снова
-        localStorage.removeItem(STORAGE_KEY);
-        handleUnauthorized();
-        return Promise.reject(error);
-      }
-
       try {
-        // Используем основной эндпойнт аутентификации
-        const response = await axios.post('/api/v1/authenticate', {
-          auth: {
-            login: email,
-            password
-          }
+        // Попытка обновить токен через API (refresh токен в HttpOnly куки)
+        const response = await axios.post('/api/v1/auth/refresh', {}, {
+          withCredentials: true // Важно для отправки HttpOnly куки
         });
 
-        const { auth_token: newToken } = response.data;
+        const { tokens: { access: newToken } } = response.data;
         
-        localStorage.setItem(STORAGE_KEY, newToken);
+        // Обновляем токен в Redux состоянии
+        const store = require('../store/store').store;
+        store.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
+        
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         
         onTokenRefreshed(newToken);
@@ -120,9 +100,9 @@ export const responseErrorInterceptor = async (error: any) => {
         return axios(originalRequest);
       } catch (refreshError) {
         console.log('Ошибка обновления токена, выполняем выход');
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('userPassword');
+        // Выходим из системы через Redux
+        const store = require('../store/store').store;
+        store.dispatch({ type: 'auth/logout' });
         isRefreshing = false;
         handleUnauthorized();
         return Promise.reject(refreshError);
@@ -130,7 +110,6 @@ export const responseErrorInterceptor = async (error: any) => {
     }
 
     if (isAuthRequest) {
-      localStorage.removeItem(STORAGE_KEY);
       handleUnauthorized();
     }
   }
@@ -143,7 +122,8 @@ function handleUnauthorized() {
   const currentPath = window.location.pathname + window.location.search;
   
   if (!currentPath.includes('/login')) {
-    localStorage.setItem('returnPath', currentPath);
+    // Сохраняем путь возврата (можно в sessionStorage вместо localStorage)
+    sessionStorage.setItem('returnPath', currentPath);
     window.history.pushState({}, '', '/login');
     // Вызываем событие изменения пути для обновления React Router
     window.dispatchEvent(new PopStateEvent('popstate'));

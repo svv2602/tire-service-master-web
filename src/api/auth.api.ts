@@ -1,5 +1,4 @@
 import { baseApi } from './baseApi';
-import config from '../config';
 
 // Типы
 interface LoginRequest {
@@ -71,18 +70,13 @@ export const authApi = baseApi.injectEndpoints({
         body: credentials,
         credentials: 'include', // Важно для получения куки
       }),
-      // Сохраняем только пользователя после успешного входа
+      // Логируем только успешный вход - данные пользователя управляются Redux
       onQueryStarted: async (arg, { queryFulfilled }) => {
         try {
           const { data } = await queryFulfilled;
-          
-          // Сохраняем только данные пользователя
-          localStorage.setItem('tvoya_shina_user', JSON.stringify(data.user));
-          
-          console.log('✅ Данные пользователя сохранены в localStorage');
-          
+          console.log('✅ Успешный вход пользователя:', data.user.email);
         } catch (error) {
-          console.error('❌ Ошибка при сохранении данных пользователя:', error);
+          console.error('❌ Ошибка при входе:', error);
         }
       },
     }),
@@ -116,16 +110,9 @@ export const authApi = baseApi.injectEndpoints({
       onQueryStarted: async (arg, { queryFulfilled }) => {
         try {
           await queryFulfilled;
-          
-          // Очищаем только данные пользователя
-          localStorage.removeItem('tvoya_shina_user');
-          
-          console.log('✅ Данные пользователя очищены');
-          
+          console.log('✅ Успешный выход');
         } catch (error) {
           console.error('❌ Ошибка при выходе:', error);
-          // Все равно очищаем данные пользователя даже при ошибке
-          localStorage.removeItem('tvoya_shina_user');
         }
       },
     }),
