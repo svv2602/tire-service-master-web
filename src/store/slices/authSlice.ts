@@ -6,60 +6,18 @@ import { UserRole } from '../../types';
 import axios from 'axios';
 import config from '../../config';
 
-const USER_STORAGE_KEY = 'tvoya_shina_user';
-const TOKEN_STORAGE_KEY = config.AUTH_TOKEN_STORAGE_KEY; // 'tvoya_shina_token'
+/**
+ * authSlice для cookie-based аутентификации
+ * Пользователи и токены управляются только через Redux состояние
+ * Refresh токены хранятся в HttpOnly куки на сервере
+ */
 
-// Функции для работы с localStorage только для пользователя
-const getStoredUser = (): User | null => {
-  try {
-    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-    return storedUser ? JSON.parse(storedUser) : null;
-  } catch (error) {
-    console.error('Ошибка при чтении данных пользователя из localStorage:', error);
-    return null;
-  }
-};
-
-const setStoredUser = (user: User | null): void => {
-  try {
-    if (user) {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(USER_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.error('Ошибка при сохранении данных пользователя в localStorage:', error);
-  }
-};
-
-// Функции для работы с токеном
-const getStoredToken = (): string | null => {
-  try {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
-  } catch (error) {
-    console.error('Ошибка при чтении токена из localStorage:', error);
-    return null;
-  }
-};
-
-const setStoredToken = (token: string | null): void => {
-  try {
-    if (token) {
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    } else {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-    }
-  } catch (error) {
-    console.error('Ошибка при сохранении токена в localStorage:', error);
-  }
-};
-
-// Начальное состояние
+// Начальное состояние (без localStorage)
 const initialState: AuthState = {
-  accessToken: getStoredToken(), // Загружаем токен из localStorage при инициализации
-  refreshToken: null, // Refresh токен хранится в HttpOnly cookies
-  user: getStoredUser(),
-  isAuthenticated: !!(getStoredToken() && getStoredUser()), // Аутентифицированы если есть и токен и пользователь
+  accessToken: null, // Токен будет получен из API при инициализации
+  refreshToken: null, // Refresh токен в HttpOnly cookies
+  user: null, // Пользователь будет получен из API при инициализации
+  isAuthenticated: false, // Будет определено при инициализации через API
   loading: false,
   error: null,
   isInitialized: false,
@@ -93,8 +51,6 @@ const authSlice = createSlice({
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      setStoredUser(user);
-      // Токен не сохраняем в localStorage - он автоматически сохраняется в HttpOnly cookies API
     },
     logout: (state) => {
       state.accessToken = null;
@@ -103,15 +59,12 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
-      setStoredUser(null);
-      // Токен из localStorage не удаляем - он в HttpOnly cookies и будет удален через API
     },
     setInitialized: (state) => {
       state.isInitialized = true;
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      // Новый токен автоматически сохраняется в HttpOnly cookies через API
       // При обновлении access токена пользователь остается аутентифицированным
       if (state.user) {
         state.isAuthenticated = true;
@@ -140,11 +93,6 @@ const authSlice = createSlice({
           hasToken: !!state.accessToken,
           hasUser: !!state.user
         });
-        
-        setStoredUser(action.payload.user);
-        setStoredToken(action.payload.tokens.access); // Сохраняем токен в localStorage
-        
-        console.log('Auth: login.fulfilled - токен и пользователь сохранены в localStorage');
       })
       .addCase(login.rejected, (state, action) => {
         console.log('Auth: login.rejected - login failed');
@@ -162,8 +110,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.isInitialized = true;
-        setStoredUser(null);
-        setStoredToken(null); // Удаляем токен из localStorage
       })
       
       // Обработка refreshAuthTokens
@@ -179,8 +125,7 @@ const authSlice = createSlice({
         if (action.payload.access_token || action.payload.tokens?.access) {
           const newToken = action.payload.access_token || action.payload.tokens.access;
           state.accessToken = newToken;
-          setStoredToken(newToken); // Сохраняем новый токен в localStorage
-          console.log('AuthSlice: Access токен обновлен и сохранен');
+          console.log('AuthSlice: Access токен обновлен');
         }
       })
       .addCase(refreshAuthTokens.rejected, (state, action) => {
@@ -204,10 +149,8 @@ const authSlice = createSlice({
         // Если в ответе есть новый access токен, сохраняем его
         if (action.payload.tokens?.access) {
           state.accessToken = action.payload.tokens.access;
-          setStoredToken(action.payload.tokens.access); // Сохраняем токен в localStorage
         }
         
-        setStoredUser(state.user);
         console.log('User role after getCurrentUser:', state.user?.role);
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
@@ -217,8 +160,6 @@ const authSlice = createSlice({
         state.accessToken = null;
         state.refreshToken = null;
         state.isInitialized = true;
-        setStoredUser(null);
-        setStoredToken(null); // Удаляем токен из localStorage при ошибке
       });
   },
 });
@@ -229,18 +170,17 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
   async ({ email, password }) => {
     try {
       console.log('Sending login request:', { email, password: '***' });
-      console.log('DEBUG: Using direct axios call to avoid double-click issue');
+      console.log('DEBUG: Using direct axios call with cookies support');
       
-      // Используем чистый axios без интерцепторов для авторизации
-      // чтобы избежать проблемы с двойным нажатием
+      // Используем чистый axios для авторизации с поддержкой куки
       const API_URL = `${config.API_URL}${config.API_PREFIX}`;
       console.log('DEBUG: API_URL =', API_URL);
       
       const response = await axios.post<LoginResponse>(
         `${API_URL}/auth/login`, 
-        { email, password },
+        { auth: { login: email, password } }, // Исправляем формат для API
         { 
-          withCredentials: true,
+          withCredentials: true, // Важно для HttpOnly куки
           headers: { 'Content-Type': 'application/json' }
         }
       );
@@ -265,28 +205,23 @@ export const login = createAsyncThunk<LoginResponse, { email: string; password: 
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
   try {
-    console.log('DEBUG: Sending logout request with direct axios call');
+    console.log('DEBUG: Sending logout request with cookies support');
     const API_URL = `${config.API_URL}${config.API_PREFIX}`;
     
-    // Используем чистый axios без интерцепторов для выхода
-    // так же как и для входа, чтобы избежать проблем с cookies
+    // Используем чистый axios для выхода с поддержкой куки
     await axios.post(
       `${API_URL}/auth/logout`,
       {},
       { 
-        withCredentials: true,
+        withCredentials: true, // Важно для HttpOnly куки
         headers: { 'Content-Type': 'application/json' }
       }
     );
     
-    console.log('DEBUG: Logout successful, removing local storage items');
-    localStorage.removeItem(USER_STORAGE_KEY);
-    
+    console.log('DEBUG: Logout successful');
     return;
   } catch (error) {
     console.error('Logout error:', error);
-    // Даже если запрос не удался, очищаем локальное хранилище
-    localStorage.removeItem(USER_STORAGE_KEY);
     return;
   }
 });
@@ -302,7 +237,7 @@ export const refreshAuthTokens = createAsyncThunk(
         `${API_URL}/auth/refresh`,
         {},
         { 
-          withCredentials: true,
+          withCredentials: true, // Важно для HttpOnly куки
           headers: { 'Content-Type': 'application/json' }
         }
       );
