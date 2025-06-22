@@ -1,8 +1,10 @@
 import { User } from '../types/models';
+import { cookieAuth } from './cookies';
 
-// Ключи для хранения данных в localStorage
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+/**
+ * Утилиты аутентификации для cookie-based системы
+ * Все токены теперь хранятся в HttpOnly куки
+ */
 
 // Интерфейс для хранения данных аутентификации
 export interface AuthData {
@@ -10,104 +12,95 @@ export interface AuthData {
   user: User;
 }
 
-// Функции для работы с токеном
+// Функции для работы с токеном (deprecated - токены в HttpOnly куки)
 export const getToken = (): string | null => {
-  try {
-    return localStorage.getItem(TOKEN_KEY);
-  } catch (error) {
-    console.error('Ошибка при получении токена:', error);
-    return null;
-  }
+  console.warn('getToken deprecated: токены теперь в HttpOnly куки, используйте Redux состояние');
+  return null;
 };
 
 export const setToken = (token: string): void => {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch (error) {
-    console.error('Ошибка при сохранении токена:', error);
-  }
+  console.warn('setToken deprecated: токены управляются сервером через HttpOnly куки');
 };
 
 export const removeToken = (): void => {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch (error) {
-    console.error('Ошибка при удалении токена:', error);
-  }
+  console.warn('removeToken deprecated: используйте logout через API');
 };
 
-// Функции для работы с данными пользователя
+// Функции для работы с данными пользователя (обновлены для поддержки куки)
 export const getUser = (): User | null => {
-  try {
-    const userStr = localStorage.getItem(USER_KEY);
-    if (!userStr) return null;
-    
-    try {
-      return JSON.parse(userStr);
-    } catch (error) {
-      throw new Error('Некорректные данные пользователя в localStorage');
-    }
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Некорректные данные пользователя в localStorage') {
-      throw error;
-    }
-    console.error('Ошибка при получении пользователя:', error);
-    return null;
-  }
+  console.warn('getUser deprecated: используйте Redux состояние для получения данных пользователя');
+  return null;
 };
 
 export const setUser = (user: User): void => {
-  try {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  } catch (error) {
-    console.error('Ошибка при сохранении пользователя:', error);
-  }
+  console.warn('setUser deprecated: данные пользователя управляются через Redux и HttpOnly куки');
 };
 
 export const removeUser = (): void => {
-  try {
-    localStorage.removeItem(USER_KEY);
-  } catch (error) {
-    console.error('Ошибка при удалении пользователя:', error);
-  }
+  console.warn('removeUser deprecated: используйте logout action в Redux');
 };
 
-// Функция для проверки аутентификации
+// Проверки аутентификации (обновлены для cookie-based системы)
 export const isAuthenticated = (): boolean => {
-  const token = getToken();
-  const user = getUser();
-  return token !== null && user !== null;
+  console.warn('isAuthenticated deprecated: используйте Redux селектор для проверки аутентификации');
+  // Синхронная проверка наличия refresh cookie
+  return document.cookie.includes('refresh_token=');
 };
 
-// Функция для сохранения данных аутентификации
+// Получение данных аутентификации (deprecated)
+export const getAuthData = (): AuthData | null => {
+  console.warn('getAuthData deprecated: используйте Redux состояние');
+  return null;
+};
+
+// Сохранение данных аутентификации (deprecated)
 export const setAuthData = (data: AuthData): void => {
-  setToken(data.token);
-  setUser(data.user);
+  console.warn('setAuthData deprecated: аутентификация управляется через Redux и HttpOnly куки');
 };
 
-// Функция для очистки данных аутентификации
-export const clearAuthData = (): void => {
-  removeToken();
-  removeUser();
+// Очистка всех данных аутентификации
+export const clearAuth = (): void => {
+  console.warn('clearAuth deprecated: используйте logout action в Redux');
+  cookieAuth.clearSession();
 };
 
-// Функция для обновления данных пользователя
-export const updateUser = (userData: Partial<User>): void => {
-  const currentUser = getUser();
-  if (currentUser) {
-    const updatedUser = { ...currentUser, ...userData };
-    setUser(updatedUser);
+/**
+ * Утилиты для cookie-based аутентификации
+ */
+export const authCookieUtils = {
+  // Проверка наличия refresh токена в куки (синхронная)
+  hasRefreshToken: () => document.cookie.includes('refresh_token='),
+  
+  // Очистка сессии
+  clearSession: () => cookieAuth.clearSession(),
+  
+  // Проверка возможности использования куки
+  canUseCookies: () => {
+    try {
+      // Простая проверка - пытаемся установить и прочитать тестовое куки
+      document.cookie = 'test=1; path=/';
+      const canRead = document.cookie.includes('test=1');
+      // Удаляем тестовое куки
+      document.cookie = 'test=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+      return canRead;
+    } catch {
+      return false;
+    }
   }
 };
 
-// Функция для проверки роли пользователя
-export const hasRole = (role: string): boolean => {
-  const user = getUser();
-  return user !== null && user.role === role;
+// Legacy функции для обратной совместимости с компонентами, которые еще не обновлены
+export const legacyAuthUtils = {
+  getToken,
+  setToken,
+  removeToken,
+  getUser,
+  setUser,
+  removeUser,
+  isAuthenticated,
+  getAuthData,
+  setAuthData,
+  clearAuth
 };
 
-// Функция для проверки активности пользователя
-export const isUserActive = (): boolean => {
-  const user = getUser();
-  return user !== null && user.is_active;
-}; 
+export default authCookieUtils;
