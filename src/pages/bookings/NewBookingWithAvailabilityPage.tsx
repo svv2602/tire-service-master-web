@@ -137,17 +137,43 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
-  // Получаем параметры из URL (если переданы)
+  // Получаем параметры из URL и state (если переданы)
   useEffect(() => {
+    // Получаем параметры из URL
     const searchParams = new URLSearchParams(location.search);
     const servicePointId = searchParams.get('servicePointId');
     
-    if (servicePointId) {
-      setFormData(prev => ({
-        ...prev,
-        service_point_id: Number(servicePointId),
-      }));
+    // Получаем данные из state (если переданы при навигации)
+    const stateData = location.state as {
+      servicePointId?: number;
+      servicePointName?: string;
+      cityId?: number;
+      cityName?: string;
+      partnerId?: number;
+      partnerName?: string;
+      step1Completed?: boolean;
+    } | null;
+    
+    // Обновляем данные формы, приоритет у данных из state
+    const newFormData = { ...formData };
+    
+    // Устанавливаем ID сервисной точки (из state или из URL)
+    if (stateData?.servicePointId) {
+      newFormData.service_point_id = stateData.servicePointId;
+      console.log('Установлена сервисная точка из state:', stateData.servicePointId, stateData.servicePointName);
+    } else if (servicePointId) {
+      newFormData.service_point_id = Number(servicePointId);
+      console.log('Установлена сервисная точка из URL:', servicePointId);
     }
+    
+    // Устанавливаем ID города (только из state)
+    if (stateData?.cityId) {
+      newFormData.city_id = stateData.cityId;
+      console.log('Установлен город из state:', stateData.cityId, stateData.cityName);
+    }
+    
+    // Обновляем данные формы
+    setFormData(newFormData);
     
     // Если пользователь аутентифицирован, предзаполняем его данные
     if (isAuthenticated && user) {
@@ -158,7 +184,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         client_email: user.email || '',
       }));
     }
-  }, [location.search, isAuthenticated, user]);
+  }, [location.search, location.state, isAuthenticated, user]);
   
   // Мутация для создания бронирования (временно отключена)
   // const [createBooking] = useCreateClientBookingMutation();

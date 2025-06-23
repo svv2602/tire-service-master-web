@@ -19,6 +19,7 @@ import {
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
   Schedule as ScheduleIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
@@ -48,6 +49,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
 }) => {
   const theme = useTheme();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [autoFilledData, setAutoFilledData] = useState(false);
   
   // Загрузка городов с точками обслуживания
   const { data: citiesData, isLoading: isLoadingCities, error: citiesError } = useGetCitiesWithServicePointsQuery();
@@ -68,9 +70,15 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       const city = cities.find(c => c.id === formData.city_id);
       if (city) {
         setSelectedCity(city);
+        
+        // Если город и сервисная точка уже выбраны при первой загрузке,
+        // считаем, что данные были предзаполнены
+        if (formData.service_point_id && !autoFilledData) {
+          setAutoFilledData(true);
+        }
       }
     }
-  }, [formData.city_id, cities]);
+  }, [formData.city_id, formData.service_point_id, cities, autoFilledData]);
   
   // Обработчик выбора города
   const handleCityChange = (city: City | null) => {
@@ -80,6 +88,9 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       city_id: city?.id || null,
       service_point_id: null, // Сбрасываем выбранную точку обслуживания
     }));
+    
+    // Если пользователь изменил город, значит данные больше не предзаполнены
+    setAutoFilledData(false);
   };
   
   // Обработчик выбора точки обслуживания
@@ -88,6 +99,9 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       ...prev,
       service_point_id: servicePoint.id,
     }));
+    
+    // Если пользователь выбрал точку обслуживания вручную, значит данные больше не предзаполнены
+    setAutoFilledData(false);
   };
   
   // Рендер карточки точки обслуживания
@@ -169,6 +183,17 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
         Выберите город и точку обслуживания
       </Typography>
+      
+      {/* Уведомление о предзаполненных данных */}
+      {autoFilledData && isValid && (
+        <Alert 
+          severity="info" 
+          icon={<InfoIcon />}
+          sx={{ mb: 3 }}
+        >
+          Город и сервисная точка уже выбраны на основе вашего предыдущего выбора. Вы можете изменить их или перейти к следующему шагу.
+        </Alert>
+      )}
       
       <Grid container spacing={3}>
         {/* Выбор города */}
@@ -271,7 +296,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       </Grid>
       
       {/* Информация о следующем шаге */}
-      {isValid && (
+      {isValid && !autoFilledData && (
         <Alert severity="success" sx={{ mt: 3 }}>
           ✅ Город и точка обслуживания выбраны. Теперь можно перейти к выбору даты и времени.
         </Alert>
