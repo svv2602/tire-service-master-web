@@ -418,7 +418,15 @@ const ServicePointsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate(partnerId ? `/partners/${partnerId}/service-points/new` : '/service-points/new')}
+          onClick={() => {
+            if (partnerId) {
+              navigate(`/partners/${partnerId}/service-points/new`);
+            } else {
+              // Если нет partnerId, нужно сначала выбрать партнера
+              alert('Для создания сервисной точки необходимо выбрать партнера. Перейдите в раздел "Партнеры" и создайте сервисную точку оттуда.');
+              navigate('/partners');
+            }
+          }}
         >
           Добавить сервисную точку
         </Button>

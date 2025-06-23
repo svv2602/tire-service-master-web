@@ -216,7 +216,6 @@ function App() {
                       <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
                       {/* Маршруты для сервисных точек */}
                       <Route path="service-points" element={<ServicePointsPage />} />
-                      <Route path="service-points/new" element={<ServicePointFormPageNew />} />
                       <Route path="service-points/:id" element={<ServicePointDetailPage />} />
                       <Route path="service-points/:id/edit" element={<ServicePointFormPageNew />} />
                       <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />

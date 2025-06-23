@@ -106,9 +106,10 @@ const ServicePointFormPageNew: React.FC = () => {
   
   // Отладочная информация для проверки параметров URL
   console.log('=== URL параметры ===');
-  console.log('partnerId:', partnerId);
-  console.log('id:', id);
+  console.log('partnerId:', partnerId, 'type:', typeof partnerId);
+  console.log('id:', id, 'type:', typeof id);
   console.log('isEditMode:', isEditMode);
+  console.log('partnerId as number:', partnerId ? Number(partnerId) : null);
   
   // Хуки для темы и адаптивности
   const theme = useTheme();
@@ -204,6 +205,15 @@ const ServicePointFormPageNew: React.FC = () => {
       console.error('ОШИБКА: Попытка редактирования сервисной точки без partnerId в URL');
       alert('Ошибка: Некорректный URL для редактирования сервисной точки');
       navigate('/service-points');
+      return;
+    }
+    
+    // Проверяем partnerId при создании новой сервисной точки
+    if (!isEditMode && !partnerId) {
+      console.error('ОШИБКА: Попытка создания сервисной точки без partnerId в URL');
+      alert('Ошибка: Для создания сервисной точки необходимо указать партнера в URL. Перейдите в раздел "Партнеры" и создайте сервисную точку оттуда.');
+      navigate('/partners');
+      return;
     }
   }, [isEditMode, partnerId, navigate]);
 
@@ -237,23 +247,37 @@ const ServicePointFormPageNew: React.FC = () => {
   }, [servicePoint?.working_hours, isEditMode]);
 
   // Начальные значения формы (мемоизированные)
-  const initialValues: ServicePointFormDataNew = useMemo(() => ({
-    name: servicePoint?.name || '',
-    partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
-    city_id: servicePoint?.city?.id || 0,
-    region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
-    address: servicePoint?.address || '',
-    contact_phone: servicePoint?.contact_phone || '',
-    description: servicePoint?.description || '',
-    latitude: servicePoint?.latitude || null,
-    longitude: servicePoint?.longitude || null,
-    is_active: servicePoint?.is_active ?? true,
-    work_status: servicePoint?.work_status || 'working',
-    working_hours: normalizedWorkingHours,
-    services: servicePoint?.services || [],
-    photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
-    service_posts: servicePoint?.service_posts || [],
-  }), [servicePoint, partnerId, normalizedWorkingHours]); // Правильные зависимости
+  const initialValues: ServicePointFormDataNew = useMemo(() => {
+    const partnerIdNumber = partnerId ? Number(partnerId) : 0;
+    
+    console.log('=== Инициализация формы ===');
+    console.log('partnerId:', partnerId);
+    console.log('partnerIdNumber:', partnerIdNumber);
+    console.log('servicePoint?.partner_id:', servicePoint?.partner_id);
+    
+    if (partnerIdNumber === 0 && !isEditMode) {
+      console.error('КРИТИЧЕСКАЯ ОШИБКА: partnerIdNumber равен 0 при создании новой сервисной точки');
+      // В этом случае система должна была уже перенаправить пользователя
+    }
+    
+    return {
+      name: servicePoint?.name || '',
+      partner_id: servicePoint?.partner_id || partnerIdNumber,
+      city_id: servicePoint?.city?.id || 0,
+      region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
+      address: servicePoint?.address || '',
+      contact_phone: servicePoint?.contact_phone || '',
+      description: servicePoint?.description || '',
+      latitude: servicePoint?.latitude || null,
+      longitude: servicePoint?.longitude || null,
+      is_active: servicePoint?.is_active ?? true,
+      work_status: servicePoint?.work_status || 'working',
+      working_hours: normalizedWorkingHours,
+      services: servicePoint?.services || [],
+      photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
+      service_posts: servicePoint?.service_posts || [],
+    };
+  }, [servicePoint, partnerId, normalizedWorkingHours]); // Правильные зависимости
 
   // Отладка загруженных данных
   useEffect(() => {
@@ -439,13 +463,27 @@ const ServicePointFormPageNew: React.FC = () => {
           
           setSuccessMessage('Точка обслуживания успешно обновлена');
         } else {
+          // Проверяем, что partnerId корректно передан
+          if (!partnerId) {
+            throw new Error('КРИТИЧЕСКАЯ ОШИБКА: partnerId не определен при создании сервисной точки');
+          }
+          
           // Для создания исключаем фотографии И услуги, добавим их отдельно после создания
           const { photos_attributes, services_attributes, ...createData } = servicePointData;
           
+          // Проверяем, что partner_id в данных соответствует partnerId из URL
+          if (createData.partner_id !== Number(partnerId)) {
+            console.warn(`Несоответствие partnerId: URL=${partnerId}, данные=${createData.partner_id}. Используем значение из URL.`);
+            createData.partner_id = Number(partnerId);
+          }
+          
+          console.log('=== Создание сервисной точки ===');
+          console.log('partnerId:', partnerId);
+          console.log('createData.partner_id:', createData.partner_id);
           console.log('Отправляемые данные для создания:', JSON.stringify({ servicePoint: createData }, null, 2));
           
           const result = await createServicePoint({
-            partnerId: partnerId || '1',
+            partnerId: partnerId,
             servicePoint: createData
           }).unwrap();
           
