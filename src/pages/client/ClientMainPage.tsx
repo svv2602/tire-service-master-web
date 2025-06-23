@@ -139,96 +139,106 @@ const ClientMainPage: React.FC = () => {
       {/* Hero секция */}
       <Fade in timeout={500}>
         <Box sx={{
-          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-          color: 'white',
+          bgcolor: colors.backgroundPrimary,
+          color: colors.textPrimary,
           py: 8,
           position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            pointerEvents: 'none'
-          }
+          overflow: 'hidden'
         }}>
           <Container maxWidth="lg">
-            <Grid container spacing={4} alignItems="center">
-              <Grid item xs={12} md={6}>
-                <Typography variant="h2" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
-                  {currentHero.title}
-                </Typography>
-                <Typography variant="h6" sx={{ mb: 4, opacity: 0.9, lineHeight: 1.6 }}>
-                  {currentHero.settings?.subtitle || currentHero.content}
-                </Typography>
-                
-                {/* Поиск */}
-                <Paper sx={{ p: 2, borderRadius: SIZES.borderRadius.lg }}>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={8}>
-                      <Autocomplete
-                        value={selectedCity}
-                        onChange={(event, newValue) => setSelectedCity(newValue)}
-                        options={cities}
-                        getOptionLabel={(option) => option.name}
-                        renderOption={(props, option) => (
-                          <Box component="li" {...props}>
-                            <Box>
-                              <Typography variant="body1">{option.name}</Typography>
-                              {option.region_name && (
-                                <Typography variant="caption" color="text.secondary">
-                                  {option.region_name}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Box>
-                        )}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label={currentHero.settings?.city_placeholder || 'Оберіть місто'}
-                            fullWidth
-                            InputProps={{
-                              ...params.InputProps,
-                              startAdornment: <LocationIcon sx={{ mr: 1, color: colors.textSecondary }} />
-                            }}
-                          />
-                        )}
-                        noOptionsText="Городи не знайдені"
-                        loadingText="Завантаження..."
-                        loading={citiesLoading}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        size="large"
-                        onClick={handleSearch}
-                        sx={{ 
-                          ...buttonStyles, 
-                          height: 56,
-                          bgcolor: theme.palette.primary.main,
-                          '&:hover': { bgcolor: theme.palette.primary.dark }
-                        }}
-                      >
-                        {currentHero.settings?.button_text || 'Знайти'}
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </Grid>
-              
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={4} alignItems="stretch" sx={{ minHeight: '60vh' }}>
+              <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
                 <Box sx={{ 
                   display: 'flex', 
                   justifyContent: 'center',
-                  '& > *': { fontSize: { xs: '8rem', md: '12rem' } }
+                  alignItems: 'center',
+                  width: '100%',
+                  height: '100%'
                 }}>
-                  🚗
+                  <Box
+                    component="img"
+                    src="/image_app/serviceman.png" 
+                    alt="Професійний сервісмен" 
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'cover',
+                      borderRadius: 3,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                      transition: 'transform 0.3s ease',
+                      '&:hover': {
+                        transform: 'scale(1.02)'
+                      }
+                    }}
+                  />
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant="h2" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+                    {currentHero.title}
+                  </Typography>
+                  <Typography variant="h6" sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}>
+                    {currentHero.settings?.subtitle || currentHero.content}
+                  </Typography>
+                  
+                  {/* Поиск */}
+                  <Paper sx={{ p: 2, borderRadius: SIZES.borderRadius.lg }}>
+                    <Grid container spacing={2} alignItems="center">
+                      <Grid item xs={12} sm={8}>
+                        <Autocomplete
+                          value={selectedCity}
+                          onChange={(event, newValue) => setSelectedCity(newValue)}
+                          options={cities}
+                          getOptionLabel={(option) => option.name}
+                          renderOption={(props, option) => (
+                            <Box component="li" {...props}>
+                              <Box>
+                                <Typography variant="body1">{option.name}</Typography>
+                                {option.region_name && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {option.region_name}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Box>
+                          )}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label={currentHero.settings?.city_placeholder || 'Оберіть місто'}
+                              fullWidth
+                              InputProps={{
+                                ...params.InputProps,
+                                startAdornment: <LocationIcon sx={{ mr: 1, color: colors.textSecondary }} />
+                              }}
+                            />
+                          )}
+                          noOptionsText="Городи не знайдені"
+                          loadingText="Завантаження..."
+                          loading={citiesLoading}
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          size="large"
+                          onClick={handleSearch}
+                          sx={{ 
+                            ...buttonStyles, 
+                            height: 56,
+                            bgcolor: theme.palette.primary.main,
+                            '&:hover': { bgcolor: theme.palette.primary.dark }
+                          }}
+                        >
+                          {currentHero.settings?.button_text || 'Знайти'}
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Paper>
                 </Box>
               </Grid>
             </Grid>
