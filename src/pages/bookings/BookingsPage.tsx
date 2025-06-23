@@ -114,7 +114,7 @@ const BookingsPage: React.FC = () => {
   };
 
   const handleCreateBooking = () => {
-    navigate('/bookings/new-with-availability');
+    navigate('/client/booking/new-with-availability');
   };
 
   // Определение колонок для UI Table
