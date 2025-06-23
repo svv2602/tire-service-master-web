@@ -38,14 +38,14 @@ const ReviewFormPage: React.FC = () => {
   // Обработчик отправки формы
   const handleSubmit = async (values: ReviewFormData) => {
     try {
-      // Если выбрана запись, используем ее ID для связи с отзывом
-      const reviewData = {
-        ...values,
-        service_point_id: selectedServicePointId,
-        booking_id: selectedBookingId || undefined,
-      };
-      
-      await createReview(reviewData).unwrap();
+      await createReview({
+        client_id: currentUser!.id,
+        data: {
+          ...values,
+          service_point_id: selectedServicePointId,
+          ...(selectedBookingId ? { booking_id: Number(selectedBookingId) } : {}),
+        } as any
+      }).unwrap();
       navigate('/client/reviews?success=true');
     } catch (error) {
       console.error('Ошибка при создании отзыва:', error);
@@ -156,4 +156,4 @@ const ReviewFormPage: React.FC = () => {
   );
 };
 
-export default ReviewFormPage; 
+export default ReviewFormPage;
