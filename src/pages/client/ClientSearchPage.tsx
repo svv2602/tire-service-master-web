@@ -22,7 +22,8 @@ import {
   ListItemText,
   ListItemIcon,
   Paper,
-  Collapse
+  Collapse,
+  IconButton
 } from '@mui/material';
 import { 
   Home as HomeIcon, 
@@ -61,6 +62,13 @@ interface SearchServicePoint {
   posts_count?: number;
   work_status: string;
   distance?: number;
+  photos?: {
+    id: number;
+    url: string;
+    description?: string;
+    is_main: boolean;
+    sort_order: number;
+  }[];
 }
 
 // Интерфейс для услуги
@@ -73,6 +81,271 @@ interface ServicePointService {
   duration: number;
   is_available?: boolean;
 }
+
+// Простой компонент фотогалереи
+const PhotoGallery: React.FC<{
+  photos: { id: number; url: string; description?: string; is_main: boolean; sort_order: number; }[];
+  height?: number | string;
+  showCounter?: boolean;
+  fallbackIcon?: React.ReactNode;
+}> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗' }) => {
+  const theme = useTheme();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  // Сортируем фотографии: главная первая, затем по sort_order
+  const sortedPhotos = [...photos].sort((a, b) => {
+    if (a.is_main && !b.is_main) return -1;
+    if (!a.is_main && b.is_main) return 1;
+    return a.sort_order - b.sort_order;
+  });
+
+  const mainPhoto = sortedPhotos[0];
+  const hasPhotos = sortedPhotos.length > 0;
+
+  const handleOpenModal = () => {
+    console.log('Opening modal with photos:', sortedPhotos);
+    if (hasPhotos) {
+      setModalOpen(true);
+      setCurrentPhotoIndex(0);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+
+  return (
+    <>
+      {/* Основное изображение */}
+      <Box
+        sx={{
+          position: 'relative',
+          height,
+          cursor: hasPhotos ? 'pointer' : 'default',
+          overflow: 'hidden',
+          borderRadius: 1,
+          '&:hover .photo-overlay': {
+            opacity: hasPhotos ? 1 : 0,
+          }
+        }}
+        onClick={handleOpenModal}
+      >
+        {hasPhotos ? (
+          <CardMedia
+            component="img"
+            image={mainPhoto.url}
+            alt={mainPhoto.description || 'Фото сервисной точки'}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'transform 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.05)'
+              }
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              height: '100%',
+              background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '4rem'
+            }}
+          >
+            {fallbackIcon}
+          </Box>
+        )}
+
+        {/* Оверлей с информацией о количестве фото */}
+        {hasPhotos && sortedPhotos.length > 1 && showCounter && (
+          <Box
+            className="photo-overlay"
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              bgcolor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              opacity: 0,
+              transition: 'opacity 0.3s ease'
+            }}
+          >
+            📷 {sortedPhotos.length}
+          </Box>
+        )}
+
+        {/* Индикатор главного фото */}
+        {hasPhotos && mainPhoto.is_main && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 8,
+              left: 8,
+              bgcolor: 'rgba(76, 175, 80, 0.9)',
+              color: 'white',
+              px: 1,
+              py: 0.25,
+              borderRadius: 0.5,
+              fontSize: '0.75rem',
+              fontWeight: 600
+            }}
+          >
+            Главное фото
+          </Box>
+        )}
+      </Box>
+
+      {/* Простое модальное окно */}
+      {modalOpen && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            bgcolor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            cursor: 'pointer'
+          }}
+          onClick={handleCloseModal}
+        >
+          <Box
+            sx={{
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              position: 'relative',
+              bgcolor: 'white',
+              borderRadius: 2,
+              p: 2
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {hasPhotos && sortedPhotos[currentPhotoIndex] ? (
+              <>
+                <img
+                  src={sortedPhotos[currentPhotoIndex].url}
+                  alt={sortedPhotos[currentPhotoIndex].description || 'Фото сервисной точки'}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '80vh',
+                    objectFit: 'contain',
+                    borderRadius: '8px',
+                    display: 'block'
+                  }}
+                  onError={(e) => {
+                    console.error('Failed to load image:', sortedPhotos[currentPhotoIndex].url);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully:', sortedPhotos[currentPhotoIndex].url);
+                  }}
+                />
+                {sortedPhotos[currentPhotoIndex].description && (
+                  <Typography variant="body2" sx={{ mt: 1, textAlign: 'center', color: 'text.secondary' }}>
+                    {sortedPhotos[currentPhotoIndex].description}
+                  </Typography>
+                )}
+                {sortedPhotos.length > 1 && (
+                  <Typography variant="caption" sx={{ mt: 1, textAlign: 'center', display: 'block', color: 'text.secondary' }}>
+                    Фото {currentPhotoIndex + 1} из {sortedPhotos.length}
+                  </Typography>
+                )}
+              </>
+            ) : (
+              <Box sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary">
+                  Фотографии не найдены
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Debug: hasPhotos={hasPhotos.toString()}, photos length={sortedPhotos.length}
+                </Typography>
+              </Box>
+            )}
+            
+            <IconButton
+              onClick={handleCloseModal}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary',
+                bgcolor: 'rgba(0, 0, 0, 0.1)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.2)'
+                }
+              }}
+            >
+              ✕
+            </IconButton>
+
+            {/* Навигация между фото */}
+            {sortedPhotos.length > 1 && (
+              <>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentPhotoIndex(prev => prev === 0 ? sortedPhotos.length - 1 : prev - 1);
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    left: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'text.secondary',
+                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.2)'
+                    }
+                  }}
+                >
+                  ←
+                </IconButton>
+                
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentPhotoIndex(prev => prev === sortedPhotos.length - 1 ? 0 : prev + 1);
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'text.secondary',
+                    bgcolor: 'rgba(0, 0, 0, 0.1)',
+                    '&:hover': {
+                      bgcolor: 'rgba(0, 0, 0, 0.2)'
+                    }
+                  }}
+                >
+                  →
+                </IconButton>
+              </>
+            )}
+          </Box>
+        </Box>
+      )}
+    </>
+  );
+};
 
 // Интерфейс для расписания
 interface WorkingSchedule {
@@ -142,21 +415,23 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         boxShadow: theme.shadows[4]
       }
     }}>
-      {/* Заглушка для фото */}
-      <CardMedia
-        component="div"
-        sx={{
-          height: 200,
-          background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontSize: '4rem'
-        }}
-      >
-        🚗
-      </CardMedia>
+      {/* Фотогалерея сервисной точки */}
+      <PhotoGallery
+        photos={servicePoint.photos || []}
+        height={200}
+        showCounter={true}
+        fallbackIcon="🚗"
+      />
+      
+      {/* Отладочная информация (временно) */}
+      {process.env.NODE_ENV === 'development' && (
+        <Box sx={{ p: 1, fontSize: '0.75rem', color: 'text.secondary', bgcolor: 'grey.100' }}>
+          Фото: {servicePoint.photos?.length || 0} шт.
+          {servicePoint.photos && servicePoint.photos.length > 0 && (
+            <div>Первое фото: {servicePoint.photos[0].url.substring(0, 50)}...</div>
+          )}
+        </Box>
+      )}
 
       <CardContent>
         {/* Основная информация */}
@@ -374,10 +649,11 @@ const ClientSearchPage: React.FC = () => {
 
   // Адаптируем данные из API к локальному интерфейсу
   const servicePoints: SearchServicePoint[] = (searchResult?.data || []).map(point => {
-    // Отладочный вывод для проверки статуса
+    // Отладочный вывод для проверки статуса и фотографий
     console.log(`ServicePoint ${point.id} - ${point.name}:`, {
       is_active: point.is_active,
-      work_status: point.work_status
+      work_status: point.work_status,
+      photos_count: point.photos?.length || 0
     });
     
     return {
@@ -394,11 +670,18 @@ const ClientSearchPage: React.FC = () => {
         name: point.partner?.company_name || point.partner?.name || ''
       },
       contact_phone: point.contact_phone,
-      average_rating: 4.0, // Заглушка для рейтинга
-      reviews_count: 0, // Заглушка для количества отзывов
+      average_rating: (point as any).average_rating || 4.0,
+      reviews_count: (point as any).reviews_count || 0,
       posts_count: point.post_count,
       work_status: point.work_status,
-      distance: undefined // Пока не используется расстояние
+      distance: undefined, // Пока не используется расстояние
+      photos: ((point as any).photos || []).map((photo: any) => ({
+        id: photo.id,
+        url: photo.url,
+        description: photo.description,
+        is_main: photo.is_main,
+        sort_order: photo.sort_order || 0
+      }))
     };
   });
   const totalFound = searchResult?.total || 0;
