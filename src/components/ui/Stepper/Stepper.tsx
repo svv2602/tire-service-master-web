@@ -185,53 +185,55 @@ export const Stepper: React.FC<StepperProps> = ({
           >
             {step.label}
           </StyledStepLabel>
-          <StyledStepContent>
-            {step.description && (
-              <Typography 
-                sx={{ 
-                  mt: 1, 
-                  mb: 2,
-                  color: themeColors.textSecondary,
-                  fontFamily: tokens.typography.fontFamily,
-                  fontSize: tokens.typography.fontSize.sm,
-                }}
-              >
-                {step.description}
-              </Typography>
-            )}
-            {step.content}
-            <Box sx={{ mt: tokens.spacing.md }}>
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                sx={{ 
-                  mt: tokens.spacing.sm, 
-                  mr: tokens.spacing.sm,
-                  fontFamily: tokens.typography.fontFamily,
-                  fontSize: tokens.typography.fontSize.sm,
-                  fontWeight: tokens.typography.fontWeight.medium,
-                  transition: tokens.transitions.duration.normal,
-                }}
-                disabled={disabled}
-              >
-                {index === steps.length - 1 ? 'Завершить' : 'Продолжить'}
-              </Button>
-              <Button
-                disabled={index === 0 || disabled}
-                onClick={handleBack}
-                sx={{ 
-                  mt: tokens.spacing.sm, 
-                  mr: tokens.spacing.sm,
-                  fontFamily: tokens.typography.fontFamily,
-                  fontSize: tokens.typography.fontSize.sm,
-                  fontWeight: tokens.typography.fontWeight.medium,
-                  transition: tokens.transitions.duration.normal,
-                }}
-              >
-                Назад
-              </Button>
-            </Box>
-          </StyledStepContent>
+          {orientation === 'vertical' && (
+            <StyledStepContent>
+              {step.description && (
+                <Typography 
+                  sx={{ 
+                    mt: 1, 
+                    mb: 2,
+                    color: themeColors.textSecondary,
+                    fontFamily: tokens.typography.fontFamily,
+                    fontSize: tokens.typography.fontSize.sm,
+                  }}
+                >
+                  {step.description}
+                </Typography>
+              )}
+              {step.content}
+              <Box sx={{ mt: tokens.spacing.md }}>
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  sx={{ 
+                    mt: tokens.spacing.sm, 
+                    mr: tokens.spacing.sm,
+                    fontFamily: tokens.typography.fontFamily,
+                    fontSize: tokens.typography.fontSize.sm,
+                    fontWeight: tokens.typography.fontWeight.medium,
+                    transition: tokens.transitions.duration.normal,
+                  }}
+                  disabled={disabled}
+                >
+                  {index === steps.length - 1 ? 'Завершить' : 'Продолжить'}
+                </Button>
+                <Button
+                  disabled={index === 0 || disabled}
+                  onClick={handleBack}
+                  sx={{ 
+                    mt: tokens.spacing.sm, 
+                    mr: tokens.spacing.sm,
+                    fontFamily: tokens.typography.fontFamily,
+                    fontSize: tokens.typography.fontSize.sm,
+                    fontWeight: tokens.typography.fontWeight.medium,
+                    transition: tokens.transitions.duration.normal,
+                  }}
+                >
+                  Назад
+                </Button>
+              </Box>
+            </StyledStepContent>
+          )}
         </MuiStep>
       ))}
     </StyledStepper>

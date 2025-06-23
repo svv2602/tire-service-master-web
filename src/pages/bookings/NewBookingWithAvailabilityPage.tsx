@@ -36,7 +36,7 @@ import {
 } from './components';
 
 // Импорт API хуков
-// import { useCreateClientBookingMutation } from '../../api/clientBookings.api';
+import { useCreateClientBookingMutation } from '../../api/clientBookings.api';
 
 // Импорт стилей
 import { getCardStyles } from '../../styles/components';
@@ -191,8 +191,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, [location.search, location.state, isAuthenticated, user]);
   
-  // Мутация для создания бронирования (временно отключена)
-  // const [createBooking] = useCreateClientBookingMutation();
+  // Мутация для создания бронирования
+  const [createBooking] = useCreateClientBookingMutation();
   
   // Функции навигации по шагам
   const handleNext = () => {
@@ -238,6 +238,14 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!isCurrentStepValid) return;
     
+    // Дополнительная проверка обязательных полей
+    if (!formData.service_point_id || !formData.booking_date || !formData.start_time || 
+        !formData.client_name || !formData.client_phone || !formData.car_type_id || 
+        !formData.license_plate) {
+      setSubmitError('Не все обязательные поля заполнены');
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitError(null);
     
@@ -256,7 +264,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           car_model: formData.car_model,
         },
         booking: {
-          service_point_id: formData.service_point_id,
+          service_point_id: formData.service_point_id!,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
           notes: formData.notes,
@@ -264,29 +272,44 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         services: formData.services,
       };
       
-      // Временно - показываем успешное сообщение вместо реального API вызова
-      console.log('Booking data would be sent:', bookingData);
+      // Отправляем данные на сервер
+      console.log('Booking data being sent:', bookingData);
       
-      // Имитируем успешное создание
-      setTimeout(() => {
-        alert('Бронирование успешно создано! (демо версия)');
-        navigate('/client/bookings', { replace: true });
-      }, 1000);
+      const result = await createBooking(bookingData).unwrap();
+      console.log('Booking created successfully:', result);
       
-      // TODO: Раскомментировать когда API будет готов
-      // const result = await createBooking(bookingData).unwrap();
-      // navigate(`/client/booking-success/${result.id}`, {
-      //   replace: true,
-      //   state: { bookingData: result }
-      // });
+      // Переходим на страницу успешного создания или список бронирований
+      navigate('/my-bookings', { 
+        replace: true,
+        state: { 
+          bookingCreated: true, 
+          bookingData: result 
+        }
+      });
       
     } catch (error: any) {
       console.error('Ошибка создания бронирования:', error);
-      setSubmitError(
-        error.data?.message || 
-        error.message || 
-        'Произошла ошибка при создании бронирования'
-      );
+      console.error('Детали ошибки:', error.data);
+      
+      let errorMessage = 'Произошла ошибка при создании бронирования';
+      
+      if (error.data) {
+        if (error.data.error) {
+          errorMessage = error.data.error;
+          if (error.data.details) {
+            errorMessage += `: ${Array.isArray(error.data.details) ? error.data.details.join(', ') : error.data.details}`;
+          }
+          if (error.data.reason) {
+            errorMessage += ` (${error.data.reason})`;
+          }
+        } else if (error.data.message) {
+          errorMessage = error.data.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
