@@ -420,11 +420,11 @@ const ServicePointsPage: React.FC = () => {
           startIcon={<AddIcon />}
           onClick={() => {
             if (partnerId) {
-              navigate(`/partners/${partnerId}/service-points/new`);
+              navigate(`/admin/partners/${partnerId}/service-points/new`);
             } else {
               // Если нет partnerId, нужно сначала выбрать партнера
               alert('Для создания сервисной точки необходимо выбрать партнера. Перейдите в раздел "Партнеры" и создайте сервисную точку оттуда.');
-              navigate('/partners');
+              navigate('/admin/partners');
             }
           }}
         >

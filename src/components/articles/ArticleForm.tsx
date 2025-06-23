@@ -217,7 +217,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
 
     if (result?.success) {
       setSuccess(publishStatus === 'published' ? 'Статья опубликована!' : 'Статья сохранена!');
-      setTimeout(() => navigate('/articles'), 1500);
+      setTimeout(() => navigate('/admin/articles'), 1500);
     } else if (result?.error) {
       setError(result.error);
     }
@@ -288,12 +288,14 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
       <Fade in timeout={500}>
         <Box sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <IconButton
-              onClick={() => navigate('/articles')}
-              sx={{ mr: 2, color: colors.textSecondary }}
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/admin/articles')}
+              sx={{ mr: 2, ...secondaryButtonStyles }}
             >
-              <ArrowBackIcon />
-            </IconButton>
+              Назад к списку
+            </Button>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h4" component="h1" sx={{ 
                 fontWeight: 700, 

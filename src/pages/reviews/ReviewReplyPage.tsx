@@ -60,7 +60,7 @@ const ReviewReplyPage: React.FC = () => {
             id: id || '',
             data: { response: values.response } as ReviewUpdateData,
           }).unwrap();
-          navigate('/reviews');
+          navigate('/admin/reviews');
         } catch (error) {
           console.error('Ошибка при сохранении ответа:', error);
         }
@@ -86,7 +86,7 @@ const ReviewReplyPage: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/reviews');
+    navigate('/admin/reviews');
   };
 
   // Отображение состояний загрузки и ошибок

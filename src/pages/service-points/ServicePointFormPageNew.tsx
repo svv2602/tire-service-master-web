@@ -528,7 +528,7 @@ const ServicePointFormPageNew: React.FC = () => {
         }
 
         setTimeout(() => {
-          navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
+          navigate(partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points');
         }, 1000);
       } catch (error: any) {
         console.error('Ошибка при сохранении:', error);
@@ -629,7 +629,7 @@ const ServicePointFormPageNew: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    navigate(partnerId ? `/partners/${partnerId}/service-points` : '/service-points');
+    navigate(partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points');
   };
 
   const handleStepClick = (stepIndex: number) => {
