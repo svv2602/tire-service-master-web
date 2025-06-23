@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест аутентификации и сохранения сессии</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    button {
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    .error {
+      color: #f44336;
+    }
+    .success {
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <h1>Тест аутентификации и сохранения сессии</h1>
+  
+  <div class="container">
+    <h2>Вход в систему</h2>
+    <div>
+      <input type="email" id="email" placeholder="Email" value="admin@test.com">
+      <input type="password" id="password" placeholder="Пароль" value="admin123">
+      <button id="loginBtn">Войти</button>
+    </div>
+    <pre id="loginResult"></pre>
+  </div>
+  
+  <div class="container">
+    <h2>Проверка текущего состояния</h2>
+    <div>
+      <button id="checkAuthBtn">Проверить аутентификацию</button>
+      <button id="checkLocalStorageBtn">Проверить localStorage</button>
+      <button id="checkCookiesBtn">Проверить cookies</button>
+    </div>
+    <pre id="stateResult"></pre>
+  </div>
+  
+  <div class="container">
+    <h2>Получение данных пользователя</h2>
+    <div>
+      <button id="getMeBtn">Получить данные пользователя</button>
+      <button id="refreshTokenBtn">Обновить токен</button>
+    </div>
+    <pre id="userResult"></pre>
+  </div>
+  
+  <div class="container">
+    <h2>Выход из системы</h2>
+    <div>
+      <button id="logoutBtn">Выйти</button>
+    </div>
+    <pre id="logoutResult"></pre>
+  </div>
+  
+  <script>
+    const API_URL = 'http://localhost:8000/api/v1';
+    const AUTH_TOKEN_KEY = 'tvoya_shina_token';
+    
+    // Вход в систему
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const resultElement = document.getElementById('loginResult');
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            auth: {
+              login: email,
+              password: password
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">Успешный вход!</span>\n${JSON.stringify(data, null, 2)}`;
+          
+          // Сохраняем токен в localStorage
+          if (data.tokens && data.tokens.access) {
+            localStorage.setItem(AUTH_TOKEN_KEY, data.tokens.access);
+          }
+        } else {
+          resultElement.innerHTML = `<span class="error">Ошибка: ${data.error || 'Неизвестная ошибка'}</span>`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+    });
+    
+    // Проверка аутентификации
+    document.getElementById('checkAuthBtn').addEventListener('click', () => {
+      const resultElement = document.getElementById('stateResult');
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      
+      resultElement.innerHTML = `Токен в localStorage: ${token ? 'Присутствует' : 'Отсутствует'}
+Токен (первые 20 символов): ${token ? token.substring(0, 20) + '...' : 'N/A'}`;
+    });
+    
+    // Проверка localStorage
+    document.getElementById('checkLocalStorageBtn').addEventListener('click', () => {
+      const resultElement = document.getElementById('stateResult');
+      
+      resultElement.innerHTML = 'Содержимое localStorage:\n';
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        let value = localStorage.getItem(key);
+        
+        // Сокращаем длинные значения
+        if (value && value.length > 50) {
+          value = value.substring(0, 50) + '...';
+        }
+        
+        resultElement.innerHTML += `${key}: ${value}\n`;
+      }
+    });
+    
+    // Проверка cookies
+    document.getElementById('checkCookiesBtn').addEventListener('click', () => {
+      const resultElement = document.getElementById('stateResult');
+      
+      resultElement.innerHTML = 'Cookies:\n' + document.cookie;
+    });
+    
+    // Получение данных пользователя
+    document.getElementById('getMeBtn').addEventListener('click', async () => {
+      const resultElement = document.getElementById('userResult');
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">Данные пользователя получены!</span>\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          resultElement.innerHTML = `<span class="error">Ошибка: ${data.error || 'Неизвестная ошибка'}</span>`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+    });
+    
+    // Обновление токена
+    document.getElementById('refreshTokenBtn').addEventListener('click', async () => {
+      const resultElement = document.getElementById('userResult');
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">Токен обновлен!</span>\n${JSON.stringify(data, null, 2)}`;
+          
+          // Сохраняем новый токен в localStorage
+          if (data.tokens && data.tokens.access) {
+            localStorage.setItem(AUTH_TOKEN_KEY, data.tokens.access);
+          } else if (data.access_token) {
+            localStorage.setItem(AUTH_TOKEN_KEY, data.access_token);
+          }
+        } else {
+          resultElement.innerHTML = `<span class="error">Ошибка: ${data.error || 'Неизвестная ошибка'}</span>`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+    });
+    
+    // Выход из системы
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      const resultElement = document.getElementById('logoutResult');
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      
+      try {
+        const response = await fetch(`${API_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          resultElement.innerHTML = `<span class="success">Выход выполнен успешно!</span>\n${JSON.stringify(data, null, 2)}`;
+          
+          // Удаляем токен из localStorage
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+        } else {
+          resultElement.innerHTML = `<span class="error">Ошибка: ${data.error || 'Неизвестная ошибка'}</span>`;
+        }
+      } catch (error) {
+        resultElement.innerHTML = `<span class="error">Ошибка: ${error.message}</span>`;
+      }
+    });
+  </script>
+</body>
+</html> 
