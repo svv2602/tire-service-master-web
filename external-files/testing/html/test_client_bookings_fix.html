@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅ Тест исправления бронирований клиента</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #007bff; font-weight: bold; }
+        .step { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .result.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .result.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        code { background: #f1f1f1; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>✅ Тест исправления бронирований клиента</h1>
+    
+    <div class="step">
+        <h2>🎯 Что было исправлено:</h2>
+        <ul>
+            <li><strong>BookingStatusEnum</strong> - добавлен статус CONFIRMED (ID=2)</li>
+            <li><strong>MyBookingsPage.tsx</strong> - добавлена вкладка "Подтвержденные"</li>
+            <li><strong>API запрос</strong> - исправлен client_id (вместо user_id)</li>
+            <li><strong>Тестовые данные</strong> - создан клиент и бронирование</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🧪 Инструкции по тестированию:</h2>
+        
+        <h3>1. Авторизация как клиент</h3>
+        <div class="result">
+            <strong>URL:</strong> <code>http://localhost:3008/auth/login</code><br>
+            <strong>Email:</strong> <code>client@test.com</code><br>
+            <strong>Пароль:</strong> <code>client123</code>
+        </div>
+
+        <h3>2. Переход в личный кабинет</h3>
+        <div class="result">
+            <strong>URL:</strong> <code>http://localhost:3008/my-bookings</code><br>
+            <strong>Ожидается:</strong> 4 вкладки: Предстоящие, Подтвержденные, Завершенные, Отмененные
+        </div>
+
+        <h3>3. Проверка данных</h3>
+        <div class="result">
+            <strong>Вкладка "Подтвержденные":</strong> должна содержать 1 запись<br>
+            <strong>Дата:</strong> завтра (2025-06-24)<br>
+            <strong>Время:</strong> 14:00-15:00<br>
+            <strong>Статус:</strong> Подтверждено
+        </div>
+
+        <h3>4. Отладочная информация</h3>
+        <div class="result">
+            В режиме разработки должен быть виден блок с отладочной информацией:<br>
+            <code>Пользователь ID: 7</code><br>
+            <code>Роль пользователя: client</code><br>
+            <code>Client ID: 1</code><br>
+            <code>Количество записей: 1</code>
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>🔍 Что проверить в консоли браузера:</h2>
+        <ul>
+            <li><code>MyBookingsPage - currentUser.role: "client"</code></li>
+            <li><code>MyBookingsPage - clientId: "1"</code></li>
+            <li><code>RTK Query state: {data: {data: Array(1)}, isLoading: false}</code></li>
+            <li><code>Raw bookings data: [{id: 24, status_id: 2, ...}]</code></li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>📊 Ожидаемые результаты:</h2>
+        
+        <div class="result success">
+            <strong>✅ УСПЕХ:</strong> Если видны все 4 вкладки и есть 1 запись в "Подтвержденных"
+        </div>
+
+        <div class="result error">
+            <strong>❌ ПРОБЛЕМА:</strong> Если по-прежнему только 3 вкладки или нет данных
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>🛠️ Данные в базе:</h2>
+        <ul>
+            <li><strong>Клиент:</strong> User ID=7, Client ID=1, Email=client@test.com</li>
+            <li><strong>Бронирование:</strong> ID=24, Status=2 (confirmed), Date=2025-06-24</li>
+            <li><strong>Статусы:</strong> 1=pending, 2=confirmed, 3=cancelled, 4=completed</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🔄 Если проблемы остались:</h2>
+        <ol>
+            <li>Проверьте, что фронтенд перезапущен</li>
+            <li>Очистите кэш браузера (Ctrl+Shift+R)</li>
+            <li>Проверьте консоль разработчика на ошибки</li>
+            <li>Убедитесь, что авторизованы как <code>client@test.com</code>, а не как admin</li>
+        </ol>
+    </div>
+
+    <script>
+        // Автоматическая проверка при загрузке страницы
+        window.onload = function() {
+            console.log('🧪 Тест загружен. Переходите к ручному тестированию по инструкции выше.');
+            
+            // Проверяем localStorage на наличие токена
+            const token = localStorage.getItem('tvoya_shina_token');
+            if (token) {
+                console.log('✅ Токен найден в localStorage:', token.substring(0, 20) + '...');
+            } else {
+                console.log('❌ Токен не найден в localStorage. Требуется авторизация.');
+            }
+        };
+    </script>
+</body>
+</html> 

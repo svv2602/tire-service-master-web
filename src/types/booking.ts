@@ -5,9 +5,10 @@ import { CarBrand, CarModel } from './car';
 import { PaginationFilter } from './models';
 
 export enum BookingStatusEnum {
-  PENDING = 1,
-  COMPLETED = 2,
-  CANCELLED = 3
+  PENDING = 1,      // Ожидает подтверждения
+  CONFIRMED = 2,    // Подтверждено  
+  CANCELLED = 3,    // Отменено
+  COMPLETED = 4     // Завершено
 }
 
 export type BookingStatus = BookingStatusEnum;

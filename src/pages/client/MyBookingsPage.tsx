@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { useSelector } from 'react-redux';
@@ -58,11 +58,49 @@ const MyBookingsPage: React.FC = () => {
     status: BookingStatusEnum.PENDING,
   });
 
+  // Получаем client_id из текущего пользователя
+  // Временное решение: используем отдельный запрос для получения client_id
+  const clientId = currentUser?.role === 'client' ? '1' : null; // Hardcode для тестирования
+
+  // Отладочная информация
+  console.log('MyBookingsPage - currentUser:', currentUser);
+  console.log('MyBookingsPage - currentUser.id:', currentUser?.id);
+  console.log('MyBookingsPage - currentUser.role:', currentUser?.role);
+  console.log('MyBookingsPage - clientId:', clientId);
+  
   // Запрос на получение записей клиента
-  const { data: bookingsData, isLoading, isError, refetch } = useGetBookingsByClientQuery(
-    currentUser?.id ? String(currentUser.id) : '', 
-    { skip: !currentUser?.id }
+  const { data: bookingsData, isLoading, isError, error } = useGetBookingsByClientQuery(
+    clientId ? String(clientId) : '', 
+    { skip: !clientId }
   );
+
+  // Отладочная информация для запроса
+  console.log('MyBookingsPage - RTK Query state:', {
+    data: bookingsData,
+    isLoading,
+    isError,
+    error,
+    currentUserId: currentUser?.id,
+    skip: !currentUser?.id
+  });
+
+  // Детальная отладочная информация для данных
+  if (bookingsData?.data) {
+    console.log('MyBookingsPage - Raw bookings data:', bookingsData.data);
+    console.log('MyBookingsPage - Current filters:', filters);
+    console.log('MyBookingsPage - Filter status:', filters.status);
+    console.log('MyBookingsPage - BookingStatusEnum values:', BookingStatusEnum);
+    
+    bookingsData.data.forEach((booking, index) => {
+      console.log(`Booking ${index}:`, {
+        id: booking.id,
+        status_id: booking.status_id,
+        status: booking.status_id as BookingStatusEnum,
+        filterStatus: filters.status,
+        matches: booking.status_id === filters.status
+      });
+    });
+  }
 
   // Обработчик изменения вкладки
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -72,8 +110,10 @@ const MyBookingsPage: React.FC = () => {
     if (newValue === 0) {
       setFilters({ ...filters, status: BookingStatusEnum.PENDING });
     } else if (newValue === 1) {
-      setFilters({ ...filters, status: BookingStatusEnum.COMPLETED });
+      setFilters({ ...filters, status: BookingStatusEnum.CONFIRMED });
     } else if (newValue === 2) {
+      setFilters({ ...filters, status: BookingStatusEnum.COMPLETED });
+    } else if (newValue === 3) {
       setFilters({ ...filters, status: BookingStatusEnum.CANCELLED });
     }
   };
@@ -83,12 +123,8 @@ const MyBookingsPage: React.FC = () => {
     setFilters({ ...filters, ...newFilters });
   };
 
-  // Эффект для обновления данных при изменении фильтров
-  useEffect(() => {
-    if (currentUser?.id) {
-      refetch();
-    }
-  }, [filters, currentUser, refetch]);
+  // RTK Query автоматически обновляется при изменении параметров
+  // useEffect с refetch не нужен
 
   // Если пользователь не авторизован, показываем предложение войти
   if (!currentUser) {
@@ -101,6 +137,14 @@ const MyBookingsPage: React.FC = () => {
         .filter(booking => booking.status === filters.status)
     : [];
 
+  // Для тестирования - показываем все записи без фильтрации
+  const allConvertedBookings = bookingsData?.data
+    ? bookingsData.data.map(convertBooking)
+    : [];
+
+  console.log('MyBookingsPage - convertedBookings:', convertedBookings);
+  console.log('MyBookingsPage - allConvertedBookings (без фильтра):', allConvertedBookings);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
@@ -108,6 +152,39 @@ const MyBookingsPage: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         {t('Мои записи')}
       </Typography>
+
+      {/* Отладочная информация в режиме разработки */}
+      {process.env.NODE_ENV === 'development' && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
+          <Typography variant="h6" gutterBottom>🔍 Отладочная информация</Typography>
+          <Typography variant="body2">Пользователь ID: {currentUser?.id || 'Не найден'}</Typography>
+          <Typography variant="body2">Роль пользователя: {currentUser?.role || 'Не найдена'}</Typography>
+          <Typography variant="body2">Client ID: {clientId || 'Не найден'}</Typography>
+          <Typography variant="body2">Загрузка: {isLoading ? 'Да' : 'Нет'}</Typography>
+          <Typography variant="body2">Ошибка: {isError ? 'Да' : 'Нет'}</Typography>
+          <Typography variant="body2">Данные получены: {bookingsData ? 'Да' : 'Нет'}</Typography>
+          <Typography variant="body2">Количество записей: {bookingsData?.data?.length || 0}</Typography>
+          <Typography variant="body2">Текущий фильтр статус: {filters.status}</Typography>
+          <Typography variant="body2">Отфильтровано записей: {convertedBookings.length}</Typography>
+          <Typography variant="body2">Активная вкладка: {tabValue}</Typography>
+          {bookingsData?.data && bookingsData.data.length > 0 && (
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2" fontWeight="bold">Статусы записей:</Typography>
+              {bookingsData.data.map((booking, index) => (
+                <Typography key={index} variant="body2" sx={{ ml: 2 }}>
+                  Запись {booking.id}: status_id={booking.status_id} 
+                  {booking.status_id === filters.status ? ' ✅' : ' ❌'}
+                </Typography>
+              ))}
+            </Box>
+          )}
+          {error && (
+            <Typography variant="body2" color="error">
+              Детали ошибки: {JSON.stringify(error)}
+            </Typography>
+          )}
+        </Paper>
+      )}
       
       <Paper sx={{ mb: 3 }}>
         <Tabs 
@@ -118,6 +195,7 @@ const MyBookingsPage: React.FC = () => {
           variant="fullWidth"
         >
           <Tab label={t('Предстоящие')} />
+          <Tab label={t('Подтвержденные')} />
           <Tab label={t('Завершенные')} />
           <Tab label={t('Отмененные')} />
         </Tabs>
@@ -139,6 +217,15 @@ const MyBookingsPage: React.FC = () => {
           <BookingsList 
             bookings={convertedBookings} 
           />
+        ) : allConvertedBookings.length > 0 ? (
+          <Box>
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              ⚠️ Записи найдены, но не соответствуют текущему фильтру. Показаны все записи для диагностики:
+            </Alert>
+            <BookingsList 
+              bookings={allConvertedBookings} 
+            />
+          </Box>
         ) : (
           <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
         )}
