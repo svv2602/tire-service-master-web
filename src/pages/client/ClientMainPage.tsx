@@ -349,7 +349,7 @@ const ClientMainPage: React.FC = () => {
                   color: theme.palette.primary.main,
                   '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
                 }}
-                onClick={() => navigate('/client/booking')}
+                onClick={() => navigate('/client/booking/new-with-availability')}
               >
                 {ctaContent?.settings?.primary_button_text || 'Записатися онлайн'}
               </Button>

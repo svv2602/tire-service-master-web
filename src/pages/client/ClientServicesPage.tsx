@@ -376,7 +376,7 @@ const ClientServicesPage: React.FC = () => {
                       fullWidth
                       variant="contained" 
                       sx={buttonStyles}
-                      onClick={() => navigate('/client/booking', { state: { service } })}
+                      onClick={() => navigate('/client/booking/new-with-availability', { state: { service } })}
                     >
                       Записаться на услугу
                     </Button>
