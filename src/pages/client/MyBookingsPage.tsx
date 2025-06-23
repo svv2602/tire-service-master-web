@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert } from '@mui/material';
+import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import BookingsList from '../../components/bookings/BookingsList';
 import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import { BookingStatusEnum } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
 import { Booking as ModelBooking } from '../../types/models';
 import { Booking } from '../../types/booking';
+import { getThemeColors, getButtonStyles } from '../../styles';
 
 // Функция для конвертации типов Booking
 const convertBooking = (modelBooking: ModelBooking): Booking => {
@@ -46,6 +48,10 @@ interface BookingsFilter {
 
 const MyBookingsPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  
   const currentUser = useSelector(selectCurrentUser);
   const [tabValue, setTabValue] = useState<number>(0);
   const [filters, setFilters] = useState<BookingsFilter>({
@@ -96,7 +102,9 @@ const MyBookingsPage: React.FC = () => {
     : [];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
+      <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         {t('Мои записи')}
       </Typography>
@@ -135,7 +143,8 @@ const MyBookingsPage: React.FC = () => {
           <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
         )}
       </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

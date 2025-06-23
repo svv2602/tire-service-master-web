@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, Button } from '@mui/material';
+import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, Button, useTheme } from '@mui/material';
 import { useGetReviewsByClientQuery } from '../../api/reviews.api';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import { useTranslation } from 'react-i18next';
 import ReviewsList from '../../components/reviews/ReviewsList';
 import LoginPrompt from '../../components/auth/LoginPrompt';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { ReviewStatus, Review as ReviewType } from '../../types/review';
 import { Review as ModelReview } from '../../types/models';
+import { getThemeColors, getButtonStyles } from '../../styles';
 
 // Функция для конвертации типов Review
 const convertReview = (modelReview: ModelReview): ReviewType => {
@@ -35,6 +37,10 @@ interface ReviewsFilter {
 
 const MyReviewsPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  
   const currentUser = useSelector(selectCurrentUser);
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState<number>(0);
@@ -78,7 +84,9 @@ const MyReviewsPage: React.FC = () => {
     : [];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
+      <Container maxWidth="lg" sx={{ py: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" component="h1">
           {t('Мои отзывы')}
@@ -139,7 +147,8 @@ const MyReviewsPage: React.FC = () => {
           </Paper>
         )}
       </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

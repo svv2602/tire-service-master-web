@@ -14,6 +14,7 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import { 
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
@@ -38,6 +39,7 @@ import {
 
 // Импорт стилей
 import { getCardStyles, getTablePageStyles } from '../../styles/components';
+import { getThemeColors, getButtonStyles } from '../../styles';
 
 // Типы для данных формы
 export interface BookingFormData {
@@ -128,6 +130,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const tablePageStyles = getTablePageStyles(theme);
+  const colors = getThemeColors(theme);
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   
   // Получаем информацию об аутентификации
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -304,8 +308,9 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   };
   
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3 }}>
-      <Box sx={tablePageStyles.pageContainer}>
+    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
+      <Box sx={{ ...tablePageStyles.pageContainer, py: 3 }}>
         {/* Заголовок */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button

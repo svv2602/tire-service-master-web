@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import {
   Box,
   Container,
@@ -19,8 +20,6 @@ import {
   MenuItem,
   Fade,
   useTheme,
-  AppBar,
-  Toolbar,
   Breadcrumbs
 } from '@mui/material';
 import {
@@ -44,7 +43,6 @@ import {
   getThemeColors,
   ANIMATIONS
 } from '../../styles';
-import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const ClientServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -162,26 +160,7 @@ const ClientServicesPage: React.FC = () => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       {/* Навигация */}
-      <AppBar position="static" sx={{ bgcolor: colors.backgroundCard, boxShadow: 1 }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: colors.textPrimary, fontWeight: 700 }}>
-            🚗 Твоя Шина
-          </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
-              Главная
-            </Button>
-            <Button color="inherit" component={Link} to="/knowledge-base" sx={{ color: colors.textSecondary }}>
-              База знаний
-            </Button>
-            <ThemeToggle />
-            <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
-              Войти
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Хлебные крошки */}

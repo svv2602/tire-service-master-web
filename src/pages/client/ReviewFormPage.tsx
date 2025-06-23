@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Paper, Button, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Container, Typography, Box, Paper, Button, CircularProgress, Alert, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, useTheme } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -9,12 +9,18 @@ import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { ReviewFormData } from '../../types/review';
 import ReviewForm from '../../components/reviews/ReviewForm';
 import LoginPrompt from '../../components/auth/LoginPrompt';
+import ClientNavigation from '../../components/client/ClientNavigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Booking as ModelBooking } from '../../types/models';
+import { getThemeColors, getButtonStyles } from '../../styles';
 
 const ReviewFormPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  
   const { servicePointId } = useParams<{ servicePointId?: string }>();
   const currentUser = useSelector(selectCurrentUser);
   const [selectedBookingId, setSelectedBookingId] = useState<string>('');
@@ -74,7 +80,9 @@ const ReviewFormPage: React.FC = () => {
   const completedBookings = bookingsData?.data.filter(booking => booking.status_id === 2) || [];
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
+      <Container maxWidth="md" sx={{ py: 4 }}>
       <Box mb={3} display="flex" alignItems="center">
         <Button 
           startIcon={<ArrowBackIcon />} 
@@ -143,7 +151,8 @@ const ReviewFormPage: React.FC = () => {
           />
         </>
       )}
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
