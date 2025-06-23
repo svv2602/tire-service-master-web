@@ -120,10 +120,15 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
   ];
 
   const handleBooking = () => {
-    navigate('/client/booking', { 
+    navigate('/client/booking/new-with-availability', { 
       state: { 
         servicePointId: servicePoint.id,
-        servicePointName: servicePoint.name 
+        servicePointName: servicePoint.name,
+        cityId: servicePoint.city.id,
+        cityName: servicePoint.city.name,
+        partnerId: servicePoint.partner.id,
+        partnerName: servicePoint.partner.name,
+        step1Completed: true // Указываем, что данные для шага 1 уже заполнены
       } 
     });
   };
@@ -449,21 +454,33 @@ const ClientSearchPage: React.FC = () => {
             </Typography>
           )}
 
-          {/* Статистика */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Chip 
-              label={`Знайдено: ${totalFound}`} 
-              color="primary" 
-              variant="outlined" 
-            />
-            {cityFound && searchParams.city && (
+          {/* Статистика и кнопка возврата */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
               <Chip 
-                label={`Місто знайдено`} 
-                color="success" 
-                size="small" 
+                label={`Знайдено: ${totalFound}`} 
+                color="primary" 
                 variant="outlined" 
               />
-            )}
+              {cityFound && searchParams.city && (
+                <Chip 
+                  label={`Місто знайдено`} 
+                  color="success" 
+                  size="small" 
+                  variant="outlined" 
+                />
+              )}
+            </Box>
+            
+            <Button
+              variant="outlined"
+              startIcon={<HomeIcon />}
+              component={Link}
+              to="/client"
+              sx={secondaryButtonStyles}
+            >
+              На головну
+            </Button>
           </Box>
         </Box>
 
