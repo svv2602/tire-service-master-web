@@ -195,7 +195,7 @@ const PageContentPage: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/page-content/new')}
+            onClick={() => navigate('/admin/page-content/new')}
           >
             Создать контент
           </Button>
@@ -304,7 +304,7 @@ const PageContentPage: React.FC = () => {
                   <Box>
                     <IconButton
                       size="small"
-                      onClick={() => navigate(`/page-content/${page.id}/edit`)}
+                      onClick={() => navigate(`/admin/page-content/${page.id}/edit`)}
                       color="primary"
                     >
                       <EditIcon />

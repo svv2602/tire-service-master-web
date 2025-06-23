@@ -216,7 +216,7 @@ const RegionsManagementPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/regions/new')}
+          onClick={() => navigate('/admin/regions/new')}
         >
           Добавить регион
         </Button>
@@ -327,7 +327,7 @@ const RegionsManagementPage: React.FC = () => {
                       <Tooltip title="Редактировать">
                         <IconButton 
                           size="small"
-                          onClick={() => navigate(`/regions/${region.id}/edit`)}
+                          onClick={() => navigate(`/admin/regions/${region.id}/edit`)}
                         >
                           <EditIcon />
                         </IconButton>

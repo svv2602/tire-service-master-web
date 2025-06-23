@@ -394,7 +394,7 @@ const PartnerFormPage: React.FC = () => {
       }
       
       // Возвращаемся на список после успешного сохранения
-      navigate('/partners');
+      navigate('/admin/partners');
     } catch (error: any) {
       console.error('Ошибка при сохранении партнера:', error);
       
@@ -582,7 +582,7 @@ const PartnerFormPage: React.FC = () => {
   // Обработчики для сервисных точек
   const handleEditServicePoint = (servicePointId: number) => {
     if (id) {
-      navigate(`/partners/${id}/service-points/${servicePointId}/edit`);
+      navigate(`/admin/partners/${id}/service-points/${servicePointId}/edit`);
     }
   };
 
@@ -593,7 +593,7 @@ const PartnerFormPage: React.FC = () => {
 
   const handleAddServicePoint = () => {
     if (id) {
-      navigate(`/partners/${id}/service-points/new`);
+      navigate(`/admin/partners/${id}/service-points/new`);
     }
   };
 
@@ -646,7 +646,7 @@ const PartnerFormPage: React.FC = () => {
       }}>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/partners')}
+          onClick={() => navigate('/admin/partners')}
           sx={{ 
             ...secondaryButtonStyles,
             mr: SIZES.spacing.md 
@@ -1034,7 +1034,7 @@ const PartnerFormPage: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: 2 }}>
                     <Button
                       variant="outlined"
-                      onClick={() => navigate('/partners')}
+                      onClick={() => navigate('/admin/partners')}
                       sx={secondaryButtonStyles}
                     >
                       Отмена

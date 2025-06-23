@@ -295,7 +295,7 @@ const ArticlesPage: React.FC = () => {
           <Tooltip title="Редактировать">
             <IconButton
               size="small"
-              onClick={() => navigate(`/articles/${row.id}/edit`)}
+              onClick={() => navigate(`/admin/articles/${row.id}/edit`)}
               sx={{ color: theme.palette.success.main }}
             >
               <EditIcon fontSize="small" />
@@ -339,7 +339,7 @@ const ArticlesPage: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/articles/new')}
+            onClick={() => navigate('/admin/articles/new')}
           >
             Создать статью
           </Button>
@@ -488,7 +488,7 @@ const ArticlesPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => navigate('/articles/new')}
+              onClick={() => navigate('/admin/articles/new')}
             >
               Создать первую статью
             </Button>

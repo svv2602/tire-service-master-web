@@ -228,7 +228,7 @@ const MyReviewsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/reviews/new')}
+          onClick={() => navigate('/admin/reviews/new')}
         >
           Написать отзыв
         </Button>

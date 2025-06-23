@@ -149,7 +149,7 @@ const PageContentFormPage: React.FC = () => {
         await createPage(formData as CreatePageContentRequest).unwrap();
       }
       
-      navigate('/page-content');
+      navigate('/admin/page-content');
     } catch (error) {
       console.error('Ошибка при сохранении:', error);
     }
@@ -184,7 +184,7 @@ const PageContentFormPage: React.FC = () => {
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="outlined"
-            onClick={() => navigate('/page-content')}
+            onClick={() => navigate('/admin/page-content')}
           >
             Отмена
           </Button>

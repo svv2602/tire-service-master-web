@@ -139,15 +139,15 @@ const ClientsPage: React.FC = () => {
   }, []);
 
   const handleAddClient = useCallback(() => {
-    navigate('/clients/new');
+    navigate('/admin/clients/new');
   }, [navigate]);
 
   const handleEditClient = useCallback((id: string) => {
-    navigate(`/clients/${id}/edit`);
+    navigate(`/admin/clients/${id}/edit`);
   }, [navigate]);
 
   const handleViewCars = useCallback((id: string) => {
-    navigate(`/clients/${id}/cars`);
+    navigate(`/admin/clients/${id}/cars`);
   }, [navigate]);
 
   const handleToggleStatus = useCallback(async (client: Client) => {

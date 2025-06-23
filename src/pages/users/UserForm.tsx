@@ -277,7 +277,7 @@ const UserForm: React.FC = () => {
       }}>
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/users')}
+          onClick={() => navigate('/admin/users')}
           sx={{ 
             ...secondaryButtonStyles,
             mr: SIZES.spacing.md 
@@ -525,7 +525,7 @@ const UserForm: React.FC = () => {
               }}>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/users')}
+                  onClick={() => navigate('/admin/users')}
                   disabled={isLoading}
                   sx={secondaryButtonStyles}
                 >

@@ -152,7 +152,7 @@ const ArticleViewPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<EditIcon />}
-              onClick={() => navigate(`/articles/${article.id}/edit`)}
+              onClick={() => navigate(`/admin/articles/${article.id}/edit`)}
               sx={buttonStyles}
               size="small"
             >

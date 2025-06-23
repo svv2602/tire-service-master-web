@@ -83,7 +83,7 @@ const ClientCarsPage: React.FC = () => {
   }, [selectedCar, deleteCar, clientId]);
 
   const handleEditClick = useCallback((carId: number) => {
-    navigate(`/clients/${clientId}/cars/${carId}/edit`);
+    navigate(`/admin/clients/${clientId}/cars/${carId}/edit`);
   }, [navigate, clientId]);
 
   // Конфигурация колонок таблицы
@@ -186,7 +186,7 @@ const ClientCarsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate(`/clients/${clientId}/cars/new`)}
+          onClick={() => navigate(`/admin/clients/${clientId}/cars/new`)}
           sx={tablePageStyles.createButton}
         >
           Добавить автомобиль

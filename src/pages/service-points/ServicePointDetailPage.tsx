@@ -56,15 +56,15 @@ const ServicePointDetailPage: React.FC = () => {
   );
 
   const handleBack = () => {
-    navigate('/service-points');
+    navigate('/admin/service-points');
   };
 
   const handleEdit = () => {
-    navigate(`/service-points/${id}/edit`);
+    navigate(`/admin/service-points/${id}/edit`);
   };
 
   const handlePhotos = () => {
-    navigate(`/service-points/${id}/photos`);
+    navigate(`/admin/service-points/${id}/photos`);
   };
 
   if (error) {

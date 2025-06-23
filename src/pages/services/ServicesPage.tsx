@@ -203,7 +203,7 @@ const ServicesPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/services/new')}
+          onClick={() => navigate('/admin/services/new')}
           sx={tablePageStyles.primaryButton}
         >
           Добавить категорию
@@ -367,7 +367,7 @@ const ServicesPage: React.FC = () => {
                 <Tooltip title="Редактировать">
                   <IconButton 
                     size="small"
-                    onClick={() => navigate(`/services/${category.id}/edit`)}
+                    onClick={() => navigate(`/admin/services/${category.id}/edit`)}
                     sx={tablePageStyles.actionButton}
                   >
                     <EditIcon fontSize="small" />
@@ -428,7 +428,7 @@ const ServicesPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => navigate('/services/new')}
+              onClick={() => navigate('/admin/services/new')}
               sx={tablePageStyles.primaryButton}
             >
               Добавить категорию

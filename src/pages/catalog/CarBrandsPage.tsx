@@ -266,7 +266,7 @@ const CarBrandsPage: React.FC = () => {
           <Tooltip title="Редактировать">
             <IconButton 
               size="small"
-              onClick={() => navigate(`/car-brands/${brand.id}/edit`)}
+              onClick={() => navigate(`/admin/car-brands/${brand.id}/edit`)}
               sx={{ 
                 color: theme.palette.primary.main,
                 '&:hover': {
@@ -341,7 +341,7 @@ const CarBrandsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/car-brands/new')}
+          onClick={() => navigate('/admin/car-brands/new')}
         >
           Добавить бренд
         </Button>

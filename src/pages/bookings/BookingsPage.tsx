@@ -191,7 +191,7 @@ const BookingsPage: React.FC = () => {
           <Box sx={tablePageStyles.actionsContainer}>
             <Tooltip title="Редактировать">
               <IconButton
-                onClick={() => navigate(`/bookings/${booking.id}/edit`)}
+                onClick={() => navigate(`/admin/bookings/${booking.id}/edit`)}
                 size="small"
                 sx={tablePageStyles.actionButton}
               >

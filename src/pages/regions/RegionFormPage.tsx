@@ -96,7 +96,7 @@ export const RegionFormPage: React.FC = () => {
         } else {
           await createRegion(values).unwrap();
         }
-        navigate('/regions');
+        navigate('/admin/regions');
       } catch (error: any) {
         console.error('Submit error:', error);
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
@@ -108,7 +108,7 @@ export const RegionFormPage: React.FC = () => {
    * Обработчик возврата к списку регионов
    */
   const handleBack = () => {
-    navigate('/regions');
+    navigate('/admin/regions');
   };
 
   // Состояние загрузки для режима редактирования

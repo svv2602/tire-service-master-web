@@ -168,7 +168,7 @@ const BookingFormPage: React.FC = () => {
         }
         
         setTimeout(() => {
-          navigate('/bookings');
+          navigate('/admin/bookings');
         }, 1500);
       } catch (err) {
         console.error('Ошибка при сохранении бронирования:', err);
@@ -246,11 +246,11 @@ const BookingFormPage: React.FC = () => {
   }, [formik]);
 
   const handleBack = useCallback(() => {
-    navigate('/bookings');
+    navigate('/admin/bookings');
   }, [navigate]);
 
   const handleCancel = useCallback(() => {
-    navigate('/bookings');
+    navigate('/admin/bookings');
   }, [navigate]);
   
   // Получение централизованных стилей для консистентного дизайна

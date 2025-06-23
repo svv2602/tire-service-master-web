@@ -137,7 +137,7 @@ const CarBrandsPage: React.FC = () => {
   }, []);
 
   const handleEditClick = useCallback((brandId: number) => {
-    navigate(`/car-brands/${brandId}/edit`);
+    navigate(`/admin/car-brands/${brandId}/edit`);
   }, [navigate]);
 
   const handleToggleActive = useCallback(async (brand: CarBrand) => {
@@ -342,7 +342,7 @@ const CarBrandsPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/car-brands/new')}
+          onClick={() => navigate('/admin/car-brands/new')}
           sx={tablePageStyles.createButton}
         >
           Добавить бренд

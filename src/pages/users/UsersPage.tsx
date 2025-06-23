@@ -128,11 +128,11 @@ export const UsersPage: React.FC = () => {
 
   // Обработчики событий
   const handleCreate = useCallback(() => {
-    navigate('/users/new');
+    navigate('/admin/users/new');
   }, [navigate]);
 
   const handleEdit = useCallback((id: number) => {
-    navigate(`/users/${id}/edit`);
+    navigate(`/admin/users/${id}/edit`);
   }, [navigate]);
 
   const handleDelete = useCallback((id: number) => {

@@ -136,7 +136,7 @@ const PartnersPage: React.FC = () => {
   }, []);
 
   const handleEditPartner = useCallback((id: number) => {
-    navigate(`/partners/${id}/edit`);
+    navigate(`/admin/partners/${id}/edit`);
   }, [navigate]);
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -330,7 +330,7 @@ const PartnersPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/partners/new')}
+          onClick={() => navigate('/admin/partners/new')}
           sx={tablePageStyles.createButton}
         >
           Добавить партнера

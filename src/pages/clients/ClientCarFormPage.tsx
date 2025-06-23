@@ -120,7 +120,7 @@ const ClientCarFormPage: React.FC = () => {
         } else if (clientId) {
           await createCar({ clientId, data: values }).unwrap();
         }
-        navigate(`/clients/${clientId}/cars`);
+        navigate(`/admin/clients/${clientId}/cars`);
       } catch (error) {
         console.error('Ошибка при сохранении автомобиля:', error);
       }
@@ -131,7 +131,7 @@ const ClientCarFormPage: React.FC = () => {
    * Мемоизированный обработчик отмены операции
    */
   const handleCancel = useCallback(() => {
-    navigate(`/clients/${clientId}/cars`);
+    navigate(`/admin/clients/${clientId}/cars`);
   }, [navigate, clientId]);
 
   /**

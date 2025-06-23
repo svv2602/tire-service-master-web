@@ -109,7 +109,7 @@ export const ServicesPage: React.FC = () => {
   }, []);
 
   const handleEditCategory = useCallback((categoryId: number) => {
-    navigate(`/services/${categoryId}/edit`);
+    navigate(`/admin/services/${categoryId}/edit`);
   }, [navigate]);
 
   /**
@@ -246,7 +246,7 @@ export const ServicesPage: React.FC = () => {
    * Обработчик перехода к созданию новой категории
    */
   const handleAddCategory = () => {
-    navigate('/services/new');
+    navigate('/admin/services/new');
   };
 
   /**

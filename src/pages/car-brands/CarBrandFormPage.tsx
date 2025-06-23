@@ -133,7 +133,7 @@ export const CarBrandFormPage: React.FC = () => {
           console.log('Sending create data:', createData);
           await createBrand(createData).unwrap();
         }
-        navigate('/car-brands');
+        navigate('/admin/car-brands');
       } catch (error: any) {
         console.error('Submit error:', error);
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
@@ -145,7 +145,7 @@ export const CarBrandFormPage: React.FC = () => {
    * Обработчик возврата к списку брендов
    */
   const handleBack = () => {
-    navigate('/car-brands');
+    navigate('/admin/car-brands');
   };
 
   /**

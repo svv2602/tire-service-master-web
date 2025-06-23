@@ -130,7 +130,7 @@ const ClientFormPage: React.FC = () => {
           
           setSnackbarMessage('Клиент успешно обновлен');
           setSnackbarOpen(true);
-          navigate('/clients');
+          navigate('/admin/clients');
         } else {
           // Создание нового клиента
           const createData: ClientCreateData = {
@@ -153,7 +153,7 @@ const ClientFormPage: React.FC = () => {
           
           setSnackbarMessage('Клиент успешно создан');
           setSnackbarOpen(true);
-          navigate('/clients');
+          navigate('/admin/clients');
         }
       } catch (error) {
         console.error('Error saving client:', error);
@@ -168,7 +168,7 @@ const ClientFormPage: React.FC = () => {
 
   // Мемоизированный обработчик навигации
   const handleCancel = useCallback(() => {
-    navigate('/clients');
+    navigate('/admin/clients');
   }, [navigate]);
 
   // Функция для извлечения сообщения об ошибке

@@ -95,7 +95,7 @@ export const ServiceFormPage: React.FC = () => {
         } else {
           await createCategory(values).unwrap();
         }
-        navigate('/services');
+        navigate('/admin/services');
       } catch (error: any) {
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
       }
@@ -106,7 +106,7 @@ export const ServiceFormPage: React.FC = () => {
    * Обработчик возврата к списку категорий
    */
   const handleBack = () => {
-    navigate('/services');
+    navigate('/admin/services');
   };
 
   // Состояние загрузки для режима редактирования
