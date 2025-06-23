@@ -41,6 +41,15 @@ import {
 // Импорт API для работы с контентом
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
 import { useGetFeaturedArticlesQuery } from '../../api/articles.api';
+import { useGetCitiesWithServicePointsQuery } from '../../api/cities.api';
+
+// Интерфейс для города с сервисными точками
+interface CityWithServicePoints {
+  id: number;
+  name: string;
+  region_name?: string;
+  service_points_count?: number;
+}
 
 const ClientMainPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,29 +62,34 @@ const ClientMainPage: React.FC = () => {
   
   // Состояние для поиска
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCity, setSelectedCity] = useState<string | null>('Київ');
+  const [selectedCity, setSelectedCity] = useState<CityWithServicePoints | null>(null);
   
   // API запросы для контента
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
     section: 'client_main'
   });
   const { data: articlesData } = useGetFeaturedArticlesQuery();
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
   
   // Получаем данные контента из API
   const pageContent = pageContentData?.data || [];
+  
+  // Получаем города с сервисными точками
+  const cities: CityWithServicePoints[] = citiesData?.data || [];
   
   // Получаем контент по типам
   const heroContent = pageContent.find(item => item.content_type === 'hero');
   const ctaContent = pageContent.find(item => item.content_type === 'cta');
   const footerContent = pageContent.find(item => item.content_type === 'text_block' && item.settings?.type === 'footer');
-  
-  // Украинские города (fallback если нет в API)
-  const cities = [
-    'Київ', 'Харків', 'Одеса', 'Дніпро', 'Запоріжжя', 'Львів', 'Кривий Ріг', 'Миколаїв'
-  ];
 
   const handleSearch = () => {
-    navigate(`/client/search?city=${selectedCity}&query=${searchQuery}`);
+    if (!selectedCity) {
+      // Если город не выбран, показываем общий поиск
+      navigate(`/client/search?query=${encodeURIComponent(searchQuery)}`);
+    } else {
+      // Если город выбран, используем его в поиске
+      navigate(`/client/search?city=${encodeURIComponent(selectedCity.name)}&query=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   // Используем данные из API или fallback
@@ -112,7 +126,7 @@ const ClientMainPage: React.FC = () => {
     }
   ];
 
-  if (contentLoading) {
+  if (contentLoading || citiesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <Typography>Завантаження...</Typography>
@@ -157,15 +171,28 @@ const ClientMainPage: React.FC = () => {
                 {/* Поиск */}
                 <Paper sx={{ p: 2, borderRadius: SIZES.borderRadius.lg }}>
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={4}>
+                    <Grid item xs={12} sm={6}>
                       <Autocomplete
                         value={selectedCity}
                         onChange={(event, newValue) => setSelectedCity(newValue)}
                         options={cities}
+                        getOptionLabel={(option) => option.name}
+                        renderOption={(props, option) => (
+                          <Box component="li" {...props}>
+                            <Box>
+                              <Typography variant="body1">{option.name}</Typography>
+                              {option.region_name && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {option.region_name}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        )}
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label={currentHero.settings?.city_placeholder || 'Місто'}
+                            label={currentHero.settings?.city_placeholder || 'Оберіть місто'}
                             fullWidth
                             InputProps={{
                               ...params.InputProps,
@@ -173,15 +200,19 @@ const ClientMainPage: React.FC = () => {
                             }}
                           />
                         )}
+                        noOptionsText="Городи не знайдені"
+                        loadingText="Завантаження..."
+                        loading={citiesLoading}
                       />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={4}>
                       <TextField
                         fullWidth
-                        label={currentHero.settings?.search_placeholder || 'Знайти сервіс або послугу'}
+                        label="Пошук за назвою сервісу (необов'язково)"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Введіть назву сервісу..."
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
