@@ -5,13 +5,13 @@ import {
   Box,
   Typography,
   Grid,
-  Alert,
   Autocomplete,
   TextField,
   CircularProgress,
-  FormHelperText
+  FormHelperText,
+  Alert,
 } from '@mui/material';
-import { Info as InfoIcon, LocationOn as LocationIcon } from '@mui/icons-material';
+import { Info as InfoIcon, LocationOn as LocationIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
 // Импорт API хуков
@@ -22,8 +22,6 @@ import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api'
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 import { City, ServicePoint } from '../../../types/models';
-
-// Импорт компонента карточки
 import { ServicePointCard, ServicePointData } from '../../../components/ui/ServicePointCard';
 
 interface CityServicePointStepProps {
@@ -39,46 +37,50 @@ const convertServicePointToServicePointData = (servicePoint: ServicePoint): Serv
   return {
     id: servicePoint.id,
     name: servicePoint.name,
-    address: servicePoint.address,
+    address: servicePoint.address || '',
     description: servicePoint.description,
     city: servicePoint.city ? {
       id: servicePoint.city.id,
       name: servicePoint.city.name,
-      region: servicePoint.city.region?.name || ''
+      region: servicePoint.city.region?.name
     } : undefined,
-    partner: servicePoint.partner,
-    contact_phone: servicePoint.contact_phone,
-    average_rating: (servicePoint as any).average_rating,
-    reviews_count: (servicePoint as any).reviews_count,
+    partner: servicePoint.partner ? {
+      id: servicePoint.partner.id,
+      name: servicePoint.partner.company_name || servicePoint.partner.name || ''
+    } : undefined,
+    contact_phone: servicePoint.contact_phone || servicePoint.phone,
     work_status: servicePoint.work_status,
     is_active: servicePoint.is_active,
     photos: servicePoint.photos?.map(photo => ({
-      ...photo,
+      id: photo.id,
+      url: photo.url || '',
+      description: photo.description,
+      is_main: photo.is_main || false,
       sort_order: photo.sort_order || 0
-    }))
+    })) || [],
   };
 };
 
-// Компонент-обертка для карточки с хуками
+// Обертка для ServicePointCard с загрузкой услуг
 const ServicePointCardWrapper: React.FC<{
   servicePoint: ServicePoint;
   isSelected: boolean;
   onSelect: (servicePointData: ServicePointData) => void;
 }> = ({ servicePoint, isSelected, onSelect }) => {
-  // Загрузка услуг для данной точки обслуживания
-  const { data: servicesData, isLoading: isLoadingServices } = useGetServicePointServicesQuery(servicePoint.id.toString());
-  const services = (servicesData as any)?.data || [];
+  const { data: servicesData } = useGetServicePointServicesQuery(servicePoint.id.toString());
+  
+  const servicePointData = convertServicePointToServicePointData(servicePoint);
+  const services = servicesData || [];
 
   return (
     <Grid item xs={12} md={6} lg={4}>
       <ServicePointCard
-        servicePoint={convertServicePointToServicePointData(servicePoint)}
+        servicePoint={servicePointData}
+        variant="compact"
         isSelected={isSelected}
-        onSelect={onSelect}
+        onSelect={() => onSelect(servicePointData)}
         showSelectButton={true}
         services={services}
-        isLoadingServices={isLoadingServices}
-        variant="compact"
       />
     </Grid>
   );
@@ -87,6 +89,7 @@ const ServicePointCardWrapper: React.FC<{
 const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   formData,
   setFormData,
+  onNext,
   isValid,
 }) => {
   const theme = useTheme();
@@ -105,6 +108,21 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   // Получаем списки из данных API с мемоизацией
   const cities = useMemo(() => citiesData?.data || [], [citiesData]);
   const servicePoints = useMemo(() => servicePointsData?.data || [], [servicePointsData]);
+  
+  // Функция для получения списка незаполненных обязательных полей
+  const getRequiredFieldErrors = () => {
+    const errors: string[] = [];
+    
+    if (!formData.city_id) {
+      errors.push('Город');
+    }
+    
+    if (!formData.service_point_id) {
+      errors.push('Точка обслуживания');
+    }
+    
+    return errors;
+  };
   
   // Устанавливаем выбранный город при изменении formData
   useEffect(() => {
@@ -144,6 +162,12 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
     
     // Если пользователь выбрал точку обслуживания вручную, значит данные больше не предзаполнены
     setAutoFilledData(false);
+    
+    // Автоматический переход к следующему шагу через небольшую задержку
+    // Это позволяет пользователю увидеть, что выбор принят
+    setTimeout(() => {
+      onNext();
+    }, 800);
   };
   
   return (
@@ -163,6 +187,17 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         </Alert>
       )}
       
+      {/* Уведомление о автоматическом переходе */}
+      {isValid && !autoFilledData && (
+        <Alert 
+          severity="success" 
+          icon={<CheckCircleIcon />}
+          sx={{ mb: 3 }}
+        >
+          ✅ Город и точка обслуживания выбраны. Переход к выбору даты и времени через несколько секунд...
+        </Alert>
+      )}
+      
       <Grid container spacing={3}>
         {/* Выбор города */}
         <Grid item xs={12}>
@@ -175,10 +210,9 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Город"
-                placeholder="Выберите город"
-                error={!formData.city_id && !isLoadingCities}
-                helperText={!formData.city_id && !isLoadingCities ? 'Выберите город для продолжения' : ''}
+                label="Город *"
+                placeholder="Выберите город для продолжения"
+                required
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
@@ -209,7 +243,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         {selectedCity && (
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Доступные точки обслуживания в г. {selectedCity.name}
+              Доступные точки обслуживания в г. {selectedCity.name} *
             </Typography>
             
             {isLoadingServicePoints ? (
@@ -243,23 +277,26 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         )}
       </Grid>
       
-      {/* Валидация */}
-      {!formData.city_id && selectedCity === null && (
-        <FormHelperText error sx={{ mt: 2 }}>
-          Выберите город для продолжения
-        </FormHelperText>
+      {/* Уведомление о незаполненных обязательных полях */}
+      {(!isValid) && (
+        <Alert severity="warning" sx={{ mt: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Заполните все обязательные поля:
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+            {getRequiredFieldErrors().map((field, index) => (
+              <Typography variant="body2" component="li" key={index}>
+                {field}
+              </Typography>
+            ))}
+          </Box>
+        </Alert>
       )}
       
-      {formData.city_id && !formData.service_point_id && servicePoints.length > 0 && (
-        <FormHelperText error sx={{ mt: 2 }}>
-          Выберите точку обслуживания для продолжения
-        </FormHelperText>
-      )}
-      
-      {/* Подтверждение выбора */}
-      {isValid && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Город и точка обслуживания выбраны. Теперь можно перейти к выбору даты и времени.
+      {/* Информационное сообщение */}
+      {(isValid) && (
+        <Alert severity="info" sx={{ mt: 3 }}>
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>

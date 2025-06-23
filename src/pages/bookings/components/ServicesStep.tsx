@@ -363,9 +363,9 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         </Grid>
       </Grid>
       
-      {/* Информация о следующем шаге */}
-      <Alert severity="success" sx={{ mt: 3 }}>
-        ✅ Этап выбора услуг завершен
+      {/* Информационное сообщение */}
+      <Alert severity="info" sx={{ mt: 3 }}>
+        Этап выбора услуг завершен. Можете перейти к следующему шагу.
       </Alert>
     </Box>
   );

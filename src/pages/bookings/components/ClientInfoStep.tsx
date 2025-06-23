@@ -234,20 +234,31 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Typography>
       </Alert>
       
-      {/* Сообщения валидации */}
-      {(!formData.client_name || !formData.client_phone) && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          ⚠️ Требуется заполнить обязательные поля:
-          {!formData.client_name && ' имя'}
-          {!formData.client_name && !formData.client_phone && ','}
-          {!formData.client_phone && ' телефон'}
+      {/* Уведомление о незаполненных обязательных полях */}
+      {(!isValid) && (
+        <Alert severity="warning" sx={{ mt: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Заполните все обязательные поля:
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+            {!formData.client_name && (
+              <Typography variant="body2" component="li">
+                Имя и фамилия
+              </Typography>
+            )}
+            {!formData.client_phone && (
+              <Typography variant="body2" component="li">
+                Телефон
+              </Typography>
+            )}
+          </Box>
         </Alert>
       )}
       
-      {/* Подтверждение заполнения */}
+      {/* Информационное сообщение */}
       {isValid && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Контактная информация заполнена. Теперь можно перейти к следующему шагу для указания информации об автомобиле.
+        <Alert severity="info" sx={{ mt: 3 }}>
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>

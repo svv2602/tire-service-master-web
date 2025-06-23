@@ -1,6 +1,6 @@
 // Шаг 2: Выбор даты и времени
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -44,6 +44,38 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  
+  // Эффект для фокуса на календаре при монтировании компонента
+  useEffect(() => {
+    // Небольшая задержка для плавности UX и ожидания рендера календаря
+    const timer = setTimeout(() => {
+      if (calendarRef.current) {
+        // Ищем кнопку календаря или первый интерактивный элемент
+        const calendarButton = calendarRef.current.querySelector('button[role="gridcell"]:not([disabled])') as HTMLElement;
+        const calendarInput = calendarRef.current.querySelector('input') as HTMLElement;
+        const focusTarget = calendarButton || calendarInput || calendarRef.current;
+        
+        if (focusTarget) {
+          focusTarget.focus();
+          // Добавляем визуальное выделение области календаря
+          calendarRef.current.style.outline = `2px solid ${theme.palette.primary.main}`;
+          calendarRef.current.style.outlineOffset = '4px';
+          calendarRef.current.style.borderRadius = '8px';
+          
+          // Убираем выделение через некоторое время
+          setTimeout(() => {
+            if (calendarRef.current) {
+              calendarRef.current.style.outline = 'none';
+              calendarRef.current.style.outlineOffset = '0';
+            }
+          }, 2000);
+        }
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []); // Срабатывает только при монтировании компонента
   
   // Инициализация состояния из formData
   useEffect(() => {
@@ -161,8 +193,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         </Alert>
       )}
 
-      {/* Селектор доступности */}
-      <Box sx={{ mb: 3 }}>
+      {/* Селектор доступности с рефом для фокуса */}
+      <Box ref={calendarRef} sx={{ mb: 3 }}>
         <AvailabilitySelector
           servicePointId={formData.service_point_id}
           selectedDate={selectedDate}
@@ -174,7 +206,6 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           servicePointPhone={servicePointData?.contact_phone || servicePointData?.phone}
         />
       </Box>
-
 
       
       {/* Валидация */}
@@ -190,10 +221,31 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         </FormHelperText>
       )}
       
-      {/* Подтверждение выбора */}
+      {/* Уведомление о незаполненных обязательных полях */}
+      {(!isValid) && (
+        <Alert severity="warning" sx={{ mt: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+            Заполните все обязательные поля:
+          </Typography>
+          <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+            {!formData.booking_date && (
+              <Typography variant="body2" component="li">
+                Дата бронирования
+              </Typography>
+            )}
+            {!formData.start_time && (
+              <Typography variant="body2" component="li">
+                Время бронирования
+              </Typography>
+            )}
+          </Box>
+        </Alert>
+      )}
+      
+      {/* Информационное сообщение */}
       {isValid && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Дата и время выбраны: {selectedDate && format(selectedDate, 'dd MMMM yyyy', { locale: ru })} в {selectedTimeSlot}. Теперь можно перейти к заполнению контактной информации.
+        <Alert severity="info" sx={{ mt: 3 }}>
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>
