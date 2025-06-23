@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест яркости выбранной даты в календаре</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        .theme-demo {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .theme-box {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .light-theme {
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid #e0e0e0;
+        }
+        .dark-theme {
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 2px solid #333333;
+        }
+        .date-demo {
+            width: 40px;
+            height: 40px;
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        
+        /* СТАРЫЕ блеклые стили (как было) */
+        .light-theme .old-selected {
+            background: #424242;
+            color: white;
+        }
+        .dark-theme .old-selected {
+            background: #e0e0e0;
+            color: #000;
+        }
+        
+        /* НОВЫЕ яркие стили */
+        .light-theme .new-selected {
+            background: #1976D2;
+            color: #ffffff;
+            border: 2px solid #1565C0;
+            box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3), 0 4px 12px rgba(25, 118, 210, 0.4);
+        }
+        .light-theme .new-selected:hover {
+            background: #1565C0;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.4), 0 6px 16px rgba(21, 101, 192, 0.5);
+        }
+        
+        .dark-theme .new-selected {
+            background: #2196F3;
+            color: #ffffff;
+            border: 2px solid #42A5F5;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3), 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+        .dark-theme .new-selected:hover {
+            background: #42A5F5;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.4), 0 6px 16px rgba(66, 165, 245, 0.5);
+        }
+        
+        .test-link {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 10px 10px 0;
+        }
+        .test-link:hover {
+            background-color: #1565c0;
+        }
+        .info {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .warning {
+            background-color: #fff3e0;
+            border: 1px solid #ff9800;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .vs {
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Тест яркости выбранной даты в календаре</h1>
+        <p><strong>Дата тестирования:</strong> <span id="currentDate"></span></p>
+        
+        <div class="warning">
+            <h3>🚨 Проблема</h3>
+            <p>При возврате на шаг с календарем выбранная дата становится блеклой и плохо видной. Пользователь не понимает, какая дата выбрана.</p>
+        </div>
+        
+        <h2>Сравнение: ДО и ПОСЛЕ исправления</h2>
+        
+        <div class="theme-demo">
+            <div class="theme-box light-theme">
+                <h3 style="text-align: center; margin-top: 0;">Светлая тема</h3>
+                
+                <div class="comparison">
+                    <div>
+                        <p style="text-align: center; margin: 5px 0; font-size: 12px;"><strong>ДО (блеклая)</strong></p>
+                        <div class="date-demo old-selected">24</div>
+                        <p style="text-align: center; font-size: 10px; color: #666;">
+                            #424242 фон<br>
+                            Плохо видно
+                        </p>
+                    </div>
+                    
+                    <div class="vs">→</div>
+                    
+                    <div>
+                        <p style="text-align: center; margin: 5px 0; font-size: 12px;"><strong>ПОСЛЕ (яркая)</strong></p>
+                        <div class="date-demo new-selected">24</div>
+                        <p style="text-align: center; font-size: 10px; color: #666;">
+                            #1976D2 фон<br>
+                            Рамка + тень<br>
+                            Отлично видно!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="theme-box dark-theme">
+                <h3 style="text-align: center; margin-top: 0;">Темная тема</h3>
+                
+                <div class="comparison">
+                    <div>
+                        <p style="text-align: center; margin: 5px 0; font-size: 12px;"><strong>ДО (блеклая)</strong></p>
+                        <div class="date-demo old-selected">24</div>
+                        <p style="text-align: center; font-size: 10px; color: #ccc;">
+                            #e0e0e0 фон<br>
+                            Плохо видно
+                        </p>
+                    </div>
+                    
+                    <div class="vs">→</div>
+                    
+                    <div>
+                        <p style="text-align: center; margin: 5px 0; font-size: 12px;"><strong>ПОСЛЕ (яркая)</strong></p>
+                        <div class="date-demo new-selected">24</div>
+                        <p style="text-align: center; font-size: 10px; color: #ccc;">
+                            #2196F3 фон<br>
+                            Рамка + тень<br>
+                            Отлично видно!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="success">
+            <h3>✅ Что исправлено</h3>
+            <ul>
+                <li><strong>Яркие синие цвета:</strong> #1976D2 (светлая) / #2196F3 (темная) вместо блеклых</li>
+                <li><strong>Контрастная рамка:</strong> 2px solid с более светлым оттенком синего</li>
+                <li><strong>Объемная тень:</strong> двойная тень для создания глубины</li>
+                <li><strong>Жирный шрифт:</strong> fontWeight: 700 для лучшей читаемости</li>
+                <li><strong>Hover эффекты:</strong> еще более яркие цвета при наведении</li>
+                <li><strong>Масштабирование:</strong> scale(1.05) при hover для интерактивности</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>🧪 Тестирование</h3>
+            <p>Проверьте исправления на реальной странице:</p>
+            <a href="http://localhost:3008/client/booking/new-with-availability" class="test-link" target="_blank">
+                Страница бронирования с календарем
+            </a>
+            
+            <h4>Сценарий тестирования:</h4>
+            <ol>
+                <li>Откройте страницу бронирования</li>
+                <li>Выберите сервисную точку</li>
+                <li>На шаге "Выберите дату" кликните на любую дату</li>
+                <li>✅ <strong>Проверьте:</strong> дата должна стать ярко-синей с рамкой и тенью</li>
+                <li>Перейдите на следующий шаг</li>
+                <li>Вернитесь обратно на шаг с календарем</li>
+                <li>✅ <strong>Главная проверка:</strong> выбранная дата должна остаться яркой и заметной!</li>
+                <li>Переключите тему (светлая/темная) и повторите проверку</li>
+            </ol>
+        </div>
+        
+        <div class="container">
+            <h3>📊 Технические характеристики новых стилей</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: #f5f5f5;">
+                    <th style="border: 1px solid #ddd; padding: 8px;">Параметр</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Светлая тема</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Темная тема</th>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><strong>Фон</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">#1976D2</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">#2196F3</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><strong>Рамка</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">2px solid #1565C0</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">2px solid #42A5F5</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><strong>Тень</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">Двойная: контур + объемная тень</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><strong>Hover фон</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">#1565C0</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">#42A5F5</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;"><strong>Шрифт</strong></td>
+                    <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">fontWeight: 700 (очень жирный)</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="info">
+            <h3>🎯 Ожидаемый результат</h3>
+            <p>Теперь выбранная дата будет:</p>
+            <ul>
+                <li>✨ Ярко-синей и хорошо заметной</li>
+                <li>🔵 Иметь контрастную рамку и объемную тень</li>
+                <li>💪 Сохранять яркость при переходах между шагами</li>
+                <li>🎨 Красиво выглядеть в обеих темах</li>
+                <li>👆 Реагировать на hover эффекты</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Установка текущей даты
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        console.log('✨ Тест яркости выбранной даты загружен');
+        console.log('🎯 Наведите курсор на новые стили для проверки hover эффектов');
+    </script>
+</body>
+</html> 

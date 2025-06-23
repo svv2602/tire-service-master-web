@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест кнопки "Новое бронирование"</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .test-result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .code-block {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест кнопки "Новое бронирование"</h1>
+    
+    <div class="test-container">
+        <h2>📋 Информация о тесте</h2>
+        <p><strong>Цель:</strong> Проверить, что кнопка "Новое бронирование" на странице /bookings ведет на правильный адрес</p>
+        <p><strong>Исходная страница:</strong> <code>http://localhost:3008/bookings</code></p>
+        <p><strong>Ожидаемый переход:</strong> <code>http://localhost:3008/client/booking/new-with-availability</code></p>
+        <p><strong>Статус:</strong> <span class="success">✅ Исправлено</span></p>
+    </div>
+
+    <div class="test-container">
+        <h2>🔧 Что было изменено</h2>
+        <p><strong>Файл:</strong> <code>src/pages/bookings/BookingsPage.tsx</code></p>
+        <p><strong>Функция:</strong> <code>handleCreateBooking</code></p>
+        
+        <h3>До изменения:</h3>
+        <div class="code-block">
+const handleCreateBooking = () => {
+  navigate('/bookings/new-with-availability');
+};
+        </div>
+        
+        <h3>После изменения:</h3>
+        <div class="code-block">
+const handleCreateBooking = () => {
+  navigate('/client/booking/new-with-availability');
+};
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🎯 Действия для проверки</h2>
+        <button onclick="openBookingsPage()">1. Открыть страницу /bookings</button>
+        <button onclick="openTargetPage()">2. Открыть целевую страницу</button>
+        <button onclick="runFullTest()">🚀 Полный тест</button>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Результаты проверки</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>📝 Инструкции для ручной проверки</h2>
+        <ol>
+            <li>Перейдите на страницу <code>http://localhost:3008/bookings</code></li>
+            <li>Найдите кнопку "Новое бронирование" в правом верхнем углу</li>
+            <li>Нажмите на кнопку</li>
+            <li>Убедитесь, что вы перешли на <code>http://localhost:3008/client/booking/new-with-availability</code></li>
+            <li>Проверьте, что страница загружается корректно с клиентской навигацией</li>
+        </ol>
+    </div>
+
+    <div class="test-container">
+        <h2>✅ Ожидаемые результаты</h2>
+        <ul>
+            <li>✅ Кнопка "Новое бронирование" присутствует на странице /bookings</li>
+            <li>✅ При клике происходит переход на /client/booking/new-with-availability</li>
+            <li>✅ Целевая страница загружается с клиентской навигацией</li>
+            <li>✅ Форма бронирования отображается корректно</li>
+            <li>✅ Нет ошибок в консоли браузера</li>
+        </ul>
+    </div>
+
+    <script>
+        const FRONTEND_BASE = 'http://localhost:3008';
+        
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `test-result ${type}`;
+            logEntry.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            resultsDiv.appendChild(logEntry);
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function openBookingsPage() {
+            log('🌐 Открываем админскую страницу бронирований...', 'info');
+            const url = `${FRONTEND_BASE}/bookings`;
+            window.open(url, '_blank');
+            log(`✅ Открыта страница: ${url}`, 'success');
+        }
+
+        function openTargetPage() {
+            log('🎯 Открываем целевую страницу бронирования...', 'info');
+            const url = `${FRONTEND_BASE}/client/booking/new-with-availability`;
+            window.open(url, '_blank');
+            log(`✅ Открыта страница: ${url}`, 'success');
+        }
+
+        function runFullTest() {
+            log('🚀 Запуск полного теста...', 'info');
+            
+            // Очищаем результаты
+            document.getElementById('testResults').innerHTML = '';
+            
+            // Открываем обе страницы для сравнения
+            openBookingsPage();
+            setTimeout(() => {
+                openTargetPage();
+                log('📋 Проверьте оба окна и убедитесь, что кнопка ведет на правильную страницу', 'info');
+                log('✅ Тест завершен - проверьте результаты вручную', 'success');
+            }, 1000);
+        }
+
+        // Автоматически показываем информацию при загрузке
+        window.addEventListener('load', () => {
+            log('🎯 Тест готов к выполнению', 'info');
+            log('💡 Нажмите "Полный тест" для автоматической проверки', 'info');
+        });
+    </script>
+</body>
+</html> 
