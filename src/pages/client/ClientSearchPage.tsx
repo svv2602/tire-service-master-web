@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Container, 
   Typography, 
   Button, 
-  Breadcrumbs,
   Grid,
   Card,
   CardContent,
@@ -30,8 +29,6 @@ import {
   DialogActions
 } from '@mui/material';
 import { 
-  Home as HomeIcon, 
-  NavigateNext as NavigateNextIcon, 
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
   Schedule as ScheduleIcon,
@@ -846,24 +843,6 @@ const ClientSearchPage: React.FC = () => {
       <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Breadcrumbs */}
-        <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ mb: 4 }}>
-          <Link 
-            to="/client" 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              color: colors.textSecondary, 
-              textDecoration: 'none' 
-            }}
-          >
-            <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-            Головна
-          </Link>
-          <Typography sx={{ color: colors.textPrimary }}>
-            Результати пошуку
-          </Typography>
-        </Breadcrumbs>
 
         {/* Заголовок результатов */}
         <Box sx={{ mb: 4 }}>
@@ -898,9 +877,7 @@ const ClientSearchPage: React.FC = () => {
             
             <Button
               variant="outlined"
-              startIcon={<HomeIcon />}
-              component={Link}
-              to="/client"
+              onClick={() => window.location.href = '/client'}
               sx={secondaryButtonStyles}
             >
               На головну
@@ -933,8 +910,7 @@ const ClientSearchPage: React.FC = () => {
             </Typography>
             <Button 
               variant="outlined" 
-              component={Link} 
-              to="/client" 
+              onClick={() => window.location.href = '/client'}
               sx={secondaryButtonStyles}
             >
               Повернутися на головну
