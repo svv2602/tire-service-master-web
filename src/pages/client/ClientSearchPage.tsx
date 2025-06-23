@@ -36,7 +36,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   CalendarToday as CalendarIcon,
-  BookOnline as BookIcon
+  BookOnline as BookIcon,
+  Description as DescriptionIcon
 } from '@mui/icons-material';
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
@@ -48,6 +49,7 @@ interface SearchServicePoint {
   id: number;
   name: string;
   address: string;
+  description?: string;
   city: {
     id: number;
     name: string;
@@ -89,7 +91,8 @@ const PhotoGallery: React.FC<{
   height?: number | string;
   showCounter?: boolean;
   fallbackIcon?: React.ReactNode;
-}> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗' }) => {
+  servicePointName?: string;
+}> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗', servicePointName }) => {
   const theme = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -144,7 +147,7 @@ const PhotoGallery: React.FC<{
           {hasPhotos ? (
             <CardMedia
               component="img"
-              image={mainPhoto.url}
+              image={mainPhoto.url.replace(/\?.*$/, '') + '?w=600&h=400&fit=crop&auto=format,compress&q=85'}
               alt={mainPhoto.description || 'Фото сервисной точки'}
               sx={{
                 width: '100%',
@@ -154,6 +157,10 @@ const PhotoGallery: React.FC<{
                 '&:hover': {
                   transform: 'scale(1.05)'
                 }
+              }}
+              onError={(e) => {
+                // Fallback к оригинальному URL если оптимизированное не загружается
+                (e.target as HTMLImageElement).src = mainPhoto.url;
               }}
             />
           ) : (
@@ -269,12 +276,16 @@ const PhotoGallery: React.FC<{
               >
                 <CardMedia
                   component="img"
-                  image={photo.url}
+                  image={photo.url.replace(/\?.*$/, '') + '?w=120&h=80&fit=crop&auto=format,compress&q=80'}
                   alt={photo.description || `Фото ${index + 1}`}
                   sx={{
                     width: '100%',
                     height: '100%',
                     objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    // Fallback к оригинальному URL если оптимизированное не загружается
+                    (e.target as HTMLImageElement).src = photo.url;
                   }}
                 />
               </Box>
@@ -303,7 +314,7 @@ const PhotoGallery: React.FC<{
           pb: 1
         }}>
           <Typography variant="h6">
-            Фотогалерея
+            {servicePointName ? `Фотогалерея - ${servicePointName}` : 'Фотогалерея'}
           </Typography>
           <IconButton onClick={handleCloseModal} size="small">
             ✕
@@ -312,7 +323,11 @@ const PhotoGallery: React.FC<{
         
         <DialogContent sx={{ p: 0, position: 'relative' }}>
           {hasPhotos && sortedPhotos[currentPhotoIndex] ? (
-            <Box sx={{ position: 'relative' }}>
+            <Box sx={{ 
+              position: 'relative',
+              bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+              minHeight: '60vh'
+            }}>
               <CardMedia
                 component="img"
                 image={sortedPhotos[currentPhotoIndex].url}
@@ -321,7 +336,7 @@ const PhotoGallery: React.FC<{
                   width: '100%',
                   maxHeight: '70vh',
                   objectFit: 'contain',
-                  bgcolor: 'grey.100'
+                  bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100'
                 }}
                 onError={(e) => {
                   console.error('Failed to load image:', sortedPhotos[currentPhotoIndex].url);
@@ -437,12 +452,16 @@ const PhotoGallery: React.FC<{
                  >
                    <CardMedia
                      component="img"
-                     image={photo.url}
+                     image={photo.url.replace(/\?.*$/, '') + '?w=160&h=120&fit=crop&auto=format,compress&q=80'}
                      alt={photo.description || `Фото ${index + 1}`}
                      sx={{
                        width: '100%',
                        height: '100%',
                        objectFit: 'cover'
+                     }}
+                     onError={(e) => {
+                       // Fallback к оригинальному URL если оптимизированное не загружается
+                       (e.target as HTMLImageElement).src = photo.url;
                      }}
                    />
                  </Box>
@@ -496,6 +515,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
   const navigate = useNavigate();
   
   const [showDetails, setShowDetails] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [servicesExpanded, setServicesExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
 
@@ -555,6 +575,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         height={200}
         showCounter={true}
         fallbackIcon="🚗"
+        servicePointName={servicePoint.name}
       />
 
       <CardContent>
@@ -592,15 +613,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
             />
           </Box>
 
-          {/* Партнер */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Avatar sx={{ width: 24, height: 24, fontSize: '0.8rem' }}>
-              {servicePoint.partner.name.charAt(0)}
-            </Avatar>
-            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {servicePoint.partner.name}
-            </Typography>
-          </Box>
+
 
           {/* Контактный телефон */}
           {servicePoint.contact_phone && (
@@ -616,6 +629,43 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         {/* Детальная информация (свернуто по умолчанию) */}
         <Collapse in={showDetails}>
           <Divider sx={{ my: 2 }} />
+          
+          {/* Описание */}
+          {servicePoint.description && servicePoint.description.trim() && (
+            <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer' 
+                }}
+                onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <DescriptionIcon sx={{ color: theme.palette.primary.main }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Опис
+                  </Typography>
+                </Box>
+                {descriptionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </Box>
+              
+              <Collapse in={descriptionExpanded}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    mt: 2, 
+                    color: colors.textPrimary,
+                    lineHeight: 1.6,
+                    whiteSpace: 'pre-wrap' // Сохраняем переносы строк
+                  }}
+                >
+                  {servicePoint.description}
+                </Typography>
+              </Collapse>
+            </Paper>
+          )}
           
           {/* Услуги */}
           <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
@@ -773,17 +823,11 @@ const ClientSearchPage: React.FC = () => {
 
   // Адаптируем данные из API к локальному интерфейсу
   const servicePoints: SearchServicePoint[] = (searchResult?.data || []).map(point => {
-    // Отладочный вывод для проверки статуса и фотографий
-    console.log(`ServicePoint ${point.id} - ${point.name}:`, {
-      is_active: point.is_active,
-      work_status: point.work_status,
-      photos_count: point.photos?.length || 0
-    });
-    
     return {
       id: point.id,
       name: point.name,
       address: point.address,
+      description: (point as any).description,
       city: {
         id: point.city?.id || 0,
         name: point.city?.name || '',
