@@ -37,7 +37,7 @@ import {
 // import { useCreateClientBookingMutation } from '../../api/clientBookings.api';
 
 // Импорт стилей
-import { getCardStyles } from '../../styles/components';
+import { getCardStyles, getTablePageStyles } from '../../styles/components';
 
 // Типы для данных формы
 export interface BookingFormData {
@@ -127,6 +127,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Получаем информацию об аутентификации
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -304,7 +305,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 3 }}>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: 2 }}>
+      <Box sx={tablePageStyles.pageContainer}>
         {/* Заголовок */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button

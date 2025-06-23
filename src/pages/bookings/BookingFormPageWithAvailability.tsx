@@ -29,6 +29,8 @@ import {
 import { useCreateBookingMutation, useUpdateBookingMutation } from '../../api/bookings.api';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { AvailabilitySelector } from '../../components/availability';
+import { getTablePageStyles } from '../../styles/components';
+import { useTheme } from '@mui/material';
 
 // Типы для формы
 interface ServiceSelection {
@@ -54,6 +56,8 @@ interface BookingFormState {
 const BookingFormPageWithAvailability: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const tablePageStyles = getTablePageStyles(theme);
   
   const [createBooking] = useCreateBookingMutation();
   const [updateBooking] = useUpdateBookingMutation();
@@ -272,7 +276,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
   const isLoading = servicePointsLoading;
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+          <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок */}
       <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
         <Button

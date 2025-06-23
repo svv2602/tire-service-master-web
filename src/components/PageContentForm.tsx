@@ -31,6 +31,8 @@ import {
   UpdatePageContentRequest,
   CONTENT_TYPES 
 } from '../api/pageContent.api';
+import { getTablePageStyles } from '../styles/components';
+import { useTheme } from '@mui/material';
 
 interface PageContentFormProps {
   initialData?: PageContent;
@@ -65,6 +67,8 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const theme = useTheme();
+  const tablePageStyles = getTablePageStyles(theme);
   const [formData, setFormData] = useState<CreatePageContentRequest>({
     section: '',
     content_type: '',
@@ -200,7 +204,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
   const settingsFields = currentContentType?.settings_fields || [];
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={tablePageStyles.pageContainer}>
       <Typography variant="h5" gutterBottom>
         {initialData ? 'Редагувати контент' : 'Створити новий контент'}
       </Typography>

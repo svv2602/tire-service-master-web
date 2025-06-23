@@ -30,7 +30,7 @@ import {
 import { UserFormData } from '../../types/user';
 
 // Импорт централизованной системы стилей
-import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES } from '../../styles';
+import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
 
 /**
  * Страница формы пользователя - создание и редактирование пользователей
@@ -63,6 +63,7 @@ const UserForm: React.FC = () => {
   const textFieldStyles = getTextFieldStyles(theme, 'filled');
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const tablePageStyles = getTablePageStyles(theme);
 
   // RTK Query хуки
   const { 
@@ -267,11 +268,7 @@ const UserForm: React.FC = () => {
   }
 
   return (
-    <Box sx={{ 
-      maxWidth: 1200, 
-      mx: 'auto', 
-      p: SIZES.spacing.lg 
-    }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок с кнопкой "Назад" */}
       <Box sx={{ 
         display: 'flex', 

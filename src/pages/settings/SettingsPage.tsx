@@ -29,6 +29,7 @@ import {
   getButtonStyles,
   getTextFieldStyles,
   getFormStyles,
+  getTablePageStyles,
 } from '../../styles';
 
 // Импорты UI компонентов
@@ -58,6 +59,7 @@ const SettingsPage: React.FC = () => {
   const buttonStyles = getButtonStyles(theme, 'primary');
   const textFieldStyles = getTextFieldStyles(theme);
   const formStyles = getFormStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
 
   // Получение данных
   const { data: settingsData, isLoading: loading } = useGetSettingsQuery();
@@ -187,12 +189,7 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ 
-      width: '100%',
-      maxWidth: 1200,
-      mx: 'auto',
-      px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg },
-    }}>
+    <Box sx={tablePageStyles.pageContainer}>
       <Box sx={{
         overflow: 'hidden'
       }}>

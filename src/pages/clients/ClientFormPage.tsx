@@ -24,7 +24,7 @@ import {
 } from '../../components/ui';
 
 // Импорт централизованных стилей
-import { getFormStyles } from '../../styles/components';
+import { getFormStyles, getTablePageStyles } from '../../styles/components';
 
 /**
  * Схема валидации для формы клиента
@@ -70,6 +70,7 @@ const ClientFormPage: React.FC = () => {
 
   // Инициализация централизованных стилей
   const formStyles = getFormStyles(theme);
+  const tablePageStyles = getTablePageStyles(theme);
 
   // RTK Query хуки
   const { data: client, isLoading: isLoadingClient } = useGetClientByIdQuery(id || '', {
@@ -199,8 +200,7 @@ const ClientFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ padding: theme.spacing(3) }}>
-      <Box sx={formStyles.container}>
+    <Box sx={tablePageStyles.pageContainer}>
         <Typography 
           variant="h5" 
           sx={formStyles.sectionTitle}
@@ -345,7 +345,6 @@ const ClientFormPage: React.FC = () => {
             </Grid>
           </Grid>
         </form>
-      </Box>
     </Box>
   );
 };

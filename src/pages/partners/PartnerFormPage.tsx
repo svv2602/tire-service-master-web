@@ -637,11 +637,7 @@ const PartnerFormPage: React.FC = () => {
   const isLoading = createLoading || updateLoading;
 
   return (
-    <Box sx={{ 
-      maxWidth: 1000, 
-      mx: 'auto', 
-      p: SIZES.spacing.lg 
-    }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок и навигация */}
       <Box sx={{ 
         display: 'flex', 

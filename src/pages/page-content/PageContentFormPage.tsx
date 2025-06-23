@@ -44,7 +44,8 @@ import {
   getButtonStyles, 
   getTextFieldStyles,
   SIZES,
-  getThemeColors 
+  getThemeColors,
+  getTablePageStyles
 } from '../../styles';
 import { 
   useGetPageContentByIdQuery,
@@ -90,6 +91,7 @@ const PageContentFormPage: React.FC = () => {
   const buttonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const textFieldStyles = getTextFieldStyles(theme, 'filled');
+  const tablePageStyles = getTablePageStyles(theme);
   
   const isEdit = id !== 'new';
   const [activeTab, setActiveTab] = useState(0);
@@ -155,25 +157,25 @@ const PageContentFormPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={tablePageStyles.pageContainer}>
         <Skeleton variant="rectangular" height={200} sx={{ mb: 3, borderRadius: 2 }} />
         <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 2 }} />
-      </Container>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Box sx={tablePageStyles.pageContainer}>
         <Alert severity="error" sx={{ mb: 4 }}>
           Ошибка при загрузке данных страницы
         </Alert>
-      </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
@@ -289,7 +291,7 @@ const PageContentFormPage: React.FC = () => {
           </Grid>
         </Grid>
       </Paper>
-    </Container>
+    </Box>
   );
 };
 
