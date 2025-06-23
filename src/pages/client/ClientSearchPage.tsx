@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -37,7 +37,9 @@ import {
   ExpandLess as ExpandLessIcon,
   CalendarToday as CalendarIcon,
   BookOnline as BookIcon,
-  Description as DescriptionIcon
+  Description as DescriptionIcon,
+  ArrowBackIos as ArrowBackIosIcon,
+  ArrowForwardIos as ArrowForwardIosIcon
 } from '@mui/icons-material';
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
@@ -126,6 +128,26 @@ const PhotoGallery: React.FC<{
   const handlePrevPhoto = () => {
     setCurrentPhotoIndex(prev => prev === 0 ? sortedPhotos.length - 1 : prev - 1);
   };
+
+  // Добавляем поддержку клавиатурной навигации
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!modalOpen) return;
+      
+      if (event.key === 'ArrowLeft') {
+        handlePrevPhoto();
+      } else if (event.key === 'ArrowRight') {
+        handleNextPhoto();
+      } else if (event.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [modalOpen, handlePrevPhoto, handleNextPhoto, handleCloseModal]);
 
   return (
     <>
@@ -328,6 +350,39 @@ const PhotoGallery: React.FC<{
               bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
               minHeight: '60vh'
             }}>
+              {/* Индикатор позиции фото */}
+              {sortedPhotos.length > 1 && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 16,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1,
+                    bgcolor: theme.palette.mode === 'dark'
+                      ? 'rgba(0, 0, 0, 0.8)'
+                      : 'rgba(255, 255, 255, 0.95)',
+                    color: theme.palette.mode === 'dark'
+                      ? 'white'
+                      : 'text.primary',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: theme.palette.mode === 'dark'
+                      ? '0 4px 20px rgba(0, 0, 0, 0.4)'
+                      : '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    border: '1px solid',
+                    borderColor: theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.2)'
+                      : 'rgba(0, 0, 0, 0.1)',
+                    fontSize: '0.875rem',
+                    fontWeight: 500
+                  }}
+                >
+                  {currentPhotoIndex + 1} / {sortedPhotos.length}
+                </Box>
+              )}
               <CardMedia
                 component="img"
                 image={sortedPhotos[currentPhotoIndex].url}
@@ -353,40 +408,104 @@ const PhotoGallery: React.FC<{
                     onClick={handlePrevPhoto}
                     sx={{
                       position: 'absolute',
-                      left: 16,
+                      left: 24,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      bgcolor: 'rgba(255, 255, 255, 0.9)',
-                      color: 'primary.main',
+                      width: 64,
+                      height: 64,
+                      bgcolor: theme.palette.mode === 'dark' 
+                        ? 'rgba(0, 0, 0, 0.8)' 
+                        : 'rgba(255, 255, 255, 0.95)',
+                      color: theme.palette.mode === 'dark' 
+                        ? 'white' 
+                        : 'primary.main',
                       border: '2px solid',
-                      borderColor: 'primary.main',
+                      borderColor: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.3)' 
+                        : 'primary.main',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: theme.palette.mode === 'dark'
+                        ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+                        : '0 8px 32px rgba(0, 0, 0, 0.15)',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': {
-                        bgcolor: 'primary.main',
-                        color: 'white'
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'primary.main',
+                        color: theme.palette.mode === 'dark'
+                          ? '#90CAF9'
+                          : 'white',
+                        transform: 'translateY(-50%) scale(1.1)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 12px 40px rgba(0, 0, 0, 0.6)'
+                          : '0 12px 40px rgba(25, 118, 210, 0.4)',
+                        borderColor: theme.palette.mode === 'dark'
+                          ? '#90CAF9'
+                          : 'primary.dark'
+                      },
+                      '&:active': {
+                        transform: 'translateY(-50%) scale(0.95)'
                       }
                     }}
                   >
-                    ←
+                    <ArrowBackIosIcon sx={{ 
+                      fontSize: '2.5rem',
+                      marginLeft: '4px' // Компенсируем смещение иконки влево
+                    }} />
                   </IconButton>
                   
                   <IconButton
                     onClick={handleNextPhoto}
                     sx={{
                       position: 'absolute',
-                      right: 16,
+                      right: 24,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      bgcolor: 'rgba(255, 255, 255, 0.9)',
-                      color: 'primary.main',
+                      width: 64,
+                      height: 64,
+                      bgcolor: theme.palette.mode === 'dark' 
+                        ? 'rgba(0, 0, 0, 0.8)' 
+                        : 'rgba(255, 255, 255, 0.95)',
+                      color: theme.palette.mode === 'dark' 
+                        ? 'white' 
+                        : 'primary.main',
                       border: '2px solid',
-                      borderColor: 'primary.main',
+                      borderColor: theme.palette.mode === 'dark' 
+                        ? 'rgba(255, 255, 255, 0.3)' 
+                        : 'primary.main',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: theme.palette.mode === 'dark'
+                        ? '0 8px 32px rgba(0, 0, 0, 0.4)'
+                        : '0 8px 32px rgba(0, 0, 0, 0.15)',
+                      fontSize: '1.5rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       '&:hover': {
-                        bgcolor: 'primary.main',
-                        color: 'white'
+                        bgcolor: theme.palette.mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.1)'
+                          : 'primary.main',
+                        color: theme.palette.mode === 'dark'
+                          ? '#90CAF9'
+                          : 'white',
+                        transform: 'translateY(-50%) scale(1.1)',
+                        boxShadow: theme.palette.mode === 'dark'
+                          ? '0 12px 40px rgba(0, 0, 0, 0.6)'
+                          : '0 12px 40px rgba(25, 118, 210, 0.4)',
+                        borderColor: theme.palette.mode === 'dark'
+                          ? '#90CAF9'
+                          : 'primary.dark'
+                      },
+                      '&:active': {
+                        transform: 'translateY(-50%) scale(0.95)'
                       }
                     }}
                   >
-                    →
+                    <ArrowForwardIosIcon sx={{ 
+                      fontSize: '2.5rem',
+                      marginRight: '4px' // Компенсируем смещение иконки вправо
+                    }} />
                   </IconButton>
                 </>
               )}
