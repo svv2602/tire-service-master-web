@@ -21,7 +21,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         params,
       }),
       transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
-      providesTags: ['Booking'],
+      providesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
 
     getBookingsByServicePoint: builder.query<ApiResponse<Booking>, string>({
@@ -31,7 +31,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         params: { service_point_id: servicePointId }
       }),
       transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
-      providesTags: ['Booking'],
+      providesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
 
     getBookingsByClient: builder.query<ApiResponse<Booking>, string>({
@@ -41,7 +41,7 @@ export const bookingsApi = baseApi.injectEndpoints({
         params: { client_id: clientId }
       }),
       transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
-      providesTags: ['Booking'],
+      providesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
     
     getBookingById: builder.query<Booking, string>({
@@ -106,7 +106,10 @@ export const bookingsApi = baseApi.injectEndpoints({
         url: `bookings/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
+      invalidatesTags: (_result, _error, id) => [
+        { type: 'Booking', id: 'LIST' },
+        { type: 'Booking', id },
+      ],
     }),
     
     cancelBooking: builder.mutation<Booking, string>({

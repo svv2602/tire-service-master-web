@@ -57,7 +57,8 @@ const BookingsPage: React.FC = () => {
   const { 
     data: bookingsData, 
     isLoading: bookingsLoading, 
-    error: bookingsError 
+    error: bookingsError,
+    refetch: refetchBookings
   } = useGetBookingsQuery({
     query: search || undefined,
     page: page + 1,
@@ -89,11 +90,13 @@ const BookingsPage: React.FC = () => {
         await deleteBooking(selectedBooking.id.toString()).unwrap();
         setDeleteDialogOpen(false);
         setSelectedBooking(null);
+        // Принудительно обновляем данные после удаления
+        await refetchBookings();
       } catch (error) {
         console.error('Ошибка при удалении бронирования:', error);
       }
     }
-  }, [selectedBooking, deleteBooking]);
+  }, [selectedBooking, deleteBooking, refetchBookings]);
 
   const handleToggleStatus = useCallback(async (booking: Booking) => {
     try {
