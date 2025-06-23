@@ -74,6 +74,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
       query?: string;
       city_id?: number;
       region_id?: number;
+      partner_id?: number;
       page?: number;
       per_page?: number;
     } | void>({
@@ -91,6 +92,37 @@ export const servicePointsApi = baseApi.injectEndpoints({
               { type: 'ServicePoint' as const, id: 'LIST' },
             ]
           : [{ type: 'ServicePoint' as const, id: 'LIST' }],
+      // Кэширование на 5 минут
+      keepUnusedDataFor: 300,
+    }),
+
+    // Получение списка сервисных точек по ID партнера
+    getServicePointsByPartnerId: builder.query<ApiResponse<ServicePoint>, { 
+      partner_id: number;
+      query?: string;
+      page?: number;
+      per_page?: number;
+    }>({
+      query: (params) => ({
+        url: `/partners/${params.partner_id}/service_points`,
+        params: {
+          query: params.query,
+          page: params.page,
+          per_page: params.per_page,
+          include: 'city.region,working_hours,status,partner'
+        }
+      }),
+      providesTags: (result, _error, { partner_id }) =>
+        result
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'ServicePoint' as const, id })),
+              { type: 'ServicePoint' as const, id: 'LIST' },
+              { type: 'ServicePoint' as const, id: `PARTNER_${partner_id}` },
+            ]
+          : [
+              { type: 'ServicePoint' as const, id: 'LIST' },
+              { type: 'ServicePoint' as const, id: `PARTNER_${partner_id}` },
+            ],
       // Кэширование на 5 минут
       keepUnusedDataFor: 300,
     }),
@@ -406,6 +438,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
 export const {
   useSearchServicePointsQuery,
   useGetServicePointsQuery,
+  useGetServicePointsByPartnerIdQuery,
   useGetServicePointBasicInfoQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,

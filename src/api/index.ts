@@ -29,6 +29,7 @@ export * from './users.api';
 // Экспортируем только нужные хуки из servicePoints.api без конфликтов
 export {
   useGetServicePointsQuery,
+  useGetServicePointsByPartnerIdQuery,
   useGetServicePointByIdQuery,
   useCreateServicePointMutation,
   useUpdateServicePointMutation,

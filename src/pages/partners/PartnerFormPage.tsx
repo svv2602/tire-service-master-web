@@ -16,23 +16,35 @@ import {
   FormControlLabel,
   Switch,
   useTheme,
+  Tooltip,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { 
+  ArrowBack as ArrowBackIcon, 
+  Save as SaveIcon,
+  Business as BusinessIcon,
+  LocationOn as LocationOnIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon
+} from '@mui/icons-material';
 import { 
   useGetPartnerByIdQuery, 
   useCreatePartnerMutation, 
   useUpdatePartnerMutation,
   useGetRegionsQuery,
   useGetCitiesQuery,
+  useGetServicePointsByPartnerIdQuery,
 } from '../../api';
 import { getRoleId } from '../../utils/roles.utils';
-import { PartnerFormData } from '../../types/models';
+import { PartnerFormData, ServicePoint } from '../../types/models';
 import { SelectChangeEvent } from '@mui/material';
 // Импорт централизованной системы стилей
-import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES } from '../../styles';
+import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
+// Импорт UI компонентов
+import { Tabs, TabPanel, Table, type Column, Pagination } from '../../components/ui';
 
 /**
  * Страница формы партнера - создание и редактирование партнеров
@@ -76,7 +88,46 @@ interface FormValues {
   user: FormUserData | null;
 }
 
-// Создаем типизированные версии touched и errors для пользователя (используются в полях формы)
+// Типы для formik.touched и formik.errors
+interface FormikTouched {
+  company_name?: boolean;
+  company_description?: boolean;
+  contact_person?: boolean;
+  logo_url?: boolean;
+  website?: boolean;
+  tax_number?: boolean;
+  legal_address?: boolean;
+  region_id?: boolean;
+  city_id?: boolean;
+  is_active?: boolean;
+  user?: {
+    first_name?: boolean;
+    last_name?: boolean;
+    email?: boolean;
+    phone?: boolean;
+    password?: boolean;
+  };
+}
+
+interface FormikErrors {
+  company_name?: string;
+  company_description?: string;
+  contact_person?: string;
+  logo_url?: string;
+  website?: string;
+  tax_number?: string;
+  legal_address?: string;
+  region_id?: string;
+  city_id?: string;
+  is_active?: string;
+  user?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+  };
+}
 
 // Функция для создания схемы валидации в зависимости от режима
 const createValidationSchema = (isEdit: boolean) => yup.object({
@@ -147,6 +198,7 @@ const PartnerFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
+  const [activeTab, setActiveTab] = useState<number>(0);
   
   // Централизованная система стилей
   const theme = useTheme();
@@ -154,6 +206,7 @@ const PartnerFormPage: React.FC = () => {
   const textFieldStyles = getTextFieldStyles(theme, 'filled');
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const tablePageStyles = getTablePageStyles(theme);
 
   // RTK Query хуки
   const { data: partner, isLoading: partnerLoading } = useGetPartnerByIdQuery(id ? parseInt(id) : 0, {
@@ -196,6 +249,16 @@ const PartnerFormPage: React.FC = () => {
   
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
+
+  // Загрузка сервисных точек партнера (только в режиме редактирования)
+  const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsByPartnerIdQuery(
+    { 
+      partner_id: id ? parseInt(id) : 0,
+      page: 1,
+      per_page: 25
+    }, 
+    { skip: !isEdit || !id }
+  );
 
   // Состояние для управления ошибками API и сообщениями успеха
   const [apiError, setApiError] = useState<string | null>(null);
@@ -407,6 +470,133 @@ const PartnerFormPage: React.FC = () => {
     onSubmit: handleSubmit,
   });
 
+  // Определяем вкладки для режима редактирования
+  const tabs = useMemo(() => {
+    const baseTabs = [
+      { label: 'Основная информация', value: 0 },
+    ];
+
+    // Добавляем вкладку сервисных точек только в режиме редактирования
+    if (isEdit) {
+      baseTabs.push({ label: 'Сервисные точки', value: 1 });
+    }
+
+    return baseTabs;
+  }, [isEdit]);
+
+  // Определяем колонки для таблицы сервисных точек
+  const servicePointColumns: Column[] = useMemo(() => [
+    {
+      id: 'name',
+      label: 'Название',
+      format: (value, row: ServicePoint) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <Typography variant="body2">{row.name}</Typography>
+        </Box>
+      ),
+      minWidth: 150,
+    },
+    {
+      id: 'address',
+      label: 'Адрес',
+      format: (value, row: ServicePoint) => (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <LocationOnIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <Typography variant="body2">{row.address}</Typography>
+        </Box>
+      ),
+      minWidth: 200,
+    },
+    {
+      id: 'city',
+      label: 'Город',
+      format: (value, row: ServicePoint) => {
+        // Проверяем, что city существует и имеет свойство name
+        return typeof row.city === 'object' && row.city ? row.city.name : '-';
+      },
+      minWidth: 120,
+    },
+    {
+      id: 'is_active',
+      label: 'Статус',
+      format: (value, row: ServicePoint) => (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          {row.is_active ? (
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'success.main',
+                fontWeight: 'bold'
+              }}
+            >
+              Активна
+            </Typography>
+          ) : (
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'error.main',
+                fontWeight: 'bold'
+              }}
+            >
+              Неактивна
+            </Typography>
+          )}
+        </Box>
+      ),
+      align: 'center',
+      minWidth: 100,
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      format: (value, row: ServicePoint) => (
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Tooltip title="Редактировать">
+            <Button
+              size="small"
+              onClick={() => handleEditServicePoint(row.id)}
+              sx={{ minWidth: 'auto', p: 1 }}
+            >
+              <EditIcon fontSize="small" />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Удалить">
+            <Button
+              size="small"
+              color="error"
+              onClick={() => handleDeleteServicePoint(row)}
+              sx={{ minWidth: 'auto', p: 1 }}
+            >
+              <DeleteIcon fontSize="small" />
+            </Button>
+          </Tooltip>
+        </Box>
+      ),
+      align: 'center',
+      minWidth: 120,
+    },
+  ], []);
+
+  // Обработчики для сервисных точек
+  const handleEditServicePoint = (servicePointId: number) => {
+    if (id) {
+      navigate(`/partners/${id}/service-points/${servicePointId}/edit`);
+    }
+  };
+
+  const handleDeleteServicePoint = (servicePoint: any) => {
+    // Здесь будет логика удаления или открытия диалога подтверждения
+    console.log('Удаление сервисной точки:', servicePoint);
+  };
+
+  const handleAddServicePoint = () => {
+    if (id) {
+      navigate(`/partners/${id}/service-points/new`);
+    }
+  };
+
   // Обработчик изменения региона
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
     const newRegionId = event.target.value;
@@ -431,6 +621,11 @@ const PartnerFormPage: React.FC = () => {
     formik.setFieldValue('city_id', newCityId);
   };
 
+  // Обработчик изменения вкладки
+  const handleTabChange = (newValue: string | number) => {
+    setActiveTab(newValue as number);
+  };
+
   if (partnerLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
@@ -440,51 +635,6 @@ const PartnerFormPage: React.FC = () => {
   }
 
   const isLoading = createLoading || updateLoading;
-
-  // Создаем типизированные версии touched и errors для пользователя (используются в полях формы)
-  type FormikTouchedUser = {
-    first_name?: boolean;
-    last_name?: boolean;
-    email?: boolean;
-    phone?: boolean;
-    password?: boolean;
-  };
-
-  type FormikErrorsUser = {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone?: string;
-    password?: string;
-  };
-
-  type FormikTouchedValues = {
-    company_name?: boolean;
-    company_description?: boolean;
-    contact_person?: boolean;
-    logo_url?: boolean;
-    website?: boolean;
-    tax_number?: boolean;
-    legal_address?: boolean;
-    region_id?: boolean;
-    city_id?: boolean;
-    is_active?: boolean;
-    user?: FormikTouchedUser;
-  };
-
-  type FormikErrorsValues = {
-    company_name?: string;
-    company_description?: string;
-    contact_person?: string;
-    logo_url?: string;
-    website?: string;
-    tax_number?: string;
-    legal_address?: string;
-    region_id?: string;
-    city_id?: string;
-    is_active?: string;
-    user?: FormikErrorsUser;
-  };
 
   return (
     <Box sx={{ 
@@ -515,433 +665,483 @@ const PartnerFormPage: React.FC = () => {
           {isEdit ? 'Редактировать партнера' : 'Создать партнера'}
         </Typography>
       </Box>
+      
+      {/* Вкладки (только в режиме редактирования) */}
+      {isEdit && (
+        <Box sx={{ mb: SIZES.spacing.md }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            tabs={tabs}
+            variant="standard"
+          />
+        </Box>
+      )}
           
       <form onSubmit={formik.handleSubmit}>
-        <Paper sx={cardStyles}>
-          <Grid container spacing={SIZES.spacing.lg}>
-            {/* Основная информация о компании */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom>
-                Основная информация о компании
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-            </Grid>
+        {/* Вкладка основной информации */}
+        <TabPanel value={activeTab} index={0}>
+          <Paper sx={cardStyles}>
+            <Grid container spacing={SIZES.spacing.lg}>
+              {/* Основная информация о компании */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  Основная информация о компании
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                required
-                name="company_name"
-                label="Название компании"
-                value={formik.values.company_name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={(formik.touched.company_name || showValidationErrors) && Boolean(formik.errors.company_name)}
-                helperText={(formik.touched.company_name || showValidationErrors) && formik.errors.company_name}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                required
-                name="contact_person"
-                label="Контактное лицо"
-                value={formik.values.contact_person}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={(formik.touched.contact_person || showValidationErrors) && Boolean(formik.errors.contact_person)}
-                helperText={(formik.touched.contact_person || showValidationErrors) && formik.errors.contact_person}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                name="company_description"
-                label="Описание компании"
-                value={formik.values.company_description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.company_description && Boolean(formik.errors.company_description)}
-                helperText={formik.touched.company_description && formik.errors.company_description}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                name="website"
-                label="Веб-сайт"
-                placeholder="https://example.com"
-                value={formik.values.website}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.website && Boolean(formik.errors.website)}
-                helperText={formik.touched.website && formik.errors.website}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                name="logo_url"
-                label="URL логотипа"
-                placeholder="https://example.com/logo.png"
-                value={formik.values.logo_url}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
-                helperText={formik.touched.logo_url && formik.errors.logo_url}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            {/* Юридическая информация */}
-            <Grid item xs={12}>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                sx={{ 
-                  mt: SIZES.spacing.md,
-                  fontSize: SIZES.fontSize.lg 
-                }}
-              >
-                Юридическая информация
-              </Typography>
-              <Divider sx={{ mb: SIZES.spacing.md }} />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                name="tax_number"
-                label="Налоговый номер (необязательно)"
-                placeholder="12345678"
-                value={formik.values.tax_number}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
-                helperText={formik.touched.tax_number && formik.errors.tax_number}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                required
-                name="legal_address"
-                label="Юридический адрес"
-                value={formik.values.legal_address}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={(formik.touched.legal_address || showValidationErrors) && Boolean(formik.errors.legal_address)}
-                helperText={(formik.touched.legal_address || showValidationErrors) && formik.errors.legal_address}
-                sx={textFieldStyles}
-              />
-            </Grid>
-
-            {/* Местоположение */}
-            <Grid item xs={12}>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                sx={{ 
-                  mt: SIZES.spacing.md,
-                  fontSize: SIZES.fontSize.lg 
-                }}
-              >
-                Местоположение
-              </Typography>
-              <Divider sx={{ mb: SIZES.spacing.md }} />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={(formik.touched.region_id || showValidationErrors) && Boolean(formik.errors.region_id)}>
-                <InputLabel>Регион *</InputLabel>
-                <Select
-                  name="region_id"
-                  value={formik.values.region_id?.toString() || ''}
-                  onChange={handleRegionChange}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  name="company_name"
+                  label="Название компании"
+                  value={formik.values.company_name}
+                  onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  error={(formik.touched.region_id || showValidationErrors) && Boolean(formik.errors.region_id)}
-                >
-                  <MenuItem value="">Не выбран</MenuItem>
-                  {regionsData?.data?.map((region) => (
-                    <MenuItem key={region.id} value={region.id.toString()}>
-                      {region.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {(formik.touched.region_id || showValidationErrors) && formik.errors.region_id && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {formik.errors.region_id}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth required error={(formik.touched.city_id || showValidationErrors) && Boolean(formik.errors.city_id)}>
-                <InputLabel>Город *</InputLabel>
-                <Select
-                  name="city_id"
-                  value={formik.values.city_id?.toString() || ''}
-                  onChange={handleCityChange}
-                  onBlur={formik.handleBlur}
-                  error={(formik.touched.city_id || showValidationErrors) && Boolean(formik.errors.city_id)}
-                  disabled={!formik.values.region_id || citiesLoading || citiesFetching}
-                >
-                  <MenuItem value="">
-                    {citiesLoading || citiesFetching ? 'Загрузка городов...' : 'Не выбран'}
-                  </MenuItem>
-                  {citiesData?.data?.map((city) => (
-                    <MenuItem key={city.id} value={city.id.toString()}>
-                      {city.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-
-                {(formik.touched.city_id || showValidationErrors) && formik.errors.city_id && (
-                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
-                    {formik.errors.city_id}
-                  </Typography>
-                )}
-              </FormControl>
-            </Grid>
-
-            {/* Статус */}
-            <Grid item xs={12}>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                sx={{ 
-                  mt: SIZES.spacing.md,
-                  fontSize: SIZES.fontSize.lg 
-                }}
-              >
-                Статус
-              </Typography>
-              <Divider sx={{ mb: SIZES.spacing.md }} />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box sx={{ ml: 2, mt: 1 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={formik.values.is_active}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
-                      name="is_active"
-                    />
-                  }
-                  label="Активный партнер"
+                  error={(formik.touched.company_name || showValidationErrors) && Boolean(formik.errors.company_name)}
+                  helperText={(formik.touched.company_name || showValidationErrors) && formik.errors.company_name}
+                  sx={textFieldStyles}
                 />
-              </Box>
-            </Grid>
+              </Grid>
 
-            {/* Данные пользователя (только при создании) */}
-            {!isEdit && (
-              <>
-                <Grid item xs={12}>
-                  <Typography 
-                    variant="h6" 
-                    gutterBottom 
-                    sx={{ 
-                      mt: SIZES.spacing.md,
-                      fontSize: SIZES.fontSize.lg 
-                    }}
-                  >
-                    Данные пользователя
-                  </Typography>
-                  <Divider sx={{ mb: SIZES.spacing.md }} />
-                </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  name="contact_person"
+                  label="Контактное лицо"
+                  value={formik.values.contact_person}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={(formik.touched.contact_person || showValidationErrors) && Boolean(formik.errors.contact_person)}
+                  helperText={(formik.touched.contact_person || showValidationErrors) && formik.errors.contact_person}
+                  sx={textFieldStyles}
+                />
+              </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    required
-                    name="user.first_name"
-                    label="Имя"
-                    value={formik.values.user?.first_name || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(
-                      ((formik.touched as FormikTouchedValues).user?.first_name || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.first_name
-                    )}
-                    helperText={
-                      (((formik.touched as FormikTouchedValues).user?.first_name || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.first_name) || ''
-                    }
-                    sx={textFieldStyles}
-                  />
-                </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  name="company_description"
+                  label="Описание компании"
+                  value={formik.values.company_description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.company_description && Boolean(formik.errors.company_description)}
+                  helperText={formik.touched.company_description && formik.errors.company_description}
+                  sx={textFieldStyles}
+                />
+              </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    required
-                    name="user.last_name"
-                    label="Фамилия"
-                    value={formik.values.user?.last_name || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(
-                      ((formik.touched as FormikTouchedValues).user?.last_name || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.last_name
-                    )}
-                    helperText={
-                      (((formik.touched as FormikTouchedValues).user?.last_name || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.last_name) || ''
-                    }
-                    sx={textFieldStyles}
-                  />
-                </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  name="website"
+                  label="Веб-сайт"
+                  placeholder="https://example.com"
+                  value={formik.values.website}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.website && Boolean(formik.errors.website)}
+                  helperText={formik.touched.website && formik.errors.website}
+                  sx={textFieldStyles}
+                />
+              </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    required
-                    type="email"
-                    name="user.email"
-                    label="Email"
-                    value={formik.values.user?.email || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(
-                      ((formik.touched as FormikTouchedValues).user?.email || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.email
-                    )}
-                    helperText={
-                      (((formik.touched as FormikTouchedValues).user?.email || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.email) || ''
-                    }
-                    sx={textFieldStyles}
-                  />
-                </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  name="logo_url"
+                  label="URL логотипа"
+                  placeholder="https://example.com/logo.png"
+                  value={formik.values.logo_url}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
+                  helperText={formik.touched.logo_url && formik.errors.logo_url}
+                  sx={textFieldStyles}
+                />
+              </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    required
-                    name="user.phone"
-                    label="Телефон"
-                    placeholder="+380671234567"
-                    value={formik.values.user?.phone || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(
-                      ((formik.touched as FormikTouchedValues).user?.phone || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.phone
-                    )}
-                    helperText={
-                      (((formik.touched as FormikTouchedValues).user?.phone || showValidationErrors) && 
-                      (formik.errors as FormikErrorsValues).user?.phone) || ''
-                    }
-                    sx={textFieldStyles}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    type="password"
-                    name="user.password"
-                    label="Пароль (оставьте пустым для автогенерации)"
-                    value={formik.values.user?.password || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={Boolean(
-                      (formik.touched as FormikTouchedValues).user?.password && 
-                      (formik.errors as FormikErrorsValues).user?.password
-                    )}
-                    helperText={
-                      ((formik.touched as FormikTouchedValues).user?.password && 
-                      (formik.errors as FormikErrorsValues).user?.password) || ''
-                    }
-                    sx={textFieldStyles}
-                  />
-                </Grid>
-              </>
-            )}
-
-            {/* Кнопки действий */}
-            <Grid item xs={12}>
-              {apiError && (
-                <Alert severity="error" sx={{ mb: 2 }}>{apiError}</Alert>
-              )}
-              
-              {successMessage && (
-                <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
-              )}
-
-              {/* Уведомление о незаполненных обязательных полях */}
-              {(!formik.isValid && showValidationErrors) && (
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Заполните все обязательные поля:
-                  </Typography>
-                  <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
-                    {getRequiredFieldErrors().map((field, index) => (
-                      <Typography variant="body2" component="li" key={index}>
-                        {field}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Alert>
-              )}
-
-              {/* Информационное сообщение о блокировке кнопки */}
-              {!formik.isValid && !showValidationErrors && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Заполните все обязательные поля для активации кнопки сохранения
-                </Alert>
-              )}
-              
-              <Box sx={{ 
-                display: 'flex', 
-                gap: SIZES.spacing.md, 
-                justifyContent: 'flex-end', 
-                mt: SIZES.spacing.lg 
-              }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate('/partners')}
-                  disabled={isLoading}
-                  sx={secondaryButtonStyles}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  type={formik.isValid ? "submit" : "button"}
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  disabled={isLoading}
-                  onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
-                  sx={{
-                    ...primaryButtonStyles,
-                    ...((!formik.isValid && !isLoading) && {
-                      backgroundColor: theme.palette.warning.main,
-                      '&:hover': {
-                        backgroundColor: theme.palette.warning.dark,
-                      }
-                    })
+              {/* Юридическая информация */}
+              <Grid item xs={12}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    mt: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.lg 
                   }}
                 >
-                  {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
+                  Юридическая информация
+                </Typography>
+                <Divider sx={{ mb: SIZES.spacing.md }} />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  name="tax_number"
+                  label="Налоговый номер (необязательно)"
+                  placeholder="12345678"
+                  value={formik.values.tax_number}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.tax_number && Boolean(formik.errors.tax_number)}
+                  helperText={formik.touched.tax_number && formik.errors.tax_number}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  name="legal_address"
+                  label="Юридический адрес"
+                  value={formik.values.legal_address}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={(formik.touched.legal_address || showValidationErrors) && Boolean(formik.errors.legal_address)}
+                  helperText={(formik.touched.legal_address || showValidationErrors) && formik.errors.legal_address}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+
+              {/* Местоположение */}
+              <Grid item xs={12}>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    mt: SIZES.spacing.md,
+                    fontSize: SIZES.fontSize.lg 
+                  }}
+                >
+                  Местоположение
+                </Typography>
+                <Divider sx={{ mb: SIZES.spacing.md }} />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
+                  <InputLabel id="region-select-label">Регион</InputLabel>
+                  <Select
+                    labelId="region-select-label"
+                    id="region_id"
+                    name="region_id"
+                    value={formik.values.region_id || ''}
+                    label="Регион"
+                    onChange={handleRegionChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <MenuItem value="" disabled>
+                      <em>Выберите регион</em>
+                    </MenuItem>
+                    {regionsData?.data?.map((region) => (
+                      <MenuItem key={region.id} value={region.id.toString()}>
+                        {region.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.region_id && formik.errors.region_id && (
+                    <Typography variant="caption" color="error">
+                      {formik.errors.region_id}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <FormControl 
+                  fullWidth 
+                  required 
+                  disabled={!formik.values.region_id}
+                  error={formik.touched.city_id && Boolean(formik.errors.city_id)}
+                >
+                  <InputLabel id="city-select-label">Город</InputLabel>
+                  <Select
+                    labelId="city-select-label"
+                    id="city_id"
+                    name="city_id"
+                    value={formik.values.city_id || ''}
+                    label="Город"
+                    onChange={handleCityChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <MenuItem value="" disabled>
+                      <em>Выберите город</em>
+                    </MenuItem>
+                    {citiesData?.data?.map((city) => (
+                      <MenuItem key={city.id} value={city.id.toString()}>
+                        {city.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.city_id && formik.errors.city_id && (
+                    <Typography variant="caption" color="error">
+                      {formik.errors.city_id}
+                    </Typography>
+                  )}
+                  {citiesLoading && (
+                    <Typography variant="caption" color="text.secondary">
+                      Загрузка городов...
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Box sx={{ ml: 2, mt: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.is_active}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
+                        name="is_active"
+                      />
+                    }
+                    label="Активный партнер"
+                  />
+                </Box>
+              </Grid>
+
+              {/* Данные пользователя (только при создании) */}
+              {!isEdit && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography 
+                      variant="h6" 
+                      gutterBottom 
+                      sx={{ 
+                        mt: SIZES.spacing.md,
+                        fontSize: SIZES.fontSize.lg 
+                      }}
+                    >
+                      Данные пользователя
+                    </Typography>
+                    <Divider sx={{ mb: SIZES.spacing.md }} />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      name="user.first_name"
+                      label="Имя"
+                      value={formik.values.user?.first_name || ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={(formik.touched.user as FormikTouched['user'])?.first_name && Boolean((formik.errors.user as FormikErrors['user'])?.first_name)}
+                      helperText={(formik.touched.user as FormikTouched['user'])?.first_name && (formik.errors.user as FormikErrors['user'])?.first_name}
+                      sx={textFieldStyles}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      name="user.last_name"
+                      label="Фамилия"
+                      value={formik.values.user?.last_name || ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={(formik.touched.user as FormikTouched['user'])?.last_name && Boolean((formik.errors.user as FormikErrors['user'])?.last_name)}
+                      helperText={(formik.touched.user as FormikTouched['user'])?.last_name && (formik.errors.user as FormikErrors['user'])?.last_name}
+                      sx={textFieldStyles}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      name="user.email"
+                      label="Email"
+                      type="email"
+                      value={formik.values.user?.email || ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={(formik.touched.user as FormikTouched['user'])?.email && Boolean((formik.errors.user as FormikErrors['user'])?.email)}
+                      helperText={(formik.touched.user as FormikTouched['user'])?.email && (formik.errors.user as FormikErrors['user'])?.email}
+                      sx={textFieldStyles}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      name="user.phone"
+                      label="Телефон"
+                      value={formik.values.user?.phone || ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={(formik.touched.user as FormikTouched['user'])?.phone && Boolean((formik.errors.user as FormikErrors['user'])?.phone)}
+                      helperText={(formik.touched.user as FormikTouched['user'])?.phone && (formik.errors.user as FormikErrors['user'])?.phone}
+                      placeholder="+79001234567"
+                      sx={textFieldStyles}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      fullWidth
+                      name="user.password"
+                      label="Пароль"
+                      type="password"
+                      value={formik.values.user?.password || ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      error={(formik.touched.user as FormikTouched['user'])?.password && Boolean((formik.errors.user as FormikErrors['user'])?.password)}
+                      helperText={(formik.touched.user as FormikTouched['user'])?.password && (formik.errors.user as FormikErrors['user'])?.password}
+                      sx={textFieldStyles}
+                    />
+                  </Grid>
+                </>
+              )}
+
+              {/* Отображение ошибок и кнопки действий */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: SIZES.spacing.md }} />
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mt: SIZES.spacing.md
+                }}>
+                  {/* Отображение ошибок */}
+                  <Box>
+                    {apiError && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        {apiError}
+                      </Alert>
+                    )}
+                    {successMessage && (
+                      <Alert severity="success" sx={{ mb: 2 }}>
+                        {successMessage}
+                      </Alert>
+                    )}
+                    {showValidationErrors && !formik.isValid && (
+                      <Alert severity="error" sx={{ mb: 2 }}>
+                        Пожалуйста, исправьте ошибки в форме.
+                      </Alert>
+                    )}
+                  </Box>
+
+                  {/* Кнопки действий */}
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => navigate('/partners')}
+                      sx={secondaryButtonStyles}
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={createLoading || updateLoading}
+                      startIcon={
+                        (createLoading || updateLoading) ? 
+                          <CircularProgress size={20} color="inherit" /> : 
+                          <SaveIcon />
+                      }
+                      onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
+                      sx={primaryButtonStyles}
+                    >
+                      {(createLoading || updateLoading) ? 'Сохранение...' : 'Сохранить'}
+                    </Button>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </Paper>
+        </TabPanel>
+
+        {/* Вкладка сервисных точек (только в режиме редактирования) */}
+        {isEdit && (
+          <TabPanel value={activeTab} index={1}>
+            <Paper sx={cardStyles}>
+              {/* Заголовок и кнопка добавления */}
+              <Box sx={tablePageStyles.pageHeader}>
+                <Typography variant="h5">
+                  Сервисные точки партнера
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleAddServicePoint}
+                >
+                  Добавить сервисную точку
                 </Button>
               </Box>
-            </Grid>
-          </Grid>
-        </Paper>
+
+              {/* Отображение состояний загрузки и ошибок */}
+              {servicePointsLoading ? (
+                <Box sx={tablePageStyles.loadingContainer}>
+                  <CircularProgress />
+                </Box>
+              ) : servicePointsData?.data?.length === 0 ? (
+                <Box sx={{ p: 3, textAlign: 'center' }}>
+                  <Typography variant="body1" color="text.secondary">
+                    У этого партнера пока нет сервисных точек
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  {/* Статистика */}
+                  <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Всего сервисных точек: <strong>{servicePointsData?.pagination?.total_count || 0}</strong>
+                    </Typography>
+                    {servicePointsData?.data && servicePointsData.data.length > 0 && (
+                      <>
+                        <Typography variant="body2" color="success.main">
+                          Активных: <strong>{servicePointsData.data.filter(sp => sp.is_active).length}</strong>
+                        </Typography>
+                        {servicePointsData.data.filter(sp => !sp.is_active).length > 0 && (
+                          <Typography variant="body2" color="error.main">
+                            Неактивных: <strong>{servicePointsData.data.filter(sp => !sp.is_active).length}</strong>
+                          </Typography>
+                        )}
+                      </>
+                    )}
+                  </Box>
+
+                  {/* Таблица сервисных точек */}
+                  <Box sx={tablePageStyles.tableContainer}>
+                    <Table 
+                      columns={servicePointColumns}
+                      rows={servicePointsData?.data || []}
+                    />
+                  </Box>
+
+                  {/* Пагинация */}
+                  {servicePointsData?.pagination && Math.ceil(servicePointsData.pagination.total_count / 25) > 1 && (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      mt: 3
+                    }}>
+                      <Pagination
+                        count={Math.ceil(servicePointsData.pagination.total_count / 25)}
+                        page={1}
+                        onChange={(newPage) => console.log('Переход на страницу:', newPage)}
+                        color="primary"
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+            </Paper>
+          </TabPanel>
+        )}
       </form>
     </Box>
   );
