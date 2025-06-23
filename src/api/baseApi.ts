@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { useDispatch } from 'react-redux';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
+import config from '../config';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -15,19 +16,22 @@ const baseQuery = fetchBaseQuery({
     const state = getState() as any;
     const token = state.auth?.accessToken;
     
+    // Если токен есть в Redux состоянии, добавляем его в заголовок
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
+    } else {
+      // Если токена нет в Redux, пробуем взять из localStorage
+      const localToken = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
+      if (localToken) {
+        headers.set('authorization', `Bearer ${localToken}`);
+      }
     }
-    // Если токена нет в состоянии, API попытается использовать токен из cookies
-    
-    // ВАЖНО: НЕ устанавливаем Content-Type для FormData!
-    // RTK Query автоматически определит FormData и не установит Content-Type,
-    // позволяя браузеру установить правильные заголовки multipart/form-data
     
     // Отладочная информация только в режиме разработки
     if (process.env.NODE_ENV === 'development') {
       console.log('BaseAPI prepareHeaders:', {
         hasAccessToken: !!token,
+        hasLocalStorageToken: !!localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY),
         tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
         url: 'unknown',
         method: 'unknown'
@@ -55,6 +59,7 @@ const baseQueryWithReauth: BaseQueryFn<
       {
         url: '/auth/refresh',
         method: 'POST',
+        credentials: 'include',
       },
       api,
       extraOptions
@@ -68,15 +73,24 @@ const baseQueryWithReauth: BaseQueryFn<
       if (refreshData.access_token || refreshData.tokens?.access) {
         // Импортируем action из authSlice
         const { updateAccessToken } = await import('../store/slices/authSlice');
-        api.dispatch(updateAccessToken(refreshData.access_token || refreshData.tokens.access));
+        const newToken = refreshData.access_token || refreshData.tokens.access;
+        
+        // Обновляем токен в Redux состоянии
+        api.dispatch(updateAccessToken(newToken));
+        
+        // Сохраняем токен в localStorage
+        localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, newToken);
+        
+        console.log('BaseQuery: токен обновлен в Redux и localStorage');
       }
       
       // Повторяем оригинальный запрос
       result = await baseQuery(args, api, extraOptions);
     } else {
       console.log('BaseQuery: не удалось обновить токен, выходим из системы');
-      // Если не удалось обновить токен, очищаем состояние
+      // Если не удалось обновить токен, очищаем состояние и localStorage
       const { logout } = await import('../store/slices/authSlice');
+      localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
       api.dispatch(logout());
     }
   }

@@ -8,16 +8,16 @@ import config from '../../config';
 
 /**
  * authSlice для cookie-based аутентификации
- * Пользователи и токены управляются только через Redux состояние
+ * Пользователи и токены управляются через Redux состояние и localStorage
  * Refresh токены хранятся в HttpOnly куки на сервере
  */
 
-// Начальное состояние (без localStorage)
+// Начальное состояние (проверяем localStorage при инициализации)
 const initialState: AuthState = {
-  accessToken: null, // Токен будет получен из API при инициализации
+  accessToken: localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY), // Проверяем localStorage при инициализации
   refreshToken: null, // Refresh токен в HttpOnly cookies
   user: null, // Пользователь будет получен из API при инициализации
-  isAuthenticated: false, // Будет определено при инициализации через API
+  isAuthenticated: !!localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY), // Считаем аутентифицированным если есть токен
   loading: false,
   error: null,
   isInitialized: false,
@@ -51,6 +51,9 @@ const authSlice = createSlice({
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
+      
+      // Сохраняем токен в localStorage для сохранения сессии при обновлении страницы
+      localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, accessToken);
     },
     logout: (state) => {
       state.accessToken = null;
@@ -59,6 +62,9 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
+      
+      // Очищаем токен из localStorage при выходе
+      localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
     },
     setInitialized: (state) => {
       state.isInitialized = true;
@@ -69,6 +75,9 @@ const authSlice = createSlice({
       if (state.user) {
         state.isAuthenticated = true;
       }
+      
+      // Сохраняем обновленный токен в localStorage
+      localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -87,6 +96,9 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
+        
+        // Сохраняем токен в localStorage для сохранения сессии при обновлении страницы
+        localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, action.payload.tokens.access);
         
         console.log('Auth: login.fulfilled - state updated:', {
           isAuthenticated: state.isAuthenticated,
@@ -110,6 +122,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.isInitialized = true;
+        
+        // Очищаем localStorage при выходе
+        localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
       })
       
       // Обработка refreshAuthTokens
@@ -125,7 +140,11 @@ const authSlice = createSlice({
         if (action.payload.access_token || action.payload.tokens?.access) {
           const newToken = action.payload.access_token || action.payload.tokens.access;
           state.accessToken = newToken;
-          console.log('AuthSlice: Access токен обновлен');
+          
+          // Сохраняем обновленный токен в localStorage для сохранения сессии
+          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, newToken);
+          
+          console.log('AuthSlice: Access токен обновлен и сохранен в localStorage');
         }
       })
       .addCase(refreshAuthTokens.rejected, (state, action) => {
@@ -149,6 +168,9 @@ const authSlice = createSlice({
         // Если в ответе есть новый access токен, сохраняем его
         if (action.payload.tokens?.access) {
           state.accessToken = action.payload.tokens.access;
+          
+          // Сохраняем токен в localStorage
+          localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, action.payload.tokens.access);
         }
         
         console.log('User role after getCurrentUser:', state.user?.role);
