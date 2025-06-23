@@ -22,6 +22,7 @@ import {
   Business as BusinessIcon,
   Check as CheckIcon,
   Close as CloseIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -408,7 +409,7 @@ const ReviewsPage: React.FC = () => {
           )}
           <Tooltip title="Ответить">
             <IconButton 
-              onClick={() => navigate(`/reviews/${review.id}/reply`)}
+              onClick={() => navigate(`/admin/reviews/${review.id}/reply`)}
               size="small"
               sx={{
                 '&:hover': {
@@ -489,6 +490,19 @@ const ReviewsPage: React.FC = () => {
         >
           Отзывы
         </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/admin/reviews/new')}
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            '&:hover': {
+              backgroundColor: theme.palette.primary.dark,
+            }
+          }}
+        >
+          Создать отзыв
+        </Button>
       </Box>
 
       {/* Отображение ошибок */}
