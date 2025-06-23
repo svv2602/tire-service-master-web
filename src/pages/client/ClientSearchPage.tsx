@@ -59,7 +59,6 @@ interface SearchServicePoint {
   average_rating?: string | number;
   reviews_count?: number;
   posts_count?: number;
-  can_accept_bookings?: boolean;
   work_status: string;
   distance?: number;
 }
@@ -189,7 +188,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
             <Chip 
               label={servicePoint.work_status} 
               size="small" 
-              color={servicePoint.can_accept_bookings ? 'success' : 'default'}
+              color={servicePoint.work_status.toLowerCase().includes('работает') || servicePoint.work_status.toLowerCase() === 'working' ? 'success' : 'default'}
               variant="outlined"
             />
           </Box>
@@ -328,20 +327,18 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         
         <Box sx={{ flexGrow: 1 }} />
         
-        {servicePoint.can_accept_bookings && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<BookIcon />}
-            onClick={handleBooking}
-            sx={{ 
-              bgcolor: theme.palette.primary.main,
-              '&:hover': { bgcolor: theme.palette.primary.dark }
-            }}
-          >
-            Записатися
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<BookIcon />}
+          onClick={handleBooking}
+          sx={{ 
+            bgcolor: theme.palette.primary.main,
+            '&:hover': { bgcolor: theme.palette.primary.dark }
+          }}
+        >
+          Записатися
+        </Button>
       </CardActions>
     </Card>
   );
@@ -376,27 +373,34 @@ const ClientSearchPage: React.FC = () => {
   );
 
   // Адаптируем данные из API к локальному интерфейсу
-  const servicePoints: SearchServicePoint[] = (searchResult?.data || []).map(point => ({
-    id: point.id,
-    name: point.name,
-    address: point.address,
-    city: {
-      id: point.city?.id || 0,
-      name: point.city?.name || '',
-      region: point.city?.region?.name || ''
-    },
-    partner: {
-      id: point.partner?.id || 0,
-      name: point.partner?.company_name || point.partner?.name || ''
-    },
-    contact_phone: point.contact_phone,
-    average_rating: 4.0, // Заглушка для рейтинга
-    reviews_count: 0, // Заглушка для количества отзывов
-    posts_count: point.post_count,
-    can_accept_bookings: point.is_active && point.work_status === 'working',
-    work_status: point.work_status,
-    distance: undefined // Пока не используется расстояние
-  }));
+  const servicePoints: SearchServicePoint[] = (searchResult?.data || []).map(point => {
+    // Отладочный вывод для проверки статуса
+    console.log(`ServicePoint ${point.id} - ${point.name}:`, {
+      is_active: point.is_active,
+      work_status: point.work_status
+    });
+    
+    return {
+      id: point.id,
+      name: point.name,
+      address: point.address,
+      city: {
+        id: point.city?.id || 0,
+        name: point.city?.name || '',
+        region: point.city?.region?.name || ''
+      },
+      partner: {
+        id: point.partner?.id || 0,
+        name: point.partner?.company_name || point.partner?.name || ''
+      },
+      contact_phone: point.contact_phone,
+      average_rating: 4.0, // Заглушка для рейтинга
+      reviews_count: 0, // Заглушка для количества отзывов
+      posts_count: point.post_count,
+      work_status: point.work_status,
+      distance: undefined // Пока не используется расстояние
+    };
+  });
   const totalFound = searchResult?.total || 0;
   const cityFound = searchResult?.city_found ?? true;
 
