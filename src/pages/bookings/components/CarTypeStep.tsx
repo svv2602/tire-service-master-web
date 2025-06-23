@@ -71,10 +71,6 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     if (!value.trim()) {
       return 'Номер автомобиля обязателен для заполнения';
     }
-    // Простая валидация номера (может быть улучшена)
-    if (value.length < 5) {
-      return 'Номер автомобиля слишком короткий';
-    }
     return '';
   };
   

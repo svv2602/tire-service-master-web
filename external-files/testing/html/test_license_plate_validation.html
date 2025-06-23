@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест валидации номера автомобиля</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
+            color: white;
+            border-radius: 8px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 5px;
+        }
+        .test-case {
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+        }
+        .test-case-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .test-input {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .expected {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .deprecated {
+            color: #d32f2f;
+            text-decoration: line-through;
+        }
+        .new-behavior {
+            color: #1976d2;
+            font-weight: bold;
+        }
+        .step-list {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #1976d2;
+        }
+        .step-list ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .step-list li {
+            margin: 8px 0;
+        }
+        .url {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            border: 1px solid #ffb74d;
+            margin: 10px 0;
+        }
+        .implementation-details {
+            background: #f3e5f5;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Тест валидации номера автомобиля</h1>
+            <p>Проверка упрощенной валидации поля "Номер автомобиля"</p>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎯 Цель изменения</div>
+            <p>Упростить валидацию поля "Номер автомобиля" - оставить только проверку на то, что поле не пустое, убрав дополнительные проверки формата.</p>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📋 Описание изменений</div>
+            <div class="implementation-details">
+✅ ДО: Валидация проверяла пустоту И минимальную длину (5 символов)
+✅ ПОСЛЕ: Валидация проверяет только пустоту поля
+
+Изменения в файле: tire-service-master-web/src/pages/bookings/components/CarTypeStep.tsx
+
+Функция validateLicensePlate():
+- Убрана проверка: if (value.length < 5)
+- Убрано сообщение: "Номер автомобиля слишком короткий"
+- Оставлена только проверка: if (!value.trim())
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🧪 Тестовые случаи</div>
+            
+            <div class="test-case">
+                <div class="test-case-title">1. Пустое поле</div>
+                <strong>Ввод:</strong> <span class="test-input">""</span> (пустая строка)<br>
+                <strong>Ожидаемый результат:</strong> <span class="expected">❌ "Номер автомобиля обязателен для заполнения"</span>
+            </div>
+
+            <div class="test-case">
+                <div class="test-case-title">2. Только пробелы</div>
+                <strong>Ввод:</strong> <span class="test-input">"   "</span> (пробелы)<br>
+                <strong>Ожидаемый результат:</strong> <span class="expected">❌ "Номер автомобиля обязателен для заполнения"</span>
+            </div>
+
+            <div class="test-case">
+                <div class="test-case-title">3. Короткий номер (1 символ)</div>
+                <strong>Ввод:</strong> <span class="test-input">"А"</span><br>
+                <strong>Старое поведение:</strong> <span class="deprecated">❌ "Номер автомобиля слишком короткий"</span><br>
+                <strong>Новое поведение:</strong> <span class="new-behavior">✅ Валидация пройдена</span>
+            </div>
+
+            <div class="test-case">
+                <div class="test-case-title">4. Короткий номер (2-4 символа)</div>
+                <strong>Ввод:</strong> <span class="test-input">"АА", "123", "А1Б2"</span><br>
+                <strong>Старое поведение:</strong> <span class="deprecated">❌ "Номер автомобиля слишком короткий"</span><br>
+                <strong>Новое поведение:</strong> <span class="new-behavior">✅ Валидация пройдена</span>
+            </div>
+
+            <div class="test-case">
+                <div class="test-case-title">5. Стандартный номер (5+ символов)</div>
+                <strong>Ввод:</strong> <span class="test-input">"АА123ВВ", "А123БВ777"</span><br>
+                <strong>Результат:</strong> <span class="expected">✅ Валидация пройдена (как и раньше)</span>
+            </div>
+
+            <div class="test-case">
+                <div class="test-case-title">6. Специальные символы</div>
+                <strong>Ввод:</strong> <span class="test-input">"А-123", "№1", "@#$"</span><br>
+                <strong>Результат:</strong> <span class="new-behavior">✅ Валидация пройдена (любые символы разрешены)</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔧 Техническая реализация</div>
+            <div class="implementation-details">
+Файл: tire-service-master-web/src/pages/bookings/components/CarTypeStep.tsx
+
+Функция validateLicensePlate:
+```javascript
+// ДО:
+const validateLicensePlate = (value: string) => {
+  if (!value.trim()) {
+    return 'Номер автомобиля обязателен для заполнения';
+  }
+  // Простая валидация номера (может быть улучшена)
+  if (value.length < 5) {
+    return 'Номер автомобиля слишком короткий';
+  }
+  return '';
+};
+
+// ПОСЛЕ:
+const validateLicensePlate = (value: string) => {
+  if (!value.trim()) {
+    return 'Номер автомобиля обязателен для заполнения';
+  }
+  return '';
+};
+```
+
+Обработчик остался без изменений:
+- Автоматически переводит в верхний регистр
+- Сохраняет значение в formData.license_plate
+- Вызывает валидацию и показывает ошибки
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📝 Инструкции по тестированию</div>
+            <div class="step-list">
+                <ol>
+                    <li>Перейдите на страницу создания бронирования</li>
+                    <li>Пройдите до шага "Информация об автомобиле"</li>
+                    <li>Выберите любой тип автомобиля</li>
+                    <li>В поле "Номер автомобиля" попробуйте ввести тестовые случаи</li>
+                    <li>Проверьте, что короткие номера (1-4 символа) теперь проходят валидацию</li>
+                    <li>Убедитесь, что пустое поле по-прежнему показывает ошибку</li>
+                </ol>
+            </div>
+            
+            <div class="url">
+                <strong>URL для тестирования:</strong><br>
+                http://localhost:3008/client/booking/new-with-availability
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">✅ Ожидаемые результаты</div>
+            <ul>
+                <li><strong>Пустое поле:</strong> Показывается ошибка "Номер автомобиля обязателен для заполнения"</li>
+                <li><strong>Любой непустой ввод:</strong> Валидация проходит успешно</li>
+                <li><strong>Короткие номера:</strong> Больше не показывают ошибку о минимальной длине</li>
+                <li><strong>Автоматический верхний регистр:</strong> Продолжает работать</li>
+                <li><strong>Переход к следующему шагу:</strong> Возможен при заполненных обязательных полях</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎯 Польза изменения</div>
+            <ul>
+                <li><strong>Гибкость:</strong> Поддержка различных форматов номеров (временные, региональные особенности)</li>
+                <li><strong>Простота:</strong> Убрана избыточная валидация формата</li>
+                <li><strong>UX:</strong> Пользователи не получают ложные ошибки для валидных коротких номеров</li>
+                <li><strong>Международность:</strong> Поддержка номеров разных стран с разными форматами</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

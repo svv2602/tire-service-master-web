@@ -28,6 +28,11 @@ import { useTheme } from '@mui/material/styles';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+// Импорт API хуков
+import { useGetCityByIdQuery } from '../../../api/cities.api';
+import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
+import { useGetCarTypeByIdQuery } from '../../../api/carTypes.api';
+
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 
@@ -48,20 +53,40 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
   const theme = useTheme();
   
+  // API запросы для получения данных
+  const { data: cityData } = useGetCityByIdQuery(formData.city_id || 0, {
+    skip: !formData.city_id
+  });
+  
+  const { data: servicePointData } = useGetServicePointBasicInfoQuery(
+    formData.service_point_id?.toString() || '',
+    { skip: !formData.service_point_id }
+  );
+  
+  const { data: carTypeData } = useGetCarTypeByIdQuery(
+    formData.car_type_id?.toString() || '',
+    { skip: !formData.car_type_id }
+  );
+  
   // Функции для получения названий
   const getServicePointName = () => {
-    // В реальном приложении здесь будет запрос к API
-    return `Точка обслуживания #${formData.service_point_id}`;
+    if (!servicePointData) return 'Загрузка...';
+    return servicePointData.name;
+  };
+  
+  const getServicePointAddress = () => {
+    if (!servicePointData) return '';
+    return servicePointData.address;
   };
   
   const getCityName = () => {
-    // В реальном приложении здесь будет запрос к API
-    return `Город #${formData.city_id}`;
+    if (!cityData?.data) return 'Загрузка...';
+    return cityData.data.name;
   };
   
   const getCarTypeName = () => {
-    // В реальном приложении здесь будет запрос к API
-    return `Тип автомобиля #${formData.car_type_id}`;
+    if (!carTypeData) return 'Загрузка...';
+    return carTypeData.name;
   };
   
   // Подсчет общей стоимости услуг
@@ -119,7 +144,18 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary="Точка обслуживания"
-                  secondary={getServicePointName()}
+                  secondary={
+                    <Box>
+                      <Typography variant="body2" component="div">
+                        {getServicePointName()}
+                      </Typography>
+                      {getServicePointAddress() && (
+                        <Typography variant="caption" color="text.secondary" component="div">
+                          {getServicePointAddress()}
+                        </Typography>
+                      )}
+                    </Box>
+                  }
                 />
               </ListItem>
               
