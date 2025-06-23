@@ -556,16 +556,6 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         showCounter={true}
         fallbackIcon="🚗"
       />
-      
-      {/* Отладочная информация (временно) */}
-      {process.env.NODE_ENV === 'development' && (
-        <Box sx={{ p: 1, fontSize: '0.75rem', color: 'text.secondary', bgcolor: 'grey.100' }}>
-          Фото: {servicePoint.photos?.length || 0} шт.
-          {servicePoint.photos && servicePoint.photos.length > 0 && (
-            <div>Первое фото: {servicePoint.photos[0].url.substring(0, 50)}...</div>
-          )}
-        </Box>
-      )}
 
       <CardContent>
         {/* Основная информация */}
