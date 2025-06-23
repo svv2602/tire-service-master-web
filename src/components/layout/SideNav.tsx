@@ -129,8 +129,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         <ListItem disablePadding>
           <StyledListItemButton 
             component={Link} 
-            to="/" 
-            selected={pathname === '/'}
+            to="/admin/dashboard" 
+            selected={pathname === '/admin/dashboard'}
           >
             <ListItemIcon>
               <DashboardIcon />
@@ -144,8 +144,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
           <ListItem disablePadding>
             <StyledListItemButton 
               component={Link} 
-              to="/partners" 
-              selected={pathname === '/partners'}
+              to="/admin/partners" 
+              selected={pathname === '/admin/partners'}
             >
               <ListItemIcon>
                 <BusinessIcon />
@@ -159,8 +159,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         <ListItem disablePadding>
           <StyledListItemButton
             component={Link}
-            to="/clients"
-            selected={pathname === '/clients'}
+            to="/admin/clients"
+            selected={pathname === '/admin/clients'}
           >
             <ListItemIcon>
               <PeopleIcon />
@@ -200,8 +200,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/articles"
-                    selected={pathname === '/articles'}
+                    to="/admin/articles"
+                    selected={pathname === '/admin/articles'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -213,8 +213,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/articles/new"
-                    selected={pathname === '/articles/new'}
+                    to="/admin/articles/new"
+                    selected={pathname === '/admin/articles/new'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -233,8 +233,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
           <ListItem disablePadding>
             <StyledListItemButton
               component={Link}
-              to="/users"
-              selected={pathname === '/users'}
+              to="/admin/users"
+              selected={pathname === '/admin/users'}
             >
               <ListItemIcon>
                 <PersonIcon />
@@ -261,8 +261,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/page-content"
-                    selected={pathname === '/page-content'}
+                    to="/admin/page-content"
+                    selected={pathname === '/admin/page-content'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -274,8 +274,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/page-content/new"
-                    selected={pathname === '/page-content/new'}
+                    to="/admin/page-content/new"
+                    selected={pathname === '/admin/page-content/new'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -287,8 +287,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/page-content/management"
-                    selected={pathname === '/page-content/management'}
+                    to="/admin/page-content/management"
+                    selected={pathname === '/admin/page-content/management'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -319,8 +319,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                 <ListItem disablePadding>
                   <StyledListItemButton
                     component={Link}
-                    to="/service-points"
-                    selected={pathname === '/service-points'}
+                    to="/admin/service-points"
+                    selected={pathname === '/admin/service-points'}
                     nested={1}
                   >
                     <ListItemIcon>
@@ -333,8 +333,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                   <ListItem disablePadding>
                     <StyledListItemButton
                       component={Link}
-                      to="/my-service-points"
-                      selected={pathname === '/my-service-points'}
+                      to="/admin/my-service-points"
+                      selected={pathname === '/admin/my-service-points'}
                       nested={1}
                     >
                       <ListItemIcon>
@@ -364,8 +364,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
             <ListItem disablePadding>
               <StyledListItemButton
                 component={Link}
-                to="/bookings"
-                selected={pathname === '/bookings'}
+                to="/admin/bookings"
+                selected={pathname === '/admin/bookings'}
                 nested={1}
               >
                 <ListItemIcon>
@@ -378,8 +378,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
               <ListItem disablePadding>
                 <StyledListItemButton
                   component={Link}
-                  to="/my-bookings"
-                  selected={pathname === '/my-bookings'}
+                  to="/admin/my-bookings"
+                  selected={pathname === '/admin/my-bookings'}
                   nested={1}
                 >
                   <ListItemIcon>
@@ -424,8 +424,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                     <ListItem disablePadding>
                       <StyledListItemButton
                         component={Link}
-                        to="/regions"
-                        selected={pathname === '/regions'}
+                        to="/admin/regions"
+                        selected={pathname === '/admin/regions'}
                         nested={2}
                       >
                         <ListItemIcon>
@@ -455,8 +455,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                     <ListItem disablePadding>
                       <StyledListItemButton
                         component={Link}
-                        to="/car-brands"
-                        selected={pathname === '/car-brands'}
+                        to="/admin/car-brands"
+                        selected={pathname === '/admin/car-brands'}
                         nested={2}
                       >
                         <ListItemIcon>
@@ -468,8 +468,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
                     <ListItem disablePadding>
                       <StyledListItemButton
                         component={Link}
-                        to="/car-models"
-                        selected={pathname === '/car-models'}
+                        to="/admin/car-models"
+                        selected={pathname === '/admin/car-models'}
                         nested={2}
                       >
                         <ListItemIcon>
@@ -489,8 +489,8 @@ const SideNav: React.FC<SideNavProps> = ({ open }) => {
         <ListItem disablePadding>
           <StyledListItemButton
             component={Link}
-            to="/settings"
-            selected={pathname === '/settings'}
+            to="/admin/settings"
+            selected={pathname === '/admin/settings'}
           >
             <ListItemIcon>
               <SettingsIcon />
