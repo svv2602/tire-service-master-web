@@ -14,13 +14,11 @@ import {
   CardActions,
   Chip,
   IconButton,
-  InputAdornment,
   Autocomplete,
   Fade,
   useTheme
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   LocationOn as LocationIcon,
   Article as ArticleIcon,
   BookOnline as BookIcon,
@@ -61,7 +59,6 @@ const ClientMainPage: React.FC = () => {
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   
   // Состояние для поиска
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState<CityWithServicePoints | null>(null);
   
   // API запросы для контента
@@ -84,11 +81,11 @@ const ClientMainPage: React.FC = () => {
 
   const handleSearch = () => {
     if (!selectedCity) {
-      // Если город не выбран, показываем общий поиск
-      navigate(`/client/search?query=${encodeURIComponent(searchQuery)}`);
+      // Если город не выбран, показываем сообщение или просто ничего не делаем
+      return;
     } else {
       // Если город выбран, используем его в поиске
-      navigate(`/client/search?city=${encodeURIComponent(selectedCity.name)}&query=${encodeURIComponent(searchQuery)}`);
+      navigate(`/client/search?city=${encodeURIComponent(selectedCity.name)}`);
     }
   };
 
@@ -171,7 +168,7 @@ const ClientMainPage: React.FC = () => {
                 {/* Поиск */}
                 <Paper sx={{ p: 2, borderRadius: SIZES.borderRadius.lg }}>
                   <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={8}>
                       <Autocomplete
                         value={selectedCity}
                         onChange={(event, newValue) => setSelectedCity(newValue)}
@@ -206,23 +203,6 @@ const ClientMainPage: React.FC = () => {
                       />
                     </Grid>
                     <Grid item xs={12} sm={4}>
-                      <TextField
-                        fullWidth
-                        label="Пошук за назвою сервісу (необов'язково)"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                        placeholder="Введіть назву сервісу..."
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <SearchIcon />
-                            </InputAdornment>
-                          )
-                        }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={2}>
                       <Button
                         fullWidth
                         variant="contained"
