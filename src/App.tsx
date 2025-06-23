@@ -99,6 +99,9 @@ const RescheduleBookingPage = lazy(() => import('./pages/client/RescheduleBookin
 const ClientMyReviewsPage = lazy(() => import('./pages/client/MyReviewsPage'));
 const ClientReviewFormPage = lazy(() => import('./pages/client/ReviewFormPage'));
 
+// Ленивая загрузка страницы записей для роута /my-bookings
+const MyBookingsPageStandalone = lazy(() => import('./pages/my-bookings/MyBookingsPage'));
+
 // Ленивая загрузка страниц управления контентом
 const PageContentPage = lazy(() => import('./pages/page-content/PageContentPage'));
 const PageContentFormPage = lazy(() => import('./pages/page-content/PageContentFormPage'));
@@ -247,7 +250,7 @@ function App() {
                       {/* Маршруты для клиентских автомобилей */}
                       <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
                       <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
-                      <Route path="my-bookings" element={<div>Мои записи на шиномонтаж (в разработке)</div>} />
+                      <Route path="my-bookings" element={<MyBookingsPageStandalone />} />
                       {/* Маршруты для сервисных центров клиента */}
                       <Route path="service-points/search" element={<div>Поиск центров (в разработке)</div>} />
                       <Route path="service-points/favorites" element={<div>Избранные центры (в разработке)</div>} />
