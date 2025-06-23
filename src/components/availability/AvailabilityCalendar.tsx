@@ -105,18 +105,7 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
         />
       )}
 
-      {selectedDate && (
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-            Выбрана дата: {selectedDate.toLocaleDateString('ru-RU', { 
-              day: 'numeric', 
-              month: 'long',
-              year: 'numeric',
-              weekday: 'long'
-            })}
-          </Typography>
-        </Box>
-      )}
+
     </Box>
   );
 };
