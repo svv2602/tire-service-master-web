@@ -1,6 +1,6 @@
 // Шаг 1: Выбор города и точки обслуживания
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -8,31 +8,23 @@ import {
   Alert,
   Autocomplete,
   TextField,
-  Card,
-  CardContent,
-  CardActionArea,
-  Chip,
   CircularProgress,
-  FormHelperText,
+  FormHelperText
 } from '@mui/material';
-import {
-  LocationOn as LocationIcon,
-  Phone as PhoneIcon,
-  Schedule as ScheduleIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
+import { Info as InfoIcon, LocationOn as LocationIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
 // Импорт API хуков
 import { useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
 import { useSearchServicePointsQuery } from '../../../api/servicePoints.api';
+import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 import { City, ServicePoint } from '../../../types/models';
 
-// Импорт стилей
-import { getCardStyles } from '../../../styles/components';
+// Импорт компонента карточки
+import { ServicePointCard, ServicePointData } from '../../../components/ui/ServicePointCard';
 
 interface CityServicePointStepProps {
   formData: BookingFormData;
@@ -41,6 +33,56 @@ interface CityServicePointStepProps {
   onBack: () => void;
   isValid: boolean;
 }
+
+// Функция конвертации ServicePoint в ServicePointData
+const convertServicePointToServicePointData = (servicePoint: ServicePoint): ServicePointData => {
+  return {
+    id: servicePoint.id,
+    name: servicePoint.name,
+    address: servicePoint.address,
+    description: servicePoint.description,
+    city: servicePoint.city ? {
+      id: servicePoint.city.id,
+      name: servicePoint.city.name,
+      region: servicePoint.city.region?.name || ''
+    } : undefined,
+    partner: servicePoint.partner,
+    contact_phone: servicePoint.contact_phone,
+    average_rating: (servicePoint as any).average_rating,
+    reviews_count: (servicePoint as any).reviews_count,
+    work_status: servicePoint.work_status,
+    is_active: servicePoint.is_active,
+    photos: servicePoint.photos?.map(photo => ({
+      ...photo,
+      sort_order: photo.sort_order || 0
+    }))
+  };
+};
+
+// Компонент-обертка для карточки с хуками
+const ServicePointCardWrapper: React.FC<{
+  servicePoint: ServicePoint;
+  isSelected: boolean;
+  onSelect: (servicePointData: ServicePointData) => void;
+}> = ({ servicePoint, isSelected, onSelect }) => {
+  // Загрузка услуг для данной точки обслуживания
+  const { data: servicesData, isLoading: isLoadingServices } = useGetServicePointServicesQuery(servicePoint.id.toString());
+  const services = (servicesData as any)?.data || [];
+
+  return (
+    <Grid item xs={12} md={6} lg={4}>
+      <ServicePointCard
+        servicePoint={convertServicePointToServicePointData(servicePoint)}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        showSelectButton={true}
+        services={services}
+        isLoadingServices={isLoadingServices}
+        variant="compact"
+      />
+    </Grid>
+  );
+};
 
 const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   formData,
@@ -94,88 +136,14 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   };
   
   // Обработчик выбора точки обслуживания
-  const handleServicePointSelect = (servicePoint: ServicePoint) => {
+  const handleServicePointSelect = (servicePointData: ServicePointData) => {
     setFormData(prev => ({
       ...prev,
-      service_point_id: servicePoint.id,
+      service_point_id: servicePointData.id,
     }));
     
     // Если пользователь выбрал точку обслуживания вручную, значит данные больше не предзаполнены
     setAutoFilledData(false);
-  };
-  
-  // Рендер карточки точки обслуживания
-  const renderServicePointCard = (servicePoint: ServicePoint) => {
-    const isSelected = formData.service_point_id === servicePoint.id;
-    
-    return (
-      <Card
-        key={servicePoint.id}
-        sx={{
-          ...getCardStyles(theme),
-          border: isSelected ? `2px solid ${theme.palette.primary.main}` : '1px solid',
-          borderColor: isSelected ? 'primary.main' : 'divider',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            borderColor: 'primary.main',
-            transform: 'translateY(-2px)',
-            boxShadow: theme.shadows[4],
-          },
-        }}
-      >
-        <CardActionArea onClick={() => handleServicePointSelect(servicePoint)}>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>
-                {servicePoint.name}
-              </Typography>
-              {isSelected && (
-                <Chip
-                  label="Выбрано"
-                  color="primary"
-                  size="small"
-                  variant="filled"
-                />
-              )}
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <LocationIcon color="action" fontSize="small" />
-              <Typography variant="body2" color="text.secondary">
-                {servicePoint.address}
-              </Typography>
-            </Box>
-            
-            {servicePoint.contact_phone && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <PhoneIcon color="action" fontSize="small" />
-                <Typography variant="body2" color="text.secondary">
-                  {servicePoint.contact_phone}
-                </Typography>
-              </Box>
-            )}
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ScheduleIcon color="action" fontSize="small" />
-              <Typography variant="body2" color="text.secondary">
-                {servicePoint.is_active ? 'Работает' : 'Не работает'}
-              </Typography>
-            </Box>
-            
-            {servicePoint.partner?.name && (
-              <Box sx={{ mt: 1 }}>
-                <Chip
-                  label={servicePoint.partner.name}
-                  size="small"
-                  variant="outlined"
-                />
-              </Box>
-            )}
-          </CardContent>
-        </CardActionArea>
-      </Card>
-    );
   };
   
   return (
@@ -198,34 +166,24 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       <Grid container spacing={3}>
         {/* Выбор города */}
         <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            1. Выберите город
-          </Typography>
-          
-          {citiesError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              Ошибка загрузки городов. Попробуйте обновить страницу.
-            </Alert>
-          )}
-          
           <Autocomplete
             value={selectedCity}
-            onChange={(_, value) => handleCityChange(value)}
+            onChange={(_, newValue) => handleCityChange(newValue)}
             options={cities}
             getOptionLabel={(option) => option.name}
             loading={isLoadingCities}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Выберите город"
-                placeholder="Начните вводить название города"
-                variant="outlined"
-                fullWidth
+                label="Город"
+                placeholder="Выберите город"
+                error={!formData.city_id && !isLoadingCities}
+                helperText={!formData.city_id && !isLoadingCities ? 'Выберите город для продолжения' : ''}
                 InputProps={{
                   ...params.InputProps,
                   endAdornment: (
                     <>
-                      {isLoadingCities && <CircularProgress color="inherit" size={20} />}
+                      {isLoadingCities ? <CircularProgress color="inherit" size={20} /> : null}
                       {params.InputProps.endAdornment}
                     </>
                   ),
@@ -234,69 +192,72 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
             )}
             renderOption={(props, option) => (
               <Box component="li" {...props}>
-                <Box>
-                  <Typography variant="body1">{option.name}</Typography>
-                  {option.region?.name && (
-                    <Typography variant="caption" color="text.secondary">
-                      {option.region.name}
-                    </Typography>
-                  )}
-                </Box>
+                <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                {option.name}
               </Box>
             )}
-            noOptionsText="Города не найдены"
-            loadingText="Загрузка городов..."
           />
           
-          {!formData.city_id && (
+          {citiesError && (
             <FormHelperText error>
-              Выберите город для продолжения
+              Ошибка загрузки городов. Попробуйте обновить страницу.
             </FormHelperText>
           )}
         </Grid>
-        
-        {/* Выбор точки обслуживания */}
+
+        {/* Точки обслуживания */}
         {selectedCity && (
           <Grid item xs={12}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              2. Выберите точку обслуживания
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+              Доступные точки обслуживания в г. {selectedCity.name}
             </Typography>
             
-            {servicePointsError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                Ошибка загрузки точек обслуживания. Попробуйте выбрать город заново.
-              </Alert>
-            )}
-            
             {isLoadingServicePoints ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                 <CircularProgress />
+                <Typography variant="body1" sx={{ ml: 2 }}>
+                  Загрузка точек обслуживания...
+                </Typography>
               </Box>
+            ) : servicePointsError ? (
+              <Alert severity="error">
+                Ошибка загрузки точек обслуживания. Попробуйте выбрать другой город.
+              </Alert>
             ) : servicePoints.length === 0 ? (
               <Alert severity="info">
                 В выбранном городе нет доступных точек обслуживания.
               </Alert>
             ) : (
-              <Grid container spacing={2}>
+              <Grid container spacing={3}>
                 {servicePoints.map((servicePoint) => (
-                  <Grid item xs={12} sm={6} md={4} key={servicePoint.id}>
-                    {renderServicePointCard(servicePoint)}
-                  </Grid>
+                  <ServicePointCardWrapper
+                    key={servicePoint.id}
+                    servicePoint={servicePoint}
+                    isSelected={formData.service_point_id === servicePoint.id}
+                    onSelect={handleServicePointSelect}
+                  />
                 ))}
               </Grid>
-            )}
-            
-            {!formData.service_point_id && servicePoints.length > 0 && (
-              <FormHelperText error sx={{ mt: 1 }}>
-                Выберите точку обслуживания для продолжения
-              </FormHelperText>
             )}
           </Grid>
         )}
       </Grid>
       
-      {/* Информация о следующем шаге */}
-      {isValid && !autoFilledData && (
+      {/* Валидация */}
+      {!formData.city_id && selectedCity === null && (
+        <FormHelperText error sx={{ mt: 2 }}>
+          Выберите город для продолжения
+        </FormHelperText>
+      )}
+      
+      {formData.city_id && !formData.service_point_id && servicePoints.length > 0 && (
+        <FormHelperText error sx={{ mt: 2 }}>
+          Выберите точку обслуживания для продолжения
+        </FormHelperText>
+      )}
+      
+      {/* Подтверждение выбора */}
+      {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
           ✅ Город и точка обслуживания выбраны. Теперь можно перейти к выбору даты и времени.
         </Alert>
