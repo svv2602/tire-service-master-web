@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧭 Тест исправления навигации</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+        .info { color: #007bff; font-weight: bold; }
+        .step { margin: 20px 0; padding: 15px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .result.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .result.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        code { background: #f1f1f1; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧭 Тест исправления навигации</h1>
+    
+    <div class="step">
+        <h2>🎯 Что было исправлено:</h2>
+        <ul>
+            <li><strong>Корневой маршрут "/"</strong> теперь перенаправляет на <code>/client</code></li>
+            <li><strong>LoginPage</strong> после входа перенаправляет на <code>/client</code> вместо <code>/dashboard</code></li>
+            <li><strong>Админские маршруты</strong> перенесены под <code>/admin/*</code></li>
+            <li><strong>Путь возврата</strong> сохраняется только для админских страниц</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>🧪 Сценарии тестирования:</h2>
+        
+        <h3>1. Переход на главную без авторизации</h3>
+        <div class="result">
+            <strong>URL:</strong> <code>http://localhost:3008/</code><br>
+            <strong>Ожидается:</strong> Перенаправление на <code>http://localhost:3008/client</code><br>
+            <strong>Результат:</strong> Должна открыться главная страница клиента
+        </div>
+
+        <h3>2. Авторизация и перенаправление</h3>
+        <div class="result">
+            <strong>Шаги:</strong><br>
+            1. Перейти на <code>http://localhost:3008/login</code><br>
+            2. Войти как <code>admin@test.com</code> / <code>admin123</code><br>
+            <strong>Ожидается:</strong> Перенаправление на <code>/client</code><br>
+            <strong>Результат:</strong> Админ должен попасть на клиентскую главную
+        </div>
+
+        <h3>3. Доступ к админской панели</h3>
+        <div class="result">
+            <strong>URL:</strong> <code>http://localhost:3008/admin</code> (после авторизации)<br>
+            <strong>Ожидается:</strong> Перенаправление на <code>/admin/dashboard</code><br>
+            <strong>Результат:</strong> Должна открыться админская панель
+        </div>
+
+        <h3>4. Прямой доступ к админским страницам</h3>
+        <div class="result">
+            <strong>URL:</strong> <code>http://localhost:3008/admin/partners</code> (без авторизации)<br>
+            <strong>Ожидается:</strong> Перенаправление на <code>/login</code> с сохранением пути<br>
+            <strong>Результат:</strong> После входа должен вернуться на <code>/admin/partners</code>
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>🔍 Проверка в консоли браузера:</h2>
+        <ul>
+            <li>Нет ошибок маршрутизации</li>
+            <li>Правильные перенаправления в Network tab</li>
+            <li>sessionStorage содержит returnPath только для админских страниц</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h2>📊 Ожидаемые результаты:</h2>
+        
+        <div class="result success">
+            <strong>✅ УСПЕХ:</strong> Если все перенаправления работают как описано выше
+        </div>
+
+        <div class="result error">
+            <strong>❌ ПРОБЛЕМА:</strong> Если по-прежнему перенаправляет на /login или /dashboard
+        </div>
+    </div>
+
+    <div class="step">
+        <h2>🔄 Структура маршрутов после изменений:</h2>
+        <ul>
+            <li><code>/</code> → <code>/client</code> (главная для всех)</li>
+            <li><code>/client/*</code> → клиентские страницы (публичные)</li>
+            <li><code>/admin/*</code> → админские страницы (защищенные)</li>
+            <li><code>/login</code> → страница входа</li>
+        </ul>
+    </div>
+
+    <script>
+        // Автоматическая проверка при загрузке страницы
+        window.onload = function() {
+            console.log('🧭 Тест навигации загружен');
+            
+            // Проверяем текущий URL
+            console.log('Текущий URL:', window.location.href);
+            
+            // Проверяем sessionStorage
+            const returnPath = sessionStorage.getItem('returnPath');
+            if (returnPath) {
+                console.log('🔍 Найден returnPath в sessionStorage:', returnPath);
+            } else {
+                console.log('✅ sessionStorage чист (returnPath отсутствует)');
+            }
+            
+            // Функции для тестирования
+            window.testNavigation = {
+                goToRoot: () => window.location.href = 'http://localhost:3008/',
+                goToClient: () => window.location.href = 'http://localhost:3008/client',
+                goToAdmin: () => window.location.href = 'http://localhost:3008/admin',
+                goToLogin: () => window.location.href = 'http://localhost:3008/login',
+                checkSessionStorage: () => console.log('sessionStorage returnPath:', sessionStorage.getItem('returnPath'))
+            };
+            
+            console.log('🛠️ Доступные функции тестирования:', Object.keys(window.testNavigation));
+        };
+    </script>
+</body>
+</html> 

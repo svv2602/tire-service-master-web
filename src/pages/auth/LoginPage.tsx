@@ -47,8 +47,8 @@ const LoginPage: React.FC = () => {
       console.log('User is authenticated, navigating to dashboard');
       isNavigatingRef.current = true;
       
-      const returnPath = localStorage.getItem('returnPath') || '/dashboard';
-      localStorage.removeItem('returnPath');
+      const returnPath = sessionStorage.getItem('returnPath') || '/client';
+      sessionStorage.removeItem('returnPath');
       
       console.log('Navigating to:', returnPath);
       navigate(returnPath, { replace: true });

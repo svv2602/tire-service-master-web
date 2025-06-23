@@ -202,13 +202,16 @@ function App() {
                     <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
                     <Route path="/knowledge-base/:id" element={<ArticleDetailPage />} />
                     
+                    {/* Корневой маршрут перенаправляет на клиентскую часть */}
+                    <Route path="/" element={<Navigate to="/client" replace />} />
+                    
                     {/* Защищенные маршруты в главном лейауте */}
-                    <Route path="/" element={
+                    <Route path="/admin" element={
                       <ProtectedRoute>
                         <MainLayout />
                       </ProtectedRoute>
                     }>
-                      <Route index element={<Navigate to="/client" replace />} />
+                      <Route index element={<Navigate to="/admin/dashboard" replace />} />
                       <Route path="dashboard" element={<DashboardPage />} />
                       {/* Маршруты для партнеров */}
                       <Route path="partners" element={<PartnersPage />} />

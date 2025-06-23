@@ -122,8 +122,14 @@ function handleUnauthorized() {
   const currentPath = window.location.pathname + window.location.search;
   
   if (!currentPath.includes('/login')) {
-    // Сохраняем путь возврата (можно в sessionStorage вместо localStorage)
-    sessionStorage.setItem('returnPath', currentPath);
+    // Сохраняем путь возврата только для админских страниц
+    if (currentPath.startsWith('/admin') || currentPath.startsWith('/dashboard') || 
+        currentPath.startsWith('/partners') || currentPath.startsWith('/service-points') ||
+        currentPath.startsWith('/clients') || currentPath.startsWith('/bookings') ||
+        currentPath.startsWith('/reviews') || currentPath.startsWith('/users') ||
+        currentPath.startsWith('/settings') || currentPath.startsWith('/profile')) {
+      sessionStorage.setItem('returnPath', currentPath);
+    }
     window.history.pushState({}, '', '/login');
     // Вызываем событие изменения пути для обновления React Router
     window.dispatchEvent(new PopStateEvent('popstate'));
