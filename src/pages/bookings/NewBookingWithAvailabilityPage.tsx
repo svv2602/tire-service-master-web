@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
   Box,
+  Container,
   Paper,
   Typography,
   Button,
@@ -38,7 +39,7 @@ import {
 // import { useCreateClientBookingMutation } from '../../api/clientBookings.api';
 
 // Импорт стилей
-import { getCardStyles, getTablePageStyles } from '../../styles/components';
+import { getCardStyles } from '../../styles/components';
 import { getThemeColors, getButtonStyles } from '../../styles';
 
 // Типы для данных формы
@@ -129,7 +130,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const tablePageStyles = getTablePageStyles(theme);
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   
@@ -310,7 +310,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-      <Box sx={{ ...tablePageStyles.pageContainer, py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         {/* Заголовок */}
         <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button
@@ -395,7 +395,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             )}
           </Box>
         </Paper>
-      </Box>
+      </Container>
     </Box>
   );
 };
