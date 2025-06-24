@@ -88,7 +88,17 @@ const ReviewFormPage: React.FC = () => {
   );
   const { data: servicePointsData } = useGetServicePointsQuery({});
   // Для редактирования/удаления
-  const { data: reviewData, isLoading: reviewLoading } = useGetReviewByIdQuery(id!, { skip: !isEditMode });
+  const { data: reviewData, isLoading: reviewLoading, error: reviewError } = useGetReviewByIdQuery(id!, { skip: !isEditMode });
+  
+  // Отладочная информация
+  React.useEffect(() => {
+    if (isEditMode) {
+      console.log('🔍 Режим редактирования, ID:', id);
+      console.log('📊 Данные отзыва:', reviewData);
+      console.log('⏳ Загрузка:', reviewLoading);
+      console.log('❌ Ошибка:', reviewError);
+    }
+  }, [isEditMode, id, reviewData, reviewLoading, reviewError]);
   const [updateReview, { isLoading: isUpdating }] = useUpdateReviewMutation();
   const [deleteReview, { isLoading: isDeleting }] = useDeleteReviewMutation();
 
@@ -100,11 +110,12 @@ const ReviewFormPage: React.FC = () => {
   // При редактировании — заполняем поля из reviewData
   React.useEffect(() => {
     if (isEditMode && reviewData) {
-      setSelectedClientId(String(reviewData.client_id));
+      console.log('📝 Загружаем данные отзыва для редактирования:', reviewData);
+      setSelectedClientId(String(reviewData.client?.id || ''));
       setSelectedBookingId(reviewData.booking?.id ? String(reviewData.booking.id) : '');
-      setSelectedServicePointId(String(reviewData.service_point_id));
-      setRating(reviewData.rating);
-      setComment(reviewData.comment);
+      setSelectedServicePointId(String(reviewData.service_point?.id || ''));
+      setRating(reviewData.rating || 0);
+      setComment(reviewData.comment || '');
       setStatus(reviewData.status || 'published');
     }
   }, [isEditMode, reviewData]);
@@ -165,12 +176,14 @@ const ReviewFormPage: React.FC = () => {
         await updateReview({
           id,
           data: {
-            service_point_id,
-            rating,
-            comment,
-            ...(selectedBookingId ? { booking_id: Number(selectedBookingId) } : {}),
-            client_id: Number(selectedClientId),
-            status,
+            review: {
+              service_point_id: Number(service_point_id),
+              rating,
+              comment,
+              ...(selectedBookingId ? { booking_id: Number(selectedBookingId) } : {}),
+              client_id: Number(selectedClientId),
+              status,
+            }
           } as any,
         }).unwrap();
         setSuccess(true);
@@ -196,6 +209,7 @@ const ReviewFormPage: React.FC = () => {
                 service_point_id: Number(service_point_id),
                 rating,
                 comment,
+                status,
               }
             }
           }).unwrap();

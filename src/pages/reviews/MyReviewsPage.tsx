@@ -60,8 +60,8 @@ const MyReviewsPage: React.FC = () => {
   const [updateReview, { isLoading: updateLoading }] = useUpdateReviewMutation();
 
   const isLoading = reviewsLoading || deleteLoading || updateLoading;
-  const reviews = reviewsData?.data || [];
-  const totalItems = reviewsData?.pagination?.total_count || 0;
+  const reviews = reviewsData || [];
+  const totalItems = reviews.length;
   const totalPages = Math.ceil(totalItems / rowsPerPage);
 
   // Обработчики событий

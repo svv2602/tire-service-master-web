@@ -245,6 +245,7 @@ function App() {
                       <Route path="reviews" element={<ReviewsPage />} />
                       <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
                       <Route path="reviews/new" element={<ReviewFormPage />} />
+                      <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
                       <Route path="my-reviews" element={<MyReviewsPage />} />
                       {/* Маршруты для брендов и моделей автомобилей */}
                       <Route path="car-brands" element={<CarBrandsPage />} />

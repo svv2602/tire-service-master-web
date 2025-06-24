@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест API отзывов - финальная проверка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .review-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #fafafa;
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .client-info {
+            font-weight: bold;
+            color: #333;
+        }
+        .rating {
+            color: #ff9800;
+            font-size: 18px;
+        }
+        .service-point {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .comment {
+            color: #333;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .published {
+            background: #4caf50;
+            color: white;
+        }
+        .pending {
+            background: #ff9800;
+            color: white;
+        }
+        .error {
+            color: red;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест API отзывов - финальная проверка</h1>
+        <p>Проверяем работу API отзывов на порту 8000 с правильной структурой данных</p>
+        
+        <div id="status"></div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalReviews">-</div>
+                <div class="stat-label">Всего отзывов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="publishedReviews">-</div>
+                <div class="stat-label">Опубликованных</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="averageRating">-</div>
+                <div class="stat-label">Средний рейтинг</div>
+            </div>
+        </div>
+        
+        <button onclick="testReviewsAPI()" style="background: #1976d2; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+            🔄 Обновить данные
+        </button>
+        
+        <button onclick="testWithFilters()" style="background: #4caf50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+            🔍 Тест с фильтрами
+        </button>
+    </div>
+    
+    <div class="container">
+        <h2>📋 Список отзывов</h2>
+        <div id="reviewsList"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const className = type === 'error' ? 'error' : (type === 'success' ? 'success' : 'loading');
+            statusDiv.innerHTML = `<div class="${className}">${message}</div>`;
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('ru-RU');
+        }
+        
+        function renderStars(rating) {
+            return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+        }
+        
+        function renderReview(review) {
+            const client = review.client;
+            const user = client?.user;
+            const servicePoint = review.service_point;
+            
+            const clientName = user ? `${user.first_name} ${user.last_name}` : `Клиент #${client?.id || 'N/A'}`;
+            const clientEmail = user?.email || 'Не указан';
+            const servicePointName = servicePoint?.name || 'Не указана';
+            const servicePointAddress = servicePoint?.address || '';
+            
+            return `
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="client-info">
+                            ${clientName}<br>
+                            <small style="font-weight: normal; color: #666;">${clientEmail}</small>
+                        </div>
+                        <div>
+                            <div class="rating">${renderStars(review.rating)} (${review.rating}/5)</div>
+                            <div class="status ${review.is_published ? 'published' : 'pending'}">
+                                ${review.is_published ? 'Опубликован' : 'На модерации'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-point">
+                        🏢 <strong>${servicePointName}</strong>
+                        ${servicePointAddress ? `<br>&nbsp;&nbsp;&nbsp;&nbsp;📍 ${servicePointAddress}` : ''}
+                    </div>
+                    
+                    <div class="comment">
+                        💬 "${review.comment}"
+                    </div>
+                    
+                    ${review.partner_response ? `
+                        <div style="background: #f0f8ff; padding: 8px; border-radius: 4px; margin-top: 8px;">
+                            <strong>Ответ партнера:</strong> ${review.partner_response}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="date">
+                        📅 ${formatDate(review.created_at)}
+                        ${review.booking_id ? `| 🎫 Бронирование #${review.booking_id}` : '| 📝 Без бронирования'}
+                        ${review.recommend ? ' | 👍 Рекомендует' : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function testReviewsAPI() {
+            showStatus('🔄 Загружаем отзывы...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/reviews`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const reviews = await response.json();
+                
+                if (!Array.isArray(reviews)) {
+                    throw new Error('Ответ API не является массивом');
+                }
+                
+                // Обновляем статистику
+                document.getElementById('totalReviews').textContent = reviews.length;
+                
+                const publishedCount = reviews.filter(r => r.is_published).length;
+                document.getElementById('publishedReviews').textContent = publishedCount;
+                
+                const avgRating = reviews.length > 0 
+                    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+                    : '0.0';
+                document.getElementById('averageRating').textContent = avgRating;
+                
+                // Рендерим отзывы
+                const reviewsList = document.getElementById('reviewsList');
+                if (reviews.length === 0) {
+                    reviewsList.innerHTML = '<p style="text-align: center; color: #666;">Отзывов пока нет</p>';
+                } else {
+                    reviewsList.innerHTML = reviews.map(renderReview).join('');
+                }
+                
+                showStatus(`✅ Загружено ${reviews.length} отзывов. API работает корректно!`, 'success');
+                
+            } catch (error) {
+                console.error('Ошибка при загрузке отзывов:', error);
+                showStatus(`❌ Ошибка: ${error.message}`, 'error');
+                document.getElementById('reviewsList').innerHTML = '<p style="color: red;">Не удалось загрузить отзывы</p>';
+            }
+        }
+        
+        async function testWithFilters() {
+            showStatus('🔍 Тестируем API с фильтрами...', 'info');
+            
+            try {
+                // Тест фильтра по статусу
+                const publishedResponse = await fetch(`${API_BASE}/reviews?status=published`);
+                const publishedReviews = await publishedResponse.json();
+                
+                // Тест поиска
+                const searchResponse = await fetch(`${API_BASE}/reviews?search=тест`);
+                const searchResults = await searchResponse.json();
+                
+                // Тест фильтра по рейтингу
+                const highRatingResponse = await fetch(`${API_BASE}/reviews?min_rating=4`);
+                const highRatingReviews = await highRatingResponse.json();
+                
+                showStatus(`✅ Фильтры работают! Опубликованных: ${publishedReviews.length}, По поиску: ${searchResults.length}, С высоким рейтингом: ${highRatingReviews.length}`, 'success');
+                
+            } catch (error) {
+                showStatus(`❌ Ошибка тестирования фильтров: ${error.message}`, 'error');
+            }
+        }
+        
+        // Автоматическая загрузка при открытии страницы
+        document.addEventListener('DOMContentLoaded', testReviewsAPI);
+    </script>
+</body>
+</html> 

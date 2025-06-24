@@ -54,7 +54,9 @@ const StyledPaper = styled(Paper)(({ theme }) => {
   };
 });
 
-const StyledTableCell = styled(TableCell)<{ wrap?: boolean }>(({ theme, wrap }) => {
+const StyledTableCell = styled(TableCell, {
+  shouldForwardProp: (prop) => prop !== 'wrap',
+})<{ wrap?: boolean }>(({ theme, wrap }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {

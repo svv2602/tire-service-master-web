@@ -332,18 +332,41 @@ export interface Review {
   id: number;
   service_point_id: number;
   client_id: number;
+  user_id?: number; // Для совместимости с frontend
   rating: number;
   comment: string;
-  text?: string;
+  text?: string; // Алиас для comment
   response?: string;
-  status?: ReviewStatus;
+  status: ReviewStatus;
+  is_published?: boolean;
   created_at: string;
   updated_at: string;
   
-  // Связанные объекты
-  service_point?: ServicePoint;
-  client?: Client;
-  booking?: Booking;
+  // Связанные объекты с полными данными
+  service_point?: {
+    id: number;
+    name: string;
+    address: string;
+    phone: string;
+  };
+  client?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    user?: {
+      id: number;
+      email: string;
+      phone: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
+  booking?: {
+    id: number;
+    booking_date: string;
+    start_time: string;
+    end_time: string;
+  };
 }
 
 export interface ServicePointFormData {

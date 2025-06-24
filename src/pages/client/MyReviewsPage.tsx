@@ -77,10 +77,10 @@ const MyReviewsPage: React.FC = () => {
   }
 
   // Конвертируем данные отзывов
-  const convertedReviews = reviewsData?.data
-    ? reviewsData.data
+  const convertedReviews = reviewsData
+    ? reviewsData
         .map(convertReview)
-        .filter(review => review.status === filters.status)
+        .filter((review: any) => review.status === filters.status)
     : [];
 
   return (

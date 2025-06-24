@@ -23,7 +23,7 @@ const convertModelReviewToReviewType = (modelReview: ModelReview): ReviewType =>
     id: modelReview.id,
     user_id: modelReview.client_id, 
     service_point_id: modelReview.service_point_id,
-    booking_id: 0, // Значение по умолчанию
+    booking_id: modelReview.booking?.id || 0,
     rating: modelReview.rating,
     comment: modelReview.comment || modelReview.text || '',
     status: modelReview.status || 'published',
@@ -33,12 +33,12 @@ const convertModelReviewToReviewType = (modelReview: ModelReview): ReviewType =>
     service_point: modelReview.service_point
   };
   
-  // Если есть client, преобразуем его в User
+  // Если есть client, создаем объект User из доступных данных
   if (modelReview.client) {
     review.user = {
       id: modelReview.client.id,
-      email: modelReview.client.email || '',
-      phone: modelReview.client.phone,
+      email: modelReview.client.user?.email || '',
+      phone: modelReview.client.user?.phone || '',
       first_name: modelReview.client.first_name,
       last_name: modelReview.client.last_name,
       role: UserRole.CLIENT,
@@ -46,8 +46,8 @@ const convertModelReviewToReviewType = (modelReview: ModelReview): ReviewType =>
       is_active: true,
       email_verified: true,
       phone_verified: true,
-      created_at: modelReview.client.created_at || modelReview.created_at,
-      updated_at: modelReview.client.updated_at || modelReview.updated_at
+      created_at: modelReview.created_at, // Используем дату создания отзыва
+      updated_at: modelReview.updated_at  // Используем дату обновления отзыва
     };
   }
   
@@ -111,11 +111,11 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ servicePointId }) => {
   }
 
   // Получаем только опубликованные отзывы
-  const publishedReviews = reviewsData.data.filter(review => review.status === 'published');
+  const publishedReviews = reviewsData.filter((review: any) => review.status === 'published');
 
   // Рассчитываем средний рейтинг
   const averageRating = publishedReviews.length > 0
-    ? publishedReviews.reduce((sum, review) => sum + review.rating, 0) / publishedReviews.length
+    ? publishedReviews.reduce((sum: number, review: any) => sum + review.rating, 0) / publishedReviews.length
     : 0;
 
   // Фильтруем отзывы по рейтингу в зависимости от выбранной вкладки
@@ -123,9 +123,9 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ servicePointId }) => {
   if (tabValue === 0) {
     filteredModelReviews = publishedReviews; // Все отзывы
   } else if (tabValue === 1) {
-    filteredModelReviews = publishedReviews.filter(review => review.rating >= 4); // Положительные (4-5 звезд)
+    filteredModelReviews = publishedReviews.filter((review: any) => review.rating >= 4); // Положительные (4-5 звезд)
   } else if (tabValue === 2) {
-    filteredModelReviews = publishedReviews.filter(review => review.rating <= 3); // Критические (1-3 звезды)
+    filteredModelReviews = publishedReviews.filter((review: any) => review.rating <= 3); // Критические (1-3 звезды)
   }
   
   // Конвертируем отзывы из модели в тип Review

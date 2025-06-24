@@ -63,13 +63,13 @@ const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => {
 /** 
  * Компонент кнопки с поддержкой кастомных вариантов
  */
-export const Button: React.FC<ButtonProps> = ({ 
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ 
   variant = 'primary',
   loading = false,
   disabled,
   children,
   ...props 
-}) => {
+}, ref) => {
   // Определяем соответствующие MUI варианты и цвета
   const muiVariant = ['text', 'contained', 'outlined'].includes(variant) 
     ? variant as MuiButtonProps['variant']
@@ -82,6 +82,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <StyledButton
+      ref={ref}
       variant={muiVariant}
       color={muiColor}
       disabled={loading || disabled}
@@ -90,6 +91,8 @@ export const Button: React.FC<ButtonProps> = ({
       {children}
     </StyledButton>
   );
-};
+});
+
+Button.displayName = 'Button';
 
 export default Button;

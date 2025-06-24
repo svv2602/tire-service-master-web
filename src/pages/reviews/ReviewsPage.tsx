@@ -2,22 +2,17 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Typography,
   InputAdornment,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Avatar,
-  Rating,
-  FormControl,
   MenuItem,
   useTheme, // Добавлен импорт темы
-  Alert,
+  IconButton,
+  Tooltip as MuiTooltip,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Delete as DeleteIcon,
   Reply as ReplyIcon,
+  Edit as EditIcon,
   Star as StarIcon,
   Business as BusinessIcon,
   Check as CheckIcon,
@@ -35,6 +30,7 @@ import { ReviewStatus, ReviewFormData, ReviewFilter } from '../../types/review';
 
 // Импорты централизованной системы стилей
 import { SIZES } from '../../styles/theme';
+import { getTablePageStyles } from '../../styles/components';
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
@@ -44,41 +40,57 @@ import { Select } from '../../components/ui/Select';
 import { Pagination } from '../../components/ui/Pagination';
 import { Modal } from '../../components/ui/Modal';
 import { Table, Column } from '../../components/ui/Table';
+import Typography from '../../components/ui/Typography';
+import { Avatar } from '../../components/ui/Avatar';
+import Rating from '../../components/ui/Rating/Rating';
+import { Alert } from '../../components/ui/Alert';
 
-// Расширяем интерфейс для отображения, не наследуя от ModelReview
+import { Progress } from '../../components/ui/Progress';
+
+// Расширяем интерфейс для отображения с полными данными от сериализатора
 interface ReviewWithClient {
   id: number;
-  user_id: number;
+  user_id?: number;
+  client_id: number;
   service_point_id: number;
-  booking_id: number;
+  booking_id?: number;
   rating: number;
   comment: string;
+  text?: string; // Алиас для comment
   status: ReviewStatus;
+  is_published?: boolean;
   response?: string;
   created_at: string;
   updated_at: string;
-  client?: {
+  
+  // Данные клиента от сериализатора
+  client: {
+    id: number;
     first_name: string;
     last_name: string;
+    user?: {
+      id: number;
+      email: string;
+      phone: string;
+      first_name: string;
+      last_name: string;
+    };
   };
-  text?: string;
-  user?: {
-    first_name: string;
-    last_name: string;
-  };
-  service_point?: {
+  
+  // Данные сервисной точки от сериализатора
+  service_point: {
     id: number;
     name: string;
+    address: string;
+    phone: string;
   };
+  
+  // Данные бронирования от сериализатора (опционально)
   booking?: {
     id: number;
-    scheduled_at: string;
-    client?: {
-      car?: {
-        carBrand?: { name: string };
-        carModel?: { name: string };
-      }
-    };
+    booking_date: string;
+    start_time: string;
+    end_time: string;
   };
 }
 
@@ -98,6 +110,9 @@ const ReviewsPage: React.FC = () => {
   
   // Получение темы
   const theme = useTheme();
+  
+  // Инициализация централизованных стилей
+  const tablePageStyles = getTablePageStyles(theme);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -136,15 +151,33 @@ const ReviewsPage: React.FC = () => {
 
   const isLoading = reviewsLoading || deleteLoading;
   const error = reviewsError;
-  const reviews = (Array.isArray(reviewsData?.data) 
-    ? reviewsData?.data.map((review: any) => ({
+  
+  // Обрабатываем данные отзывов от сериализатора
+  const reviews = (Array.isArray(reviewsData) 
+    ? reviewsData.map((review: any) => ({
         ...review,
-        user_id: review.client_id || 0,
+        user_id: review.user_id || review.client_id || review.client?.id,
+        client_id: review.client_id || review.client?.id,
         booking_id: review.booking?.id || 0,
-        status: review.status || 'pending',
-        user: review.user || { first_name: '', last_name: '' }
+        // Используем статус из API (не перезаписываем!)
+        status: review.status || (review.is_published ? 'published' : 'pending'),
+        // Гарантируем наличие данных клиента
+        client: review.client || {
+          id: review.client_id || 0,
+          first_name: 'Неизвестно',
+          last_name: '',
+          user: review.client?.user || null
+        },
+        // Гарантируем наличие данных сервисной точки
+        service_point: review.service_point || {
+          id: review.service_point_id || 0,
+          name: 'Неизвестная точка',
+          address: '',
+          phone: ''
+        }
       }))
     : []) as ReviewWithClient[];
+  
   const totalItems = reviews.length;
   const servicePoints = servicePointsData?.data || [];
 
@@ -243,29 +276,21 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'client',
       label: 'Клиент',
-      minWidth: 200,
-      align: 'left',
+      wrap: true,
       format: (value: any, review: ReviewWithClient) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
-          <Avatar sx={{ 
-            bgcolor: theme.palette.primary.main,
-            width: 36,
-            height: 36,
-            fontSize: SIZES.fontSize.md
-          }}>
+        <Box sx={tablePageStyles.avatarContainer}>
+          <Avatar sx={{ bgcolor: 'primary.main' }}>
             {getClientInitials(review)}
           </Avatar>
           <Box>
-            <Typography sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500 }}>
-              {review.client?.first_name || review.user?.first_name} {review.client?.last_name || review.user?.last_name}
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {review.client?.user?.first_name || 'Имя'} {review.client?.user?.last_name || 'Фамилия'}
             </Typography>
-            <Typography 
-              sx={{ 
-                fontSize: SIZES.fontSize.sm, 
-                color: theme.palette.text.secondary 
-              }}
-            >
-              {review.booking?.client?.car?.carBrand?.name} {review.booking?.client?.car?.carModel?.name}
+            <Typography variant="body2" color="text.secondary">
+              {review.client?.user?.phone || 'Телефон не указан'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              ID: {review.client?.id}
             </Typography>
           </Box>
         </Box>
@@ -274,45 +299,50 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'service_point',
       label: 'Сервисная точка',
-      minWidth: 180,
-      align: 'left',
+      wrap: true,
       format: (value: any, review: ReviewWithClient) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.xs }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <BusinessIcon color="action" />
-          <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-            {review.service_point?.name}
-          </Typography>
+          <Box>
+            <Typography variant="body2">
+              {review.service_point?.name || `Точка #${review.service_point_id}`}
+            </Typography>
+            {review.booking && (
+              <Typography variant="caption" color="text.secondary">
+                Бронирование #{review.booking.id}
+              </Typography>
+            )}
+          </Box>
         </Box>
       )
     },
     {
       id: 'comment',
       label: 'Отзыв',
-      minWidth: 350,
-      align: 'left',
       wrap: true,
       format: (value: any, review: ReviewWithClient) => (
         <Box>
           <Typography
+            variant="body2"
             sx={{
-              fontSize: SIZES.fontSize.md,
               maxWidth: 300,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
+              marginBottom: 1,
             }}
           >
             {review.text || review.comment}
           </Typography>
           {review.response && (
-            <Box sx={{ mt: SIZES.spacing.xs, display: 'flex', alignItems: 'flex-start', gap: SIZES.spacing.xs }}>
+            <Box sx={{ mt: 1, display: 'flex', alignItems: 'flex-start', gap: 1 }}>
               <ReplyIcon color="action" sx={{ fontSize: '1rem' }} />
               <Typography
+                variant="caption"
+                color="text.secondary"
                 sx={{
-                  fontSize: SIZES.fontSize.sm,
-                  color: theme.palette.text.secondary,
                   maxWidth: 280,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -331,8 +361,7 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'rating',
       label: 'Оценка',
-      minWidth: 120,
-      align: 'left',
+      align: 'center',
       format: (value: any, review: ReviewWithClient) => (
         <Rating 
           value={review.rating} 
@@ -349,8 +378,7 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'status',
       label: 'Статус',
-      minWidth: 120,
-      align: 'left',
+      align: 'center',
       format: (value: any, review: ReviewWithClient) => (
         <Chip
           label={REVIEW_STATUSES[review.status as ReviewStatus].label}
@@ -362,10 +390,8 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'created_at',
       label: 'Дата',
-      minWidth: 120,
-      align: 'left',
       format: (value: any, review: ReviewWithClient) => (
-        <Typography sx={{ fontSize: SIZES.fontSize.md }}>
+        <Typography variant="body2">
           {formatDate(review.created_at)}
         </Typography>
       )
@@ -373,13 +399,12 @@ const ReviewsPage: React.FC = () => {
     {
       id: 'actions',
       label: 'Действия',
-      minWidth: 180,
       align: 'right',
       format: (value: any, review: ReviewWithClient) => (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
+        <Box sx={tablePageStyles.actionsContainer}>
           {review.status === 'pending' && (
             <>
-              <Tooltip title="Одобрить">
+              <MuiTooltip title="Одобрить">
                 <IconButton
                   onClick={() => handleStatusChange(review, 'published')}
                   size="small"
@@ -391,8 +416,8 @@ const ReviewsPage: React.FC = () => {
                 >
                   <CheckIcon color="success" />
                 </IconButton>
-              </Tooltip>
-              <Tooltip title="Отклонить">
+                              </MuiTooltip>
+                <MuiTooltip title="Отклонить">
                 <IconButton
                   onClick={() => handleStatusChange(review, 'rejected')}
                   size="small"
@@ -404,35 +429,39 @@ const ReviewsPage: React.FC = () => {
                 >
                   <CloseIcon color="error" />
                 </IconButton>
-              </Tooltip>
+              </MuiTooltip>
             </>
           )}
-          <Tooltip title="Ответить">
-            <IconButton 
+          <MuiTooltip title="Редактировать">
+            <Button 
+              variant="secondary"
+              onClick={() => navigate(`/admin/reviews/${review.id}/edit`)}
+              size="small"
+              sx={tablePageStyles.actionButton}
+            >
+              <EditIcon color="info" />
+            </Button>
+          </MuiTooltip>
+          <MuiTooltip title="Ответить">
+            <Button 
+              variant="secondary"
               onClick={() => navigate(`/admin/reviews/${review.id}/reply`)}
               size="small"
-              sx={{
-                '&:hover': {
-                  backgroundColor: `${theme.palette.primary.main}15`
-                }
-              }}
+              sx={tablePageStyles.actionButton}
             >
               <ReplyIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton
+            </Button>
+          </MuiTooltip>
+          <MuiTooltip title="Удалить">
+            <Button
+              variant="secondary"
               onClick={() => handleDeleteClick(review)}
               size="small"
-              sx={{
-                '&:hover': {
-                  backgroundColor: `${theme.palette.error.main}15`
-                }
-              }}
+              sx={tablePageStyles.actionButton}
             >
               <DeleteIcon color="error" />
-            </IconButton>
-          </Tooltip>
+            </Button>
+          </MuiTooltip>
         </Box>
       )
     }
@@ -440,8 +469,8 @@ const ReviewsPage: React.FC = () => {
 
   // Вспомогательные функции
   const getClientInitials = (review: ReviewWithClient) => {
-    const firstName = review.client?.first_name || review.user?.first_name || '';
-    const lastName = review.client?.last_name || review.user?.last_name || '';
+    const firstName = review.client?.user?.first_name || '';
+    const lastName = review.client?.user?.last_name || '';
     return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
   };
 
@@ -457,7 +486,7 @@ const ReviewsPage: React.FC = () => {
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
+        <Progress variant="circular" />
       </Box>
     );
   }
@@ -473,127 +502,124 @@ const ReviewsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: SIZES.spacing.lg }}>
-      {/* Заголовок */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: SIZES.spacing.md 
-      }}>
-        <Typography
-          sx={{ 
-            fontSize: SIZES.fontSize.xl, 
-            fontWeight: 600,
-            color: theme.palette.text.primary
-          }}
-        >
+    <Box sx={tablePageStyles.pageContainer}>
+      {/* Отображение ошибок */}
+      {errorMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="error" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
+        </Box>
+      )}
+
+      {/* Заголовок и кнопки действий */}
+      <Box sx={tablePageStyles.pageHeader}>
+        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
           Отзывы
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/admin/reviews/new')}
-          sx={{
-            backgroundColor: theme.palette.primary.main,
-            '&:hover': {
-              backgroundColor: theme.palette.primary.dark,
-            }
-          }}
+          sx={tablePageStyles.createButton}
         >
-          Создать отзыв
+          Добавить отзыв
         </Button>
       </Box>
 
-      {/* Отображение ошибок */}
-      {errorMessage && (
-        <Box sx={{ mb: SIZES.spacing.md }}>
-          <Alert severity="error" onClose={() => setErrorMessage(null)}>
-            ❌ {errorMessage}
-          </Alert>
-        </Box>
-      )}
+      {/* Фильтры */}
+      <Box sx={tablePageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по тексту отзыва, имени клиента или телефону..."
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          sx={tablePageStyles.searchField}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <Select
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+          label="Статус"
+          size="small"
+          sx={{ minWidth: 150 }}
+        >
+          <MenuItem value="">Все статусы</MenuItem>
+          {Object.entries(REVIEW_STATUSES).map(([value, { label }]) => (
+            <MenuItem key={value} value={value}>
+              {label}
+            </MenuItem>
+          ))}
+        </Select>
 
-      {/* Фильтры и поиск */}
+        <Select
+          value={servicePointId}
+          onChange={handleServicePointChange}
+          label="Сервисная точка"
+          size="small"
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="">Все точки</MenuItem>
+          {servicePoints.map((point) => (
+            <MenuItem key={point.id} value={point.id.toString()}>
+              {point.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </Box>
+
+      {/* Статистика */}
       <Box sx={{ 
-        p: SIZES.spacing.md, 
-        mb: SIZES.spacing.md
+        mb: 2, 
+        display: 'flex', 
+        gap: 3, 
+        flexWrap: 'wrap', 
+        alignItems: 'center' 
       }}>
-        <Box sx={{ display: 'flex', gap: SIZES.spacing.md, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField
-            placeholder="Поиск по тексту отзыва"
-            variant="outlined"
-            size="small"
-            value={search}
-            onChange={handleSearchChange}
-            sx={{ minWidth: 300 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <Select
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              label="Статус"
-              displayEmpty
-            >
-              <MenuItem value="">Все статусы</MenuItem>
-              {Object.entries(REVIEW_STATUSES).map(([value, { label }]) => (
-                <MenuItem key={value} value={value}>
-                  {label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <Select
-              value={servicePointId}
-              onChange={handleServicePointChange}
-              label="Сервисная точка"
-              displayEmpty
-            >
-              <MenuItem value="">Все точки</MenuItem>
-              {servicePoints.map((point) => (
-                <MenuItem key={point.id} value={point.id.toString()}>
-                  {point.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
+        <Typography variant="body2" color="text.secondary">
+          Найдено отзывов: <strong>{totalItems}</strong>
+        </Typography>
+        {reviews.length > 0 && (
+          <>
+            <Typography variant="body2" color="success.main">
+              Опубликованных: <strong>{reviews.filter(r => r.status === 'published').length}</strong>
+            </Typography>
+            <Typography variant="body2" color="warning.main">
+              На модерации: <strong>{reviews.filter(r => r.status === 'pending').length}</strong>
+            </Typography>
+            <Typography variant="body2" color="error.main">
+              Отклоненных: <strong>{reviews.filter(r => r.status === 'rejected').length}</strong>
+            </Typography>
+          </>
+        )}
       </Box>
 
       {/* Таблица отзывов */}
-      <Table
-        columns={columns}
-        rows={reviews}
-        sx={{
-          '& .MuiTable-root': {
-            backgroundColor: 'transparent',
-          }
-        }}
-      />
-      
-      {/* Пагинация */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        p: 2 
-      }}>
-        <Pagination
-          count={Math.ceil(totalItems / rowsPerPage)}
-          page={page + 1}
-          onChange={handleChangePage}
-          color="primary"
-          disabled={totalItems <= rowsPerPage}
+      <Box sx={tablePageStyles.tableContainer}>
+        <Table
+          columns={columns}
+          rows={reviews}
         />
+        
+        {/* Пагинация */}
+        {Math.ceil(totalItems / rowsPerPage) > 1 && (
+          <Box sx={tablePageStyles.paginationContainer}>
+            <Pagination
+              count={Math.ceil(totalItems / rowsPerPage)}
+              page={page + 1}
+              onChange={handleChangePage}
+              disabled={isLoading}
+            />
+          </Box>
+        )}
       </Box>
 
       {/* Модальное окно подтверждения удаления */}
@@ -615,7 +641,7 @@ const ReviewsPage: React.FC = () => {
       >
         <Typography sx={{ fontSize: SIZES.fontSize.md }}>
           Вы действительно хотите удалить отзыв клиента{' '}
-          {selectedReview?.client?.first_name || selectedReview?.user?.first_name} {selectedReview?.client?.last_name || selectedReview?.user?.last_name}?
+          {selectedReview?.client?.user?.first_name} {selectedReview?.client?.user?.last_name}?
           Это действие нельзя будет отменить.
         </Typography>
       </Modal>

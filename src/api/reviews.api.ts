@@ -5,48 +5,48 @@ import { ReviewFormData, ReviewResponseData } from '../types/review';
 
 export const reviewsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getReviews: build.query<ApiResponse<Review>, ReviewFilter>({
+    getReviews: build.query<Review[], ReviewFilter>({
       query: (filter: ReviewFilter) => ({
         url: 'reviews',
         params: filter,
       }),
-      providesTags: (result: ApiResponse<Review> | undefined) =>
-        result?.data
+      providesTags: (result: Review[] | undefined) =>
+        result
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
             ]
           : ['Review'],
     }),
 
-    getReviewsByServicePoint: build.query<ApiResponse<Review>, string>({
+    getReviewsByServicePoint: build.query<Review[], string>({
       query: (servicePointId: string) => `reviews?service_point_id=${servicePointId}`,
-      providesTags: (result: ApiResponse<Review> | undefined) =>
-        result?.data
+      providesTags: (result: Review[] | undefined) =>
+        result
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
             ]
           : ['Review'],
     }),
 
-    getReviewsByClient: build.query<ApiResponse<Review>, string>({
+    getReviewsByClient: build.query<Review[], string>({
       query: (clientId: string) => `reviews?client_id=${clientId}`,
-      providesTags: (result: ApiResponse<Review> | undefined) =>
-        result?.data
+      providesTags: (result: Review[] | undefined) =>
+        result
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
             ]
           : ['Review'],
     }),
 
-    getReviewsByPartner: build.query<ApiResponse<Review>, string>({
+    getReviewsByPartner: build.query<Review[], string>({
       query: (partnerId: string) => `reviews?partner_id=${partnerId}`,
-      providesTags: (result: ApiResponse<Review> | undefined) =>
-        result?.data
+      providesTags: (result: Review[] | undefined) =>
+        result
           ? [
-              ...result.data.map(({ id }) => ({ type: 'Review' as const, id })),
+              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
             ]
           : ['Review'],

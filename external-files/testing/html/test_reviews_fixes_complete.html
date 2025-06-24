@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправлений отзывов - полная проверка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            border-left: 4px solid #2196F3;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+        .success { border-left-color: #4CAF50; }
+        .warning { border-left-color: #FF9800; }
+        .error { border-left-color: #F44336; }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .result.success { background: #E8F5E8; color: #2E7D32; }
+        .result.error { background: #FFEBEE; color: #C62828; }
+        .result.info { background: #E3F2FD; color: #1565C0; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976D2; }
+        .review-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        .client-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #2196F3;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .status-chip {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-published { background: #E8F5E8; color: #2E7D32; }
+        .status-pending { background: #FFF3E0; color: #F57C00; }
+        .status-rejected { background: #FFEBEE; color: #C62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест исправлений отзывов</h1>
+        <p>Проверка всех исправлений: отображение клиентов, статусы, поиск, refs</p>
+        
+        <div class="test-section">
+            <h3>🔧 Исправления:</h3>
+            <ul>
+                <li>✅ Отображение имени и телефона клиента</li>
+                <li>✅ Правильный статус отзыва (pending/published)</li>
+                <li>✅ Поиск по имени клиента и телефону</li>
+                <li>✅ Исправление ошибки wrap в таблице</li>
+                <li>✅ Исправление refs в Button компоненте</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>1. Тест API отзывов</h2>
+        <button onclick="testReviewsAPI()">Проверить API отзывов</button>
+        <div id="apiResults"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. Тест поиска по клиентам</h2>
+        <button onclick="testSearchByClient()">Поиск по имени "Сергій"</button>
+        <button onclick="testSearchByPhone()">Поиск по телефону "+380"</button>
+        <div id="searchResults"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. Тест отображения данных</h2>
+        <button onclick="testDataDisplay()">Проверить отображение клиентов</button>
+        <div id="displayResults"></div>
+    </div>
+
+    <div class="container">
+        <h2>4. Проверка фронтенда</h2>
+        <div class="test-section">
+            <h4>Ссылки для проверки:</h4>
+            <p><a href="http://localhost:3008/admin/reviews" target="_blank">Страница отзывов (админ)</a></p>
+            <p><a href="http://localhost:3008/admin/reviews/new" target="_blank">Создание отзыва</a></p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/v1';
+
+        async function testReviewsAPI() {
+            const resultsDiv = document.getElementById('apiResults');
+            resultsDiv.innerHTML = '<div class="result info">Проверка API...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/reviews`);
+                const data = await response.json();
+
+                if (response.ok && Array.isArray(data)) {
+                    resultsDiv.innerHTML = `
+                        <div class="result success">✅ API работает! Получено ${data.length} отзывов</div>
+                        <h4>Первый отзыв:</h4>
+                        <div class="review-card">
+                            <div class="client-info">
+                                <div class="avatar">${getInitials(data[0])}</div>
+                                <div>
+                                    <strong>${getClientName(data[0])}</strong><br>
+                                    <small>${getClientPhone(data[0])}</small><br>
+                                    <small>ID: ${data[0].client?.id}</small>
+                                </div>
+                            </div>
+                            <p><strong>Отзыв:</strong> ${data[0].comment}</p>
+                            <p><strong>Рейтинг:</strong> ${'★'.repeat(data[0].rating)}${'☆'.repeat(5-data[0].rating)}</p>
+                            <p><strong>Сервисная точка:</strong> ${data[0].service_point?.name}</p>
+                            <span class="status-chip status-${data[0].is_published ? 'published' : 'pending'}">
+                                ${data[0].is_published ? 'Опубликован' : 'На модерации'}
+                            </span>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result error">❌ Ошибка API или пустой ответ</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearchByClient() {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '<div class="result info">Поиск по имени...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/reviews?search=Сергій`);
+                const data = await response.json();
+
+                if (response.ok && Array.isArray(data)) {
+                    resultsDiv.innerHTML = `
+                        <div class="result success">✅ Поиск работает! Найдено ${data.length} отзывов</div>
+                        ${data.map(review => `
+                            <div class="review-card">
+                                <strong>${getClientName(review)}</strong> - ${review.comment}
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result error">❌ Ошибка поиска</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearchByPhone() {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '<div class="result info">Поиск по телефону...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/reviews?search=+380`);
+                const data = await response.json();
+
+                if (response.ok && Array.isArray(data)) {
+                    resultsDiv.innerHTML = `
+                        <div class="result success">✅ Поиск по телефону работает! Найдено ${data.length} отзывов</div>
+                        ${data.map(review => `
+                            <div class="review-card">
+                                <strong>${getClientName(review)}</strong> (${getClientPhone(review)}) - ${review.comment}
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result error">❌ Ошибка поиска по телефону</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        async function testDataDisplay() {
+            const resultsDiv = document.getElementById('displayResults');
+            resultsDiv.innerHTML = '<div class="result info">Проверка отображения...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/reviews`);
+                const data = await response.json();
+
+                if (response.ok && Array.isArray(data)) {
+                    let html = '<div class="result success">✅ Данные клиентов:</div>';
+                    
+                    data.slice(0, 3).forEach(review => {
+                        const clientName = getClientName(review);
+                        const clientPhone = getClientPhone(review);
+                        const hasName = clientName !== 'Имя Фамилия';
+                        const hasPhone = clientPhone !== 'Телефон не указан';
+                        
+                        html += `
+                            <div class="review-card">
+                                <div class="client-info">
+                                    <div class="avatar">${getInitials(review)}</div>
+                                    <div>
+                                        <strong style="color: ${hasName ? 'green' : 'red'}">
+                                            ${clientName} ${hasName ? '✅' : '❌'}
+                                        </strong><br>
+                                        <small style="color: ${hasPhone ? 'green' : 'red'}">
+                                            ${clientPhone} ${hasPhone ? '✅' : '❌'}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="result error">❌ Ошибка получения данных</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="result error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        function getClientName(review) {
+            const firstName = review.client?.user?.first_name || 'Имя';
+            const lastName = review.client?.user?.last_name || 'Фамилия';
+            return `${firstName} ${lastName}`;
+        }
+
+        function getClientPhone(review) {
+            return review.client?.user?.phone || 'Телефон не указан';
+        }
+
+        function getInitials(review) {
+            const firstName = review.client?.user?.first_name || '';
+            const lastName = review.client?.user?.last_name || '';
+            return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || 'П';
+        }
+
+        // Автоматический запуск тестов при загрузке
+        window.onload = function() {
+            setTimeout(testReviewsAPI, 1000);
+        };
+    </script>
+</body>
+</html> 
