@@ -107,7 +107,7 @@ export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 
           const icon = getValue(action.icon, null);
           const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
           const tooltip = getValue(action.tooltip, label);
-
+          
           return (
             <Tooltip key={action.id || actionIndex} title={tooltip}>
               <span>
@@ -135,17 +135,17 @@ export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 
   // Если действий много, показываем выпадающее меню
   return (
     <>
-      <IconButton
-        size="small"
-        onClick={handleMenuOpen}
-        sx={{
-          '&:hover': {
-            backgroundColor: theme.palette.action.hover,
-          }
-        }}
-      >
-        <MoreVertIcon />
-      </IconButton>
+        <IconButton
+          size="small"
+          onClick={handleMenuOpen}
+          sx={{
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            }
+          }}
+        >
+          <MoreVertIcon />
+        </IconButton>
 
       <Menu
         anchorEl={anchorEl}
@@ -171,7 +171,7 @@ export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 
           const label = getValue(action.label, '');
           const icon = getValue(action.icon, null);
           const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
-
+          
           return (
             <MenuItem
               key={action.id || actionIndex}
