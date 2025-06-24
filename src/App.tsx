@@ -62,6 +62,7 @@ const UserForm = lazy(() => import('./pages/users/UserForm'));
 
 // Ленивая загрузка страниц регионов и городов
 const RegionsPage = lazy(() => import('./pages/regions/RegionsPage'));
+const RegionsPageNew = lazy(() => import('./pages/catalog/RegionsPageNew'));
 const RegionFormPage = lazy(() => import('./pages/regions/RegionFormPage'));
 const CitiesPage = lazy(() => import('./pages/catalog/CitiesPage'));
 
@@ -309,6 +310,7 @@ function App() {
                       <Route path="testing/bookings-new" element={<BookingsPageNew />} />
                       <Route path="testing/service-points-new" element={<ServicePointsPageNew />} />
                       <Route path="testing/cities-new" element={<CitiesPageNew />} />
+                      <Route path="testing/regions-new" element={<RegionsPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
