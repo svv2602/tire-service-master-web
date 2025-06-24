@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления обновления статуса отзывов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+        }
+        .status.pending { background-color: #ff9800; }
+        .status.published { background-color: #4caf50; }
+        .status.rejected { background-color: #f44336; }
+        .test-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #1976d2;
+        }
+        .success { color: #4caf50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        .info { color: #2196f3; font-weight: bold; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .test-section {
+            border-left: 4px solid #2196f3;
+            padding-left: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест исправления обновления статуса отзывов</h1>
+    <p><strong>Цель:</strong> Проверить что статус отзывов корректно обновляется на странице редактирования /admin/reviews/{id}/edit</p>
+
+    <div class="test-container">
+        <h2>📋 Проблема</h2>
+        <p>На странице <code>http://localhost:3008/admin/reviews/11/edit</code> если статус был "отклонен", то он не обновлялся при сохранении формы.</p>
+        
+        <h3>🚨 Корневая причина:</h3>
+        <ul>
+            <li>Дублирование обертки данных: <code>{ review: { review: { ... } } }</code></li>
+            <li>Мутация <code>updateReview</code> уже оборачивает данные в <code>{ review: data }</code></li>
+            <li>Backend получал неправильную структуру данных</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <h2>🔧 Исправления</h2>
+        
+        <div class="test-section">
+            <h3>1. Исправлена функция handleAdminSubmit в ReviewFormPage.tsx</h3>
+            <p><strong>БЫЛО (неправильно):</strong></p>
+            <pre>await updateReview({
+  id,
+  data: {
+    review: {  // ❌ Лишняя обертка
+      service_point_id: Number(service_point_id),
+      rating,
+      comment,
+      status,
+    }
+  }
+});</pre>
+
+            <p><strong>СТАЛО (правильно):</strong></p>
+            <pre>await updateReview({
+  id,
+  data: {  // ✅ Мутация сама добавит обертку { review: data }
+    service_point_id: service_point_id,
+    rating,
+    comment,
+    status,
+  } as any,
+});</pre>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Исправлена функция createReview для отзывов без бронирования</h3>
+            <p>Убрана дублирующая обертка <code>{ review: { ... } }</code> и в функции создания отзыва.</p>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🧪 Тестирование</h2>
+        
+        <div class="test-section">
+            <h3>Шаги для проверки:</h3>
+            <ol>
+                <li>Откройте <a href="http://localhost:3008/admin/reviews" target="_blank">http://localhost:3008/admin/reviews</a></li>
+                <li>Найдите отзыв со статусом "Отклонён" и нажмите кнопку редактирования</li>
+                <li>Измените статус на "Опубликован" или "На модерации"</li>
+                <li>Нажмите "Сохранить"</li>
+                <li>Проверьте что статус обновился в списке отзывов</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>API тестирование</h3>
+            <button class="test-button" onclick="testUpdateReviewStatus()">Тест API обновления статуса</button>
+            <div id="api-result"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>✅ Ожидаемые результаты</h2>
+        <ul>
+            <li>✅ Статус отзыва обновляется при сохранении формы</li>
+            <li>✅ Переход между всеми статусами: pending ↔ published ↔ rejected</li>
+            <li>✅ Нет ошибок 422 или 500 при сохранении</li>
+            <li>✅ Автоматическое перенаправление на /admin/reviews после сохранения</li>
+            <li>✅ Уведомление "Отзыв успешно обновлён!"</li>
+        </ul>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Статистика исправлений</h2>
+        <p><strong>Коммиты:</strong></p>
+        <ul>
+            <li><code>fbb9e52</code> - Исправление формата данных в API мутациях</li>
+            <li><code>a333b2c</code> - Расширение функциональности управления статусами</li>
+            <li><code>cbe24c4</code> - Исправление ошибки с импортом PauseIcon</li>
+            <li><code>82b0162</code> - Исправление обновления статуса на странице редактирования</li>
+        </ul>
+
+        <p><strong>Измененные файлы:</strong></p>
+        <ul>
+            <li><code>src/api/reviews.api.ts</code> - исправление API мутаций</li>
+            <li><code>src/pages/reviews/ReviewsPage.tsx</code> - расширение функциональности кнопок</li>
+            <li><code>src/pages/reviews/ReviewFormPage.tsx</code> - исправление обновления</li>
+        </ul>
+    </div>
+
+    <script>
+        async function testUpdateReviewStatus() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<p class="info">Тестирование API...</p>';
+
+            try {
+                // Тест обновления статуса отзыва
+                const response = await fetch('http://localhost:8000/api/v1/reviews/11', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        review: {
+                            status: 'published'
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ API тест успешен!</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const errorData = await response.text();
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ API тест неудачен (${response.status})</p>
+                        <pre>${errorData}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Ошибка сети: ${error.message}</p>
+                    <p>Убедитесь что backend запущен на порту 8000</p>
+                `;
+            }
+        }
+
+        // Автоматическое тестирование при загрузке страницы
+        window.addEventListener('load', () => {
+            console.log('🧪 Тест исправления обновления статуса отзывов загружен');
+            console.log('📝 Для проверки откройте /admin/reviews и отредактируйте отклоненный отзыв');
+        });
+    </script>
+</body>
+</html> 

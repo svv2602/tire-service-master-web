@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест кнопок действий на странице отзывов</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1976d2;
+            border-bottom: 3px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #2196f3;
+            background-color: #f8f9fa;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 6px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        .approve-btn {
+            background-color: #4caf50;
+        }
+        .approve-btn:hover {
+            background-color: #45a049;
+        }
+        .reject-btn {
+            background-color: #f44336;
+        }
+        .reject-btn:hover {
+            background-color: #da190b;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .review-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-published {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест кнопок действий на странице отзывов</h1>
+        <p><strong>Цель:</strong> Проверить работу кнопок "Одобрить" и "Отклонить" отзывы</p>
+        <p><strong>URL:</strong> <a href="http://localhost:3008/admin/reviews" target="_blank">http://localhost:3008/admin/reviews</a></p>
+        
+        <div class="test-section">
+            <h2>📋 План тестирования</h2>
+            <div class="step">1. Авторизация администратора</div>
+            <div class="step">2. Получение списка отзывов</div>
+            <div class="step">3. Поиск отзывов со статусом "pending"</div>
+            <div class="step">4. Тест кнопки "Одобрить" (pending → published)</div>
+            <div class="step">5. Тест кнопки "Отклонить" (pending → rejected)</div>
+            <div class="step">6. Проверка обновления интерфейса</div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 Шаг 1: Авторизация</h2>
+            <button onclick="testAuth()">Проверить авторизацию</button>
+            <div id="auth-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Шаг 2: Получение отзывов</h2>
+            <button onclick="getReviews()">Загрузить отзывы</button>
+            <button onclick="getPendingReviews()">Только pending отзывы</button>
+            <div id="reviews-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Шаг 3: Тест кнопки "Одобрить"</h2>
+            <div id="pending-reviews"></div>
+            <div id="approve-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>❌ Шаг 4: Тест кнопки "Отклонить"</h2>
+            <div id="reject-result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Шаг 5: Проверка обновления</h2>
+            <button onclick="checkStatusUpdates()">Проверить обновления статусов</button>
+            <div id="status-result"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let reviews = [];
+        let pendingReviews = [];
+
+        // Авторизация
+        async function testAuth() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.innerHTML = '<div class="info">🔄 Авторизация...</div>';
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Авторизация успешна</div>
+                        <pre>Email: admin@test.com
+Роль: ${data.user?.role || 'admin'}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка авторизации: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Получение всех отзывов
+        async function getReviews() {
+            const resultDiv = document.getElementById('reviews-result');
+            resultDiv.innerHTML = '<div class="info">🔄 Загрузка отзывов...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/reviews', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    reviews = await response.json();
+                    const statusCounts = reviews.reduce((acc, review) => {
+                        acc[review.status] = (acc[review.status] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Загружено отзывов: ${reviews.length}</div>
+                        <pre>Статистика по статусам:
+${JSON.stringify(statusCounts, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка загрузки: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Получение только pending отзывов
+        async function getPendingReviews() {
+            const resultDiv = document.getElementById('reviews-result');
+            resultDiv.innerHTML = '<div class="info">🔄 Загрузка pending отзывов...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/reviews?status=pending', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    pendingReviews = await response.json();
+                    
+                    let html = `<div class="success">✅ Найдено pending отзывов: ${pendingReviews.length}</div>`;
+                    
+                    if (pendingReviews.length > 0) {
+                        html += '<div style="margin-top: 15px;">';
+                        pendingReviews.forEach(review => {
+                            html += `
+                                <div class="review-item">
+                                    <strong>ID: ${review.id}</strong> | 
+                                    <span class="status-badge status-${review.status}">${review.status}</span><br>
+                                    <strong>Клиент:</strong> ${review.client?.user?.first_name || 'Имя'} ${review.client?.user?.last_name || 'Фамилия'}<br>
+                                    <strong>Текст:</strong> ${(review.text || review.comment || '').substring(0, 100)}...
+                                    <div style="margin-top: 10px;">
+                                        <button class="approve-btn" onclick="approveReview(${review.id})">✅ Одобрить</button>
+                                        <button class="reject-btn" onclick="rejectReview(${review.id})">❌ Отклонить</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    } else {
+                        html += '<div class="warning">⚠️ Нет отзывов со статусом "pending" для тестирования</div>';
+                    }
+                    
+                    document.getElementById('pending-reviews').innerHTML = html;
+                    resultDiv.innerHTML = html;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка загрузки: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Одобрить отзыв
+        async function approveReview(reviewId) {
+            const resultDiv = document.getElementById('approve-result');
+            resultDiv.innerHTML = `<div class="info">🔄 Одобрение отзыва ID: ${reviewId}...</div>`;
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/v1/reviews/${reviewId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        status: 'published'
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedReview = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Отзыв ID: ${reviewId} успешно одобрен</div>
+                        <pre>Новый статус: ${updatedReview.status}</pre>
+                    `;
+                    // Обновляем список pending отзывов
+                    setTimeout(getPendingReviews, 1000);
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка одобрения: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Отклонить отзыв
+        async function rejectReview(reviewId) {
+            const resultDiv = document.getElementById('reject-result');
+            resultDiv.innerHTML = `<div class="info">🔄 Отклонение отзыва ID: ${reviewId}...</div>`;
+
+            try {
+                const response = await fetch(`http://localhost:3001/api/v1/reviews/${reviewId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        status: 'rejected'
+                    })
+                });
+
+                if (response.ok) {
+                    const updatedReview = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Отзыв ID: ${reviewId} успешно отклонен</div>
+                        <pre>Новый статус: ${updatedReview.status}</pre>
+                    `;
+                    // Обновляем список pending отзывов
+                    setTimeout(getPendingReviews, 1000);
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка отклонения: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Проверка обновлений статусов
+        async function checkStatusUpdates() {
+            const resultDiv = document.getElementById('status-result');
+            resultDiv.innerHTML = '<div class="info">🔄 Проверка обновлений...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/reviews', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const currentReviews = await response.json();
+                    const statusCounts = currentReviews.reduce((acc, review) => {
+                        acc[review.status] = (acc[review.status] || 0) + 1;
+                        return acc;
+                    }, {});
+
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Текущая статистика обновлена</div>
+                        <pre>Статусы отзывов:
+${JSON.stringify(statusCounts, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка обновления: ${response.status} ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        // Автоматический запуск при загрузке страницы
+        window.onload = function() {
+            console.log('🧪 Тест кнопок действий отзывов загружен');
+            console.log('Инструкции:');
+            console.log('1. Нажмите "Проверить авторизацию"');
+            console.log('2. Нажмите "Только pending отзывы"');
+            console.log('3. Используйте кнопки "Одобрить" и "Отклонить" для тестирования');
+        };
+    </script>
+</body>
+</html> 
