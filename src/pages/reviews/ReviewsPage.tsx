@@ -17,7 +17,8 @@ import {
   Check as CheckIcon,
   Close as CloseIcon,
   Add as AddIcon,
-  Pause as PauseIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -444,7 +445,7 @@ const ReviewsPage: React.FC = () => {
                   }
                 }}
               >
-                <PauseIcon color="warning" />
+                <VisibilityOffIcon color="warning" />
               </IconButton>
             </Tooltip>
           )}
