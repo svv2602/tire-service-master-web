@@ -42,6 +42,7 @@ const ServiceFormPage = lazy(() => import('./pages/services/ServiceFormPage'));
 
 // Ленивая загрузка страниц клиентов
 const ClientsPage = lazy(() => import('./pages/clients/ClientsPage'));
+const ClientsPageNew = lazy(() => import('./pages/clients/ClientsPageNew'));
 const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
@@ -315,6 +316,7 @@ function App() {
                       <Route path="testing/regions-new" element={<RegionsPageNew />} />
                       <Route path="testing/car-brands-new" element={<CarBrandsPageNew />} />
                       <Route path="testing/services-new" element={<ServicesPageNew />} />
+                      <Route path="testing/clients-new" element={<ClientsPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
