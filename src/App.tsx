@@ -77,6 +77,7 @@ const CitiesPageNew = lazy(() => import('./pages/catalog/CitiesPageNew'));
 
 // Ленивая загрузка страниц брендов автомобилей
 const CarBrandsPage = lazy(() => import('./pages/car-brands/CarBrandsPage'));
+const CarBrandsPageNew = lazy(() => import('./pages/car-brands/CarBrandsPageNew'));
 const CarBrandFormPage = lazy(() => import('./pages/car-brands/CarBrandFormPage'));
 
 // Ленивая загрузка страниц отзывов
@@ -311,6 +312,7 @@ function App() {
                       <Route path="testing/service-points-new" element={<ServicePointsPageNew />} />
                       <Route path="testing/cities-new" element={<CitiesPageNew />} />
                       <Route path="testing/regions-new" element={<RegionsPageNew />} />
+                      <Route path="testing/car-brands-new" element={<CarBrandsPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
