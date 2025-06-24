@@ -176,14 +176,12 @@ const ReviewFormPage: React.FC = () => {
         await updateReview({
           id,
           data: {
-            review: {
-              service_point_id: Number(service_point_id),
-              rating,
-              comment,
-              ...(selectedBookingId ? { booking_id: Number(selectedBookingId) } : {}),
-              client_id: Number(selectedClientId),
-              status,
-            }
+            service_point_id: service_point_id,
+            rating,
+            comment,
+            ...(selectedBookingId ? { booking_id: selectedBookingId } : {}),
+            client_id: selectedClientId,
+            status,
           } as any,
         }).unwrap();
         setSuccess(true);
@@ -204,13 +202,11 @@ const ReviewFormPage: React.FC = () => {
           // Новый путь — без бронирования (POST /reviews)
           await createReview({
             data: {
-              review: {
-                client_id: Number(selectedClientId),
-                service_point_id: Number(service_point_id),
-                rating,
-                comment,
-                status,
-              }
+              client_id: selectedClientId,
+              service_point_id: service_point_id,
+              rating,
+              comment,
+              status,
             }
           }).unwrap();
         }
