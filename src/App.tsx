@@ -91,6 +91,7 @@ const ReviewFormPage = lazy(() => import('./pages/reviews/ReviewFormPage'));
 // Ленивая загрузка страниц статей (админка)
 const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticlesPage })));
 const ArticlesPageNew = lazy(() => import('./pages/articles/ArticlesPageNew'));
+const PageContentPageNew = lazy(() => import('./pages/page-content/PageContentPageNew'));
 const CreateArticlePage = lazy(() => import('./pages/articles').then(module => ({ default: module.CreateArticlePage })));
 const EditArticlePage = lazy(() => import('./pages/articles').then(module => ({ default: module.EditArticlePage })));
 const ArticleViewPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleViewPage })));
@@ -319,6 +320,7 @@ function App() {
                       <Route path="testing/services-new" element={<ServicesPageNew />} />
                       <Route path="testing/clients-new" element={<ClientsPageNew />} />
                       <Route path="testing/articles-new" element={<ArticlesPageNew />} />
+                      <Route path="testing/page-content-new" element={<PageContentPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
