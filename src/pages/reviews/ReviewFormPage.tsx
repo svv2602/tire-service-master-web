@@ -142,6 +142,8 @@ const ReviewFormPage: React.FC = () => {
           } as any,
         }).unwrap();
         setSuccess(true);
+        // Перенаправление на страницу списка отзывов после успешного редактирования
+        setTimeout(() => navigate('/admin/reviews'), 1500);
       } else {
         if (selectedBookingId) {
           // Старый путь — с бронированием
@@ -167,6 +169,8 @@ const ReviewFormPage: React.FC = () => {
           }).unwrap();
         }
         setSuccess(true);
+        // Перенаправление на страницу списка отзывов после успешного создания
+        setTimeout(() => navigate('/admin/reviews'), 1500);
         setSelectedClientId('');
         setSelectedBookingId('');
         setSelectedServicePointId('');
@@ -201,7 +205,9 @@ const ReviewFormPage: React.FC = () => {
           {isEditMode ? 'Редактирование отзыва (режим администратора)' : 'Создание/редактирование отзыва (режим администратора)'}
         </Typography>
         {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>{isEditMode ? 'Отзыв успешно обновлён!' : 'Отзыв успешно создан!'}</Alert>
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {isEditMode ? 'Отзыв успешно обновлён!' : 'Отзыв успешно создан!'} Перенаправление на список отзывов...
+          </Alert>
         )}
         {formError && (
           <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>
