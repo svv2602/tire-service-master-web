@@ -66,14 +66,14 @@ export const reviewsApi = baseApi.injectEndpoints({
           return {
             url: `clients/${client_id}/reviews`,
             method: 'POST',
-            body: data,
+            body: { review: data },
           };
         } else {
           // Для админа — без бронирования
           return {
             url: 'reviews',
             method: 'POST',
-            body: data,
+            body: { review: data },
           };
         }
       },
@@ -84,7 +84,7 @@ export const reviewsApi = baseApi.injectEndpoints({
       query: ({ id, data }: { id: string; data: Partial<ReviewFormData> }) => ({
         url: `reviews/${id}`,
         method: 'PATCH',
-        body: data,
+        body: { review: data },
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
         { type: 'Review' as const, id },
@@ -96,7 +96,7 @@ export const reviewsApi = baseApi.injectEndpoints({
       query: ({ id, data }: { id: string; data: ReviewResponseData }) => ({
         url: `reviews/${id}/response`,
         method: 'POST',
-        body: data,
+        body: { review: data },
       }),
       invalidatesTags: (_result: Review | undefined, _err: FetchBaseQueryError | undefined, { id }: { id: string }) => [
         { type: 'Review' as const, id },
