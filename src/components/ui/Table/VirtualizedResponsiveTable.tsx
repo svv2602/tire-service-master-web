@@ -74,7 +74,7 @@ export function VirtualizedResponsiveTable<T = any>({ columns, rows, rowKey, cla
             itemCount={rows.length}
             itemSize={rowHeight}
             width="100%"
-            outerElementType={React.forwardRef<HTMLTableSectionElement>((props, ref) => <tbody {...props} ref={ref} />)}
+            
           >
             {Row}
           </List>
