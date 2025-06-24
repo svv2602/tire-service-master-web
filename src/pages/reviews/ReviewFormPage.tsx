@@ -113,6 +113,38 @@ const ReviewFormPage: React.FC = () => {
     navigate('/my-reviews');
   };
 
+  // Функция для проверки валидности формы
+  const isFormValid = () => {
+    if (!selectedClientId) return false;
+    if (!selectedBookingId && !selectedServicePointId) return false;
+    if (!rating || rating === 0) return false;
+    if (!comment || comment.trim() === '') return false;
+    return true;
+  };
+
+  // Функция для получения списка незаполненных обязательных полей
+  const getRequiredFieldErrors = () => {
+    const errors: string[] = [];
+    
+    if (!selectedClientId) {
+      errors.push('Клиент');
+    }
+    
+    if (!selectedBookingId && !selectedServicePointId) {
+      errors.push('Бронирование или сервисная точка');
+    }
+    
+    if (!rating || rating === 0) {
+      errors.push('Оценка');
+    }
+    
+    if (!comment || comment.trim() === '') {
+      errors.push('Текст отзыва');
+    }
+    
+    return errors;
+  };
+
   // Универсальный submit для админа
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +157,7 @@ const ReviewFormPage: React.FC = () => {
           service_point_id = String(booking.service_point_id);
         }
       }
-      if (!selectedClientId || !service_point_id || !rating || !comment) {
+      if (!isFormValid()) {
         setFormError('Заполните все обязательные поля');
         return;
       }
@@ -298,6 +330,30 @@ const ReviewFormPage: React.FC = () => {
                   <MenuItem value="rejected">Отклонён</MenuItem>
                 </Select>
               </FormControl>
+
+              {/* Уведомление о незаполненных обязательных полях */}
+              {(!isFormValid()) && (
+                <Alert severity="warning" sx={{ mt: 3 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Заполните все обязательные поля:
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                    {getRequiredFieldErrors().map((field, index) => (
+                      <Typography variant="body2" component="li" key={index}>
+                        {field}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Alert>
+              )}
+
+              {/* Информационное сообщение при заполненной форме */}
+              {isFormValid() && !success && (
+                <Alert severity="info" sx={{ mt: 3 }}>
+                  Все обязательные поля заполнены. Можете сохранить отзыв.
+                </Alert>
+              )}
+
               <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: SIZES.spacing.md, marginTop: SIZES.spacing.lg }}>
                 <Button onClick={() => navigate('/admin/reviews')} sx={secondaryButtonStyles}>Отмена</Button>
                 <Box>
@@ -306,7 +362,7 @@ const ReviewFormPage: React.FC = () => {
                       {isDeleting ? 'Удаление...' : 'Удалить'}
                     </Button>
                   )}
-                  <Button type="submit" variant="contained" disabled={isSubmitting || isUpdating} startIcon={<StarIcon />} sx={primaryButtonStyles}>
+                  <Button type="submit" variant="contained" disabled={isSubmitting || isUpdating || !isFormValid()} startIcon={<StarIcon />} sx={primaryButtonStyles}>
                     {isEditMode ? (isUpdating ? 'Сохранение...' : 'Сохранить изменения') : (isSubmitting ? 'Сохранение...' : 'Сохранить отзыв')}
                   </Button>
                 </Box>
