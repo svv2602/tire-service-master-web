@@ -67,6 +67,7 @@ const CitiesPage = lazy(() => import('./pages/catalog/CitiesPage'));
 const WordWrapTestPage = lazy(() => import('./pages/testing/WordWrapTestPage'));
 const TableUnificationTest = lazy(() => import('./pages/testing/TableUnificationTest'));
 const PageTableTest = lazy(() => import('./pages/testing/PageTableTest'));
+const ReviewsPageNew = lazy(() => import('./pages/reviews/ReviewsPageNew'));
 
 // Ленивая загрузка страниц брендов автомобилей
 const CarBrandsPage = lazy(() => import('./pages/car-brands/CarBrandsPage'));
@@ -295,6 +296,7 @@ function App() {
                       <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
                       <Route path="testing/table-unification" element={<TableUnificationTest />} />
                       <Route path="testing/page-table" element={<PageTableTest />} />
+                      <Route path="testing/reviews-new" element={<ReviewsPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
