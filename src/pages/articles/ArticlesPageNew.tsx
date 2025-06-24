@@ -409,7 +409,6 @@ const ArticlesPageNew: React.FC = () => {
         rows={articles}
         actions={actionsConfig}
         loading={isLoading}
-        error={error}
         pagination={{
           page,
           totalItems,
