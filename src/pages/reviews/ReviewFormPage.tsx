@@ -139,15 +139,28 @@ const ReviewFormPage: React.FC = () => {
         }).unwrap();
         setSuccess(true);
       } else {
-        await createReview({
-          client_id: Number(selectedClientId),
-          data: {
-            service_point_id,
-            rating,
-            comment,
-            ...(selectedBookingId ? { booking_id: Number(selectedBookingId) } : {}),
-          } as any
-        }).unwrap();
+        if (selectedBookingId) {
+          // Старый путь — с бронированием
+          await createReview({
+            client_id: Number(selectedClientId),
+            data: {
+              service_point_id,
+              rating,
+              comment,
+              booking_id: Number(selectedBookingId),
+            } as any
+          }).unwrap();
+        } else {
+          // Новый путь — без бронирования (POST /reviews)
+          await createReview({
+            data: {
+              client_id: Number(selectedClientId),
+              service_point_id,
+              rating,
+              comment,
+            }
+          }).unwrap();
+        }
         setSuccess(true);
         setSelectedClientId('');
         setSelectedBookingId('');

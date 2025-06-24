@@ -36,9 +36,8 @@ export const bookingsApi = baseApi.injectEndpoints({
 
     getBookingsByClient: builder.query<ApiResponse<Booking>, string>({
       query: (clientId: string) => ({
-        url: 'bookings',
+        url: `clients/${clientId}/bookings`,
         method: 'GET',
-        params: { client_id: clientId }
       }),
       transformResponse: (response: any) => transformPaginatedResponse<Booking>(response),
       providesTags: [{ type: 'Booking', id: 'LIST' }],
@@ -140,4 +139,4 @@ export const {
   useUpdateBookingStatusMutation,
   useDeleteBookingMutation,
   useCancelBookingMutation,
-} = bookingsApi; 
+} = bookingsApi;

@@ -59,13 +59,24 @@ export const reviewsApi = baseApi.injectEndpoints({
       ],
     }),
     
-    // Новый тип для мутации создания отзыва с client_id
-    createReview: build.mutation<Review, { client_id: number; data: ReviewFormData }>({
-      query: ({ client_id, data }) => ({
-        url: `clients/${client_id}/reviews`,
-        method: 'POST',
-        body: data,
-      }),
+    // Новый тип для мутации создания отзыва с client_id или без (для админа)
+    createReview: build.mutation<Review, { client_id?: number; data: any }>({
+      query: ({ client_id, data }) => {
+        if (client_id) {
+          return {
+            url: `clients/${client_id}/reviews`,
+            method: 'POST',
+            body: data,
+          };
+        } else {
+          // Для админа — без бронирования
+          return {
+            url: 'reviews',
+            method: 'POST',
+            body: data,
+          };
+        }
+      },
       invalidatesTags: ['Review'],
     }),
     
