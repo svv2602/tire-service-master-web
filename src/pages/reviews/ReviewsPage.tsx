@@ -17,6 +17,7 @@ import {
   Check as CheckIcon,
   Close as CloseIcon,
   Add as AddIcon,
+  Pause as PauseIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -401,35 +402,51 @@ const ReviewsPage: React.FC = () => {
       align: 'right',
       format: (value: any, review: ReviewWithClient) => (
         <Box sx={tablePageStyles.actionsContainer}>
-                    {review.status === 'pending' && (
-            <>
-              <Tooltip title="Одобрить отзыв">
-                <IconButton
-                  onClick={() => handleStatusChange(review, 'published')}
-                  size="small"
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: `${theme.palette.success.main}15`
-                    }
-                  }}
-                >
-                  <CheckIcon color="success" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Отклонить отзыв">
-                <IconButton
-                  onClick={() => handleStatusChange(review, 'rejected')}
-                  size="small"
-                  sx={{
-                    '&:hover': {
-                      backgroundColor: `${theme.palette.error.main}15`
-                    }
-                  }}
-                >
-                  <CloseIcon color="error" />
-                </IconButton>
-              </Tooltip>
-            </>
+          {/* Кнопки управления статусом */}
+          {review.status !== 'published' && (
+            <Tooltip title="Одобрить отзыв">
+              <IconButton
+                onClick={() => handleStatusChange(review, 'published')}
+                size="small"
+                sx={{
+                  '&:hover': {
+                    backgroundColor: `${theme.palette.success.main}15`
+                  }
+                }}
+              >
+                <CheckIcon color="success" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {review.status !== 'rejected' && (
+            <Tooltip title="Отклонить отзыв">
+              <IconButton
+                onClick={() => handleStatusChange(review, 'rejected')}
+                size="small"
+                sx={{
+                  '&:hover': {
+                    backgroundColor: `${theme.palette.error.main}15`
+                  }
+                }}
+              >
+                <CloseIcon color="error" />
+              </IconButton>
+            </Tooltip>
+          )}
+          {review.status === 'published' && (
+            <Tooltip title="Снять с публикации">
+              <IconButton
+                onClick={() => handleStatusChange(review, 'pending')}
+                size="small"
+                sx={{
+                  '&:hover': {
+                    backgroundColor: `${theme.palette.warning.main}15`
+                  }
+                }}
+              >
+                <PauseIcon color="warning" />
+              </IconButton>
+            </Tooltip>
           )}
           <Tooltip title="Редактировать отзыв">
             <IconButton
