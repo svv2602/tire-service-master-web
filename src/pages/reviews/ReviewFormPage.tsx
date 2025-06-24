@@ -29,6 +29,7 @@ import {
   useGetUsersQuery,
   useGetServicePointsQuery,
 } from '../../api';
+import { useGetClientsQuery } from '../../api/clients.api';
 import { Booking } from '../../types/models';
 import { User } from '../../types/user';
 import { ServicePoint } from '../../types/models';
@@ -80,7 +81,7 @@ const ReviewFormPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
 
   // RTK Query хуки
-  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery({ role: 'client', per_page: 100 });
+  const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({ per_page: 100 });
   const { data: clientBookingsData, isLoading: adminBookingsLoading } = useGetBookingsByClientQuery(
     selectedClientId, 
     { skip: !selectedClientId || selectedClientId === '' }
@@ -190,7 +191,7 @@ const ReviewFormPage: React.FC = () => {
   };
 
   if (isAdmin) {
-    if (usersLoading || adminBookingsLoading || (isEditMode && reviewLoading)) {
+    if (clientsLoading || adminBookingsLoading || (isEditMode && reviewLoading)) {
       return <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px"><CircularProgress /></Box>;
     }
 
@@ -220,8 +221,10 @@ const ReviewFormPage: React.FC = () => {
                   disabled={isEditMode}
                 >
                   <MenuItem value="">Выберите клиента</MenuItem>
-                  {usersData?.data.map((user: User) => (
-                    <MenuItem key={user.id} value={user.id}>{user.last_name} {user.first_name} ({user.email})</MenuItem>
+                  {clientsData?.data.map((client: any) => (
+                    <MenuItem key={client.id} value={client.id}>
+                      {client.user?.last_name || 'Фамилия'} {client.user?.first_name || 'Имя'} ({client.user?.email || 'email'})
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
