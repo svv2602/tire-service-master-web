@@ -193,7 +193,7 @@ const ServicePointsPageNew: React.FC<ServicePointsPageNewProps> = () => {
   // Обработка удаления
   const handleDelete = useCallback(async (servicePoint: ServicePoint) => {
     try {
-      await deleteServicePoint(servicePoint.id).unwrap();
+      await deleteServicePoint({ partner_id: servicePoint.partner_id, id: servicePoint.id }).unwrap();
       showNotification(`Сервисная точка "${servicePoint.name}" успешно удалена`, 'success');
     } catch (error) {
       console.error('Ошибка при удалении сервисной точки:', error);
