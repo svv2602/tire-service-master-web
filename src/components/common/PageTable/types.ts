@@ -1,28 +1,65 @@
 import React from 'react';
-import { Column } from '../../ui/Table/Table';
+
+/** Колонка таблицы */
+export interface Column<T = any> {
+  /** Уникальный идентификатор колонки */
+  id: string;
+  /** Название колонки */
+  label: string;
+  /** Минимальная ширина */
+  minWidth?: number;
+  /** Максимальная ширина */
+  maxWidth?: number;
+  /** Выравнивание содержимого */
+  align?: 'left' | 'center' | 'right';
+  /** Сортируемая колонка */
+  sortable?: boolean;
+  /** Скрывать на мобильных устройствах */
+  hideOnMobile?: boolean;
+  /** Перенос текста */
+  wrap?: boolean;
+  /** Функция форматирования значения */
+  format?: (value: any, row: T, index?: number) => React.ReactNode | { type: 'chip'; label: string; color?: string; size?: string; };
+  /** Функция рендеринга (альтернатива format) */
+  render?: (row: T, index?: number) => React.ReactNode;
+}
 
 /** Конфигурация действия над строкой */
-export interface ActionConfig {
+export interface ActionConfig<T = any> {
   /** Уникальный идентификатор действия */
-  id: string;
+  id?: string;
   /** Название действия */
-  label: string;
+  label: string | ((row: T) => string);
   /** Иконка действия */
-  icon: React.ReactNode;
+  icon: React.ReactNode | ((row: T) => React.ReactNode);
   /** Цвет кнопки */
-  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success' | ((row: T) => 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success');
   /** Вариант кнопки */
   variant?: 'text' | 'outlined' | 'contained';
   /** Функция для определения видимости действия */
-  isVisible?: (row: any) => boolean;
+  isVisible?: (row: T) => boolean;
   /** Функция для определения доступности действия */
-  isDisabled?: (row: any) => boolean;
+  isDisabled?: (row: T) => boolean;
   /** Обработчик клика */
-  onClick: (row: any, index: number) => void;
+  onClick: (row: T, index?: number) => void;
+  /** Подсказка */
+  tooltip?: string | ((row: T) => string);
   /** Подтверждение перед выполнением */
   requireConfirmation?: boolean;
-  /** Текст подтверждения */
-  confirmationText?: string;
+  /** Конфигурация диалога подтверждения */
+  confirmationConfig?: ConfirmationDialogConfig;
+}
+
+/** Конфигурация диалога подтверждения */
+export interface ConfirmationDialogConfig {
+  /** Заголовок диалога */
+  title: string;
+  /** Сообщение диалога */
+  message: string;
+  /** Текст кнопки подтверждения */
+  confirmLabel?: string;
+  /** Текст кнопки отмены */
+  cancelLabel?: string;
 }
 
 /** Конфигурация фильтра */
@@ -51,7 +88,7 @@ export interface PageHeaderConfig {
   subtitle?: string;
   /** Кнопки действий */
   actions?: Array<{
-    id: string;
+    id?: string;
     label: string;
     icon?: React.ReactNode;
     color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
@@ -68,6 +105,8 @@ export interface SearchConfig {
   value: string;
   /** Обработчик изменения поиска */
   onChange: (value: string) => void;
+  /** Обработчик очистки поиска */
+  onClear?: () => void;
   /** Показать кнопку очистки */
   showClearButton?: boolean;
 }
@@ -81,11 +120,11 @@ export interface PageTableProps<T = any> {
   /** Конфигурация фильтров */
   filters?: FilterConfig[];
   /** Колонки таблицы */
-  columns: Column[];
+  columns: Column<T>[];
   /** Данные таблицы */
   rows: T[];
   /** Действия над строками */
-  actions?: ActionConfig[];
+  actions?: ActionConfig<T>[];
   /** Состояние загрузки */
   loading?: boolean;
   /** Кастомное пустое состояние */
@@ -105,4 +144,7 @@ export interface PageTableProps<T = any> {
   };
   /** Дополнительные пропсы для Table */
   tableProps?: Record<string, any>;
-} 
+}
+
+// Алиасы для обратной совместимости
+export type HeaderConfig = PageHeaderConfig; 

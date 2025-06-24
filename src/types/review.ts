@@ -28,6 +28,7 @@ export interface ReviewFormData {
   service_point_id: string;
   rating: number;
   comment: string;
+  status?: ReviewStatus;
 }
 
 export interface ReviewResponseData {

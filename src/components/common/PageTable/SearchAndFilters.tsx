@@ -18,7 +18,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { SearchConfig, FilterConfig } from './types';
+import { SearchConfig, FilterConfig } from './index';
 
 interface SearchAndFiltersProps {
   search?: SearchConfig;
@@ -62,7 +62,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               <MenuItem value="">
                 <em>Все</em>
               </MenuItem>
-              {filter.options?.map((option) => (
+              {filter.options?.map((option: any) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
@@ -87,7 +87,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               renderValue={(selected) => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {(selected as string[]).map((value) => {
-                    const option = filter.options?.find(opt => opt.value === value);
+                    const option = filter.options?.find((opt: any) => opt.value === value);
                     return (
                       <Chip 
                         key={value} 
@@ -99,7 +99,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
                 </Box>
               )}
             >
-              {filter.options?.map((option) => (
+              {filter.options?.map((option: any) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>

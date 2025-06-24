@@ -37,6 +37,7 @@ const ServicePointServicesPage = lazy(() => import('./pages/service-points/Servi
 
 // Ленивая загрузка страниц услуг
 const ServicesPage = lazy(() => import('./pages/services/NewServicesPage').then(module => ({ default: module.ServicesPage })));
+const ServicesPageNew = lazy(() => import('./pages/services/ServicesPageNew'));
 const ServiceFormPage = lazy(() => import('./pages/services/ServiceFormPage'));
 
 // Ленивая загрузка страниц клиентов
@@ -313,6 +314,7 @@ function App() {
                       <Route path="testing/cities-new" element={<CitiesPageNew />} />
                       <Route path="testing/regions-new" element={<RegionsPageNew />} />
                       <Route path="testing/car-brands-new" element={<CarBrandsPageNew />} />
+                      <Route path="testing/services-new" element={<ServicesPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}

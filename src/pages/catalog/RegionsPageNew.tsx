@@ -56,7 +56,7 @@ import type {
   PageHeaderConfig, 
   SearchConfig, 
   ActionConfig
-} from '../../components/common/PageTable/types';
+} from '../../components/common/PageTable';
 import type { Column } from '../../components/ui/Table/Table';
 
 // Схема валидации для региона

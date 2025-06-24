@@ -46,7 +46,7 @@ import type {
   SearchConfig, 
   ActionConfig,
   PageTableProps 
-} from '../../components/common/PageTable/types';
+} from '../../components/common/PageTable';
 import type { Column } from '../../components/ui/Table/Table';
 
 // Хук для debounce поиска

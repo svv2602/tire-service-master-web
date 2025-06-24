@@ -7,7 +7,7 @@ import {
   useTheme,
   useMediaQuery
 } from '@mui/material';
-import { PageHeaderConfig } from './types';
+import { PageHeaderConfig } from './index';
 
 interface PageHeaderProps {
   config: PageHeaderConfig;
@@ -67,7 +67,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
             mt: isMobile ? 2 : 0
           }}
         >
-          {actions.map((action) => (
+          {actions.map((action: any) => (
             <Button
               key={action.id}
               variant={action.variant || 'contained'}

@@ -21,13 +21,12 @@ import { BookingFilter } from '../../types/booking';
 // Импорт PageTable компонента
 import { PageTable } from '../../components/common/PageTable';
 import type { 
-  PageTableConfig,
-  HeaderConfig,
+  PageHeaderConfig,
   SearchConfig,
   Column,
   ActionConfig,
   ConfirmationDialogConfig
-} from '../../components/common/PageTable/types';
+} from '../../components/common/PageTable';
 
 const BookingsPageNew: React.FC = () => {
   const navigate = useNavigate();
@@ -107,12 +106,12 @@ const BookingsPageNew: React.FC = () => {
   }, [navigate]);
 
   // Конфигурация заголовка
-  const headerConfig: HeaderConfig = useMemo(() => ({
+  const headerConfig: PageHeaderConfig = useMemo(() => ({
     title: 'Бронирования (PageTable)',
     actions: [
       {
         label: 'Новое бронирование',
-        icon: AddIcon,
+        icon: <AddIcon />,
         variant: 'contained',
         onClick: handleCreateBooking,
       },
@@ -134,7 +133,7 @@ const BookingsPageNew: React.FC = () => {
       label: 'Клиент',
       minWidth: 200,
       wrap: true,
-      format: (booking: Booking) => (
+      format: (value: any, booking: Booking) => (
         <Box sx={tablePageStyles.avatarContainer}>
           <Avatar>
             {booking.client?.user?.first_name?.charAt(0) || booking.client?.user?.last_name?.charAt(0) || '?'}
@@ -151,7 +150,7 @@ const BookingsPageNew: React.FC = () => {
       minWidth: 180,
       wrap: true,
       hideOnMobile: true,
-      format: (booking: Booking) => (
+      format: (value: any, booking: Booking) => (
         <Typography>{booking.service_point?.name}</Typography>
       ),
     },
@@ -160,7 +159,7 @@ const BookingsPageNew: React.FC = () => {
       label: 'Дата и время',
       minWidth: 160,
       hideOnMobile: true,
-      format: (booking: Booking) => (
+      format: (value: any, booking: Booking) => (
         <Typography>
           {new Date(booking.booking_date).toLocaleDateString()} {new Date(booking.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Typography>
@@ -171,7 +170,7 @@ const BookingsPageNew: React.FC = () => {
       label: 'Статус',
       minWidth: 120,
       align: 'center',
-      format: (booking: Booking) => ({
+      format: (value: any, booking: Booking) => ({
         type: 'chip',
         label: getStatusLabel(booking.status_id),
         color: getStatusColor(booking.status_id),
@@ -184,20 +183,20 @@ const BookingsPageNew: React.FC = () => {
   const actionsConfig: ActionConfig<Booking>[] = useMemo(() => [
     {
       label: 'Редактировать',
-      icon: EditIcon,
+      icon: <EditIcon />,
       onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
       tooltip: 'Редактировать',
     },
     {
       label: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
-      icon: (booking: Booking) => booking.status_id === 2 ? CloseIcon : CheckIcon,
+      icon: (booking: Booking) => booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />,
       onClick: handleToggleStatus,
       tooltip: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
       color: (booking: Booking) => booking.status_id === 2 ? 'warning' : 'success',
     },
     {
       label: 'Удалить',
-      icon: DeleteIcon,
+      icon: <DeleteIcon />,
       onClick: handleDeleteBooking,
       tooltip: 'Удалить',
       color: 'error',
@@ -210,33 +209,6 @@ const BookingsPageNew: React.FC = () => {
       } as ConfirmationDialogConfig,
     },
   ], [navigate, handleToggleStatus, handleDeleteBooking]);
-
-  // Общая конфигурация PageTable
-  const pageTableConfig: PageTableConfig<Booking> = useMemo(() => ({
-    header: headerConfig,
-    search: searchConfig,
-    columns,
-    actions: actionsConfig,
-    data: bookings,
-    loading: isLoading,
-    error: error ? `Ошибка при загрузке бронирований: ${error.toString()}` : undefined,
-    pagination: {
-      page,
-      rowsPerPage,
-      totalItems,
-      onPageChange: setPage,
-    },
-  }), [
-    headerConfig,
-    searchConfig,
-    columns,
-    actionsConfig,
-    bookings,
-    isLoading,
-    error,
-    page,
-    totalItems,
-  ]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -259,7 +231,20 @@ const BookingsPageNew: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      <PageTable config={pageTableConfig} />
+      <PageTable<Booking>
+        header={headerConfig}
+        search={searchConfig}
+        columns={columns}
+        rows={bookings}
+        actions={actionsConfig}
+        loading={isLoading}
+        pagination={{
+          page,
+          rowsPerPage,
+          totalItems,
+          onPageChange: setPage,
+        }}
+      />
     </Box>
   );
 };

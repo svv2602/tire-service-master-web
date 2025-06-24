@@ -29,7 +29,7 @@ import {
   SearchConfig, 
   FilterConfig, 
   ActionConfig 
-} from '../../components/common/PageTable/types';
+} from '../../components/common/PageTable';
 import { Column } from '../../components/ui/Table/Table';
 
 // Импорты UI компонентов
@@ -158,28 +158,28 @@ const ReviewsPageNew: React.FC = () => {
   const servicePoints = servicePointsData?.data || [];
 
   // Обработчики действий
-  const handleStatusChange = useCallback(async (review: ReviewWithClient, status: ReviewStatus) => {
+  const handleUpdateReviewStatus = useCallback(async (review: ReviewWithClient, status: string) => {
     try {
       await updateReview({
-        id: review.id,
-        review: { status }
+        id: review.id.toString(),
+        data: { status: status as ReviewStatus }
       }).unwrap();
       
-      setSuccessMessage(`Статус отзыва изменен на "${REVIEW_STATUSES[status].label}"`);
+      setSuccessMessage(`Отзыв успешно ${status === 'published' ? 'опубликован' : status === 'rejected' ? 'отклонен' : 'снят с публикации'}`);
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error: any) {
-      setErrorMessage(`Ошибка при изменении статуса: ${error.message || 'Неизвестная ошибка'}`);
+      setErrorMessage(error?.data?.message || 'Ошибка при изменении статуса отзыва');
       setTimeout(() => setErrorMessage(null), 5000);
     }
   }, [updateReview]);
 
   const handleDeleteReview = useCallback(async (review: ReviewWithClient) => {
     try {
-      await deleteReview(review.id).unwrap();
+      await deleteReview(review.id.toString()).unwrap();
       setSuccessMessage('Отзыв успешно удален');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error: any) {
-      setErrorMessage(`Ошибка при удалении: ${error.message || 'Неизвестная ошибка'}`);
+      setErrorMessage(error?.data?.message || 'Ошибка при удалении отзыва');
       setTimeout(() => setErrorMessage(null), 5000);
     }
   }, [deleteReview]);
@@ -389,7 +389,7 @@ const ReviewsPageNew: React.FC = () => {
       icon: <CheckIcon />,
       color: 'success',
       isVisible: (review: ReviewWithClient) => review.status !== 'published',
-      onClick: (review: ReviewWithClient) => handleStatusChange(review, 'published')
+      onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'published')
     },
     {
       id: 'reject',
@@ -397,7 +397,7 @@ const ReviewsPageNew: React.FC = () => {
       icon: <CloseIcon />,
       color: 'error',
       isVisible: (review: ReviewWithClient) => review.status !== 'rejected',
-      onClick: (review: ReviewWithClient) => handleStatusChange(review, 'rejected')
+      onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'rejected')
     },
     {
       id: 'unpublish',
@@ -405,7 +405,7 @@ const ReviewsPageNew: React.FC = () => {
       icon: <VisibilityOffIcon />,
       color: 'warning',
       isVisible: (review: ReviewWithClient) => review.status === 'published',
-      onClick: (review: ReviewWithClient) => handleStatusChange(review, 'pending')
+      onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'pending')
     },
     {
       id: 'edit',

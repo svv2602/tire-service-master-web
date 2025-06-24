@@ -1,41 +1,45 @@
 import React, { useState } from 'react';
 import {
-  Box,
   IconButton,
-  Tooltip,
   Menu,
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Button,
+  Box,
+  Divider,
+  Typography,
   useTheme,
-  useMediaQuery
+  Theme
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { ActionConfig } from './types';
+import { ActionConfig } from './index';
 
 interface RowActionsProps {
   actions: ActionConfig[];
   row: any;
-  index: number;
+  index?: number;
 }
+
+// Типизация для цветов палитры
+type PaletteColor = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
+
+const getColorFromPalette = (theme: Theme, color: PaletteColor): string => {
+  return theme.palette[color].main;
+};
 
 /**
  * Компонент действий над строкой таблицы
+ * Отображает кнопки действий в виде выпадающего меню или отдельных кнопок
  */
-export const RowActions: React.FC<RowActionsProps> = ({
-  actions,
-  row,
-  index
-}) => {
+export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -44,21 +48,24 @@ export const RowActions: React.FC<RowActionsProps> = ({
 
   // Фильтруем видимые действия
   const visibleActions = actions.filter(action => 
-    !action.isVisible || action.isVisible(row)
+    action.isVisible ? action.isVisible(row) : true
   );
 
   if (visibleActions.length === 0) {
     return null;
   }
 
+  // Обработчик открытия меню
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
+  // Обработчик закрытия меню
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
+  // Обработчик клика по действию
   const handleActionClick = (action: ActionConfig) => {
     handleMenuClose();
     
@@ -69,6 +76,7 @@ export const RowActions: React.FC<RowActionsProps> = ({
     }
   };
 
+  // Обработчик подтверждения действия
   const handleConfirmAction = () => {
     if (confirmDialog.action) {
       confirmDialog.action.onClick(row, index);
@@ -76,127 +84,112 @@ export const RowActions: React.FC<RowActionsProps> = ({
     setConfirmDialog({ open: false });
   };
 
+  // Обработчик отмены действия
   const handleCancelAction = () => {
     setConfirmDialog({ open: false });
   };
 
-  // Если действий мало и не мобильная версия, показываем кнопки
-  if (visibleActions.length <= 2 && !isMobile) {
+  // Получение значения из функции или строки
+  const getValue = <T,>(value: T | ((row: any) => T), defaultValue: T): T => {
+    if (typeof value === 'function') {
+      return (value as (row: any) => T)(row);
+    }
+    return value || defaultValue;
+  };
+
+  // Если действий мало, показываем их как отдельные кнопки
+  if (visibleActions.length <= 3) {
     return (
       <Box sx={{ display: 'flex', gap: 0.5 }}>
-        {visibleActions.map((action) => {
-          const isDisabled = action.isDisabled && action.isDisabled(row);
-          
+        {visibleActions.map((action, actionIndex) => {
+          const isDisabled = action.isDisabled ? action.isDisabled(row) : false;
+          const label = getValue(action.label, '');
+          const icon = getValue(action.icon, null);
+          const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
+          const tooltip = getValue(action.tooltip, label);
+
           return (
-            <Tooltip key={action.id} title={action.label}>
+            <Tooltip key={action.id || actionIndex} title={tooltip}>
               <span>
                 <IconButton
                   size="small"
                   disabled={isDisabled}
                   onClick={() => handleActionClick(action)}
-                  color={action.color || 'default'}
                   sx={{
+                    color: getColorFromPalette(theme, color),
                     '&:hover': {
-                      backgroundColor: `${theme.palette[action.color || 'primary'].main}15`,
+                      backgroundColor: `${getColorFromPalette(theme, color)}15`,
                     }
                   }}
                 >
-                  {action.icon}
+                  {icon}
                 </IconButton>
               </span>
             </Tooltip>
           );
         })}
-        
-        {/* Диалог подтверждения */}
-        <Dialog
-          open={confirmDialog.open}
-          onClose={handleCancelAction}
-          maxWidth="sm"
-        >
-          <DialogTitle>
-            Подтверждение действия
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {confirmDialog.action?.confirmationText || 
-               `Вы уверены, что хотите выполнить действие "${confirmDialog.action?.label}"?`}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCancelAction} color="inherit">
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleConfirmAction} 
-              color={confirmDialog.action?.color || 'primary'}
-              variant="contained"
-            >
-              Подтвердить
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     );
   }
 
-  // Для множества действий или мобильной версии используем меню
+  // Если действий много, показываем выпадающее меню
   return (
-    <Box>
-      <Tooltip title="Действия">
-        <IconButton
-          size="small"
-          onClick={handleMenuOpen}
-          sx={{
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            }
-          }}
-        >
-          <MoreVertIcon />
-        </IconButton>
-      </Tooltip>
+    <>
+      <IconButton
+        size="small"
+        onClick={handleMenuOpen}
+        sx={{
+          '&:hover': {
+            backgroundColor: theme.palette.action.hover,
+          }
+        }}
+      >
+        <MoreVertIcon />
+      </IconButton>
 
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
-        PaperProps={{
-          sx: {
-            minWidth: 160,
-            boxShadow: theme.shadows[8],
-          }
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
         }}
         transformOrigin={{
           vertical: 'top',
           horizontal: 'right',
         }}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+        PaperProps={{
+          sx: {
+            minWidth: 180,
+            boxShadow: theme.shadows[8],
+          }
         }}
       >
-        {visibleActions.map((action) => {
-          const isDisabled = action.isDisabled && action.isDisabled(row);
-          
+        {visibleActions.map((action, actionIndex) => {
+          const isDisabled = action.isDisabled ? action.isDisabled(row) : false;
+          const label = getValue(action.label, '');
+          const icon = getValue(action.icon, null);
+          const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
+
           return (
             <MenuItem
-              key={action.id}
+              key={action.id || actionIndex}
               onClick={() => handleActionClick(action)}
               disabled={isDisabled}
               sx={{
-                color: action.color ? theme.palette[action.color].main : 'inherit',
+                color: isDisabled ? theme.palette.text.disabled : getColorFromPalette(theme, color),
                 '&:hover': {
-                  backgroundColor: action.color 
-                    ? `${theme.palette[action.color].main}15`
-                    : theme.palette.action.hover,
+                  backgroundColor: isDisabled 
+                    ? 'transparent' 
+                    : `${getColorFromPalette(theme, color)}15`,
                 }
               }}
             >
-              <ListItemIcon sx={{ color: 'inherit' }}>
-                {action.icon}
+              <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>
+                {icon}
               </ListItemIcon>
-              <ListItemText primary={action.label} />
+              <ListItemText primary={label} />
             </MenuItem>
           );
         })}
@@ -206,31 +199,32 @@ export const RowActions: React.FC<RowActionsProps> = ({
       <Dialog
         open={confirmDialog.open}
         onClose={handleCancelAction}
-        maxWidth="sm"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
       >
-        <DialogTitle>
-          Подтверждение действия
+        <DialogTitle id="confirm-dialog-title">
+          {confirmDialog.action?.confirmationConfig?.title || 'Подтверждение'}
         </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            {confirmDialog.action?.confirmationText || 
-             `Вы уверены, что хотите выполнить действие "${confirmDialog.action?.label}"?`}
+          <DialogContentText id="confirm-dialog-description">
+            {confirmDialog.action?.confirmationConfig?.message || 'Вы уверены, что хотите выполнить это действие?'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelAction} color="inherit">
-            Отмена
+            {confirmDialog.action?.confirmationConfig?.cancelLabel || 'Отмена'}
           </Button>
           <Button 
             onClick={handleConfirmAction} 
-            color={confirmDialog.action?.color || 'primary'}
+            color="error" 
             variant="contained"
+            autoFocus
           >
-            Подтвердить
+            {confirmDialog.action?.confirmationConfig?.confirmLabel || 'Подтвердить'}
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 };
 

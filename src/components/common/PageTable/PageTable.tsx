@@ -5,7 +5,7 @@ import { Pagination } from '../../ui/Pagination/Pagination';
 import { PageHeader } from './PageHeader';
 import { SearchAndFilters } from './SearchAndFilters';
 import { RowActions } from './RowActions';
-import { PageTableProps } from './types';
+import { PageTableProps, Column as PageTableColumn } from './index';
 import { getTablePageStyles } from '../../../styles/components';
 import { useTheme } from '@mui/material/styles';
 
@@ -29,31 +29,56 @@ export const PageTable = <T,>({
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
-  // Добавляем колонку действий если есть действия
+  // Преобразуем колонки PageTable в формат для Table компонента
   const enhancedColumns = useMemo(() => {
-    if (actions.length === 0) return columns;
+    const tableColumns = columns.map((col: PageTableColumn<T>) => ({
+      id: col.id,
+      label: col.label,
+      minWidth: col.minWidth,
+      maxWidth: col.maxWidth,
+      align: col.align,
+      sortable: col.sortable,
+      hideOnMobile: col.hideOnMobile,
+      wrap: col.wrap,
+      format: col.format || col.render ? (value: any, row: T, index?: number) => {
+        if (col.format) {
+          return col.format(value, row, index);
+        }
+        if (col.render) {
+          return col.render(row, index);
+        }
+        return value;
+      } : undefined,
+    }));
 
-    const actionsColumn = {
-      id: 'actions',
-      label: 'Действия',
-      minWidth: 120,
-      maxWidth: 150,
-      align: 'center' as const,
-      format: (_: any, row: T, index?: number) => (
-        <RowActions 
-          actions={actions} 
-          row={row} 
-          index={index || 0} 
-        />
-      ),
-    };
+    // Добавляем колонку действий если есть действия
+    if (actions.length > 0) {
+      const actionsColumn = {
+        id: 'actions',
+        label: 'Действия',
+        minWidth: 120,
+        maxWidth: 150,
+        align: 'center' as const,
+        sortable: false,
+        hideOnMobile: false,
+        wrap: false,
+        format: (_: any, row: T, index?: number) => (
+          <RowActions 
+            actions={actions} 
+            row={row} 
+            index={index || 0} 
+          />
+        ),
+      };
+      tableColumns.push(actionsColumn);
+    }
 
-    return [...columns, actionsColumn];
+    return tableColumns;
   }, [columns, actions]);
 
   // Обработчик очистки фильтров
   const handleClearFilters = () => {
-    filters.forEach(filter => {
+    filters.forEach((filter: any) => {
       if (Array.isArray(filter.value)) {
         filter.onChange([]);
       } else {

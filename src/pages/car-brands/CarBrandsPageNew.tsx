@@ -30,6 +30,9 @@ import {
   ToggleOff as ToggleOffIcon,
   CalendarToday as CalendarTodayIcon,
   FormatListNumbered as FormatListNumberedIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  DriveEta as DriveEtaIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -44,12 +47,12 @@ import config from '../../config';
 import { Box, Typography } from '../../components/ui';
 import { PageTable } from '../../components/common/PageTable';
 import type { 
-  HeaderConfig, 
+  PageHeaderConfig, 
   SearchConfig, 
-  FiltersConfig, 
+  FilterConfig, 
   Column, 
-  ActionsConfig 
-} from '../../components/common/PageTable/types';
+  ActionConfig 
+} from '../../components/common/PageTable';
 
 // Импорт централизованных стилей
 import { getTablePageStyles, SIZES } from '../../styles';
@@ -135,154 +138,124 @@ const CarBrandsPageNew: React.FC = () => {
     }
   }, [deleteBrand]);
 
-  // Конфигурация заголовка
-  const headerConfig: HeaderConfig = useMemo(() => ({
-    title: 'Бренды автомобилей (PageTable)',
-    actions: [
-      {
-        label: 'Добавить бренд',
-        icon: <AddIcon />,
-        variant: 'contained',
-        onClick: () => navigate('/admin/car-brands/new')
-      }
-    ]
-  }), [navigate]);
-
-  // Конфигурация поиска
-  const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по названию бренда',
-    value: search,
-    onChange: (value) => {
-      setSearch(value);
-      setPage(0);
-    }
-  }), [search]);
-
   // Конфигурация фильтров
-  const filtersConfig: FiltersConfig = useMemo(() => ({
-    filters: [
-      {
-        type: 'select',
-        label: 'Статус',
-        value: activeFilter,
-        onChange: (value) => {
-          setActiveFilter(value as string);
-          setPage(0);
-        },
-        options: [
-          { value: '', label: 'Все' },
-          { value: 'true', label: 'Активные' },
-          { value: 'false', label: 'Неактивные' }
-        ]
-      }
-    ]
-  }), [activeFilter]);
+  const filtersConfig: FilterConfig[] = useMemo(() => [
+    {
+      id: 'status',
+      type: 'select',
+      label: 'Статус',
+      value: activeFilter,
+      onChange: (value: any) => {
+        setActiveFilter(value as string);
+        setPage(0);
+      },
+      options: [
+        { value: 'all', label: 'Все' },
+        { value: 'active', label: 'Активные' },
+        { value: 'inactive', label: 'Неактивные' },
+      ],
+    },
+  ], [activeFilter]);
 
   // Конфигурация колонок
   const columns: Column<CarBrand>[] = useMemo(() => [
     {
-      id: 'brand',
+      id: 'name',
       label: 'Бренд',
       sortable: true,
-      render: (brand) => (
+      render: (brand: CarBrand) => (
         <Box sx={tablePageStyles.avatarContainer}>
           {brand.logo ? (
             <Avatar 
-              src={getLogoUrl(brand.logo)} 
+              src={brand.logo} 
               alt={brand.name}
-              variant="rounded"
-              sx={{ 
-                width: SIZES.icon.medium * 1.5, 
-                height: SIZES.icon.medium * 1.5,
-                borderRadius: SIZES.borderRadius.xs
-              }}
+              sx={{ width: 40, height: 40 }}
             />
           ) : (
-            <Avatar
-              variant="rounded"
-              sx={{ 
-                width: SIZES.icon.medium * 1.5, 
-                height: SIZES.icon.medium * 1.5,
-                borderRadius: SIZES.borderRadius.xs,
-                bgcolor: 'grey.200'
-              }}
-            >
-              <CarIcon color="disabled" />
+            <Avatar sx={{ width: 40, height: 40, bgcolor: 'grey.300' }}>
+              <DriveEtaIcon />
             </Avatar>
           )}
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
             {brand.name}
           </Typography>
         </Box>
-      )
+      ),
     },
     {
-      id: 'is_active',
+      id: 'status',
       label: 'Статус',
       align: 'center',
       hideOnMobile: false,
-      render: (brand) => (
+      render: (brand: CarBrand) => (
         <Tooltip title={`Нажмите чтобы ${brand.is_active ? 'деактивировать' : 'активировать'}`}>
           <IconButton
             onClick={() => handleToggleActive(brand)}
-            color={brand.is_active ? 'success' : 'default'}
             size="small"
+            sx={{ 
+              color: brand.is_active ? 'success.main' : 'error.main',
+              '&:hover': { 
+                backgroundColor: brand.is_active ? 'success.light' : 'error.light',
+                opacity: 0.1
+              }
+            }}
           >
-            {brand.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+            {brand.is_active ? <CheckCircleIcon /> : <CancelIcon />}
           </IconButton>
         </Tooltip>
-      )
+      ),
     },
     {
       id: 'models_count',
-      label: 'Кол-во моделей',
+      label: 'Моделей',
       align: 'center',
       hideOnMobile: true,
-      render: (brand) => (
+      render: (brand: CarBrand) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <FormatListNumberedIcon fontSize="small" color="action" />
           <Typography variant="body2">
             {brand.models_count || 0}
           </Typography>
         </Box>
-      )
+      ),
     },
     {
       id: 'created_at',
       label: 'Дата создания',
       align: 'center',
       hideOnMobile: true,
-      render: (brand) => (
+      render: (brand: CarBrand) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <CalendarTodayIcon fontSize="small" color="action" />
           <Typography variant="body2">
             {new Date(brand.created_at).toLocaleDateString('ru-RU')}
           </Typography>
         </Box>
-      )
-    }
-  ], [tablePageStyles.avatarContainer, getLogoUrl, handleToggleActive]);
+      ),
+    },
+  ], [tablePageStyles, handleToggleActive]);
 
   // Конфигурация действий
-  const actionsConfig: ActionsConfig<CarBrand> = useMemo(() => ({
-    actions: [
-      {
-        label: 'Редактировать',
-        icon: <EditIcon />,
-        onClick: (brand) => navigate(`/admin/car-brands/${brand.id}/edit`)
+  const actionsConfig: ActionConfig<CarBrand>[] = useMemo(() => [
+    {
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`)
+    },
+    {
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      color: 'error',
+      onClick: (brand: CarBrand) => handleDeleteBrand(brand),
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите удаление',
+        message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
       },
-      {
-        label: 'Удалить',
-        icon: <DeleteIcon />,
-        onClick: handleDeleteBrand,
-        color: 'error',
-        requireConfirmation: true,
-        confirmationTitle: 'Подтвердите удаление',
-        confirmationText: (brand) => 
-          `Вы уверены, что хотите удалить бренд "${brand.name}"? Это действие нельзя отменить.`
-      }
-    ]
-  }), [navigate, handleDeleteBrand]);
+    }
+  ], [navigate, handleDeleteBrand]);
 
   // Извлечение данных из ответа API
   const brands = brandsData?.data || [];
@@ -290,19 +263,33 @@ const CarBrandsPageNew: React.FC = () => {
 
   return (
     <PageTable<CarBrand>
-      headerConfig={headerConfig}
-      searchConfig={searchConfig}
-      filtersConfig={filtersConfig}
+      header={{
+        title: 'Бренды автомобилей (PageTable)',
+        actions: [
+          {
+            label: 'Добавить бренд',
+            icon: <AddIcon />,
+            color: 'primary',
+            variant: 'contained',
+            onClick: () => navigate('/admin/car-brands/new'),
+          },
+        ],
+      }}
+      search={{
+        placeholder: 'Поиск по названию бренда...',
+        value: search,
+        onChange: setSearch,
+      }}
+      filters={filtersConfig}
       columns={columns}
-      actionsConfig={actionsConfig}
-      data={brands}
+      rows={brands}
+      actions={actionsConfig}
       loading={isLoading}
-      error={error}
       pagination={{
         page,
         rowsPerPage,
         totalItems,
-        onPageChange: setPage
+        onPageChange: setPage,
       }}
       emptyState={{
         title: search || activeFilter !== '' ? 'Бренды не найдены' : 'Нет брендов автомобилей',

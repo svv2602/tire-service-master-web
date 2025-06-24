@@ -21,7 +21,7 @@ import {
   FilterConfig, 
   PageHeaderConfig, 
   SearchConfig 
-} from '../../components/common/PageTable/types';
+} from '../../components/common/PageTable';
 import { Column } from '../../components/ui/Table/Table';
 
 interface TestUser {
