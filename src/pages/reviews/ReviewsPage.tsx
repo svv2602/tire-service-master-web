@@ -6,7 +6,6 @@ import {
   MenuItem,
   useTheme, // Добавлен импорт темы
   IconButton,
-  Tooltip as MuiTooltip,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -44,7 +43,7 @@ import Typography from '../../components/ui/Typography';
 import { Avatar } from '../../components/ui/Avatar';
 import Rating from '../../components/ui/Rating/Rating';
 import { Alert } from '../../components/ui/Alert';
-
+import { Tooltip } from '../../components/ui/Tooltip';
 import { Progress } from '../../components/ui/Progress';
 
 // Расширяем интерфейс для отображения с полными данными от сериализатора
@@ -402,9 +401,9 @@ const ReviewsPage: React.FC = () => {
       align: 'right',
       format: (value: any, review: ReviewWithClient) => (
         <Box sx={tablePageStyles.actionsContainer}>
-          {review.status === 'pending' && (
+                    {review.status === 'pending' && (
             <>
-              <MuiTooltip title="Одобрить">
+              <Tooltip title="Одобрить отзыв">
                 <IconButton
                   onClick={() => handleStatusChange(review, 'published')}
                   size="small"
@@ -416,8 +415,8 @@ const ReviewsPage: React.FC = () => {
                 >
                   <CheckIcon color="success" />
                 </IconButton>
-                              </MuiTooltip>
-                <MuiTooltip title="Отклонить">
+              </Tooltip>
+              <Tooltip title="Отклонить отзыв">
                 <IconButton
                   onClick={() => handleStatusChange(review, 'rejected')}
                   size="small"
@@ -429,39 +428,36 @@ const ReviewsPage: React.FC = () => {
                 >
                   <CloseIcon color="error" />
                 </IconButton>
-              </MuiTooltip>
+              </Tooltip>
             </>
           )}
-          <MuiTooltip title="Редактировать">
-            <Button 
-              variant="secondary"
+          <Tooltip title="Редактировать отзыв">
+            <IconButton
               onClick={() => navigate(`/admin/reviews/${review.id}/edit`)}
               size="small"
               sx={tablePageStyles.actionButton}
             >
               <EditIcon color="info" />
-            </Button>
-          </MuiTooltip>
-          <MuiTooltip title="Ответить">
-            <Button 
-              variant="secondary"
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Ответить на отзыв">
+            <IconButton
               onClick={() => navigate(`/admin/reviews/${review.id}/reply`)}
               size="small"
               sx={tablePageStyles.actionButton}
             >
               <ReplyIcon />
-            </Button>
-          </MuiTooltip>
-          <MuiTooltip title="Удалить">
-            <Button
-              variant="secondary"
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Удалить отзыв">
+            <IconButton
               onClick={() => handleDeleteClick(review)}
               size="small"
               sx={tablePageStyles.actionButton}
             >
               <DeleteIcon color="error" />
-            </Button>
-          </MuiTooltip>
+            </IconButton>
+          </Tooltip>
         </Box>
       )
     }

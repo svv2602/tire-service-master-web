@@ -2,75 +2,78 @@ import React from 'react';
 import {
   Tooltip as MuiTooltip,
   TooltipProps as MuiTooltipProps,
-  Fade,
-  Box,
-  Typography,
 } from '@mui/material';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import { tokens } from '../../../styles/theme/tokens';
 
-export interface TooltipProps extends MuiTooltipProps {
-  /** Контент тултипа */
-  title: React.ReactNode;
+export interface TooltipProps extends Omit<MuiTooltipProps, 'title'> {
+  /** Текст подсказки */
+  title: string;
   /** Элемент, к которому привязан тултип */
   children: React.ReactElement;
-  /** Описание (опционально) */
-  description?: React.ReactNode;
   /** Задержка появления (мс) */
   enterDelay?: number;
   /** Задержка исчезновения (мс) */
   leaveDelay?: number;
   /** Максимальная ширина */
-  maxWidth?: number | string;
+  maxWidth?: number;
   /** Вариант внешнего вида */
   variant?: 'light' | 'dark';
   /** Показывать стрелку */
   arrow?: boolean;
 }
 
-const StyledTooltip = styled(({ className, ...props }: TooltipProps) => (
-  <MuiTooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => {
-  const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
-  return {
-    '& .MuiTooltip-tooltip': {
-      backgroundColor: theme.palette.mode === 'dark' 
-        ? 'rgba(255, 255, 255, 0.95)' 
-        : 'rgba(33, 33, 33, 0.95)',
-      color: theme.palette.mode === 'dark' ? themeColors.textPrimary : '#fff',
-      fontSize: tokens.typography.fontSize.xs,
-      fontFamily: tokens.typography.fontFamily,
-      fontWeight: tokens.typography.fontWeight.medium,
-      lineHeight: tokens.typography.lineHeight.md,
-      borderRadius: tokens.borderRadius.md,
-      padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
-      boxShadow: tokens.shadows.md,
-      maxWidth: 300,
-      wordWrap: 'break-word',
-      transition: `opacity ${tokens.transitions.duration.fast} ${tokens.transitions.easing.easeInOut}`,
+const StyledTooltip = styled(MuiTooltip)<TooltipProps>(({ theme, variant = 'dark', maxWidth = 300 }) => ({
+  '& .MuiTooltip-tooltip': {
+    backgroundColor: variant === 'light' 
+      ? 'rgba(255, 255, 255, 0.95)' 
+      : 'rgba(33, 33, 33, 0.95)',
+    color: variant === 'light' ? '#333' : '#fff',
+    fontSize: tokens.typography.fontSize.xs,
+    fontFamily: tokens.typography.fontFamily,
+    fontWeight: tokens.typography.fontWeight.medium,
+    lineHeight: tokens.typography.lineHeight.md,
+    borderRadius: tokens.borderRadius.md,
+    padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
+    boxShadow: variant === 'light' 
+      ? '0 2px 8px rgba(0,0,0,0.15)' 
+      : '0 2px 8px rgba(0,0,0,0.3)',
+    maxWidth: maxWidth,
+    wordWrap: 'break-word',
+    border: variant === 'light' ? '1px solid rgba(0,0,0,0.12)' : 'none',
+  },
+  '& .MuiTooltip-arrow': {
+    color: variant === 'light' 
+      ? 'rgba(255, 255, 255, 0.95)' 
+      : 'rgba(33, 33, 33, 0.95)',
+    '&::before': {
+      border: variant === 'light' ? '1px solid rgba(0,0,0,0.12)' : 'none',
     },
-    '& .MuiTooltip-arrow': {
-      color: theme.palette.mode === 'dark' 
-        ? 'rgba(255, 255, 255, 0.95)' 
-        : 'rgba(33, 33, 33, 0.95)',
-      transition: tokens.transitions.duration.fast,
-    },
-  };
-});
+  },
+}));
 
 /**
- * Компонент тултипа
+ * Централизованный компонент подсказки (Tooltip)
  * 
  * @example
- * <Tooltip title="Подсказка">
+ * // Простая подсказка
+ * <Tooltip title="Это подсказка">
  *   <Button>Наведи на меня</Button>
+ * </Tooltip>
+ * 
+ * // Светлая тема
+ * <Tooltip title="Светлая подсказка" variant="light">
+ *   <IconButton><EditIcon /></IconButton>
+ * </Tooltip>
+ * 
+ * // Кастомная задержка
+ * <Tooltip title="Быстрая подсказка" enterDelay={100}>
+ *   <Chip label="Быстро" />
  * </Tooltip>
  */
 export const Tooltip: React.FC<TooltipProps> = ({
   children,
   title,
-  description,
   enterDelay = 200,
   leaveDelay = 0,
   maxWidth = 300,
@@ -79,40 +82,21 @@ export const Tooltip: React.FC<TooltipProps> = ({
   placement = 'top',
   ...props
 }) => {
-  const tooltipContent = (
-    <Box>
-      {typeof title === 'string' ? (
-        <Typography variant="subtitle2" component="div" gutterBottom={!!description}>
-          {title}
-        </Typography>
-      ) : (
-        title
-      )}
-      {description && (
-        typeof description === 'string' ? (
-          <Typography variant="body2" color="textSecondary">
-            {description}
-          </Typography>
-        ) : (
-          description
-        )
-      )}
-    </Box>
-  );
+  // Если title пустой, возвращаем просто children без tooltip
+  if (!title || title.trim() === '') {
+    return children;
+  }
 
   return (
     <StyledTooltip
-      title={tooltipContent}
+      title={title}
       placement={placement}
       arrow={arrow}
-      TransitionProps={{ timeout: parseInt(tokens.transitions.duration.fast) }}
+      enterDelay={enterDelay}
+      leaveDelay={leaveDelay}
+      variant={variant}
+      maxWidth={maxWidth}
       {...props}
-      sx={{
-        '& .MuiTooltip-tooltip': {
-          maxWidth,
-        },
-        ...props.sx,
-      }}
     >
       {children}
     </StyledTooltip>

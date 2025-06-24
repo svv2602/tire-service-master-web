@@ -4,7 +4,10 @@ import { Tooltip, TooltipProps } from './Tooltip';
 import { Button, IconButton, Box, Typography } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { tokens } from '../../../styles/theme/tokens';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import ShareIcon from '@mui/icons-material/Share';
 
 export default {
   title: 'UI/Tooltip',
@@ -49,10 +52,9 @@ Default.args = {
   title: 'Это подсказка',
 };
 
-export const WithDescription = Template.bind({});
-WithDescription.args = {
-  title: 'Заголовок подсказки',
-  description: 'Дополнительное описание с более подробной информацией о функциональности.',
+export const LongText = Template.bind({});
+LongText.args = {
+  title: 'Это длинная подсказка с дополнительной информацией о функциональности кнопки',
 };
 
 // Размещение
@@ -108,9 +110,14 @@ DarkVariant.args = {
 // Задержки
 export const WithDelay = Template.bind({});
 WithDelay.args = {
-  title: 'Подсказка с задержкой появления',
+  title: 'Подсказка с задержкой появления (1 секунда)',
   enterDelay: 1000,
-  description: 'Эта подсказка появится через 1 секунду после наведения',
+};
+
+export const FastTooltip = Template.bind({});
+FastTooltip.args = {
+  title: 'Быстрая подсказка (без задержки)',
+  enterDelay: 0,
 };
 
 // Различные триггеры
@@ -134,59 +141,61 @@ export const WithText = () => (
   </Box>
 );
 
-// Сложный контент
-export const WithRichContent = () => (
-  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-    <Tooltip
-      title={
-        <Box>
-          <Typography variant="subtitle2" component="div" sx={{ fontWeight: 'bold' }}>
-            Расширенная подсказка
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            Подсказки могут содержать:
-          </Typography>
-          <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-            <li>Форматированный текст</li>
-            <li>Списки</li>
-            <li>И другие элементы</li>
-          </ul>
-        </Box>
-      }
-      arrow
-    >
-      <Button variant="outlined" startIcon={<HelpOutlineIcon />}>
-        Подробная информация
-      </Button>
-    </Tooltip>
-  </Box>
-);
+// Максимальная ширина
+export const WithCustomWidth = Template.bind({});
+WithCustomWidth.args = {
+  title: 'Очень длинная подсказка которая должна переноситься на несколько строк для демонстрации работы maxWidth',
+  maxWidth: 200,
+};
+
+export const WideTooltip = Template.bind({});
+WideTooltip.args = {
+  title: 'Широкая подсказка с большим количеством текста для демонстрации',
+  maxWidth: 500,
+};
 
 // Группа тултипов
 export const TooltipGroup = () => (
   <Box sx={{ display: 'flex', justifyContent: 'space-around', p: 4 }}>
     <Tooltip title="Редактировать" arrow>
       <IconButton>
-        <span className="material-icons">edit</span>
+        <EditIcon />
       </IconButton>
     </Tooltip>
     
     <Tooltip title="Удалить" arrow>
       <IconButton>
-        <span className="material-icons">delete</span>
+        <DeleteIcon />
       </IconButton>
     </Tooltip>
     
     <Tooltip title="Добавить" arrow>
       <IconButton>
-        <span className="material-icons">add</span>
+        <AddIcon />
       </IconButton>
     </Tooltip>
     
     <Tooltip title="Поделиться" arrow>
       <IconButton>
-        <span className="material-icons">share</span>
+        <ShareIcon />
       </IconButton>
+    </Tooltip>
+  </Box>
+);
+
+// Разные варианты в группе
+export const MixedVariants = () => (
+  <Box sx={{ display: 'flex', justifyContent: 'space-around', p: 4 }}>
+    <Tooltip title="Темная подсказка" variant="dark" arrow>
+      <Button variant="contained">Темная</Button>
+    </Tooltip>
+    
+    <Tooltip title="Светлая подсказка" variant="light" arrow>
+      <Button variant="outlined">Светлая</Button>
+    </Tooltip>
+    
+    <Tooltip title="Без стрелки" arrow={false}>
+      <Button variant="text">Без стрелки</Button>
     </Tooltip>
   </Box>
 ); 
