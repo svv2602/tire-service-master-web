@@ -25,6 +25,7 @@ const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
 
 // Ленивая загрузка страниц партнеров
 const PartnersPage = lazy(() => import('./pages/partners/PartnersPage'));
+const PartnersPageNew = lazy(() => import('./pages/partners/PartnersPageNew'));
 const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 
 // Ленивая загрузка страниц сервисных точек
@@ -69,6 +70,8 @@ const TableUnificationTest = lazy(() => import('./pages/testing/TableUnification
 const PageTableTest = lazy(() => import('./pages/testing/PageTableTest'));
 const ReviewsPageNew = lazy(() => import('./pages/reviews/ReviewsPageNew'));
 const BookingsPageNew = lazy(() => import('./pages/bookings/BookingsPageNew'));
+const ServicePointsPageNew = lazy(() => import('./pages/service-points/ServicePointsPageNew'));
+const CitiesPageNew = lazy(() => import('./pages/catalog/CitiesPageNew'));
 
 // Ленивая загрузка страниц брендов автомобилей
 const CarBrandsPage = lazy(() => import('./pages/car-brands/CarBrandsPage'));
@@ -221,6 +224,9 @@ function App() {
                       <Route path="partners" element={<PartnersPage />} />
                       <Route path="partners/new" element={<PartnerFormPage />} />
                       <Route path="partners/:id/edit" element={<PartnerFormPage />} />
+                      
+                      {/* Тестирование PageTable */}
+                      <Route path="testing/partners-new" element={<PartnersPageNew />} />
                       <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
                       <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
                       <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
@@ -299,6 +305,8 @@ function App() {
                       <Route path="testing/page-table" element={<PageTableTest />} />
                       <Route path="testing/reviews-new" element={<ReviewsPageNew />} />
                       <Route path="testing/bookings-new" element={<BookingsPageNew />} />
+                      <Route path="testing/service-points-new" element={<ServicePointsPageNew />} />
+                      <Route path="testing/cities-new" element={<CitiesPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
