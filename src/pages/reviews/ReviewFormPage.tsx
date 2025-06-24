@@ -144,20 +144,21 @@ const ReviewFormPage: React.FC = () => {
           await createReview({
             client_id: Number(selectedClientId),
             data: {
-              service_point_id,
+              booking_id: Number(selectedBookingId),
               rating,
               comment,
-              booking_id: Number(selectedBookingId),
-            } as any
+            }
           }).unwrap();
         } else {
           // Новый путь — без бронирования (POST /reviews)
           await createReview({
             data: {
-              client_id: Number(selectedClientId),
-              service_point_id,
-              rating,
-              comment,
+              review: {
+                client_id: Number(selectedClientId),
+                service_point_id: Number(service_point_id),
+                rating,
+                comment,
+              }
             }
           }).unwrap();
         }
