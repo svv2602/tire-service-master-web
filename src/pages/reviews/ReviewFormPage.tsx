@@ -81,7 +81,10 @@ const ReviewFormPage: React.FC = () => {
 
   // RTK Query хуки
   const { data: usersData, isLoading: usersLoading } = useGetUsersQuery({ role: 'client', per_page: 100 });
-  const { data: clientBookingsData, isLoading: adminBookingsLoading } = useGetBookingsByClientQuery(selectedClientId, { skip: !selectedClientId });
+  const { data: clientBookingsData, isLoading: adminBookingsLoading } = useGetBookingsByClientQuery(
+    selectedClientId, 
+    { skip: !selectedClientId || selectedClientId === '' }
+  );
   const { data: servicePointsData } = useGetServicePointsQuery({});
   // Для редактирования/удаления
   const { data: reviewData, isLoading: reviewLoading } = useGetReviewByIdQuery(id!, { skip: !isEditMode });
