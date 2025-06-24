@@ -121,6 +121,11 @@ const PageContentPage = lazy(() => import('./pages/page-content/PageContentPage'
 const PageContentFormPage = lazy(() => import('./pages/page-content/PageContentFormPage'));
 const PageContentManagement = lazy(() => import('./pages/admin/PageContentManagement'));
 
+// Ленивая загрузка новых мигрированных страниц
+const RegionsManagementPageNew = lazy(() => import('./pages/regions-management/RegionsManagementPageNew'));
+const ClientCarsPageNew = lazy(() => import('./pages/clients/ClientCarsPageNew'));
+const MyReviewsPageNew = lazy(() => import('./pages/reviews/MyReviewsPageNew'));
+
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
@@ -321,6 +326,9 @@ function App() {
                       <Route path="testing/clients-new" element={<ClientsPageNew />} />
                       <Route path="testing/articles-new" element={<ArticlesPageNew />} />
                       <Route path="testing/page-content-new" element={<PageContentPageNew />} />
+                      <Route path="testing/regions-management-new" element={<RegionsManagementPageNew />} />
+                      <Route path="testing/client-cars-new" element={<ClientCarsPageNew />} />
+                      <Route path="testing/my-reviews-new" element={<MyReviewsPageNew />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}
