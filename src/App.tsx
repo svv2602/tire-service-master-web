@@ -57,6 +57,7 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 
 // Ленивая загрузка страниц пользователей
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
+const UsersPageNew = lazy(() => import('./pages/users/UsersPageNew'));
 const UserForm = lazy(() => import('./pages/users/UserForm'));
 
 // Ленивая загрузка страниц регионов и городов
@@ -227,6 +228,7 @@ function App() {
                       
                       {/* Тестирование PageTable */}
                       <Route path="testing/partners-new" element={<PartnersPageNew />} />
+                      <Route path="testing/users-new" element={<UsersPageNew />} />
                       <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
                       <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
                       <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
