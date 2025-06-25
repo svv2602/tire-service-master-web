@@ -19,12 +19,6 @@ const baseQuery = fetchBaseQuery({
     // Если токен есть в Redux состоянии, добавляем его в заголовок
     if (token) {
       headers.set('authorization', `Bearer ${token}`);
-    } else {
-      // Если токена нет в Redux, пробуем взять из localStorage
-      const localToken = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
-      if (localToken) {
-        headers.set('authorization', `Bearer ${localToken}`);
-      }
     }
     
     // Отладочная информация только в режиме разработки
@@ -78,19 +72,16 @@ const baseQueryWithReauth: BaseQueryFn<
         // Обновляем токен в Redux состоянии
         api.dispatch(updateAccessToken(newToken));
         
-        // Сохраняем токен в localStorage
-        localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, newToken);
-        
-        console.log('BaseQuery: токен обновлен в Redux и localStorage');
+        // localStorage больше не используем
+        console.log('BaseQuery: токен обновлен в Redux');
       }
       
       // Повторяем оригинальный запрос
       result = await baseQuery(args, api, extraOptions);
     } else {
       console.log('BaseQuery: не удалось обновить токен, выходим из системы');
-      // Если не удалось обновить токен, очищаем состояние и localStorage
+      // Если не удалось обновить токен, очищаем состояние
       const { logout } = await import('../store/slices/authSlice');
-      localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
       api.dispatch(logout());
     }
   }
