@@ -25,12 +25,8 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
                                 document.cookie.includes('_tire_service_refresh=') || 
                                 document.cookie.includes('_session=');
         
-        // Проверка наличия сохраненного токена в localStorage
-        const savedToken = localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY);
-        
         console.log('AuthInitializer: Проверяем состояние', {
           hasRefreshCookie,
-          hasLocalStorageToken: !!savedToken,
           hasUserInState: !!user,
           hasAccessToken: !!accessToken,
           isAuthenticated,
@@ -38,12 +34,10 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
           isInitialized
         });
 
-        // Если есть refresh cookie или сохраненный токен, пытаемся восстановить сессию
-        if ((hasRefreshCookie || savedToken) && !user) {
+        // Если есть refresh cookie и нет accessToken, пытаемся восстановить сессию
+        if (hasRefreshCookie && !accessToken) {
           try {
-            console.log('AuthInitializer: Обнаружен refresh cookie или token, пытаемся восстановить сессию');
-            
-            // Прямой запрос к API для проверки сессии
+            console.log('AuthInitializer: Обнаружен refresh cookie, пытаемся восстановить сессию');
             const API_URL = `${config.API_URL}${config.API_PREFIX}`;
             const response = await axios.post(
               `${API_URL}/auth/refresh`,
@@ -53,14 +47,9 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 headers: { 'Content-Type': 'application/json' }
               }
             );
-            
             if (response.data && (response.data.tokens?.access || response.data.access_token)) {
               const token = response.data.tokens?.access || response.data.access_token;
               console.log('AuthInitializer: Токен успешно обновлен');
-              
-              // Сохраняем токен в localStorage
-              localStorage.setItem(config.AUTH_TOKEN_STORAGE_KEY, token);
-              
               // Получаем данные пользователя
               const userResponse = await axios.get(
                 `${API_URL}/auth/me`,
@@ -72,10 +61,8 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
                   }
                 }
               );
-              
               if (userResponse.data && userResponse.data.user) {
                 console.log('AuthInitializer: Данные пользователя получены');
-                
                 // Устанавливаем данные пользователя и токен в Redux
                 dispatch(setCredentials({ 
                   accessToken: token, 
@@ -85,25 +72,20 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
             }
           } catch (error) {
             console.log('AuthInitializer: Ошибка восстановления сессии', error);
-            // Очищаем localStorage если refresh не удался
-            localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
             dispatch(setInitialized());
           }
-        } else if (!hasRefreshCookie && !savedToken && user) {
-          // Если нет refresh cookie и сохраненного токена, но есть пользователь в состоянии - очищаем состояние
-          console.log('AuthInitializer: Нет refresh cookie и токена, очищаем состояние пользователя');
-          localStorage.removeItem(config.AUTH_TOKEN_STORAGE_KEY);
+        } else if (!hasRefreshCookie && user) {
+          // Если нет refresh cookie, но есть пользователь в состоянии - очищаем состояние
+          console.log('AuthInitializer: Нет refresh cookie, очищаем состояние пользователя');
           dispatch(setInitialized());
         } else {
           // Если нет refresh cookie и нет пользователя в состоянии - просто инициализируемся
           console.log('AuthInitializer: Инициализация без восстановления сессии');
           dispatch(setInitialized());
         }
-
         console.log('AuthInitializer: Инициализация завершена');
       }
     };
-
     initializeAuth();
   }, [dispatch, user, loading, isInitialized, isAuthenticated, accessToken]);
 
