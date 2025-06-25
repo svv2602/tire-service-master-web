@@ -171,7 +171,7 @@ const ArticlesPage: React.FC = () => {
                 fontSize: SIZES.fontSize.md,
                 '&:hover': { color: theme.palette.primary.main }
               }}
-              onClick={() => navigate(`/articles/${row.id}`)}
+              onClick={() => navigate(`/admin/articles/${row.id}`)}
             >
               {row.title}
               {row.featured && (
@@ -286,7 +286,7 @@ const ArticlesPage: React.FC = () => {
           <Tooltip title="Просмотр">
             <IconButton
               size="small"
-              onClick={() => navigate(`/articles/${row.id}`)}
+              onClick={() => navigate(`/admin/articles/${row.id}`)}
               sx={{ color: theme.palette.primary.main }}
             >
               <ViewIcon fontSize="small" />
