@@ -24,6 +24,7 @@ import {
   Button,
   PhoneField,
 } from '../../components/ui';
+import Notification from '../../components/Notification';
 
 // Импорт централизованных стилей
 import { getFormStyles, getTablePageStyles } from '../../styles/components';
@@ -36,17 +37,20 @@ import { getFormStyles, getTablePageStyles } from '../../styles/components';
  * - Email: необязательное поле, проверка формата email если заполнено
  */
 const validationSchema = Yup.object({
-  first_name: Yup.string()
-    .required('Имя обязательно')
-    .min(2, 'Имя должно быть не менее 2 символов'),
-  last_name: Yup.string()
-    .required('Фамилия обязательна')
-    .min(2, 'Фамилия должна быть не менее 2 символов'),
-  phone: phoneValidation,
-  email: Yup.string()
-    .email('Введите корректный email')
-    .required('Email обязателен'),
-  is_active: Yup.boolean()
+  user_attributes: Yup.object({
+    first_name: Yup.string()
+      .required('Имя обязательно')
+      .min(2, 'Имя должно быть не менее 2 символов'),
+    last_name: Yup.string()
+      .required('Фамилия обязательна')
+      .min(2, 'Фамилия должна быть не менее 2 символов'),
+    phone: phoneValidation,
+         email: Yup.string()
+       .email('Введите корректный email'),
+    is_active: Yup.boolean()
+  }),
+  preferred_notification_method: Yup.string(),
+  marketing_consent: Yup.boolean()
 });
 
 /**
@@ -138,21 +142,30 @@ const ClientFormPage: React.FC = () => {
           navigate('/admin/clients');
         } else {
           // Создание нового клиента
+          // Создаем объект пользователя, исключая пустой email
+          const userData: any = {
+            first_name: values.user_attributes.first_name,
+            last_name: values.user_attributes.last_name,
+            middle_name: values.user_attributes.middle_name || '',
+            phone: values.user_attributes.phone || '',
+            password: 'default_password', // Временный пароль
+            password_confirmation: 'default_password'
+          };
+
+          // Добавляем email только если он заполнен (избегаем пустой строки)
+          if (values.user_attributes.email && values.user_attributes.email.trim() !== '') {
+            userData.email = values.user_attributes.email.trim();
+          }
+
           const createData: ClientCreateData = {
-            user: {
-              first_name: values.user_attributes.first_name,
-              last_name: values.user_attributes.last_name,
-              middle_name: values.user_attributes.middle_name || '',
-              phone: values.user_attributes.phone || '',
-              email: values.user_attributes.email || '',
-              password: 'default_password', // Временный пароль
-              password_confirmation: 'default_password'
-            },
+            user: userData,
             client: {
               preferred_notification_method: values.preferred_notification_method,
               marketing_consent: values.marketing_consent
             }
           };
+          
+          console.log('🚀 Sending client data:', JSON.stringify(createData, null, 2));
           
           await createClient(createData).unwrap();
           
@@ -160,9 +173,15 @@ const ClientFormPage: React.FC = () => {
           setSnackbarOpen(true);
           navigate('/admin/clients');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving client:', error);
-        setSnackbarMessage('Ошибка при сохранении клиента');
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        console.error('Error data:', error?.data);
+        console.error('Error status:', error?.status);
+        
+        const errorMessage = extractErrorMessage(error);
+        setApiError(errorMessage);
+        setSnackbarMessage(errorMessage);
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
       } finally {
@@ -175,6 +194,37 @@ const ClientFormPage: React.FC = () => {
   const handleCancel = useCallback(() => {
     navigate('/admin/clients');
   }, [navigate]);
+
+  // Функция для проверки валидности формы
+  const isFormValid = useCallback(() => {
+    const { user_attributes } = formik.values;
+    return (
+      user_attributes.first_name.trim() !== '' &&
+      user_attributes.last_name.trim() !== '' &&
+      (user_attributes.phone || '').trim() !== '' &&
+      Object.keys(formik.errors).length === 0
+    );
+  }, [formik.values, formik.errors]);
+
+  // Функция для получения списка незаполненных полей
+  const getRequiredFieldErrors = useCallback(() => {
+    const errors: string[] = [];
+    const { user_attributes } = formik.values;
+    
+    if (!user_attributes.first_name.trim()) errors.push('Имя');
+    if (!user_attributes.last_name.trim()) errors.push('Фамилия');
+    if (!(user_attributes.phone || '').trim()) errors.push('Номер телефона');
+    
+    return errors;
+  }, [formik.values]);
+
+  // Обработчик закрытия уведомлений
+  const handleCloseNotification = useCallback(() => {
+    setSnackbarOpen(false);
+    setSnackbarMessage(null);
+    setApiError(null);
+    setSuccessMessage(null);
+  }, []);
 
   // Функция для извлечения сообщения об ошибке
   const extractErrorMessage = useCallback((error: any): string => {
@@ -277,7 +327,8 @@ const ClientFormPage: React.FC = () => {
                 fullWidth
                 id="email"
                 name="user_attributes.email"
-                label="Email (необязательно)"
+                label="Email"
+                placeholder="example@email.com (необязательно)"
                 value={formik.values.user_attributes.email}
                 onChange={formik.handleChange}
                 error={formik.touched.user_attributes?.email && Boolean(formik.errors.user_attributes?.email)}
@@ -323,6 +374,29 @@ const ClientFormPage: React.FC = () => {
                   {successMessage}
                 </Alert>
               )}
+
+              {/* Уведомление о незаполненных обязательных полях */}
+              {(!isFormValid()) && (
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    Заполните все обязательные поля:
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
+                    {getRequiredFieldErrors().map((field, index) => (
+                      <Typography variant="body2" component="li" key={index}>
+                        {field}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Alert>
+              )}
+
+              {/* Информационное сообщение при заполненной форме */}
+              {isFormValid() && !apiError && !successMessage && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Все обязательные поля заполнены. Можете создать клиента.
+                </Alert>
+              )}
               
               <Box sx={{ 
                 display: 'flex', 
@@ -340,7 +414,7 @@ const ClientFormPage: React.FC = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  disabled={isLoading}
+                  disabled={isLoading || !isFormValid()}
                 >
                   {isLoading ? 'Сохранение...' : (isEditMode ? 'Сохранить' : 'Создать')}
                 </Button>
@@ -348,6 +422,13 @@ const ClientFormPage: React.FC = () => {
             </Grid>
           </Grid>
         </form>
+
+        <Notification
+          open={snackbarOpen}
+          message={snackbarMessage || ''}
+          severity={snackbarSeverity}
+          onClose={handleCloseNotification}
+        />
     </Box>
   );
 };
