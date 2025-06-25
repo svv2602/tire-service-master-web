@@ -138,6 +138,7 @@ interface UserAttributes {
   first_name: string;
   last_name: string;
   password?: string;
+  password_confirmation?: string;
   role_id?: number;
 }
 
@@ -386,7 +387,8 @@ const PartnerFormPage: React.FC = () => {
         first_name: partner.user.first_name || '',
         last_name: partner.user.last_name || '',
         role_id: getRoleId('partner'),
-        password: values.new_password.trim()
+        password: values.new_password.trim(),
+        password_confirmation: values.new_password.trim()
       };
     }
 
