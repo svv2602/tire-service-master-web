@@ -1,14 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store/store';
-import { getCurrentUser, setInitialized, refreshAuthTokens, setCredentials } from '../../store/slices/authSlice';
+import { setInitialized, setCredentials } from '../../store/slices/authSlice';
 import { LoadingScreen } from '../LoadingScreen';
 import axios from 'axios';
 import config from '../../config';
 
 /**
  * Компонент для инициализации аутентификации при загрузке приложения
- * Проверяет наличие HttpOnly cookie с refresh токеном и восстанавливает состояние аутентификации
+ * Всегда пробует восстановить accessToken через refresh, если пользователь не залогинен
  */
 const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,30 +19,16 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
     const initializeAuth = async () => {
       if (!initializationStarted.current && !isInitialized) {
         initializationStarted.current = true;
-        
-        // Проверка наличия refresh токена в куках (несколько вариантов имени куки)
-        const hasRefreshCookie = document.cookie.includes('refresh_token=') || 
-                                document.cookie.includes('_tire_service_refresh=') || 
-                                document.cookie.includes('_session=');
-        
-        console.log('AuthInitializer: Проверяем состояние', {
-          hasRefreshCookie,
-          hasUserInState: !!user,
-          hasAccessToken: !!accessToken,
-          isAuthenticated,
-          loading,
-          isInitialized
-        });
 
-        // Если есть refresh cookie и нет accessToken, пытаемся восстановить сессию
-        if (hasRefreshCookie && !accessToken) {
+        // Если нет accessToken и пользователь не залогинен, всегда пробуем восстановить сессию через refresh
+        if (!accessToken && !user) {
           try {
-            console.log('AuthInitializer: Обнаружен refresh cookie, пытаемся восстановить сессию');
+            console.log('AuthInitializer: Пробуем восстановить access token через refresh');
             const API_URL = `${config.API_URL}${config.API_PREFIX}`;
             const response = await axios.post(
               `${API_URL}/auth/refresh`,
               {},
-              { 
+              {
                 withCredentials: true,
                 headers: { 'Content-Type': 'application/json' }
               }
@@ -55,7 +41,7 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
                 `${API_URL}/auth/me`,
                 {
                   withCredentials: true,
-                  headers: { 
+                  headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                   }
@@ -64,23 +50,21 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
               if (userResponse.data && userResponse.data.user) {
                 console.log('AuthInitializer: Данные пользователя получены');
                 // Устанавливаем данные пользователя и токен в Redux
-                dispatch(setCredentials({ 
-                  accessToken: token, 
-                  user: userResponse.data.user 
+                dispatch(setCredentials({
+                  accessToken: token,
+                  user: userResponse.data.user
                 }));
               }
+            } else {
+              // Если refresh не сработал, просто инициализируемся
+              dispatch(setInitialized());
             }
           } catch (error) {
             console.log('AuthInitializer: Ошибка восстановления сессии', error);
             dispatch(setInitialized());
           }
-        } else if (!hasRefreshCookie && user) {
-          // Если нет refresh cookie, но есть пользователь в состоянии - очищаем состояние
-          console.log('AuthInitializer: Нет refresh cookie, очищаем состояние пользователя');
-          dispatch(setInitialized());
         } else {
-          // Если нет refresh cookie и нет пользователя в состоянии - просто инициализируемся
-          console.log('AuthInitializer: Инициализация без восстановления сессии');
+          // Если accessToken или пользователь уже есть, просто инициализируемся
           dispatch(setInitialized());
         }
         console.log('AuthInitializer: Инициализация завершена');
