@@ -207,7 +207,7 @@ const ServicePointsPage: React.FC = () => {
       alert('Ошибка: Сервисная точка не связана с партнером. Обратитесь к администратору.');
       return;
     }
-    navigate(`/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
+    navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
   }, [navigate]);
 
   const handleDeleteConfirm = useCallback(async () => {
