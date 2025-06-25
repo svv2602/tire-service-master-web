@@ -625,7 +625,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
               <strong>Что фотографировать:</strong>
-              <StyledList gap={8} sx={{ mt: 1, pl: 2.5 }}>
+              <StyledList gap={2} sx={{ mt: 1, pl: 2.5 }}>
                 <ListItem disablePadding>
                   <ListItemText primary="Общий вид сервисного центра" />
                 </ListItem>
@@ -644,7 +644,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
               <strong>Качество фотографий:</strong>
-              <StyledList gap={8} sx={{ mt: 1, pl: 2.5 }}>
+              <StyledList gap={2} sx={{ mt: 1, pl: 2.5 }}>
                 <ListItem disablePadding>
                   <ListItemText primary="Хорошее освещение" />
                 </ListItem>
