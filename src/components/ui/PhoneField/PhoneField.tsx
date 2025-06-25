@@ -3,6 +3,7 @@ import InputMask from 'react-input-mask';
 import { TextField, TextFieldProps } from '../TextField';
 import { InputAdornment } from '@mui/material';
 import { Phone as PhoneIcon } from '@mui/icons-material';
+import { formatPhoneNumber } from '../../../utils/validation';
 
 export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' | 'onChange'> {
   /**
@@ -31,49 +32,40 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   showIcon = true,
   label = 'Телефон',
   required = false,
-  helperText = 'Формат: +38 (067) 123-45-67',
-  placeholder = '+38 (___) ___-__-__',
+  helperText = 'Формат: +380XXXXXXXXX',
+  error = false,
   onBlur,
   ...props
 }) => {
   // Обработчик изменения значения
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatPhoneNumber(e.target.value);
+    onChange(formattedValue);
   };
-
-  // Валидация телефона
-  const validatePhone = (value: string): boolean => {
-    const phoneDigits = value.replace(/[^\d]/g, '');
-    return phoneDigits.length === 12; // 38 + 10 цифр номера
-  };
-
-  // Отделяем пропсы для InputMask и TextField
-  const { InputProps, ...textFieldProps } = props;
 
   return (
     <InputMask
-      mask="+38 (999) 999-99-99"
-      value={value}
+      mask="+380 (99) 999-99-99"
+      value={value || ''}
       onChange={handleChange}
       onBlur={onBlur}
-      maskChar="_"
     >
       {(inputProps: any) => (
         <TextField
-          {...textFieldProps}
+          {...props}
           {...inputProps}
+          type="tel"
           label={label}
           required={required}
-          placeholder={placeholder}
+          error={error}
           helperText={helperText}
-          error={props.error || (value && !validatePhone(value))}
           InputProps={{
-            ...InputProps,
+            ...props.InputProps,
             startAdornment: showIcon ? (
               <InputAdornment position="start">
-                <PhoneIcon color="action" />
+                <PhoneIcon color={error ? 'error' : 'action'} />
               </InputAdornment>
-            ) : InputProps?.startAdornment,
+            ) : null,
           }}
         />
       )}

@@ -14,6 +14,7 @@ import {
 import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation, clientsApi } from '../../api/clients.api';
 import { ClientFormData, ClientUpdateData, ClientCreateData } from '../../types/client';
 import { clientToFormData } from '../../utils/clientExtensions';
+import { phoneValidation } from '../../utils/validation';
 
 // Импорты UI компонентов
 import {
@@ -35,14 +36,17 @@ import { getFormStyles, getTablePageStyles } from '../../styles/components';
  * - Email: необязательное поле, проверка формата email если заполнено
  */
 const validationSchema = Yup.object({
-  first_name: Yup.string().required('Обязательное поле'),
-  last_name: Yup.string().required('Обязательное поле'),
-  phone: Yup.string()
-    .required('Обязательное поле')
-    .matches(/^\+?[0-9]{10,15}$/, 'Неверный формат телефона'),
+  first_name: Yup.string()
+    .required('Имя обязательно')
+    .min(2, 'Имя должно быть не менее 2 символов'),
+  last_name: Yup.string()
+    .required('Фамилия обязательна')
+    .min(2, 'Фамилия должна быть не менее 2 символов'),
+  phone: phoneValidation,
   email: Yup.string()
-    .email('Неверный формат email')
-    .notRequired(),
+    .email('Введите корректный email')
+    .required('Email обязателен'),
+  is_active: Yup.boolean()
 });
 
 /**

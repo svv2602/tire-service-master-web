@@ -24,6 +24,8 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
+import { phoneValidation } from '../../utils/validation';
+import * as yup from 'yup';
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
@@ -212,6 +214,37 @@ const ProfilePage: React.FC = () => {
   const textFieldStyles = getTextFieldStyles(theme);
   const chipStyles = getChipStyles(theme);
   const formStyles = getFormStyles(theme);
+
+  // Схема валидации с Yup
+  const validationSchema = yup.object({
+    email: yup
+      .string()
+      .email('Введите корректный email')
+      .required('Email обязателен'),
+    first_name: yup
+      .string()
+      .required('Имя обязательно')
+      .min(2, 'Имя должно быть не менее 2 символов'),
+    last_name: yup
+      .string()
+      .required('Фамилия обязательна')
+      .min(2, 'Фамилия должна быть не менее 2 символов'),
+    phone: phoneValidation,
+    current_password: yup
+      .string()
+      .min(6, 'Пароль должен содержать минимум 6 символов')
+      .test('required-if-new-password', 'Введите текущий пароль', function(value) {
+        return !this.parent.new_password || (this.parent.new_password && value);
+      }),
+    new_password: yup
+      .string()
+      .min(6, 'Пароль должен содержать минимум 6 символов'),
+    new_password_confirmation: yup
+      .string()
+      .test('passwords-match', 'Пароли не совпадают', function(value) {
+        return !this.parent.new_password || this.parent.new_password === value;
+      })
+  });
 
   return (
     <Box sx={{ p: SIZES.spacing.lg }}>

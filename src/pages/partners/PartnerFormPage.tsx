@@ -45,6 +45,7 @@ import { SelectChangeEvent } from '@mui/material';
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
 // Импорт UI компонентов
 import { Tabs, TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
+import { phoneValidation } from '../../utils/validation';
 
 /**
  * Страница формы партнера - создание и редактирование партнеров
@@ -178,9 +179,7 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
         email: yup.string()
           .email('Введите корректный email')
           .required('Email обязателен'),
-        phone: yup.string()
-          .required('Телефон обязателен')
-          .matches(/^\+?[0-9]{10,12}$/, 'Введите корректный номер телефона'),
+        phone: phoneValidation,
         first_name: yup.string()
           .required('Имя обязательно')
           .min(2, 'Имя должно быть не менее 2 символов'),

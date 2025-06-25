@@ -29,6 +29,7 @@ import {
 
 import { UserFormData } from '../../types/user';
 import { PhoneField } from '../../components/ui/PhoneField';
+import { phoneValidation } from '../../utils/validation';
 
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
@@ -147,10 +148,7 @@ const UserForm: React.FC = () => {
     middle_name: yup
       .string()
       .nullable(),
-    phone: yup
-      .string()
-      .matches(/^\+?[0-9]{10,12}$/, 'Введите корректный номер телефона')
-      .nullable(),
+    phone: phoneValidation,
     role_id: yup
       .number()
       .required('Роль обязательна'),
