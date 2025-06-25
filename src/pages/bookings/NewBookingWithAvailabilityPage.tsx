@@ -57,9 +57,12 @@ export interface BookingFormData {
   start_time: string;
   
   // Шаг 3: Информация о клиенте
-  client_name: string;
-  client_phone: string;
-  client_email: string;
+  client: {
+    first_name: string;
+    last_name?: string;
+    phone: string;
+    email: string;
+  };
   
   // Шаг 4: Тип автомобиля
   car_type_id: number | null;
@@ -118,9 +121,12 @@ const initialFormData: BookingFormData = {
   service_point_id: null,
   booking_date: '',
   start_time: '',
-  client_name: '',
-  client_phone: '',
-  client_email: '',
+  client: {
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  },
   car_type_id: null,
   car_brand: '',
   car_model: '',
@@ -190,9 +196,13 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     if (isAuthenticated && user) {
       setFormData(prev => ({
         ...prev,
-        client_name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-        client_phone: user.phone || '',
-        client_email: user.email || '',
+        client: {
+          ...prev.client,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+        }
       }));
     }
   }, [location.search, location.state, isAuthenticated, user]);
@@ -260,12 +270,12 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         if (currentUser) return true;
         
         // Валидация для неавторизованного пользователя
-        const phone = formData.client_phone.replace(/[^\d]/g, '');
+        const phone = formData.client.phone.replace(/[^\d]/g, '');
         const isPhoneValid = phone.length >= 10 && phone.length <= 15;
-        const isEmailValid = !formData.client_email || Boolean(formData.client_email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        const isEmailValid = !formData.client.email || Boolean(formData.client.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
         
         return (
-          formData.client_name.trim().length >= 2 &&
+          formData.client.first_name.trim().length >= 2 &&
           isPhoneValid &&
           isEmailValid
         );
@@ -306,10 +316,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         },
         services: formData.services,
         client: {
-          first_name: formData.client_name.split(' ')[0],
-          last_name: formData.client_name.split(' ').slice(1).join(' ') || '',
-          phone: formData.client_phone.replace(/[^\d+]/g, ''),
-          email: formData.client_email || ''
+          first_name: formData.client.first_name,
+          last_name: formData.client.last_name,
+          phone: formData.client.phone.replace(/[^\d+]/g, ''),
+          email: formData.client.email || ''
         }
       };
 

@@ -145,36 +145,48 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             </Typography>
             
             <List dense>
-              <ListItem>
-                <ListItemIcon>
-                  <PersonIcon color="action" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Имя"
-                  secondary={formData.client_name}
-                />
-              </ListItem>
-              
-              <ListItem>
-                <ListItemIcon>
-                  <PhoneIcon color="action" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Телефон"
-                  secondary={formData.client_phone}
-                />
-              </ListItem>
-              
-              {formData.client_email && (
-                <ListItem>
-                  <ListItemIcon>
-                    <EmailIcon color="action" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Email"
-                    secondary={formData.client_email}
-                  />
-                </ListItem>
+              {/* Информация о клиенте */}
+              {formData.client && (
+                <>
+                  {/* Имя и фамилия */}
+                  {formData.client.first_name && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <PersonIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Имя"
+                        secondary={`${formData.client.first_name}${formData.client.last_name ? ' ' + formData.client.last_name : ''}`}
+                      />
+                    </ListItem>
+                  )}
+                  
+                  {/* Телефон */}
+                  {formData.client.phone && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <PhoneIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Телефон"
+                        secondary={formData.client.phone}
+                      />
+                    </ListItem>
+                  )}
+                  
+                  {/* Email (если указан) */}
+                  {formData.client.email && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <EmailIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Email"
+                        secondary={formData.client.email}
+                      />
+                    </ListItem>
+                  )}
+                </>
               )}
             </List>
           </Paper>

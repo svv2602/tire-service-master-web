@@ -43,37 +43,51 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
   const [errors, setErrors] = useState({
-    client_name: '',
-    client_phone: '',
-    client_email: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
   });
   
   const [receiveNotifications, setReceiveNotifications] = useState(true);
   
   // Валидация полей
-  const validateField = (field: string, value: string) => {
+  const validateField = (field: string, value: string | undefined): string => {
+    if (!value) {
+      if (field === 'first_name') {
+        return 'Имя обязательно для заполнения';
+      }
+      if (field === 'phone') {
+        return 'Телефон обязателен для заполнения';
+      }
+      return '';
+    }
+
     switch (field) {
-      case 'client_name':
-        if (!value.trim()) {
-          return 'Имя обязательно для заполнения';
+      case 'first_name':
+        if (value.trim().length < 2) {
+          return 'Имя должно быть не менее 2 символов';
         }
-        if (!value.trim().includes(' ')) {
-          return 'Укажите имя и фамилию';
+        return '';
+
+      case 'last_name':
+        if (value.trim() && value.trim().length < 2) {
+          return 'Фамилия должна быть не менее 2 символов';
         }
         return '';
         
-      case 'client_phone':
-        if (!value.trim()) {
-          return 'Телефон обязателен для заполнения';
-        }
+      case 'phone':
         // Проверяем, что все символы маски заполнены и номер начинается с +380
-        const phoneDigits = value.replace(/[^\d]/g, '');
-        if (!value.startsWith('+380') || phoneDigits.length !== 12) {
-          return 'Телефон должен начинаться с +380 и содержать 12 цифр';
+        const phoneDigits = value.replace(/[^\d+]/g, '');
+        if (!phoneDigits.startsWith('+380')) {
+          return 'Телефон должен начинаться с +380';
+        }
+        if (phoneDigits.length !== 13) { // +380 + 9 цифр
+          return 'Телефон должен содержать 12 цифр после +';
         }
         return '';
         
-      case 'client_email':
+      case 'email':
         if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           return 'Введите корректный email адрес';
         }
@@ -85,12 +99,13 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   };
   
   // Обработчик изменения поля
-  const handleFieldChange = (field: keyof typeof formData) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    let value = event.target.value;
-    
+  const handleFieldChange = (field: keyof BookingFormData['client']) => (value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value,
+      client: {
+        ...prev.client,
+        [field]: value,
+      }
     }));
     
     // Валидация поля
@@ -108,13 +123,27 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   
   // Проверка всех ошибок при изменении formData
   useEffect(() => {
+    if (!formData.client) {
+      setFormData(prev => ({
+        ...prev,
+        client: {
+          first_name: '',
+          last_name: '',
+          phone: '',
+          email: '',
+        }
+      }));
+      return;
+    }
+
     const newErrors = {
-      client_name: validateField('client_name', formData.client_name),
-      client_phone: validateField('client_phone', formData.client_phone),
-      client_email: validateField('client_email', formData.client_email),
+      first_name: validateField('first_name', formData.client.first_name),
+      last_name: validateField('last_name', formData.client.last_name),
+      phone: validateField('phone', formData.client.phone),
+      email: validateField('email', formData.client.email),
     };
     setErrors(newErrors);
-  }, [formData.client_name, formData.client_phone, formData.client_email]);
+  }, [formData.client]);
   
   return (
     <Box>
@@ -147,16 +176,36 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       )}
       
       <Grid container spacing={3}>
-        {/* Имя и фамилия */}
-        <Grid item xs={12}>
+        {/* Имя */}
+        <Grid item xs={12} sm={6}>
           <TextField
             label="Имя *"
-            value={formData.client_name}
-            onChange={handleFieldChange('client_name')}
-            placeholder="Например: Иван или Иван Иванов"
+            value={formData.client.first_name}
+            onChange={(e) => handleFieldChange('first_name')(e.target.value)}
+            placeholder="Например: Иван"
             required
-            error={!!errors.client_name}
-            helperText={errors.client_name || 'Как к вам обращаться'}
+            error={!!errors.first_name}
+            helperText={errors.first_name || 'Минимум 2 символа'}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            fullWidth
+          />
+        </Grid>
+
+        {/* Фамилия */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Фамилия"
+            value={formData.client.last_name}
+            onChange={(e) => handleFieldChange('last_name')(e.target.value)}
+            placeholder="Например: Иванов"
+            error={!!errors.last_name}
+            helperText={errors.last_name || 'Необязательно'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -171,11 +220,11 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {/* Телефон */}
         <Grid item xs={12} sm={6}>
           <PhoneField
-            value={formData.client_phone}
-            onChange={(value) => setFormData(prev => ({ ...prev, client_phone: value }))}
+            value={formData.client.phone}
+            onChange={(value) => handleFieldChange('phone')(value)}
             required
-            error={!!errors.client_phone}
-            helperText={errors.client_phone}
+            error={!!errors.phone}
+            helperText={errors.phone || 'Формат: +380 67 123-45-67'}
           />
         </Grid>
         
@@ -183,12 +232,10 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         <Grid item xs={12} sm={6}>
           <TextField
             label="Email"
-            value={formData.client_email}
-            onChange={handleFieldChange('client_email')}
-            placeholder="your.email@example.com"
-            type="email"
-            error={!!errors.client_email}
-            helperText={errors.client_email || 'Необязательно. Для отправки подтверждения'}
+            value={formData.client.email}
+            onChange={(e) => handleFieldChange('email')(e.target.value)}
+            error={!!errors.email}
+            helperText={errors.email || 'Необязательно'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -233,12 +280,17 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             Заполните все обязательные поля:
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
-            {!formData.client_name && (
+            {!formData.client.first_name && (
               <Typography variant="body2" component="li">
-                Имя и фамилия
+                Имя
               </Typography>
             )}
-            {!formData.client_phone && (
+            {!formData.client.last_name && (
+              <Typography variant="body2" component="li">
+                Фамилия
+              </Typography>
+            )}
+            {!formData.client.phone && (
               <Typography variant="body2" component="li">
                 Телефон
               </Typography>
