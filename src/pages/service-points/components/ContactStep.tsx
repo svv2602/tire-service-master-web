@@ -2,12 +2,12 @@ import React from 'react';
 import {
   Box,
   Typography,
-  TextField,
   Grid,
   useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
-import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
+import { SIZES, getFormStyles } from '../../../styles';
+import { PhoneField } from '../../../components/ui';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
 
 interface ContactStepProps {
@@ -19,7 +19,6 @@ interface ContactStepProps {
 const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
-  const textFieldStyles = getTextFieldStyles(theme);
 
   return (
     <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
@@ -38,24 +37,16 @@ const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePo
       
       <Grid container spacing={SIZES.spacing.lg}>
         <Grid item xs={12} md={6}>
-          <TextField
+          <PhoneField
             fullWidth
             id="contact_phone"
             name="contact_phone"
-            label="Контактный телефон"
             value={formik.values.contact_phone}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
+            onChange={(value) => formik.setFieldValue('contact_phone', value)}
+            onBlur={() => formik.setFieldTouched('contact_phone', true)}
             error={formik.touched.contact_phone && Boolean(formik.errors.contact_phone)}
             helperText={formik.touched.contact_phone && formik.errors.contact_phone}
-            placeholder="+380 XX XXX XX XX"
             required
-            sx={{
-              ...textFieldStyles,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm,
-              },
-            }}
           />
         </Grid>
       </Grid>

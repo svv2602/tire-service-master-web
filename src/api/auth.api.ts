@@ -24,6 +24,7 @@ interface LoginResponse {
     phone_verified?: boolean;
     created_at?: string;
     updated_at?: string;
+    client_id?: number; // ID клиента, если пользователь является клиентом
     profile?: {
       position?: string;
       access_level: number;
@@ -53,6 +54,7 @@ interface CurrentUserResponse {
   phone_verified: boolean;
   created_at: string;
   updated_at: string;
+  client_id?: number; // ID клиента, если пользователь является клиентом
   profile?: {
     position?: string;
     access_level: number;
@@ -84,7 +86,7 @@ export const authApi = baseApi.injectEndpoints({
     // Получение текущего пользователя
     getCurrentUser: builder.query<CurrentUserResponse, void>({
       query: () => ({
-        url: 'users/me',
+        url: 'auth/me',
         method: 'GET',
         credentials: 'include', // Важно для отправки куки
       }),

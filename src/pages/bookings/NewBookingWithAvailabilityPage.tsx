@@ -36,7 +36,11 @@ import {
 } from './components';
 
 // Импорт API хуков
-import { useCreateClientBookingMutation } from '../../api/clientBookings.api';
+import { 
+  useCreateClientBookingMutation,
+  useGetBookingByIdQuery,
+} from '../../api/bookings.api';
+import { useGetCurrentUserQuery } from '../../api/auth.api';
 
 // Импорт стилей
 import { getCardStyles } from '../../styles/components';
@@ -142,6 +146,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
+  const { data: currentUser } = useGetCurrentUserQuery();
+  
   // Получаем параметры из URL и state (если переданы)
   useEffect(() => {
     // Получаем параметры из URL
@@ -192,7 +198,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   }, [location.search, location.state, isAuthenticated, user]);
   
   // Мутация для создания бронирования
-  const [createBooking] = useCreateClientBookingMutation();
+  const [createClientBooking] = useCreateClientBookingMutation();
   
   // Функции навигации по шагам
   const handleNext = () => {
@@ -214,25 +220,69 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   };
   
-  // Проверка валидности текущего шага
-  const isCurrentStepValid = useMemo(() => {
-    switch (activeStep) {
-      case 0: // Город и точка обслуживания
-        return !!(formData.city_id && formData.service_point_id);
-      case 1: // Дата и время
-        return !!(formData.booking_date && formData.start_time);
-      case 2: // Информация о клиенте
-        return !!(formData.client_name && formData.client_phone);
-      case 3: // Тип автомобиля
-        return !!(formData.car_type_id && formData.license_plate);
-      case 4: // Услуги (опционально)
-        return true;
-      case 5: // Подтверждение
-        return true;
+  // Валидация текущего шага
+  const isCurrentStepValid = useMemo((): boolean => {
+    const step = STEPS[activeStep];
+    
+    // Отладочная информация
+    console.log('Validating step:', {
+      stepId: step.id,
+      formData: {
+        booking_date: formData.booking_date,
+        start_time: formData.start_time,
+        city_id: formData.city_id,
+        service_point_id: formData.service_point_id
+      }
+    });
+    
+    switch (step.id) {
+      case 'city-service-point':
+        return formData.city_id !== null && formData.service_point_id !== null;
+      
+      case 'date-time': {
+        // Проверяем, что дата и время выбраны
+        const hasDate = Boolean(formData.booking_date && formData.booking_date.trim());
+        const hasTime = Boolean(formData.start_time && formData.start_time.trim());
+        const isValid = hasDate && hasTime;
+        
+        console.log('Date-time validation result:', {
+          hasDate,
+          hasTime,
+          booking_date: formData.booking_date,
+          start_time: formData.start_time,
+          isValid
+        });
+        
+        return isValid;
+      }
+      
+      case 'client-info':
+        if (currentUser) return true;
+        
+        // Валидация для неавторизованного пользователя
+        const phone = formData.client_phone.replace(/[^\d]/g, '');
+        const isPhoneValid = phone.length >= 10 && phone.length <= 15;
+        const isEmailValid = !formData.client_email || Boolean(formData.client_email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        
+        return (
+          formData.client_name.trim().length >= 2 &&
+          isPhoneValid &&
+          isEmailValid
+        );
+      
+      case 'car-type':
+        return formData.car_type_id !== null;
+      
+      case 'services':
+        return true; // Услуги опциональны
+      
+      case 'review':
+        return true; // Комментарий опционален
+      
       default:
         return false;
     }
-  }, [activeStep, formData]);
+  }, [activeStep, formData, currentUser]);
   
   // Обработка отправки формы
   const handleSubmit = async () => {
@@ -251,31 +301,72 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     
     try {
       // Подготавливаем данные для API
-      const bookingData = {
-        client: {
-          first_name: formData.client_name.split(' ')[0] || '',
-          last_name: formData.client_name.split(' ').slice(1).join(' ') || '',
-          phone: formData.client_phone,
-          email: formData.client_email,
-        },
+      const bookingData: {
+        booking: {
+          service_point_id: number;
+          booking_date: string;
+          start_time: string;
+          notes: string;
+        };
         car: {
-          license_plate: formData.license_plate,
-          car_brand: formData.car_brand,
-          car_model: formData.car_model,
-        },
+          car_type_id: number;
+          license_plate: string;
+          car_brand: string;
+          car_model: string;
+        };
+        services: Array<{
+          service_id: number;
+          quantity: number;
+          price: number;
+        }>;
+        client?: {
+          first_name: string;
+          last_name: string;
+          phone: string;
+          email: string;
+        };
+        client_id?: number;
+      } = {
         booking: {
           service_point_id: formData.service_point_id!,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
-          notes: formData.notes,
+          notes: formData.notes?.trim() || '',
         },
-        services: formData.services,
+        car: {
+          car_type_id: formData.car_type_id,
+          license_plate: formData.license_plate?.trim() || '',
+          car_brand: formData.car_brand?.trim() || '',
+          car_model: formData.car_model?.trim() || '',
+        },
+        services: formData.services || [],
       };
+
+      // Если пользователь авторизован, добавляем client_id
+      if (currentUser?.client_id) {
+        bookingData.client_id = currentUser.client_id;
+      } else {
+        // Если пользователь не авторизован, добавляем данные клиента
+        const nameParts = formData.client_name.trim().split(/\s+/);
+        
+        // Форматируем телефон: убираем все нецифровые символы
+        let phone = formData.client_phone.replace(/[^\d]/g, '');
+        if (phone.length === 12 && phone.startsWith('38')) {
+          phone = '+' + phone;
+        }
+
+        bookingData.client = {
+          first_name: nameParts[0],
+          last_name: nameParts.length > 1 ? nameParts.slice(1).join(' ') : '',
+          phone: phone,
+          email: formData.client_email?.trim() || '',
+        };
+      }
       
       // Отправляем данные на сервер
-      console.log('Booking data being sent:', bookingData);
+      console.log('Booking data being sent:', JSON.stringify(bookingData, null, 2));
       
-      const result = await createBooking(bookingData).unwrap();
+      const result = await createClientBooking(bookingData).unwrap();
       console.log('Booking created successfully:', result);
       
       // Переходим на страницу успешного создания или список бронирований
@@ -289,15 +380,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       
     } catch (error: any) {
       console.error('Ошибка создания бронирования:', error);
-      console.error('Детали ошибки:', error.data);
+      console.error('Детали ошибки:', {
+        status: error.status,
+        data: error.data,
+        details: error.data?.details,
+        error: error.data?.error,
+        fullError: JSON.stringify(error, null, 2)
+      });
       
       let errorMessage = 'Произошла ошибка при создании бронирования';
       
       if (error.data) {
         if (error.data.error) {
           errorMessage = error.data.error;
-          if (error.data.details) {
-            errorMessage += `: ${Array.isArray(error.data.details) ? error.data.details.join(', ') : error.data.details}`;
+          if (error.data.details && Array.isArray(error.data.details)) {
+            errorMessage += ':\n' + error.data.details.join('\n');
+          } else if (error.data.details) {
+            errorMessage += ': ' + error.data.details;
           }
           if (error.data.reason) {
             errorMessage += ` (${error.data.reason})`;

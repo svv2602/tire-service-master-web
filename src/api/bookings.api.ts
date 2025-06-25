@@ -125,6 +125,19 @@ export const bookingsApi = baseApi.injectEndpoints({
         { type: 'Booking', id },
       ],
     }),
+
+    createClientBooking: builder.mutation<Booking, any>({
+      query: (booking) => ({
+        url: 'client_bookings',
+        method: 'POST',
+        body: booking,
+      }),
+      transformResponse: (response: any) => {
+        const transformed = transformPaginatedResponse<Booking>(response);
+        return transformed.data[0];
+      },
+      invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -135,6 +148,7 @@ export const {
   useGetBookingsByClientQuery,
   useGetBookingByIdQuery,
   useCreateBookingMutation,
+  useCreateClientBookingMutation,
   useUpdateBookingMutation,
   useUpdateBookingStatusMutation,
   useDeleteBookingMutation,

@@ -18,9 +18,11 @@ import {
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
+import InputMask from 'react-input-mask';
 
 // Импорт UI компонентов
 import { TextField } from '../../../components/ui/TextField';
+import { PhoneField } from '../../../components/ui/PhoneField';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
@@ -55,19 +57,16 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         if (!value.trim()) {
           return 'Имя обязательно для заполнения';
         }
-        if (value.trim().length < 2) {
-          return 'Имя должно содержать минимум 2 символа';
-        }
         return '';
         
       case 'client_phone':
         if (!value.trim()) {
           return 'Телефон обязателен для заполнения';
         }
-        // Простая валидация телефона
-        const phoneRegex = /^[+]?[0-9\s\-()]{10,}$/;
-        if (!phoneRegex.test(value.replace(/\s/g, ''))) {
-          return 'Введите корректный номер телефона';
+        // Проверяем, что все символы маски заполнены
+        const phoneDigits = value.replace(/[^\d]/g, '');
+        if (phoneDigits.length < 12) { // 38 + 10 цифр номера
+          return 'Введите полный номер телефона';
         }
         return '';
         
@@ -84,7 +83,8 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   
   // Обработчик изменения поля
   const handleFieldChange = (field: keyof typeof formData) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+    let value = event.target.value;
+    
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -101,7 +101,6 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   // Обработчик изменения чекбокса уведомлений
   const handleNotificationsChange = (checked: boolean) => {
     setReceiveNotifications(checked);
-    // Можно сохранить это в formData если нужно
   };
   
   // Проверка всех ошибок при изменении formData
@@ -148,13 +147,13 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {/* Имя и фамилия */}
         <Grid item xs={12}>
           <TextField
-            label="Имя и фамилия *"
+            label="Имя *"
             value={formData.client_name}
             onChange={handleFieldChange('client_name')}
-            placeholder="Например: Иван Иванов"
+            placeholder="Например: Иван или Иван Иванов"
             required
             error={!!errors.client_name}
-            helperText={errors.client_name || 'Ваше полное имя для записи'}
+            helperText={errors.client_name || 'Как к вам обращаться'}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -168,22 +167,12 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         
         {/* Телефон */}
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="Телефон *"
+          <PhoneField
             value={formData.client_phone}
-            onChange={handleFieldChange('client_phone')}
-            placeholder="+380 67 123 45 67"
+            onChange={(value) => setFormData(prev => ({ ...prev, client_phone: value }))}
             required
             error={!!errors.client_phone}
-            helperText={errors.client_phone || 'Для связи и подтверждения записи'}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PhoneIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
+            helperText={errors.client_phone}
           />
         </Grid>
         

@@ -28,6 +28,7 @@ import { UserRole } from '../../types';
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
+import { PhoneField } from '../../components/ui/PhoneField';
 import { Chip } from '../../components/ui/Chip';
 import { Snackbar } from '../../components/ui/Snackbar';
 import { Card } from '../../components/ui/Card';
@@ -296,21 +297,22 @@ const ProfilePage: React.FC = () => {
                 />
               </ListItem>
               
-              <ListItem sx={{ 
-                py: SIZES.spacing.sm,
-                '&:hover': { 
-                  bgcolor: theme.palette.mode === 'dark'
-                    ? 'rgba(255, 255, 255, 0.05)'
-                    : 'rgba(0, 0, 0, 0.02)',
-                  borderRadius: SIZES.borderRadius.sm
-                }
-              }}>
+              {/* Телефон */}
+              <ListItem>
                 <ListItemIcon>
-                  <PhoneIcon color="primary" />
+                  <PhoneIcon />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="body2" color="textSecondary">Телефон</Typography>}
-                  secondary={<Typography variant="body1">{user?.phone}</Typography>}
+                  primary={
+                    <PhoneField
+                      fullWidth
+                      name="phone"
+                      value={formData.phone}
+                      onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
+                      disabled={loading}
+                      sx={textFieldStyles}
+                    />
+                  }
                 />
               </ListItem>
               
@@ -428,12 +430,11 @@ const ProfilePage: React.FC = () => {
               </Box>
               
               <Box>
-                <TextField
+                <PhoneField
                   fullWidth
-                  label="Телефон"
                   name="phone"
                   value={formData.phone}
-                  onChange={handleInputChange}
+                  onChange={(value) => setFormData(prev => ({ ...prev, phone: value }))}
                   sx={textFieldStyles}
                 />
               </Box>

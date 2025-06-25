@@ -21,6 +21,7 @@ import {
   Typography,
   TextField,
   Button,
+  PhoneField,
 } from '../../components/ui';
 
 // Импорт централизованных стилей
@@ -255,16 +256,14 @@ const ClientFormPage: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <TextField
+              <PhoneField
                 fullWidth
                 id="phone"
                 name="user_attributes.phone"
-                label="Телефон *"
                 value={formik.values.user_attributes.phone}
-                onChange={formik.handleChange}
+                onChange={(value: string) => formik.setFieldValue('user_attributes.phone', value)}
                 error={formik.touched.user_attributes?.phone && Boolean(formik.errors.user_attributes?.phone)}
                 helperText={formik.touched.user_attributes?.phone && formik.errors.user_attributes?.phone}
-                sx={formStyles.field}
                 required
               />
             </Grid>

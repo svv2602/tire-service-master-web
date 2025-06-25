@@ -14,11 +14,11 @@ import { useTheme } from '@mui/material';
 import { getThemeColors } from '../../styles';
 import { 
   Person as PersonIcon,
-  Phone as PhoneIcon,
   Email as EmailIcon,
   Comment as CommentIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { PhoneField } from '../ui';
 
 interface ClientInfoFormProps {
   clientInfo: {
@@ -58,15 +58,9 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
     validateField('name', value);
   };
 
-  const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    // Простая маска для телефона
-    const formattedValue = value
-      .replace(/\D/g, '') // Удаляем все нецифровые символы
-      .slice(0, 11); // Ограничиваем длину
-    
-    setClientInfo(prev => ({ ...prev, phone: formattedValue }));
-    validateField('phone', formattedValue);
+  const handlePhoneChange = (value: string) => {
+    setClientInfo(prev => ({ ...prev, phone: value }));
+    validateField('phone', value);
   };
 
   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,23 +150,13 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
         </Grid>
         
         <Grid item xs={12} md={6}>
-          <TextField
+          <PhoneField
             id="client-phone"
-            label="Номер телефона"
-            variant="outlined"
-            fullWidth
-            required
-            value={formatPhoneForDisplay(clientInfo.phone)}
+            value={clientInfo.phone}
             onChange={handlePhoneChange}
             error={!!errors.phone}
-            helperText={errors.phone || 'Формат: +7 (XXX) XXX-XX-XX'}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PhoneIcon />
-                </InputAdornment>
-              ),
-            }}
+            helperText={errors.phone}
+            required
           />
         </Grid>
         

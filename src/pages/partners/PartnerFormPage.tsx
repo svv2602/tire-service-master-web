@@ -44,7 +44,7 @@ import { SelectChangeEvent } from '@mui/material';
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
 // Импорт UI компонентов
-import { Tabs, TabPanel, Table, type Column, Pagination } from '../../components/ui';
+import { Tabs, TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
 
 /**
  * Страница формы партнера - создание и редактирование партнеров
@@ -970,17 +970,15 @@ const PartnerFormPage: React.FC = () => {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
+                    <PhoneField
                       fullWidth
                       required
                       name="user.phone"
-                      label="Телефон"
                       value={formik.values.user?.phone || ''}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
+                      onChange={(value) => formik.setFieldValue('user.phone', value)}
+                      onBlur={() => formik.setFieldTouched('user.phone', true)}
                       error={(formik.touched.user as FormikTouched['user'])?.phone && Boolean((formik.errors.user as FormikErrors['user'])?.phone)}
                       helperText={(formik.touched.user as FormikTouched['user'])?.phone && (formik.errors.user as FormikErrors['user'])?.phone}
-                      placeholder="+79001234567"
                       sx={textFieldStyles}
                     />
                   </Grid>

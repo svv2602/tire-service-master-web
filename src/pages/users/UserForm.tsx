@@ -28,6 +28,7 @@ import {
 } from '../../api';
 
 import { UserFormData } from '../../types/user';
+import { PhoneField } from '../../components/ui/PhoneField';
 
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
@@ -325,16 +326,14 @@ const UserForm: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField
+              <PhoneField
                 fullWidth
                 name="phone"
-                label="Телефон"
-                placeholder="+380671234567"
                 value={formik.values.phone}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={(formik.touched.phone || showValidationErrors) && Boolean(formik.errors.phone)}
-                helperText={(formik.touched.phone || showValidationErrors) && formik.errors.phone}
+                onChange={(value) => formik.setFieldValue('phone', value)}
+                onBlur={() => formik.setFieldTouched('phone', true)}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
                 sx={textFieldStyles}
               />
             </Grid>
