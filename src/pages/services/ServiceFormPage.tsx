@@ -65,6 +65,7 @@ export const ServiceFormPage: React.FC = () => {
   
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   // RTK Query хуки для работы с API категорий услуг
   const { data: category, isLoading } = useGetServiceCategoryByIdQuery(id!, {
@@ -86,16 +87,19 @@ export const ServiceFormPage: React.FC = () => {
       sort_order: category?.sort_order || 0,
     },
     validationSchema,
-    enableReinitialize: true, // Автоматически перезагружает значения при изменении initialValues
+    enableReinitialize: true,
     onSubmit: async (values) => {
       try {
         setSubmitError('');
+        setSuccessMessage('');
         if (isEditing && id) {
           await updateCategory({ id, data: values }).unwrap();
+          setSuccessMessage('Категория услуг успешно обновлена');
         } else {
           await createCategory(values).unwrap();
+          setSuccessMessage('Категория услуг успешно создана');
         }
-        navigate('/admin/services');
+        setTimeout(() => navigate('/admin/services'), 1000);
       } catch (error: any) {
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
       }
@@ -138,6 +142,18 @@ export const ServiceFormPage: React.FC = () => {
         </Typography>
       </Box>
 
+      {/* Сообщения об ошибках и успехе */}
+      {submitError && (
+        <Alert severity="error" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {submitError}
+        </Alert>
+      )}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {successMessage}
+        </Alert>
+      )}
+
       <Grid container spacing={theme.spacing(SIZES.spacing.xl)}>
         {/* Основная форма категории */}
         <Grid item xs={12} md={isEditing ? 6 : 12}>
@@ -145,16 +161,6 @@ export const ServiceFormPage: React.FC = () => {
             <Typography variant="h6" sx={formStyles.sectionTitle}>
               Информация о категории
             </Typography>
-
-            {/* Отображение ошибок отправки формы */}
-            {submitError && (
-              <Alert 
-                severity="error" 
-                sx={formStyles.errorAlert}
-              >
-                {submitError}
-              </Alert>
-            )}
 
             <Box component="form" onSubmit={formik.handleSubmit}>
               {/* Поле ввода названия категории */}

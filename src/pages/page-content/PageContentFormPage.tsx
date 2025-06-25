@@ -93,7 +93,7 @@ const PageContentFormPage: React.FC = () => {
   const textFieldStyles = getTextFieldStyles(theme, 'filled');
   const tablePageStyles = getTablePageStyles(theme);
   
-  const isEdit = id !== 'new';
+  const isEdit = Boolean(id);
   const [activeTab, setActiveTab] = useState(0);
   
   // Состояние формы
@@ -106,6 +106,8 @@ const PageContentFormPage: React.FC = () => {
     position: 0,
     active: true
   });
+  
+  const [successMessage, setSuccessMessage] = useState<string>('');
   
   // API запросы
   const {
@@ -140,16 +142,19 @@ const PageContentFormPage: React.FC = () => {
   // Сохранение
   const handleSave = async () => {
     try {
+      setSuccessMessage('');
       if (isEdit) {
         await updatePage({
           id: parseInt(id!),
           ...formData
         }).unwrap();
+        setSuccessMessage('Контент успешно обновлен');
       } else {
         await createPage(formData as CreatePageContentRequest).unwrap();
+        setSuccessMessage('Контент успешно создан');
       }
       
-      navigate('/admin/page-content');
+      setTimeout(() => navigate('/admin/page-content'), 1000);
     } catch (error) {
       console.error('Ошибка при сохранении:', error);
     }
@@ -197,6 +202,13 @@ const PageContentFormPage: React.FC = () => {
           </Button>
         </Box>
       </Box>
+
+      {/* Сообщение об успехе */}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
+      )}
 
       {/* Форма */}
       <Paper sx={{ p: 4 }}>

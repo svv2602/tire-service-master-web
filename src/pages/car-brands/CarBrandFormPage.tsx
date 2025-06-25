@@ -74,6 +74,7 @@ export const CarBrandFormPage: React.FC = () => {
   
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // RTK Query хуки для работы с API брендов
@@ -99,6 +100,7 @@ export const CarBrandFormPage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         setSubmitError('');
+        setSuccessMessage('');
         
         if (isEditing && id) {
           // Для редактирования используем только измененные поля
@@ -122,6 +124,7 @@ export const CarBrandFormPage: React.FC = () => {
           console.log('Logo type:', typeof values.logo, values.logo?.constructor?.name);
           
           await updateBrand({ id, data: updateData }).unwrap();
+          setSuccessMessage('Бренд успешно обновлен');
         } else {
           // Для создания используем полный объект
           const createData: CarBrandFormData = {
@@ -132,8 +135,9 @@ export const CarBrandFormPage: React.FC = () => {
           
           console.log('Sending create data:', createData);
           await createBrand(createData).unwrap();
+          setSuccessMessage('Бренд успешно создан');
         }
-        navigate('/admin/car-brands');
+        setTimeout(() => navigate('/admin/car-brands'), 1000);
       } catch (error: any) {
         console.error('Submit error:', error);
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
@@ -224,6 +228,18 @@ export const CarBrandFormPage: React.FC = () => {
         </Typography>
       </Box>
 
+      {/* Сообщения об ошибках и успехе */}
+      {submitError && (
+        <Alert severity="error" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {submitError}
+        </Alert>
+      )}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {successMessage}
+        </Alert>
+      )}
+
       <Grid container spacing={theme.spacing(SIZES.spacing.xl)}>
         {/* Основная форма бренда */}
         <Grid item xs={12} md={isEditing ? 6 : 12}>
@@ -231,16 +247,6 @@ export const CarBrandFormPage: React.FC = () => {
             <Typography variant="h6" sx={formStyles.sectionTitle}>
               Информация о бренде
             </Typography>
-
-            {/* Отображение ошибок отправки формы */}
-            {submitError && (
-              <Alert 
-                severity="error" 
-                sx={formStyles.errorAlert}
-              >
-                {submitError}
-              </Alert>
-            )}
 
             <Box component="form" onSubmit={formik.handleSubmit}>
               {/* Поле ввода названия бренда */}

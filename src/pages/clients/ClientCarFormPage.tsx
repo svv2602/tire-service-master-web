@@ -2,7 +2,7 @@
  * Страница формы автомобиля клиента
  * Обеспечивает создание и редактирование автомобилей клиента с валидацией
  */
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -20,9 +20,10 @@ import {
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarByIdQuery, useCreateClientCarMutation, useUpdateClientCarMutation } from '../../api/clients.api';
 import { ClientCarFormData } from '../../types/client';
-import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
+import { getCardStyles, getButtonStyles, getTextFieldStyles, getTablePageStyles } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
 import { getBrandName, getModelName } from '../../utils/carUtils';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 /**
  * Схема валидации полей формы автомобиля
@@ -47,10 +48,12 @@ const validationSchema = Yup.object({
  */
 
 const ClientCarFormPage: React.FC = () => {
+  const { clientId, carId } = useParams<{ clientId: string; carId: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { clientId, carId } = useParams<{ clientId: string; carId: string }>();
   const isEditMode = Boolean(carId);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const tablePageStyles = getTablePageStyles(theme);
 
   /**
    * Получаем централизованные стили для консистентного дизайна
@@ -115,12 +118,15 @@ const ClientCarFormPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
+        setSuccessMessage('');
         if (isEditMode && carId && clientId) {
           await updateCar({ clientId, carId, data: values }).unwrap();
+          setSuccessMessage('Автомобиль успешно обновлен');
         } else if (clientId) {
           await createCar({ clientId, data: values }).unwrap();
+          setSuccessMessage('Автомобиль успешно создан');
         }
-        navigate(`/admin/clients/${clientId}/cars`);
+        setTimeout(() => navigate(`/admin/clients/${clientId}/cars`), 1000);
       } catch (error) {
         console.error('Ошибка при сохранении автомобиля:', error);
       }
@@ -164,7 +170,28 @@ const ClientCarFormPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: SIZES.spacing.xl }}>
+    <Box sx={tablePageStyles.pageContainer}>
+      {/* Заголовок */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleCancel}
+          sx={{ mr: 2 }}
+        >
+          Назад
+        </Button>
+        <Typography variant="h4">
+          {isEditMode ? 'Редактирование автомобиля' : 'Добавление автомобиля'}
+        </Typography>
+      </Box>
+
+      {/* Сообщение об успехе */}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
+      )}
+
       <Paper sx={cardStyles}>
         <Typography 
           variant="h5" 

@@ -68,6 +68,7 @@ export const RegionFormPage: React.FC = () => {
   
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   // RTK Query хуки для работы с API регионов
   const { data: regionData, isLoading } = useGetRegionByIdQuery(parseInt(id ?? '0'), {
@@ -87,16 +88,19 @@ export const RegionFormPage: React.FC = () => {
       is_active: regionData?.is_active ?? true,
     },
     validationSchema,
-    enableReinitialize: true, // Автоматически перезагружает значения при изменении initialValues
+    enableReinitialize: true,
     onSubmit: async (values) => {
       try {
         setSubmitError('');
+        setSuccessMessage('');
         if (isEditing && id) {
           await updateRegion({ id: parseInt(id), region: values }).unwrap();
+          setSuccessMessage('Регион успешно обновлен');
         } else {
           await createRegion(values).unwrap();
+          setSuccessMessage('Регион успешно создан');
         }
-        navigate('/admin/regions');
+        setTimeout(() => navigate('/admin/regions'), 1000);
       } catch (error: any) {
         console.error('Submit error:', error);
         setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
@@ -140,6 +144,18 @@ export const RegionFormPage: React.FC = () => {
         </Typography>
       </Box>
 
+      {/* Сообщения об ошибках и успехе */}
+      {submitError && (
+        <Alert severity="error" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {submitError}
+        </Alert>
+      )}
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: theme.spacing(SIZES.spacing.md) }}>
+          {successMessage}
+        </Alert>
+      )}
+
       <Grid container spacing={theme.spacing(SIZES.spacing.xl)}>
         {/* Основная форма региона */}
         <Grid item xs={12} md={isEditing ? 6 : 12}>
@@ -147,16 +163,6 @@ export const RegionFormPage: React.FC = () => {
             <Typography variant="h6" sx={formStyles.sectionTitle}>
               Информация о регионе
             </Typography>
-
-            {/* Отображение ошибок отправки формы */}
-            {submitError && (
-              <Alert 
-                severity="error" 
-                sx={formStyles.errorAlert}
-              >
-                {submitError}
-              </Alert>
-            )}
 
             <Box component="form" onSubmit={formik.handleSubmit}>
               {/* Поле ввода названия региона */}

@@ -83,10 +83,11 @@ interface FormValues {
   website: string | undefined;
   tax_number: string | undefined;
   legal_address: string | undefined;
-  region_id: string | undefined;
-  city_id: string | undefined;
+  region_id: number | undefined;
+  city_id: number | undefined;
   is_active: boolean;
   user: FormUserData | null;
+  new_password?: string;
 }
 
 // Типы для formik.touched и formik.errors
@@ -118,8 +119,8 @@ interface FormikErrors {
   website?: string;
   tax_number?: string;
   legal_address?: string;
-  region_id?: string;
-  city_id?: string;
+  region_id?: string | number;
+  city_id?: string | number;
   is_active?: string;
   user?: {
     first_name?: string;
@@ -128,6 +129,21 @@ interface FormikErrors {
     phone?: string;
     password?: string;
   };
+}
+
+// Определяем базовый интерфейс для атрибутов пользователя
+interface UserAttributes {
+  email: string;
+  phone: string;
+  first_name: string;
+  last_name: string;
+  password?: string;
+  role_id?: number;
+}
+
+// Расширяем тип PartnerFormData для поддержки частичного обновления
+interface ExtendedPartnerFormData extends Omit<PartnerFormData, 'user_attributes'> {
+  user_attributes?: UserAttributes | Partial<UserAttributes>;
 }
 
 // Функция для создания схемы валидации в зависимости от режима
@@ -165,17 +181,25 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .url('Введите корректный URL логотипа')
     .nullable(),
   
-  region_id: yup.string()
-    .required('Выберите регион'),
+  region_id: yup.number()
+    .typeError('Выберите регион')
+    .required('Выберите регион')
+    .min(1, 'Выберите регион'),
   
-  city_id: yup.string()
-    .required('Выберите город'),
+  city_id: yup.number()
+    .typeError('Выберите город')
+    .required('Выберите город')
+    .min(1, 'Выберите город'),
   
   is_active: yup.boolean(),
   
+  new_password: yup.string()
+    .nullable()
+    .min(6, 'Пароль должен быть не менее 6 символов'),
+  
   user: isEdit 
-    ? yup.object().nullable() // При редактировании user может быть null
-    : yup.object().shape({     // При создании user обязателен
+    ? yup.object().nullable()
+    : yup.object().shape({
         email: yup.string()
           .email('Введите корректный email')
           .required('Email обязателен'),
@@ -336,23 +360,37 @@ const PartnerFormPage: React.FC = () => {
       website: values.website || undefined,
       tax_number: values.tax_number || undefined,
       legal_address: values.legal_address,
-      region_id: values.region_id ? parseInt(values.region_id) : undefined,
-      city_id: values.city_id ? parseInt(values.city_id) : undefined,
+      region_id: values.region_id,
+      city_id: values.city_id,
       is_active: values.is_active,
     };
 
-    // Добавляем данные пользователя только при создании
+    // Добавляем данные пользователя при создании
     if (!isEdit && values.user) {
       formattedData.user_attributes = {
         email: values.user.email,
         phone: values.user.phone,
         first_name: values.user.first_name,
         last_name: values.user.last_name,
-        password: values.user.password || undefined,
+        password: values.user.password,
         role_id: getRoleId('partner'),
       };
     }
 
+    // При редактировании отправляем только новый пароль, если он был указан
+    if (isEdit && values.new_password?.trim() && partner?.user?.id) {
+      formattedData.user_attributes = {
+        id: partner.user.id,
+        email: partner.user.email || '',
+        phone: partner.user.phone || '',
+        first_name: partner.user.first_name || '',
+        last_name: partner.user.last_name || '',
+        role_id: getRoleId('partner'),
+        password: values.new_password.trim()
+      };
+    }
+
+    console.log('Форматированные данные для отправки:', formattedData);
     return formattedData;
   };
 
@@ -365,7 +403,6 @@ const PartnerFormPage: React.FC = () => {
       
       // Проверяем валидность формы
       if (!formik.isValid) {
-        // Помечаем все поля как затронутые для показа ошибок
         const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
           acc[field] = true;
           if (field === 'user' && formik.values.user) {
@@ -382,37 +419,26 @@ const PartnerFormPage: React.FC = () => {
       }
       
       const formattedData = formatPartnerData(values);
-      console.log('Отправляемые данные:', formattedData);
       
       if (isEdit && id) {
-        await updatePartner({ id: parseInt(id), partner: formattedData }).unwrap();
+        const response = await updatePartner({ id: parseInt(id), partner: formattedData }).unwrap();
+        console.log('Ответ сервера при обновлении:', response);
         setSuccessMessage('Партнер успешно обновлен');
+        setTimeout(() => navigate('/admin/partners'), 1500);
       } else {
-        await createPartner({ partner: formattedData }).unwrap();
+        const response = await createPartner({ partner: formattedData }).unwrap();
+        console.log('Ответ сервера при создании:', response);
         setSuccessMessage('Партнер успешно создан');
+        navigate('/admin/partners');
       }
-      
-      // Возвращаемся на список после успешного сохранения
-      navigate('/admin/partners');
     } catch (error: any) {
-      console.error('Ошибка при сохранении партнера:', error);
-      
-      // Извлекаем сообщение об ошибке
-      let errorMessage = 'Произошла ошибка при сохранении';
+      console.log('Полная ошибка:', error);
+      let errorMessage = 'Произошла ошибка при сохранении партнера';
       
       if (error.data?.errors) {
-        // Формируем читаемое сообщение из всех ошибок
-        const errorMessages = [];
-        for (const [key, messages] of Object.entries(error.data.errors)) {
-          if (Array.isArray(messages)) {
-            errorMessages.push(`${key}: ${messages.join(', ')}`);
-          } else if (typeof messages === 'string') {
-            errorMessages.push(`${key}: ${messages}`);
-          }
-        }
-        errorMessage = errorMessages.join('\n');
-      } else if (error.data?.message) {
-        errorMessage = error.data.message;
+        errorMessage = Object.entries(error.data.errors)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
       } else if (error.error) {
         errorMessage = error.error;
       }
@@ -432,10 +458,11 @@ const PartnerFormPage: React.FC = () => {
         website: partner.website || '',
         tax_number: partner.tax_number || '',
         legal_address: partner.legal_address || '',
-        region_id: partner.region_id?.toString() || '',
-        city_id: partner.city_id?.toString() || '',
+        region_id: partner.region_id || undefined,
+        city_id: partner.city_id || undefined,
         is_active: partner.is_active ?? true,
         user: null,
+        new_password: '',
       };
     }
     return {
@@ -444,10 +471,10 @@ const PartnerFormPage: React.FC = () => {
       contact_person: '',
       logo_url: '',
       website: '',
-      tax_number: '', // Необязательное поле
-      legal_address: '', // Обязательное поле
-      region_id: '',
-      city_id: '',
+      tax_number: '',
+      legal_address: '',
+      region_id: undefined,
+      city_id: undefined,
       is_active: true,
       user: {
         email: '',
@@ -456,6 +483,7 @@ const PartnerFormPage: React.FC = () => {
         last_name: '',
         password: '',
       },
+      new_password: '',
     };
   }, [partner, isEdit]);
 
@@ -598,25 +626,17 @@ const PartnerFormPage: React.FC = () => {
 
   // Обработчик изменения региона
   const handleRegionChange = (event: SelectChangeEvent<string>) => {
-    const newRegionId = event.target.value;
-    
-    console.log('Изменение региона:', newRegionId);
-    
-    // Обновляем значения формы
+    const value = event.target.value;
+    const newRegionId = value === '' ? undefined : parseInt(value);
+    setSelectedRegionId(newRegionId);
     formik.setFieldValue('region_id', newRegionId);
-    formik.setFieldValue('city_id', ''); // Сбрасываем выбранный город
-    
-    // Обновляем selectedRegionId - это автоматически вызовет обновление городов
-    if (newRegionId && newRegionId !== '') {
-      setSelectedRegionId(Number(newRegionId));
-    } else {
-      setSelectedRegionId(undefined);
-    }
+    formik.setFieldValue('city_id', undefined);
   };
 
   // Обработчик изменения города
   const handleCityChange = (event: SelectChangeEvent<string>) => {
-    const newCityId = event.target.value;
+    const value = event.target.value;
+    const newCityId = value === '' ? undefined : parseInt(value);
     formik.setFieldValue('city_id', newCityId);
   };
 
@@ -826,19 +846,17 @@ const PartnerFormPage: React.FC = () => {
                 <FormControl fullWidth required error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
                   <InputLabel id="region-select-label">Регион</InputLabel>
                   <Select
-                    labelId="region-select-label"
                     id="region_id"
                     name="region_id"
-                    value={formik.values.region_id || ''}
+                    value={formik.values.region_id?.toString() || ''}
                     label="Регион"
                     onChange={handleRegionChange}
-                    onBlur={formik.handleBlur}
+                    error={formik.touched.region_id && Boolean(formik.errors.region_id)}
+                    disabled={isLoading}
                   >
-                    <MenuItem value="" disabled>
-                      <em>Выберите регион</em>
-                    </MenuItem>
-                    {regionsData?.data?.map((region) => (
-                      <MenuItem key={region.id} value={region.id.toString()}>
+                    <MenuItem value="">Выберите регион</MenuItem>
+                    {regionsData?.data.map((region) => (
+                      <MenuItem key={region.id} value={region.id}>
                         {region.name}
                       </MenuItem>
                     ))}
@@ -860,19 +878,17 @@ const PartnerFormPage: React.FC = () => {
                 >
                   <InputLabel id="city-select-label">Город</InputLabel>
                   <Select
-                    labelId="city-select-label"
                     id="city_id"
                     name="city_id"
-                    value={formik.values.city_id || ''}
+                    value={formik.values.city_id?.toString() || ''}
                     label="Город"
                     onChange={handleCityChange}
-                    onBlur={formik.handleBlur}
+                    error={formik.touched.city_id && Boolean(formik.errors.city_id)}
+                    disabled={isLoading || !formik.values.region_id}
                   >
-                    <MenuItem value="" disabled>
-                      <em>Выберите город</em>
-                    </MenuItem>
-                    {citiesData?.data?.map((city) => (
-                      <MenuItem key={city.id} value={city.id.toString()}>
+                    <MenuItem value="">Выберите город</MenuItem>
+                    {citiesData?.data.map((city) => (
+                      <MenuItem key={city.id} value={city.id}>
                         {city.name}
                       </MenuItem>
                     ))}
@@ -904,6 +920,80 @@ const PartnerFormPage: React.FC = () => {
                   />
                 </Box>
               </Grid>
+
+              {/* Добавляем поле изменения пароля и данные пользователя в режиме редактирования */}
+              {isEdit && (
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ 
+                      mt: SIZES.spacing.md,
+                      fontSize: SIZES.fontSize.lg 
+                    }}
+                  >
+                    Данные пользователя
+                  </Typography>
+                  <Divider sx={{ mb: SIZES.spacing.md }} />
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        disabled
+                        label="Email"
+                        value={partner?.user?.email || ''}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        disabled
+                        label="Телефон"
+                        value={partner?.user?.phone || ''}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        disabled
+                        label="Имя"
+                        value={partner?.user?.first_name || ''}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        disabled
+                        label="Фамилия"
+                        value={partner?.user?.last_name || ''}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField
+                        fullWidth
+                        name="new_password"
+                        label="Новый пароль"
+                        type="password"
+                        value={formik.values.new_password || ''}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={formik.touched.new_password && Boolean(formik.errors.new_password)}
+                        helperText={formik.touched.new_password && formik.errors.new_password}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="caption" color="text.secondary">
+                        Оставьте поле пароля пустым, если не хотите его менять
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              )}
 
               {/* Данные пользователя (только при создании) */}
               {!isEdit && (
