@@ -353,7 +353,7 @@ const ServicesPage: React.FC = () => {
                   <Tooltip title="Редактировать">
                     <IconButton 
                       size="small"
-                      onClick={() => navigate(`/services/${category.id}/edit`)}
+                      onClick={() => navigate(`/admin/services/${category.id}/edit`)}
                       sx={{
                         '&:hover': {
                           backgroundColor: `${theme.palette.primary.main}15`

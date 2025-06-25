@@ -18,7 +18,7 @@ import {
   Star as StarIcon,
   StarBorder as StarBorderIcon
 } from '@mui/icons-material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
@@ -53,6 +53,7 @@ const MyCarsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
 
   const fetchCars = useCallback(async () => {
     try {
@@ -275,7 +276,7 @@ const MyCarsList: React.FC = () => {
                   <Box sx={{ display: 'flex', gap: SIZES.spacing.sm }}>
                     <IconButton 
                       aria-label="edit"
-                      onClick={() => window.location.href = `/my-cars/${car.id}/edit`}
+                      onClick={() => navigate(`/my-cars/${car.id}/edit`)}
                       color="primary"
                     >
                       <EditIcon />
