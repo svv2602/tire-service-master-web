@@ -228,6 +228,7 @@ export interface PartnerFormData {
   region_id: number | undefined;
   city_id: number | undefined;
   user_attributes?: {
+    id?: number;
     email: string;
     phone: string;
     first_name: string;

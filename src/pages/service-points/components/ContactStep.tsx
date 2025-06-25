@@ -9,6 +9,8 @@ import { FormikProps } from 'formik';
 import { SIZES, getFormStyles } from '../../../styles';
 import { PhoneField } from '../../../components/ui';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
+import { phoneValidation } from '../../../utils/validation';
+import * as yup from 'yup';
 
 interface ContactStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -19,6 +21,19 @@ interface ContactStepProps {
 const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
+
+  // Схема валидации с Yup
+  const validationSchema = yup.object({
+    contact_phone: phoneValidation,
+    address: yup
+      .string()
+      .required('Адрес обязателен')
+      .min(5, 'Адрес должен быть не менее 5 символов'),
+    description: yup
+      .string()
+      .required('Описание обязательно')
+      .min(10, 'Описание должно быть не менее 10 символов')
+  });
 
   return (
     <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>

@@ -223,9 +223,9 @@ const UserForm: React.FC = () => {
         }
         
         // Переходим к списку пользователей через небольшую задержку
-        setTimeout(() => {
-          navigate('/users');
-        }, 1500);
+                  setTimeout(() => {
+            navigate('/admin/users');
+          }, 1500);
       } catch (error: any) {
         console.error('Ошибка при сохранении пользователя:', error);
         setApiError(extractErrorMessage(error));

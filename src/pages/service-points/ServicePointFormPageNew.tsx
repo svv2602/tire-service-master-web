@@ -24,6 +24,9 @@ import { useSelector } from 'react-redux';
 // Импорты стилей
 import { SIZES, getButtonStyles, getCardStyles } from '../../styles';
 
+// Импорт валидации
+import { phoneValidation } from '../../utils/validation';
+
 // Компоненты шагов
 import BasicInfoStep from './components/BasicInfoStep';
 import LocationStep from './components/LocationStep';
@@ -84,29 +87,16 @@ const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHours
   return acc;
 }, {} as WorkingHoursSchedule);
 
-// Схема валидации с Yup
+// Схема валидации
 const validationSchema = yup.object({
-  name: yup
-    .string()
-    .required('Название обязательно')
-    .min(2, 'Название должно быть не менее 2 символов'),
-  description: yup
-    .string()
-    .required('Описание обязательно')
-    .min(10, 'Описание должно быть не менее 10 символов'),
-  contact_phone: phoneValidation,
-  address: yup
-    .string()
-    .required('Адрес обязателен')
-    .min(5, 'Адрес должен быть не менее 5 символов'),
-  city_id: yup
-    .number()
-    .required('Город обязателен'),
-  partner_id: yup
-    .number()
-    .required('Партнер обязателен'),
-  is_active: yup
-    .boolean()
+  name: yup.string().required('Название точки обязательно'),
+  partner_id: yup.number().required('Партнер обязателен').min(1, 'Выберите партнера'),
+  region_id: yup.number().required('Регион обязателен').min(1, 'Выберите регион'),
+  city_id: yup.number().required('Город обязателен').min(1, 'Выберите город'),
+  address: yup.string().required('Адрес обязателен'),
+  contact_phone: yup.string().required('Контактный телефон обязателен'),
+  is_active: yup.boolean().required(),
+  work_status: yup.string().required('Статус работы обязателен'),
 });
 
 const ServicePointFormPageNew: React.FC = () => {
