@@ -57,16 +57,19 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         if (!value.trim()) {
           return 'Имя обязательно для заполнения';
         }
+        if (!value.trim().includes(' ')) {
+          return 'Укажите имя и фамилию';
+        }
         return '';
         
       case 'client_phone':
         if (!value.trim()) {
           return 'Телефон обязателен для заполнения';
         }
-        // Проверяем, что все символы маски заполнены
+        // Проверяем, что все символы маски заполнены и номер начинается с +380
         const phoneDigits = value.replace(/[^\d]/g, '');
-        if (phoneDigits.length < 12) { // 38 + 10 цифр номера
-          return 'Введите полный номер телефона';
+        if (!value.startsWith('+380') || phoneDigits.length !== 12) {
+          return 'Телефон должен начинаться с +380 и содержать 12 цифр';
         }
         return '';
         

@@ -284,128 +284,62 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, [activeStep, formData, currentUser]);
   
-  // Обработка отправки формы
+  // Отправка формы
   const handleSubmit = async () => {
-    if (!isCurrentStepValid) return;
-    
-    // Дополнительная проверка обязательных полей
-    if (!formData.service_point_id || !formData.booking_date || !formData.start_time || 
-        !formData.client_name || !formData.client_phone || !formData.car_type_id || 
-        !formData.license_plate) {
-      setSubmitError('Не все обязательные поля заполнены');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    setSubmitError(null);
-    
     try {
-      // Подготавливаем данные для API
-      const bookingData: {
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      // Форматируем данные для API
+      const bookingData = {
         booking: {
-          service_point_id: number;
-          booking_date: string;
-          start_time: string;
-          notes: string;
-        };
-        car: {
-          car_type_id: number;
-          license_plate: string;
-          car_brand: string;
-          car_model: string;
-        };
-        services: Array<{
-          service_id: number;
-          quantity: number;
-          price: number;
-        }>;
-        client?: {
-          first_name: string;
-          last_name: string;
-          phone: string;
-          email: string;
-        };
-        client_id?: number;
-      } = {
-        booking: {
-          service_point_id: formData.service_point_id!,
+          service_point_id: formData.service_point_id,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
-          notes: formData.notes?.trim() || '',
+          notes: formData.notes || ''
         },
         car: {
           car_type_id: formData.car_type_id,
-          license_plate: formData.license_plate?.trim() || '',
-          car_brand: formData.car_brand?.trim() || '',
-          car_model: formData.car_model?.trim() || '',
+          license_plate: formData.license_plate,
+          car_brand: formData.car_brand || '',
+          car_model: formData.car_model || ''
         },
-        services: formData.services || [],
+        services: formData.services,
+        client: {
+          first_name: formData.client_name.split(' ')[0],
+          last_name: formData.client_name.split(' ').slice(1).join(' ') || '',
+          phone: formData.client_phone.replace(/[^\d+]/g, ''),
+          email: formData.client_email || ''
+        }
       };
 
-      // Если пользователь авторизован, добавляем client_id
-      if (currentUser?.client_id) {
-        bookingData.client_id = currentUser.client_id;
-      } else {
-        // Если пользователь не авторизован, добавляем данные клиента
-        const nameParts = formData.client_name.trim().split(/\s+/);
-        
-        // Форматируем телефон: убираем все нецифровые символы
-        let phone = formData.client_phone.replace(/[^\d]/g, '');
-        if (phone.length === 12 && phone.startsWith('38')) {
-          phone = '+' + phone;
-        }
+      // Отладочная информация
+      console.log('Booking data being sent:', bookingData);
 
-        bookingData.client = {
-          first_name: nameParts[0],
-          last_name: nameParts.length > 1 ? nameParts.slice(1).join(' ') : '',
-          phone: phone,
-          email: formData.client_email?.trim() || '',
-        };
-      }
-      
-      // Отправляем данные на сервер
-      console.log('Booking data being sent:', JSON.stringify(bookingData, null, 2));
-      
-      const result = await createClientBooking(bookingData).unwrap();
-      console.log('Booking created successfully:', result);
-      
-      // Переходим на страницу успешного создания или список бронирований
-      navigate('/my-bookings', { 
-        replace: true,
-        state: { 
-          bookingCreated: true, 
-          bookingData: result 
+      // Отправляем запрос
+      const response = await createClientBooking(bookingData).unwrap();
+
+      // Перенаправляем на страницу успешного бронирования
+      navigate(`/client/booking/success/${response.id}`, {
+        state: {
+          bookingData: response,
+          fromNewBooking: true
         }
       });
-      
+
     } catch (error: any) {
       console.error('Ошибка создания бронирования:', error);
-      console.error('Детали ошибки:', {
-        status: error.status,
-        data: error.data,
-        details: error.data?.details,
-        error: error.data?.error,
-        fullError: JSON.stringify(error, null, 2)
-      });
+      console.log('Детали ошибки:', error.data);
       
-      let errorMessage = 'Произошла ошибка при создании бронирования';
+      // Формируем понятное сообщение об ошибке
+      let errorMessage = 'Произошла ошибка при создании бронирования. ';
       
-      if (error.data) {
-        if (error.data.error) {
-          errorMessage = error.data.error;
-          if (error.data.details && Array.isArray(error.data.details)) {
-            errorMessage += ':\n' + error.data.details.join('\n');
-          } else if (error.data.details) {
-            errorMessage += ': ' + error.data.details;
-          }
-          if (error.data.reason) {
-            errorMessage += ` (${error.data.reason})`;
-          }
-        } else if (error.data.message) {
-          errorMessage = error.data.message;
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (error.data?.error) {
+        errorMessage += error.data.error;
+      }
+      
+      if (error.data?.details) {
+        errorMessage += '\n' + error.data.details.join('\n');
       }
       
       setSubmitError(errorMessage);
