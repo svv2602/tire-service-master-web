@@ -33,6 +33,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   required = false,
   helperText = 'Формат: +38 (067) 123-45-67',
   placeholder = '+38 (___) ___-__-__',
+  onBlur,
   ...props
 }) => {
   // Обработчик изменения значения
@@ -46,29 +47,33 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
     return phoneDigits.length === 12; // 38 + 10 цифр номера
   };
 
+  // Отделяем пропсы для InputMask и TextField
+  const { InputProps, ...textFieldProps } = props;
+
   return (
     <InputMask
       mask="+38 (999) 999-99-99"
       value={value}
       onChange={handleChange}
+      onBlur={onBlur}
       maskChar="_"
     >
       {(inputProps: any) => (
         <TextField
+          {...textFieldProps}
           {...inputProps}
-          {...props}
           label={label}
           required={required}
           placeholder={placeholder}
           helperText={helperText}
           error={props.error || (value && !validatePhone(value))}
           InputProps={{
-            ...props.InputProps,
+            ...InputProps,
             startAdornment: showIcon ? (
               <InputAdornment position="start">
                 <PhoneIcon color="action" />
               </InputAdornment>
-            ) : props.InputProps?.startAdornment,
+            ) : InputProps?.startAdornment,
           }}
         />
       )}
