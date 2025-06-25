@@ -22,7 +22,7 @@ import * as yup from 'yup';
 import { useSelector } from 'react-redux';
 
 // Импорты стилей
-import { SIZES, getButtonStyles, getCardStyles } from '../../styles';
+import { SIZES, getButtonStyles, getCardStyles, getTablePageStyles } from '../../styles';
 
 // Импорт валидации
 import { phoneValidation } from '../../utils/validation';
@@ -789,13 +789,13 @@ const ServicePointFormPageNew: React.FC = () => {
     if (shouldUseMobileVersion) {
       // Мобильная/планшетная версия - компактный индикатор прогресса
       return (
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 2 }}> {/* Уменьшаем отступ снизу */}
           {/* Компактный индикатор прогресса */}
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            mb: 2,
-            p: isVerySmallMobile ? 1.5 : 2,
+            mb: 1.5, // Уменьшаем отступ снизу
+            p: isVerySmallMobile ? 1 : 1.5, // Уменьшаем внутренние отступы
             backgroundColor: theme.palette.background.default,
             borderRadius: SIZES.borderRadius.md,
             border: `1px solid ${theme.palette.divider}`,
@@ -826,7 +826,7 @@ const ServicePointFormPageNew: React.FC = () => {
             height: isVerySmallMobile ? 3 : 4, 
             backgroundColor: theme.palette.divider,
             borderRadius: 2,
-            mb: 2,
+            mb: 1.5, // Уменьшаем отступ снизу
             overflow: 'hidden',
           }}>
             <Box sx={{
@@ -920,7 +920,7 @@ const ServicePointFormPageNew: React.FC = () => {
         <Stepper 
           activeStep={activeStep} 
           sx={{ 
-            mb: 4,
+            mb: 2, // Уменьшаем отступ снизу
             '& .MuiStepLabel-root': {
               cursor: 'pointer',
             },
@@ -994,31 +994,29 @@ const ServicePointFormPageNew: React.FC = () => {
     );
   }
 
+  // Получаем стандартные стили страницы
+  const tablePageStyles = getTablePageStyles(theme);
+
   return (
     <Box sx={{ 
-      padding: isMobile ? 1.5 : 3,
-      paddingRight: isMobile ? 2 : 3, // Увеличиваем отступ справа на мобильных
+      ...tablePageStyles.pageContainer, // Используем стандартные отступы
       maxWidth: '100%',
       overflow: 'hidden',
     }}>
       {/* Адаптивный заголовок */}
       <Box sx={{ 
-        display: 'flex', 
+        ...tablePageStyles.pageHeader, // Используем стандартные стили заголовка
         flexDirection: isMobile ? 'column' : 'row',
-        justifyContent: 'space-between', 
         alignItems: isMobile ? 'flex-start' : 'center', 
-        mb: isMobile ? 2.5 : 3,
-        gap: isMobile ? 1.5 : 0,
-        pr: isMobile ? 1 : 0, // Добавляем отступ справа на мобильных
+        gap: isMobile ? 1 : 0,
       }}>
         <Typography 
           variant={isMobile ? "h5" : "h4"}
           sx={{
-            fontSize: SIZES.fontSize.xl, // Используем стандартный размер как на странице партнеров
-            fontWeight: 600,
-            color: theme.palette.text.primary,
+            ...tablePageStyles.pageTitle, // Используем стандартные стили заголовка
+            fontSize: SIZES.fontSize.xl,
             lineHeight: 1.2,
-            maxWidth: isMobile ? '100%' : '70%', // Ограничиваем ширину заголовка
+            maxWidth: isMobile ? '100%' : '70%',
           }}
         >
           {isEditMode 
@@ -1044,9 +1042,7 @@ const ServicePointFormPageNew: React.FC = () => {
       </Box>
 
       <Paper sx={{ 
-        ...getCardStyles(theme),
-        p: isMobile ? 1.5 : 3,
-        pr: isMobile ? 2 : 3, // Увеличиваем отступ справа
+        ...tablePageStyles.card, // Используем стандартные стили карточки
         borderRadius: SIZES.borderRadius.lg,
       }}>
         {renderAdaptiveStepper()}
@@ -1054,10 +1050,8 @@ const ServicePointFormPageNew: React.FC = () => {
         {/* Содержимое шага */}
         <form onSubmit={formik.handleSubmit}>
           <Box sx={{ 
-            minHeight: isMobile ? 'auto' : 400, 
-            mb: 3,
-            // Для мобильных устройств убираем фиксированную высоту
-            // чтобы контент естественно растягивался
+            minHeight: isMobile ? 'auto' : 300, // Уменьшаем минимальную высоту
+            mb: 2, // Уменьшаем отступ снизу
           }}>
             {getCurrentStepComponent()}
           </Box>
@@ -1067,13 +1061,11 @@ const ServicePointFormPageNew: React.FC = () => {
             display: 'flex', 
             flexDirection: isMobile ? 'column' : 'row',
             justifyContent: 'space-between',
-            gap: isMobile ? 2.5 : 2, // Увеличиваем gap между кнопками
+            gap: isMobile ? 1.5 : 1.5, // Уменьшаем gap между кнопками
             alignItems: isMobile ? 'stretch' : 'center',
-            mt: 4, // Увеличиваем отступ сверху
-            pt: 2, // Добавляем внутренний отступ сверху
-            borderTop: `1px solid ${theme.palette.divider}`, // Добавляем разделитель
-            pl: isMobile ? 0 : 0, // Убираем отступ слева
-            pr: isMobile ? 0 : 0, // Убираем отступ справа
+            mt: 2, // Уменьшаем отступ сверху
+            pt: 1.5, // Уменьшаем внутренний отступ сверху
+            borderTop: `1px solid ${theme.palette.divider}`,
           }}>
             <Button
               onClick={handleBack}
@@ -1083,12 +1075,9 @@ const ServicePointFormPageNew: React.FC = () => {
               sx={{
                 ...getButtonStyles(theme, 'secondary'),
                 order: isMobile ? 2 : 1,
-                minHeight: isMobile ? 48 : 42,
-                px: isMobile ? 3 : 2, // Уменьшаем горизонтальный padding
-                mr: isMobile ? 0 : 3, // Увеличиваем отступ справа на десктопе
+                minHeight: isMobile ? 44 : 40, // Уменьшаем высоту кнопок
+                px: isMobile ? 2 : 1.5, // Уменьшаем горизонтальный padding
                 minWidth: isMobile ? '100%' : 100,
-                // Уменьшаем отступ слева на мобильных
-                ml: isMobile ? 0 : 0,
               }}
             >
               Назад
@@ -1096,13 +1085,10 @@ const ServicePointFormPageNew: React.FC = () => {
 
             <Box sx={{ 
               display: 'flex', 
-              gap: isMobile ? 2 : 2.5, // Увеличиваем gap между кнопками
+              gap: isMobile ? 1.5 : 1.5, // Уменьшаем gap между кнопками
               order: isMobile ? 1 : 2,
               flexDirection: isMobile ? 'column' : 'row',
               alignItems: isMobile ? 'stretch' : 'center',
-              // Убираем отступы по краям
-              ml: isMobile ? 0 : 0,
-              mr: isMobile ? 0 : 0,
             }}>
               {!isLastStep ? (
                 <Button
@@ -1112,10 +1098,9 @@ const ServicePointFormPageNew: React.FC = () => {
                   size={isMobile ? 'large' : 'medium'}
                   sx={{
                     ...getButtonStyles(theme, 'primary'),
-                    minHeight: isMobile ? 48 : 42,
+                    minHeight: isMobile ? 44 : 40, // Уменьшаем высоту кнопок
                     minWidth: isMobile ? '100%' : 140,
-                    px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
-                    mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
+                    px: isMobile ? 2 : 2, // Уменьшаем горизонтальный padding
                   }}
                 >
                   Далее
@@ -1131,10 +1116,9 @@ const ServicePointFormPageNew: React.FC = () => {
                     size={isMobile ? 'large' : 'medium'}
                     sx={{
                       ...getButtonStyles(theme, 'primary'),
-                      minHeight: isMobile ? 48 : 42,
+                      minHeight: isMobile ? 44 : 40, // Уменьшаем высоту кнопок
                       minWidth: isMobile ? '100%' : 160,
-                      px: isMobile ? 3 : 2.5, // Уменьшаем горизонтальный padding
-                      mr: isMobile ? 0 : 1, // Уменьшаем отступ справа
+                      px: isMobile ? 2 : 2, // Уменьшаем горизонтальный padding
                     }}
                   >
                     {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
@@ -1144,7 +1128,7 @@ const ServicePointFormPageNew: React.FC = () => {
                   {!isFormReadyToSubmit() && (
                     <Box sx={{ 
                       mt: 1, 
-                      p: 1.5,
+                      p: 1, // Уменьшаем внутренние отступы
                       backgroundColor: theme.palette.warning.light,
                       borderRadius: SIZES.borderRadius.sm,
                       border: `1px solid ${theme.palette.warning.main}`,
