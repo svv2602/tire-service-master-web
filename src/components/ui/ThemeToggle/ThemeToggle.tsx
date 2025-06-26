@@ -24,22 +24,22 @@ const ThemeToggle: React.FC = () => {
         onClick={toggleTheme}
         sx={{
           ml: 1,
-          color: theme.palette.mode === 'dark' ? '#fff' : '#333',
+          color: theme.palette.mode === 'dark' ? '#fff' : '#0d2345',
           backgroundColor: theme.palette.mode === 'dark' 
             ? 'rgba(255, 255, 255, 0.1)' 
-            : 'rgba(0, 0, 0, 0.08)',
+            : '#fff',
           border: theme.palette.mode === 'dark' 
             ? '1px solid rgba(255, 255, 255, 0.2)' 
-            : '1px solid rgba(0, 0, 0, 0.15)',
+            : '1.5px solid #1976d2',
           transition: tokens.transitions.duration.normal,
           '&:hover': {
             backgroundColor: theme.palette.mode === 'dark' 
               ? 'rgba(255, 255, 255, 0.2)' 
-              : 'rgba(0, 0, 0, 0.12)',
+              : '#e3f0ff',
             transform: 'rotate(180deg)',
             borderColor: theme.palette.mode === 'dark' 
               ? 'rgba(255, 255, 255, 0.3)' 
-              : 'rgba(0, 0, 0, 0.25)',
+              : '#1565c0',
           },
           '&:active': {
             transform: 'scale(0.95) rotate(180deg)',
@@ -48,9 +48,9 @@ const ThemeToggle: React.FC = () => {
         aria-label="Переключить тему"
       >
         {isDarkMode ? (
-          <LightModeIcon sx={{ fontSize: 20, color: '#FFC107' }} />
+          <LightModeIcon sx={{ fontSize: 22, color: '#FFC107' }} />
         ) : (
-          <DarkModeIcon sx={{ fontSize: 20, color: '#1976d2' }} />
+          <DarkModeIcon sx={{ fontSize: 22, color: '#0d2345' }} />
         )}
       </IconButton>
     </Tooltip>

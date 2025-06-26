@@ -6,7 +6,6 @@ import { selectCurrentUser } from '../../store/slices/authSlice';
 import BookingsList from '../../components/bookings/BookingsList';
 import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { BookingStatusEnum } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
 import { Booking as ModelBooking } from '../../types/models';
@@ -105,7 +104,6 @@ const MyBookingsPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ 
           display: 'flex', 

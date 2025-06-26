@@ -70,6 +70,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { User } from '../../types/user';
 import ThemeToggle from '../ui/ThemeToggle';
+import { getProfileActions } from '../ui/AppBar/profileActions';
 import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
 
 // Константы для управления панелью
@@ -712,13 +713,27 @@ const MainLayout: React.FC = () => {
         }}
       >
         {/* Универсальная верхняя панель */}
+        {/* Унифицированное меню пользователя для AppBar */}
+        {/**
+         * Используем getProfileActions для генерации пунктов меню,
+         * чтобы меню пользователя было одинаковым в админке и клиентской части
+         */}
+        {/* Импортируем функцию генерации меню в начале файла */}
+        {/* Унифицированное меню пользователя для AppBar */}
         <CustomAppBar
           title="Твоя шина - Администратор"
           onDrawerToggle={handleDrawerToggle}
-          profileActions={[{ label: 'Выйти', onClick: handleLogout }]}
+          profileActions={getProfileActions({
+            user,
+            isAuthenticated,
+            navigate,
+            isAdminPanel: true,
+            onLogout: handleLogout,
+          })}
           username={user ? `${user.first_name} ${user.last_name}` : ''}
           rightContent={<ThemeToggle />}
         />
+
         <Toolbar />
         <Container maxWidth="xl" sx={{ p: 3, flex: 1, boxSizing: 'border-box' }}>
           <Outlet />

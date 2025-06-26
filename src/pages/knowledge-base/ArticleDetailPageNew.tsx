@@ -25,7 +25,6 @@ import {
 } from '@mui/icons-material';
 import { useArticle, useRelatedArticles, useArticleCategories } from '../../hooks/useArticles';
 import ArticleCard from '../../components/knowledge-base/ArticleCard';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { getThemeColors, getCardStyles, getButtonStyles } from '../../styles';
 
 const ArticleDetailPage: React.FC = () => {
@@ -107,7 +106,6 @@ const ArticleDetailPage: React.FC = () => {
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-        <ClientNavigation colors={colors} secondaryButtonStyles={getButtonStyles(theme, 'secondary')} />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
             <CircularProgress size={60} />
@@ -120,7 +118,6 @@ const ArticleDetailPage: React.FC = () => {
   if (error || !article) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-        <ClientNavigation colors={colors} secondaryButtonStyles={getButtonStyles(theme, 'secondary')} />
         <Container maxWidth="lg" sx={{ py: 6 }}>
           <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
             <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>❌</Typography>
@@ -146,23 +143,6 @@ const ArticleDetailPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={getButtonStyles(theme, 'secondary')} />
-      
-      {/* Breadcrumbs */}
-      <Box sx={{ backgroundColor: colors.backgroundSecondary, py: 2 }}>
-        <Container maxWidth="lg">
-          <Breadcrumbs>
-            <Link to="/" style={{ color: colors.primary, textDecoration: 'none' }}>
-              Главная
-            </Link>
-            <Link to="/knowledge-base" style={{ color: colors.primary, textDecoration: 'none' }}>
-              База знаний
-            </Link>
-            <Typography color="text.primary">{article.title}</Typography>
-          </Breadcrumbs>
-        </Container>
-      </Box>
-
       <Container maxWidth="lg" sx={{ py: 6 }}>
         <Grid container spacing={4}>
           {/* Основной контент */}

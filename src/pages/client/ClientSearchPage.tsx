@@ -43,7 +43,6 @@ import {
 } from '@mui/icons-material';
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
 
 // Интерфейс для сервисной точки из API поиска
@@ -978,7 +977,6 @@ const ClientSearchPage: React.FC = () => {
   if (isLoading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-        <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             <CircularProgress size={60} />
@@ -993,8 +991,6 @@ const ClientSearchPage: React.FC = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-
       <Container maxWidth="lg" sx={{ py: 4 }}>
 
         {/* Заголовок результатов */}

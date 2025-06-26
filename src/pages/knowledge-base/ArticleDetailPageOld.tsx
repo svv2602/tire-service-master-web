@@ -27,7 +27,6 @@ import {
 } from '@mui/icons-material';
 import { useArticle, useRelatedArticles, useArticleCategories } from '../../hooks/useArticles';
 import ArticleCard from '../../components/knowledge-base/ArticleCard';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { getThemeColors, getCardStyles, getButtonStyles } from '../../styles';
 
 const ArticleDetailPage: React.FC = () => {

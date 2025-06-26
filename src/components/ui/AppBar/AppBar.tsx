@@ -28,7 +28,7 @@ export interface AppBarAction {
   /** Текст действия */
   label: string;
   /** Иконка */
-  icon?: React.ReactNode;
+  icon?: React.ElementType;
   /** Обработчик клика */
   onClick: () => void;
   /** Отключено ли действие */
@@ -133,10 +133,12 @@ export const AppBar: React.FC<AppBarProps> = ({
         <Box sx={{ flexGrow: 1 }} />
         
         {/* Дополнительный контент справа */}
-        {rightContent}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pr: 4 }}>
+          {rightContent}
+        </Box>
         
         {/* Десктопные иконки */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
           {/* Уведомления */}
           {notificationActions.length > 0 && (
             <IconButton
@@ -159,9 +161,9 @@ export const AppBar: React.FC<AppBarProps> = ({
             color="inherit"
           >
             {avatarUrl ? (
-              <Avatar src={avatarUrl} alt={username} sx={{ width: 32, height: 32 }} />
+              <Avatar src={avatarUrl} alt={username} sx={{ width: 40, height: 40 }} />
             ) : (
-              <AccountCircleIcon />
+              <AccountCircleIcon sx={{ fontSize: 40 }} />
             )}
           </IconButton>
         </Box>
@@ -205,7 +207,7 @@ export const AppBar: React.FC<AppBarProps> = ({
           >
             {action.icon && (
               <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                {action.icon}
+                {React.createElement(action.icon, { fontSize: 'small' })}
               </Box>
             )}
             {action.label}
@@ -234,7 +236,7 @@ export const AppBar: React.FC<AppBarProps> = ({
             >
               {action.icon && (
                 <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                  {action.icon}
+                  {React.createElement(action.icon, { fontSize: 'small' })}
                 </Box>
               )}
               {action.label}
@@ -275,9 +277,9 @@ export const AppBar: React.FC<AppBarProps> = ({
             size="large"
           >
             {avatarUrl ? (
-              <Avatar src={avatarUrl} alt={username} sx={{ width: 32, height: 32 }} />
+              <Avatar src={avatarUrl} alt={username} sx={{ width: 40, height: 40 }} />
             ) : (
-              <AccountCircleIcon />
+              <AccountCircleIcon sx={{ fontSize: 40 }} />
             )}
           </IconButton>
           <p>Профиль</p>

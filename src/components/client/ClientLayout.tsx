@@ -1,4 +1,5 @@
 import React from 'react';
+import { getProfileActions } from '../ui/AppBar/profileActions';
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getButtonStyles } from '../../styles';
@@ -34,48 +35,16 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
 
-  // Действия профиля для AppBar
-  const profileActions = isAuthenticated
-    ? [
-        {
-          label: 'Профіль',
-          icon: <PersonIcon fontSize="small" />,
-          onClick: () => navigate('/client/profile'),
-        },
-        {
-          label: 'Мої записи',
-          icon: <BookOnlineIcon fontSize="small" />,
-          onClick: () => navigate('/client/bookings'),
-        },
-        {
-          label: 'Мої відгуки',
-          icon: <ReviewIcon fontSize="small" />,
-          onClick: () => navigate('/client/reviews'),
-        },
-        ...(isAdmin
-          ? [
-              {
-                label: 'Адмін-панель',
-                icon: <AdminIcon fontSize="small" />,
-                onClick: () => navigate('/admin'),
-              },
-            ]
-          : []),
-        {
-          label: 'Вийти',
-          icon: <LogoutIcon fontSize="small" />,
-          onClick: async () => {
-            await dispatch(logoutUser());
-          },
-        },
-      ]
-    : [
-        {
-          label: 'Увійти',
-          icon: <LoginIcon fontSize="small" />,
-          onClick: () => navigate('/login'),
-        },
-      ];
+
+  const profileActions = getProfileActions({
+    user,
+    isAuthenticated,
+    navigate,
+    isAdminPanel: false,
+    onLogout: async () => {
+      await dispatch(logoutUser());
+    },
+  });
 
   // Публичные ссылки для AppBar
   const publicLinks = (
