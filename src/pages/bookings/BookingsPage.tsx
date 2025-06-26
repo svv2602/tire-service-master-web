@@ -386,6 +386,51 @@ const BookingsPage: React.FC = () => {
               }}
               getOptionLabel={(option) => option.label}
               isOptionEqualToValue={(option, value) => option.id === value.id}
+              filterOptions={(options, params) => {
+                const { inputValue } = params;
+                
+                // Если нет введенного текста, показываем все опции
+                if (!inputValue) return options;
+                
+                const lowercaseInput = inputValue.toLowerCase().trim();
+                
+                // Фильтруем опции по введенному тексту
+                return options.filter(option => {
+                  // Всегда показываем опцию "Все сервисные точки"
+                  if (option.id === 'all') return true;
+                  
+                  // Поиск по названию сервисной точки
+                  if (option.name && option.name.toLowerCase().includes(lowercaseInput)) {
+                    return true;
+                  }
+                  
+                  // Поиск по названию города
+                  if (option.city?.name && option.city.name.toLowerCase().includes(lowercaseInput)) {
+                    return true;
+                  }
+                  
+                  // Поиск по полной строке label (название + город)
+                  if (option.label && option.label.toLowerCase().includes(lowercaseInput)) {
+                    return true;
+                  }
+                  
+                  return false;
+                });
+              }}
+              renderOption={(props, option) => (
+                <Box component="li" {...props} key={option.id}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <Typography variant="body2" sx={{ fontWeight: option.id === 'all' ? 'bold' : 'normal' }}>
+                      {option.name}
+                    </Typography>
+                    {option.city && (
+                      <Typography variant="caption" color="text.secondary">
+                        {option.city.name}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              )}
               renderInput={(params) => (
                 <TextField
                   {...params}
