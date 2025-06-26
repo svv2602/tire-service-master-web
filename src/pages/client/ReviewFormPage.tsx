@@ -9,10 +9,10 @@ import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { ReviewFormData } from '../../types/review';
 import ReviewForm from '../../components/reviews/ReviewForm';
 import LoginPrompt from '../../components/auth/LoginPrompt';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Booking as ModelBooking } from '../../types/models';
 import { getThemeColors, getButtonStyles } from '../../styles';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const ReviewFormPage: React.FC = () => {
   const { t } = useTranslation();
@@ -80,79 +80,80 @@ const ReviewFormPage: React.FC = () => {
   const completedBookings = bookingsData?.data.filter(booking => booking.status_id === 2) || [];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-      <Container maxWidth="md" sx={{ py: 4 }}>
-      <Box mb={3} display="flex" alignItems="center">
-        <Button 
-          startIcon={<ArrowBackIcon />} 
-          onClick={handleBack}
-          sx={{ mr: 2 }}
-        >
-          {t('Назад')}
-        </Button>
-        <Typography variant="h4" component="h1">
-          {t('Новый отзыв')}
-        </Typography>
-      </Box>
-
-      {isLoadingBookings ? (
-        <Box display="flex" justifyContent="center" my={4}>
-          <CircularProgress />
-        </Box>
-      ) : completedBookings.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
-            {t('У вас нет завершенных записей')}
-          </Typography>
-          <Typography variant="body1" color="textSecondary" paragraph>
-            {t('Вы можете оставить отзыв только после завершения обслуживания')}
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="primary"
-                            onClick={() => navigate('/client/booking')}
-            sx={{ mt: 2 }}
-          >
-            {t('Записаться на обслуживание')}
-          </Button>
-        </Paper>
-      ) : (
-        <>
-          <Paper sx={{ p: 3, mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              {t('Выберите запись для отзыва')}
+    <ClientLayout>
+      <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Box mb={3} display="flex" alignItems="center">
+            <Button 
+              startIcon={<ArrowBackIcon />} 
+              onClick={handleBack}
+              sx={{ mr: 2 }}
+            >
+              {t('Назад')}
+            </Button>
+            <Typography variant="h4" component="h1">
+              {t('Новый отзыв')}
             </Typography>
-            
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="booking-select-label">{t('Запись на обслуживание')}</InputLabel>
-              <Select
-                labelId="booking-select-label"
-                id="booking-select"
-                value={selectedBookingId}
-                onChange={handleBookingChange}
-                label={t('Запись на обслуживание')}
-              >
-                <MenuItem value="">{t('Выберите запись')}</MenuItem>
-                {completedBookings.map((booking) => (
-                  <MenuItem key={booking.id} value={String(booking.id)}>
-                    {t('Запись №')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Paper>
+          </Box>
 
-          <ReviewForm
-            servicePointId={selectedServicePointId}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            error={error}
-          />
-        </>
-      )}
-      </Container>
-    </Box>
+          {isLoadingBookings ? (
+            <Box display="flex" justifyContent="center" my={4}>
+              <CircularProgress />
+            </Box>
+          ) : completedBookings.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="h6" gutterBottom>
+                {t('У вас нет завершенных записей')}
+              </Typography>
+              <Typography variant="body1" color="textSecondary" paragraph>
+                {t('Вы можете оставить отзыв только после завершения обслуживания')}
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="primary"
+                onClick={() => navigate('/client/booking')}
+                sx={{ mt: 2 }}
+              >
+                {t('Записаться на обслуживание')}
+              </Button>
+            </Paper>
+          ) : (
+            <>
+              <Paper sx={{ p: 3, mb: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('Выберите запись для отзыва')}
+                </Typography>
+                
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="booking-select-label">{t('Запись на обслуживание')}</InputLabel>
+                  <Select
+                    labelId="booking-select-label"
+                    id="booking-select"
+                    value={selectedBookingId}
+                    onChange={handleBookingChange}
+                    label={t('Запись на обслуживание')}
+                  >
+                    <MenuItem value="">{t('Выберите запись')}</MenuItem>
+                    {completedBookings.map((booking) => (
+                      <MenuItem key={booking.id} value={String(booking.id)}>
+                        {t('Запись №')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Paper>
+
+              <ReviewForm
+                servicePointId={selectedServicePointId}
+                onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                error={error}
+              />
+            </>
+          )}
+        </Container>
+      </Box>
+    </ClientLayout>
   );
 };
 

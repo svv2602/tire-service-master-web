@@ -24,9 +24,9 @@ import {
   Schedule as ScheduleIcon
 } from '@mui/icons-material';
 import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import ArticleCard from '../../components/knowledge-base/ArticleCard';
 import { getThemeColors, getButtonStyles, getCardStyles } from '../../styles';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const ArticleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,42 +44,44 @@ const ArticleDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-        <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress size={48} />
-          </Box>
-        </Container>
-      </Box>
+      <ClientLayout>
+        <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
+          <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress size={48} />
+            </Box>
+          </Container>
+        </Box>
+      </ClientLayout>
     );
   }
 
   if (error || !article) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-        <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-          <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
-            <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>❌</Typography>
-            <Typography variant="h5" sx={{ color: colors.textPrimary, mb: 2 }}>
-              Статья не найдена
-            </Typography>
-            <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
-              {error || 'Запрашиваемая статья не существует или была удалена'}
-            </Typography>
-            <Button
-              component={Link}
-              to="/knowledge-base"
-              variant="contained"
-              startIcon={<ArrowBackIcon />}
-              sx={buttonStyles}
-            >
-              Вернуться к базе знаний
-            </Button>
-          </Paper>
-        </Container>
-      </Box>
+      <ClientLayout>
+        <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
+          <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
+              <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>❌</Typography>
+              <Typography variant="h5" sx={{ color: colors.textPrimary, mb: 2 }}>
+                Статья не найдена
+              </Typography>
+              <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
+                {error || 'Запрашиваемая статья не существует или была удалена'}
+              </Typography>
+              <Button
+                component={Link}
+                to="/knowledge-base"
+                variant="contained"
+                startIcon={<ArrowBackIcon />}
+                sx={buttonStyles}
+              >
+                Вернуться к базе знаний
+              </Button>
+            </Paper>
+          </Container>
+        </Box>
+      </ClientLayout>
     );
   }
 
@@ -99,321 +101,321 @@ const ArticleDetailPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
+    <ClientLayout>
+      <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Fade in timeout={600}>
+            <Box>
+              {/* Хлебные крошки */}
+              <Breadcrumbs sx={{ mb: 3, color: colors.textSecondary }}>
+                <Link 
+                  to="/client" 
+                  style={{ 
+                    color: colors.textSecondary, 
+                    textDecoration: 'none'
+                  }}
+                >
+                  Главная
+                </Link>
+                <Link 
+                  to="/knowledge-base"
+                  style={{ 
+                    color: colors.textSecondary, 
+                    textDecoration: 'none'
+                  }}
+                >
+                  База знаний
+                </Link>
+                <Typography sx={{ color: colors.textPrimary }}>
+                  {article.title}
+                </Typography>
+              </Breadcrumbs>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Fade in timeout={600}>
-          <Box>
-            {/* Хлебные крошки */}
-            <Breadcrumbs sx={{ mb: 3, color: colors.textSecondary }}>
-              <Link 
-                to="/client" 
-                style={{ 
-                  color: colors.textSecondary, 
-                  textDecoration: 'none'
-                }}
-              >
-                Главная
-              </Link>
-              <Link 
+              {/* Кнопка назад */}
+              <Button
+                component={Link}
                 to="/knowledge-base"
-                style={{ 
-                  color: colors.textSecondary, 
-                  textDecoration: 'none'
+                startIcon={<ArrowBackIcon />}
+                sx={{ 
+                  ...secondaryButtonStyles,
+                  mb: 4,
+                  color: colors.textSecondary,
+                  '&:hover': {
+                    backgroundColor: colors.backgroundSecondary,
+                    color: colors.primary
+                  }
                 }}
               >
-                База знаний
-              </Link>
-              <Typography sx={{ color: colors.textPrimary }}>
-                {article.title}
-              </Typography>
-            </Breadcrumbs>
+                Назад к базе знаний
+              </Button>
 
-            {/* Кнопка назад */}
-            <Button
-              component={Link}
-              to="/knowledge-base"
-              startIcon={<ArrowBackIcon />}
-              sx={{ 
-                ...secondaryButtonStyles,
-                mb: 4,
-                color: colors.textSecondary,
-                '&:hover': {
-                  backgroundColor: colors.backgroundSecondary,
-                  color: colors.primary
-                }
-              }}
-            >
-              Назад к базе знаний
-            </Button>
+              <Grid container spacing={4}>
+                {/* Основной контент */}
+                <Grid item xs={12} lg={8}>
+                  <Paper sx={cardStyles}>
+                    {/* Заголовок статьи */}
+                    <Box sx={{ p: 4, pb: 2 }}>
+                      <Typography 
+                        variant="h3" 
+                        component="h1" 
+                        sx={{ 
+                          color: colors.textPrimary, 
+                          fontWeight: 700, 
+                          mb: 3,
+                          lineHeight: 1.2
+                        }}
+                      >
+                        {article.title}
+                      </Typography>
 
-            <Grid container spacing={4}>
-              {/* Основной контент */}
-              <Grid item xs={12} lg={8}>
-                <Paper sx={cardStyles}>
-                  {/* Заголовок статьи */}
-                  <Box sx={{ p: 4, pb: 2 }}>
-                    <Typography 
-                      variant="h3" 
-                      component="h1" 
-                      sx={{ 
-                        color: colors.textPrimary, 
-                        fontWeight: 700, 
-                        mb: 3,
-                        lineHeight: 1.2
-                      }}
-                    >
-                      {article.title}
-                    </Typography>
+                      {/* Метаинформация */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: 2, 
+                        alignItems: 'center',
+                        mb: 3
+                      }}>
+                        {article.author && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <PersonIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                              {article.author.name}
+                            </Typography>
+                          </Box>
+                        )}
 
-                    {/* Метаинформация */}
-                    <Box sx={{ 
-                      display: 'flex', 
-                      flexWrap: 'wrap', 
-                      gap: 2, 
-                      alignItems: 'center',
-                      mb: 3
-                    }}>
-                      {article.author && (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <PersonIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                          <CalendarIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
                           <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                            {article.author.name}
+                            {formatDate(article.created_at)}
                           </Typography>
                         </Box>
-                      )}
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CalendarIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
-                        <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                          {formatDate(article.created_at)}
-                        </Typography>
+                        {article.reading_time && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ScheduleIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                              {formatReadingTime(article.reading_time)}
+                            </Typography>
+                          </Box>
+                        )}
+
+                        {article.views_count !== undefined && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <ViewIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                              {article.views_count} просмотров
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
 
-                      {article.reading_time && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <ScheduleIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
-                          <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                            {formatReadingTime(article.reading_time)}
-                          </Typography>
+                      {/* Категория */}
+                      {article.category_name && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                          <Chip
+                            label={article.category_name}
+                            size="small"
+                            sx={{
+                              backgroundColor: colors.backgroundSecondary,
+                              color: colors.primary,
+                              fontWeight: 500,
+                              '&:hover': {
+                                backgroundColor: colors.primary,
+                                color: 'white'
+                              }
+                            }}
+                          />
                         </Box>
                       )}
 
-                      {article.views_count !== undefined && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <ViewIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
-                          <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                            {article.views_count} просмотров
-                          </Typography>
-                        </Box>
+                      {/* Описание */}
+                      {article.excerpt && (
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            color: colors.textSecondary, 
+                            fontWeight: 400,
+                            fontStyle: 'italic',
+                            mb: 3,
+                            p: 3,
+                            backgroundColor: colors.backgroundSecondary,
+                            borderRadius: 2,
+                            borderLeft: `4px solid ${colors.primary}`
+                          }}
+                        >
+                          {article.excerpt}
+                        </Typography>
                       )}
                     </Box>
 
-                    {/* Категория */}
-                    {article.category_name && (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                        <Chip
-                          label={article.category_name}
-                          size="small"
+                    <Divider sx={{ borderColor: colors.backgroundSecondary }} />
+
+                    {/* Основное изображение */}
+                    {article.featured_image && (
+                      <Box sx={{ p: 4, pb: 2 }}>
+                        <Box
+                          component="img"
+                          src={article.featured_image}
+                          alt={article.title}
                           sx={{
-                            backgroundColor: colors.backgroundSecondary,
-                            color: colors.primary,
-                            fontWeight: 500,
-                            '&:hover': {
-                              backgroundColor: colors.primary,
-                              color: 'white'
-                            }
+                            width: '100%',
+                            height: 'auto',
+                            maxHeight: 400,
+                            objectFit: 'cover',
+                            borderRadius: 2,
+                            boxShadow: theme.shadows[3]
                           }}
                         />
                       </Box>
                     )}
 
-                    {/* Описание */}
-                    {article.excerpt && (
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          color: colors.textSecondary, 
-                          fontWeight: 400,
-                          fontStyle: 'italic',
-                          mb: 3,
-                          p: 3,
+                    {/* Контент статьи */}
+                    <Box 
+                      sx={{ 
+                        p: 4,
+                        '& h1, & h2, & h3, & h4, & h5, & h6': {
+                          color: colors.textPrimary,
+                          fontWeight: 600,
+                          mt: 3,
+                          mb: 2
+                        },
+                        '& h1': { fontSize: '2rem' },
+                        '& h2': { fontSize: '1.75rem' },
+                        '& h3': { fontSize: '1.5rem' },
+                        '& p': {
+                          color: colors.textPrimary,
+                          lineHeight: 1.7,
+                          mb: 2,
+                          fontSize: '1.1rem'
+                        },
+                        '& ul, & ol': {
+                          color: colors.textPrimary,
+                          pl: 3,
+                          mb: 2
+                        },
+                        '& li': {
+                          mb: 1,
+                          lineHeight: 1.6
+                        },
+                        '& blockquote': {
+                          borderLeft: `4px solid ${colors.primary}`,
                           backgroundColor: colors.backgroundSecondary,
+                          pl: 3,
+                          py: 2,
+                          my: 3,
+                          fontStyle: 'italic',
+                          color: colors.textSecondary
+                        },
+                        '& code': {
+                          backgroundColor: colors.backgroundSecondary,
+                          padding: '2px 6px',
+                          borderRadius: 1,
+                          fontSize: '0.9em',
+                          fontFamily: 'monospace'
+                        },
+                        '& pre': {
+                          backgroundColor: colors.backgroundSecondary,
+                          p: 2,
                           borderRadius: 2,
-                          borderLeft: `4px solid ${colors.primary}`
-                        }}
-                      >
-                        {article.excerpt}
-                      </Typography>
-                    )}
-                  </Box>
-
-                  <Divider sx={{ borderColor: colors.backgroundSecondary }} />
-
-                  {/* Основное изображение */}
-                  {article.featured_image && (
-                    <Box sx={{ p: 4, pb: 2 }}>
-                      <Box
-                        component="img"
-                        src={article.featured_image}
-                        alt={article.title}
-                        sx={{
-                          width: '100%',
+                          overflow: 'auto',
+                          my: 2
+                        },
+                        '& img': {
+                          maxWidth: '100%',
                           height: 'auto',
-                          maxHeight: 400,
-                          objectFit: 'cover',
                           borderRadius: 2,
-                          boxShadow: theme.shadows[3]
-                        }}
-                      />
-                    </Box>
+                          my: 2
+                        },
+                        '& a': {
+                          color: colors.primary,
+                          textDecoration: 'none',
+                          '&:hover': {
+                            textDecoration: 'underline'
+                          }
+                        }
+                      }}
+                      dangerouslySetInnerHTML={{ __html: article.content }}
+                    />
+                  </Paper>
+                </Grid>
+
+                {/* Боковая панель */}
+                <Grid item xs={12} lg={4}>
+                  {/* Связанные статьи */}
+                  {relatedArticles.length > 0 && (
+                    <Card sx={cardStyles}>
+                      <CardContent>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            color: colors.textPrimary, 
+                            fontWeight: 600, 
+                            mb: 3 
+                          }}
+                        >
+                          Похожие статьи
+                        </Typography>
+                        {relatedLoading ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                            <CircularProgress size={32} />
+                          </Box>
+                        ) : (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {relatedArticles.map((relatedArticle) => (
+                              <ArticleCard 
+                                key={relatedArticle.id} 
+                                article={relatedArticle} 
+                                variant="compact"
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
                   )}
 
-                  {/* Контент статьи */}
-                  <Box 
-                    sx={{ 
-                      p: 4,
-                      '& h1, & h2, & h3, & h4, & h5, & h6': {
-                        color: colors.textPrimary,
-                        fontWeight: 600,
-                        mt: 3,
-                        mb: 2
-                      },
-                      '& h1': { fontSize: '2rem' },
-                      '& h2': { fontSize: '1.75rem' },
-                      '& h3': { fontSize: '1.5rem' },
-                      '& p': {
-                        color: colors.textPrimary,
-                        lineHeight: 1.7,
-                        mb: 2,
-                        fontSize: '1.1rem'
-                      },
-                      '& ul, & ol': {
-                        color: colors.textPrimary,
-                        pl: 3,
-                        mb: 2
-                      },
-                      '& li': {
-                        mb: 1,
-                        lineHeight: 1.6
-                      },
-                      '& blockquote': {
-                        borderLeft: `4px solid ${colors.primary}`,
-                        backgroundColor: colors.backgroundSecondary,
-                        pl: 3,
-                        py: 2,
-                        my: 3,
-                        fontStyle: 'italic',
-                        color: colors.textSecondary
-                      },
-                      '& code': {
-                        backgroundColor: colors.backgroundSecondary,
-                        padding: '2px 6px',
-                        borderRadius: 1,
-                        fontSize: '0.9em',
-                        fontFamily: 'monospace'
-                      },
-                      '& pre': {
-                        backgroundColor: colors.backgroundSecondary,
-                        p: 2,
-                        borderRadius: 2,
-                        overflow: 'auto',
-                        my: 2
-                      },
-                      '& img': {
-                        maxWidth: '100%',
-                        height: 'auto',
-                        borderRadius: 2,
-                        my: 2
-                      },
-                      '& a': {
-                        color: colors.primary,
-                        textDecoration: 'none',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }
-                    }}
-                    dangerouslySetInnerHTML={{ __html: article.content }}
-                  />
-                </Paper>
-              </Grid>
-
-              {/* Боковая панель */}
-              <Grid item xs={12} lg={4}>
-                {/* Связанные статьи */}
-                {relatedArticles.length > 0 && (
-                  <Card sx={cardStyles}>
-                    <CardContent>
+                  {/* Призыв к действию */}
+                  <Card sx={{ ...cardStyles, mt: 3 }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
                       <Typography 
                         variant="h6" 
                         sx={{ 
                           color: colors.textPrimary, 
                           fontWeight: 600, 
+                          mb: 2 
+                        }}
+                      >
+                        Нужна помощь?
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: colors.textSecondary, 
                           mb: 3 
                         }}
                       >
-                        Похожие статьи
+                        Закажите профессиональный шиномонтаж у наших мастеров
                       </Typography>
-                      {relatedLoading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                          <CircularProgress size={32} />
-                        </Box>
-                      ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {relatedArticles.map((relatedArticle) => (
-                            <ArticleCard 
-                              key={relatedArticle.id} 
-                              article={relatedArticle} 
-                              variant="compact"
-                            />
-                          ))}
-                        </Box>
-                      )}
+                      <Button
+                        component={Link}
+                        to="/client"
+                        variant="contained"
+                        fullWidth
+                        sx={buttonStyles}
+                      >
+                        Записаться на шиномонтаж
+                      </Button>
                     </CardContent>
                   </Card>
-                )}
-
-                {/* Призыв к действию */}
-                <Card sx={{ ...cardStyles, mt: 3 }}>
-                  <CardContent sx={{ textAlign: 'center' }}>
-                    <Typography 
-                      variant="h6" 
-                      sx={{ 
-                        color: colors.textPrimary, 
-                        fontWeight: 600, 
-                        mb: 2 
-                      }}
-                    >
-                      Нужна помощь?
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: colors.textSecondary, 
-                        mb: 3 
-                      }}
-                    >
-                      Закажите профессиональный шиномонтаж у наших мастеров
-                    </Typography>
-                    <Button
-                      component={Link}
-                      to="/client"
-                      variant="contained"
-                      fullWidth
-                      sx={buttonStyles}
-                    >
-                      Записаться на шиномонтаж
-                    </Button>
-                  </CardContent>
-                </Card>
+                </Grid>
               </Grid>
-            </Grid>
-          </Box>
-        </Fade>
-      </Container>
-    </Box>
+            </Box>
+          </Fade>
+        </Container>
+      </Box>
+    </ClientLayout>
   );
 };
 

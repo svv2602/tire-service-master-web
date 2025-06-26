@@ -6,12 +6,12 @@ import { selectCurrentUser } from '../../store/slices/authSlice';
 import BookingsList from '../../components/bookings/BookingsList';
 import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { BookingStatusEnum } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
 import { Booking as ModelBooking } from '../../types/models';
 import { Booking } from '../../types/booking';
 import { getThemeColors, getButtonStyles } from '../../styles';
+import ClientLayout from '../../components/client/ClientLayout';
 
 // Функция для конвертации типов Booking
 const convertBooking = (modelBooking: ModelBooking): Booking => {
@@ -146,92 +146,93 @@ const MyBookingsPage: React.FC = () => {
   console.log('MyBookingsPage - allConvertedBookings (без фильтра):', allConvertedBookings);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {t('Мои записи')}
-      </Typography>
+    <ClientLayout>
+      <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            {t('Мои записи')}
+          </Typography>
 
-      {/* Отладочная информация в режиме разработки */}
-      {process.env.NODE_ENV === 'development' && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
-          <Typography variant="h6" gutterBottom>🔍 Отладочная информация</Typography>
-          <Typography variant="body2">Пользователь ID: {currentUser?.id || 'Не найден'}</Typography>
-          <Typography variant="body2">Роль пользователя: {currentUser?.role || 'Не найдена'}</Typography>
-          <Typography variant="body2">Client ID: {clientId || 'Не найден'}</Typography>
-          <Typography variant="body2">Загрузка: {isLoading ? 'Да' : 'Нет'}</Typography>
-          <Typography variant="body2">Ошибка: {isError ? 'Да' : 'Нет'}</Typography>
-          <Typography variant="body2">Данные получены: {bookingsData ? 'Да' : 'Нет'}</Typography>
-          <Typography variant="body2">Количество записей: {bookingsData?.data?.length || 0}</Typography>
-          <Typography variant="body2">Текущий фильтр статус: {filters.status}</Typography>
-          <Typography variant="body2">Отфильтровано записей: {convertedBookings.length}</Typography>
-          <Typography variant="body2">Активная вкладка: {tabValue}</Typography>
-          {bookingsData?.data && bookingsData.data.length > 0 && (
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2" fontWeight="bold">Статусы записей:</Typography>
-              {bookingsData.data.map((booking, index) => (
-                <Typography key={index} variant="body2" sx={{ ml: 2 }}>
-                  Запись {booking.id}: status_id={booking.status_id} 
-                  {booking.status_id === filters.status ? ' ✅' : ' ❌'}
+          {/* Отладочная информация в режиме разработки */}
+          {process.env.NODE_ENV === 'development' && (
+            <Paper sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
+              <Typography variant="h6" gutterBottom>🔍 Отладочная информация</Typography>
+              <Typography variant="body2">Пользователь ID: {currentUser?.id || 'Не найден'}</Typography>
+              <Typography variant="body2">Роль пользователя: {currentUser?.role || 'Не найдена'}</Typography>
+              <Typography variant="body2">Client ID: {clientId || 'Не найден'}</Typography>
+              <Typography variant="body2">Загрузка: {isLoading ? 'Да' : 'Нет'}</Typography>
+              <Typography variant="body2">Ошибка: {isError ? 'Да' : 'Нет'}</Typography>
+              <Typography variant="body2">Данные получены: {bookingsData ? 'Да' : 'Нет'}</Typography>
+              <Typography variant="body2">Количество записей: {bookingsData?.data?.length || 0}</Typography>
+              <Typography variant="body2">Текущий фильтр статус: {filters.status}</Typography>
+              <Typography variant="body2">Отфильтровано записей: {convertedBookings.length}</Typography>
+              <Typography variant="body2">Активная вкладка: {tabValue}</Typography>
+              {bookingsData?.data && bookingsData.data.length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" fontWeight="bold">Статусы записей:</Typography>
+                  {bookingsData.data.map((booking, index) => (
+                    <Typography key={index} variant="body2" sx={{ ml: 2 }}>
+                      Запись {booking.id}: status_id={booking.status_id} 
+                      {booking.status_id === filters.status ? ' ✅' : ' ❌'}
+                    </Typography>
+                  ))}
+                </Box>
+              )}
+              {error && (
+                <Typography variant="body2" color="error">
+                  Детали ошибки: {JSON.stringify(error)}
                 </Typography>
-              ))}
-            </Box>
+              )}
+            </Paper>
           )}
-          {error && (
-            <Typography variant="body2" color="error">
-              Детали ошибки: {JSON.stringify(error)}
-            </Typography>
-          )}
-        </Paper>
-      )}
-      
-      <Paper sx={{ mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
-        >
-          <Tab label={t('Предстоящие')} />
-          <Tab label={t('Подтвержденные')} />
-          <Tab label={t('Завершенные')} />
-          <Tab label={t('Отмененные')} />
-        </Tabs>
-      </Paper>
-      
-      <BookingFilters 
-        filters={filters} 
-        onFilterChange={handleFilterChange} 
-      />
-      
-      <Box mt={3}>
-        {isLoading ? (
-          <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
-          </Box>
-        ) : isError ? (
-          <Alert severity="error">❌ {t('Произошла ошибка при загрузке записей')}</Alert>
-        ) : convertedBookings.length > 0 ? (
-          <BookingsList 
-            bookings={convertedBookings} 
+          
+          <Paper sx={{ mb: 3 }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+            >
+              <Tab label={t('Предстоящие')} />
+              <Tab label={t('Подтвержденные')} />
+              <Tab label={t('Завершенные')} />
+              <Tab label={t('Отмененные')} />
+            </Tabs>
+          </Paper>
+          
+          <BookingFilters 
+            filters={filters} 
+            onFilterChange={handleFilterChange} 
           />
-        ) : allConvertedBookings.length > 0 ? (
-          <Box>
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              ⚠️ Записи найдены, но не соответствуют текущему фильтру. Показаны все записи для диагностики:
-            </Alert>
-            <BookingsList 
-              bookings={allConvertedBookings} 
-            />
+          
+          <Box mt={3}>
+            {isLoading ? (
+              <Box display="flex" justifyContent="center" my={4}>
+                <CircularProgress />
+              </Box>
+            ) : isError ? (
+              <Alert severity="error">❌ {t('Произошла ошибка при загрузке записей')}</Alert>
+            ) : convertedBookings.length > 0 ? (
+              <BookingsList 
+                bookings={convertedBookings} 
+              />
+            ) : allConvertedBookings.length > 0 ? (
+              <Box>
+                <Alert severity="warning" sx={{ mb: 2 }}>
+                  ⚠️ Записи найдены, но не соответствуют текущему фильтру. Показаны все записи для диагностики:
+                </Alert>
+                <BookingsList 
+                  bookings={allConvertedBookings} 
+                />
+              </Box>
+            ) : (
+              <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
+            )}
           </Box>
-        ) : (
-          <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
-        )}
+        </Container>
       </Box>
-      </Container>
-    </Box>
+    </ClientLayout>
   );
 };
 

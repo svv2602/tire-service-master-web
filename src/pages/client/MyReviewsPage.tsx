@@ -6,12 +6,12 @@ import { selectCurrentUser } from '../../store/slices/authSlice';
 import { useTranslation } from 'react-i18next';
 import ReviewsList from '../../components/reviews/ReviewsList';
 import LoginPrompt from '../../components/auth/LoginPrompt';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import AddIcon from '@mui/icons-material/Add';
 import { useNavigate } from 'react-router-dom';
 import { ReviewStatus, Review as ReviewType } from '../../types/review';
 import { Review as ModelReview } from '../../types/models';
 import { getThemeColors, getButtonStyles } from '../../styles';
+import ClientLayout from '../../components/client/ClientLayout';
 
 // Функция для конвертации типов Review
 const convertReview = (modelReview: ModelReview): ReviewType => {
@@ -84,71 +84,72 @@ const MyReviewsPage: React.FC = () => {
     : [];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
-          {t('Мои отзывы')}
-        </Typography>
-        
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<AddIcon />}
-          onClick={handleCreateReview}
-        >
-          {t('Оставить отзыв')}
-        </Button>
-      </Box>
-      
-      <Paper sx={{ mb: 3 }}>
-        <Tabs 
-          value={tabValue} 
-          onChange={handleTabChange}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="fullWidth"
-        >
-          <Tab label={t('Опубликованные')} />
-          <Tab label={t('На модерации')} />
-        </Tabs>
-      </Paper>
-      
-      <Box mt={3}>
-        {isLoading ? (
-          <Box display="flex" justifyContent="center" my={4}>
-            <CircularProgress />
-          </Box>
-        ) : isError ? (
-          <Alert severity="error">❌ {t('Произошла ошибка при загрузке отзывов')}</Alert>
-        ) : convertedReviews.length > 0 ? (
-          <ReviewsList 
-            reviews={convertedReviews} 
-            showServicePoint={true}
-          />
-        ) : (
-          <Paper sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom>
-              {t('У вас пока нет отзывов')}
+    <ClientLayout>
+      <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h4" component="h1">
+              {t('Мои отзывы')}
             </Typography>
-            <Typography variant="body1" color="textSecondary" paragraph>
-              {t('Оставьте отзыв о сервисе, которым вы воспользовались')}
-            </Typography>
+            
             <Button 
               variant="contained" 
               color="primary" 
               startIcon={<AddIcon />}
               onClick={handleCreateReview}
-              sx={{ mt: 2 }}
             >
               {t('Оставить отзыв')}
             </Button>
+          </Box>
+          
+          <Paper sx={{ mb: 3 }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange}
+              indicatorColor="primary"
+              textColor="primary"
+              variant="fullWidth"
+            >
+              <Tab label={t('Опубликованные')} />
+              <Tab label={t('На модерации')} />
+            </Tabs>
           </Paper>
-        )}
+          
+          <Box mt={3}>
+            {isLoading ? (
+              <Box display="flex" justifyContent="center" my={4}>
+                <CircularProgress />
+              </Box>
+            ) : isError ? (
+              <Alert severity="error">❌ {t('Произошла ошибка при загрузке отзывов')}</Alert>
+            ) : convertedReviews.length > 0 ? (
+              <ReviewsList 
+                reviews={convertedReviews} 
+                showServicePoint={true}
+              />
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('У вас пока нет отзывов')}
+                </Typography>
+                <Typography variant="body1" color="textSecondary" paragraph>
+                  {t('Оставьте отзыв о сервисе, которым вы воспользовались')}
+                </Typography>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateReview}
+                  sx={{ mt: 2 }}
+                >
+                  {t('Оставить отзыв')}
+                </Button>
+              </Paper>
+            )}
+          </Box>
+        </Container>
       </Box>
-      </Container>
-    </Box>
+    </ClientLayout>
   );
 };
 

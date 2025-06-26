@@ -15,7 +15,6 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import ClientNavigation from '../../components/client/ClientNavigation';
 import { 
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
@@ -47,6 +46,8 @@ import { useGetCurrentUserQuery } from '../../api/auth.api';
 // Импорт стилей
 import { getCardStyles } from '../../styles/components';
 import { getThemeColors, getButtonStyles } from '../../styles';
+
+import ClientLayout from '../../components/client/ClientLayout';
 
 // Типы для данных формы
 export interface BookingFormData {
@@ -523,124 +524,125 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   };
   
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
-      <Container maxWidth="lg" sx={{ py: 3 }}>
-        {/* Заголовок */}
-        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(-1)}
-            variant="outlined"
-            size="small"
-          >
-            Назад
-          </Button>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-            Новое бронирование
-          </Typography>
-        </Box>
-        
-        {/* Stepper */}
-        <Paper sx={{ ...getCardStyles(theme), mb: 3, p: 3 }}>
-          <Stepper
-            steps={STEPS.map(step => ({
-              label: step.label,
-              content: <div />
-            }))}
-            activeStep={activeStep}
-            onStepChange={handleStepClick}
-            orientation={isMobile ? 'vertical' : 'horizontal'}
-          />
-        </Paper>
-        
-        {/* Контент шага */}
-        <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
-          {renderCurrentStep()}
-          
-          {/* Ошибка отправки */}
-          {submitError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {submitError}
-            </Alert>
-          )}
-          
-          {/* Кнопки навигации */}
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mt: 4,
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: 2
-          }}>
+    <ClientLayout>
+      <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+        <Container maxWidth="lg" sx={{ py: 3 }}>
+          {/* Заголовок */}
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
             <Button
-              onClick={handleBack}
-              disabled={activeStep === 0}
-              variant="outlined"
               startIcon={<ArrowBackIcon />}
+              onClick={() => navigate(-1)}
+              variant="outlined"
+              size="small"
             >
               Назад
             </Button>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" color="text.secondary">
-                Шаг {activeStep + 1} из {STEPS.length}
-              </Typography>
-            </Box>
-            
-            {activeStep === STEPS.length - 1 ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={!isCurrentStepValid || isSubmitting}
-                variant="contained"
-                endIcon={isSubmitting ? <CircularProgress size={16} /> : <CheckCircleIcon />}
-              >
-                {isSubmitting ? 'Создание...' : 'Подтвердить бронирование'}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                disabled={!isCurrentStepValid}
-                variant="contained"
-                endIcon={<ArrowForwardIcon />}
-              >
-                Далее
-              </Button>
-            )}
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+              Новое бронирование
+            </Typography>
           </Box>
-        </Paper>
-      </Container>
+          
+          {/* Stepper */}
+          <Paper sx={{ ...getCardStyles(theme), mb: 3, p: 3 }}>
+            <Stepper
+              steps={STEPS.map(step => ({
+                label: step.label,
+                content: <div />
+              }))}
+              activeStep={activeStep}
+              onStepChange={handleStepClick}
+              orientation={isMobile ? 'vertical' : 'horizontal'}
+            />
+          </Paper>
+          
+          {/* Контент шага */}
+          <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
+            {renderCurrentStep()}
+            
+            {/* Ошибка отправки */}
+            {submitError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {submitError}
+              </Alert>
+            )}
+            
+            {/* Кнопки навигации */}
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              mt: 4,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: 2
+            }}>
+              <Button
+                onClick={handleBack}
+                disabled={activeStep === 0}
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+              >
+                Назад
+              </Button>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Шаг {activeStep + 1} из {STEPS.length}
+                </Typography>
+              </Box>
+              
+              {activeStep === STEPS.length - 1 ? (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={!isCurrentStepValid || isSubmitting}
+                  variant="contained"
+                  endIcon={isSubmitting ? <CircularProgress size={16} /> : <CheckCircleIcon />}
+                >
+                  {isSubmitting ? 'Создание...' : 'Подтвердить бронирование'}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleNext}
+                  disabled={!isCurrentStepValid}
+                  variant="contained"
+                  endIcon={<ArrowForwardIcon />}
+                >
+                  Далее
+                </Button>
+              )}
+            </Box>
+          </Paper>
+        </Container>
 
-      {/* Модальное окно успешного создания бронирования */}
-      <SuccessDialog
-        open={successDialogOpen}
-        title="Бронирование создано!"
-        message="Спасибо за ваше бронирование!"
-        description="Мы отправили ваш запрос в сервисную точку для подтверждения времени и деталей обслуживания. Вы можете проверить информацию в вашем личном кабинете."
-        bookingDetails={createdBooking ? {
-          id: createdBooking.id,
-          date: createdBooking.booking_date,
-          time: createdBooking.start_time,
-          servicePoint: createdBooking.service_point?.name,
-          servicePointAddress: createdBooking.service_point?.city?.name 
-            ? `${createdBooking.service_point.city.name}, ${createdBooking.service_point?.address}`
-            : createdBooking.service_point?.address,
-          servicePointPhone: createdBooking.service_point?.phone,
-          clientName: createdBooking.client?.first_name && createdBooking.client?.last_name 
-            ? `${createdBooking.client.first_name} ${createdBooking.client.last_name}` 
-            : undefined,
-          carInfo: createdBooking.car_brand && createdBooking.car_model 
-            ? `${createdBooking.car_brand} ${createdBooking.car_model}` 
-            : undefined,
-        } : undefined}
-        primaryButtonText={currentUser ? "Мои бронирования" : "На главную"}
-        secondaryButtonText="Создать еще одно бронирование"
-        onPrimaryAction={currentUser ? handleGoToProfile : handleGoHome}
-        onSecondaryAction={handleCreateAnother}
-        onClose={handleGoHome}
-      />
-    </Box>
+        {/* Модальное окно успешного создания бронирования */}
+        <SuccessDialog
+          open={successDialogOpen}
+          title="Бронирование создано!"
+          message="Спасибо за ваше бронирование!"
+          description="Мы отправили ваш запрос в сервисную точку для подтверждения времени и деталей обслуживания. Вы можете проверить информацию в вашем личном кабинете."
+          bookingDetails={createdBooking ? {
+            id: createdBooking.id,
+            date: createdBooking.booking_date,
+            time: createdBooking.start_time,
+            servicePoint: createdBooking.service_point?.name,
+            servicePointAddress: createdBooking.service_point?.city?.name 
+              ? `${createdBooking.service_point.city.name}, ${createdBooking.service_point?.address}`
+              : createdBooking.service_point?.address,
+            servicePointPhone: createdBooking.service_point?.phone,
+            clientName: createdBooking.client?.first_name && createdBooking.client?.last_name 
+              ? `${createdBooking.client.first_name} ${createdBooking.client.last_name}` 
+              : undefined,
+            carInfo: createdBooking.car_brand && createdBooking.car_model 
+              ? `${createdBooking.car_brand} ${createdBooking.car_model}` 
+              : undefined,
+          } : undefined}
+          primaryButtonText={currentUser ? "Мои бронирования" : "На главную"}
+          secondaryButtonText="Создать еще одно бронирование"
+          onPrimaryAction={currentUser ? handleGoToProfile : handleGoHome}
+          onSecondaryAction={handleCreateAnother}
+          onClose={handleGoHome}
+        />
+      </Box>
+    </ClientLayout>
   );
 };
 
