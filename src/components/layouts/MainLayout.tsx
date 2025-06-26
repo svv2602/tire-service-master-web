@@ -70,6 +70,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { User } from '../../types/user';
 import ThemeToggle from '../ui/ThemeToggle';
+import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
 
 // Константы для управления панелью
 const MIN_DRAWER_WIDTH = 72;
@@ -710,82 +711,14 @@ const MainLayout: React.FC = () => {
           backgroundColor: theme.palette.background.default,
         }}
       >
-        <AppBar
-          position="fixed"
-          sx={{
-            width: `calc(100vw - ${currentDrawerWidth}px)`,
-            ml: 0,
-            backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#1976d2',
-            zIndex: 1202,
-          }}
-        >
-          <Container maxWidth="xl">
-            <Toolbar>
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={handleDrawerToggle}
-                sx={{ mr: 2, display: { sm: 'none' } }}
-              >
-                <MenuIcon />
-              </IconButton>
-              <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
-              </Typography>
-              
-              <Button
-                color="inherit"
-                onClick={() => navigate('/client')}
-                startIcon={<WebIcon />}
-                sx={{ mr: 2 }}
-              >
-                На сайт
-              </Button>
-              
-              {isAuthenticated ? (
-                <>
-                  <IconButton
-                    size="large"
-                    edge="end"
-                    aria-label="account of current user"
-                    aria-controls="menu-appbar"
-                    aria-haspopup="true"
-                    onClick={handleUserMenuOpen}
-                    color="inherit"
-                  >
-                    <AccountIcon />
-                  </IconButton>
-                  <Menu
-                    id="menu-appbar"
-                    anchorEl={userMenuAnchorEl}
-                    anchorOrigin={{
-                      vertical: 'bottom',
-                      horizontal: 'right',
-                    }}
-                    keepMounted
-                    transformOrigin={{
-                      vertical: 'top',
-                      horizontal: 'right',
-                    }}
-                    open={Boolean(userMenuAnchorEl)}
-                    onClose={handleUserMenuClose}
-                  >
-                    <MenuItem onClick={handleLogout}>Выйти</MenuItem>
-                  </Menu>
-                </>
-              ) : (
-                <Button 
-                  color="inherit"
-                  onClick={() => navigate('/login')}
-                >
-                  Войти
-                </Button>
-              )}
-              <ThemeToggle />
-            </Toolbar>
-          </Container>
-        </AppBar>
+        {/* Универсальная верхняя панель */}
+        <CustomAppBar
+          title="Твоя шина - Администратор"
+          onDrawerToggle={handleDrawerToggle}
+          profileActions={[{ label: 'Выйти', onClick: handleLogout }]}
+          username={user ? `${user.first_name} ${user.last_name}` : ''}
+          rightContent={<ThemeToggle />}
+        />
         <Toolbar />
         <Container maxWidth="xl" sx={{ p: 3, flex: 1, boxSizing: 'border-box' }}>
           <Outlet />
