@@ -23,7 +23,10 @@ const StyledDivider = styled(MuiDivider)(({ theme }) => {
 });
 
 // Стилизованный компонент для текста
-const DividerText = styled('span')<{ padding?: number | string }>(({ theme, padding }) => {
+const DividerText = styled('span', {
+  // Исключаем кастомные пропы из передачи в DOM
+  shouldForwardProp: (prop) => prop !== 'padding',
+})<{ padding?: number | string }>(({ theme, padding }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   return {

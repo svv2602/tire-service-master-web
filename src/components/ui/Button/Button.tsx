@@ -15,7 +15,10 @@ export interface ButtonProps extends Omit<MuiButtonProps, 'variant'> {
 }
 
 /** Стилизованная кнопка */
-const StyledButton = styled(MuiButton)<ButtonProps>(({ theme, variant }) => {
+const StyledButton = styled(MuiButton, {
+  // Исключаем кастомные пропы из передачи в DOM
+  shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'loading',
+})<ButtonProps>(({ theme, variant }) => {
   // Маппинг наших вариантов на варианты MUI
   const variantMapping: Record<ButtonVariant, MuiButtonProps['variant']> = {
     primary: 'contained',

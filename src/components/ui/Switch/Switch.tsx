@@ -28,7 +28,10 @@ export interface SwitchProps extends Omit<MuiSwitchProps, 'size'> {
 }
 
 /** Стилизованный переключатель */
-const StyledSwitch = styled(MuiSwitch)<{ customSize?: 'small' | 'medium' | 'large' }>(({ theme, customSize = 'medium' }) => {
+const StyledSwitch = styled(MuiSwitch, {
+  // Исключаем кастомные пропы из передачи в DOM
+  shouldForwardProp: (prop) => prop !== 'customSize',
+})<{ customSize?: 'small' | 'medium' | 'large' }>(({ theme, customSize = 'medium' }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
   const sizes = {

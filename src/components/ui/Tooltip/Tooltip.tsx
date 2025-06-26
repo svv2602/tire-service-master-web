@@ -23,7 +23,10 @@ export interface TooltipProps extends Omit<MuiTooltipProps, 'title'> {
   arrow?: boolean;
 }
 
-const StyledTooltip = styled(MuiTooltip)<TooltipProps>(({ theme, variant = 'dark', maxWidth = 300 }) => ({
+const StyledTooltip = styled(MuiTooltip, {
+  // Исключаем кастомные пропы из передачи в DOM
+  shouldForwardProp: (prop) => prop !== 'variant' && prop !== 'maxWidth',
+})<TooltipProps>(({ theme, variant = 'dark', maxWidth = 300 }) => ({
   '& .MuiTooltip-tooltip': {
     backgroundColor: variant === 'light' 
       ? 'rgba(255, 255, 255, 0.95)' 
