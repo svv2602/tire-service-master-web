@@ -80,7 +80,7 @@ const BookingSuccessPage: React.FC = () => {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             Главная
           </Link>
-                        <Link to="/client/booking/new-with-availability" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
+                        <Link to="/client/booking" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
             Запись на услугу
           </Link>
           <Typography sx={{ color: colors.textPrimary }}>Подтверждение</Typography>

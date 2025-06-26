@@ -158,7 +158,7 @@ const BookingsPage: React.FC = () => {
   };
 
   const handleCreateBooking = () => {
-    navigate('/client/booking/new-with-availability');
+          navigate('/client/booking');
   };
 
   // Вспомогательные функции для Autocomplete

@@ -104,7 +104,7 @@ const ArticleDetailPage = lazy(() => import('./pages/knowledge-base/ArticleDetai
 const ClientMainPage = lazy(() => import('./pages/client/ClientMainPage'));
 const ClientServicesPage = lazy(() => import('./pages/client/ClientServicesPage'));
 const ClientSearchPage = lazy(() => import('./pages/client/ClientSearchPage'));
-const ClientBookingPage = lazy(() => import('./pages/client/ClientBookingPage'));
+
 const ClientProfilePage = lazy(() => import('./pages/client/ClientProfilePage'));
 const BookingSuccessPage = lazy(() => import('./pages/client/BookingSuccessPage'));
 const MyBookingsPage = lazy(() => import('./pages/client/MyBookingsPage'));
@@ -199,8 +199,7 @@ function App() {
                     {/* Клиентские маршруты */}
                     <Route path="/client/services" element={<ClientServicesPage />} />
                     <Route path="/client/search" element={<ClientSearchPage />} />
-                    <Route path="/client/booking" element={<ClientBookingPage />} />
-                    <Route path="/client/booking/new-with-availability" element={<NewBookingWithAvailabilityPage />} />
+                    <Route path="/client/booking" element={<NewBookingWithAvailabilityPage />} />
                     <Route path="/client/booking/success" element={<BookingSuccessPage />} />
                     <Route path="/client/profile" element={<ClientProfilePage />} />
                     

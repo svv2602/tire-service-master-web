@@ -105,7 +105,7 @@ const ClientNavigation: React.FC<ClientNavigationProps> = ({
           <Button 
             color="inherit" 
             component={Link} 
-            to="/client/booking/new-with-availability"
+                            to="/client/booking"
             sx={{ color: colors.textSecondary }}
             startIcon={<BookOnlineIcon />}
           >

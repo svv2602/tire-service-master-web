@@ -111,7 +111,7 @@ const ReviewFormPage: React.FC = () => {
           <Button 
             variant="contained" 
             color="primary"
-            onClick={() => navigate('/client/booking/new-with-availability')}
+                            onClick={() => navigate('/client/booking')}
             sx={{ mt: 2 }}
           >
             {t('Записаться на обслуживание')}

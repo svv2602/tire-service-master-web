@@ -102,7 +102,7 @@ const BookingsPageNew: React.FC = () => {
   }, [deleteBooking, refetchBookings]);
 
   const handleCreateBooking = useCallback(() => {
-    navigate('/client/booking/new-with-availability');
+          navigate('/client/booking');
   }, [navigate]);
 
   // Конфигурация заголовка

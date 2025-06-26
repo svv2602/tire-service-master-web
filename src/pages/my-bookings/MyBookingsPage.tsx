@@ -119,7 +119,7 @@ const MyBookingsPage: React.FC = () => {
           <Button 
             variant="contained" 
             startIcon={<AddIcon />}
-            onClick={() => window.location.href = '/client/booking/new-with-availability'}
+                            onClick={() => window.location.href = '/client/booking'}
             sx={{ ml: 2 }}
           >
             Записаться на обслуживание
@@ -173,7 +173,7 @@ const MyBookingsPage: React.FC = () => {
               <Button 
                 variant="contained" 
                 startIcon={<AddIcon />}
-                onClick={() => window.location.href = '/client/booking/new-with-availability'}
+                onClick={() => window.location.href = '/client/booking'}
               >
                 Записаться на обслуживание
               </Button>

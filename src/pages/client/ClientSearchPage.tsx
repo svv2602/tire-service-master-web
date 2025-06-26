@@ -665,7 +665,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
   ];
 
   const handleBooking = () => {
-    navigate('/client/booking/new-with-availability', { 
+            navigate('/client/booking', { 
       state: { 
         servicePointId: servicePoint.id,
         servicePointName: servicePoint.name,
