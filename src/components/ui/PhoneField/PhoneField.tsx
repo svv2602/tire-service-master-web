@@ -1,5 +1,5 @@
-import React from 'react';
-import InputMask from 'react-input-mask';
+import React, { useRef } from 'react';
+import { IMaskInput } from 'react-imask';
 import { TextField, TextFieldProps } from '../TextField';
 import { InputAdornment } from '@mui/material';
 import { Phone as PhoneIcon } from '@mui/icons-material';
@@ -23,8 +23,32 @@ export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' |
   showIcon?: boolean;
 }
 
+// Компонент маски для IMaskInput
+interface CustomMaskProps {
+  onChange: (event: { target: { name: string; value: string } }) => void;
+  name: string;
+}
+
+const PhoneMask = React.forwardRef<HTMLInputElement, CustomMaskProps>(
+  function PhoneMask(props, ref) {
+    const { onChange, ...other } = props;
+    return (
+      <IMaskInput
+        {...other}
+        mask="+380 (00) 000-00-00"
+        definitions={{
+          '0': /[0-9]/,
+        }}
+        inputRef={ref}
+        onAccept={(value: any) => onChange({ target: { name: props.name, value } })}
+        overwrite
+      />
+    );
+  },
+);
+
 /**
- * Поле ввода телефона с маской +38 (___) ___-__-__
+ * Поле ввода телефона с маской +380 (___) ___-__-__
  */
 export const PhoneField: React.FC<PhoneFieldProps> = ({
   value = '',
@@ -44,32 +68,26 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   };
 
   return (
-    <InputMask
-      mask="+380 (99) 999-99-99"
+    <TextField
+      {...props}
+      type="tel"
+      label={label}
+      required={required}
+      error={error}
+      helperText={helperText}
       value={value || ''}
       onChange={handleChange}
       onBlur={onBlur}
-    >
-      {(inputProps: any) => (
-        <TextField
-          {...props}
-          {...inputProps}
-          type="tel"
-          label={label}
-          required={required}
-          error={error}
-          helperText={helperText}
-          InputProps={{
-            ...props.InputProps,
-            startAdornment: showIcon ? (
-              <InputAdornment position="start">
-                <PhoneIcon color={error ? 'error' : 'action'} />
-              </InputAdornment>
-            ) : null,
-          }}
-        />
-      )}
-    </InputMask>
+      InputProps={{
+        ...props.InputProps,
+        inputComponent: PhoneMask as any,
+        startAdornment: showIcon ? (
+          <InputAdornment position="start">
+            <PhoneIcon color={error ? 'error' : 'action'} />
+          </InputAdornment>
+        ) : null,
+      }}
+    />
   );
 };
 

@@ -34,6 +34,11 @@ import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
 
+// Импорт API хуков
+import { useGetCityByIdQuery } from '../../../api/cities.api';
+import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
+import { useGetCarTypeByIdQuery } from '../../../api/carTypes.api';
+
 interface ReviewStepProps {
   formData: BookingFormData;
   setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
@@ -48,19 +53,72 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
   const theme = useTheme();
   
+  // API запросы для получения названий
+  const { data: cityData, isLoading: cityLoading, error: cityError } = useGetCityByIdQuery(formData.city_id || 0, {
+    skip: !formData.city_id
+  });
+  
+  // Отладочная информация для города
+  console.log('ReviewStep - City data:', {
+    city_id: formData.city_id,
+    cityData,
+    cityLoading,
+    cityError,
+    cityName: (cityData as any)?.name || (cityData as any)?.data?.name
+  });
+  
+  const { data: servicePointData } = useGetServicePointBasicInfoQuery(
+    formData.service_point_id?.toString() || '', 
+    {
+      skip: !formData.service_point_id
+    }
+  );
+  
+  const { data: carTypeData } = useGetCarTypeByIdQuery(
+    formData.car_type_id?.toString() || '', 
+    {
+      skip: !formData.car_type_id
+    }
+  );
+  
   // Функции для получения названий
   const getServicePointName = () => {
-    // В реальном приложении здесь будет запрос к API
+    if (servicePointData) {
+      return servicePointData.name || `Точка обслуживания #${formData.service_point_id}`;
+    }
     return `Точка обслуживания #${formData.service_point_id}`;
   };
   
+  const getServicePointAddress = () => {
+    if (servicePointData && cityData) {
+      // API возвращает данные напрямую, не в формате { data: City }
+      return `${(cityData as any).name}, ${servicePointData.address}`;
+    }
+    return servicePointData?.address || '';
+  };
+  
+  const getServicePointPhone = () => {
+    return servicePointData?.phone || '';
+  };
+  
   const getCityName = () => {
-    // В реальном приложении здесь будет запрос к API
+    if (cityLoading) {
+      return 'Загрузка...';
+    }
+    if (cityError) {
+      return `Город #${formData.city_id} (ошибка загрузки)`;
+    }
+    if (cityData) {
+      // API возвращает данные напрямую, не в формате { data: City }
+      return (cityData as any).name || `Город #${formData.city_id}`;
+    }
     return `Город #${formData.city_id}`;
   };
   
   const getCarTypeName = () => {
-    // В реальном приложении здесь будет запрос к API
+    if (carTypeData) {
+      return carTypeData.name || `Тип автомобиля #${formData.car_type_id}`;
+    }
     return `Тип автомобиля #${formData.car_type_id}`;
   };
   
@@ -122,6 +180,30 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   secondary={getServicePointName()}
                 />
               </ListItem>
+              
+              {getServicePointAddress() && (
+                <ListItem>
+                  <ListItemIcon>
+                    <LocationIcon color="action" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Адрес"
+                    secondary={getServicePointAddress()}
+                  />
+                </ListItem>
+              )}
+              
+              {getServicePointPhone() && (
+                <ListItem>
+                  <ListItemIcon>
+                    <PhoneIcon color="action" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Телефон"
+                    secondary={getServicePointPhone()}
+                  />
+                </ListItem>
+              )}
               
               <ListItem>
                 <ListItemIcon>

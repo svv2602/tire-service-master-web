@@ -90,6 +90,17 @@ export const authApi = baseApi.injectEndpoints({
         method: 'GET',
         credentials: 'include', // Важно для отправки куки
       }),
+      transformResponse: (response: { user: CurrentUserResponse }) => {
+        console.log('🔄 Трансформация ответа getCurrentUser:', response);
+        return response.user;
+      },
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('❌ Ошибка getCurrentUser:', response);
+        return {
+          status: response.status,
+          data: response.data?.error || 'Ошибка получения данных пользователя'
+        };
+      },
     }),
 
     // Обновление токена

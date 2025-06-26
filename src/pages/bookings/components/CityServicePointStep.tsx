@@ -224,12 +224,15 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
                 }}
               />
             )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props}>
-                <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                {option.name}
-              </Box>
-            )}
+            renderOption={(props, option) => {
+              const { key, ...otherProps } = props;
+              return (
+                <Box component="li" key={key} {...otherProps}>
+                  <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                  {option.name}
+                </Box>
+              );
+            }}
           />
           
           {citiesError && (

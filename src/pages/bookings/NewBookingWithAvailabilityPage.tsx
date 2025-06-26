@@ -19,11 +19,12 @@ import ClientNavigation from '../../components/client/ClientNavigation';
 import { 
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 
 // Импорт компонентов UI
-import { Stepper } from '../../components/ui/Stepper';
+import Stepper from '../../components/ui/Stepper';
+import { SuccessDialog } from '../../components/ui/Dialog';
 
 // Импорт шагов формы
 import {
@@ -152,7 +153,17 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
-  const { data: currentUser } = useGetCurrentUserQuery();
+  // Состояние модального окна успеха
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<any>(null);
+  
+  const { data: currentUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
+    undefined, // Параметры не нужны
+    { 
+      skip: !isAuthenticated, // Пропускаем запрос если пользователь не авторизован
+      refetchOnMountOrArgChange: true // Перезагружаем при монтировании компонента
+    }
+  );
   
   // Получаем параметры из URL и state (если переданы)
   useEffect(() => {
@@ -191,21 +202,63 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     
     // Обновляем данные формы
     setFormData(newFormData);
+  }, [location.search, location.state]);
+
+  // Отдельный useEffect для предзаполнения данных пользователя
+  useEffect(() => {
+    console.log('🔍 Проверка данных пользователя для предзаполнения:', {
+      isAuthenticated,
+      isLoadingCurrentUser,
+      hasUser: !!user,
+      hasCurrentUser: !!currentUser,
+      currentUserError: currentUserError,
+      userFromRedux: user,
+      userFromAPI: currentUser,
+      currentFormData: formData.client
+    });
+
+    // Используем данные из API (currentUser) с приоритетом над Redux (user)
+    const userData = currentUser || user;
     
-    // Если пользователь аутентифицирован, предзаполняем его данные
-    if (isAuthenticated && user) {
-      setFormData(prev => ({
-        ...prev,
-        client: {
-          ...prev.client,
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          email: user.email || '',
-          phone: user.phone || '',
-        }
-      }));
+    if (isAuthenticated && userData && !isLoadingCurrentUser) {
+      console.log('✅ Предзаполняем данные пользователя:', userData);
+      
+      // Проверяем, не заполнены ли уже данные (чтобы не перезаписывать при редактировании)
+      const shouldPrefill = !formData.client.first_name && !formData.client.phone;
+      
+      if (shouldPrefill) {
+        console.log('🔄 Выполняем предзаполнение полей...');
+        setFormData(prev => ({
+          ...prev,
+          client: {
+            ...prev.client,
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+          }
+        }));
+        console.log('✅ Данные пользователя предзаполнены');
+      } else {
+        console.log('ℹ️ Данные уже заполнены, пропускаем предзаполнение:', {
+          current_first_name: formData.client.first_name,
+          current_phone: formData.client.phone
+        });
+      }
+    } else if (isAuthenticated && !userData && !isLoadingCurrentUser && currentUserError) {
+      console.error('❌ Ошибка загрузки данных пользователя:', currentUserError);
+    } else if (isAuthenticated && isLoadingCurrentUser) {
+      console.log('⏳ Загружаем данные пользователя...');
+    } else if (!isAuthenticated) {
+      console.log('❌ Пользователь не авторизован');
+    } else {
+      console.log('⚠️ Условия для предзаполнения не выполнены:', {
+        isAuthenticated,
+        hasUserData: !!userData,
+        isLoadingCurrentUser
+      });
     }
-  }, [location.search, location.state, isAuthenticated, user]);
+  }, [isAuthenticated, user, currentUser, isLoadingCurrentUser, currentUserError]);
   
   // Мутация для создания бронирования
   const [createClientBooking] = useCreateClientBookingMutation();
@@ -301,7 +354,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setSubmitError(null);
 
       // Форматируем данные для API
-      const bookingData = {
+      const bookingData: any = {
         booking: {
           service_point_id: formData.service_point_id,
           booking_date: formData.booking_date,
@@ -314,28 +367,31 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           car_brand: formData.car_brand || '',
           car_model: formData.car_model || ''
         },
-        services: formData.services,
-        client: {
+        services: formData.services
+      };
+
+      // Для авторизованных пользователей НЕ отправляем данные клиента
+      // Сервер автоматически использует current_user.client
+      if (!currentUser) {
+        bookingData.client = {
           first_name: formData.client.first_name,
           last_name: formData.client.last_name,
           phone: formData.client.phone.replace(/[^\d+]/g, ''),
           email: formData.client.email || ''
-        }
-      };
+        };
+      }
 
       // Отладочная информация
       console.log('Booking data being sent:', bookingData);
+      console.log('Current user:', currentUser);
+      console.log('Is authenticated:', isAuthenticated);
 
       // Отправляем запрос
       const response = await createClientBooking(bookingData).unwrap();
 
-      // Перенаправляем на страницу успешного бронирования
-      navigate(`/client/booking/success/${response.id}`, {
-        state: {
-          bookingData: response,
-          fromNewBooking: true
-        }
-      });
+      // Сохраняем данные созданного бронирования и показываем модальное окно
+      setCreatedBooking(response);
+      setSuccessDialogOpen(true);
 
     } catch (error: any) {
       console.error('Ошибка создания бронирования:', error);
@@ -356,6 +412,38 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Обработчики модального окна успеха
+  const handleSuccessDialogClose = () => {
+    setSuccessDialogOpen(false);
+    setCreatedBooking(null);
+  };
+
+  const handleGoToProfile = () => {
+    handleSuccessDialogClose();
+    if (currentUser) {
+      navigate('/client/profile/bookings');
+    } else {
+      navigate('/client/auth/login', {
+        state: { 
+          redirectTo: '/client/profile/bookings',
+          message: 'Войдите в систему, чтобы просмотреть ваши бронирования'
+        }
+      });
+    }
+  };
+
+  const handleCreateAnother = () => {
+    handleSuccessDialogClose();
+    // Сбрасываем форму для нового бронирования
+    setFormData(initialFormData);
+    setActiveStep(0);
+  };
+
+  const handleGoHome = () => {
+    handleSuccessDialogClose();
+    navigate('/client');
   };
   
   // Рендер текущего шага
@@ -462,6 +550,35 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           </Box>
         </Paper>
       </Container>
+
+      {/* Модальное окно успешного создания бронирования */}
+      <SuccessDialog
+        open={successDialogOpen}
+        title="Бронирование создано!"
+        message="Спасибо за ваше бронирование!"
+        description="Мы отправили ваш запрос в сервисную точку для подтверждения времени и деталей обслуживания. Вы можете проверить информацию в вашем личном кабинете."
+        bookingDetails={createdBooking ? {
+          id: createdBooking.id,
+          date: createdBooking.booking_date,
+          time: createdBooking.start_time,
+          servicePoint: createdBooking.service_point?.name,
+          servicePointAddress: createdBooking.service_point?.city?.name 
+            ? `${createdBooking.service_point.city.name}, ${createdBooking.service_point?.address}`
+            : createdBooking.service_point?.address,
+          servicePointPhone: createdBooking.service_point?.phone,
+          clientName: createdBooking.client?.first_name && createdBooking.client?.last_name 
+            ? `${createdBooking.client.first_name} ${createdBooking.client.last_name}` 
+            : undefined,
+          carInfo: createdBooking.car_brand && createdBooking.car_model 
+            ? `${createdBooking.car_brand} ${createdBooking.car_model}` 
+            : undefined,
+        } : undefined}
+        primaryButtonText={currentUser ? "Мои бронирования" : "На главную"}
+        secondaryButtonText="Создать еще одно бронирование"
+        onPrimaryAction={currentUser ? handleGoToProfile : handleGoHome}
+        onSecondaryAction={handleCreateAnother}
+        onClose={handleGoHome}
+      />
     </Box>
   );
 };
