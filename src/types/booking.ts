@@ -75,6 +75,8 @@ export interface BookingFilter extends PaginationFilter {
   date?: string;
   from_date?: string;
   to_date?: string;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 // Типы статусов бронирования

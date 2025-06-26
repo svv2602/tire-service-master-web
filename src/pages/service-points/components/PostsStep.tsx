@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -16,13 +16,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Table as MuiTable,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
+
   Chip,
   Select,
   MenuItem,
@@ -55,6 +49,8 @@ import {
   getFormStyles,
   getTableStyles 
 } from '../../../styles';
+import { Table } from '../../../components/ui';
+import type { Column } from '../../../components/ui';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -121,7 +117,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   };
 
   // Проверяем на дубликаты при изменении постов
-  React.useEffect(() => {
+  useEffect(() => {
     recalculatePostNumbers();
   }, [formik.values.service_posts?.length]);
 
@@ -715,14 +711,14 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
   };
 
   // Эффект для пересчета при изменении дня
-  React.useEffect(() => {
+  useEffect(() => {
     if (isExpanded && livePreviewData) {
       handleLivePreview();
     }
   }, [selectedDay]);
 
   // Эффект для пересчета при изменении данных формы
-  React.useEffect(() => {
+  useEffect(() => {
     if (isExpanded && formData) {
       const timeoutId = setTimeout(() => {
         handleLivePreview();
@@ -875,6 +871,103 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     });
   }
 
+  // Конфигурация колонок для централизованного компонента Table
+  const scheduleTableColumns: Column[] = [
+    {
+      id: 'time',
+      label: 'Время',
+      minWidth: 100,
+      align: 'left',
+      format: (value: string) => (
+        <Typography variant="body2" fontWeight="medium">
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'availablePosts',
+      label: 'Доступные посты',
+      minWidth: 150,
+      align: 'center',
+      format: (value: string) => (
+        <Typography variant="body2">
+          {value}
+        </Typography>
+      )
+    },
+    {
+      id: 'postDetails',
+      label: 'Детали постов',
+      minWidth: 250,
+      align: 'left',
+      wrap: true,
+      format: (value: any[]) => (
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+          {value?.length > 0 ? (
+            value.map((post: any, idx: number) => (
+              <Chip
+                key={idx}
+                label={post.label}
+                size="small"
+                variant="outlined"
+                color={post.hasCustomSchedule ? 'secondary' : 'default'}
+              />
+            ))
+          ) : (
+            <Typography variant="caption" color="text.secondary">
+              Нет доступных постов
+            </Typography>
+          )}
+        </Box>
+      )
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      minWidth: 120,
+      align: 'center',
+      format: (value: { isAvailable: boolean; label: string }) => (
+        <Chip
+          label={value.label}
+          color={value.isAvailable ? 'success' : 'default'}
+          size="small"
+        />
+      )
+    }
+  ];
+
+  // Преобразование данных timeSlots в формат для Table
+  const scheduleTableRows = timeSlots.map((slot: any) => {
+    const isUsingApiDataForSlot = isUsingApiData;
+    const availablePostsCount = isUsingApiDataForSlot 
+      ? slot.available_posts 
+      : slot.availablePosts;
+    const totalPostsCount = isUsingApiDataForSlot 
+      ? slot.total_posts 
+      : slot.totalPosts;
+    const isAvailable = isUsingApiDataForSlot 
+      ? slot.is_available 
+      : slot.isAvailable;
+    const postDetails = isUsingApiDataForSlot 
+      ? slot.post_details 
+      : slot.postDetails;
+
+    return {
+      time: slot.time,
+      availablePosts: `${availablePostsCount} из ${totalPostsCount}`,
+      postDetails: postDetails?.map((post: any) => ({
+        label: isUsingApiDataForSlot
+          ? `${post.name} (${post.duration_minutes}мин)`
+          : `${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`,
+        hasCustomSchedule: post.hasCustomSchedule || false
+      })) || [],
+      status: {
+        isAvailable,
+        label: isAvailable ? 'Доступно' : 'Недоступно'
+      }
+    };
+  });
+
   if (workingDays.length === 0) {
     return null;
   }
@@ -940,85 +1033,12 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
               />
             </Box>
 
-            <TableContainer component={Paper} variant="outlined">
-              <MuiTable size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Время</strong></TableCell>
-                    <TableCell><strong>Доступные посты</strong></TableCell>
-                    <TableCell><strong>Детали постов</strong></TableCell>
-                    <TableCell><strong>Статус</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {timeSlots.map((slot: any, index: number) => (
-                    <TableRow 
-                      key={slot.time}
-                      sx={{ 
-                        backgroundColor: index % 2 === 0 ? 'grey.50' : 'transparent',
-                        '&:hover': { backgroundColor: 'grey.100' }
-                      }}
-                    >
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="medium">
-                          {slot.time}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {/* Используем данные из API или fallback */}
-                          {isUsingApiData 
-                            ? `${(slot as any).available_posts} из ${(slot as any).total_posts}`
-                            : `${(slot as any).availablePosts} из ${(slot as any).totalPosts}`
-                          }
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {/* Отображаем детали постов */}
-                          {(isUsingApiData 
-                            ? (slot as any).post_details 
-                            : (slot as any).postDetails
-                          )?.map((post: any, idx: number) => (
-                            <Chip
-                              key={isUsingApiData ? post.number : post.number}
-                              label={isUsingApiData
-                                ? `${post.name} (${post.duration_minutes}мин)`
-                                : `${post.name}${post.hasCustomSchedule ? ' (инд.)' : ''}`
-                              }
-                              size="small"
-                              variant="outlined"
-                              color={post.hasCustomSchedule ? 'secondary' : 'default'}
-                            />
-                          ))}
-                          {(isUsingApiData
-                            ? (slot as any).available_posts === 0
-                            : (slot as any).availablePosts === 0
-                          ) && (
-                            <Typography variant="caption" color="text.secondary">
-                              Нет доступных постов
-                            </Typography>
-                          )}
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={(isUsingApiData 
-                            ? (slot as any).is_available 
-                            : (slot as any).isAvailable
-                          ) ? 'Доступно' : 'Недоступно'}
-                          color={(isUsingApiData 
-                            ? (slot as any).is_available 
-                            : (slot as any).isAvailable
-                          ) ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </MuiTable>
-            </TableContainer>
+            <Table
+              columns={scheduleTableColumns}
+              rows={scheduleTableRows}
+              responsive={true}
+              stickyHeader={false}
+            />
 
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
