@@ -771,12 +771,13 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     setIsExpanded(expanded);
     
     if (expanded && formData && servicePointId) {
-      // При открытии рассчитываем live preview
+      // При открытии рассчитываем live preview для существующих точек
       handleLivePreview();
     } else if (!expanded) {
       // При закрытии очищаем live preview
       clearLivePreview();
     }
+    // Для новых точек (без servicePointId) используем локальную генерацию слотов
   };
 
   // Эффект для пересчета при изменении дня
@@ -886,7 +887,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
       slots.push({
         time: timeString,
         availablePosts: availablePostsAtTime.length,
-        totalPosts: activePosts.length,
+        totalPosts: filteredPosts.filter(p => p.is_active).length,
         isAvailable: availablePostsAtTime.length > 0,
         postDetails: availablePostsAtTime.map(post => ({
           name: post.name,
@@ -1079,6 +1080,17 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           настроенного графика работы и количества активных постов.
         </Typography>
 
+        {/* Информационное сообщение для новых точек */}
+        {!servicePointId && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              <strong>Режим предварительного просмотра:</strong> Поскольку сервисная точка еще не сохранена, 
+              расписание генерируется на основе введенных данных формы. 
+              Для получения точного расписания с учетом всех настроек сохраните сервисную точку.
+            </Typography>
+          </Alert>
+        )}
+
         {/* Выбор дня недели и категории */}
         <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <FormControl sx={{ minWidth: 200 }}>
@@ -1125,7 +1137,15 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           </FormControl>
         </Box>
 
-        {timeSlots.length > 0 ? (
+        {/* Проверка на отсутствие постов для выбранной категории */}
+        {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0 ? (
+          <Alert severity="warning">
+            <Typography variant="body2">
+              Для выбранной категории "{categories.find(c => c.id === selectedCategoryId)?.name || 'Неизвестная категория'}" 
+              нет активных постов обслуживания. Выберите другую категорию или добавьте посты для данной категории.
+            </Typography>
+          </Alert>
+        ) : timeSlots.length > 0 ? (
           <>
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
               <AccessTimeIcon color="primary" />
@@ -1160,7 +1180,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
                   ? 'в режиме live preview с текущими данными формы'
                   : isUsingApiData
                     ? 'с помощью API с учетом индивидуальной длительности слота каждого поста'
-                    : 'с учетом индивидуальной длительности слота каждого поста (предварительно)'
+                    : 'локально на основе данных формы (предварительный режим)'
                 } в рамках рабочего времени. 
                 Количество доступных постов зависит от активных постов обслуживания и их индивидуальных расписаний.
                 <br />
@@ -1171,13 +1191,22 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
                     🔄 <strong>Live Preview:</strong> Изменения в форме автоматически отражаются в расписании без сохранения данных.
                   </>
                 )}
+                {!servicePointId && (
+                  <>
+                    <br />
+                    ⚠️ <strong>Предварительный режим:</strong> Для получения точного расписания с учетом всех настроек сохраните сервисную точку.
+                  </>
+                )}
               </Typography>
             </Alert>
           </>
         ) : (
           <Alert severity="warning">
             <Typography variant="body2">
-              {selectedDayInfo?.name} - выходной день. Выберите рабочий день для просмотра расписания.
+              {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0
+                ? `Для выбранной категории "${categories.find(c => c.id === selectedCategoryId)?.name || 'Неизвестная категория'}" нет активных постов обслуживания.`
+                : `${selectedDayInfo?.name} - выходной день. Выберите рабочий день для просмотра расписания.`
+              }
             </Typography>
           </Alert>
         )}

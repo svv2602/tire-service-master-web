@@ -328,6 +328,7 @@ const ServicePointFormPageNew: React.FC = () => {
             slot_duration: post.slot_duration,
             is_active: post.is_active,
             post_number: post.post_number,
+            service_category_id: post.service_category_id,
             _destroy: post._destroy || false,
             has_custom_schedule: post.has_custom_schedule || false,
             working_days: post.has_custom_schedule ? post.working_days : undefined,
