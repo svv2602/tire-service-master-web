@@ -20,6 +20,9 @@ import {
   ListSubheader,
   Collapse,
   useTheme,
+  Slider,
+  Tooltip,
+  Container,
 } from '@mui/material';
 // Импорт улучшенной централизованной системы стилей
 import { 
@@ -54,6 +57,10 @@ import {
   Add as AddIcon,
   ManageAccounts as ManageIcon,
   Palette as StyleGuideIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+  UnfoldLess as CollapseIcon,
+  UnfoldMore as ExpandIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -64,7 +71,10 @@ import { UserRole } from '../../types';
 import { User } from '../../types/user';
 import ThemeToggle from '../ui/ThemeToggle';
 
-const drawerWidth = 240;
+// Константы для управления панелью
+const MIN_DRAWER_WIDTH = 72;
+const DEFAULT_DRAWER_WIDTH = 280;
+const MAX_DRAWER_WIDTH = 400;
 
 interface MenuSection {
   title: string;
@@ -92,6 +102,14 @@ const MainLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
+  
+  // Новые состояния для управления панелью
+  const [drawerWidth, setDrawerWidth] = useState(DEFAULT_DRAWER_WIDTH);
+  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(DEFAULT_DRAWER_WIDTH);
+  
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -122,13 +140,13 @@ const MainLayout: React.FC = () => {
     }
   }, [dispatch, user, navigate, isAuthenticated]);
 
-  // Инициализация состояния открытия секций меню
+  // Инициализация состояния открытия секций меню - ВСЕ СЕКЦИИ СВЕРНУТЫ ПО УМОЛЧАНИЮ
   useEffect(() => {
     // Получаем все секции меню
     const sections = getMenuSections();
-    // Создаем объект с состоянием "открыто" для всех секций
+    // Создаем объект с состоянием "закрыто" для всех секций
     const initialOpenSections = sections.reduce((acc, section) => {
-      acc[section.title] = true; // устанавливаем true для открытия всех секций
+      acc[section.title] = false; // устанавливаем false для сворачивания всех секций
       return acc;
     }, {} as {[key: string]: boolean});
     
@@ -166,6 +184,61 @@ const MainLayout: React.FC = () => {
     }));
   };
 
+  // Функции управления панелью
+  const toggleDrawerCollapse = () => {
+    setIsDrawerCollapsed(!isDrawerCollapsed);
+  };
+
+  // Функции для изменения ширины мышью
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsResizing(true);
+    setStartX(e.clientX);
+    setStartWidth(drawerWidth);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      
+      const newWidth = startWidth + (e.clientX - startX);
+      if (newWidth >= MIN_DRAWER_WIDTH && newWidth <= MAX_DRAWER_WIDTH) {
+        setDrawerWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, startX, startWidth, drawerWidth]);
+
+  const collapseAllSections = () => {
+    const sections = getMenuSections();
+    const collapsedSections = sections.reduce((acc, section) => {
+      acc[section.title] = false;
+      return acc;
+    }, {} as {[key: string]: boolean});
+    setOpenSections(collapsedSections);
+  };
+
+  const expandAllSections = () => {
+    const sections = getMenuSections();
+    const expandedSections = sections.reduce((acc, section) => {
+      acc[section.title] = true;
+      return acc;
+    }, {} as {[key: string]: boolean});
+    setOpenSections(expandedSections);
+  };
+
   // Определяем структуру меню по разделам
   const getMenuSections = (): MenuSection[] => {
     return [
@@ -199,58 +272,37 @@ const MainLayout: React.FC = () => {
             description: 'Управление пользователями системы',
           },
           {
+            text: 'Партнеры',
+            icon: <CompanyIcon />,
+            path: '/admin/partners',
+            roles: [UserRole.ADMIN],
+            description: 'Управление партнерами',
+          },
+          {
             text: 'Клиенты',
-            icon: <UserIcon />,
+            icon: <PeopleIcon />,
             path: '/admin/clients',
             roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: 'Управление клиентами',
           },
-          {
-            text: 'Партнеры',
-            icon: <CompanyIcon />,
-            path: '/admin/partners',
-            roles: [UserRole.ADMIN, UserRole.MANAGER],
-            description: 'Управление партнерами',
-          },
+        ],
+      },
+      {
+        title: 'Сервис',
+        items: [
           {
             text: 'Сервисные точки',
             icon: <LocationOnIcon />,
             path: '/admin/service-points',
-            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
-            description: 'Управление сервисными точками',
+            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Управление точками обслуживания',
           },
           {
-            text: 'Автомобили',
-            icon: <CarIcon />,
-            path: '/admin/cars',
-            roles: [UserRole.ADMIN, UserRole.MANAGER],
-            description: 'Управление марками и моделями',
-          },
-        ],
-      },
-      {
-        title: 'Справочники',
-        items: [
-          {
-            text: 'Регионы',
-            icon: <MapIcon />,
-            path: '/admin/regions',
-            roles: [UserRole.ADMIN],
-            description: 'Управление регионами',
-          },
-          {
-            text: 'Бренды авто',
-            icon: <CarIcon />,
-            path: '/admin/car-brands',
-            roles: [UserRole.ADMIN],
-            description: 'Управление брендами автомобилей',
-          },
-          {
-            text: 'Услуги',
-            icon: <ServiceIcon />,
-            path: '/admin/services',
-            roles: [UserRole.ADMIN, UserRole.MANAGER],
-            description: 'Управление услугами',
+            text: 'Мои точки',
+            icon: <LocationOnIcon />,
+            path: '/admin/my-service-points',
+            roles: [UserRole.PARTNER, UserRole.MANAGER],
+            description: 'Управление собственными точками',
           },
         ],
       },
@@ -333,6 +385,25 @@ const MainLayout: React.FC = () => {
         ],
       },
       {
+        title: 'Справочники',
+        items: [
+          {
+            text: 'Регионы и города',
+            icon: <MapIcon />,
+            path: '/admin/regions',
+            roles: [UserRole.ADMIN],
+            description: 'Управление регионами и городами',
+          },
+          {
+            text: 'Автомобили',
+            icon: <CarIcon />,
+            path: '/admin/car-brands',
+            roles: [UserRole.ADMIN],
+            description: 'Управление марками и моделями автомобилей',
+          },
+        ],
+      },
+      {
         title: 'Настройки',
         items: [
           {
@@ -382,45 +453,6 @@ const MainLayout: React.FC = () => {
     return filteredSections;
   };
 
-  // Разрешенные действия для каждой роли (информационный блок)
-  // Использует централизованные стили для консистентного отображения
-  const getRoleCapabilities = () => {
-    if (!user || !(user as User).role) return null;
-
-    const capabilities: { [key in UserRole]: string[] } = {
-      [UserRole.ADMIN]: [
-        'Полный доступ ко всем функциям',
-        'Управление партнерами',
-        'Управление пользователями',
-        'Управление справочниками',
-        'Просмотр статистики'
-      ],
-      [UserRole.PARTNER]: [
-        'Управление своими точками обслуживания',
-        'Просмотр бронирований',
-        'Управление расписанием',
-        'Просмотр статистики'
-      ],
-      [UserRole.MANAGER]: [
-        'Управление бронированиями',
-        'Просмотр статистики',
-        'Работа с клиентами'
-      ],
-      [UserRole.OPERATOR]: [
-        'Обработка бронирований',
-        'Работа с клиентами',
-        'Базовые операции'
-      ],
-      [UserRole.CLIENT]: [
-        'Управление бронированиями',
-        'Просмотр истории',
-        'Управление профилем'
-      ]
-    };
-
-    return capabilities[(user as User).role] || [];
-  };
-
   // Перевод названия роли на русский
   const getRoleName = (role?: UserRole): string => {
     const roleNames = {
@@ -434,279 +466,330 @@ const MainLayout: React.FC = () => {
     return roleNames[role as UserRole] || 'Пользователь';
   };
 
+  // Вычисляем текущую ширину панели
+  const currentDrawerWidth = isDrawerCollapsed ? MIN_DRAWER_WIDTH : drawerWidth;
+
   const drawer = (
-    <div>
-      {/* Заголовок боковой панели с использованием централизованных стилей */}
-      <Toolbar
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100vh', 
+      position: 'relative',
+      width: '100%',
+      overflowX: 'hidden',
+    }}>
+      {/* Зафиксированный заголовок боковой панели */}
+      <Box
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: SIZES.spacing.md, // Консистентные отступы
-          background: theme.palette.primary.main, // Тематический цвет
-          color: theme.palette.primary.contrastText
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: isDrawerCollapsed ? MIN_DRAWER_WIDTH : drawerWidth,
+          zIndex: 1200,
+          background: theme.palette.primary.main,
+          color: theme.palette.primary.contrastText,
+          borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
-        <Typography 
-          variant="h6" 
-          noWrap 
-          component="div" 
-          sx={{ fontWeight: 'bold', fontSize: SIZES.fontSize.lg }} // Унифицированный размер шрифта
+        <Toolbar
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            minHeight: '64px !important',
+            px: 2,
+            width: '100%',
+          }}
         >
-          Твоя шина
-        </Typography>
-      </Toolbar>
-      <Divider />
-      
-      {/* Блок возможностей роли с централизованными стилями */}
-      {user && getRoleCapabilities()}
-      
-      {/* Навигационное меню с применением централизованных стилей */}
-      <List sx={{ padding: SIZES.spacing.xs }}> {/* Консистентные отступы */}
-        {getFilteredMenuSections().map((section) => (
-          <React.Fragment key={section.title}>
-            {/* Заголовок секции с централизованными стилями */}
-            <ListSubheader 
-              onClick={() => toggleSection(section.title)} 
-              sx={{ 
-                cursor: 'pointer', 
-                display: 'flex', 
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: SIZES.fontSize.lg, // Увеличиваем шрифт как просил пользователь
-                fontWeight: 700,
-                height: SIZES.navigation?.sectionTitleHeight || 44,
-                backgroundColor: theme.palette.mode === 'dark' 
-                  ? 'rgba(255, 255, 255, 0.03)'
-                  : 'rgba(0, 0, 0, 0.03)',
-                color: theme.palette.text.primary, // Убираем синий цвет как просил пользователь
-                borderRadius: 0,
-                margin: 0,
-                padding: `${theme.spacing(SIZES.spacing.sm)} ${theme.spacing(SIZES.spacing.md)}`,
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' 
-                    ? 'rgba(255, 255, 255, 0.05)'
-                    : 'rgba(0, 0, 0, 0.05)',
-                },
-                ...interactiveStyles.pressEffect,
-              }}
+          {!isDrawerCollapsed && (
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div" 
+              sx={{ fontWeight: 'bold' }}
             >
-              <Box component="span">{section.title}</Box>
-              {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
-            </ListSubheader>
+              Твоя шина
+            </Typography>
+          )}
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {!isDrawerCollapsed && (
+              <>
+                <Tooltip title="Свернуть все секции">
+                  <IconButton 
+                    onClick={collapseAllSections}
+                    size="small"
+                    sx={{ color: 'inherit' }}
+                  >
+                    <CollapseIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Развернуть все секции">
+                  <IconButton 
+                    onClick={expandAllSections}
+                    size="small"
+                    sx={{ color: 'inherit' }}
+                  >
+                    <ExpandIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
             
-            <Collapse in={openSections[section.title] !== false} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {section.items.map((item) => {
-                  // Получаем текущий путь для подсветки активного элемента
-                  const location = window.location.pathname;
-                  const isActive = location === item.path || location.startsWith(`${item.path}/`);
-                  
-                  return (
-                    <ListItem 
-                      key={item.text} 
-                      disablePadding
-                      sx={{
-                        ...navigationStyles.listItem,
-                        backgroundColor: isActive ? `rgba(${theme.palette.primary.main.replace('#', '')}, 0.12)` : 'transparent',
-                        mb: SIZES.spacing.xs,
-                        borderRadius: 0,
-                        margin: 0,
-                        '&:hover': {
-                          backgroundColor: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`,
+            <Tooltip title={isDrawerCollapsed ? "Развернуть панель" : "Свернуть панель"}>
+              <IconButton 
+                onClick={toggleDrawerCollapse}
+                size="small"
+                sx={{ color: 'inherit' }}
+              >
+                {isDrawerCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Toolbar>
+      </Box>
+
+      {/* Контейнер для прокручиваемого контента */}
+      <Box 
+        sx={{ 
+          mt: '64px',
+          height: 'calc(100vh - 64px)',
+          overflow: 'auto',
+          width: '100%',
+        }}
+      >
+        <List sx={{ 
+          p: 0,
+          width: '100%',
+          '& > *': {
+            width: '100%',
+          }
+        }}>
+          {getFilteredMenuSections().map((section) => (
+            <React.Fragment key={section.title}>
+              <ListSubheader 
+                onClick={() => !isDrawerCollapsed && toggleSection(section.title)} 
+                sx={{ 
+                  cursor: isDrawerCollapsed ? 'default' : 'pointer',
+                  display: 'flex', 
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '1rem',
+                  fontWeight: 700,
+                  backgroundColor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.03)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                  color: theme.palette.text.primary,
+                  p: 2,
+                  m: 0,
+                  borderRadius: 0,
+                  position: 'relative',
+                  '&:hover': {
+                    backgroundColor: isDrawerCollapsed ? 'transparent' : (theme.palette.mode === 'dark' 
+                      ? 'rgba(255, 255, 255, 0.05)'
+                      : 'rgba(0, 0, 0, 0.05)'),
+                  },
+                }}
+              >
+                <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {isDrawerCollapsed ? section.title.charAt(0) : section.title}
+                </Box>
+                {!isDrawerCollapsed && (openSections[section.title] ? <ExpandLess /> : <ExpandMore />)}
+              </ListSubheader>
+              
+              <Collapse in={!isDrawerCollapsed && openSections[section.title] !== false} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {section.items.map((item) => {
+                    const location = window.location.pathname;
+                    const isActive = location === item.path || location.startsWith(`${item.path}/`);
+                    
+                    return (
+                      <ListItem 
+                        key={item.text} 
+                        disablePadding
+                        sx={{
+                          backgroundColor: isActive ? `rgba(${theme.palette.primary.main.replace('#', '')}, 0.12)` : 'transparent',
                           borderRadius: 0,
-                        }
-                      }}
-                    >
-                      <ListItemButton 
-                        onClick={() => handleNavigate(item.path)}
-                        sx={{ 
-                          borderRadius: 0,
-                          margin: 0,
-                          pl: SIZES.spacing.md
+                          '&:hover': {
+                            backgroundColor: `rgba(${theme.palette.primary.main.replace('#', '')}, 0.08)`,
+                          }
                         }}
                       >
-                        <ListItemIcon sx={{
-                          ...navigationStyles.listItemIcon,
-                          color: isActive ? theme.palette.primary.main : 'inherit'
-                        }}>
-                          {item.icon}
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary={item.text} 
-                          secondary={item.description} 
-                          primaryTypographyProps={{
-                            fontWeight: isActive ? 'bold' : 'normal',
-                            fontSize: SIZES.fontSize.md,
+                        <ListItemButton 
+                          onClick={() => handleNavigate(item.path)}
+                          sx={{ 
+                            p: 2,
+                          }}
+                        >
+                          <ListItemIcon sx={{
+                            minWidth: 40,
                             color: isActive ? theme.palette.primary.main : 'inherit'
-                          }}
-                          secondaryTypographyProps={{
-                            fontSize: SIZES.fontSize.sm
-                          }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </Collapse>
-            <Divider sx={{ my: SIZES.spacing.xs }} />
-          </React.Fragment>
-        ))}
-      </List>
-    </div>
+                          }}>
+                            {item.icon}
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary={item.text} 
+                            secondary={item.description} 
+                            primaryTypographyProps={{
+                              fontWeight: isActive ? 'bold' : 'normal',
+                              color: isActive ? theme.palette.primary.main : 'inherit'
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </Collapse>
+              <Divider />
+            </React.Fragment>
+          ))}
+        </List>
+      </Box>
+      
+      {/* Граница для изменения ширины мышью */}
+      {!isDrawerCollapsed && (
+        <Box
+          onMouseDown={handleMouseDown}
+          sx={{
+            position: 'absolute',
+            right: -2,
+            top: 0,
+            bottom: 0,
+            width: '4px',
+            cursor: 'col-resize',
+            backgroundColor: 'transparent',
+            '&:hover': {
+              backgroundColor: theme.palette.primary.main,
+              opacity: 0.3,
+            },
+            zIndex: 1200,
+          }}
+        />
+      )}
+    </Box>
   );
 
+  // Корневой layout
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: SIZES.spacing.md, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography 
-            variant="h6" 
-            noWrap 
-            component="div" 
-            sx={{ 
-              flexGrow: 1, 
-              fontSize: SIZES.fontSize.lg 
-            }}
-          >
-            Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
-          </Typography>
-          
-          {/* Кнопка возврата на сайт */}
-          <Button
-            color="inherit"
-            onClick={() => navigate('/client')}
-            startIcon={<WebIcon />}
-            sx={{
-              mr: 2,
-              textTransform: 'none',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              }
-            }}
-          >
-            На сайт
-          </Button>
-          {user ? (
-            <>
-              <Button 
-                color="inherit" 
-                onClick={handleUserMenuOpen} 
-                endIcon={<AccountIcon />}
-                sx={{
-                  ...userButtonStyles.primary,
-                  ...interactiveStyles.pressEffect,
-                }}
-              >
-                {(user as User).first_name
-                  ? `${(user as User).first_name} ${(user as User).last_name || ''}`
-                  : (user as User).email}
-              </Button>
-              <Menu
-                anchorEl={userMenuAnchorEl}
-                open={Boolean(userMenuAnchorEl)}
-                onClose={handleUserMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                sx={userButtonStyles.menu}
-              >
-                <MenuItem onClick={() => { handleUserMenuClose(); navigate('/profile'); }}>
-                  <ListItemIcon>
-                    <AccountIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Профиль</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogoutIcon fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText>Выйти</ListItemText>
-                </MenuItem>
-              </Menu>
-            </>
-          ) : (
-            <Button 
-              color="inherit"
-              onClick={() => navigate('/login')}
-              sx={{
-                ...userButtonStyles.primary,
-                color: 'inherit',
-                borderColor: 'currentColor',
-                '&:hover': {
-                  borderColor: 'currentColor',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Войти
-            </Button>
-          )}
-          <ThemeToggle />
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ display: 'flex', width: '100vw', minHeight: '100vh' }}>
+      {/* Боковая панель */}
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
+        sx={{
+          width: currentDrawerWidth,
+          flexShrink: 0,
+          zIndex: 1201,
+        }}
       >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': {
+              width: currentDrawerWidth,
+              boxSizing: 'border-box',
+              border: 'none',
+              backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
+            },
           }}
           open
         >
           {drawer}
         </Drawer>
       </Box>
+
+      {/* Основной контент */}
       <Box
         component="main"
-        sx={{ 
-          flexGrow: 1, 
-          p: SIZES.spacing.lg, 
-          width: { sm: `calc(100% - ${drawerWidth}px)` } 
+        sx={{
+          flexGrow: 1,
+          width: `calc(100vw - ${currentDrawerWidth}px)`,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          backgroundColor: theme.palette.background.default,
         }}
       >
+        <AppBar
+          position="fixed"
+          sx={{
+            width: `calc(100vw - ${currentDrawerWidth}px)`,
+            ml: 0,
+            backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#1976d2',
+            zIndex: 1202,
+          }}
+        >
+          <Container maxWidth="xl">
+            <Toolbar>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2, display: { sm: 'none' } }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                Твоя шина - {user ? getRoleName((user as User).role as UserRole) : 'Авторизация'}
+              </Typography>
+              
+              <Button
+                color="inherit"
+                onClick={() => navigate('/client')}
+                startIcon={<WebIcon />}
+                sx={{ mr: 2 }}
+              >
+                На сайт
+              </Button>
+              
+              {isAuthenticated ? (
+                <>
+                  <IconButton
+                    size="large"
+                    edge="end"
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleUserMenuOpen}
+                    color="inherit"
+                  >
+                    <AccountIcon />
+                  </IconButton>
+                  <Menu
+                    id="menu-appbar"
+                    anchorEl={userMenuAnchorEl}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'right',
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'right',
+                    }}
+                    open={Boolean(userMenuAnchorEl)}
+                    onClose={handleUserMenuClose}
+                  >
+                    <MenuItem onClick={handleLogout}>Выйти</MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <Button 
+                  color="inherit"
+                  onClick={() => navigate('/login')}
+                >
+                  Войти
+                </Button>
+              )}
+              <ThemeToggle />
+            </Toolbar>
+          </Container>
+        </AppBar>
         <Toolbar />
-        <Outlet />
+        <Container maxWidth="xl" sx={{ p: 3, flex: 1, boxSizing: 'border-box' }}>
+          <Outlet />
+        </Container>
       </Box>
     </Box>
   );
