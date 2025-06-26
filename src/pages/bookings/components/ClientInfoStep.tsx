@@ -21,11 +21,10 @@ import {
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
-import InputMask from 'react-input-mask';
 
 // Импорт UI компонентов
-import { TextField } from '../../../components/ui/TextField';
-import { PhoneField } from '../../../components/ui/PhoneField';
+import TextField from '../../../components/ui/TextField';
+import PhoneField from '../../../components/ui/PhoneField';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
@@ -214,6 +213,25 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       }));
     }
   }, [isSelfService, formData.client.first_name, formData.client.last_name, formData.client.phone, formData.client.email]);
+  
+  // Инициализация данных получателя при первом монтировании
+  useEffect(() => {
+    // Если данные получателя пустые и включено самообслуживание, копируем данные клиента
+    if (isSelfService && 
+        !formData.service_recipient.first_name && 
+        !formData.service_recipient.phone &&
+        (formData.client.first_name || formData.client.phone)) {
+      setFormData(prev => ({
+        ...prev,
+        service_recipient: {
+          first_name: prev.client.first_name,
+          last_name: prev.client.last_name || '',
+          phone: prev.client.phone,
+          email: prev.client.email,
+        }
+      }));
+    }
+  }, []); // Выполняется только при монтировании
   
   // Валидация полей получателя услуги
   useEffect(() => {

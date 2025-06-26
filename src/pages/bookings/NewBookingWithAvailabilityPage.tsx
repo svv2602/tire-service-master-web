@@ -274,6 +274,25 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, [isAuthenticated, user, currentUser, isLoadingCurrentUser, currentUserError]);
   
+  // Синхронизация данных получателя услуги с данными клиента (для самообслуживания)
+  useEffect(() => {
+    // Если данные клиента заполнены, а данные получателя пустые, копируем их
+    if (formData.client.first_name && 
+        formData.client.phone && 
+        !formData.service_recipient.first_name && 
+        !formData.service_recipient.phone) {
+      setFormData(prev => ({
+        ...prev,
+        service_recipient: {
+          first_name: prev.client.first_name,
+          last_name: prev.client.last_name || '',
+          phone: prev.client.phone,
+          email: prev.client.email,
+        }
+      }));
+    }
+  }, [formData.client.first_name, formData.client.last_name, formData.client.phone, formData.client.email]);
+  
   // Мутация для создания бронирования
   const [createClientBooking] = useCreateClientBookingMutation();
   
@@ -441,7 +460,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   };
 
-  // Обработчики модального окна успеха
+  // Обработчики модального окна успешного создания бронирования
   const handleSuccessDialogClose = () => {
     setSuccessDialogOpen(false);
     setCreatedBooking(null);
