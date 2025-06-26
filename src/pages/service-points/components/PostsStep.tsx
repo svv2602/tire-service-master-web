@@ -33,6 +33,7 @@ import {
   Schedule as ScheduleIcon,
   AccessTime as AccessTimeIcon,
   Settings as SettingsIcon,
+  Category as CategoryIcon,
 } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePost, ServicePoint } from '../../../types/models';
@@ -40,6 +41,7 @@ import type { WorkingHours } from '../../../types/working-hours';
 import { DAYS_OF_WEEK } from '../../../types/working-hours';
 import PostScheduleDialog from './PostScheduleDialog';
 import { useGetSchedulePreviewQuery, useCalculateSchedulePreviewMutation } from '../../../api/servicePoints.api';
+import { useGetServiceCategoriesQuery } from '../../../api/serviceCategories.api';
 import { 
   SIZES, 
   getCardStyles, 
@@ -61,6 +63,10 @@ interface PostsStepProps {
 const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint }) => {
   // Хук темы для использования централизованных стилей
   const theme = useTheme();
+  
+  // Получаем категории услуг
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetServiceCategoriesQuery({});
+  const categories = categoriesData?.data || [];
   
   // Получаем стили из централизованной системы
   const cardStyles = getCardStyles(theme);
@@ -144,6 +150,9 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
     
     const newPostNumber = maxPostNumber + 1;
     
+    // Используем первую доступную категорию или категорию по умолчанию
+    const defaultCategoryId = categories.length > 0 ? categories[0].id : 1;
+    
     const newPost: ServicePost = {
       id: Date.now(), // Временный ID для новых постов
       post_number: newPostNumber,
@@ -151,7 +160,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       description: '',
       slot_duration: 30,
       is_active: true,
-      service_category_id: 1, // Устанавливаем категорию по умолчанию (можно будет изменить в админке)
+      service_category_id: defaultCategoryId,
       has_custom_schedule: false,
       working_days: {
         monday: true,
@@ -420,6 +429,54 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       sx={textFieldStyles}
                     />
                     
+                    {/* Категория услуг */}
+                    <FormControl fullWidth margin="normal" required>
+                      <InputLabel id={`category-label-${index}`}>
+                        Категория услуг
+                      </InputLabel>
+                      <Select
+                        labelId={`category-label-${index}`}
+                        value={post.service_category_id || ''}
+                        onChange={(e) => updatePost(index, 'service_category_id', Number(e.target.value))}
+                        onBlur={() => formik.setFieldTouched(`service_posts.${index}.service_category_id`, true)}
+                        error={isPostTouched(index, 'service_category_id') && Boolean(getPostError(index, 'service_category_id'))}
+                        label="Категория услуг"
+                        disabled={categoriesLoading}
+                        startAdornment={
+                          <InputAdornment position="start">
+                            <CategoryIcon fontSize="small" />
+                          </InputAdornment>
+                        }
+                      >
+                        {categoriesLoading ? (
+                          <MenuItem disabled>
+                            <CircularProgress size={20} sx={{ mr: 1 }} />
+                            Загрузка категорий...
+                          </MenuItem>
+                        ) : categories.length === 0 ? (
+                          <MenuItem disabled>
+                            Категории не найдены
+                          </MenuItem>
+                        ) : (
+                          categories.map((category) => (
+                            <MenuItem key={category.id} value={category.id}>
+                              {category.name}
+                              {category.description && (
+                                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                  - {category.description}
+                                </Typography>
+                              )}
+                            </MenuItem>
+                          ))
+                        )}
+                      </Select>
+                      {isPostTouched(index, 'service_category_id') && getPostError(index, 'service_category_id') && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 2 }}>
+                          {getPostError(index, 'service_category_id')}
+                        </Typography>
+                      )}
+                    </FormControl>
+                    
                     {/* Длительность слота */}
                     <TextField
                       fullWidth
@@ -606,8 +663,18 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
   formData 
 }) => {
   const [selectedDay, setSelectedDay] = useState<string>('monday');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [livePreviewData, setLivePreviewData] = useState<any>(null);
+  
+  // Получаем категории услуг для фильтра
+  const { data: categoriesData } = useGetServiceCategoriesQuery({});
+  const categories = categoriesData?.data || [];
+  
+  // Фильтруем посты по выбранной категории
+  const filteredPosts = selectedCategoryId 
+    ? activePosts.filter(post => post.service_category_id === selectedCategoryId)
+    : activePosts;
   
   // Хуки для API
   const {
@@ -671,12 +738,13 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
         date: getCurrentDateForDay(selectedDay),
         formData: {
           working_hours: workingHours,
-          service_posts_attributes: activePosts.map(post => ({
+          service_posts_attributes: filteredPosts.map(post => ({
             id: post.id,
             name: post.name,
             slot_duration: post.slot_duration,
             is_active: post.is_active,
             post_number: post.post_number,
+            service_category_id: post.service_category_id,
             has_custom_schedule: post.has_custom_schedule,
             working_days: post.working_days,
             custom_hours: post.custom_hours
@@ -718,6 +786,13 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     }
   }, [selectedDay]);
 
+  // Эффект для пересчета при изменении категории
+  useEffect(() => {
+    if (isExpanded && livePreviewData) {
+      handleLivePreview();
+    }
+  }, [selectedCategoryId]);
+
   // Эффект для пересчета при изменении данных формы
   useEffect(() => {
     if (isExpanded && formData) {
@@ -740,7 +815,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     }
 
     // Получаем посты, которые работают в этот день
-    const availablePostsForDay = activePosts.filter(post => {
+    const availablePostsForDay = filteredPosts.filter(post => {
       console.log('generateTimeSlots: проверяем пост', post.name, 'is_active=', post.is_active);
       
       if (!post.is_active) return false;
@@ -1004,21 +1079,51 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           настроенного графика работы и количества активных постов.
         </Typography>
 
-        {/* Выбор дня недели */}
-        <FormControl sx={{ mb: 3, minWidth: 200 }}>
-          <InputLabel>День недели</InputLabel>
-          <Select
-            value={selectedDay}
-            onChange={(e) => setSelectedDay(e.target.value)}
-            label="День недели"
-          >
-            {workingDays.map((day) => (
-              <MenuItem key={day.key} value={day.key}>
-                {day.name}
+        {/* Выбор дня недели и категории */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>День недели</InputLabel>
+            <Select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value)}
+              label="День недели"
+            >
+              {workingDays.map((day) => (
+                <MenuItem key={day.key} value={day.key}>
+                  {day.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Категория услуг</InputLabel>
+            <Select
+              value={selectedCategoryId || ''}
+              onChange={(e) => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null)}
+              label="Категория услуг"
+              startAdornment={
+                <InputAdornment position="start">
+                  <CategoryIcon fontSize="small" />
+                </InputAdornment>
+              }
+            >
+              <MenuItem value="">
+                <em>Все категории</em>
               </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+              {categories.map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                  {category.description && (
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                      - {category.description}
+                    </Typography>
+                  )}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
         {timeSlots.length > 0 ? (
           <>
@@ -1028,10 +1133,18 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
                 {selectedDayInfo?.name} - Доступность постов
               </Typography>
               <Chip 
-                label={`${activePosts.filter(p => p.is_active).length} активных постов`} 
+                label={`${filteredPosts.filter(p => p.is_active).length} активных постов${selectedCategoryId ? ' (отфильтровано)' : ''}`} 
                 color="primary" 
                 variant="outlined" 
               />
+              {selectedCategoryId && (
+                <Chip 
+                  label={categories.find(c => c.id === selectedCategoryId)?.name || 'Категория'}
+                  color="secondary" 
+                  variant="outlined" 
+                  size="small"
+                />
+              )}
             </Box>
 
             <Table
