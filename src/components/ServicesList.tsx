@@ -88,27 +88,22 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     initialValues: {
       name: '',
       description: '',
-      default_duration: 30,
       is_active: true,
       sort_order: 0,
     },
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const cleanValues = { 
-          ...values,
-          default_duration: values.default_duration || 30
-        };
         if (selectedService) {
           await updateService({
             categoryId,
             id: selectedService.id.toString(),
-            data: cleanValues,
+            data: values,
           }).unwrap();
         } else {
           await createService({
             categoryId,
-            data: cleanValues,
+            data: values,
           }).unwrap();
         }
         handleCloseDialog();
@@ -138,7 +133,6 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       formik.setValues({
         name: service.name,
         description: service.description || '',
-        default_duration: service.default_duration || 30,
         is_active: service.is_active,
         sort_order: service.sort_order || 0,
       });
@@ -438,16 +432,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
               helperText={formik.touched.description && formik.errors.description}
               sx={{ mb: SIZES.spacing.md }}
             />
-            <TextField
-              fullWidth
-              name="default_duration"
-              label="Длительность (минуты)"
-              type="number"
-              value={formik.values.default_duration}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              sx={{ mb: SIZES.spacing.md }}
-            />
+
             <TextField
               fullWidth
               name="sort_order"

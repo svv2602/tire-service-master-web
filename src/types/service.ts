@@ -4,7 +4,6 @@ export interface Service {
   id: number;
   name: string;
   description?: string;
-  default_duration: number;
   duration?: number; // для совместимости с некоторыми API
   price?: number; // для цены услуги
   category_id: number;
@@ -18,7 +17,6 @@ export interface Service {
 export interface ServiceFormData {
   name: string;
   description?: string;
-  default_duration: number; // сделано обязательным снова
   is_active: boolean;
   sort_order?: number;
 }

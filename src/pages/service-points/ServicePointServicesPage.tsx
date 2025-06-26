@@ -45,7 +45,6 @@ interface ServicePointService {
   name: string;
   description?: string;
   price: number;
-  default_duration: number;
   category_id: number;
   category?: ServiceCategory;
   current_price_for_service_point?: number;
@@ -130,19 +129,7 @@ const ServicePointServicesPage: React.FC = () => {
         </Typography>
       )
     },
-    {
-      id: 'default_duration',
-      label: 'Длительность',
-      align: 'center',
-      format: (value, row: ServicePointService) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
-          <ScheduleIcon fontSize="small" color="action" />
-          <Typography variant="body2">
-            {row.default_duration} мин
-          </Typography>
-        </Box>
-      )
-    },
+
     {
       id: 'price',
       label: 'Цена',

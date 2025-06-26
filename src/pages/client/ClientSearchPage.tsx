@@ -653,7 +653,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
     name: service.name,
     description: service.description,
     price: service.current_price || service.price || 0,
-    duration: service.duration || service.default_duration || 0,
+    duration: service.duration || 0,
     is_available: service.is_available
   }));
 

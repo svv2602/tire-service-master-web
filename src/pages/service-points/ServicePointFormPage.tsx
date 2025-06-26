@@ -264,7 +264,7 @@ const ServicePointFormPage: React.FC = () => {
       id: service.id,
       service_id: service.service_id,
       price: service.price || service.current_price || 0,
-      duration: service.duration || service.default_duration || 60,
+      duration: service.duration || 60,
       is_available: service.is_available !== undefined ? service.is_available : true
     })),
     photos: (photosData || []).map(photo => ({
@@ -1618,7 +1618,7 @@ const ServicePointFormPage: React.FC = () => {
                                           formik.setFieldValue(`services.${originalIndex}`, {
                                             ...service,
                                             service_id: selectedServiceId,
-                                            duration: selectedService.default_duration || service.duration,
+                                            duration: service.duration || 30, // Используем текущую длительность или значение по умолчанию
                                             price: service.price,
                                           });
                                         }
