@@ -9,12 +9,15 @@ import {
   FormControlLabel,
   Checkbox,
   Alert,
+  Divider,
+  Switch,
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
   ContactPage as ContactPageIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
@@ -49,7 +52,15 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     email: '',
   });
   
+  const [recipientErrors, setRecipientErrors] = useState({
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  });
+  
   const [receiveNotifications, setReceiveNotifications] = useState(true);
+  const [isSelfService, setIsSelfService] = useState(true); // По умолчанию заказчик и получатель - одно лицо
   
   // Валидация полей
   const validateField = (field: string, value: string | undefined): string => {
@@ -121,6 +132,50 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     setReceiveNotifications(checked);
   };
   
+  // Обработчик изменения полей получателя услуги
+  const handleRecipientFieldChange = (field: keyof BookingFormData['service_recipient']) => (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      service_recipient: {
+        ...prev.service_recipient,
+        [field]: value,
+      }
+    }));
+    
+    // Валидация поля получателя
+    const error = validateField(field, value);
+    setRecipientErrors(prev => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
+  
+  // Обработчик переключения "самообслуживание"
+  const handleSelfServiceToggle = (checked: boolean) => {
+    setIsSelfService(checked);
+    
+    if (checked) {
+      // Копируем данные заказчика в поля получателя
+      setFormData(prev => ({
+        ...prev,
+        service_recipient: {
+          first_name: prev.client.first_name,
+          last_name: prev.client.last_name || '',
+          phone: prev.client.phone,
+          email: prev.client.email,
+        }
+      }));
+      
+      // Очищаем ошибки получателя
+      setRecipientErrors({
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+      });
+    }
+  };
+  
   // Проверка всех ошибок при изменении formData
   useEffect(() => {
     if (!formData.client) {
@@ -144,6 +199,34 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     };
     setErrors(newErrors);
   }, [formData.client]);
+  
+  // Синхронизация данных получателя при самообслуживании
+  useEffect(() => {
+    if (isSelfService && formData.client) {
+      setFormData(prev => ({
+        ...prev,
+        service_recipient: {
+          first_name: prev.client.first_name,
+          last_name: prev.client.last_name || '',
+          phone: prev.client.phone,
+          email: prev.client.email,
+        }
+      }));
+    }
+  }, [isSelfService, formData.client.first_name, formData.client.last_name, formData.client.phone, formData.client.email]);
+  
+  // Валидация полей получателя услуги
+  useEffect(() => {
+    if (!isSelfService && formData.service_recipient) {
+      const newRecipientErrors = {
+        first_name: validateField('first_name', formData.service_recipient.first_name),
+        last_name: validateField('last_name', formData.service_recipient.last_name),
+        phone: validateField('phone', formData.service_recipient.phone),
+        email: validateField('email', formData.service_recipient.email),
+      };
+      setRecipientErrors(newRecipientErrors);
+    }
+  }, [formData.service_recipient, isSelfService]);
   
   return (
     <Box>
@@ -248,6 +331,120 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Grid>
       </Grid>
       
+      {/* Разделитель */}
+      <Divider sx={{ my: 4 }} />
+      
+      {/* Получатель услуги */}
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <PersonAddIcon sx={{ mr: 2, fontSize: 28, color: 'primary.main' }} />
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Получатель услуги
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Укажите, кто будет получать услугу (может отличаться от заказчика)
+            </Typography>
+          </Box>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isSelfService}
+                onChange={(e) => handleSelfServiceToggle(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Получаю услугу сам"
+            labelPlacement="start"
+          />
+        </Box>
+        
+        {/* Поля получателя услуги (показываются только если не самообслуживание) */}
+        {!isSelfService && (
+          <Grid container spacing={3}>
+            {/* Имя получателя */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Имя получателя *"
+                value={formData.service_recipient.first_name}
+                onChange={(e) => handleRecipientFieldChange('first_name')(e.target.value)}
+                placeholder="Например: Анна"
+                required
+                error={!!recipientErrors.first_name}
+                helperText={recipientErrors.first_name || 'Минимум 2 символа'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                fullWidth
+              />
+            </Grid>
+
+            {/* Фамилия получателя */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Фамилия получателя *"
+                value={formData.service_recipient.last_name}
+                onChange={(e) => handleRecipientFieldChange('last_name')(e.target.value)}
+                placeholder="Например: Петрова"
+                required
+                error={!!recipientErrors.last_name}
+                helperText={recipientErrors.last_name || 'Минимум 2 символа'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                fullWidth
+              />
+            </Grid>
+            
+            {/* Телефон получателя */}
+            <Grid item xs={12} sm={6}>
+              <PhoneField
+                label="Телефон получателя *"
+                value={formData.service_recipient.phone}
+                onChange={(value) => handleRecipientFieldChange('phone')(value)}
+                required
+                error={!!recipientErrors.phone}
+                helperText={recipientErrors.phone || 'Формат: +380 67 123-45-67'}
+              />
+            </Grid>
+            
+            {/* Email получателя */}
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Email получателя"
+                value={formData.service_recipient.email}
+                onChange={(e) => handleRecipientFieldChange('email')(e.target.value)}
+                error={!!recipientErrors.email}
+                helperText={recipientErrors.email || 'Необязательно'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+        )}
+        
+        {/* Информация при самообслуживании */}
+        {isSelfService && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            ✅ Вы получите услугу сами. Будут использованы ваши контактные данные.
+          </Alert>
+        )}
+      </Box>
+      
       {/* Настройки уведомлений */}
       <Alert severity="info" sx={{ mt: 3 }}>
         📧 Настройки уведомлений
@@ -282,17 +479,27 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
             {!formData.client.first_name && (
               <Typography variant="body2" component="li">
-                Имя
-              </Typography>
-            )}
-            {!formData.client.last_name && (
-              <Typography variant="body2" component="li">
-                Фамилия
+                Имя заказчика
               </Typography>
             )}
             {!formData.client.phone && (
               <Typography variant="body2" component="li">
-                Телефон
+                Телефон заказчика
+              </Typography>
+            )}
+            {!isSelfService && !formData.service_recipient.first_name && (
+              <Typography variant="body2" component="li">
+                Имя получателя услуги
+              </Typography>
+            )}
+            {!isSelfService && !formData.service_recipient.last_name && (
+              <Typography variant="body2" component="li">
+                Фамилия получателя услуги
+              </Typography>
+            )}
+            {!isSelfService && !formData.service_recipient.phone && (
+              <Typography variant="body2" component="li">
+                Телефон получателя услуги
               </Typography>
             )}
           </Box>

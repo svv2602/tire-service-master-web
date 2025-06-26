@@ -13,6 +13,15 @@ export enum BookingStatusEnum {
 
 export type BookingStatus = BookingStatusEnum;
 
+export interface ServiceRecipient {
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  phone: string;
+  email?: string;
+  is_self_service: boolean;
+}
+
 export interface Booking {
   id: string;
   client_id: string;
@@ -31,6 +40,7 @@ export interface Booking {
     price: number;
   }[];
   status: BookingStatus;
+  service_recipient?: ServiceRecipient;
   booking_services?: BookingServiceDetails[];
   scheduled_at: string;
   created_at: string;
@@ -65,6 +75,11 @@ export interface BookingFormData {
   notes?: string;
   car_type_id?: number;
   services: BookingService[];
+  // Поля получателя услуги
+  service_recipient_first_name: string;
+  service_recipient_last_name: string;
+  service_recipient_phone: string;
+  service_recipient_email?: string;
 }
 
 export interface BookingFilter extends PaginationFilter {

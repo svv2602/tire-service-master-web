@@ -127,6 +127,11 @@ const BookingFormPage: React.FC = () => {
     notes: '',
     services: [] as BookingService[],
     total_price: '0',
+    // Поля получателя услуги (опционально для админской формы)
+    service_recipient_first_name: '',
+    service_recipient_last_name: '',
+    service_recipient_phone: '',
+    service_recipient_email: '',
   }), []);
 
   const formik = useFormik({
@@ -137,8 +142,8 @@ const BookingFormPage: React.FC = () => {
       try {
         setLoading(true);
         
-        // Подготовка данных для API
-        const bookingData: BookingFormData = {
+        // Подготовка данных для API (админская форма)
+        const bookingData = {
           client_id: Number(values.client_id),
           service_point_id: Number(values.service_point_id),
           car_id: values.car_id ? Number(values.car_id) : null,
@@ -153,7 +158,12 @@ const BookingFormPage: React.FC = () => {
             quantity: service.quantity,
             price: service.price
           })),
-          total_price: services.reduce((sum, service) => sum + (service.price * service.quantity), 0).toString()
+          total_price: services.reduce((sum, service) => sum + (service.price * service.quantity), 0).toString(),
+          // Поля получателя услуги для админской формы (опционально)
+          service_recipient_first_name: values.service_recipient_first_name || '',
+          service_recipient_last_name: values.service_recipient_last_name || '',
+          service_recipient_phone: values.service_recipient_phone || '',
+          service_recipient_email: values.service_recipient_email || ''
         };
 
         if (isEditMode && id) {

@@ -65,6 +65,14 @@ export interface BookingFormData {
     email: string;
   };
   
+  // Получатель услуги (может отличаться от заказчика)
+  service_recipient: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email?: string;
+  };
+  
   // Шаг 4: Тип автомобиля
   car_type_id: number | null;
   car_brand: string;
@@ -123,6 +131,12 @@ const initialFormData: BookingFormData = {
   booking_date: '',
   start_time: '',
   client: {
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  },
+  service_recipient: {
     first_name: '',
     last_name: '',
     phone: '',
@@ -320,18 +334,26 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       }
       
       case 'client-info':
-        if (currentUser) return true;
-        
-        // Валидация для неавторизованного пользователя
+        // Валидация данных заказчика
         const phone = formData.client.phone.replace(/[^\d]/g, '');
         const isPhoneValid = phone.length >= 10 && phone.length <= 15;
         const isEmailValid = !formData.client.email || Boolean(formData.client.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
         
-        return (
-          formData.client.first_name.trim().length >= 2 &&
-          isPhoneValid &&
-          isEmailValid
+        const isClientValid = formData.client.first_name.trim().length >= 2 && isPhoneValid && isEmailValid;
+        
+        // Валидация данных получателя услуги
+        const recipientPhone = formData.service_recipient.phone.replace(/[^\d]/g, '');
+        const isRecipientPhoneValid = recipientPhone.length >= 10 && recipientPhone.length <= 15;
+        const isRecipientEmailValid = !formData.service_recipient.email || Boolean(formData.service_recipient.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        
+        const isRecipientValid = (
+          formData.service_recipient.first_name.trim().length >= 2 &&
+          formData.service_recipient.last_name.trim().length >= 2 &&
+          isRecipientPhoneValid &&
+          isRecipientEmailValid
         );
+        
+        return isClientValid && isRecipientValid;
       
       case 'car-type':
         return formData.car_type_id !== null;
@@ -359,7 +381,12 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           service_point_id: formData.service_point_id,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
-          notes: formData.notes || ''
+          notes: formData.notes || '',
+          // Поля получателя услуги
+          service_recipient_first_name: formData.service_recipient.first_name,
+          service_recipient_last_name: formData.service_recipient.last_name,
+          service_recipient_phone: formData.service_recipient.phone,
+          service_recipient_email: formData.service_recipient.email || ''
         },
         car: {
           car_type_id: formData.car_type_id,
