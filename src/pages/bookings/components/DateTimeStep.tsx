@@ -111,8 +111,14 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   
   // Получаем доступные временные слоты
   const availableTimeSlots = useMemo(() => {
-    return (availabilityData?.available_times || [])
-      .filter(slot => slot.can_book);
+    return (availabilityData?.slots || [])
+      .filter(slot => slot.available)
+      .map(slot => ({
+        time: slot.time,
+        available_posts: slot.posts_count,
+        total_posts: slot.posts_count, // Используем posts_count как total_posts
+        can_book: slot.available
+      }));
   }, [availabilityData]);
   
   // Обработчик изменения даты

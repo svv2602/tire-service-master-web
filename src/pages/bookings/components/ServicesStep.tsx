@@ -27,14 +27,29 @@ import {
 import { useTheme } from '@mui/material/styles';
 
 // Импорт API хуков
-// import { useGetServicesByServicePointQuery } from '../../../api/services.api';
+import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
-import { Service } from '../../../types/models';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
+
+// Интерфейс для услуги (совместимый с API ответом)
+interface ServicePointService {
+  id: number;
+  service_id: number;
+  name: string;
+  description?: string;
+  category?: {
+    id: number;
+    name: string;
+  };
+  current_price: number;
+  duration: number;
+  is_available: boolean;
+  price: number;
+}
 
 interface ServicesStepProps {
   formData: any; // Используем any для совместимости с локальным BookingFormData
@@ -58,34 +73,58 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 }) => {
   const theme = useTheme();
   
-  // Временные данные услуг (заглушка до создания API)
-  const services: Service[] = [];
-  const isLoadingServices = false;
-  const servicesError = null;
+  // API хук для получения услуг сервисной точки с фильтрацией по категории
+  const { 
+    data: servicesData, 
+    isLoading: isLoadingServices, 
+    error: servicesError 
+  } = useGetServicePointServicesQuery(
+    formData.service_point_id?.toString() || '',
+    {
+      skip: !formData.service_point_id,
+      // Добавляем параметр category_id для фильтрации по выбранной категории
+      refetchOnMountOrArgChange: true,
+    }
+  );
+
+  // Фильтруем услуги по выбранной категории на клиенте (дополнительная фильтрация)
+  const services: ServicePointService[] = React.useMemo(() => {
+    if (!servicesData || !Array.isArray(servicesData)) return [];
+    
+    // Если выбрана категория, фильтруем услуги по ней
+    if (formData.service_category_id) {
+      return servicesData.filter((service: ServicePointService) => 
+        service.category?.id === formData.service_category_id && service.is_available
+      );
+    }
+    
+    // Если категория не выбрана, показываем все доступные услуги
+    return servicesData.filter((service: ServicePointService) => service.is_available);
+  }, [servicesData, formData.service_category_id]);
   
   // Обработчик добавления услуги
-  const handleAddService = (service: Service) => {
-    const existingServiceIndex = formData.services.findIndex(s => s.service_id === service.id);
+  const handleAddService = (service: ServicePointService) => {
+    const existingServiceIndex = formData.services.findIndex((s: SelectedService) => s.service_id === service.service_id);
     
     if (existingServiceIndex >= 0) {
       // Увеличиваем количество
       const updatedServices = [...formData.services];
       updatedServices[existingServiceIndex].quantity += 1;
       
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         services: updatedServices,
       }));
     } else {
       // Добавляем новую услугу
       const newService: SelectedService = {
-        service_id: service.id,
+        service_id: service.service_id,
         quantity: 1,
-        price: service.price || 0,
+        price: service.current_price || service.price || 0,
         name: service.name,
       };
       
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         services: [...prev.services, newService],
       }));
@@ -94,7 +133,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   
   // Обработчик удаления услуги
   const handleRemoveService = (serviceId: number) => {
-    const existingServiceIndex = formData.services.findIndex(s => s.service_id === serviceId);
+    const existingServiceIndex = formData.services.findIndex((s: SelectedService) => s.service_id === serviceId);
     
     if (existingServiceIndex >= 0) {
       const updatedServices = [...formData.services];
@@ -107,7 +146,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         updatedServices.splice(existingServiceIndex, 1);
       }
       
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         services: updatedServices,
       }));
@@ -116,7 +155,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   
   // Обработчик изменения комментария
   const handleNotesChange = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       notes: value,
     }));
@@ -124,20 +163,20 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   
   // Получение количества выбранной услуги
   const getServiceQuantity = (serviceId: number) => {
-    const service = formData.services.find(s => s.service_id === serviceId);
+    const service = formData.services.find((s: SelectedService) => s.service_id === serviceId);
     return service?.quantity || 0;
   };
   
   // Подсчет общей стоимости
   const calculateTotalPrice = () => {
-    return formData.services.reduce((total, service) => {
+    return formData.services.reduce((total: number, service: SelectedService) => {
       return total + (service.price * service.quantity);
     }, 0);
   };
   
   // Рендер карточки услуги
-  const renderServiceCard = (service: Service) => {
-    const quantity = getServiceQuantity(service.id);
+  const renderServiceCard = (service: ServicePointService) => {
+    const quantity = getServiceQuantity(service.service_id);
     const isSelected = quantity > 0;
     
     return (
@@ -181,7 +220,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PriceIcon color="action" fontSize="small" />
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {service.price ? `${service.price} ₴` : 'Цена по запросу'}
+                  {service.current_price || service.price ? `${service.current_price || service.price} ₴` : 'Цена по запросу'}
                 </Typography>
               </Box>
               
@@ -191,7 +230,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemoveService(service.id);
+                      handleRemoveService(service.service_id);
                     }}
                     color="error"
                   >
@@ -250,6 +289,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         <Grid item xs={12} md={8}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Доступные услуги
+            {formData.service_category_id && (
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1, display: 'inline' }}>
+                (для выбранной категории)
+              </Typography>
+            )}
           </Typography>
           
           {servicesError && (
@@ -264,7 +308,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             </Box>
           ) : services.length === 0 ? (
             <Alert severity="info">
-              Список услуг для данной точки обслуживания пуст. 
+              {formData.service_category_id 
+                ? 'Для выбранной категории услуг в данной точке обслуживания нет доступных услуг.'
+                : 'Список услуг для данной точки обслуживания пуст.'
+              } 
               Вы можете обсудить необходимые услуги с мастером на месте.
             </Alert>
           ) : (
@@ -293,13 +340,13 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             ) : (
               <Box>
                 {formData.services.map((service: SelectedService, index: number) => {
-                  const serviceInfo = services.find((s: Service) => s.id === service.service_id);
+                  const serviceInfo = services.find((s: ServicePointService) => s.service_id === service.service_id);
                   return (
                     <Box key={service.service_id}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {serviceInfo?.name || `Услуга #${service.service_id}`}
+                            {serviceInfo?.name || service.name || `Услуга #${service.service_id}`}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {service.price} ₴ × {service.quantity}
@@ -328,7 +375,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => setFormData(prev => ({ ...prev, services: [] }))}
+                  onClick={() => setFormData((prev: any) => ({ ...prev, services: [] }))}
                   sx={{ mt: 2, width: '100%' }}
                 >
                   Очистить все
