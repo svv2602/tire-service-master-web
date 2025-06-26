@@ -189,13 +189,7 @@ function App() {
                   <Routes>
                     {/* Публичные маршруты */}
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/styleguide" element={
-                      <ThemeProvider>
-                        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
-                          <StyleGuide />
-                        </LocalizationProvider>
-                      </ThemeProvider>
-                    } />
+
                     
                     {/* Главная страница для клиентов (без авторизации) */}
                     <Route path="/client" element={
@@ -277,6 +271,7 @@ function App() {
                       <Route path="car-brands" element={<CarBrandsPage />} />
                       <Route path="car-brands/new" element={<CarBrandFormPage />} />
                       <Route path="car-brands/:id/edit" element={<CarBrandFormPage />} />
+                      <Route path="car-models" element={<div>Модели автомобилей (в разработке)</div>} />
                       {/* Маршруты для клиентских автомобилей */}
                       <Route path="my-cars" element={<div>Мои автомобили (в разработке)</div>} />
                       <Route path="my-cars/new" element={<div>Добавление нового автомобиля (в разработке)</div>} />
@@ -300,6 +295,7 @@ function App() {
                       {/* Другие маршруты */}
                       <Route path="settings" element={<SettingsPage />} />
                       <Route path="profile" element={<ProfilePage />} />
+                      <Route path="seo" element={<div>SEO настройки (в разработке)</div>} />
                       {/* Справочники */}
                       <Route path="regions" element={<RegionsPage />} />
                       <Route path="regions/new" element={<RegionFormPage />} />
@@ -315,6 +311,8 @@ function App() {
                       <Route path="page-content/new" element={<PageContentFormPage />} />
                       <Route path="page-content/:id/edit" element={<PageContentFormPage />} />
                       <Route path="page-content/management" element={<PageContentManagement />} />
+                      {/* StyleGuide */}
+                      <Route path="styleguide" element={<StyleGuide />} />
                       {/* Тестовые маршруты */}
                       <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
                       <Route path="testing/table-unification" element={<TableUnificationTest />} />

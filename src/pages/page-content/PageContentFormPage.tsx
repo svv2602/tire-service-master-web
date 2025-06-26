@@ -37,7 +37,9 @@ import {
   DragIndicator as DragIcon,
   ExpandMore as ExpandMoreIcon,
   Preview as PreviewIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  CloudUpload as CloudUploadIcon,
+  Image as ImageIcon
 } from '@mui/icons-material';
 import { 
   getCardStyles, 
@@ -107,6 +109,10 @@ const PageContentFormPage: React.FC = () => {
     active: true
   });
   
+  // Состояние для загрузки изображения
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  
   const [successMessage, setSuccessMessage] = useState<string>('');
   
   // API запросы
@@ -131,6 +137,11 @@ const PageContentFormPage: React.FC = () => {
         position: pageData.position,
         active: pageData.active
       });
+      
+      // Устанавливаем превью для существующего изображения
+      if (pageData.image_url) {
+        setImagePreview(pageData.image_url);
+      }
     }
   }, [pageData]);
   
@@ -139,18 +150,65 @@ const PageContentFormPage: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
   
+  // Обработчик загрузки изображения
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Проверяем тип файла
+    if (!file.type.startsWith('image/')) {
+      alert('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    // Проверяем размер файла (максимум 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Размер файла не должен превышать 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Создаем превью
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Очищаем URL если был
+    setFormData(prev => ({ ...prev, image_url: '' }));
+  };
+
+  // Обработчик удаления изображения
+  const handleImageRemove = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    
+    // Очищаем input
+    const input = document.getElementById('image-upload') as HTMLInputElement;
+    if (input) input.value = '';
+  };
+  
   // Сохранение
   const handleSave = async () => {
     try {
       setSuccessMessage('');
+      
+      const saveData = {
+        ...formData,
+        ...(imageFile && { image: imageFile })
+      };
+      
       if (isEdit) {
         await updatePage({
           id: parseInt(id!),
-          ...formData
+          ...saveData
         }).unwrap();
         setSuccessMessage('Контент успешно обновлен');
       } else {
-        await createPage(formData as CreatePageContentRequest).unwrap();
+        await createPage(saveData as CreatePageContentRequest).unwrap();
         setSuccessMessage('Контент успешно создан');
       }
       
@@ -269,13 +327,68 @@ const PageContentFormPage: React.FC = () => {
             />
           </Grid>
           
-          <Grid item xs={12} sm={8}>
+          <Grid item xs={12}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Изображение
+            </Typography>
+            
+            {/* Кнопка загрузки */}
+            <Box sx={{ mb: 2 }}>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="image-upload"
+                type="file"
+                onChange={handleImageUpload}
+              />
+              <label htmlFor="image-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ mr: 2 }}
+                >
+                  Загрузить изображение
+                </Button>
+              </label>
+              
+              {imagePreview && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleImageRemove}
+                  startIcon={<DeleteIcon />}
+                >
+                  Удалить
+                </Button>
+              )}
+            </Box>
+
+            {/* Превью изображения */}
+            {imagePreview && (
+              <Card sx={{ maxWidth: 400, mb: 2 }}>
+                <Box
+                  component="img"
+                  src={imagePreview}
+                  alt="Превью изображения"
+                  sx={{
+                    width: '100%',
+                    height: 200,
+                    objectFit: 'cover'
+                  }}
+                />
+              </Card>
+            )}
+
+            {/* Поле URL как альтернатива */}
             <TextField
               fullWidth
-              label="URL изображения"
+              label="Или URL изображения"
               value={formData.image_url || ''}
               onChange={(e) => handleFieldChange('image_url', e.target.value)}
               placeholder="https://example.com/image.jpg"
+              disabled={!!imageFile}
+              helperText={imageFile ? "Очистите загруженное изображение для использования URL" : "Альтернатива загрузке файла"}
             />
           </Grid>
           
