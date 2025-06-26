@@ -1,5 +1,6 @@
 // Экспорт компонентов шагов бронирования
 
+export { default as CategorySelectionStep } from './CategorySelectionStep';
 export { default as CityServicePointStep } from './CityServicePointStep';
 export { default as DateTimeStep } from './DateTimeStep';
 export { default as ClientInfoStep } from './ClientInfoStep';

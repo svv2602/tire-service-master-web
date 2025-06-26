@@ -1,4 +1,4 @@
-// Шаг 1: Выбор города и точки обслуживания
+// Шаг 2: Выбор города и точки обслуживания (с учетом категории)
 
 import React, { useState, useMemo, useEffect } from 'react';
 import {
@@ -11,16 +11,17 @@ import {
   FormHelperText,
   Alert,
 } from '@mui/material';
-import { Info as InfoIcon, LocationOn as LocationIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import { Info as InfoIcon, LocationOn as LocationIcon, CheckCircle as CheckCircleIcon, Category as CategoryIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
 // Импорт API хуков
 import { useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
-import { useSearchServicePointsQuery } from '../../../api/servicePoints.api';
+import { useGetServicePointsByCategoryQuery } from '../../../api/servicePoints.api';
 import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
+import { useGetServiceCategoryByIdQuery } from '../../../api/serviceCategories.api';
 
 // Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
+import { BookingFormData } from '../../../types/booking';
 import { City, ServicePoint } from '../../../types/models';
 import { ServicePointCard, ServicePointData } from '../../../components/ui/ServicePointCard';
 
@@ -96,13 +97,22 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [autoFilledData, setAutoFilledData] = useState(false);
   
+  // Загрузка информации о выбранной категории
+  const { data: selectedCategory } = useGetServiceCategoryByIdQuery(
+    formData.service_category_id?.toString() || '',
+    { skip: !formData.service_category_id }
+  );
+  
   // Загрузка городов с точками обслуживания
   const { data: citiesData, isLoading: isLoadingCities, error: citiesError } = useGetCitiesWithServicePointsQuery();
   
-  // Загрузка точек обслуживания для выбранного города
-  const { data: servicePointsData, isLoading: isLoadingServicePoints, error: servicePointsError } = useSearchServicePointsQuery(
-    { city: selectedCity?.name || '' },
-    { skip: !selectedCity }
+  // Загрузка точек обслуживания для выбранного города и категории
+  const { data: servicePointsData, isLoading: isLoadingServicePoints, error: servicePointsError } = useGetServicePointsByCategoryQuery(
+    { 
+      categoryId: formData.service_category_id,
+      cityId: selectedCity?.id
+    },
+    { skip: !formData.service_category_id || !selectedCity }
   );
   
   // Получаем списки из данных API с мемоизацией
@@ -175,6 +185,24 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
         Выберите город и точку обслуживания
       </Typography>
+      
+      {/* Информация о выбранной категории */}
+      {selectedCategory && (
+        <Alert 
+          severity="info" 
+          icon={<CategoryIcon />}
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="body2">
+            <strong>Выбранная категория:</strong> {selectedCategory.name}
+          </Typography>
+          {selectedCategory.description && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              {selectedCategory.description}
+            </Typography>
+          )}
+        </Alert>
+      )}
       
       {/* Уведомление о предзаполненных данных */}
       {autoFilledData && isValid && (

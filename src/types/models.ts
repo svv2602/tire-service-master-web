@@ -91,6 +91,13 @@ export interface ServicePoint {
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
   post_count: number;
   default_slot_duration: number;
+  // Добавляем JSON поле для контактов по категориям
+  category_contacts: {
+    [categoryId: string]: {
+      phone: string;
+      email?: string;
+    };
+  };
   status?: {
     id: number;
     name: string;
@@ -477,6 +484,9 @@ export interface ServicePost {
   slot_duration: number;
   is_active: boolean;
   post_number: number;
+  // ОБЯЗАТЕЛЬНОЕ поле категории услуг (убираем ?)
+  service_category_id: number;
+  service_category?: ServiceCategory;
   _destroy?: boolean;
   created_at?: string; // Для обратной совместимости
   updated_at?: string; // Для обратной совместимости
@@ -543,4 +553,10 @@ export interface CitiesResponse {
     total_pages: number;
     total_count: number;
   };
+}
+
+// Интерфейс для контактов по категориям
+export interface CategoryContact {
+  phone: string;
+  email?: string;
 }

@@ -13,6 +13,44 @@ import type {
   WeekOverviewParams
 } from '../types/availability';
 
+// Типы для проверки доступности с категорией
+export interface AvailabilityCheckRequest {
+  servicePointId: number;
+  date: string;
+  startTime: string;
+  duration: number;
+  categoryId: number;
+}
+
+export interface AvailabilityCheckResponse {
+  available: boolean;
+  reason?: string;
+  available_posts_count: number;
+  total_posts_count: number;
+  category_id: number;
+  category_contact: {
+    phone?: string;
+    email?: string;
+  };
+}
+
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+  posts_count: number;
+}
+
+export interface CategorySlotsResponse {
+  service_point_id: number;
+  category_id: number;
+  date: string;
+  slots: TimeSlot[];
+  category_contact: {
+    phone?: string;
+    email?: string;
+  };
+}
+
 export const availabilityApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение доступных временных интервалов на дату
@@ -91,6 +129,47 @@ export const availabilityApi = baseApi.injectEndpoints({
         { type: 'Availability', id: `week-${servicePointId}-${params?.start_date || 'current'}` }
       ],
     }),
+
+    // Проверка доступности с учетом категории
+    checkAvailabilityWithCategory: builder.mutation<
+      AvailabilityCheckResponse,
+      AvailabilityCheckRequest
+    >({
+      query: (data) => ({
+        url: 'availability/check_with_category',
+        method: 'POST',
+        body: {
+          service_point_id: data.servicePointId,
+          date: data.date,
+          start_time: data.startTime,
+          duration: data.duration,
+          category_id: data.categoryId
+        }
+      })
+    }),
+
+    // Получение доступных слотов для категории
+    getSlotsForCategory: builder.query<
+      CategorySlotsResponse,
+      {
+        servicePointId: number;
+        categoryId: number;
+        date: string;
+        duration?: number;
+      }
+    >({
+      query: ({ servicePointId, categoryId, date, duration = 60 }) => ({
+        url: 'availability/slots_for_category',
+        params: {
+          service_point_id: servicePointId,
+          category_id: categoryId,
+          date,
+          duration
+        }
+      }),
+      // Кэширование на 2 минуты (слоты могут часто изменяться)
+      keepUnusedDataFor: 120,
+    }),
   }),
 });
 
@@ -101,4 +180,6 @@ export const {
   useGetNextAvailableTimeQuery,
   useGetDayDetailsQuery,
   useGetWeekOverviewQuery,
+  useCheckAvailabilityWithCategoryMutation,
+  useGetSlotsForCategoryQuery
 } = availabilityApi; 

@@ -34,6 +34,12 @@ export interface Booking {
   end_time: string;
   notes: string;
   status_id: number;
+  service_category_id?: number;
+  service_category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
   services: {
     service_id: string;
     quantity: number;
@@ -63,7 +69,8 @@ export interface BookingServiceDetails {
 }
 
 export interface BookingFormData {
-  service_point_id: number;
+  service_category_id: number;
+  service_point_id: number | null;
   client_id: number;
   car_id: number | null;
   booking_date: string;
@@ -75,7 +82,6 @@ export interface BookingFormData {
   notes?: string;
   car_type_id?: number;
   services: BookingService[];
-  // Поля получателя услуги
   service_recipient_first_name: string;
   service_recipient_last_name: string;
   service_recipient_phone: string;
@@ -87,6 +93,7 @@ export interface BookingFilter extends PaginationFilter {
   status_id?: number;
   service_point_id?: number;
   client_id?: number;
+  service_category_id?: number;
   date?: string;
   from_date?: string;
   to_date?: string;

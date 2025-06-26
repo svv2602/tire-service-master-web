@@ -5,7 +5,8 @@ import type {
   ServicePointUpdateRequest,
   ServicePointFormData,
   ServicePointStatus,
-  ServicePost
+  ServicePost,
+  CategoryContact
 } from '../types/models';
 import { baseApi } from './baseApi';
 
@@ -430,6 +431,57 @@ export const servicePointsApi = baseApi.injectEndpoints({
       }),
       // Не кешируем мутацию, так как это предварительный просмотр
     }),
+
+    // Получение сервисных точек по категории
+    getServicePointsByCategory: builder.query<
+      { data: ServicePoint[]; total_count: number }, 
+      { categoryId: number; cityId?: number; page?: number; per_page?: number }
+    >({
+      query: ({ categoryId, cityId, page = 1, per_page = 10 }) => ({
+        url: 'service_points/by_category',
+        params: { 
+          category_id: categoryId, 
+          city_id: cityId,
+          page,
+          per_page
+        }
+      }),
+      providesTags: ['ServicePoint'],
+      // Кэширование на 5 минут
+      keepUnusedDataFor: 300,
+    }),
+
+    // Получение постов сервисной точки по категории
+    getPostsByCategory: builder.query<
+      { 
+        data: ServicePost[]; 
+        category_contact: { phone?: string; email?: string };
+        posts_count: number;
+      }, 
+      { servicePointId: number; categoryId: number }
+    >({
+      query: ({ servicePointId, categoryId }) => 
+        `service_points/${servicePointId}/posts_by_category?category_id=${categoryId}`,
+      providesTags: ['ServicePost'],
+      // Кэширование на 10 минут
+      keepUnusedDataFor: 600,
+    }),
+
+    // Обновление контактов по категориям
+    updateCategoryContacts: builder.mutation<
+      { success: boolean; category_contacts: Record<string, CategoryContact> },
+      { id: number; category_contacts: Record<string, CategoryContact> }
+    >({
+      query: ({ id, category_contacts }) => ({
+        url: `service_points/${id}/category_contacts`,
+        method: 'PATCH',
+        body: { category_contacts }
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'ServicePoint', id },
+        { type: 'ServicePoint', id: 'LIST' }
+      ],
+    }),
   }),
   // Установка автоматического обновления при монтировании компонентов
   overrideExisting: false,
@@ -454,4 +506,7 @@ export const {
   useGetServicePointPhotosQuery,
   useGetSchedulePreviewQuery,
   useCalculateSchedulePreviewMutation,
+  useGetServicePointsByCategoryQuery,
+  useGetPostsByCategoryQuery,
+  useUpdateCategoryContactsMutation,
 } = servicePointsApi;
