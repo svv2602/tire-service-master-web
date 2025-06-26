@@ -21,13 +21,12 @@ import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api'
 import { useGetServiceCategoryByIdQuery } from '../../../api/serviceCategories.api';
 
 // Импорт типов
-import { BookingFormData } from '../../../types/booking';
 import { City, ServicePoint } from '../../../types/models';
 import { ServicePointCard, ServicePointData } from '../../../components/ui/ServicePointCard';
 
 interface CityServicePointStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с разными структурами BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -153,7 +152,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   // Обработчик выбора города
   const handleCityChange = (city: City | null) => {
     setSelectedCity(city);
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       city_id: city?.id || null,
       service_point_id: null, // Сбрасываем выбранную точку обслуживания
@@ -165,7 +164,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   
   // Обработчик выбора точки обслуживания
   const handleServicePointSelect = (servicePointData: ServicePointData) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       service_point_id: servicePointData.id,
     }));

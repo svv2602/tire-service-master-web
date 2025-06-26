@@ -151,6 +151,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       description: '',
       slot_duration: 30,
       is_active: true,
+      service_category_id: 1, // Устанавливаем категорию по умолчанию (можно будет изменить в админке)
       has_custom_schedule: false,
       working_days: {
         monday: true,

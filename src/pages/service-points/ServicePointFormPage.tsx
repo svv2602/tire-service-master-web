@@ -591,6 +591,7 @@ const ServicePointFormPage: React.FC = () => {
       description: '',
       slot_duration: 30,
       is_active: true,
+      service_category_id: 1, // Устанавливаем категорию по умолчанию (можно будет изменить в админке)
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

@@ -28,13 +28,13 @@ import { SuccessDialog } from '../../components/ui/Dialog';
 
 // Импорт шагов формы
 import {
-  CategorySelectionStep,
   CityServicePointStep,
   DateTimeStep,
   ClientInfoStep,
   CarTypeStep,
   ServicesStep,
   ReviewStep,
+  CategorySelectionStep,
 } from './components';
 
 // Импорт API хуков
@@ -48,14 +48,57 @@ import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { getCardStyles } from '../../styles/components';
 import { getThemeColors, getButtonStyles } from '../../styles';
 
-// Импорт типов для формы
-import { BookingFormData } from '../../types/booking';
+// Типы для данных формы
+export interface BookingFormData {
+  // Шаг 0: Выбор категории услуг
+  service_category_id: number;
+  
+  // Шаг 1: Город и точка обслуживания
+  city_id: number | null;
+  service_point_id: number | null;
+  
+  // Шаг 2: Дата и время
+  booking_date: string;
+  start_time: string;
+  
+  // Шаг 3: Информация о клиенте
+  client: {
+    first_name: string;
+    last_name?: string;
+    phone: string;
+    email: string;
+  };
+  
+  // Получатель услуги (может отличаться от заказчика)
+  service_recipient: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email?: string;
+  };
+  
+  // Шаг 4: Тип автомобиля
+  car_type_id: number | null;
+  car_brand: string;
+  car_model: string;
+  license_plate: string;
+  
+  // Шаг 5: Услуги (опционально)
+  services: Array<{
+    service_id: number;
+    quantity: number;
+    price: number;
+  }>;
+  
+  // Шаг 6: Комментарий (опционально)
+  notes: string;
+}
 
 // Конфигурация шагов
 const STEPS = [
   {
     id: 'category-selection',
-    label: 'Тип услуг',
+    label: 'Выбор типа услуг',
     component: CategorySelectionStep,
   },
   {
@@ -92,19 +135,28 @@ const STEPS = [
 
 // Начальные данные формы
 const initialFormData: BookingFormData = {
-  service_category_id: 0, // Обязательное поле - выбор категории
+  service_category_id: 0,
+  city_id: null,
   service_point_id: null,
-  client_id: 0, // Будет заполнено автоматически для авторизованных пользователей
-  car_id: null,
   booking_date: '',
   start_time: '',
-  end_time: '',
-  car_type_id: 0,
+  client: {
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  },
+  service_recipient: {
+    first_name: '',
+    last_name: '',
+    phone: '',
+    email: '',
+  },
+  car_type_id: null,
+  car_brand: '',
+  car_model: '',
+  license_plate: '',
   services: [],
-  service_recipient_first_name: '',
-  service_recipient_last_name: '',
-  service_recipient_phone: '',
-  service_recipient_email: '',
   notes: '',
 };
 
@@ -285,6 +337,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         service_category_id: formData.service_category_id,
         booking_date: formData.booking_date,
         start_time: formData.start_time,
+        city_id: formData.city_id,
         service_point_id: formData.service_point_id
       }
     });
@@ -294,7 +347,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         return formData.service_category_id > 0;
       
       case 'city-service-point':
-        return formData.service_point_id !== null;
+        return formData.city_id !== null && formData.service_point_id !== null;
       
       case 'date-time': {
         // Проверяем, что дата и время выбраны
@@ -314,22 +367,29 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       }
       
       case 'client-info':
+        // Валидация данных заказчика
+        const phone = formData.client.phone.replace(/[^\d]/g, '');
+        const isPhoneValid = phone.length >= 10 && phone.length <= 15;
+        const isEmailValid = !formData.client.email || Boolean(formData.client.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        
+        const isClientValid = formData.client.first_name.trim().length >= 2 && isPhoneValid && isEmailValid;
+        
         // Валидация данных получателя услуги
-        const recipientPhone = formData.service_recipient_phone.replace(/[^\d]/g, '');
+        const recipientPhone = formData.service_recipient.phone.replace(/[^\d]/g, '');
         const isRecipientPhoneValid = recipientPhone.length >= 10 && recipientPhone.length <= 15;
-        const isRecipientEmailValid = !formData.service_recipient_email || Boolean(formData.service_recipient_email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
+        const isRecipientEmailValid = !formData.service_recipient.email || Boolean(formData.service_recipient.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
         
         const isRecipientValid = (
-          formData.service_recipient_first_name.trim().length >= 2 &&
-          formData.service_recipient_last_name.trim().length >= 2 &&
+          formData.service_recipient.first_name.trim().length >= 2 &&
+          formData.service_recipient.last_name.trim().length >= 2 &&
           isRecipientPhoneValid &&
           isRecipientEmailValid
         );
         
-        return isRecipientValid;
+        return isClientValid && isRecipientValid;
       
       case 'car-type':
-        return formData.car_type_id && formData.car_type_id > 0;
+        return formData.car_type_id !== null;
       
       case 'services':
         return true; // Услуги опциональны
@@ -352,6 +412,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       const bookingData: any = {
         booking: {
           service_point_id: formData.service_point_id,
+          service_category_id: formData.service_category_id,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
           notes: formData.notes || '',
@@ -461,11 +522,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     );
   };
   
-  // Функция для обновления данных формы
-  const updateFormData = (data: Partial<BookingFormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
-
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       <ClientNavigation colors={colors} secondaryButtonStyles={secondaryButtonStyles} />
@@ -569,3 +625,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           servicePoint: createdBooking.service_point?.name,
           servicePointAddress: createdBooking.service_point?.city?.name 
             ? `${createdBooking.service_point.city.name}, ${createdBooking.service_point?.address}`
+            : createdBooking.service_point?.address,
+          servicePointPhone: createdBooking.service_point?.phone,
+          clientName: createdBooking.client?.first_name && createdBooking.client?.last_name 
+            ? `${createdBooking.client.first_name} ${createdBooking.client.last_name}` 
+            : undefined,
+          carInfo: createdBooking.car_brand && createdBooking.car_model 
+            ? `${createdBooking.car_brand} ${createdBooking.car_model}` 
+            : undefined,
+        } : undefined}
+        primaryButtonText={currentUser ? "Мои бронирования" : "На главную"}
+        secondaryButtonText="Создать еще одно бронирование"
+        onPrimaryAction={currentUser ? handleGoToProfile : handleGoHome}
+        onSecondaryAction={handleCreateAnother}
+        onClose={handleGoHome}
+      />
+    </Box>
+  );
+};
+
+export default NewBookingWithAvailabilityPage;

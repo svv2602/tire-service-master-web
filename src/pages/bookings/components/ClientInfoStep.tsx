@@ -30,8 +30,8 @@ import PhoneField from '../../../components/ui/PhoneField';
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 
 interface ClientInfoStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с локальным BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -109,8 +109,8 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   };
   
   // Обработчик изменения поля
-  const handleFieldChange = (field: keyof BookingFormData['client']) => (value: string) => {
-    setFormData(prev => ({
+  const handleFieldChange = (field: string) => (value: string) => {
+    setFormData((prev: any) => ({
       ...prev,
       client: {
         ...prev.client,
@@ -132,8 +132,8 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   };
   
   // Обработчик изменения полей получателя услуги
-  const handleRecipientFieldChange = (field: keyof BookingFormData['service_recipient']) => (value: string) => {
-    setFormData(prev => ({
+  const handleRecipientFieldChange = (field: string) => (value: string) => {
+    setFormData((prev: any) => ({
       ...prev,
       service_recipient: {
         ...prev.service_recipient,
@@ -155,7 +155,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     
     if (checked) {
       // Копируем данные заказчика в поля получателя
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         service_recipient: {
           first_name: prev.client.first_name,
@@ -178,7 +178,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   // Проверка всех ошибок при изменении formData
   useEffect(() => {
     if (!formData.client) {
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         client: {
           first_name: '',
@@ -197,12 +197,12 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       email: validateField('email', formData.client.email),
     };
     setErrors(newErrors);
-  }, [formData.client]);
+  }, [formData.client, setFormData]);
   
   // Синхронизация данных получателя при самообслуживании
   useEffect(() => {
     if (isSelfService && formData.client) {
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         service_recipient: {
           first_name: prev.client.first_name,
@@ -212,7 +212,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         }
       }));
     }
-  }, [isSelfService, formData.client.first_name, formData.client.last_name, formData.client.phone, formData.client.email]);
+  }, [isSelfService, formData.client.first_name, formData.client.last_name, formData.client.phone, formData.client.email, setFormData]);
   
   // Инициализация данных получателя при первом монтировании
   useEffect(() => {
@@ -221,7 +221,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         !formData.service_recipient.first_name && 
         !formData.service_recipient.phone &&
         (formData.client.first_name || formData.client.phone)) {
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         service_recipient: {
           first_name: prev.client.first_name,
@@ -231,7 +231,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         }
       }));
     }
-  }, []); // Выполняется только при монтировании
+  }, [setFormData]); // Выполняется только при монтировании
   
   // Валидация полей получателя услуги
   useEffect(() => {

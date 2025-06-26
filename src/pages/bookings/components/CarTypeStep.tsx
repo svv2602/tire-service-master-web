@@ -27,16 +27,15 @@ import { Select } from '../../../components/ui/Select';
 import { useGetCarTypesQuery } from '../../../api/carTypes.api';
 import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery } from '../../../api';
 
-// Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
+// Импорт типов - используем any для совместимости
 import { CarType } from '../../../types/car';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
 
 interface CarTypeStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с локальным BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -76,7 +75,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   // Обработчики изменения полей
   const handleCarTypeSelect = (carType: CarType) => {
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       car_type_id: carType.id,
     }));
@@ -85,7 +84,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   const handleBrandChange = (brandId: number) => {
     setSelectedBrandId(brandId);
     const selectedBrand = brands.find(b => b.id === brandId);
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       car_brand: selectedBrand?.name || '',
       car_model: '', // Сбрасываем модель при смене бренда
@@ -94,7 +93,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   const handleModelChange = (modelId: number) => {
     const selectedModel = models.find(m => m.id === modelId);
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       car_model: selectedModel?.name || '',
     }));
@@ -102,7 +101,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   const handleLicensePlateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       license_plate: value.toUpperCase(), // Автоматически переводим в верхний регистр
     }));

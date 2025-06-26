@@ -8,19 +8,21 @@ import {
   Alert,
   Skeleton
 } from '@mui/material';
-import { BookingFormData } from '../../../types/booking';
 import { useGetServiceCategoriesQuery } from '../../../api/serviceCategories.api';
 
 interface CategorySelectionStepProps {
-  formData: BookingFormData;
-  updateFormData: (data: Partial<BookingFormData>) => void;
+  formData: any; // Используем any для совместимости с существующей структурой
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
+  onBack: () => void;
+  isValid: boolean;
 }
 
 const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   formData,
-  updateFormData,
-  onNext
+  setFormData,
+  onNext,
+  isValid
 }) => {
   const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesQuery({ 
     active: true,
@@ -30,14 +32,15 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   const categories = categoriesResponse?.data || [];
 
   const handleCategorySelect = (categoryId: number) => {
-    updateFormData({ 
+    setFormData((prev: any) => ({ 
+      ...prev,
       service_category_id: categoryId,
       // Сбрасываем следующие шаги при смене категории
+      city_id: null,
       service_point_id: null,
       booking_date: '',
-      start_time: '',
-      end_time: ''
-    });
+      start_time: ''
+    }));
     
     // Автоматически переходим к следующему шагу
     setTimeout(() => {

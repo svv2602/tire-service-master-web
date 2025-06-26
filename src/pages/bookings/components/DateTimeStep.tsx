@@ -19,18 +19,16 @@ import {
 import { AvailabilitySelector } from '../../../components/availability';
 
 // Импорт API хуков
-import { useGetAvailableTimesQuery } from '../../../api/availability.api';
+import { useGetSlotsForCategoryQuery } from '../../../api/availability.api';
 import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
-
-// Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
 
+// Импорт типов - используем локальный тип
 interface DateTimeStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с локальным BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -90,7 +88,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       // Если дата не выбрана, устанавливаем завтра по умолчанию
       const tomorrow = addDays(new Date(), 1);
       setSelectedDate(tomorrow);
-      setFormData(prev => ({
+      setFormData((prev: any) => ({
         ...prev,
         booking_date: format(tomorrow, 'yyyy-MM-dd'),
       }));
@@ -101,13 +99,14 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [formData.booking_date, formData.start_time, setFormData]);
   
-  // Загрузка доступных временных слотов
-  const { data: availabilityData, isLoading: isLoadingAvailability, error: availabilityError } = useGetAvailableTimesQuery(
+  // Загрузка доступных временных слотов с учетом категории
+  const { data: availabilityData, isLoading: isLoadingAvailability, error: availabilityError } = useGetSlotsForCategoryQuery(
     {
       servicePointId: formData.service_point_id?.toString() || '0',
-      params: { date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '' }
+      categoryId: formData.service_category_id,
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
     },
-    { skip: !formData.service_point_id || !selectedDate }
+    { skip: !formData.service_point_id || !formData.service_category_id || !selectedDate }
   );
   
   // Получаем доступные временные слоты
@@ -121,7 +120,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     setSelectedDate(date);
     setSelectedTimeSlot(null); // Сбрасываем время при изменении даты
     
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       booking_date: date ? format(date, 'yyyy-MM-dd') : '',
       start_time: '',
@@ -138,7 +137,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const handleTimeSlotChange = (timeSlot: string | null) => {
     setSelectedTimeSlot(timeSlot);
     
-    setFormData(prev => ({
+    setFormData((prev: any) => ({
       ...prev,
       start_time: timeSlot || '',
     }));

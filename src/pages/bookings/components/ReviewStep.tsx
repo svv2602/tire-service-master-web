@@ -28,10 +28,7 @@ import { useTheme } from '@mui/material/styles';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
-// Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
-
-// Импорт стилей
+// Импорт типов - используем any для совместимости
 import { getCardStyles } from '../../../styles/components';
 
 // Импорт API хуков
@@ -40,8 +37,8 @@ import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api
 import { useGetCarTypeByIdQuery } from '../../../api/carTypes.api';
 
 interface ReviewStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с локальным BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -124,7 +121,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   
   // Подсчет общей стоимости услуг
   const calculateTotalPrice = () => {
-    return formData.services.reduce((total, service) => {
+    return formData.services.reduce((total: number, service: any) => {
       return total + (service.price * service.quantity);
     }, 0);
   };
@@ -333,7 +330,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             ) : (
               <Box>
                 <List dense>
-                  {formData.services.map((service, index) => (
+                  {formData.services.map((service: any, index: number) => (
                     <ListItem key={service.service_id}>
                       <ListItemIcon>
                         <ServiceIcon color="action" />

@@ -37,8 +37,8 @@ import { Service } from '../../../types/models';
 import { getCardStyles } from '../../../styles/components';
 
 interface ServicesStepProps {
-  formData: BookingFormData;
-  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
+  formData: any; // Используем any для совместимости с локальным BookingFormData
+  setFormData: React.Dispatch<React.SetStateAction<any>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
