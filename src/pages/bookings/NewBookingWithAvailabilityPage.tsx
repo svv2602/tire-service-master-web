@@ -24,6 +24,7 @@ import {
 // Импорт компонентов UI
 import Stepper from '../../components/ui/Stepper';
 import { SuccessDialog } from '../../components/ui/Dialog';
+import ExistingUserDialog from '../../components/booking/ExistingUserDialog';
 
 // Импорт шагов формы
 import {
@@ -181,6 +182,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // Состояние модального окна успеха
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
+  
+  // Состояние диалога существующего пользователя
+  const [existingUserDialogOpen, setExistingUserDialogOpen] = useState(false);
+  const [existingUserData, setExistingUserData] = useState<any>(null);
   
   const { data: currentUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
     undefined, // Параметры не нужны
@@ -469,17 +474,11 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       
       // Если пользователь уже существует (статус 409), показываем диалог входа
       if (error.status === 409 && error.data?.existing_user) {
-        // TODO: Показать ExistingUserDialog с данными пользователя
         console.log('Найден существующий пользователь:', error.data.existing_user);
         
-        // Пока что показываем обычную ошибку с предложением войти
-        let errorMessage = error.data.error || 'Пользователь уже существует';
-        if (error.data.details) {
-          errorMessage += '\n' + error.data.details.join('\n');
-        }
-        errorMessage += '\n\nВы можете войти в систему, используя существующий аккаунт, или изменить контактные данные.';
-        
-        setSubmitError(errorMessage);
+        // Сохраняем данные пользователя и показываем диалог
+        setExistingUserData(error.data.existing_user);
+        setExistingUserDialogOpen(true);
         return;
       }
       
@@ -530,6 +529,45 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const handleGoHome = () => {
     handleSuccessDialogClose();
     navigate('/client');
+  };
+
+  // Обработчики диалога существующего пользователя
+  const handleLoginSuccess = (userData: any) => {
+    console.log('Успешный вход пользователя:', userData);
+    
+    // Обновляем данные формы с данными авторизованного пользователя
+    setFormData(prev => ({
+      ...prev,
+      client: {
+        first_name: userData.user?.first_name || '',
+        last_name: userData.user?.last_name || '',
+        email: userData.user?.email || '',
+        phone: userData.user?.phone || '',
+      }
+    }));
+    
+    // Автоматически повторяем попытку создания бронирования
+    setTimeout(() => {
+      handleSubmit();
+    }, 1000);
+  };
+
+  const handleContinueAsGuest = () => {
+    console.log('Пользователь выбрал продолжить как гость');
+    
+    // Очищаем поля клиента, чтобы пользователь мог ввести другие данные
+    setFormData(prev => ({
+      ...prev,
+      client: {
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+      }
+    }));
+    
+    // Переходим на шаг заполнения данных клиента
+    setActiveStep(3); // ClientInfoStep
   };
   
   // Рендер текущего шага
@@ -665,6 +703,17 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           onSecondaryAction={handleCreateAnother}
           onClose={handleGoHome}
         />
+
+        {/* Диалог существующего пользователя */}
+        {existingUserData && (
+          <ExistingUserDialog
+            open={existingUserDialogOpen}
+            onClose={() => setExistingUserDialogOpen(false)}
+            user={existingUserData}
+            onLoginSuccess={handleLoginSuccess}
+            onContinueAsGuest={handleContinueAsGuest}
+          />
+        )}
       </Box>
     </ClientLayout>
   );
