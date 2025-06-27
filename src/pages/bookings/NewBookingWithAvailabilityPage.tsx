@@ -230,6 +230,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         console.log('Начинаем с выбора категории, так как передан только город');
       }
     }
+
+    console.log('Final form data after URL/state processing:', newFormData);
     
     // Обновляем данные формы
     setFormData(newFormData);
@@ -465,7 +467,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       console.error('Ошибка создания бронирования:', error);
       console.log('Детали ошибки:', error.data);
       
-      // Формируем понятное сообщение об ошибке
+      // Если пользователь уже существует (статус 409), показываем диалог входа
+      if (error.status === 409 && error.data?.existing_user) {
+        // TODO: Показать ExistingUserDialog с данными пользователя
+        console.log('Найден существующий пользователь:', error.data.existing_user);
+        
+        // Пока что показываем обычную ошибку с предложением войти
+        let errorMessage = error.data.error || 'Пользователь уже существует';
+        if (error.data.details) {
+          errorMessage += '\n' + error.data.details.join('\n');
+        }
+        errorMessage += '\n\nВы можете войти в систему, используя существующий аккаунт, или изменить контактные данные.';
+        
+        setSubmitError(errorMessage);
+        return;
+      }
+      
+      // Формируем понятное сообщение об ошибке для других случаев
       let errorMessage = 'Произошла ошибка при создании бронирования. ';
       
       if (error.data?.error) {

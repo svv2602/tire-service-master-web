@@ -192,6 +192,25 @@ export const usersApi = baseApi.injectEndpoints({
       },
       invalidatesTags: ['User'],
     }),
+    // Проверка существования пользователя
+    checkUserExists: builder.query<{
+      exists: boolean;
+      user?: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        email: string;
+        phone: string;
+        role: string;
+        client_id?: number;
+      };
+    }, { phone?: string; email?: string }>({
+      query: ({ phone, email }) => ({
+        url: 'users/check_exists',
+        params: { phone, email },
+      }),
+      keepUnusedDataFor: 0, // Не кэшируем результаты проверки
+    }),
   }),
 });
 
@@ -201,4 +220,5 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useCheckUserExistsQuery,
 } = usersApi;

@@ -35,20 +35,23 @@ export interface AvailabilityCheckResponse {
 }
 
 export interface TimeSlot {
-  time: string;
-  available: boolean;
-  posts_count: number;
+  service_post_id: number;
+  post_number: number;
+  post_name: string;
+  category_id: string;
+  category_name: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  datetime: string;
 }
 
 export interface CategorySlotsResponse {
-  service_point_id: number;
-  category_id: number;
+  service_point_id: string;
+  category_id: string;
   date: string;
   slots: TimeSlot[];
-  category_contact: {
-    phone?: string;
-    email?: string;
-  };
+  total_slots: number;
 }
 
 export const availabilityApi = baseApi.injectEndpoints({

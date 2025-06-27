@@ -82,9 +82,11 @@ const ClientMainPage: React.FC = () => {
   const handleSearch = () => {
     if (!selectedCity) {
       // Если город не выбран, показываем сообщение или просто ничего не делаем
+      console.log('Город не выбран для поиска');
       return;
     } else {
       // Перенаправляем на страницу бронирования с передачей данных о городе
+      console.log('Переход на бронирование с городом:', selectedCity);
       navigate('/client/booking', {
         state: {
           cityId: selectedCity.id,

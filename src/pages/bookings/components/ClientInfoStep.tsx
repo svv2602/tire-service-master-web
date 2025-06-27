@@ -1,6 +1,6 @@
 // Шаг 3: Информация о клиенте
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -18,13 +18,19 @@ import {
   Email as EmailIcon,
   ContactPage as ContactPageIcon,
   PersonAdd as PersonAddIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../../store';
 
 // Импорт UI компонентов
 import TextField from '../../../components/ui/TextField';
 import PhoneField from '../../../components/ui/PhoneField';
+import ExistingUserDialog from '../../../components/booking/ExistingUserDialog';
+
+// Импорт API
+import { useCheckUserExistsQuery } from '../../../api/users.api';
+import { login } from '../../../store/slices/authSlice';
 
 // Импорт типов
 import { BookingFormData } from '../NewBookingWithAvailabilityPage';
@@ -43,6 +49,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   isValid,
 }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch<AppDispatch>();
   
   const [errors, setErrors] = useState({
     first_name: '',
@@ -60,6 +67,21 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   
   const [receiveNotifications, setReceiveNotifications] = useState(true);
   const [isSelfService, setIsSelfService] = useState(true); // По умолчанию заказчик и получатель - одно лицо
+  
+  // Состояния для проверки существующих пользователей
+  const [existingUserDialogOpen, setExistingUserDialogOpen] = useState(false);
+  const [existingUser, setExistingUser] = useState<any>(null);
+  const [checkUserData, setCheckUserData] = useState<{ phone?: string; email?: string } | null>(null);
+  const [lastCheckedData, setLastCheckedData] = useState<{ phone?: string; email?: string } | null>(null);
+  
+  // API для проверки существующих пользователей
+  const { data: userCheckResult, isLoading: isCheckingUser } = useCheckUserExistsQuery(
+    checkUserData || { phone: '', email: '' },
+    { 
+      skip: !checkUserData || (!checkUserData.phone && !checkUserData.email),
+      refetchOnMountOrArgChange: true,
+    }
+  );
   
   // Валидация полей
   const validateField = (field: string, value: string | undefined): string => {
@@ -124,6 +146,17 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       ...prev,
       [field]: error,
     }));
+    
+    // Проверяем существующих пользователей при изменении телефона или email
+    if (field === 'phone' || field === 'email') {
+      const phone = field === 'phone' ? value : formData.client.phone;
+      const email = field === 'email' ? value : formData.client.email;
+      
+      // Debounce проверку на 1 секунду
+      setTimeout(() => {
+        checkExistingUser(phone, email);
+      }, 1000);
+    }
   };
   
   // Обработчик изменения чекбокса уведомлений
@@ -174,6 +207,59 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       });
     }
   };
+  
+  // Проверка существующих пользователей (debounced)
+  const checkExistingUser = useCallback((phone: string, email: string) => {
+    // Проверяем только если есть валидные данные
+    const normalizedPhone = phone?.replace(/[^\d+]/g, '');
+    const trimmedEmail = email?.trim();
+    
+    if ((normalizedPhone && normalizedPhone.length >= 10) || 
+        (trimmedEmail && trimmedEmail.includes('@'))) {
+      
+      const newCheckData = {
+        phone: normalizedPhone || undefined,
+        email: trimmedEmail || undefined,
+      };
+      
+      // Проверяем, изменились ли данные
+      const dataChanged = JSON.stringify(newCheckData) !== JSON.stringify(lastCheckedData);
+      
+      if (dataChanged) {
+        setCheckUserData(newCheckData);
+        setLastCheckedData(newCheckData);
+      }
+    }
+  }, [lastCheckedData]);
+  
+  // Обработчик успешного входа
+  const handleLoginSuccess = useCallback(async (loginResult: any) => {
+    try {
+      // Предзаполняем форму данными авторизованного пользователя
+      if (loginResult.user) {
+        setFormData((prev: any) => ({
+          ...prev,
+          client: {
+            first_name: loginResult.user.first_name,
+            last_name: loginResult.user.last_name,
+            phone: loginResult.user.phone,
+            email: loginResult.user.email,
+          },
+          client_id: loginResult.user.client_id || null,
+        }));
+      }
+      
+      setExistingUserDialogOpen(false);
+    } catch (error) {
+      console.error('Ошибка при входе:', error);
+    }
+  }, [setFormData]);
+  
+  // Обработчик продолжения как гость
+  const handleContinueAsGuest = useCallback(() => {
+    setExistingUserDialogOpen(false);
+    // Пользователь решил продолжить как гость - ничего не делаем
+  }, []);
   
   // Проверка всех ошибок при изменении formData
   useEffect(() => {
@@ -245,6 +331,14 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       setRecipientErrors(newRecipientErrors);
     }
   }, [formData.service_recipient, isSelfService]);
+  
+  // Обработка результатов проверки пользователя
+  useEffect(() => {
+    if (userCheckResult?.exists && userCheckResult.user && !isAuthenticated) {
+      setExistingUser(userCheckResult.user);
+      setExistingUserDialogOpen(true);
+    }
+  }, [userCheckResult, isAuthenticated]);
   
   return (
     <Box>
@@ -529,6 +623,17 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         <Alert severity="info" sx={{ mt: 3 }}>
           Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
+      )}
+      
+      {/* Диалог для существующих пользователей */}
+      {existingUser && (
+        <ExistingUserDialog
+          open={existingUserDialogOpen}
+          onClose={() => setExistingUserDialogOpen(false)}
+          user={existingUser}
+          onLoginSuccess={handleLoginSuccess}
+          onContinueAsGuest={handleContinueAsGuest}
+        />
       )}
     </Box>
   );

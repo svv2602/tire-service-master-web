@@ -111,14 +111,44 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   
   // Получаем доступные временные слоты
   const availableTimeSlots = useMemo(() => {
-    return (availabilityData?.slots || [])
-      .filter(slot => slot.available)
-      .map(slot => ({
-        time: slot.time,
-        available_posts: slot.posts_count,
-        total_posts: slot.posts_count, // Используем posts_count как total_posts
-        can_book: slot.available
-      }));
+    if (!availabilityData?.slots || availabilityData.slots.length === 0) {
+      return [];
+    }
+
+    // Группируем слоты по времени начала
+    const groupedByTime = availabilityData.slots.reduce((acc, slot) => {
+      const timeKey = slot.start_time;
+      
+      if (!acc[timeKey]) {
+        acc[timeKey] = {
+          time: timeKey,
+          posts: [],
+          available_posts: 0,
+          total_posts: 0
+        };
+      }
+      
+      acc[timeKey].posts.push(slot);
+      acc[timeKey].available_posts += 1; // Все слоты в ответе доступны
+      acc[timeKey].total_posts += 1;
+      
+      return acc;
+    }, {} as Record<string, {
+      time: string;
+      posts: any[];
+      available_posts: number;
+      total_posts: number;
+    }>);
+
+    // Преобразуем в массив и сортируем по времени
+    return Object.values(groupedByTime)
+      .map(group => ({
+        time: group.time,
+        available_posts: group.available_posts,
+        total_posts: group.total_posts,
+        can_book: group.available_posts > 0
+      }))
+      .sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
   
   // Обработчик изменения даты
