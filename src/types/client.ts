@@ -49,7 +49,8 @@ export interface ClientCar extends BaseModel {
   model_id: number;
   year: number;
   is_primary: boolean;
-  license_plate?: string;
+  license_plate: string;
+  car_type_id?: number;
   tire_type_id?: number;
   brand?: CarBrand;
   model?: CarModel;
@@ -78,8 +79,8 @@ export interface ClientCarFormData {
   model_id: number;
   year: number;
   license_plate: string;
-  color?: string;
-  vin?: string;
+  car_type_id?: number;
+  is_primary?: boolean;
 }
 
 // Интерфейс для фильтрации автомобилей клиента

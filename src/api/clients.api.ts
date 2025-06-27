@@ -167,6 +167,61 @@ export const clientsApi = baseApi.injectEndpoints({
         'ClientCars',
       ],
     }),
+
+    // Получение автомобилей текущего авторизованного клиента
+    getMyClientCars: builder.query<ClientCar[], void>({
+      query: () => 'auth/me/cars',
+      providesTags: (result: ClientCar[] | undefined) => {
+        if (result && Array.isArray(result)) {
+          return [
+            ...result.map(({ id }) => ({ type: 'ClientCars' as const, id })),
+            { type: 'ClientCars' as const, id: 'MY_CARS' },
+            'ClientCars',
+          ];
+        }
+        return [{ type: 'ClientCars' as const, id: 'MY_CARS' }, 'ClientCars'];
+      },
+    }),
+
+    // Создание автомобиля для текущего клиента
+    createMyClientCar: builder.mutation<ClientCar, ClientCarFormData>({
+      query: (data: ClientCarFormData) => ({
+        url: 'auth/me/cars',
+        method: 'POST',
+        body: { car: data },
+      }),
+      invalidatesTags: () => [
+        { type: 'ClientCars' as const, id: 'MY_CARS' },
+        'ClientCars',
+      ],
+    }),
+
+    // Обновление автомобиля текущего клиента
+    updateMyClientCar: builder.mutation<ClientCar, { carId: string; data: Partial<ClientCarFormData> }>({
+      query: ({ carId, data }: { carId: string; data: Partial<ClientCarFormData> }) => ({
+        url: `auth/me/cars/${carId}`,
+        method: 'PATCH',
+        body: { car: data },
+      }),
+      invalidatesTags: (_result: ClientCar | undefined, _err: FetchBaseQueryError | undefined, args: { carId: string }) => [
+        { type: 'ClientCars' as const, id: args.carId },
+        { type: 'ClientCars' as const, id: 'MY_CARS' },
+        'ClientCars',
+      ],
+    }),
+
+    // Удаление автомобиля текущего клиента
+    deleteMyClientCar: builder.mutation<void, string>({
+      query: (carId: string) => ({
+        url: `auth/me/cars/${carId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result: void | undefined, _err: FetchBaseQueryError | undefined, carId: string) => [
+        { type: 'ClientCars' as const, id: carId },
+        { type: 'ClientCars' as const, id: 'MY_CARS' },
+        'ClientCars',
+      ],
+    }),
   }),
 });
 
@@ -181,4 +236,8 @@ export const {
   useCreateClientCarMutation,
   useUpdateClientCarMutation,
   useDeleteClientCarMutation,
+  useGetMyClientCarsQuery,
+  useCreateMyClientCarMutation,
+  useUpdateMyClientCarMutation,
+  useDeleteMyClientCarMutation,
 } = clientsApi; 

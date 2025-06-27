@@ -48,6 +48,7 @@ interface CurrentUserResponse {
   last_name: string;
   middle_name?: string;
   role: string;
+  role_id: number;
   last_login?: string;
   is_active: boolean;
   email_verified: boolean;
@@ -101,6 +102,7 @@ export const authApi = baseApi.injectEndpoints({
           data: response.data?.error || 'Ошибка получения данных пользователя'
         };
       },
+      providesTags: ['User'],
     }),
 
     // Обновление токена
@@ -148,6 +150,18 @@ export const authApi = baseApi.injectEndpoints({
           status: response.status,
           data: response.data?.errors || response.data?.error || 'Ошибка обновления профиля'
         };
+      },
+      // Инвалидируем кэш getCurrentUser после успешного обновления
+      invalidatesTags: ['User'],
+      // Также обновляем Redux store
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        try {
+          const { data } = await queryFulfilled;
+          // Принудительно обновляем кэш getCurrentUser
+          dispatch(authApi.util.invalidateTags(['User']));
+        } catch (error) {
+          console.error('❌ Ошибка при обновлении профиля:', error);
+        }
       },
     }),
   }),

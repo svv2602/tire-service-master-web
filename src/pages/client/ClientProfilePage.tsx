@@ -22,6 +22,14 @@ import {
   Card,
   Button,
   TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  MenuItem,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -32,11 +40,29 @@ import {
   Phone as PhoneIcon,
   Notifications as NotificationsIcon,
   Security as SecurityIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 
 // Типы
 import { RootState } from '../../store';
 import { useUpdateProfileMutation } from '../../api/auth.api';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../store/slices/authSlice';
+import { User } from '../../types/user';
+import { UserRole } from '../../types';
+import { 
+  useGetMyClientCarsQuery, 
+  useCreateMyClientCarMutation, 
+  useUpdateMyClientCarMutation, 
+  useDeleteMyClientCarMutation 
+} from '../../api/clients.api';
+import { useGetCarBrandsQuery } from '../../api/carBrands.api';
+import { useGetCarModelsByBrandIdQuery } from '../../api/carModels.api';
+import { useGetCarTypesQuery } from '../../api/carTypes.api';
+import { ClientCar, ClientCarFormData } from '../../types/client';
 
 // Импорты компонентов
 import ClientLayout from '../../components/client/ClientLayout';
@@ -94,13 +120,30 @@ const ClientProfilePage: React.FC = () => {
     severity: 'info',
   });
 
+  // Состояния для автомобилей
+  const [carDialogOpen, setCarDialogOpen] = useState(false);
+  const [editingCar, setEditingCar] = useState<ClientCar | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [carToDelete, setCarToDelete] = useState<ClientCar | null>(null);
+
   // Redux стейт
   const { user, isAuthenticated, isInitialized } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
 
   // RTK Query мутации
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
 
-  // Схема валидации
+  // API хуки для автомобилей
+  const { data: cars = [], isLoading: carsLoading, refetch: refetchCars } = useGetMyClientCarsQuery();
+  const [createCar, { isLoading: isCreating }] = useCreateMyClientCarMutation();
+  const [updateCar, { isLoading: isUpdatingCar }] = useUpdateMyClientCarMutation();
+  const [deleteCar, { isLoading: isDeleting }] = useDeleteMyClientCarMutation();
+
+  // API для справочников
+  const { data: brandsData } = useGetCarBrandsQuery({});
+  const { data: carTypesData } = useGetCarTypesQuery();
+
+  // Схема валидации для профиля
   const validationSchema = Yup.object({
     first_name: Yup.string()
       .min(2, 'Имя должно содержать минимум 2 символа')
@@ -119,7 +162,23 @@ const ClientProfilePage: React.FC = () => {
       .required('Номер телефона обязателен'),
   });
 
-  // Formik для управления формой
+  // Схема валидации для автомобиля
+  const carValidationSchema = Yup.object({
+    brand_id: Yup.number()
+      .required('Марка автомобиля обязательна'),
+    model_id: Yup.number()
+      .required('Модель автомобиля обязательна'),
+    year: Yup.number()
+      .min(1900, 'Год не может быть меньше 1900')
+      .max(new Date().getFullYear() + 1, 'Год не может быть больше следующего года')
+      .required('Год выпуска обязателен'),
+    license_plate: Yup.string()
+      .required('Номер автомобиля обязателен'),
+    car_type_id: Yup.number()
+      .nullable(),
+  });
+
+  // Formik для управления формой профиля
   const formik = useFormik<ProfileFormData>({
     initialValues: {
       first_name: user?.first_name || '',
@@ -130,12 +189,25 @@ const ClientProfilePage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        await updateProfile({
+        const updatedUser = await updateProfile({
           first_name: values.first_name,
           last_name: values.last_name,
           email: values.email,
           phone: values.phone,
         }).unwrap();
+
+        // Обновляем Redux store с новыми данными пользователя
+        // Преобразуем CurrentUserResponse в User тип
+        const userForRedux: User = {
+          ...updatedUser,
+          role: user?.role || UserRole.CLIENT, // Сохраняем текущую роль из Redux
+          role_id: updatedUser.role_id || user?.role_id || 1, // Используем role_id из ответа или текущий
+        };
+
+        dispatch(setCredentials({
+          user: userForRedux,
+          accessToken: null, // Токен остается в куки
+        }));
 
         setNotification({
           open: true,
@@ -158,6 +230,60 @@ const ClientProfilePage: React.FC = () => {
     },
   });
 
+  // Состояние для выбранного бренда (для загрузки моделей)
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+
+  // API для моделей выбранного бренда
+  const { data: modelsData } = useGetCarModelsByBrandIdQuery(
+    { brandId: selectedBrandId?.toString() || '' },
+    { skip: !selectedBrandId }
+  );
+
+  // Formik для управления формой автомобиля
+  const carFormik = useFormik<ClientCarFormData>({
+    initialValues: {
+      brand_id: 0,
+      model_id: 0,
+      year: new Date().getFullYear(),
+      license_plate: '',
+      car_type_id: 0,
+    },
+    validationSchema: carValidationSchema,
+    onSubmit: async (values) => {
+      try {
+        if (editingCar) {
+          await updateCar({
+            carId: editingCar.id.toString(),
+            data: values,
+          }).unwrap();
+          setNotification({
+            open: true,
+            message: 'Автомобиль успешно обновлен',
+            severity: 'success',
+          });
+        } else {
+          await createCar(values).unwrap();
+          setNotification({
+            open: true,
+            message: 'Автомобиль успешно добавлен',
+            severity: 'success',
+          });
+        }
+        
+        setCarDialogOpen(false);
+        setEditingCar(null);
+        carFormik.resetForm();
+        refetchCars();
+      } catch (error) {
+        setNotification({
+          open: true,
+          message: 'Ошибка при сохранении автомобиля',
+          severity: 'error',
+        });
+      }
+    },
+  });
+
   // Обработчики
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -170,6 +296,71 @@ const ClientProfilePage: React.FC = () => {
   // Получение инициалов для аватара
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  };
+
+  // Обработчики для автомобилей
+  const handleOpenCarDialog = (car?: ClientCar) => {
+    if (car) {
+      setEditingCar(car);
+      setSelectedBrandId(car.brand_id);
+      carFormik.setValues({
+        brand_id: car.brand_id,
+        model_id: car.model_id,
+        year: car.year,
+        license_plate: car.license_plate,
+        car_type_id: car.car_type_id || 0,
+      });
+    } else {
+      setEditingCar(null);
+      setSelectedBrandId(null);
+      carFormik.resetForm();
+    }
+    setCarDialogOpen(true);
+  };
+
+  const handleCloseCarDialog = () => {
+    setCarDialogOpen(false);
+    setEditingCar(null);
+    carFormik.resetForm();
+    setSelectedBrandId(null);
+  };
+
+  const handleBrandChange = (brandId: number) => {
+    setSelectedBrandId(brandId);
+    carFormik.setFieldValue('brand_id', brandId);
+    carFormik.setFieldValue('model_id', 0); // Сбрасываем модель при смене бренда
+  };
+
+  const handleDeleteCar = async () => {
+    if (!carToDelete) return;
+
+    try {
+      await deleteCar(carToDelete.id.toString()).unwrap();
+      setNotification({
+        open: true,
+        message: 'Автомобиль успешно удален',
+        severity: 'success',
+      });
+      setDeleteDialogOpen(false);
+      setCarToDelete(null);
+      refetchCars();
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Ошибка при удалении автомобиля',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleOpenDeleteDialog = (car: ClientCar) => {
+    setCarToDelete(car);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setCarToDelete(null);
   };
 
   // Проверка авторизации после всех хуков
@@ -339,12 +530,85 @@ const ClientProfilePage: React.FC = () => {
 
           {/* Вкладка "Мои автомобили" */}
           <TabPanel value={activeTab} index={1}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'text.primary' }}>
-              Мои автомобили
-            </Typography>
-            <Alert severity="info">
-              Функционал управления автомобилями будет добавлен в следующих версиях.
-            </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" sx={{ color: 'text.primary' }}>
+                Мои автомобили
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => handleOpenCarDialog()}
+              >
+                Добавить автомобиль
+              </Button>
+            </Box>
+
+            {carsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : cars.length === 0 ? (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                У вас пока нет добавленных автомобилей. Добавьте первый автомобиль для удобного бронирования услуг.
+              </Alert>
+            ) : (
+              <Grid container spacing={2}>
+                {cars.map((car) => (
+                  <Grid item xs={12} md={6} key={car.id}>
+                    <Card sx={{ p: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CarIcon color="primary" />
+                          <Typography variant="h6">
+                            {car.brand?.name} {car.model?.name}
+                          </Typography>
+                          {car.is_primary && (
+                            <Chip
+                              icon={<StarIcon />}
+                              label="Основной"
+                              size="small"
+                              color="primary"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                        <Box>
+                          <Tooltip title="Редактировать">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenCarDialog(car)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Удалить">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleOpenDeleteDialog(car)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Box>
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Год: {car.year}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        Номер: {car.license_plate}
+                      </Typography>
+                      {car.car_type_id && (
+                        <Typography variant="body2" color="text.secondary">
+                          Тип: {car.car_type_id}
+                        </Typography>
+                      )}
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
           </TabPanel>
 
           {/* Вкладка "Статистика" */}
@@ -437,6 +701,151 @@ const ClientProfilePage: React.FC = () => {
           </TabPanel>
         </Card>
       </Container>
+
+      {/* Диалог создания/редактирования автомобиля */}
+      <Dialog open={carDialogOpen} onClose={handleCloseCarDialog} maxWidth="md" fullWidth>
+        <form onSubmit={carFormik.handleSubmit}>
+          <DialogTitle>
+            {editingCar ? 'Редактировать автомобиль' : 'Добавить автомобиль'}
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Марка автомобиля"
+                  name="brand_id"
+                  value={carFormik.values.brand_id || ''}
+                  onChange={(e) => handleBrandChange(Number(e.target.value))}
+                  onBlur={carFormik.handleBlur}
+                  error={carFormik.touched.brand_id && Boolean(carFormik.errors.brand_id)}
+                  helperText={carFormik.touched.brand_id && carFormik.errors.brand_id}
+                >
+                  <MenuItem value="">Выберите марку</MenuItem>
+                  {brandsData?.data?.map((brand) => (
+                    <MenuItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Модель автомобиля"
+                  name="model_id"
+                  value={carFormik.values.model_id || ''}
+                  onChange={carFormik.handleChange}
+                  onBlur={carFormik.handleBlur}
+                  error={carFormik.touched.model_id && Boolean(carFormik.errors.model_id)}
+                  helperText={carFormik.touched.model_id && carFormik.errors.model_id}
+                  disabled={!selectedBrandId}
+                >
+                  <MenuItem value="">Выберите модель</MenuItem>
+                  {modelsData?.car_models?.map((model) => (
+                    <MenuItem key={model.id} value={model.id}>
+                      {model.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Год выпуска"
+                  name="year"
+                  type="number"
+                  value={carFormik.values.year}
+                  onChange={carFormik.handleChange}
+                  onBlur={carFormik.handleBlur}
+                  error={carFormik.touched.year && Boolean(carFormik.errors.year)}
+                  helperText={carFormik.touched.year && carFormik.errors.year}
+                  inputProps={{ min: 1900, max: new Date().getFullYear() + 1 }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Номер автомобиля"
+                  name="license_plate"
+                  value={carFormik.values.license_plate}
+                  onChange={carFormik.handleChange}
+                  onBlur={carFormik.handleBlur}
+                  error={carFormik.touched.license_plate && Boolean(carFormik.errors.license_plate)}
+                  helperText={carFormik.touched.license_plate && carFormik.errors.license_plate}
+                  placeholder="А123БВ777"
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Тип автомобиля (необязательно)"
+                  name="car_type_id"
+                  value={carFormik.values.car_type_id || ''}
+                  onChange={carFormik.handleChange}
+                  onBlur={carFormik.handleBlur}
+                >
+                  <MenuItem value="">Не указан</MenuItem>
+                  {carTypesData?.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseCarDialog}>
+              Отмена
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isCreating || isUpdatingCar}
+            >
+              {isCreating || isUpdatingCar ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Диалог подтверждения удаления */}
+      <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>Удалить автомобиль?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите удалить автомобиль{' '}
+            <strong>
+              {carToDelete?.brand?.name} {carToDelete?.model?.name} ({carToDelete?.license_plate})
+            </strong>
+            ?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Это действие нельзя отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>
+            Отмена
+          </Button>
+          <Button
+            onClick={handleDeleteCar}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? 'Удаление...' : 'Удалить'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Уведомления */}
       <Notification

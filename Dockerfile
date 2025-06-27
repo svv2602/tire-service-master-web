@@ -10,33 +10,35 @@ RUN apk add --no-cache \
     make \
     g++
 
+# Создаем пользователя с нестандартным UID
+#ARG UID=0
+#ARG GID=0
+
+#RUN addgroup -g ${GID} appgroup && \
+#    adduser -D -u ${UID} -G appgroup appuser
+
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем package.json и package-lock.json (если есть)
+# Копируем package.json и package-lock.json
 COPY package*.json ./
 
 # Устанавливаем зависимости
-RUN npm ci --only=production=false && \
-    npm cache clean --force
+RUN npm ci && npm cache clean --force
 
-# Копируем весь код приложения
+# Копируем весь проект
 COPY . .
 
-# Создаем директории для build и node_modules
-RUN mkdir -p build node_modules && \
-    chmod -R 755 build
+# Меняем владельца всех файлов на appuser
+#RUN chown -R appuser:appgroup /app
 
-# Устанавливаем права доступа
-RUN addgroup -g 1000 -S appgroup && \
-    adduser -u 1000 -S appuser -G appgroup && \
-    chown -R appuser:appgroup /app
+# Переключаемся на непривилегированного пользователя
+USER root
 
-# Переключаемся на пользователя приложения
-USER appuser
-
-# Открываем порт 3008
+# Открываем порт
 EXPOSE 3008
 
-# Команда по умолчанию (может быть переопределена в docker-compose.yml)
-CMD ["npm", "start"] 
+# Команда запуска (для dev — npm start, для prod — можно заменить на serve -s build)
+CMD ["npm", "start"]
+
+

@@ -16,6 +16,8 @@ import {
   CircularProgress,
   Alert,
   useTheme,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarByIdQuery, useCreateClientCarMutation, useUpdateClientCarMutation } from '../../api/clients.api';
@@ -38,8 +40,8 @@ const validationSchema = Yup.object({
     .required('Обязательное поле'),
   license_plate: Yup.string()
     .required('Обязательное поле'),
-  color: Yup.string(),
-  vin: Yup.string(),
+  car_type_id: Yup.number().nullable(),
+  is_primary: Yup.boolean(),
 });
 
 /**
@@ -92,10 +94,8 @@ const ClientCarFormPage: React.FC = () => {
         model_id: car.model_id,
         year: car.year,
         license_plate: car.license_plate || '',
-        // Эти поля есть в ClientCarFormData, но отсутствуют в ClientCar
-        // Используем пустые значения по умолчанию
-        color: '',
-        vin: '',
+        car_type_id: car.car_type_id || 0,
+        is_primary: car.is_primary || false,
       };
     }
     return {
@@ -103,8 +103,8 @@ const ClientCarFormPage: React.FC = () => {
       model_id: 0,
       year: new Date().getFullYear(),
       license_plate: '',
-      color: '',
-      vin: '',
+      car_type_id: 0,
+      is_primary: false,
     };
   }, [car, isEditMode]);
 
@@ -266,31 +266,32 @@ const ClientCarFormPage: React.FC = () => {
               />
             </Grid>
 
-            {/* Поле цвета автомобиля */}
+            {/* Поле типа автомобиля */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                name="color"
-                label="Цвет"
-                value={formik.values.color}
+                name="car_type_id"
+                label="Тип автомобиля (ID)"
+                type="number"
+                value={formik.values.car_type_id}
                 onChange={formik.handleChange}
-                error={formik.touched.color && Boolean(formik.errors.color)}
-                helperText={formik.touched.color && formik.errors.color}
+                error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
+                helperText={formik.touched.car_type_id && formik.errors.car_type_id}
                 sx={textFieldStyles}
               />
             </Grid>
 
-            {/* Поле VIN номера */}
+            {/* Поле основного автомобиля */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="vin"
-                label="VIN"
-                value={formik.values.vin}
-                onChange={formik.handleChange}
-                error={formik.touched.vin && Boolean(formik.errors.vin)}
-                helperText={formik.touched.vin && formik.errors.vin}
-                sx={textFieldStyles}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    name="is_primary"
+                    checked={formik.values.is_primary}
+                    onChange={formik.handleChange}
+                  />
+                }
+                label="Основной автомобиль"
               />
             </Grid>
 
