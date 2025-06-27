@@ -102,6 +102,24 @@ export const servicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['ServiceCategory'],
     }),
+
+    // Получение категорий услуг по городу
+    getServiceCategoriesByCity: builder.query<{
+      data: Array<ServiceCategory & {
+        service_points_count: number;
+        services_count: number;
+        city_name: string;
+      }>;
+      city: {
+        id: number;
+        name: string;
+        region: string;
+      };
+      total_count: number;
+    }, string>({
+      query: (cityName) => `service_categories/by_city/${encodeURIComponent(cityName)}`,
+      providesTags: ['ServiceCategory'],
+    }),
   }),
 });
 
@@ -116,4 +134,5 @@ export const {
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,
+  useGetServiceCategoriesByCityQuery,
 } = servicesApi; 

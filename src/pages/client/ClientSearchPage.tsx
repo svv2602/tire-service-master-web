@@ -44,6 +44,7 @@ import {
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
+import { useGetServiceCategoriesByCityQuery } from '../../api/services.api';
 
 // Интерфейс для сервисной точки из API поиска
 interface SearchServicePoint {
@@ -916,6 +917,7 @@ const ClientSearchPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const location = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   // Получаем параметры поиска из URL
   const searchParams = useMemo(() => {
@@ -925,6 +927,16 @@ const ClientSearchPage: React.FC = () => {
       query: params.get('query') || ''
     };
   }, [location.search]);
+
+  // Запрос для получения категорий услуг по городу
+  const { 
+    data: categoriesResult, 
+    isLoading: categoriesLoading,
+    error: categoriesError 
+  } = useGetServiceCategoriesByCityQuery(
+    searchParams.city,
+    { skip: !searchParams.city }
+  );
 
   // Запрос к API для поиска сервисных точек
   const { 
@@ -936,7 +948,7 @@ const ClientSearchPage: React.FC = () => {
       city: searchParams.city,
       query: searchParams.query 
     },
-    { skip: !searchParams.city } // Пропускаем запрос, если нет города
+    { skip: !searchParams.city || selectedCategory === null } // Пропускаем запрос, если нет города или не выбрана категория
   );
 
   // Адаптируем данные из API к локальному интерфейсу
@@ -974,14 +986,14 @@ const ClientSearchPage: React.FC = () => {
   const cityFound = searchResult?.city_found ?? true;
 
   // Обработка состояния загрузки
-  if (isLoading) {
+  if (categoriesLoading) {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             <CircularProgress size={60} />
             <Typography variant="h6" sx={{ ml: 2, color: colors.textSecondary }}>
-              Пошук сервісних точок...
+              Завантаження категорій послуг...
             </Typography>
           </Box>
         </Container>
@@ -1034,7 +1046,72 @@ const ClientSearchPage: React.FC = () => {
           </Box>
         </Box>
 
+        {/* Выбор категории услуг */}
+        {categoriesResult && categoriesResult.data.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: colors.textPrimary }}>
+              Виберіть тип послуг
+            </Typography>
+            <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 3 }}>
+              Виберіть категорію послуг для пошуку підходящих сервісних точок
+            </Typography>
+            
+            <Grid container spacing={3}>
+              {categoriesResult.data.map((category) => (
+                <Grid item xs={12} sm={6} md={4} key={category.id}>
+                  <Card 
+                    sx={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      border: selectedCategory === category.id ? `2px solid ${theme.palette.primary.main}` : '1px solid transparent',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: theme.shadows[4]
+                      }
+                    }}
+                    onClick={() => setSelectedCategory(category.id)}
+                  >
+                    <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                      <Box sx={{ 
+                        fontSize: '2.5rem', 
+                        mb: 2,
+                        color: selectedCategory === category.id ? theme.palette.primary.main : colors.textSecondary
+                      }}>
+                        {category.name.includes('Техническое') ? '🔧' : '🚗'}
+                      </Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
+                        {category.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
+                        {category.description || 'Мойка, полировка и другие услуги'}
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
+                        <Chip 
+                          label={`Доступно услуг: ${category.services_count}`}
+                          size="small"
+                          variant="outlined"
+                        />
+                        <Chip 
+                          label={`Доступно сервісів: ${category.service_points_count}`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+
         {/* Обработка ошибок */}
+        {categoriesError && (
+          <Alert severity="error" sx={{ mb: 4 }}>
+            Помилка завантаження категорій послуг. Спробуйте пізніше.
+          </Alert>
+        )}
+
         {error && (
           <Alert severity="error" sx={{ mb: 4 }}>
             Помилка завантаження даних. Спробуйте пізніше.
@@ -1049,30 +1126,56 @@ const ClientSearchPage: React.FC = () => {
         )}
 
         {/* Результаты поиска */}
-        {servicePoints.length === 0 && !isLoading && !error ? (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
-              😔 Сервісні точки не знайдені
-            </Typography>
-            <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
-              Спробуйте змінити параметри пошуку або оберіть інше місто
-            </Typography>
-            <Button 
-              variant="outlined" 
-              onClick={() => window.location.href = '/client'}
-              sx={secondaryButtonStyles}
-            >
-              Повернутися на головну
-            </Button>
-          </Box>
-        ) : (
-          <Grid container spacing={3}>
-            {servicePoints.map((servicePoint) => (
-              <Grid item xs={12} md={6} lg={4} key={servicePoint.id}>
-                <ServicePointCard servicePoint={servicePoint} />
+        {selectedCategory && (
+          <>
+            {/* Индикатор загрузки сервисных точек */}
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
+                <CircularProgress size={40} />
+                <Typography variant="h6" sx={{ ml: 2, color: colors.textSecondary }}>
+                  Пошук сервісних точок...
+                </Typography>
+              </Box>
+            )}
+
+            {/* Заголовок результатов для выбранной категории */}
+            {!isLoading && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
+                  🏢 Сервісні точки
+                </Typography>
+                <Typography variant="body1" sx={{ color: colors.textSecondary }}>
+                  Сервісні точки, що надають послуги обраної категорії в місті "{searchParams.city}"
+                </Typography>
+              </Box>
+            )}
+
+            {servicePoints.length === 0 && !isLoading && !error ? (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
+                  😔 Сервісні точки не знайдені
+                </Typography>
+                <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
+                  Для обраної категорії послуг не знайдено сервісних точок у цьому місті
+                </Typography>
+                <Button 
+                  variant="outlined" 
+                  onClick={() => setSelectedCategory(null)}
+                  sx={secondaryButtonStyles}
+                >
+                  Обрати іншу категорію
+                </Button>
+              </Box>
+            ) : !isLoading && (
+              <Grid container spacing={3}>
+                {servicePoints.map((servicePoint) => (
+                  <Grid item xs={12} md={6} lg={4} key={servicePoint.id}>
+                    <ServicePointCard servicePoint={servicePoint} />
+                  </Grid>
+                ))}
               </Grid>
-            ))}
-          </Grid>
+            )}
+          </>
         )}
       </Container>
     </Box>

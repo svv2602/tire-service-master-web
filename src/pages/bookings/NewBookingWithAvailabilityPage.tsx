@@ -223,6 +223,12 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     if (stateData?.cityId) {
       newFormData.city_id = stateData.cityId;
       console.log('Установлен город из state:', stateData.cityId, stateData.cityName);
+      
+      // Если передан только город (без сервисной точки), начинаем с первого шага (выбор категории)
+      if (!stateData.servicePointId && !servicePointId) {
+        setActiveStep(0); // Начинаем с выбора категории
+        console.log('Начинаем с выбора категории, так как передан только город');
+      }
     }
     
     // Обновляем данные формы
