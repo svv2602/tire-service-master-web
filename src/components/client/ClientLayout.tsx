@@ -18,7 +18,8 @@ import {
   Person as PersonIcon,
   RateReview as ReviewIcon,
   AdminPanelSettings as AdminIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Calculate as CalculateIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
 
@@ -76,6 +77,15 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       >
         Записатися
       </Button>
+      <Button
+        color="inherit"
+        component={Link}
+        to="/client/tire-calculator"
+        sx={{ color: colors.textSecondary }}
+        startIcon={<CalculateIcon />}
+      >
+        Калькулятор шин
+      </Button>
     </Box>
   );
 
@@ -92,7 +102,13 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         profileActions={profileActions}
         username={user ? `${user.first_name} ${user.last_name}` : ''}
       />
-      <Box component="main">
+      <Box 
+        component="main" 
+        sx={{ 
+          pt: { xs: 7, sm: 8 }, // Отступ сверху для фиксированной навигации
+          minHeight: 'calc(100vh - 64px)' // Минимальная высота с учетом AppBar
+        }}
+      >
         {children}
       </Box>
     </Box>

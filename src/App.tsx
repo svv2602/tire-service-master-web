@@ -131,6 +131,9 @@ const RegionsPageNewAdmin = lazy(() => import('./pages/regions/RegionsPageNew'))
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
+// Ленивая загрузка калькулятора шин
+const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalculatorPage'));
+
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -200,6 +203,7 @@ function App() {
                     {/* Клиентские маршруты */}
                     <Route path="/client/services" element={<ClientServicesPage />} />
                     <Route path="/client/search" element={<ClientSearchPage />} />
+                    <Route path="/client/tire-calculator" element={<TireCalculatorPage />} />
                     <Route path="/client/booking" element={<NewBookingWithAvailabilityPage />} />
                     <Route path="/client/booking/success" element={<BookingSuccessPage />} />
                     <Route path="/client/profile" element={<ClientProfilePage />} />
