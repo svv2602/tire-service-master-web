@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { login } from '../../store/slices/authSlice';
@@ -250,8 +250,9 @@ const LoginPage: React.FC = () => {
 
           <Button
             type="submit"
-            fullWidth
             variant="contained"
+            fullWidth
+            color="primary"
             disabled={loading}
             onClick={handleButtonClick}
             sx={authStyles.authSubmit}
@@ -259,26 +260,41 @@ const LoginPage: React.FC = () => {
             {loading ? (
               <CircularProgress 
                 size={24} 
-                sx={authStyles.buttonProgress} 
+                color="inherit" 
+                data-testid="loading-spinner"
               />
             ) : (
               'Войти'
             )}
           </Button>
+
+          <Box sx={authStyles.authActions}>
+            <Box component={RouterLink} to="/auth/register" style={{ textDecoration: 'none', width: '100%' }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                color="primary"
+                disabled={loading}
+              >
+                Зарегистрироваться
+              </Button>
+            </Box>
+
+            <Button
+              variant="text"
+              fullWidth
+              color="primary"
+              onClick={handleSkipLogin}
+              disabled={loading}
+              sx={authStyles.skipButton}
+              startIcon={<CloseIcon />}
+            >
+              Продолжить без входа
+            </Button>
+          </Box>
         </form>
 
         <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Button
-            variant="text"
-            color="secondary"
-            size="small"
-            startIcon={<CloseIcon />}
-            onClick={handleSkipLogin}
-            sx={{ mb: 2 }}
-          >
-            Продолжить без входа
-          </Button>
-          
           <Typography variant="body2" color="textSecondary">
             Тестовые данные для входа в систему:
           </Typography>

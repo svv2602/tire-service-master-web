@@ -19,6 +19,7 @@ import { GlobalUIStyles } from './components/styled/CommonComponents';
 
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 
 // Ленивая загрузка страниц панели управления
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -189,8 +190,8 @@ function App() {
                   <Routes>
                     {/* Публичные маршруты */}
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/auth/register" element={<RegisterPage />} />
 
-                    
                     {/* Главная страница для клиентов (без авторизации) */}
                     <Route path="/client" element={
                       <ClientMainPage />

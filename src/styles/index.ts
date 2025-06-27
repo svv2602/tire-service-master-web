@@ -3,6 +3,8 @@
 
 // Экспорт базовых констант и утилит темы
 export * from './theme';
+export * from './theme/tokens';
+export * from './auth';
 
 // Экспорт стилей компонентов
 export {
@@ -14,7 +16,6 @@ export {
   getModalStyles,
   getTabStyles,
   getContainerStyles,
-  getAuthStyles,
   getDashboardStyles,
   getTablePageStyles,
   type CardVariant,
