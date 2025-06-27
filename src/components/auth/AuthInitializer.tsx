@@ -20,47 +20,65 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
       if (!initializationStarted.current && !isInitialized) {
         initializationStarted.current = true;
 
-        // Если нет accessToken и пользователь не залогинен, всегда пробуем восстановить сессию через refresh
+        // Если нет accessToken и пользователь не залогинен, пробуем восстановить сессию
         if (!accessToken && !user) {
           try {
             console.log('AuthInitializer: Пробуем восстановить access token через refresh');
             const API_URL = `${config.API_URL}${config.API_PREFIX}`;
-            const response = await axios.post(
-              `${API_URL}/auth/refresh`,
-              {},
-              {
-                withCredentials: true,
-                headers: { 'Content-Type': 'application/json' }
+            
+            // Сначала пробуем refresh
+            let token = null;
+            try {
+              const response = await axios.post(
+                `${API_URL}/auth/refresh`,
+                {},
+                {
+                  withCredentials: true,
+                  headers: { 'Content-Type': 'application/json' }
+                }
+              );
+              if (response.data && (response.data.tokens?.access || response.data.access_token)) {
+                token = response.data.tokens?.access || response.data.access_token;
+                console.log('AuthInitializer: Токен успешно обновлен через refresh');
               }
-            );
-            if (response.data && (response.data.tokens?.access || response.data.access_token)) {
-              const token = response.data.tokens?.access || response.data.access_token;
-              console.log('AuthInitializer: Токен успешно обновлен');
-              // Получаем данные пользователя
+            } catch (refreshError) {
+              console.log('AuthInitializer: Refresh не сработал, пробуем напрямую /auth/me');
+            }
+
+            // Пробуем получить данные пользователя (с токеном или без)
+            try {
+              const headers: any = {
+                'Content-Type': 'application/json'
+              };
+              if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+              }
+
               const userResponse = await axios.get(
                 `${API_URL}/auth/me`,
                 {
                   withCredentials: true,
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                  }
+                  headers
                 }
               );
+              
               if (userResponse.data && userResponse.data.user) {
-                console.log('AuthInitializer: Данные пользователя получены');
+                console.log('AuthInitializer: Данные пользователя получены:', userResponse.data.user.email);
                 // Устанавливаем данные пользователя и токен в Redux
                 dispatch(setCredentials({
-                  accessToken: token,
+                  accessToken: token, // может быть null, это нормально при cookie-auth
                   user: userResponse.data.user
                 }));
+              } else {
+                console.log('AuthInitializer: Данные пользователя не получены');
+                dispatch(setInitialized());
               }
-            } else {
-              // Если refresh не сработал, просто инициализируемся
+            } catch (userError) {
+              console.log('AuthInitializer: Ошибка получения данных пользователя:', userError);
               dispatch(setInitialized());
             }
           } catch (error) {
-            console.log('AuthInitializer: Ошибка восстановления сессии', error);
+            console.log('AuthInitializer: Общая ошибка инициализации:', error);
             dispatch(setInitialized());
           }
         } else {

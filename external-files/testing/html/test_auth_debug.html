@@ -3,185 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отладка авторизации</title>
+    <title>Диагностика аутентификации</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
         .container {
-            border: 1px solid #ddd;
+            background: white;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
         button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
+            background-color: #007bff;
             color: white;
             border: none;
+            padding: 10px 20px;
             border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px;
+            margin: 5px;
         }
-        input {
-            padding: 8px;
-            margin-bottom: 10px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        pre {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-        }
-        .error {
-            color: red;
-        }
-        .success {
-            color: green;
-        }
-        #debugLog {
-            max-height: 300px;
-            overflow-y: auto;
-        }
+        button:hover { background-color: #0056b3; }
+        .json { background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
     </style>
 </head>
 <body>
-    <h1>Отладка авторизации API</h1>
+    <h1>🔍 Диагностика аутентификации Tire Service</h1>
     
     <div class="container">
-        <h2>Авторизация</h2>
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" value="admin@test.com">
-        </div>
-        <div>
-            <label for="password">Пароль:</label>
-            <input type="password" id="password" value="admin123">
-        </div>
-        <div>
-            <label>
-                <input type="checkbox" id="withCredentials" checked> 
-                withCredentials (для куки)
-            </label>
-        </div>
-        <button onclick="loginWithFetch()">Войти через fetch</button>
-        <button onclick="loginWithAxios()">Войти через axios</button>
-        <div id="loginResult"></div>
+        <h2>Тестирование API</h2>
+        <button onclick="testLogin()">Тест логина</button>
+        <button onclick="testCurrentUser()">Тест /auth/me</button>
+        <button onclick="testLogout()">Тест выхода</button>
+        <button onclick="checkCookies()">Проверить cookies</button>
+        <div id="apiResults"></div>
     </div>
-    
+
     <div class="container">
-        <h2>Журнал отладки</h2>
-        <button onclick="clearLog()">Очистить журнал</button>
-        <div id="debugLog"></div>
+        <h2>Состояние браузера</h2>
+        <div id="browserState"></div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     <script>
         const API_URL = 'http://localhost:8000/api/v1';
-        const debugLog = document.getElementById('debugLog');
-        
-        // Функция для логирования
-        function log(message, isError = false) {
-            const entry = document.createElement('div');
-            entry.innerHTML = `<p class="${isError ? 'error' : ''}">[${new Date().toLocaleTimeString()}] ${message}</p>`;
-            debugLog.appendChild(entry);
-            debugLog.scrollTop = debugLog.scrollHeight;
+
+        function displayResult(elementId, title, data, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = `
+                <strong>[${timestamp}] ${title}</strong><br>
+                <div class="json">${JSON.stringify(data, null, 2)}</div>
+            `;
+            element.appendChild(resultDiv);
+            element.scrollTop = element.scrollHeight;
         }
-        
-        // Функция для очистки журнала
-        function clearLog() {
-            debugLog.innerHTML = '';
-        }
-        
-        // Функция для отображения результата
-        function showResult(data, isError = false) {
-            const element = document.getElementById('loginResult');
-            if (isError) {
-                element.innerHTML = `<p class="error">Ошибка: ${JSON.stringify(data, null, 2)}</p>`;
-            } else {
-                element.innerHTML = `<p class="success">Успешно!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
-            }
-        }
-        
-        // Функция для входа через fetch
-        async function loginWithFetch() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const withCredentials = document.getElementById('withCredentials').checked;
-            
-            log(`Попытка входа через fetch: ${email} / ***`);
-            log(`withCredentials: ${withCredentials}`);
-            
+
+        async function testLogin() {
             try {
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email, password }),
-                    credentials: withCredentials ? 'include' : 'omit'
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'admin123@test.com',
+                            password: 'admin123'
+                        }
+                    })
                 });
-                
-                log(`Статус ответа: ${response.status}`);
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    log(`Ошибка: ${JSON.stringify(errorData)}`, true);
-                    showResult(errorData, true);
-                    return;
-                }
-                
+
                 const data = await response.json();
-                log(`Успешный ответ: ${JSON.stringify(data)}`);
-                showResult(data);
                 
-                // Проверяем куки
-                log(`Cookies: ${document.cookie}`);
-            } catch (error) {
-                log(`Исключение: ${error.message}`, true);
-                showResult({ message: error.message }, true);
-            }
-        }
-        
-        // Функция для входа через axios
-        async function loginWithAxios() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const withCredentials = document.getElementById('withCredentials').checked;
-            
-            log(`Попытка входа через axios: ${email} / ***`);
-            log(`withCredentials: ${withCredentials}`);
-            
-            try {
-                const response = await axios.post(`${API_URL}/auth/login`, 
-                    { email, password },
-                    { 
-                        withCredentials,
-                        headers: { 'Content-Type': 'application/json' }
-                    }
-                );
-                
-                log(`Статус ответа: ${response.status}`);
-                log(`Успешный ответ: ${JSON.stringify(response.data)}`);
-                showResult(response.data);
-                
-                // Проверяем куки
-                log(`Cookies: ${document.cookie}`);
-            } catch (error) {
-                log(`Исключение: ${error.message}`, true);
-                if (error.response) {
-                    log(`Данные ошибки: ${JSON.stringify(error.response.data)}`, true);
-                    showResult(error.response.data, true);
+                if (response.ok) {
+                    displayResult('apiResults', 'Логин успешен', {
+                        status: response.status,
+                        data: data,
+                        cookies: document.cookie
+                    }, 'success');
                 } else {
-                    showResult({ message: error.message }, true);
+                    displayResult('apiResults', 'Ошибка логина', {
+                        status: response.status,
+                        data: data
+                    }, 'error');
                 }
+            } catch (error) {
+                displayResult('apiResults', 'Ошибка сети при логине', {
+                    error: error.message
+                }, 'error');
             }
         }
+
+        async function testCurrentUser() {
+            try {
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('apiResults', 'Получение пользователя успешно', {
+                        status: response.status,
+                        data: data
+                    }, 'success');
+                } else {
+                    displayResult('apiResults', 'Ошибка получения пользователя', {
+                        status: response.status,
+                        data: data
+                    }, 'error');
+                }
+            } catch (error) {
+                displayResult('apiResults', 'Ошибка сети при получении пользователя', {
+                    error: error.message
+                }, 'error');
+            }
+        }
+
+        async function testLogout() {
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = response.status === 204 ? 'No content' : await response.json();
+                
+                if (response.ok) {
+                    displayResult('apiResults', 'Выход успешен', {
+                        status: response.status,
+                        data: data,
+                        cookies: document.cookie
+                    }, 'success');
+                } else {
+                    displayResult('apiResults', 'Ошибка выхода', {
+                        status: response.status,
+                        data: data
+                    }, 'error');
+                }
+            } catch (error) {
+                displayResult('apiResults', 'Ошибка сети при выходе', {
+                    error: error.message
+                }, 'error');
+            }
+        }
+
+        function checkCookies() {
+            const cookies = document.cookie;
+            const localStorage = window.localStorage;
+            const sessionStorage = window.sessionStorage;
+
+            displayResult('apiResults', 'Состояние хранилищ', {
+                cookies: cookies || 'Пусто',
+                localStorage: {
+                    length: localStorage.length,
+                    keys: Object.keys(localStorage),
+                    authToken: localStorage.getItem('authToken'),
+                    refreshToken: localStorage.getItem('refreshToken')
+                },
+                sessionStorage: {
+                    length: sessionStorage.length,
+                    keys: Object.keys(sessionStorage)
+                }
+            }, 'info');
+        }
+
+        function updateBrowserState() {
+            const state = {
+                userAgent: navigator.userAgent,
+                url: window.location.href,
+                cookies: document.cookie || 'Пусто',
+                localStorage: window.localStorage.length + ' элементов',
+                sessionStorage: window.sessionStorage.length + ' элементов',
+                timestamp: new Date().toLocaleString()
+            };
+
+            document.getElementById('browserState').innerHTML = `
+                <div class="json">${JSON.stringify(state, null, 2)}</div>
+            `;
+        }
+
+        // Обновляем состояние браузера при загрузке
+        updateBrowserState();
+        
+        // Обновляем каждые 5 секунд
+        setInterval(updateBrowserState, 5000);
     </script>
 </body>
 </html>

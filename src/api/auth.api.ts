@@ -129,6 +129,27 @@ export const authApi = baseApi.injectEndpoints({
         }
       },
     }),
+
+    // Обновление профиля текущего пользователя
+    updateProfile: builder.mutation<CurrentUserResponse, { first_name: string; last_name: string; email: string; phone: string }>({
+      query: (profileData) => ({
+        url: 'auth/profile',
+        method: 'PUT',
+        body: { user: profileData },
+        credentials: 'include',
+      }),
+      transformResponse: (response: { user: CurrentUserResponse }) => {
+        console.log('🔄 Профиль обновлен:', response);
+        return response.user;
+      },
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('❌ Ошибка обновления профиля:', response);
+        return {
+          status: response.status,
+          data: response.data?.errors || response.data?.error || 'Ошибка обновления профиля'
+        };
+      },
+    }),
   }),
 });
 
@@ -138,4 +159,5 @@ export const {
   useGetCurrentUserQuery,
   useRefreshTokenMutation,
   useLogoutMutation,
+  useUpdateProfileMutation,
 } = authApi; 
