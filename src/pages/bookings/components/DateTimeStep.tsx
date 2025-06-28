@@ -239,6 +239,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           availableTimeSlots={availableTimeSlots}
           isLoading={isLoadingAvailability}
           servicePointPhone={servicePointData?.contact_phone || servicePointData?.phone}
+          categoryId={formData.service_category_id}
         />
       </Box>
 
