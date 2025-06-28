@@ -88,6 +88,28 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
       }
     }
     
+    // Проверяем, отличается ли индивидуальное расписание от основного
+    if (finalSchedule.has_custom_schedule) {
+      const isDifferentFromMainSchedule = checkIfDifferentFromMainSchedule(finalSchedule);
+      
+      if (isDifferentFromMainSchedule) {
+        // Показываем диалог подтверждения
+        const confirmed = window.confirm(
+          `Внимание! Вы устанавливаете индивидуальное расписание для поста "${post.name}", которое отличается от основного расписания сервисной точки.\n\n` +
+          `Основное расписание сервисной точки может не совпадать с рабочими днями этого поста.\n\n` +
+          `Это означает, что:\n` +
+          `• Пост может работать в дни, когда сервисная точка официально закрыта\n` +
+          `• Пост может не работать в дни, когда сервисная точка открыта\n` +
+          `• Время работы поста может отличаться от времени работы сервисной точки\n\n` +
+          `Вы уверены, что хотите применить эти настройки?`
+        );
+        
+        if (!confirmed) {
+          return; // Отменяем сохранение
+        }
+      }
+    }
+    
     // Отправляем изменения в родительский компонент
     const dataToSave = {
       has_custom_schedule: finalSchedule.has_custom_schedule,
@@ -101,6 +123,25 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
     
     onSave(dataToSave);
     onClose();
+  };
+
+  // Функция для проверки отличий от основного расписания
+  const checkIfDifferentFromMainSchedule = (schedule: typeof localSchedule) => {
+    // Здесь можно добавить логику сравнения с основным расписанием сервисной точки
+    // Пока что просто проверяем, есть ли выходные дни в индивидуальном расписании,
+    // которые обычно являются рабочими (или наоборот)
+    
+    const workingDaysCount = Object.values(schedule.working_days).filter(Boolean).length;
+    const hasWeekendWork = schedule.working_days.saturday || schedule.working_days.sunday;
+    const hasWeekdayOff = !schedule.working_days.monday || !schedule.working_days.tuesday || 
+                         !schedule.working_days.wednesday || !schedule.working_days.thursday || 
+                         !schedule.working_days.friday;
+    
+    // Считаем расписание "особенным", если:
+    // 1. Есть работа в выходные (суббота/воскресенье)
+    // 2. Есть выходные в будни
+    // 3. Менее 5 рабочих дней в неделю
+    return hasWeekendWork || hasWeekdayOff || workingDaysCount < 5;
   };
 
   const handleCancel = () => {
