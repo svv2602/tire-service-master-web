@@ -15,6 +15,8 @@ const baseQuery = fetchBaseQuery({
     // - Cookies автоматически отправляются благодаря credentials: 'include'
     const state = getState() as any;
     const token = state.auth?.accessToken;
+    const isAuthenticated = state.auth?.isAuthenticated;
+    const user = state.auth?.user;
     
     // Если токен есть в Redux состоянии, добавляем его в заголовок
     if (token) {
@@ -25,8 +27,10 @@ const baseQuery = fetchBaseQuery({
     if (process.env.NODE_ENV === 'development') {
       console.log('BaseAPI prepareHeaders:', {
         hasAccessToken: !!token,
-        hasLocalStorageToken: !!localStorage.getItem(config.AUTH_TOKEN_STORAGE_KEY),
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
+        isAuthenticated: !!isAuthenticated,
+        hasUser: !!user,
+        userRole: user?.role,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует (используются cookies)',
         url: 'unknown',
         method: 'unknown'
       });

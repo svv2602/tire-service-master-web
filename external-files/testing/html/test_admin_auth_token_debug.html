@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест авторизации админки - Токен Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        .code { background: #f5f5f5; padding: 10px; font-family: monospace; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Тест авторизации админки - Токен Debug</h1>
+    
+    <div class="test-section">
+        <h3>1. Проверка текущего состояния авторизации</h3>
+        <button onclick="checkAuthState()">Проверить состояние авторизации</button>
+        <div id="auth-state"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Логин админа</h3>
+        <button onclick="loginAdmin()">Войти как админ</button>
+        <div id="login-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Проверка API запросов</h3>
+        <button onclick="testApiWithoutAuth()">API без авторизации</button>
+        <button onclick="testApiWithAuth()">API с авторизацией</button>
+        <div id="api-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Проверка localStorage и cookies</h3>
+        <button onclick="checkStorage()">Проверить storage</button>
+        <div id="storage-result"></div>
+    </div>
+
+    <script>
+        let adminToken = null;
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'info';
+            element.innerHTML += `<div class="${className}">${message}</div>`;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearLog(elementId) {
+            document.getElementById(elementId).innerHTML = '';
+        }
+
+        async function checkAuthState() {
+            clearLog('auth-state');
+            log('auth-state', '🔍 Проверяю состояние авторизации...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(adminToken && { 'Authorization': `Bearer ${adminToken}` })
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('auth-state', `✅ Пользователь авторизован: ${data.email} (${data.role})`, 'success');
+                    log('auth-state', `<div class="code">Данные: ${JSON.stringify(data, null, 2)}</div>`, 'info');
+                } else {
+                    log('auth-state', `❌ Пользователь не авторизован: ${response.status}`, 'error');
+                    const errorText = await response.text();
+                    log('auth-state', `<div class="code">Ошибка: ${errorText}</div>`, 'error');
+                }
+            } catch (error) {
+                log('auth-state', `❌ Ошибка запроса: ${error.message}`, 'error');
+            }
+        }
+
+        async function loginAdmin() {
+            clearLog('login-result');
+            log('login-result', '🔑 Выполняю вход админа...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    adminToken = data.token || data.access_token;
+                    log('login-result', '✅ Вход выполнен успешно!', 'success');
+                    log('login-result', `<div class="code">Токен: ${adminToken ? adminToken.substring(0, 50) + '...' : 'отсутствует'}</div>`, 'info');
+                    log('login-result', `<div class="code">Полный ответ: ${JSON.stringify(data, null, 2)}</div>`, 'info');
+                } else {
+                    log('login-result', `❌ Ошибка входа: ${response.status}`, 'error');
+                    const errorText = await response.text();
+                    log('login-result', `<div class="code">Ошибка: ${errorText}</div>`, 'error');
+                }
+            } catch (error) {
+                log('login-result', `❌ Ошибка запроса: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiWithoutAuth() {
+            clearLog('api-test-result');
+            log('api-test-result', '🌐 Тестирую API без авторизации...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/service_points', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('api-test-result', `✅ API без авторизации: ${data.data.length} точек`, 'success');
+                    data.data.forEach(point => {
+                        log('api-test-result', `  • ID: ${point.id}, Name: ${point.name}, Status: ${point.work_status}`, 'info');
+                    });
+                } else {
+                    log('api-test-result', `❌ Ошибка API без авторизации: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('api-test-result', `❌ Ошибка запроса без авторизации: ${error.message}`, 'error');
+            }
+        }
+
+        async function testApiWithAuth() {
+            if (!adminToken) {
+                log('api-test-result', '⚠️ Сначала выполните вход!', 'warning');
+                return;
+            }
+
+            log('api-test-result', '🔐 Тестирую API с авторизацией...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/service_points', {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('api-test-result', `✅ API с авторизацией: ${data.data.length} точек`, 'success');
+                    data.data.forEach(point => {
+                        log('api-test-result', `  • ID: ${point.id}, Name: ${point.name}, Status: ${point.work_status}`, 'info');
+                    });
+                } else {
+                    log('api-test-result', `❌ Ошибка API с авторизацией: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log('api-test-result', `❌ Ошибка запроса с авторизацией: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkStorage() {
+            clearLog('storage-result');
+            log('storage-result', '💾 Проверяю localStorage и cookies...', 'info');
+            
+            // Проверяем localStorage
+            const keys = Object.keys(localStorage);
+            log('storage-result', `📦 localStorage содержит ${keys.length} ключей:`, 'info');
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                const preview = value && value.length > 50 ? value.substring(0, 50) + '...' : value;
+                log('storage-result', `  • ${key}: ${preview}`, 'info');
+            });
+
+            // Проверяем cookies
+            const cookies = document.cookie.split(';').map(c => c.trim()).filter(c => c);
+            log('storage-result', `🍪 Cookies содержат ${cookies.length} значений:`, 'info');
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                const preview = value && value.length > 50 ? value.substring(0, 50) + '...' : value;
+                log('storage-result', `  • ${name}: ${preview}`, 'info');
+            });
+
+            // Проверяем специфичные ключи
+            const authToken = localStorage.getItem('authToken') || localStorage.getItem('access_token');
+            if (authToken) {
+                log('storage-result', `🔑 Найден токен в localStorage: ${authToken.substring(0, 50)}...`, 'success');
+            } else {
+                log('storage-result', '❌ Токен не найден в localStorage', 'warning');
+            }
+        }
+
+        // Автоматическая проверка при загрузке
+        window.onload = function() {
+            log('auth-state', '🚀 Страница загружена, выполняю автоматическую проверку...', 'info');
+            setTimeout(() => {
+                checkAuthState();
+                checkStorage();
+            }, 1000);
+        };
+    </script>
+</body>
+</html> 
