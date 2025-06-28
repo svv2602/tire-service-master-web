@@ -134,11 +134,27 @@ const TireCalculatorPage: React.FC = () => {
           elevation={2}
           sx={{ 
             mb: 3, 
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}10)`,
             border: `1px solid ${theme.palette.divider}`
           }}
         >
-          <Box sx={{ p: 3 }}>
+          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
+            {/* Изображение слева */}
+            <Box
+              component="img"
+              src="/image_app/img_calc.jpg"
+              alt="Калькулятор шин"
+              sx={{
+                width: { xs: 80, sm: 120, md: 150 },
+                height: { xs: 80, sm: 120, md: 150 },
+                objectFit: 'cover',
+                borderRadius: 2,
+                backgroundColor: 'transparent',
+                flexShrink: 0
+              }}
+            />
+            
+            {/* Контент справа */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
             {/* Основной заголовок */}
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <CalculateIcon 
@@ -215,6 +231,7 @@ const TireCalculatorPage: React.FC = () => {
                 </Box>
               </Grid>
             </Grid>
+            </Box>
           </Box>
         </Paper>
 
