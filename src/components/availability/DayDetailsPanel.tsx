@@ -188,24 +188,26 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
                 </Box>
               </Box>
               
-              {/* Предупреждение о бронировании на сегодня */}
-              <Alert 
-                severity="warning" 
-                sx={{ mt: 3 }}
-                icon={<WarningIcon />}
-              >
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                    Бронирование на сегодня только по телефону
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <PhoneIcon sx={{ fontSize: 16 }} />
-                    <Typography variant="body2">
-                      {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
+              {/* Предупреждение о бронировании на сегодня - показываем только для текущего дня */}
+              {selectedDate && format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd') && (
+                <Alert 
+                  severity="warning" 
+                  sx={{ mt: 3 }}
+                  icon={<WarningIcon />}
+                >
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
+                      Бронирование на сегодня только по телефону
                     </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <PhoneIcon sx={{ fontSize: 16 }} />
+                      <Typography variant="body2">
+                        {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </Alert>
+                </Alert>
+              )}
             </>
           )}
         </>
