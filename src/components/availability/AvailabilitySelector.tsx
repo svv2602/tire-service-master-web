@@ -17,6 +17,7 @@ interface AvailabilitySelectorProps {
   availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
   servicePointPhone?: string;
+  categoryId?: number; // Добавляем categoryId для фильтрации по категории услуг
 }
 
 export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
@@ -28,14 +29,16 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   availableTimeSlots,
   isLoading = false,
   servicePointPhone,
+  categoryId,
 }) => {
   const theme = useTheme();
 
-  // Загрузка детальной информации о дне
+  // Загрузка детальной информации о дне с учетом категории
   const { data: dayDetailsData, isLoading: isLoadingDayDetails } = useGetDayDetailsQuery(
     {
       servicePointId: servicePointId?.toString() || '0',
-      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+      categoryId: categoryId
     },
     { skip: !servicePointId || !selectedDate }
   );
@@ -97,6 +100,8 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             selectedDate={selectedDate}
             onDateChange={onDateChange}
             isLoading={isLoading}
+            servicePointId={servicePointId}
+            categoryId={categoryId}
           />
         </Paper>
 
@@ -116,6 +121,8 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             totalPosts={dayStats.totalSlots}
             availablePosts={dayStats.availableSlots}
             servicePointPhone={servicePointPhone}
+            isWorking={dayDetailsData?.is_working}
+            workingMessage={dayDetailsData?.message}
           />
         </Paper>
       </Box>

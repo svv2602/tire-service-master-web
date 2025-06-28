@@ -47,6 +47,7 @@ export interface DayDetailsResponse {
   date: string;
   is_working: boolean;
   total_posts: number;
+  message?: string;
   working_hours?: {
     start_time: string;
     end_time: string;

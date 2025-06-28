@@ -108,13 +108,15 @@ export const availabilityApi = baseApi.injectEndpoints({
     getDayDetails: builder.query<DayDetailsResponse, {
       servicePointId: string | number;
       date: string;
+      categoryId?: number;
     }>({
-      query: ({ servicePointId, date }) => ({
+      query: ({ servicePointId, date, categoryId }) => ({
         url: `/service_points/${servicePointId}/availability/${date}/details`,
-        method: 'GET'
+        method: 'GET',
+        params: categoryId ? { category_id: categoryId } : undefined
       }),
-      providesTags: (result, error, { servicePointId, date }) => [
-        { type: 'Availability', id: `details-${servicePointId}-${date}` }
+      providesTags: (result, error, { servicePointId, date, categoryId }) => [
+        { type: 'Availability', id: `details-${servicePointId}-${date}-${categoryId || 'all'}` }
       ],
     }),
 
@@ -151,6 +153,27 @@ export const availabilityApi = baseApi.injectEndpoints({
       })
     }),
 
+    // Быстрая проверка доступности дня (для календаря)
+    checkDayAvailability: builder.query<{
+      service_point_id: number;
+      date: string;
+      is_available: boolean;
+      category_id?: number;
+    }, {
+      servicePointId: string | number;
+      date: string;
+      categoryId?: number;
+    }>({
+      query: ({ servicePointId, date, categoryId }) => ({
+        url: `/service_points/${servicePointId}/availability/${date}/check`,
+        method: 'GET',
+        params: categoryId ? { category_id: categoryId } : undefined
+      }),
+      providesTags: (result, error, { servicePointId, date, categoryId }) => [
+        { type: 'Availability', id: `check-${servicePointId}-${date}-${categoryId || 'all'}` }
+      ],
+    }),
+
     // Получение доступных слотов для категории
     getSlotsForCategory: builder.query<
       CategorySlotsResponse,
@@ -184,5 +207,6 @@ export const {
   useGetDayDetailsQuery,
   useGetWeekOverviewQuery,
   useCheckAvailabilityWithCategoryMutation,
+  useCheckDayAvailabilityQuery,
   useGetSlotsForCategoryQuery
 } = availabilityApi; 

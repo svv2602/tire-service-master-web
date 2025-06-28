@@ -15,7 +15,8 @@ import {
   EventAvailable as EventAvailableIcon,
   EventBusy as EventBusyIcon,
   Phone as PhoneIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  Block as EventOffIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -28,6 +29,8 @@ interface DayDetailsPanelProps {
   totalPosts?: number;
   availablePosts?: number;
   servicePointPhone?: string;
+  isWorking?: boolean;
+  workingMessage?: string;
 }
 
 export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
@@ -38,6 +41,8 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
   totalPosts = 0,
   availablePosts = 0,
   servicePointPhone,
+  isWorking,
+  workingMessage,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -110,82 +115,99 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
             </Box>
           )}
           
-          <Divider sx={{ my: 2 }} />
-          
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ color: colors.textSecondary }}>
-                Загруженность:
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontWeight: 500, 
-                  color: getOccupancyColor(occupancyPercentage) 
-                }}
-              >
-                {getOccupancyText(occupancyPercentage)}
-              </Typography>
-            </Box>
-            
-            <Tooltip title={`${occupancyPercentage}% занято`} arrow>
-              <LinearProgress
-                variant="determinate"
-                value={occupancyPercentage}
-                sx={{
-                  height: 8,
-                  borderRadius: 2,
-                  backgroundColor: colors.backgroundSecondary,
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: getOccupancyColor(occupancyPercentage),
-                  }
-                }}
-              />
-            </Tooltip>
-          </Box>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Box sx={{ textAlign: 'center', flex: 1 }}>
-              <EventAvailableIcon sx={{ color: colors.success, mb: 0.5 }} />
-              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                Свободно слотов
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {availablePosts}
-              </Typography>
-            </Box>
-            
-            <Divider orientation="vertical" flexItem />
-            
-            <Box sx={{ textAlign: 'center', flex: 1 }}>
-              <EventBusyIcon sx={{ color: colors.error, mb: 0.5 }} />
-              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                Занято слотов
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                {totalPosts - availablePosts}
-              </Typography>
-            </Box>
-          </Box>
-          
-          {/* Предупреждение о бронировании на сегодня */}
-          <Alert 
-            severity="warning" 
-            sx={{ mt: 3 }}
-            icon={<WarningIcon />}
-          >
-            <Box>
-              <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                Бронирование на сегодня только по телефону
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <PhoneIcon sx={{ fontSize: 16 }} />
-                <Typography variant="body2">
-                  {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
+          {/* Сообщение о выходном дне */}
+          {isWorking === false ? (
+            <Alert 
+              severity="info" 
+              sx={{ mt: 2 }}
+              icon={<InfoIcon />}
+            >
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
+                  {workingMessage || 'В выбранную дату сервисная точка не работает с услугами данной категории. Пожалуйста, выберите другую дату.'}
                 </Typography>
               </Box>
-            </Box>
-          </Alert>
+            </Alert>
+          ) : (
+            <>
+              <Divider sx={{ my: 2 }} />
+              
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ color: colors.textSecondary }}>
+                    Загруженность:
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 500, 
+                      color: getOccupancyColor(occupancyPercentage) 
+                    }}
+                  >
+                    {getOccupancyText(occupancyPercentage)}
+                  </Typography>
+                </Box>
+                
+                <Tooltip title={`${occupancyPercentage}% занято`} arrow>
+                  <LinearProgress
+                    variant="determinate"
+                    value={occupancyPercentage}
+                    sx={{
+                      height: 8,
+                      borderRadius: 2,
+                      backgroundColor: colors.backgroundSecondary,
+                      '& .MuiLinearProgress-bar': {
+                        backgroundColor: getOccupancyColor(occupancyPercentage),
+                      }
+                    }}
+                  />
+                </Tooltip>
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <EventAvailableIcon sx={{ color: colors.success, mb: 0.5 }} />
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                    Свободно слотов
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {availablePosts}
+                  </Typography>
+                </Box>
+                
+                <Divider orientation="vertical" flexItem />
+                
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <EventBusyIcon sx={{ color: colors.error, mb: 0.5 }} />
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                    Занято слотов
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {totalPosts - availablePosts}
+                  </Typography>
+                </Box>
+              </Box>
+              
+              {/* Предупреждение о бронировании на сегодня */}
+              <Alert 
+                severity="warning" 
+                sx={{ mt: 3 }}
+                icon={<WarningIcon />}
+              >
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
+                    Бронирование на сегодня только по телефону
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <PhoneIcon sx={{ fontSize: 16 }} />
+                    <Typography variant="body2">
+                      {servicePointPhone || '+7 (XXX) XXX-XX-XX'}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Alert>
+            </>
+          )}
         </>
       )}
     </Box>

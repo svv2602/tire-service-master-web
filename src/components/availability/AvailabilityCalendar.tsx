@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Typography, Skeleton } from '@mui/material';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors } from '../../styles';
 import { CalendarMonth as CalendarIcon } from '@mui/icons-material';
 import { ru } from 'date-fns/locale';
-import { addDays, isSameDay, isAfter, isBefore } from 'date-fns';
+import { addDays, isSameDay, isAfter, isBefore, format } from 'date-fns';
+import { useCheckDayAvailabilityQuery } from '../../api/availability.api';
 
 interface AvailabilityCalendarProps {
   selectedDate: Date | null;
@@ -14,6 +15,8 @@ interface AvailabilityCalendarProps {
   disabledDays?: Date[];
   minDate?: Date;
   maxDate?: Date;
+  servicePointId?: number;
+  categoryId?: number;
 }
 
 export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
@@ -23,6 +26,8 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   disabledDays = [],
   minDate = new Date(),
   maxDate,
+  servicePointId,
+  categoryId,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -30,32 +35,100 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
   // По умолчанию максимальная дата - 30 дней вперед
   const defaultMaxDate = maxDate || addDays(new Date(), 30);
   
-  // Проверка, является ли день выходным
-  const isWeekend = (date: Date) => {
-    const day = date.getDay();
-    return day === 0; // Воскресенье - выходной
-  };
+  // Состояние для кэширования результатов проверки доступности
+  const [availabilityCache, setAvailabilityCache] = useState<Record<string, boolean>>({});
   
-  // Проверка, является ли день отключенным
+  // Проверка, является ли день отключенным вручную
   const isDisabledDay = (date: Date) => {
     return disabledDays.some(disabledDate => isSameDay(date, disabledDate));
   };
   
-  // Обработчик изменения даты
-  const handleDateChange = (date: Date | null) => {
-    if (date && !isWeekend(date) && !isDisabledDay(date)) {
-      onDateChange(date);
+  // Функция для проверки доступности дня через API
+  const checkDateAvailability = async (date: Date): Promise<boolean> => {
+    if (!servicePointId) return true; // Если нет servicePointId, разрешаем все дни кроме воскресений
+    
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const cacheKey = `${servicePointId}-${dateStr}-${categoryId || 'all'}`;
+    
+    // Проверяем кэш
+    if (availabilityCache[cacheKey] !== undefined) {
+      return availabilityCache[cacheKey];
     }
+    
+    try {
+      // Здесь мы не можем использовать хук внутри функции, 
+      // поэтому используем fetch напрямую
+      const response = await fetch(
+        `/api/v1/service_points/${servicePointId}/availability/${dateStr}/check${categoryId ? `?category_id=${categoryId}` : ''}`,
+        { headers: { 'Accept': 'application/json' } }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const isAvailable = data.is_available || false;
+        
+        // Кэшируем результат
+        setAvailabilityCache(prev => ({
+          ...prev,
+          [cacheKey]: isAvailable
+        }));
+        
+        return isAvailable;
+      }
+    } catch (error) {
+      console.warn('Ошибка проверки доступности дня:', error);
+    }
+    
+    // В случае ошибки, возвращаем false для безопасности
+    return false;
   };
   
   // Функция для определения, должен ли день быть отключен
   const shouldDisableDate = (date: Date) => {
-    return (
-      isWeekend(date) || 
-      isDisabledDay(date) || 
-      isBefore(date, minDate) || 
-      isAfter(date, defaultMaxDate)
-    );
+    // Базовые проверки диапазона дат
+    if (isBefore(date, minDate) || isAfter(date, defaultMaxDate)) {
+      return true;
+    }
+    
+    // Проверка вручную отключенных дней
+    if (isDisabledDay(date)) {
+      return true;
+    }
+    
+    // Если нет servicePointId, блокируем только воскресенья (старое поведение)
+    if (!servicePointId) {
+      return date.getDay() === 0; // Воскресенье
+    }
+    
+    // Для дней с servicePointId проверяем кэш
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const cacheKey = `${servicePointId}-${dateStr}-${categoryId || 'all'}`;
+    const cachedResult = availabilityCache[cacheKey];
+    
+    if (cachedResult !== undefined) {
+      return !cachedResult; // Если недоступен, то отключаем
+    }
+    
+    // Если нет данных в кэше, по умолчанию разрешаем (будет проверено при клике)
+    return false;
+  };
+
+  // Обработчик изменения даты с проверкой доступности
+  const handleDateChange = async (date: Date | null) => {
+    if (!date || shouldDisableDate(date)) {
+      return;
+    }
+    
+    // Если есть servicePointId, проверяем доступность через API
+    if (servicePointId) {
+      const isAvailable = await checkDateAvailability(date);
+      if (!isAvailable) {
+        // Если день недоступен, не выбираем его
+        return;
+      }
+    }
+    
+    onDateChange(date);
   };
 
   return (
