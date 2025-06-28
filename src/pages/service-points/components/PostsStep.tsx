@@ -905,7 +905,21 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
 
   const workingDays = DAYS_OF_WEEK.filter(day => {
     const dayHours = workingHours[day.key] as WorkingHours;
-    return dayHours.is_working_day;
+    const isWorkingDayBySchedule = dayHours.is_working_day;
+    
+    // Проверяем, есть ли активные посты с индивидуальным расписанием для этого дня
+    const hasActivePostsWithCustomSchedule = activePosts.some(post => {
+      if (!post.is_active || !post.has_custom_schedule || !post.working_days) {
+        return false;
+      }
+      
+      // Проверяем, работает ли пост в этот день недели
+      const workingDayValue = post.working_days[day.key];
+      return workingDayValue === true || workingDayValue === 'true';
+    });
+    
+    // Показываем день, если он рабочий по основному расписанию ИЛИ есть активные посты с индивидуальным расписанием
+    return isWorkingDayBySchedule || hasActivePostsWithCustomSchedule;
   });
 
   const selectedDayInfo = DAYS_OF_WEEK.find(day => day.key === selectedDay);
