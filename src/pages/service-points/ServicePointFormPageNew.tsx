@@ -466,6 +466,14 @@ const ServicePointFormPageNew: React.FC = () => {
           }
           
           setSuccessMessage('Точка обслуживания успешно обновлена');
+          
+          // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного обновления
+          console.log('Принудительно обновляем кэш всех списков сервисных точек');
+          invalidateTag('ServicePoint', String(id));
+          invalidateList('ServicePoint');
+          if (partnerId) {
+            invalidateTag('ServicePoint', `PARTNER_${partnerId}`);
+          }
         } else {
           // Проверяем, что partnerId корректно передан
           if (!partnerId) {
@@ -529,6 +537,16 @@ const ServicePointFormPageNew: React.FC = () => {
           }
           
           setSuccessMessage('Точка обслуживания успешно создана');
+          
+          // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного создания
+          console.log('Принудительно обновляем кэш всех списков сервисных точек после создания');
+          invalidateList('ServicePoint');
+          if (partnerId) {
+            invalidateTag('ServicePoint', `PARTNER_${partnerId}`);
+          }
+          if (result?.id) {
+            invalidateTag('ServicePoint', String(result.id));
+          }
         }
 
         setTimeout(() => {

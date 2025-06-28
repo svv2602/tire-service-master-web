@@ -212,11 +212,23 @@ export const servicePointsApi = baseApi.injectEndpoints({
           };
         }
       },
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'ServicePoint' as const, id },
-        { type: 'ServicePoint' as const, id: 'LIST' },
-        { type: 'Partners' as const, id: 'LIST' }
-      ],
+      invalidatesTags: (_result, _error, { id, partnerId, servicePoint }) => {
+        const tags = [
+          { type: 'ServicePoint' as const, id },
+          { type: 'ServicePoint' as const, id: 'LIST' },
+        ];
+        
+        // Добавляем тег для партнера если известен
+        const finalPartnerId = partnerId || (servicePoint instanceof FormData 
+          ? servicePoint.get('service_point[partner_id]')
+          : servicePoint?.partner_id);
+        
+        if (finalPartnerId) {
+          tags.push({ type: 'ServicePoint' as const, id: `PARTNER_${finalPartnerId}` });
+        }
+        
+        return tags;
+      },
     }),
 
     // Удаление сервисной точки

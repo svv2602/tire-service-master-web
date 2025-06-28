@@ -12,6 +12,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   Business as BusinessIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import {
   useGetServicePointsQuery,
@@ -167,12 +168,21 @@ const ServicePointsPage: React.FC = () => {
     },
     { skip: !selectedRegionId }
   );
-  const { data: servicePointsData, isLoading: servicePointsLoading, error } = useGetServicePointsQuery(queryParams);
+  const { data: servicePointsData, isLoading: servicePointsLoading, error, refetch } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint, { isLoading: isDeleting }] = useDeleteServicePointMutation();
 
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
   const totalItems = servicePointsData?.pagination?.total_count || 0;
+
+  // Автоматическое обновление данных каждые 30 секунд для отображения изменений состояния
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000); // 30 секунд
+
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   // Мемоизированные обработчики событий
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -460,7 +470,7 @@ const ServicePointsPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Заголовок и кнопка добавления */}
+      {/* Заголовок и кнопки добавления и обновления */}
       <Box sx={tablePageStyles.pageHeader}>
         <Typography variant="h4">
           Сервисные точки
@@ -477,8 +487,21 @@ const ServicePointsPage: React.FC = () => {
               navigate('/admin/partners');
             }
           }}
+          size="small"
+          sx={{ whiteSpace: 'nowrap' }}
         >
           Добавить сервисную точку
+        </Button>
+
+        <Button
+          variant="outlined"
+          startIcon={<RefreshIcon />}
+          onClick={() => refetch()}
+          size="small"
+          sx={{ whiteSpace: 'nowrap' }}
+          disabled={isLoading}
+        >
+          Обновить
         </Button>
       </Box>
 
