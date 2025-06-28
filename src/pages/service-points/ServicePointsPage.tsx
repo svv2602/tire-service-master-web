@@ -133,6 +133,8 @@ const ServicePointsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
   const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
+  const [selectedIsActive, setSelectedIsActive] = useState<string>(''); // '' | 'true' | 'false'
+  const [selectedWorkStatus, setSelectedWorkStatus] = useState<string>(''); // '' | 'working' | 'temporarily_closed' | etc.
   const [page, setPage] = useState(0);
   const [pageSize] = useState(25);
   
@@ -149,9 +151,11 @@ const ServicePointsPage: React.FC = () => {
     query: debouncedSearch || undefined,
     city_id: selectedCityId || undefined,
     region_id: selectedRegionId || undefined,
+    is_active: selectedIsActive || undefined,
+    work_status: selectedWorkStatus || undefined,
     page: page + 1,
     per_page: pageSize,
-  }), [debouncedSearch, selectedCityId, selectedRegionId, page, pageSize]);
+  }), [debouncedSearch, selectedCityId, selectedRegionId, selectedIsActive, selectedWorkStatus, page, pageSize]);
 
   // RTK Query хуки
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
@@ -186,6 +190,16 @@ const ServicePointsPage: React.FC = () => {
   const handleCityChange = useCallback((value: string | number) => {
     const cityId = value === '' ? '' : Number(value);
     setSelectedCityId(cityId);
+    setPage(0);
+  }, []);
+
+  const handleIsActiveChange = useCallback((value: string | number) => {
+    setSelectedIsActive(value.toString());
+    setPage(0);
+  }, []);
+
+  const handleWorkStatusChange = useCallback((value: string | number) => {
+    setSelectedWorkStatus(value.toString());
     setPage(0);
   }, []);
 
@@ -332,15 +346,51 @@ const ServicePointsPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: 'Активность',
       minWidth: 100,
       align: 'center' as const,
       format: (value: any, row: any) => {
         const servicePoint = row as ServicePoint;
         return (
           <Chip
-            label={servicePoint.status?.name || (servicePoint.is_active ? 'Активна' : 'Неактивна')}
+            label={servicePoint.is_active ? 'Активна' : 'Неактивна'}
             color={servicePoint.is_active ? 'success' : 'error'}
+            size="small"
+          />
+        );
+      },
+    },
+    {
+      id: 'work_status',
+      label: 'Состояние',
+      minWidth: 130,
+      align: 'center' as const,
+      format: (value: any, row: any) => {
+        const servicePoint = row as ServicePoint;
+        const getWorkStatusColor = (status: string) => {
+          switch (status) {
+            case 'working': return 'success';
+            case 'temporarily_closed': return 'warning';
+            case 'maintenance': return 'info';
+            case 'suspended': return 'error';
+            default: return 'default';
+          }
+        };
+        
+        const getWorkStatusLabel = (status: string) => {
+          switch (status) {
+            case 'working': return 'Работает';
+            case 'temporarily_closed': return 'Временно закрыта';
+            case 'maintenance': return 'Техобслуживание';
+            case 'suspended': return 'Приостановлена';
+            default: return status;
+          }
+        };
+        
+        return (
+          <Chip
+            label={getWorkStatusLabel(servicePoint.work_status || 'working')}
+            color={getWorkStatusColor(servicePoint.work_status || 'working') as any}
             size="small"
           />
         );
@@ -489,6 +539,34 @@ const ServicePointsPage: React.FC = () => {
           size="small"
           sx={{ minWidth: 150 }}
         />
+
+        <Select
+          label="Активность"
+          value={selectedIsActive}
+          onChange={handleIsActiveChange}
+          options={[
+            { value: '', label: 'Все' },
+            { value: 'true', label: 'Активные' },
+            { value: 'false', label: 'Неактивные' }
+          ]}
+          size="small"
+          sx={{ minWidth: 120 }}
+        />
+
+        <Select
+          label="Состояние"
+          value={selectedWorkStatus}
+          onChange={handleWorkStatusChange}
+          options={[
+            { value: '', label: 'Все состояния' },
+            { value: 'working', label: 'Работает' },
+            { value: 'temporarily_closed', label: 'Временно закрыта' },
+            { value: 'maintenance', label: 'Техобслуживание' },
+            { value: 'suspended', label: 'Приостановлена' }
+          ]}
+          size="small"
+          sx={{ minWidth: 160 }}
+        />
       </Box>
 
       {/* Статистика */}
@@ -504,6 +582,24 @@ const ServicePointsPage: React.FC = () => {
             {servicePoints.filter(sp => !sp.is_active).length > 0 && (
               <Typography variant="body2" color="error.main">
                 Неактивных: <strong>{servicePoints.filter(sp => !sp.is_active).length}</strong>
+              </Typography>
+            )}
+            <Typography variant="body2" color="success.main">
+              Работающих: <strong>{servicePoints.filter(sp => sp.work_status === 'working').length}</strong>
+            </Typography>
+            {servicePoints.filter(sp => sp.work_status === 'temporarily_closed').length > 0 && (
+              <Typography variant="body2" color="warning.main">
+                Временно закрытых: <strong>{servicePoints.filter(sp => sp.work_status === 'temporarily_closed').length}</strong>
+              </Typography>
+            )}
+            {servicePoints.filter(sp => sp.work_status === 'maintenance').length > 0 && (
+              <Typography variant="body2" color="info.main">
+                На техобслуживании: <strong>{servicePoints.filter(sp => sp.work_status === 'maintenance').length}</strong>
+              </Typography>
+            )}
+            {servicePoints.filter(sp => sp.work_status === 'suspended').length > 0 && (
+              <Typography variant="body2" color="error.main">
+                Приостановленных: <strong>{servicePoints.filter(sp => sp.work_status === 'suspended').length}</strong>
               </Typography>
             )}
           </>
