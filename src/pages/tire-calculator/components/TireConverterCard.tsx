@@ -34,20 +34,13 @@ interface InchSize {
 const TireConverterCard: React.FC = () => {
   const theme = useTheme();
   
-  const [metricSize, setMetricSize] = useState<TireSize>({
-    width: 235,
-    profile: 75,
-    diameter: 16
-  });
+  const [metricSize, setMetricSize] = useState<TireSize>({ width: 0, profile: 0, diameter: 0 });
   
-  const [inchSize, setInchSize] = useState<InchSize>({
-    overallDiameter: 30,
-    sectionWidth: 9.5,
-    rimDiameter: 16
-  });
+  const [inchSize, setInchSize] = useState<InchSize>({ overallDiameter: 0, sectionWidth: 0, rimDiameter: 0 });
   
   const [conversionDirection, setConversionDirection] = useState<'metric-to-inch' | 'inch-to-metric'>('metric-to-inch');
   const [result, setResult] = useState<string>('');
+  const [recommendationMessage, setRecommendationMessage] = useState<string>('');
 
   const convertMetricToInch = useCallback(() => {
     if (metricSize.width && metricSize.profile && metricSize.diameter) {
@@ -55,7 +48,10 @@ const TireConverterCard: React.FC = () => {
       const overallDiameter = ((metricSize.diameter * 25.4) + (2 * sidewallHeight)) / 25.4;
       const sectionWidth = metricSize.width / 25.4;
       
-      setResult(`Дюймовый размер: ${overallDiameter.toFixed(1)}/${sectionWidth.toFixed(1)}R${metricSize.diameter}`);
+      // Рассчитываем общий диаметр в мм для рекомендации
+      const overallDiameterMm = Math.round(overallDiameter * 25.4);
+      
+      setResult(`Дюймовый размер: ${overallDiameter.toFixed(1)}/${sectionWidth.toFixed(1)}R${metricSize.diameter}. Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
       setConversionDirection('metric-to-inch');
     }
   }, [metricSize]);
@@ -66,7 +62,10 @@ const TireConverterCard: React.FC = () => {
       const sidewallHeight = ((inchSize.overallDiameter - inchSize.rimDiameter) / 2) * 25.4;
       const profile = Math.round((sidewallHeight / width) * 100);
       
-      setResult(`Метрический размер: ${width}/${profile}R${inchSize.rimDiameter}`);
+      // Рассчитываем общий диаметр в мм для рекомендации
+      const overallDiameterMm = Math.round(inchSize.overallDiameter * 25.4);
+      
+      setResult(`Метрический размер: ${width}/${profile}R${inchSize.rimDiameter}. Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
       setConversionDirection('inch-to-metric');
     }
   }, [inchSize]);
@@ -80,9 +79,10 @@ const TireConverterCard: React.FC = () => {
   };
 
   const handleReset = () => {
-    setMetricSize({ width: 235, profile: 75, diameter: 16 });
-    setInchSize({ overallDiameter: 30, sectionWidth: 9.5, rimDiameter: 16 });
+    setMetricSize({ width: 0, profile: 0, diameter: 0 });
+    setInchSize({ overallDiameter: 0, sectionWidth: 0, rimDiameter: 0 });
     setResult('');
+    setRecommendationMessage('');
   };
 
   const handleSwapDirection = useCallback(() => {
@@ -99,11 +99,16 @@ const TireConverterCard: React.FC = () => {
       const overallDiameter = ((currentMetric.diameter * 25.4) + (2 * sidewallHeight)) / 25.4;
       const sectionWidth = currentMetric.width / 25.4;
       
+      // Рассчитываем общий диаметр в мм для рекомендации
+      const overallDiameterMm = Math.round(overallDiameter * 25.4);
+      
       setInchSize({
         overallDiameter: parseFloat(overallDiameter.toFixed(1)),
         sectionWidth: parseFloat(sectionWidth.toFixed(1)),
         rimDiameter: currentMetric.diameter
       });
+      
+      setRecommendationMessage(`Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
     }
     // Если есть данные в дюймовой системе, конвертируем в метрическую
     else if (currentInch.overallDiameter && currentInch.sectionWidth && currentInch.rimDiameter) {
@@ -111,11 +116,16 @@ const TireConverterCard: React.FC = () => {
       const sidewallHeight = ((currentInch.overallDiameter - currentInch.rimDiameter) / 2) * 25.4;
       const profile = Math.round((sidewallHeight / width) * 100);
       
+      // Рассчитываем общий диаметр в мм для рекомендации
+      const overallDiameterMm = Math.round(currentInch.overallDiameter * 25.4);
+      
       setMetricSize({
         width: width,
         profile: profile,
         diameter: currentInch.rimDiameter
       });
+      
+      setRecommendationMessage(`Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
     }
   }, [metricSize, inchSize]);
 
@@ -157,6 +167,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем дюймовые параметры при ручном вводе в метрические
                       setInchSize({ overallDiameter: 0, sectionWidth: 0, rimDiameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">мм</InputAdornment>
@@ -173,6 +184,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем дюймовые параметры при ручном вводе в метрические
                       setInchSize({ overallDiameter: 0, sectionWidth: 0, rimDiameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">%</InputAdornment>
@@ -189,6 +201,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем дюймовые параметры при ручном вводе в метрические
                       setInchSize({ overallDiameter: 0, sectionWidth: 0, rimDiameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">"</InputAdornment>
@@ -200,15 +213,38 @@ const TireConverterCard: React.FC = () => {
             </Paper>
           </Grid>
 
-          {/* Кнопка переключения */}
-          <Grid item xs={12} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 1 }}>
-            <Button
-              variant="outlined"
-              onClick={handleSwapDirection}
-              sx={{ minWidth: 'auto', p: 1 }}
-            >
-              <SwapIcon sx={{ transform: 'rotate(90deg)' }} />
-            </Button>
+          {/* Кнопка переключения и рекомендация */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSwapDirection}
+                startIcon={<SwapIcon sx={{ transform: 'rotate(90deg)' }} />}
+                sx={{ 
+                  minWidth: 'auto', 
+                  px: 2, 
+                  py: 1.5,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  boxShadow: 2,
+                  '&:hover': {
+                    boxShadow: 4,
+                    transform: 'scale(1.02)'
+                  }
+                }}
+              >
+                Обменять
+              </Button>
+              
+              {recommendationMessage && (
+                <Alert severity="info" sx={{ flex: 1, mb: 0 }}>
+                  <Typography variant="body2">
+                    <strong>Рекомендация:</strong> {recommendationMessage}
+                  </Typography>
+                </Alert>
+              )}
+            </Box>
           </Grid>
 
           {/* Дюймовая система */}
@@ -234,6 +270,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем метрические параметры при ручном вводе в дюймовые
                       setMetricSize({ width: 0, profile: 0, diameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">"</InputAdornment>
@@ -250,6 +287,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем метрические параметры при ручном вводе в дюймовые
                       setMetricSize({ width: 0, profile: 0, diameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">"</InputAdornment>
@@ -266,6 +304,7 @@ const TireConverterCard: React.FC = () => {
                       // Обнуляем метрические параметры при ручном вводе в дюймовые
                       setMetricSize({ width: 0, profile: 0, diameter: 0 });
                       setResult('');
+                      setRecommendationMessage('');
                     }}
                     InputProps={{
                       endAdornment: <InputAdornment position="end">"</InputAdornment>

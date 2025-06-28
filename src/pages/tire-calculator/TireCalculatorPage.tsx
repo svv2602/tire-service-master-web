@@ -8,7 +8,8 @@ import {
   Divider,
   Chip,
   Paper,
-  Grid
+  Grid,
+  Container
 } from '@mui/material';
 import { 
   Calculate as CalculateIcon,
@@ -127,7 +128,7 @@ const TireCalculatorPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <Box sx={tablePageStyles.pageContainer}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         {/* Верхняя панель */}
         <Paper 
           elevation={2}
@@ -376,7 +377,7 @@ const TireCalculatorPage: React.FC = () => {
             </Typography>
           </CardContent>
         </Card>
-      </Box>
+      </Container>
     </ClientLayout>
   );
 };
