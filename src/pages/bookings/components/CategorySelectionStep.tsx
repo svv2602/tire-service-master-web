@@ -12,7 +12,7 @@ import {
   TextField
 } from '@mui/material';
 import { LocationOn as LocationOnIcon } from '@mui/icons-material';
-import { useGetServiceCategoriesQuery } from '../../../api/serviceCategories.api';
+import { useGetServiceCategoriesByCityIdQuery } from '../../../api/serviceCategories.api';
 import { useGetCityByIdQuery, useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
 
 interface CategorySelectionStepProps {
@@ -29,10 +29,11 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   onNext,
   isValid
 }) => {
-  const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesQuery({ 
-    active: true,
-    per_page: 50 
-  });
+  // Загружаем категории услуг по выбранному городу
+  const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesByCityIdQuery(
+    formData.city_id!,
+    { skip: !formData.city_id }
+  );
 
   const categories = categoriesResponse?.data || [];
 
@@ -54,7 +55,9 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
       formData_city_id: formData.city_id,
       selectedCity,
       isCityLoading,
-      cityResponse
+      cityResponse,
+      categoriesResponse,
+      categories_count: categories.length
     });
   }
 
@@ -63,6 +66,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
       ...prev,
       city_id: newCity ? newCity.id : null,
       // Сбрасываем зависимые поля при смене города
+      service_category_id: null,
       service_point_id: null,
       booking_date: '',
       start_time: ''
@@ -85,7 +89,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
     }, 300);
   };
 
-  if (isLoading) {
+  if (isLoading && formData.city_id) {
     return (
       <Box>
         <Typography variant="h6" gutterBottom>
@@ -102,14 +106,14 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
     );
   }
 
-  if (error) {
+  if (error && formData.city_id) {
     return (
       <Box>
         <Typography variant="h6" gutterBottom>
           Выберите тип услуг
         </Typography>
         <Alert severity="error">
-          Ошибка загрузки категорий услуг. Попробуйте обновить страницу.
+          Ошибка загрузки категорий услуг для выбранного города. Попробуйте выбрать другой город или обновить страницу.
         </Alert>
       </Box>
     );
@@ -132,14 +136,14 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
           renderOption={(props, option) => (
             <Box component="li" {...props}>
               <LocationOnIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                             <Box>
-                 <Typography variant="body1">{option.name}</Typography>
-                 {option.region && (
-                   <Typography variant="caption" color="text.secondary">
-                     {option.region.name}
-                   </Typography>
-                 )}
-               </Box>
+              <Box>
+                <Typography variant="body1">{option.name}</Typography>
+                {option.region && (
+                  <Typography variant="caption" color="text.secondary">
+                    {option.region.name}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           )}
           renderInput={(params) => (
@@ -168,63 +172,80 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
       {process.env.NODE_ENV === 'development' && (
         <Alert severity="info" sx={{ mb: 2, fontSize: '0.75rem' }}>
           Debug: city_id={formData.city_id}, loading={isCityLoading ? 'true' : 'false'}, 
-          hasCity={selectedCity ? 'true' : 'false'}
+          hasCity={selectedCity ? 'true' : 'false'}, categories_count={categories.length}
         </Alert>
       )}
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {selectedCity 
-          ? `Выберите категорию услуг для поиска подходящих сервисных точек в городе ${selectedCity.name}`
-          : 'Сначала выберите город, затем категорию услуг для поиска подходящих сервисных точек'
+          ? `Доступные категории услуг в городе ${selectedCity.name} (${categories.length})`
+          : 'Сначала выберите город, чтобы увидеть доступные категории услуг'
         }
       </Typography>
 
-      <Grid container spacing={2}>
-        {categories.map((category) => (
-          <Grid item xs={12} sm={6} md={4} key={category.id}>
-            <Card 
-              sx={{ 
-                cursor: selectedCity ? 'pointer' : 'not-allowed',
-                border: 2,
-                borderColor: formData.service_category_id === category.id 
-                  ? 'primary.main' 
-                  : 'transparent',
-                backgroundColor: formData.service_category_id === category.id 
-                  ? 'primary.50' 
-                  : 'background.paper',
-                opacity: selectedCity ? 1 : 0.5,
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': selectedCity ? {
-                  borderColor: 'primary.light',
-                  boxShadow: 2
-                } : {}
-              }}
-              onClick={() => selectedCity && handleCategorySelect(category.id)}
-            >
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {category.name}
-                </Typography>
-                {category.description && (
-                  <Typography variant="body2" color="text.secondary">
-                    {category.description}
-                  </Typography>
-                )}
-                {category.services_count && (
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    Доступно услуг: {category.services_count}
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      
-      {categories.length === 0 && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          Категории услуг не найдены. Обратитесь к администратору.
-        </Alert>
+      {/* Отображение категорий */}
+      {selectedCity && (
+        <>
+          {categories.length === 0 ? (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              В выбранном городе пока нет доступных категорий услуг. Попробуйте выбрать другой город.
+            </Alert>
+          ) : (
+            <Grid container spacing={2}>
+              {categories.map((category) => (
+                <Grid item xs={12} sm={6} md={4} key={category.id}>
+                  <Card 
+                    sx={{ 
+                      cursor: 'pointer',
+                      border: 2,
+                      borderColor: formData.service_category_id === category.id 
+                        ? 'primary.main' 
+                        : 'transparent',
+                      backgroundColor: formData.service_category_id === category.id 
+                        ? 'primary.50' 
+                        : 'background.paper',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        borderColor: 'primary.light',
+                        boxShadow: 2
+                      }
+                    }}
+                    onClick={() => handleCategorySelect(category.id)}
+                  >
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {category.name}
+                      </Typography>
+                      {category.description && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {category.description}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                        {category.service_points_count && (
+                          <Chip 
+                            size="small" 
+                            label={`${category.service_points_count} точек`}
+                            color="primary"
+                            variant="outlined"
+                          />
+                        )}
+                        {category.services_count && (
+                          <Chip 
+                            size="small" 
+                            label={`${category.services_count} услуг`}
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </>
       )}
 
       {!selectedCity && (
@@ -233,9 +254,9 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         </Alert>
       )}
       
-      {selectedCity && !formData.service_category_id && categories.length > 0 && (
-        <Alert severity="info" sx={{ mt: 3 }}>
-          Выберите категорию услуг для продолжения
+      {selectedCity && formData.service_category_id && (
+        <Alert severity="success" sx={{ mt: 3 }}>
+          ✅ Категория услуг выбрана. Переход к выбору сервисной точки...
         </Alert>
       )}
     </Box>

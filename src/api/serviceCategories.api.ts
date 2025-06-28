@@ -21,6 +21,21 @@ interface ApiServiceCategoriesResponse {
   };
 }
 
+// Интерфейс для ответа API категорий по городу
+interface ServiceCategoriesByCityResponse {
+  data: Array<ServiceCategoryData & {
+    service_points_count: number;
+    services_count: number;
+    city_name: string;
+  }>;
+  city: {
+    id: number;
+    name: string;
+    region: string;
+  };
+  total_count: number;
+}
+
 export const serviceCategoriesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getServiceCategories: build.query<ApiResponse<ServiceCategoryData>, ServiceCategoryFilter>({
@@ -44,6 +59,22 @@ export const serviceCategoriesApi = baseApi.injectEndpoints({
     getServiceCategoryById: build.query<ServiceCategoryData, string>({
       query: (id) => `service_categories/${id}`,
       providesTags: (_result, _err, id) => [{ type: 'ServiceCategory' as const, id }],
+    }),
+
+    // Получение категорий услуг по городу
+    getServiceCategoriesByCity: build.query<ServiceCategoriesByCityResponse, string>({
+      query: (cityName) => `service_categories/by_city/${encodeURIComponent(cityName)}`,
+      providesTags: ['ServiceCategory'],
+    }),
+
+    // Получение категорий услуг по ID города
+    getServiceCategoriesByCityId: build.query<ServiceCategoriesByCityResponse, number>({
+      query: (cityId) => {
+        // Сначала получаем название города по ID через другой API endpoint
+        // Но для упрощения можно использовать прямой запрос
+        return `service_categories/by_city_id/${cityId}`;
+      },
+      providesTags: ['ServiceCategory'],
     }),
 
     createServiceCategory: build.mutation<ServiceCategoryData, ServiceCategoryFormData>({
@@ -95,6 +126,8 @@ export const serviceCategoriesApi = baseApi.injectEndpoints({
 export const {
   useGetServiceCategoriesQuery,
   useGetServiceCategoryByIdQuery,
+  useGetServiceCategoriesByCityQuery,
+  useGetServiceCategoriesByCityIdQuery,
   useCreateServiceCategoryMutation,
   useUpdateServiceCategoryMutation,
   useDeleteServiceCategoryMutation,
