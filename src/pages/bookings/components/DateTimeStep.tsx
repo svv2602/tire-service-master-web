@@ -124,7 +124,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           time: timeKey,
           posts: [],
           available_posts: 0,
-          total_posts: 0
+          total_posts: 0,
+          duration_minutes: slot.duration_minutes
         };
       }
       
@@ -138,6 +139,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       posts: any[];
       available_posts: number;
       total_posts: number;
+      duration_minutes: number;
     }>);
 
     // Преобразуем в массив и сортируем по времени
@@ -146,7 +148,8 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         time: group.time,
         available_posts: group.available_posts,
         total_posts: group.total_posts,
-        can_book: group.available_posts > 0
+        can_book: group.available_posts > 0,
+        duration_minutes: group.duration_minutes
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
@@ -170,12 +173,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   );
   
   // Обработчик изменения времени
-  const handleTimeSlotChange = (timeSlot: string | null) => {
+  const handleTimeSlotChange = (timeSlot: string | null, slotData?: any) => {
     setSelectedTimeSlot(timeSlot);
     
     setFormData((prev: any) => ({
       ...prev,
       start_time: timeSlot || '',
+      duration_minutes: slotData?.duration_minutes, // Сохраняем длительность слота
     }));
   };
 

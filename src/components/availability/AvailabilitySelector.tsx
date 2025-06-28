@@ -13,7 +13,7 @@ interface AvailabilitySelectorProps {
   selectedDate: Date | null;
   onDateChange: (date: Date | null) => void;
   selectedTimeSlot: string | null;
-  onTimeSlotChange: (timeSlot: string | null) => void;
+  onTimeSlotChange: (timeSlot: string | null, slotData?: AvailableTimeSlot) => void;
   availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
   servicePointPhone?: string;

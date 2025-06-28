@@ -62,6 +62,7 @@ export interface BookingFormData {
   // Шаг 2: Дата и время
   booking_date: string;
   start_time: string;
+  duration_minutes?: number; // Длительность выбранного слота
   
   // Шаг 3: Информация о клиенте
   client: {
@@ -429,6 +430,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           service_category_id: formData.service_category_id,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
+          duration_minutes: formData.duration_minutes,
           notes: formData.notes || '',
           // Поля получателя услуги
           service_recipient_first_name: formData.service_recipient.first_name,

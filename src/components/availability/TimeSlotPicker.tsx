@@ -14,7 +14,7 @@ import type { AvailableTimeSlot } from '../../types/availability';
 
 interface TimeSlotPickerProps {
   selectedTimeSlot: string | null;
-  onTimeSlotChange: (timeSlot: string | null) => void;
+  onTimeSlotChange: (timeSlot: string | null, slotData?: AvailableTimeSlot) => void;
   availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
 }
@@ -67,7 +67,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                   <Button
                     variant={isSelected ? "contained" : "outlined"}
                     fullWidth
-                    onClick={() => onTimeSlotChange(slot.time)}
+                    onClick={() => onTimeSlotChange(slot.time, slot)}
                     sx={{
                       p: 2,
                       borderColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
