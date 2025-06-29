@@ -58,15 +58,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     skip: !formData.city_id
   });
   
-  // Отладочная информация для города
-  console.log('ReviewStep - City data:', {
-    city_id: formData.city_id,
-    cityData,
-    cityLoading,
-    cityError,
-    cityName: (cityData as any)?.name || (cityData as any)?.data?.name
-  });
-  
   const { data: servicePointData } = useGetServicePointBasicInfoQuery(
     formData.service_point_id?.toString() || '', 
     {
@@ -91,8 +82,9 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   
   const getServicePointAddress = () => {
     if (servicePointData && cityData) {
-      // API возвращает данные напрямую, не в формате { data: City }
-      return `${(cityData as any).name}, ${servicePointData.address}`;
+      // API возвращает данные в формате { data: City }
+      const cityName = cityData.data?.name || (cityData as any).name;
+      return `${cityName}, ${servicePointData.address}`;
     }
     return servicePointData?.address || '';
   };
@@ -109,8 +101,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       return `Город #${formData.city_id} (ошибка загрузки)`;
     }
     if (cityData) {
-      // API возвращает данные напрямую, не в формате { data: City }
-      return (cityData as any).name || `Город #${formData.city_id}`;
+      // API возвращает данные в формате { data: City }
+      return cityData.data?.name || (cityData as any).name || `Город #${formData.city_id}`;
     }
     return `Город #${formData.city_id}`;
   };
