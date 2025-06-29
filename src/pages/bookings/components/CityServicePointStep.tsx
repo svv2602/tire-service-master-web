@@ -232,7 +232,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Выберите город и точку обслуживания
+        Выберите точку обслуживания
       </Typography>
       
       {/* Информация о выбранной категории */}

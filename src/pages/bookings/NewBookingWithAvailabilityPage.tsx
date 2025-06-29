@@ -106,7 +106,7 @@ const STEPS = [
   },
   {
     id: 'city-service-point',
-    label: 'Выбор города и точки обслуживания',
+    label: 'Выбор точки обслуживания',
     component: CityServicePointStep,
   },
   {

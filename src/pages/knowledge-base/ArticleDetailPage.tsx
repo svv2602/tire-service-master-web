@@ -8,7 +8,6 @@ import {
   Chip,
   Button,
   CircularProgress,
-  Breadcrumbs,
   useTheme,
   Fade,
   Divider,
@@ -106,30 +105,7 @@ const ArticleDetailPage: React.FC = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Fade in timeout={600}>
             <Box>
-              {/* Хлебные крошки */}
-              <Breadcrumbs sx={{ mb: 3, color: colors.textSecondary }}>
-                <Link 
-                  to="/client" 
-                  style={{ 
-                    color: colors.textSecondary, 
-                    textDecoration: 'none'
-                  }}
-                >
-                  Главная
-                </Link>
-                <Link 
-                  to="/knowledge-base"
-                  style={{ 
-                    color: colors.textSecondary, 
-                    textDecoration: 'none'
-                  }}
-                >
-                  База знаний
-                </Link>
-                <Typography sx={{ color: colors.textPrimary }}>
-                  {article.title}
-                </Typography>
-              </Breadcrumbs>
+
 
               {/* Кнопка назад */}
               <Button
@@ -400,7 +376,7 @@ const ArticleDetailPage: React.FC = () => {
                       </Typography>
                       <Button
                         component={Link}
-                        to="/client"
+                        to="/client/booking"
                         variant="contained"
                         fullWidth
                         sx={buttonStyles}

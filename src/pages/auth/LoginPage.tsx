@@ -20,6 +20,7 @@ import {
   getContainerStyles
 } from '../../styles';
 import CloseIcon from '@mui/icons-material/Close';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -169,16 +170,17 @@ const LoginPage: React.FC = () => {
   };
 
   const handleSkipLogin = () => {
-    // Возвращаемся на предыдущую страницу или на главную
-    navigate(-1);
+    // Переходим на главную страницу
+    navigate('/client');
   };
 
   return (
-    <Container 
-      maxWidth="sm" 
-      sx={containerStyles.centerContent}
-    >
-      <Card sx={authStyles.authCard}>
+    <ClientLayout>
+      <Container 
+        maxWidth="sm" 
+        sx={containerStyles.centerContent}
+      >
+        <Card sx={authStyles.authCard}>
         <Box sx={authStyles.authHeader}>
           <LockIcon 
             color="primary" 
@@ -294,16 +296,10 @@ const LoginPage: React.FC = () => {
           </Box>
         </form>
 
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="body2" color="textSecondary">
-            Тестовые данные для входа в систему:
-          </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Email: admin@test.com, Пароль: admin123
-          </Typography>
-        </Box>
+
       </Card>
     </Container>
+    </ClientLayout>
   );
 };
 

@@ -185,7 +185,7 @@ const MyBookingsList: React.FC = () => {
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
-          onClick={() => window.location.href = '/service-points/search'}
+          onClick={() => window.location.href = '/client/booking'}
         >
           Записаться на шиномонтаж
         </Button>
@@ -214,7 +214,7 @@ const MyBookingsList: React.FC = () => {
           <Button 
             variant="contained" 
             startIcon={<AddIcon />}
-            onClick={() => window.location.href = '/service-points/search'}
+            onClick={() => window.location.href = '/client/booking'}
             sx={{ mt: SIZES.spacing.md }}
           >
             Выбрать сервисный центр

@@ -51,6 +51,17 @@ export const articlesApi = baseApi.injectEndpoints({
       }),
       providesTags: ['Article'],
     }),
+    getMainPageArticles: builder.query<ArticlesResponse, void>({
+      query: () => ({
+        url: '/articles',
+        params: { 
+          status: 'published', 
+          per_page: 3,
+          sort_by_featured: true // Специальный параметр для сортировки
+        },
+      }),
+      providesTags: ['Article'],
+    }),
     getArticleCategories: builder.query<ArticleCategory[], void>({
       queryFn: () => ({ data: ARTICLE_CATEGORIES }),
     }),
@@ -86,6 +97,7 @@ export const {
   useGetArticlesQuery,
   useGetArticleByIdQuery,
   useGetFeaturedArticlesQuery,
+  useGetMainPageArticlesQuery,
   useGetRelatedArticlesQuery,
   useGetArticleCategoriesQuery,
   useCreateArticleMutation,

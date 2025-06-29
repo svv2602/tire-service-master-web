@@ -37,8 +37,8 @@ import {
 
 // Импорт API для работы с контентом
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
-import { useGetFeaturedArticlesQuery } from '../../api/articles.api';
 import { useGetCitiesWithServicePointsQuery } from '../../api/cities.api';
+import { useMainPageArticles } from '../../hooks/useMainPageArticles';
 import ClientLayout from '../../components/client/ClientLayout';
 
 // Интерфейс для города с сервисными точками
@@ -65,8 +65,10 @@ const ClientMainPage: React.FC = () => {
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
     section: 'client_main'
   });
-  const { data: articlesData } = useGetFeaturedArticlesQuery();
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
+  
+  // Получаем статьи для главной страницы (приоритет рекомендованным)
+  const { articles: mainPageArticles, isLoading: articlesLoading } = useMainPageArticles();
   
   // Получаем данные контента из API
   const pageContent = pageContentData?.data || [];
@@ -109,29 +111,35 @@ const ClientMainPage: React.FC = () => {
     }
   };
   
-  // Для статей используем автоматические данные из API или fallback
-  const currentArticles = articlesData?.data || [
+  // Для статей используем новую логику с приоритетом рекомендованных
+  const currentArticles = mainPageArticles.length > 0 ? mainPageArticles : [
     {
+      id: 1,
       title: 'Як вибрати зимові шини',
       excerpt: 'Детальний посібник з вибору зимових шин для безпечної їзди',
       reading_time: 5,
-      author: 'Експерт з шин'
+      author: { name: 'Експерт з шин' },
+      created_at: new Date().toISOString()
     },
     {
+      id: 2,
       title: 'Правильний тиск у шинах',
       excerpt: 'Вплив тиску на безпеку та витрату палива',
       reading_time: 3,
-      author: 'Технічний спеціаліст'
+      author: { name: 'Технічний спеціаліст' },
+      created_at: new Date().toISOString()
     },
     {
+      id: 3,
       title: 'Сезонне зберігання шин',
       excerpt: 'Як правильно зберігати шини в міжсезоння',
       reading_time: 4,
-      author: 'Майстер сервісу'
+      author: { name: 'Майстер сервісу' },
+      created_at: new Date().toISOString()
     }
   ];
 
-  if (contentLoading || citiesLoading) {
+  if (contentLoading || citiesLoading || articlesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <Typography>Завантаження...</Typography>
@@ -265,8 +273,8 @@ const ClientMainPage: React.FC = () => {
             </Typography>
             
             <Grid container spacing={3}>
-              {currentArticles.slice(0, 3).map((article, index) => (
-                <Grid item xs={12} md={4} key={index}>
+              {currentArticles.slice(0, 3).map((article: any, index: number) => (
+                <Grid item xs={12} md={4} key={article.id || index}>
                   <Fade in timeout={1200 + index * 100}>
                     <Card sx={{ 
                       ...cardStyles, 
@@ -306,7 +314,7 @@ const ClientMainPage: React.FC = () => {
                         <Button 
                           size="small" 
                           sx={{ color: theme.palette.primary.main }}
-                          onClick={() => navigate(`/knowledge-base/${index}`)}
+                          onClick={() => navigate(`/knowledge-base/${article.id}`)}
                         >
                           Читати далі
                         </Button>

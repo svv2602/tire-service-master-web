@@ -30,16 +30,16 @@ export const getAuthStyles = (theme: Theme) => ({
   },
   authSubmit: {
     mt: 2,
-    mb: 2,
+    mb: 1,
     height: 48
   },
   authActions: {
-    mt: 2,
+    mt: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: 1
+    gap: 0.5
   },
   skipButton: {
-    mt: 1
+    mt: 0.5
   }
 }); 

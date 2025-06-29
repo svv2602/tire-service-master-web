@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -19,30 +19,49 @@ import {
   MenuItem,
   Fade,
   useTheme,
-  Breadcrumbs
+  Skeleton,
+  Alert,
+  Autocomplete,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Collapse,
+  IconButton,
+  Rating,
+  Tooltip
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  TireRepair as TireIcon,
-  Speed as SpeedIcon,
-  Build as BuildIcon,
-  DirectionsCar as CarIcon,
+  LocationOn as LocationIcon,
   Schedule as ScheduleIcon,
   AttachMoney as MoneyIcon,
   Star as StarIcon,
-  NavigateNext as NavigateNextIcon,
-  Home as HomeIcon
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  FilterList as FilterIcon,
+  Clear as ClearIcon,
+  BookOnline as BookIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 import { 
   getCardStyles, 
   getButtonStyles, 
   getTextFieldStyles,
-  SIZES,
   getThemeColors,
   ANIMATIONS
 } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
+
+// API импорты
+import { useGetServiceCategoriesQuery } from '../../api/services.api';
+import { useGetCitiesQuery } from '../../api/cities.api';
+import { useSearchServicePointsQuery } from '../../api/servicePoints.api';
+
+// Импорт типов
+import type { ServicePoint, ServiceCategory, City, ServicePointService } from '../../types/models';
 
 const ClientServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,138 +73,194 @@ const ClientServicesPage: React.FC = () => {
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const textFieldStyles = getTextFieldStyles(theme, 'filled');
   
+  // Состояния фильтров
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [priceFilter, setPriceFilter] = useState('');
-  
-  // Категории услуг
-  const categories = [
-    { value: '', label: 'Все категории' },
-    { value: 'mounting', label: 'Шиномонтаж' },
-    { value: 'repair', label: 'Ремонт шин' },
-    { value: 'balance', label: 'Балансировка' },
-    { value: 'storage', label: 'Хранение' },
-    { value: 'diagnostics', label: 'Диагностика' }
-  ];
-  
-  // Услуги
-  const services = [
-    {
-      id: 1,
-      title: 'Замена шин легкового автомобиля',
-      category: 'mounting',
-      price: { min: 500, max: 800 },
-      duration: '30-40 мин',
-      description: 'Профессиональная замена летних и зимних шин на легковых автомобилях',
-      features: ['Снятие старых шин', 'Установка новых', 'Проверка давления'],
-      icon: <TireIcon />,
-      rating: 4.8,
-      popularity: 95
-    },
-    {
-      id: 2,
-      title: 'Балансировка колес',
-      category: 'balance',
-      price: { min: 200, max: 400 },
-      duration: '15-25 мин',
-      description: 'Устранение вибрации руля и неравномерного износа шин',
-      features: ['Диагностика дисбаланса', 'Установка грузиков', 'Проверка результата'],
-      icon: <SpeedIcon />,
-      rating: 4.7,
-      popularity: 88
-    },
-    {
-      id: 3,
-      title: 'Ремонт прокола шины',
-      category: 'repair',
-      price: { min: 300, max: 600 },
-      duration: '20-30 мин',
-      description: 'Быстрый и качественный ремонт проколов различной сложности',
-      features: ['Поиск прокола', 'Заплатка или жгут', 'Проверка герметичности'],
-      icon: <BuildIcon />,
-      rating: 4.6,
-      popularity: 75
-    },
-    {
-      id: 4,
-      title: 'Шиномонтаж грузового автомобиля',
-      category: 'mounting',
-      price: { min: 800, max: 1500 },
-      duration: '45-60 мин',
-      description: 'Монтаж и демонтаж шин для грузовых автомобилей',
-      features: ['Работа с крупногабаритными шинами', 'Специальное оборудование'],
-      icon: <CarIcon />,
-      rating: 4.9,
-      popularity: 60
-    },
-    {
-      id: 5,
-      title: 'Сезонное хранение шин',
-      category: 'storage',
-      price: { min: 2000, max: 4000 },
-      duration: 'Сезон',
-      description: 'Профессиональное хранение шин в оптимальных условиях',
-      features: ['Климат-контроль', 'Маркировка', 'Страхование'],
-      icon: <TireIcon />,
-      rating: 4.5,
-      popularity: 70
-    },
-    {
-      id: 6,
-      title: 'Диагностика ходовой части',
-      category: 'diagnostics',
-      price: { min: 1000, max: 2000 },
-      duration: '30-45 мин',
-      description: 'Комплексная проверка состояния подвески и шин',
-      features: ['Визуальный осмотр', 'Компьютерная диагностика', 'Отчет'],
-      icon: <BuildIcon />,
-      rating: 4.4,
-      popularity: 55
-    }
-  ];
-  
-  // Фильтрация услуг
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         service.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || service.category === selectedCategory;
-    const matchesPrice = !priceFilter || 
-      (priceFilter === 'low' && service.price.max <= 500) ||
-      (priceFilter === 'medium' && service.price.min <= 1000 && service.price.max > 500) ||
-      (priceFilter === 'high' && service.price.min > 1000);
-    
-    return matchesSearch && matchesCategory && matchesPrice;
+  const [showFilters, setShowFilters] = useState(false);
+  const [expandedServicePoints, setExpandedServicePoints] = useState<Set<number>>(new Set());
+
+  // API запросы
+  const { 
+    data: categoriesResponse, 
+    isLoading: categoriesLoading,
+    error: categoriesError 
+  } = useGetServiceCategoriesQuery({ 
+    active: true,
+    per_page: 50 
   });
+
+  const { 
+    data: citiesResponse, 
+    isLoading: citiesLoading 
+  } = useGetCitiesQuery({ 
+    per_page: 100 
+  });
+
+  const { 
+    data: servicePointsResponse,
+    isLoading: servicePointsLoading,
+    error: servicePointsError
+  } = useSearchServicePointsQuery(
+    selectedCity ? { city: selectedCity.name } : {},
+    { skip: !selectedCity }
+  );
+
+  // Обработанные данные
+  const categories = categoriesResponse?.data || [];
+  const cities = citiesResponse?.data || [];
+  const servicePoints = servicePointsResponse?.data || [];
+
+  // Фильтрация услуг
+  const filteredServices = useMemo(() => {
+    if (!servicePoints.length) return [];
+
+    let allServices: (ServicePointService & { servicePoint: ServicePoint })[] = [];
+    
+    // Собираем все услуги из всех сервисных точек
+    servicePoints.forEach(servicePoint => {
+      if (servicePoint.services) {
+        servicePoint.services.forEach(service => {
+          if (service.is_available && service.service) {
+            allServices.push({
+              ...service,
+              servicePoint
+            });
+          }
+        });
+      }
+    });
+
+    // Применяем фильтры
+    return allServices.filter(service => {
+      // Поиск по названию услуги
+      const serviceName = service.service?.name || '';
+      const matchesSearch = !searchQuery || 
+        serviceName.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Фильтр по категории
+      const matchesCategory = !selectedCategory || 
+        (service.service?.category && service.service.category.id === selectedCategory);
+
+      // Фильтр по цене
+      const matchesPrice = !priceFilter || 
+        (priceFilter === 'low' && service.price <= 500) ||
+        (priceFilter === 'medium' && service.price > 500 && service.price <= 1500) ||
+        (priceFilter === 'high' && service.price > 1500);
+
+      return matchesSearch && matchesCategory && matchesPrice;
+    });
+  }, [servicePoints, searchQuery, selectedCategory, priceFilter]);
+
+  // Группировка услуг по сервисным точкам
+  const servicesByServicePoint = useMemo(() => {
+    const grouped = new Map<number, {
+      servicePoint: ServicePoint;
+      services: ServicePointService[];
+    }>();
+
+    filteredServices.forEach(service => {
+      const spId = service.servicePoint.id;
+      if (!grouped.has(spId)) {
+        grouped.set(spId, {
+          servicePoint: service.servicePoint,
+          services: []
+        });
+      }
+      grouped.get(spId)!.services.push(service);
+    });
+
+    return Array.from(grouped.values());
+  }, [filteredServices]);
+
+  // Обработчики
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory(null);
+    setSelectedCity(null);
+    setPriceFilter('');
+  };
+
+  const handleBookService = (service: ServicePointService, servicePoint: ServicePoint) => {
+    if (!servicePoint.city || !service.service) return;
+    
+    navigate('/client/booking/new-with-availability', {
+      state: {
+        preselected: {
+          city_id: servicePoint.city.id,
+          service_point_id: servicePoint.id,
+          service_id: service.service_id,
+          service_name: service.service.name,
+          service_price: service.price,
+          service_duration: service.duration
+        }
+      }
+    });
+  };
+
+  const toggleServicePointExpansion = (servicePointId: number) => {
+    const newExpanded = new Set(expandedServicePoints);
+    if (newExpanded.has(servicePointId)) {
+      newExpanded.delete(servicePointId);
+    } else {
+      newExpanded.add(servicePointId);
+    }
+    setExpandedServicePoints(newExpanded);
+  };
+
+  const getServiceIcon = (categoryName: string) => {
+    const iconMap: { [key: string]: string } = {
+      'техническое обслуживание': '🔧',
+      'шиномонтаж': '🚗',
+      'диагностика': '🔍',
+      'ремонт': '⚙️',
+      'мойка': '💧',
+      'автосервис': '🏪'
+    };
+    return iconMap[categoryName.toLowerCase()] || '🔧';
+  };
+
+  // Рендер состояний загрузки и ошибок
+  if (categoriesLoading || citiesLoading) {
+    return (
+      <ClientLayout>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Skeleton variant="text" width="60%" height={60} sx={{ mb: 2 }} />
+          <Skeleton variant="text" width="40%" height={40} sx={{ mb: 4 }} />
+          <Grid container spacing={3}>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Grid item xs={12} md={6} lg={4} key={i}>
+                <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </ClientLayout>
+    );
+  }
 
   return (
     <ClientLayout>
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          {/* Хлебные крошки */}
-          <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ mb: 4 }}>
-            <Link to="/client" style={{ display: 'flex', alignItems: 'center', color: colors.textSecondary, textDecoration: 'none' }}>
-              <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-              Главная
-            </Link>
-            <Typography sx={{ color: colors.textPrimary }}>Услуги</Typography>
-          </Breadcrumbs>
-
           {/* Заголовок */}
           <Fade in timeout={300}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
               <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                🔧 Каталог услуг
+                🔧 Поиск услуг
               </Typography>
               <Typography variant="h6" sx={{ color: colors.textSecondary, maxWidth: 600, mx: 'auto' }}>
-                Выберите необходимую услугу и запишитесь в удобное время
+                Найдите нужную услугу в вашем городе и запишитесь на удобное время
               </Typography>
             </Box>
           </Fade>
 
-          {/* Фильтры */}
+          {/* Основные фильтры */}
           <Fade in timeout={500}>
             <Paper sx={{ ...cardStyles, mb: 4, p: 3 }}>
               <Grid container spacing={3} alignItems="center">
+                {/* Поиск */}
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
@@ -199,240 +274,326 @@ const ClientServicesPage: React.FC = () => {
                         <InputAdornment position="start">
                           <SearchIcon />
                         </InputAdornment>
+                      ),
+                      endAdornment: searchQuery && (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => setSearchQuery('')}>
+                            <ClearIcon />
+                          </IconButton>
+                        </InputAdornment>
                       )
                     }}
                   />
                 </Grid>
                 
+                {/* Выбор города */}
                 <Grid item xs={12} md={4}>
-                  <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Категория</InputLabel>
-                    <Select
-                      value={selectedCategory}
-                      onChange={(e) => setSelectedCategory(e.target.value)}
-                      label="Категория"
-                    >
-                      {categories.map((category) => (
-                        <MenuItem key={category.value} value={category.value}>
-                          {category.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    options={cities}
+                    getOptionLabel={(city) => `${city.name}${city.region ? `, ${city.region.name}` : ''}`}
+                    value={selectedCity}
+                    onChange={(_, newValue) => setSelectedCity(newValue)}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Выберите город"
+                        placeholder="Начните вводить название города..."
+                        sx={textFieldStyles}
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <LocationIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                    loading={citiesLoading}
+                    loadingText="Загрузка городов..."
+                    noOptionsText="Города не найдены"
+                  />
                 </Grid>
                 
+                {/* Кнопка дополнительных фильтров */}
                 <Grid item xs={12} md={4}>
-                  <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Цена</InputLabel>
-                    <Select
-                      value={priceFilter}
-                      onChange={(e) => setPriceFilter(e.target.value)}
-                      label="Цена"
-                    >
-                      <MenuItem value="">Любая цена</MenuItem>
-                      <MenuItem value="low">До 500 ₽</MenuItem>
-                      <MenuItem value="medium">500 - 1000 ₽</MenuItem>
-                      <MenuItem value="high">Свыше 1000 ₽</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    startIcon={<FilterIcon />}
+                    endIcon={showFilters ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    onClick={() => setShowFilters(!showFilters)}
+                    sx={{ ...secondaryButtonStyles, height: '56px' }}
+                  >
+                    Фильтры
+                  </Button>
                 </Grid>
               </Grid>
+
+              {/* Дополнительные фильтры */}
+              <Collapse in={showFilters}>
+                <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${colors.backgroundSecondary}` }}>
+                  <Grid container spacing={3}>
+                    {/* Категория услуг */}
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth sx={textFieldStyles}>
+                        <InputLabel>Категория услуг</InputLabel>
+                        <Select
+                          value={selectedCategory || ''}
+                          onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : null)}
+                          label="Категория услуг"
+                        >
+                          <MenuItem value="">Все категории</MenuItem>
+                          {categories.map((category) => (
+                            <MenuItem key={category.id} value={category.id}>
+                              {getServiceIcon(category.name)} {category.name}
+                              {category.services_count && ` (${category.services_count})`}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    
+                    {/* Ценовой диапазон */}
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth sx={textFieldStyles}>
+                        <InputLabel>Ценовой диапазон</InputLabel>
+                        <Select
+                          value={priceFilter}
+                          onChange={(e) => setPriceFilter(e.target.value)}
+                          label="Ценовой диапазон"
+                        >
+                          <MenuItem value="">Любая цена</MenuItem>
+                          <MenuItem value="low">До 500 ₴</MenuItem>
+                          <MenuItem value="medium">500 - 1500 ₴</MenuItem>
+                          <MenuItem value="high">Свыше 1500 ₴</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </Grid>
+
+                  {/* Кнопка очистки фильтров */}
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="text"
+                      startIcon={<ClearIcon />}
+                      onClick={handleClearFilters}
+                      sx={{ color: colors.textSecondary }}
+                    >
+                      Очистить фильтры
+                    </Button>
+                  </Box>
+                </Box>
+              </Collapse>
             </Paper>
           </Fade>
 
-          {/* Услуги */}
-          <Grid container spacing={3}>
-            {filteredServices.map((service, index) => (
-              <Grid item xs={12} md={6} lg={4} key={service.id}>
-                <Fade in timeout={600 + index * 100}>
-                  <Card sx={{ 
-                    ...cardStyles, 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    cursor: 'pointer',
-                    transition: ANIMATIONS.transition.medium,
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: theme.shadows[4]
-                    }
-                  }}>
-                    <CardContent sx={{ flex: 1, p: 3 }}>
-                      {/* Заголовок и иконка */}
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                        <Box sx={{ 
-                          color: theme.palette.primary.main, 
-                          fontSize: 40, 
-                          mr: 2,
-                          flexShrink: 0
+          {/* Результаты поиска */}
+          {!selectedCity ? (
+            <Fade in timeout={700}>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  mb: 4,
+                  '& .MuiAlert-message': { 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1 
+                  }
+                }}
+              >
+                <LocationIcon />
+                Выберите город для поиска доступных услуг
+              </Alert>
+            </Fade>
+          ) : servicePointsLoading ? (
+            <Grid container spacing={3}>
+              {[1, 2, 3, 4].map((i) => (
+                <Grid item xs={12} key={i}>
+                  <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 2 }} />
+                </Grid>
+              ))}
+            </Grid>
+          ) : servicePointsError ? (
+            <Alert severity="error" sx={{ mb: 4 }}>
+              Ошибка при загрузке данных. Попробуйте обновить страницу.
+            </Alert>
+          ) : servicesByServicePoint.length === 0 ? (
+            <Fade in timeout={700}>
+              <Alert severity="warning" sx={{ mb: 4 }}>
+                В городе {selectedCity.name} не найдено услуг по заданным критериям.
+                Попробуйте изменить фильтры или выбрать другой город.
+              </Alert>
+            </Fade>
+          ) : (
+            <Fade in timeout={700}>
+              <Box>
+                {/* Информация о результатах */}
+                <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="h6" sx={{ color: colors.textPrimary }}>
+                    Найдено {filteredServices.length} услуг в {servicesByServicePoint.length} точках обслуживания
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                    Город: {selectedCity.name}
+                  </Typography>
+                </Box>
+
+                {/* Список сервисных точек с услугами */}
+                <Grid container spacing={3}>
+                  {servicesByServicePoint.map(({ servicePoint, services }, index) => (
+                    <Grid item xs={12} key={servicePoint.id}>
+                      <Fade in timeout={800 + index * 100}>
+                        <Card sx={{ 
+                          ...cardStyles,
+                          transition: ANIMATIONS.transition.medium,
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4]
+                          }
                         }}>
-                          {service.icon}
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
-                            {service.title}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Chip 
-                              label={categories.find(c => c.value === service.category)?.label} 
-                              size="small" 
-                              variant="outlined"
-                            />
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <StarIcon sx={{ fontSize: 16, color: colors.warning, mr: 0.5 }} />
-                              <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                                {service.rating}
-                              </Typography>
+                          {/* Заголовок сервисной точки */}
+                          <CardContent sx={{ pb: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
+                                  {servicePoint.name}
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                                  <Chip 
+                                    icon={<LocationIcon />}
+                                    label={servicePoint.address}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                  {servicePoint.contact_phone && (
+                                    <Chip 
+                                      icon={<LocationIcon />}
+                                      label={servicePoint.contact_phone}
+                                      size="small"
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Box>
+                                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                                  {servicePoint.partner?.name || servicePoint.partner?.company_name || 'Неизвестный партнер'}
+                                </Typography>
+                              </Box>
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+{/* Рейтинг временно скрыт - нет в типе ServicePoint */}
+                                <Chip 
+                                  label={`${services.length} услуг`}
+                                  size="small"
+                                  color="primary"
+                                />
+                              </Box>
                             </Box>
-                          </Box>
-                        </Box>
-                      </Box>
 
-                      {/* Описание */}
-                      <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 3 }}>
-                        {service.description}
-                      </Typography>
+                            {/* Кнопка развернуть/свернуть */}
+                            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                              <IconButton
+                                onClick={() => toggleServicePointExpansion(servicePoint.id)}
+                                sx={{ color: colors.primary }}
+                              >
+                                {expandedServicePoints.has(servicePoint.id) ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              </IconButton>
+                            </Box>
+                          </CardContent>
 
-                      {/* Особенности */}
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" sx={{ color: colors.textPrimary, mb: 1 }}>
-                          Что включено:
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          {service.features.map((feature, idx) => (
-                            <Typography key={idx} variant="caption" sx={{ color: colors.textSecondary }}>
-                              • {feature}
-                            </Typography>
-                          ))}
-                        </Box>
-                      </Box>
-
-                      {/* Цена и время */}
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                            {service.price.min === service.price.max 
-                              ? `${service.price.min} ₽`
-                              : `${service.price.min} - ${service.price.max} ₽`
-                            }
-                          </Typography>
-                        </Box>
-                        <Chip 
-                          icon={<ScheduleIcon />} 
-                          label={service.duration} 
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Box>
-
-                      {/* Популярность */}
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                          Популярность: {service.popularity}%
-                        </Typography>
-                        <Box sx={{ 
-                          width: '100%', 
-                          height: 4, 
-                          bgcolor: colors.backgroundField, 
-                          borderRadius: 2,
-                          mt: 0.5
-                        }}>
-                          <Box sx={{
-                            width: `${service.popularity}%`,
-                            height: '100%',
-                            bgcolor: theme.palette.primary.main,
-                            borderRadius: 2,
-                            transition: ANIMATIONS.transition.medium
-                          }} />
-                        </Box>
-                      </Box>
-                    </CardContent>
-
-                    <CardActions sx={{ p: 3, pt: 0 }}>
-                      <Button 
-                        fullWidth
-                        variant="contained" 
-                        sx={buttonStyles}
-                        onClick={() => navigate('/client/booking', { state: { service } })}
-                      >
-                        Записаться на услугу
-                      </Button>
-                    </CardActions>
-                  </Card>
-                </Fade>
-              </Grid>
-            ))}
-          </Grid>
-
-          {/* Если нет результатов */}
-          {filteredServices.length === 0 && (
-            <Fade in timeout={600}>
-              <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  🔍 По вашему запросу ничего не найдено
-                </Typography>
-                <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 3 }}>
-                  Попробуйте изменить параметры поиска или выберите другую категорию
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  sx={secondaryButtonStyles}
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('');
-                    setPriceFilter('');
-                  }}
-                >
-                  Сбросить фильтры
-                </Button>
+                          {/* Список услуг */}
+                          <Collapse in={expandedServicePoints.has(servicePoint.id)}>
+                            <Divider />
+                            <CardContent sx={{ pt: 2 }}>
+                              <List sx={{ p: 0 }}>
+                                {services.map((service, serviceIndex) => (
+                                  <ListItem
+                                    key={service.id}
+                                    sx={{
+                                      border: `1px solid ${colors.backgroundSecondary}`,
+                                      borderRadius: 2,
+                                      mb: serviceIndex < services.length - 1 ? 2 : 0,
+                                      bgcolor: colors.backgroundSecondary,
+                                      '&:hover': {
+                                        bgcolor: colors.backgroundField
+                                      }
+                                    }}
+                                  >
+                                    <ListItemIcon>
+                                      <Box sx={{ 
+                                        fontSize: '1.5rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: '50%',
+                                        bgcolor: colors.primary,
+                                        color: 'white'
+                                      }}>
+                                        {service.service?.category ? getServiceIcon(service.service.category.name) : '🔧'}
+                                      </Box>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                      primary={
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: colors.textPrimary }}>
+                                            {service.service?.name || 'Неизвестная услуга'}
+                                          </Typography>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Chip
+                                              icon={<MoneyIcon />}
+                                              label={`${service.price} ₴`}
+                                              size="small"
+                                              color="primary"
+                                              variant="filled"
+                                            />
+                                            <Chip
+                                              icon={<ScheduleIcon />}
+                                              label={`${service.duration} мин`}
+                                              size="small"
+                                              variant="outlined"
+                                            />
+                                          </Box>
+                                        </Box>
+                                      }
+                                      secondary={
+                                        <Box sx={{ mt: 1 }}>
+                                          {service.service?.category && (
+                                            <Chip
+                                              label={service.service.category.name}
+                                              size="small"
+                                              variant="outlined"
+                                              sx={{ mr: 1 }}
+                                            />
+                                          )}
+                                          <Button
+                                            variant="contained"
+                                            size="small"
+                                            startIcon={<BookIcon />}
+                                            onClick={() => handleBookService(service, servicePoint)}
+                                            sx={{ 
+                                              ...buttonStyles,
+                                              mt: 1,
+                                              minWidth: 140
+                                            }}
+                                          >
+                                            Записаться
+                                          </Button>
+                                        </Box>
+                                      }
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            </CardContent>
+                          </Collapse>
+                        </Card>
+                      </Fade>
+                    </Grid>
+                  ))}
+                </Grid>
               </Box>
             </Fade>
           )}
-
-          {/* CTA */}
-          <Fade in timeout={800}>
-            <Box sx={{
-              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              color: 'white',
-              borderRadius: SIZES.borderRadius.lg,
-              p: 4,
-              mt: 6,
-              textAlign: 'center'
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
-                Не нашли нужную услугу?
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 3, opacity: 0.9 }}>
-                Свяжитесь с нами, и мы поможем подобрать оптимальное решение
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <Button 
-                  variant="contained" 
-                  sx={{ 
-                    bgcolor: 'white', 
-                    color: theme.palette.primary.main,
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
-                  }}
-                >
-                  📞 Позвонить
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  sx={{ 
-                    borderColor: 'white', 
-                    color: 'white',
-                    '&:hover': { 
-                      borderColor: 'white', 
-                      bgcolor: 'rgba(255,255,255,0.1)' 
-                    }
-                  }}
-                  onClick={() => navigate('/client/search')}
-                >
-                  🗺️ Найти сервис
-                </Button>
-              </Box>
-            </Box>
-          </Fade>
         </Container>
       </Box>
     </ClientLayout>
