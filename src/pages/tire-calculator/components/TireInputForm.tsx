@@ -25,10 +25,7 @@ import {
 import { 
   TireSize, 
   TireSearchParams, 
-  TireSeason, 
-  CarType,
-  TIRE_CONSTANTS,
-  SPEED_INDEXES 
+  TIRE_CONSTANTS
 } from '../../../types/tire-calculator';
 import { getPopularTireSizes, formatTireSize, parseTireSize } from '../../../utils/tire-calculator';
 
@@ -105,14 +102,6 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
     const options = [];
     for (let diameter = TIRE_CONSTANTS.MIN_DIAMETER; diameter <= TIRE_CONSTANTS.MAX_DIAMETER; diameter++) {
       options.push(diameter);
-    }
-    return options;
-  };
-
-  const generateLoadIndexOptions = () => {
-    const options = [];
-    for (let index = 70; index <= 120; index++) {
-      options.push(index);
     }
     return options;
   };
@@ -231,41 +220,6 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
         </Box>
       )}
 
-      {/* Дополнительные параметры шины */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Индекс нагрузки</InputLabel>
-            <Select
-              value={originalTire.loadIndex || 91}
-              label="Индекс нагрузки"
-              onChange={(e) => handleTireFieldChange('loadIndex', Number(e.target.value))}
-            >
-              {generateLoadIndexOptions().map(index => (
-                <MenuItem key={index} value={index}>{index}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth>
-            <InputLabel>Индекс скорости</InputLabel>
-            <Select
-              value={originalTire.speedIndex || 'H'}
-              label="Индекс скорости"
-              onChange={(e) => handleTireFieldChange('speedIndex', e.target.value)}
-            >
-              {Object.entries(SPEED_INDEXES).map(([key, value]) => (
-                <MenuItem key={key} value={key}>
-                  {key} ({value.description})
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
-
       {/* Расширенные настройки */}
       <Accordion expanded={showAdvanced} onChange={(_, expanded) => setShowAdvanced(expanded)}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -332,39 +286,6 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
                 ]}
                 valueLabelDisplay="auto"
               />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Сезон</InputLabel>
-                <Select
-                  value={searchParams.season || ''}
-                  label="Сезон"
-                  onChange={(e) => handleAdvancedParamChange('season', e.target.value || undefined)}
-                >
-                  <MenuItem value="">Любой</MenuItem>
-                  <MenuItem value={TireSeason.SUMMER}>Летние</MenuItem>
-                  <MenuItem value={TireSeason.WINTER}>Зимние</MenuItem>
-                  <MenuItem value={TireSeason.ALL_SEASON}>Всесезонные</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel>Тип автомобиля</InputLabel>
-                <Select
-                  value={searchParams.carType || ''}
-                  label="Тип автомобиля"
-                  onChange={(e) => handleAdvancedParamChange('carType', e.target.value || undefined)}
-                >
-                  <MenuItem value="">Любой</MenuItem>
-                  <MenuItem value={CarType.PASSENGER}>Легковой</MenuItem>
-                  <MenuItem value={CarType.SUV}>Внедорожник</MenuItem>
-                  <MenuItem value={CarType.TRUCK}>Грузовой</MenuItem>
-                  <MenuItem value={CarType.VAN}>Фургон</MenuItem>
-                </Select>
-              </FormControl>
             </Grid>
           </Grid>
         </AccordionDetails>
