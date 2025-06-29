@@ -209,9 +209,17 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   return (
     <Box>
-      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Информация об автомобиле
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <CarIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
+        <Box>
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 0.5 }}>
+            Информация об автомобиле
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Шаг 4 из 6: Укажите тип и номер вашего автомобиля
+          </Typography>
+        </Box>
+      </Box>
       
       <Grid container spacing={3}>
         {/* Выбор типа автомобиля - Аккордеон */}
@@ -291,53 +299,57 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           </Accordion>
         </Grid>
         
-        {/* Номер автомобиля */}
-        <Grid item xs={12} sm={6}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            2. Номер автомобиля *
-          </Typography>
-          
-          <TextField
-            ref={licensePlateRef}
-            label="Номер автомобиля"
-            value={formData.license_plate}
-            onChange={handleLicensePlateChange}
-            placeholder="АА1234ВВ"
-            required
-            error={!!errors.license_plate}
-            helperText={errors.license_plate || 'Государственный номер автомобиля'}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LicensePlateIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            fullWidth
-          />
-        </Grid>
+        {/* Номер автомобиля - показываем только после выбора типа */}
+        {formData.car_type_id && (
+          <Grid item xs={12} sm={6}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              2. Номер автомобиля *
+            </Typography>
+            
+            <TextField
+              ref={licensePlateRef}
+              label="Номер автомобиля"
+              value={formData.license_plate}
+              onChange={handleLicensePlateChange}
+              placeholder="АА1234ВВ"
+              required
+              error={!!errors.license_plate}
+              helperText={errors.license_plate || 'Государственный номер автомобиля'}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LicensePlateIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              fullWidth
+            />
+          </Grid>
+        )}
         
-        {/* Марка автомобиля */}
-        <Grid item xs={12} sm={6}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            3. Марка автомобиля (необязательно)
-          </Typography>
-          
-          <Select
-            label="Марка"
-            value={selectedBrandId || ''}
-            onChange={(value) => handleBrandChange(Number(value))}
-            options={brands.map(brand => ({
-              value: brand.id,
-              label: brand.name,
-            }))}
-            placeholder="Выберите марку"
-            fullWidth
-          />
-        </Grid>
+        {/* Марка автомобиля - показываем только после выбора типа */}
+        {formData.car_type_id && (
+          <Grid item xs={12} sm={6}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              3. Марка автомобиля (необязательно)
+            </Typography>
+            
+            <Select
+              label="Марка"
+              value={selectedBrandId || ''}
+              onChange={(value) => handleBrandChange(Number(value))}
+              options={brands.map(brand => ({
+                value: brand.id,
+                label: brand.name,
+              }))}
+              placeholder="Выберите марку"
+              fullWidth
+            />
+          </Grid>
+        )}
         
-        {/* Модель автомобиля */}
-        {selectedBrandId && (
+        {/* Модель автомобиля - показываем только после выбора марки */}
+        {formData.car_type_id && selectedBrandId && (
           <Grid item xs={12} sm={6}>
             <Typography variant="h6" sx={{ mb: 2 }}>
               4. Модель автомобиля (необязательно)
@@ -376,7 +388,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 Тип автомобиля
               </Typography>
             )}
-            {!formData.license_plate && (
+            {formData.car_type_id && !formData.license_plate && (
               <Typography variant="body2" component="li">
                 Номер автомобиля
               </Typography>
