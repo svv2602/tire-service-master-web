@@ -37,6 +37,7 @@ import { getCardStyles } from '../../../styles/components';
 import { useGetCityByIdQuery } from '../../../api/cities.api';
 import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
 import { useGetCarTypeByIdQuery } from '../../../api/carTypes.api';
+import { useGetServiceByIdQuery } from '../../../api/services.api';
 
 interface ReviewStepProps {
   formData: any; // Используем any для совместимости с локальным BookingFormData
@@ -137,6 +138,27 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     } catch (error) {
       return formData.booking_date;
     }
+  };
+  
+  // Компонент для отображения услуги
+  const ServiceItem: React.FC<{ service: any }> = ({ service }) => {
+    const { data: serviceData, isLoading } = useGetServiceByIdQuery(service.service_id, {
+      skip: !service.service_id
+    });
+
+    const serviceName = serviceData?.name || `Услуга #${service.service_id}`;
+    
+    return (
+      <ListItem key={service.service_id}>
+        <ListItemIcon>
+          <ServiceIcon color="action" />
+        </ListItemIcon>
+        <ListItemText
+          primary={isLoading ? 'Загрузка...' : serviceName}
+          secondary={`${service.price} ₴ × ${service.quantity} = ${service.price * service.quantity} ₴`}
+        />
+      </ListItem>
+    );
   };
   
   return (
@@ -332,16 +354,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             ) : (
               <Box>
                 <List dense>
-                  {formData.services.map((service: any, index: number) => (
-                    <ListItem key={service.service_id}>
-                      <ListItemIcon>
-                        <ServiceIcon color="action" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={`Услуга #${service.service_id}`}
-                        secondary={`${service.price} ₴ × ${service.quantity} = ${service.price * service.quantity} ₴`}
-                      />
-                    </ListItem>
+                  {formData.services.map((service: any) => (
+                    <ServiceItem key={service.service_id} service={service} />
                   ))}
                 </List>
                 
