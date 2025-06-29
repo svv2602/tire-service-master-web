@@ -219,54 +219,34 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     // Устанавливаем ID сервисной точки (из state или из URL)
     if (stateData?.servicePointId) {
       newFormData.service_point_id = stateData.servicePointId;
-      console.log('Установлена сервисная точка из state:', stateData.servicePointId, stateData.servicePointName);
     } else if (servicePointId) {
       newFormData.service_point_id = Number(servicePointId);
-      console.log('Установлена сервисная точка из URL:', servicePointId);
     }
     
     // Устанавливаем ID города (только из state)
     if (stateData?.cityId) {
       newFormData.city_id = stateData.cityId;
-      console.log('Установлен город из state:', stateData.cityId, stateData.cityName);
       
       // Если передан только город (без сервисной точки), начинаем с первого шага (выбор категории)
       if (!stateData.servicePointId && !servicePointId) {
         setActiveStep(0); // Начинаем с выбора категории
-        console.log('Начинаем с выбора категории, так как передан только город');
       }
     }
 
-    console.log('Final form data after URL/state processing:', newFormData);
-    
     // Обновляем данные формы
     setFormData(newFormData);
   }, [location.search, location.state]);
 
   // Отдельный useEffect для предзаполнения данных пользователя
   useEffect(() => {
-    console.log('🔍 Проверка данных пользователя для предзаполнения:', {
-      isAuthenticated,
-      isLoadingCurrentUser,
-      hasUser: !!user,
-      hasCurrentUser: !!currentUser,
-      currentUserError: currentUserError,
-      userFromRedux: user,
-      userFromAPI: currentUser,
-      currentFormData: formData.client
-    });
-
     // Используем данные из API (currentUser) с приоритетом над Redux (user)
     const userData = currentUser || user;
     
     if (isAuthenticated && userData && !isLoadingCurrentUser) {
-      console.log('✅ Предзаполняем данные пользователя:', userData);
-      
       // Проверяем, не заполнены ли уже данные (чтобы не перезаписывать при редактировании)
       const shouldPrefill = !formData.client.first_name && !formData.client.phone;
       
       if (shouldPrefill) {
-        console.log('🔄 Выполняем предзаполнение полей...');
         setFormData(prev => ({
           ...prev,
           client: {
@@ -277,25 +257,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             phone: userData.phone || '',
           }
         }));
-        console.log('✅ Данные пользователя предзаполнены');
-      } else {
-        console.log('ℹ️ Данные уже заполнены, пропускаем предзаполнение:', {
-          current_first_name: formData.client.first_name,
-          current_phone: formData.client.phone
-        });
       }
-    } else if (isAuthenticated && !userData && !isLoadingCurrentUser && currentUserError) {
-      console.error('❌ Ошибка загрузки данных пользователя:', currentUserError);
-    } else if (isAuthenticated && isLoadingCurrentUser) {
-      console.log('⏳ Загружаем данные пользователя...');
-    } else if (!isAuthenticated) {
-      console.log('❌ Пользователь не авторизован');
-    } else {
-      console.log('⚠️ Условия для предзаполнения не выполнены:', {
-        isAuthenticated,
-        hasUserData: !!userData,
-        isLoadingCurrentUser
-      });
     }
   }, [isAuthenticated, user, currentUser, isLoadingCurrentUser, currentUserError]);
   
@@ -345,18 +307,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const isCurrentStepValid = useMemo((): boolean => {
     const step = STEPS[activeStep];
     
-    // Отладочная информация
-    console.log('Validating step:', {
-      stepId: step.id,
-      formData: {
-        service_category_id: formData.service_category_id,
-        booking_date: formData.booking_date,
-        start_time: formData.start_time,
-        city_id: formData.city_id,
-        service_point_id: formData.service_point_id
-      }
-    });
-    
     switch (step.id) {
       case 'category-selection':
         return formData.service_category_id > 0;
@@ -369,14 +319,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         const hasDate = Boolean(formData.booking_date && formData.booking_date.trim());
         const hasTime = Boolean(formData.start_time && formData.start_time.trim());
         const isValid = hasDate && hasTime;
-        
-        console.log('Date-time validation result:', {
-          hasDate,
-          hasTime,
-          booking_date: formData.booking_date,
-          start_time: formData.start_time,
-          isValid
-        });
         
         return isValid;
       }
@@ -404,7 +346,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         return isClientValid && isRecipientValid;
       
       case 'car-type':
-        return formData.car_type_id !== null;
+        return formData.car_type_id !== null && formData.license_plate.trim().length > 0;
       
       case 'services':
         return true; // Услуги опциональны
@@ -423,47 +365,33 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      // Форматируем данные для API
-      const bookingData: any = {
-        booking: {
-          service_point_id: formData.service_point_id,
-          service_category_id: formData.service_category_id,
-          booking_date: formData.booking_date,
-          start_time: formData.start_time,
-          duration_minutes: formData.duration_minutes,
-          notes: formData.notes || '',
-          // Поля получателя услуги
-          service_recipient_first_name: formData.service_recipient.first_name,
-          service_recipient_last_name: formData.service_recipient.last_name,
-          service_recipient_phone: formData.service_recipient.phone,
-          service_recipient_email: formData.service_recipient.email || ''
-        },
-        car: {
-          car_type_id: formData.car_type_id,
-          license_plate: formData.license_plate,
-          car_brand: formData.car_brand || '',
-          car_model: formData.car_model || ''
-        },
-        services: formData.services
-      };
-
-      // Для авторизованных пользователей НЕ отправляем данные клиента
-      // Сервер автоматически использует current_user.client
-      if (!currentUser) {
-        bookingData.client = {
+      // Подготавливаем данные для отправки
+      const bookingData = {
+        service_point_id: formData.service_point_id,
+        service_category_id: formData.service_category_id,
+        booking_date: formData.booking_date,
+        start_time: formData.start_time,
+        duration_minutes: formData.duration_minutes || 30,
+        client_attributes: {
           first_name: formData.client.first_name,
           last_name: formData.client.last_name,
-          phone: formData.client.phone.replace(/[^\d+]/g, ''),
-          email: formData.client.email || ''
-        };
-      }
+          phone: formData.client.phone,
+          email: formData.client.email,
+        },
+        service_recipient_attributes: {
+          first_name: formData.service_recipient.first_name,
+          last_name: formData.service_recipient.last_name,
+          phone: formData.service_recipient.phone,
+          email: formData.service_recipient.email,
+        },
+        car_type_id: formData.car_type_id,
+        car_brand: formData.car_brand,
+        car_model: formData.car_model,
+        license_plate: formData.license_plate,
+        services: formData.services,
+        notes: formData.notes,
+      };
 
-      // Отладочная информация
-      console.log('Booking data being sent:', bookingData);
-      console.log('Current user:', currentUser);
-      console.log('Is authenticated:', isAuthenticated);
-
-      // Отправляем запрос
       const response = await createClientBooking(bookingData).unwrap();
 
       // Сохраняем данные созданного бронирования и показываем модальное окно
@@ -471,31 +399,17 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setSuccessDialogOpen(true);
 
     } catch (error: any) {
-      console.error('Ошибка создания бронирования:', error);
-      console.log('Детали ошибки:', error.data);
-      
-      // Если пользователь уже существует (статус 409), показываем диалог входа
-      if (error.status === 409 && error.data?.existing_user) {
-        console.log('Найден существующий пользователь:', error.data.existing_user);
-        
-        // Сохраняем данные пользователя и показываем диалог
+      if (error?.status === 409 && error?.data?.existing_user) {
+        // Пользователь уже существует
         setExistingUserData(error.data.existing_user);
         setExistingUserDialogOpen(true);
-        return;
+      } else {
+        setSubmitError(
+          error?.data?.message || 
+          error?.message || 
+          'Произошла ошибка при создании бронирования'
+        );
       }
-      
-      // Формируем понятное сообщение об ошибке для других случаев
-      let errorMessage = 'Произошла ошибка при создании бронирования. ';
-      
-      if (error.data?.error) {
-        errorMessage += error.data.error;
-      }
-      
-      if (error.data?.details) {
-        errorMessage += '\n' + error.data.details.join('\n');
-      }
-      
-      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -535,41 +449,36 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // Обработчики диалога существующего пользователя
   const handleLoginSuccess = (userData: any) => {
-    console.log('Успешный вход пользователя:', userData);
+    setExistingUserDialogOpen(false);
+    setExistingUserData(null);
     
-    // Обновляем данные формы с данными авторизованного пользователя
-    setFormData(prev => ({
-      ...prev,
-      client: {
-        first_name: userData.user?.first_name || '',
-        last_name: userData.user?.last_name || '',
-        email: userData.user?.email || '',
-        phone: userData.user?.phone || '',
-      }
-    }));
-    
-    // Автоматически повторяем попытку создания бронирования
-    setTimeout(() => {
-      handleSubmit();
-    }, 1000);
+    // Автоматически создаем бронирование после успешного входа
+    handleSubmit();
   };
 
   const handleContinueAsGuest = () => {
-    console.log('Пользователь выбрал продолжить как гость');
+    setExistingUserDialogOpen(false);
+    setExistingUserData(null);
     
-    // Очищаем поля клиента, чтобы пользователь мог ввести другие данные
+    // Очищаем форму и возвращаемся на шаг 4 (информация о клиенте)
     setFormData(prev => ({
       ...prev,
       client: {
         first_name: '',
         last_name: '',
-        email: '',
         phone: '',
-      }
+        email: '',
+      },
+      service_recipient: {
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+      },
     }));
     
-    // Переходим на шаг заполнения данных клиента
-    setActiveStep(3); // ClientInfoStep
+    // Переходим на шаг ввода информации о клиенте
+    setActiveStep(3);
   };
   
   // Рендер текущего шага
@@ -592,18 +501,19 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 3 }}>
           {/* Заголовок */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate(-1)}
-              variant="outlined"
-              size="small"
-            >
-              Назад
-            </Button>
+          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
               Новое бронирование
             </Typography>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/client')}
+              variant="outlined"
+              size="small"
+              color="error"
+            >
+              Отмена
+            </Button>
           </Box>
           
           {/* Stepper */}

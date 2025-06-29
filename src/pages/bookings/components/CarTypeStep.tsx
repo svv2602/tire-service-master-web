@@ -1,6 +1,6 @@
 // Шаг 4: Информация об автомобиле
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -13,9 +13,14 @@ import {
   CardActionArea,
   Chip,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   ConfirmationNumber as LicensePlateIcon,
+  ExpandMore as ExpandMoreIcon,
+  DirectionsCar as CarIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
@@ -48,9 +53,13 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
 }) => {
   const theme = useTheme();
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  const [carTypeAccordionOpen, setCarTypeAccordionOpen] = useState(false);
   const [errors, setErrors] = useState({
     license_plate: '',
   });
+  
+  // Рефы для управления фокусом
+  const licensePlateRef = useRef<HTMLInputElement>(null);
   
   // Загрузка данных
   const { data: carTypesData, isLoading: isLoadingCarTypes, error: carTypesError } = useGetCarTypesQuery();
@@ -64,6 +73,22 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   const carTypes = carTypesData || [];
   const brands = useMemo(() => brandsData?.data || [], [brandsData]);
   const models = modelsData?.car_models || [];
+  
+  // Автоматически открываем аккордеон при загрузке компонента (если тип не выбран)
+  useEffect(() => {
+    if (!formData.car_type_id && carTypes.length > 0) {
+      setCarTypeAccordionOpen(true);
+    }
+  }, [formData.car_type_id, carTypes.length]);
+  
+  // Устанавливаем фокус на номер авто после выбора типа
+  useEffect(() => {
+    if (formData.car_type_id && !carTypeAccordionOpen) {
+      setTimeout(() => {
+        licensePlateRef.current?.focus();
+      }, 300); // Небольшая задержка для завершения анимации аккордеона
+    }
+  }, [formData.car_type_id, carTypeAccordionOpen]);
   
   // Валидация номера автомобиля
   const validateLicensePlate = (value: string) => {
@@ -79,6 +104,9 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       ...prev,
       car_type_id: carType.id,
     }));
+    
+    // Сворачиваем аккордеон после выбора
+    setCarTypeAccordionOpen(false);
   };
   
   const handleBrandChange = (brandId: number) => {
@@ -122,6 +150,15 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       }
     }
   }, [formData.car_brand, brands]);
+  
+  // Получение названия выбранного типа авто
+  const getSelectedCarTypeName = () => {
+    if (formData.car_type_id) {
+      const selectedType = carTypes.find(type => type.id === formData.car_type_id);
+      return selectedType?.name || `Тип #${formData.car_type_id}`;
+    }
+    return null;
+  };
   
   // Рендер карточки типа автомобиля
   const renderCarTypeCard = (carType: CarType) => {
@@ -177,41 +214,81 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       </Typography>
       
       <Grid container spacing={3}>
-        {/* Выбор типа автомобиля */}
+        {/* Выбор типа автомобиля - Аккордеон */}
         <Grid item xs={12}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            1. Выберите тип автомобиля *
-          </Typography>
-          
-          {carTypesError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              Ошибка загрузки типов автомобилей. Попробуйте обновить страницу.
-            </Alert>
-          )}
-          
-          {isLoadingCarTypes ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : carTypes.length === 0 ? (
-            <Alert severity="warning">
-              Типы автомобилей не найдены.
-            </Alert>
-          ) : (
-            <Grid container spacing={2}>
-              {carTypes.map((carType) => (
-                <Grid item xs={12} sm={6} md={4} key={carType.id}>
-                  {renderCarTypeCard(carType)}
+          <Accordion 
+            expanded={carTypeAccordionOpen} 
+            onChange={(_, expanded) => setCarTypeAccordionOpen(expanded)}
+            sx={{ 
+              border: `1px solid ${theme.palette.divider}`,
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+            }}
+          >
+            <AccordionSummary 
+              expandIcon={<ExpandMoreIcon />}
+              sx={{ 
+                backgroundColor: formData.car_type_id ? theme.palette.success.light : theme.palette.grey[50],
+                '&.Mui-expanded': {
+                  minHeight: 56,
+                },
+                '& .MuiAccordionSummary-content': {
+                  margin: '12px 0',
+                  '&.Mui-expanded': {
+                    margin: '12px 0',
+                  },
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CarIcon color={formData.car_type_id ? 'success' : 'action'} />
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  1. Тип автомобиля *
+                </Typography>
+                {formData.car_type_id && (
+                  <Chip
+                    label={getSelectedCarTypeName()}
+                    color="success"
+                    size="small"
+                    variant="filled"
+                    sx={{ ml: 2 }}
+                  />
+                )}
+              </Box>
+            </AccordionSummary>
+            
+            <AccordionDetails>
+              {carTypesError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  Ошибка загрузки типов автомобилей. Попробуйте обновить страницу.
+                </Alert>
+              )}
+              
+              {isLoadingCarTypes ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : carTypes.length === 0 ? (
+                <Alert severity="warning">
+                  Типы автомобилей не найдены.
+                </Alert>
+              ) : (
+                <Grid container spacing={2}>
+                  {carTypes.map((carType) => (
+                    <Grid item xs={12} sm={6} md={4} key={carType.id}>
+                      {renderCarTypeCard(carType)}
+                    </Grid>
+                  ))}
                 </Grid>
-              ))}
-            </Grid>
-          )}
-          
-          {!formData.car_type_id && carTypes.length > 0 && (
-            <FormHelperText error sx={{ mt: 1 }}>
-              Выберите тип автомобиля для продолжения
-            </FormHelperText>
-          )}
+              )}
+              
+              {!formData.car_type_id && carTypes.length > 0 && (
+                <FormHelperText error sx={{ mt: 1 }}>
+                  Выберите тип автомобиля для продолжения
+                </FormHelperText>
+              )}
+            </AccordionDetails>
+          </Accordion>
         </Grid>
         
         {/* Номер автомобиля */}
@@ -221,6 +298,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           </Typography>
           
           <TextField
+            ref={licensePlateRef}
             label="Номер автомобиля"
             value={formData.license_plate}
             onChange={handleLicensePlateChange}
@@ -309,8 +387,8 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       
       {/* Информационное сообщение */}
       {isValid && (
-        <Alert severity="info" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+        <Alert severity="success" sx={{ mt: 3 }}>
+          ✅ Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>

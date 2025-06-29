@@ -49,18 +49,6 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   const cities = citiesResponse?.data || [];
   const selectedCity = cityResponse?.data;
 
-  // Отладочная информация (только в development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('CategorySelectionStep Debug:', {
-      formData_city_id: formData.city_id,
-      selectedCity,
-      isCityLoading,
-      cityResponse,
-      categoriesResponse,
-      categories_count: categories.length
-    });
-  }
-
   const handleCityChange = (newCity: any) => {
     setFormData((prev: any) => ({
       ...prev,
@@ -168,14 +156,6 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         />
       </Box>
       
-      {/* Отладочная информация (временно) */}
-      {process.env.NODE_ENV === 'development' && (
-        <Alert severity="info" sx={{ mb: 2, fontSize: '0.75rem' }}>
-          Debug: city_id={formData.city_id}, loading={isCityLoading ? 'true' : 'false'}, 
-          hasCity={selectedCity ? 'true' : 'false'}, categories_count={categories.length}
-        </Alert>
-      )}
-      
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {selectedCity 
           ? `Доступные категории услуг в городе ${selectedCity.name} (${categories.length})`
@@ -248,12 +228,6 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         </>
       )}
 
-      {!selectedCity && (
-        <Alert severity="warning" sx={{ mt: 3 }}>
-          Сначала выберите город для отображения доступных категорий услуг
-        </Alert>
-      )}
-      
       {selectedCity && formData.service_category_id && (
         <Alert severity="success" sx={{ mt: 3 }}>
           ✅ Категория услуг выбрана. Переход к выбору сервисной точки...
