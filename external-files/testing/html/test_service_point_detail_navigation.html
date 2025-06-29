@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест навигации с детальной страницы сервисной точки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .test-link {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .test-link:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .expected {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .steps {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .warning { background: rgba(255, 193, 7, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Тест навигации с детальной страницы сервисной точки</h1>
+        
+        <div class="test-section">
+            <h2>📋 Описание теста</h2>
+            <p>Проверяем, что кнопки "Записаться" корректно перенаправляют на форму бронирования с предзаполненными данными.</p>
+            
+            <div class="expected">
+                <strong>Ожидаемое поведение:</strong>
+                <ul>
+                    <li>Клик по кнопке "Записаться" → переход на /client/booking</li>
+                    <li>Форма открывается на шаге 2 (выбор даты и времени)</li>
+                    <li>Город и сервисная точка уже выбраны</li>
+                    <li>Категория услуг установлена по умолчанию</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Тестовые сценарии</h2>
+            
+            <h3>1. Переход с детальной страницы сервисной точки</h3>
+            <a href="http://localhost:3008/client/service-point/1" class="test-link" target="_blank">
+                📍 Открыть сервисную точку #1
+            </a>
+            
+            <div class="steps">
+                <strong>Шаги для проверки:</strong>
+                <ol>
+                    <li>Нажмите ссылку выше</li>
+                    <li>На странице найдите кнопку "Записаться" (в правом верхнем углу)</li>
+                    <li>Нажмите на кнопку "Записаться"</li>
+                    <li>Проверьте, что открылась форма бронирования на шаге 2</li>
+                    <li>Проверьте, что город "Київ" и точка уже выбраны</li>
+                </ol>
+            </div>
+
+            <h3>2. Кнопка "Записаться на обслуживание" в правой колонке</h3>
+            <div class="steps">
+                <strong>Дополнительная проверка:</strong>
+                <ol>
+                    <li>На той же странице прокрутите вниз</li>
+                    <li>Найдите кнопку "Записаться на обслуживание" в правой колонке</li>
+                    <li>Нажмите на неё</li>
+                    <li>Убедитесь, что поведение такое же</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Переданные данные</h2>
+            <div class="code">
+// Данные, передаваемые в navigate():
+{
+  servicePointId: 1,
+  cityId: 1,
+  step1Completed: true
+}
+
+// Ожидаемое состояние формы:
+{
+  service_point_id: 1,
+  city_id: 1,
+  service_category_id: 1, // по умолчанию
+  activeStep: 2 // шаг выбора даты и времени
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🐛 Возможные проблемы</h2>
+            
+            <div class="status warning">
+                <strong>⚠️ Если перенаправляет на главную:</strong>
+                <ul>
+                    <li>Проверьте, что роут /client/booking существует в App.tsx</li>
+                    <li>Убедитесь, что компонент NewBookingWithAvailabilityPage загружается</li>
+                    <li>Проверьте консоль браузера на ошибки</li>
+                </ul>
+            </div>
+
+            <div class="status error">
+                <strong>🚫 Если форма открывается на шаге 0:</strong>
+                <ul>
+                    <li>Проверьте, что данные state корректно передаются</li>
+                    <li>Убедитесь, что useEffect обрабатывает step1Completed</li>
+                    <li>Проверьте, что setActiveStep(2) вызывается</li>
+                </ul>
+            </div>
+
+            <div class="status success">
+                <strong>✅ Если всё работает:</strong>
+                <ul>
+                    <li>Форма открывается на шаге 2</li>
+                    <li>Город и сервисная точка предзаполнены</li>
+                    <li>Можно сразу выбирать дату и время</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Результаты тестирования</h2>
+            <div id="results">
+                <p>Выполните тесты выше и запишите результаты:</p>
+                <div class="code">
+Тест 1 - Кнопка "Записаться": [ ] Пройден / [ ] Не пройден
+Тест 2 - Кнопка "Записаться на обслуживание": [ ] Пройден / [ ] Не пройден
+Предзаполнение данных: [ ] Работает / [ ] Не работает
+Переход на шаг 2: [ ] Работает / [ ] Не работает
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Отладочная информация</h2>
+            <p>Для отладки откройте DevTools (F12) и проверьте:</p>
+            <div class="code">
+// Console.log в NewBookingWithAvailabilityPage.tsx
+console.log('Location state:', location.state);
+console.log('Form data after update:', newFormData);
+console.log('Active step set to:', activeStep);
+
+// Network tab
+- Запросы к API /service_points/1
+- Запросы к API /cities/1
+- Загрузка компонентов формы
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность для результатов
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Тест навигации с детальной страницы сервисной точки загружен');
+            console.log('📋 Проверьте кнопки "Записаться" на странице /client/service-point/1');
+        });
+    </script>
+</body>
+</html> 

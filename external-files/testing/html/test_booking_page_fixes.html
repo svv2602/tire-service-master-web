@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправлений страницы бронирования</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .test-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #4caf50;
+        }
+        .issue {
+            border-left-color: #f44336;
+        }
+        .fixed {
+            border-left-color: #4caf50;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background-color: #1565c0;
+        }
+        .api-test {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .code {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправлений страницы бронирования</h1>
+        <p><strong>Дата:</strong> 29 июня 2025</p>
+        <p><strong>Страница:</strong> <code>/client/booking/new-with-availability</code></p>
+
+        <div class="test-section">
+            <div class="test-title">📋 Описание исправлений</div>
+            
+            <div class="test-item fixed">
+                <strong>✅ ИСПРАВЛЕНИЕ 1: Отображение главного фото</strong><br>
+                • Проблема: карточки показывали только синий фон с иконкой машины<br>
+                • Решение: заменен API запрос с <code>by_category</code> на <code>getServicePointById</code><br>
+                • Результат: теперь загружаются полные данные включая фотографии
+            </div>
+
+            <div class="test-item fixed">
+                <strong>✅ ИСПРАВЛЕНИЕ 2: Замена услуг на категории</strong><br>
+                • Проблема: отображался список конкретных услуг<br>
+                • Решение: извлечение уникальных категорий из <code>service_posts</code><br>
+                • Результат: показываются доступные категории услуг с описанием и количеством
+            </div>
+
+            <div class="test-item fixed">
+                <strong>✅ ИСПРАВЛЕНИЕ 3: Оптимизация загрузки данных</strong><br>
+                • Добавлен скелетон при загрузке данных<br>
+                • Улучшена обработка состояний загрузки<br>
+                • Мемоизация извлечения категорий для производительности
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔗 Ссылки для тестирования</div>
+            
+            <a href="http://localhost:3008/client/booking/new-with-availability" class="test-link" target="_blank">
+                🎯 Страница бронирования
+            </a>
+            
+            <a href="http://localhost:3008/client/search" class="test-link" target="_blank">
+                🔍 Страница поиска (для сравнения)
+            </a>
+            
+            <a href="http://localhost:3008/admin/service-points" class="test-link" target="_blank">
+                ⚙️ Админка сервисных точек
+            </a>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🧪 API тесты</div>
+            
+            <div class="api-test">
+                <strong>Тест 1: API сервисных точек по категории (без фото)</strong>
+                <div class="code">curl "http://localhost:8000/api/v1/service_points/by_category?category_id=1&city_id=1"</div>
+                <p>❌ Не содержит фотографии в ответе</p>
+            </div>
+
+            <div class="api-test">
+                <strong>Тест 2: API конкретной сервисной точки (с фото)</strong>
+                <div class="code">curl "http://localhost:8000/api/v1/service_points/1"</div>
+                <p>✅ Содержит полные данные: фотографии, service_posts, categories</p>
+            </div>
+
+            <div class="api-test">
+                <strong>Тест 3: Структура service_posts для извлечения категорий</strong>
+                <div class="code">"service_posts": [
+  {
+    "service_category": {
+      "id": 1,
+      "name": "Техническое обслуживание",
+      "description": "Диагностика, ремонт и обслуживание автомобилей",
+      "services_count": 5
+    }
+  }
+]</div>
+                <p>✅ Используется для извлечения уникальных категорий</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📝 Инструкции по тестированию</div>
+            
+            <div class="test-item">
+                <strong>Шаг 1: Проверка фотографий</strong><br>
+                1. Перейти на страницу бронирования<br>
+                2. Выбрать категорию "Техническое обслуживание"<br>
+                3. Выбрать город "Київ"<br>
+                4. Убедиться, что в карточках сервисных точек отображаются фотографии
+            </div>
+
+            <div class="test-item">
+                <strong>Шаг 2: Проверка категорий услуг</strong><br>
+                1. В карточке сервисной точки нажать "Детальніше"<br>
+                2. Развернуть секцию "Доступні категорії послуг"<br>
+                3. Убедиться, что показываются категории, а не конкретные услуги<br>
+                4. Проверить формат: "Название • Описание • X послуг"
+            </div>
+
+            <div class="test-item">
+                <strong>Шаг 3: Проверка производительности</strong><br>
+                1. Обновить страницу и следить за загрузкой<br>
+                2. Убедиться, что показываются скелетоны при загрузке<br>
+                3. Проверить, что данные загружаются корректно без ошибок в консоли
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎯 Ожидаемые результаты</div>
+            
+            <div class="test-item fixed">
+                <strong>✅ Фотографии:</strong> В карточках сервисных точек должны отображаться реальные фотографии вместо синего фона
+            </div>
+
+            <div class="test-item fixed">
+                <strong>✅ Категории:</strong> Секция "Доступні категорії послуг" должна показывать категории с описанием и количеством услуг
+            </div>
+
+            <div class="test-item fixed">
+                <strong>✅ Загрузка:</strong> При загрузке данных должны показываться скелетоны, затем корректно отображаться данные
+            </div>
+
+            <div class="test-item fixed">
+                <strong>✅ Функциональность:</strong> Все кнопки "Обрати" и "Подробнее" должны работать корректно
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">⚠️ Возможные проблемы</div>
+            
+            <div class="test-item">
+                <strong>Кэширование браузера:</strong> Если изменения не видны, очистить кэш браузера (Ctrl+F5)
+            </div>
+
+            <div class="test-item">
+                <strong>Состояние сервисов:</strong> Убедиться, что и фронтенд (3008) и бэкенд (8000) запущены
+            </div>
+
+            <div class="test-item">
+                <strong>Данные в БД:</strong> Проверить, что в БД есть сервисные точки с фотографиями и service_posts
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 Техническая информация</div>
+            
+            <div class="api-test">
+                <strong>Изменённые файлы:</strong>
+                <div class="code">tire-service-master-web/src/pages/bookings/components/CityServicePointStep.tsx
+tire-service-master-web/src/components/ui/ServicePointCard/ServicePointCard.tsx</div>
+            </div>
+
+            <div class="api-test">
+                <strong>Ключевые изменения:</strong>
+                <div class="code">• ServicePointCardWrapper: useGetServicePointByIdQuery вместо useGetServicePointServicesQuery
+• Добавлен useMemo для извлечения уникальных категорий из service_posts
+• Обновлён интерфейс ServicePointCardProps с поддержкой categories
+• Заменена секция "Послуги" на "Доступні категорії послуг"</div>
+            </div>
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; color: #666;">
+            <small>Создано автоматически для тестирования исправлений страницы бронирования</small>
+        </p>
+    </div>
+
+    <script>
+        // Добавляем информацию о времени создания
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Тест исправлений страницы бронирования загружен');
+            console.log('📅 Время создания:', new Date().toLocaleString('ru-RU'));
+            
+            // Проверяем доступность сервисов
+            fetch('http://localhost:3008')
+                .then(response => response.ok ? console.log('✅ Frontend доступен') : console.log('❌ Frontend недоступен'))
+                .catch(() => console.log('❌ Frontend недоступен'));
+                
+            fetch('http://localhost:8000/api/v1/service_points/1')
+                .then(response => response.ok ? console.log('✅ Backend API доступен') : console.log('❌ Backend API недоступен'))
+                .catch(() => console.log('❌ Backend API недоступен'));
+        });
+    </script>
+</body>
+</html> 

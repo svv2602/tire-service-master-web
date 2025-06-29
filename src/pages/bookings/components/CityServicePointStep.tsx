@@ -10,15 +10,19 @@ import {
   CircularProgress,
   FormHelperText,
   Alert,
+  Card,
+  CardContent,
 } from '@mui/material';
 import { Info as InfoIcon, LocationOn as LocationIcon, CheckCircle as CheckCircleIcon, Category as CategoryIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 
 // Импорт API хуков
 import { useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
 import { useGetServicePointsByCategoryQuery } from '../../../api/servicePoints.api';
 import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
 import { useGetServiceCategoryByIdQuery } from '../../../api/serviceCategories.api';
+import { useGetServicePointByIdQuery } from '../../../api/servicePoints.api';
 
 // Импорт типов
 import { City, ServicePoint } from '../../../types/models';
@@ -61,16 +65,52 @@ const convertServicePointToServicePointData = (servicePoint: ServicePoint): Serv
   };
 };
 
-// Обертка для ServicePointCard с загрузкой услуг
+// Обертка для ServicePointCard с загрузкой полных данных
 const ServicePointCardWrapper: React.FC<{
   servicePoint: ServicePoint;
   isSelected: boolean;
   onSelect: (servicePointData: ServicePointData) => void;
-}> = ({ servicePoint, isSelected, onSelect }) => {
-  const { data: servicesData } = useGetServicePointServicesQuery(servicePoint.id.toString());
+  onViewDetails: (servicePointData: ServicePointData) => void;
+}> = ({ servicePoint, isSelected, onSelect, onViewDetails }) => {
+  // Загружаем полные данные сервисной точки включая фотографии и service_posts
+  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery(servicePoint.id.toString());
   
-  const servicePointData = convertServicePointToServicePointData(servicePoint);
-  const services = servicesData || [];
+  // Преобразуем данные в нужный формат
+  const servicePointData = convertServicePointToServicePointData(fullServicePointData || servicePoint);
+  
+  // Извлекаем уникальные категории из service_posts
+  const categories = useMemo(() => {
+    if (!fullServicePointData?.service_posts) return [];
+    
+    const uniqueCategories = new Map();
+    fullServicePointData.service_posts.forEach(post => {
+      if (post.service_category && !uniqueCategories.has(post.service_category.id)) {
+        uniqueCategories.set(post.service_category.id, {
+          id: post.service_category.id,
+          name: post.service_category.name,
+          description: post.service_category.description,
+          services_count: post.service_category.services_count || 0
+        });
+      }
+    });
+    
+    return Array.from(uniqueCategories.values());
+  }, [fullServicePointData?.service_posts]);
+
+  // Если данные загружаются, показываем скелетон
+  if (isLoading) {
+    return (
+      <Grid item xs={12} md={6} lg={4}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+    );
+  }
 
   return (
     <Grid item xs={12} md={6} lg={4}>
@@ -79,8 +119,11 @@ const ServicePointCardWrapper: React.FC<{
         variant="compact"
         isSelected={isSelected}
         onSelect={() => onSelect(servicePointData)}
+        onViewDetails={() => onViewDetails(servicePointData)}
         showSelectButton={true}
-        services={services}
+        showDetailsLink={true}
+        categories={categories}
+        isLoadingCategories={isLoading}
       />
     </Grid>
   );
@@ -93,6 +136,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   isValid,
 }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [autoFilledData, setAutoFilledData] = useState(false);
   
@@ -177,6 +221,12 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
     setTimeout(() => {
       onNext();
     }, 800);
+  };
+  
+  // Обработчик перехода к детальной странице сервисной точки
+  const handleViewDetails = (servicePointData: ServicePointData) => {
+    // Переход на клиентскую страницу сервисной точки
+    navigate(`/client/service-point/${servicePointData.id}`);
   };
   
   return (
@@ -299,6 +349,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
                     servicePoint={servicePoint}
                     isSelected={formData.service_point_id === servicePoint.id}
                     onSelect={handleServicePointSelect}
+                    onViewDetails={handleViewDetails}
                   />
                 ))}
               </Grid>

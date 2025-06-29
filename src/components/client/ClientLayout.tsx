@@ -93,6 +93,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       <CustomAppBar
         title="🚗 Твоя Шина"
+        onTitleClick={() => navigate('/client')}
         rightContent={
           <>
             {publicLinks}

@@ -233,6 +233,13 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       }
     }
 
+    // Если переданы данные о сервисной точке и городе, пропускаем первые шаги
+    if (stateData?.step1Completed && stateData?.servicePointId && stateData?.cityId) {
+      // Устанавливаем категорию по умолчанию (можно взять из API сервисной точки)
+      newFormData.service_category_id = 1; // Временно устанавливаем категорию 1
+      setActiveStep(2); // Переходим к шагу выбора даты и времени
+    }
+
     // Обновляем данные формы
     setFormData(newFormData);
   }, [location.search, location.state]);

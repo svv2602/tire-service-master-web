@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест страницы детальной информации о сервисной точке</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .test-link {
+            display: inline-block;
+            background: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px 10px 5px 0;
+        }
+        .test-link:hover {
+            background: #1565c0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+        .status.info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1565c0;
+        }
+        .api-test {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест страницы детальной информации о сервисной точке</h1>
+        
+        <div class="test-section">
+            <div class="test-title">📋 Что нужно проверить</div>
+            <ul class="checklist">
+                <li>Кнопки "Записаться" ведут на форму бронирования с предзаполненными данными</li>
+                <li>В адресе отображается город (формат: "Город, Улица")</li>
+                <li>Блоки услуг не выходят за границы карточки</li>
+                <li>Услуги сгруппированы по категориям</li>
+                <li>Отображается навигационная панель ClientLayout</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🌐 Прямые ссылки для тестирования</div>
+            <a href="http://localhost:3008/client/service-point/1" class="test-link" target="_blank">
+                Сервисная точка ID=1 (ШиноСервіс Експрес)
+            </a>
+            <a href="http://localhost:3008/client/service-point/2" class="test-link" target="_blank">
+                Сервисная точка ID=2
+            </a>
+            <a href="http://localhost:3008/client/service-point/3" class="test-link" target="_blank">
+                Сервисная точка ID=3
+            </a>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔧 API тесты</div>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📝 Ожидаемые результаты</div>
+            <div class="status info">
+                <strong>Адрес:</strong> Должен отображаться как "Київ, вул. Хрещатик, 22"
+            </div>
+            <div class="status info">
+                <strong>Кнопки "Записаться":</strong> Должны вести на /client/booking/new-with-availability с предзаполненными данными
+            </div>
+            <div class="status info">
+                <strong>Услуги:</strong> Должны быть сгруппированы по категориям (Шиномонтаж, Техническое обслуживание)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Проверяем API
+        async function testAPI() {
+            const apiResults = document.getElementById('api-results');
+            
+            try {
+                // Тест API сервисной точки
+                const servicePointResponse = await fetch('http://localhost:8000/api/v1/service_points/1');
+                const servicePointData = await servicePointResponse.json();
+                
+                apiResults.innerHTML += `
+                    <div class="api-test">
+                        <strong>✅ API сервисной точки:</strong><br>
+                        ID: ${servicePointData.id}<br>
+                        Название: ${servicePointData.name}<br>
+                        Адрес: ${servicePointData.address}<br>
+                        City ID: ${servicePointData.city?.id}<br>
+                        Услуг: ${servicePointData.services?.length || 0}
+                    </div>
+                `;
+
+                // Тест API города
+                if (servicePointData.city?.id) {
+                    const cityResponse = await fetch(`http://localhost:8000/api/v1/cities/${servicePointData.city.id}`);
+                    const cityData = await cityResponse.json();
+                    
+                    apiResults.innerHTML += `
+                        <div class="api-test">
+                            <strong>✅ API города:</strong><br>
+                            ID: ${cityData.data.id}<br>
+                            Название: ${cityData.data.name}<br>
+                            Ожидаемый адрес: ${cityData.data.name}, ${servicePointData.address}
+                        </div>
+                    `;
+                }
+
+                // Тест API услуг
+                const servicesResponse = await fetch('http://localhost:8000/api/v1/service_points/1/services');
+                const servicesData = await servicesResponse.json();
+                
+                const categories = {};
+                servicesData.forEach(service => {
+                    if (service.category) {
+                        if (!categories[service.category.name]) {
+                            categories[service.category.name] = [];
+                        }
+                        categories[service.category.name].push(service);
+                    }
+                });
+
+                apiResults.innerHTML += `
+                    <div class="api-test">
+                        <strong>✅ API услуг:</strong><br>
+                        Всего услуг: ${servicesData.length}<br>
+                        Категории: ${Object.keys(categories).join(', ')}<br>
+                        Услуги по категориям:<br>
+                        ${Object.entries(categories).map(([catName, services]) => 
+                            `&nbsp;&nbsp;• ${catName}: ${services.length} услуг`
+                        ).join('<br>')}
+                    </div>
+                `;
+
+            } catch (error) {
+                apiResults.innerHTML += `
+                    <div class="api-test" style="background: #ffebee; border: 1px solid #f44336;">
+                        <strong>❌ Ошибка API:</strong> ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Запускаем тесты при загрузке страницы
+        window.onload = testAPI;
+    </script>
+</body>
+</html> 

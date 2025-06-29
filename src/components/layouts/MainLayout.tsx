@@ -723,6 +723,7 @@ const MainLayout: React.FC = () => {
         <CustomAppBar
           title="Твоя шина - Администратор"
           onDrawerToggle={handleDrawerToggle}
+          onTitleClick={() => navigate('/admin')}
           profileActions={getProfileActions({
             user,
             isAuthenticated,

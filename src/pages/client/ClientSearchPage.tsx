@@ -678,6 +678,10 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
     });
   };
 
+  const handleViewDetails = () => {
+    navigate(`/client/service-point/${servicePoint.id}`);
+  };
+
   return (
     <Card sx={{ 
       ...cardStyles, 
@@ -891,6 +895,24 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
           sx={{ color: colors.textSecondary }}
         >
           {showDetails ? 'Згорнути' : 'Детальніше'}
+        </Button>
+        
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={handleViewDetails}
+          sx={{ 
+            ml: 1,
+            borderColor: theme.palette.primary.main,
+            color: theme.palette.primary.main,
+            '&:hover': { 
+              borderColor: theme.palette.primary.dark,
+              bgcolor: theme.palette.primary.main,
+              color: 'white'
+            }
+          }}
+        >
+          Подробнее
         </Button>
         
         <Box sx={{ flexGrow: 1 }} />

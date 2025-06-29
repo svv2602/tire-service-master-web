@@ -552,8 +552,17 @@ export interface ServicePointCardProps {
   onBook?: (servicePoint: ServicePointData) => void;
   showBookButton?: boolean;
   showSelectButton?: boolean;
+  showDetailsLink?: boolean;
+  onViewDetails?: (servicePoint: ServicePointData) => void;
   services?: ServicePointService[];
   isLoadingServices?: boolean;
+  categories?: Array<{
+    id: number;
+    name: string;
+    description?: string;
+    services_count?: number;
+  }>;
+  isLoadingCategories?: boolean;
   variant?: 'default' | 'compact';
 }
 
@@ -564,8 +573,12 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   onBook,
   showBookButton = false,
   showSelectButton = false,
+  showDetailsLink = false,
+  onViewDetails,
   services = [],
   isLoadingServices = false,
+  categories = [],
+  isLoadingCategories = false,
   variant = 'default'
 }) => {
   const theme = useTheme();
@@ -593,6 +606,12 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const handleBook = () => {
     if (onBook) {
       onBook(servicePoint);
+    }
+  };
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails(servicePoint);
     }
   };
 
@@ -707,7 +726,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             </Paper>
           )}
           
-          {/* Услуги */}
+          {/* Доступные категории услуг */}
           <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
             <Box 
               sx={{ 
@@ -724,27 +743,27 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BuildIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Послуги ({isLoadingServices ? '...' : services.length})
+                  Доступні категорії послуг ({isLoadingCategories ? '...' : categories.length})
                 </Typography>
               </Box>
               {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
             
             <Collapse in={servicesExpanded}>
-              {isLoadingServices ? (
+              {isLoadingCategories ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                   <CircularProgress size={24} />
                 </Box>
-              ) : services.length > 0 ? (
+              ) : categories.length > 0 ? (
                 <List dense sx={{ mt: 1 }}>
-                  {services.map((service) => (
-                    <ListItem key={service.id} sx={{ py: 0.5 }}>
+                  {categories.map((category) => (
+                    <ListItem key={category.id} sx={{ py: 0.5 }}>
                       <ListItemIcon sx={{ minWidth: 36 }}>
                         <BuildIcon sx={{ fontSize: '1rem', color: colors.textSecondary }} />
                       </ListItemIcon>
                       <ListItemText
-                        primary={service.name}
-                        secondary={`${service.price > 0 ? `${service.price} грн` : 'Цена по запросу'} • ${service.duration > 0 ? `${service.duration} хв` : 'Время уточняется'}`}
+                        primary={category.name}
+                        secondary={`${category.description || 'Опис категорії'} • ${category.services_count || 0} послуг`}
                         primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -753,7 +772,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                 </List>
               ) : (
                 <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  Послуги не завантажені
+                  Категорії послуг не завантажені
                 </Typography>
               )}
             </Collapse>
@@ -822,6 +841,30 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         >
           {showDetails ? 'Згорнути' : 'Детальніше'}
         </Button>
+        
+        {/* Ссылка на детальную страницу */}
+        {showDetailsLink && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleViewDetails();
+            }}
+            sx={{ 
+              ml: 1,
+              borderColor: theme.palette.primary.main,
+              color: theme.palette.primary.main,
+              '&:hover': { 
+                borderColor: theme.palette.primary.dark,
+                bgcolor: theme.palette.primary.main,
+                color: 'white'
+              }
+            }}
+          >
+            Подробнее
+          </Button>
+        )}
         
         <Box sx={{ flexGrow: 1 }} />
         

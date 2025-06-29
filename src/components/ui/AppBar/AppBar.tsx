@@ -45,6 +45,8 @@ export interface AppBarProps {
   drawerOpen?: boolean;
   /** Обработчик открытия/закрытия drawer */
   onDrawerToggle?: () => void;
+  /** Обработчик клика по заголовку */
+  onTitleClick?: () => void;
   /** Действия для меню профиля */
   profileActions?: AppBarAction[];
   /** Действия для меню уведомлений */
@@ -76,6 +78,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   title,
   drawerOpen,
   onDrawerToggle,
+  onTitleClick,
   profileActions = [],
   notificationActions = [],
   notificationCount = 0,
@@ -126,7 +129,17 @@ export const AppBar: React.FC<AppBarProps> = ({
         )}
 
         {/* Заголовок */}
-        <StyledTitle variant="h6">
+        <StyledTitle 
+          variant="h6"
+          onClick={onTitleClick}
+          sx={{
+            cursor: onTitleClick ? 'pointer' : 'default',
+            '&:hover': onTitleClick ? {
+              opacity: 0.8,
+              transition: 'opacity 0.2s ease'
+            } : {}
+          }}
+        >
           {title}
         </StyledTitle>
 
