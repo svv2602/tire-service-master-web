@@ -718,12 +718,22 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
       'thursday': 4, 'friday': 5, 'saturday': 6
     };
     
-    const targetDayIndex = dayIndexMap[dayKey as keyof typeof dayIndexMap] || 1;
+    const targetDayIndex = dayIndexMap[dayKey as keyof typeof dayIndexMap];
+    if (targetDayIndex === undefined) {
+      console.warn(`Unknown day key: ${dayKey}, defaulting to monday`);
+      return getCurrentDateForDay('monday');
+    }
     
-    // Вычисляем следующую дату с выбранным днем недели
-    const daysUntilTarget = (targetDayIndex - currentDayIndex + 7) % 7;
+    // Вычисляем количество дней до целевого дня
+    let daysUntilTarget = targetDayIndex - currentDayIndex;
+    
+    // Если целевой день уже прошел на этой неделе или сегодня, берем следующую неделю
+    if (daysUntilTarget <= 0) {
+      daysUntilTarget += 7;
+    }
+    
     const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + (daysUntilTarget === 0 ? 7 : daysUntilTarget));
+    targetDate.setDate(today.getDate() + daysUntilTarget);
     
     return targetDate.toISOString().split('T')[0];
   }
@@ -914,8 +924,8 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
       }
       
       // Проверяем, работает ли пост в этот день недели
-      const workingDayValue = post.working_days[day.key];
-      return workingDayValue === true || workingDayValue === 'true';
+      const workingDayValue = post.working_days[day.key as keyof typeof post.working_days];
+      return workingDayValue === true;
     });
     
     // Показываем день, если он рабочий по основному расписанию ИЛИ есть активные посты с индивидуальным расписанием

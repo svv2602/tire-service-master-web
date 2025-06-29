@@ -463,16 +463,16 @@ const BookingFormPageWithAvailability: React.FC = () => {
                 selectedTimeSlot={selectedTime}
                 onTimeSlotChange={setSelectedTime}
                 availableTimeSlots={[
-                  { time: '09:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '10:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '11:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '12:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '13:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '14:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '15:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '16:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '17:00', available_posts: 1, total_posts: 1, can_book: true },
-                  { time: '18:00', available_posts: 1, total_posts: 1, can_book: true }
+                  { time: '09:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '10:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '11:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '12:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '13:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '14:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '15:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '16:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '17:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 },
+                  { time: '18:00', available_posts: 1, total_posts: 1, can_book: true, duration_minutes: 30 }
                 ]}
                 isLoading={isLoading}
               />
