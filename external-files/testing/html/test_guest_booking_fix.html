@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления бронирования для гостей</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4caf50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .info { border-color: #2196f3; background-color: #e3f2fd; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Тест исправления бронирования для незалогиненных пользователей</h1>
+        <p><strong>Цель:</strong> Проверить, что незалогиненный пользователь может создать бронирование без ошибки 422</p>
+        <p><strong>Дата:</strong> <span id="currentDate"></span></p>
+    </div>
+
+    <div class="container">
+        <h2>📋 Тестовые данные для бронирования</h2>
+        
+        <div class="form-group">
+            <label>Имя клиента:</label>
+            <input type="text" id="clientFirstName" value="Иван">
+        </div>
+        
+        <div class="form-group">
+            <label>Фамилия клиента:</label>
+            <input type="text" id="clientLastName" value="Петров">
+        </div>
+        
+        <div class="form-group">
+            <label>Телефон клиента:</label>
+            <input type="text" id="clientPhone" value="+380671234567">
+        </div>
+        
+        <div class="form-group">
+            <label>Email клиента:</label>
+            <input type="text" id="clientEmail" value="ivan.petrov@test.com">
+        </div>
+        
+        <div class="form-group">
+            <label>Сервисная точка ID:</label>
+            <select id="servicePointId">
+                <option value="1">1 - ШиноСервис Экспресс (Киев)</option>
+                <option value="2">2 - АвтоШина Плюс (Киев)</option>
+                <option value="3">3 - ТайрМастер (Харьков)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Дата бронирования:</label>
+            <input type="date" id="bookingDate">
+        </div>
+        
+        <div class="form-group">
+            <label>Время начала:</label>
+            <input type="time" id="startTime" value="10:00">
+        </div>
+        
+        <div class="form-group">
+            <label>Номер автомобиля:</label>
+            <input type="text" id="licensePlate" value="АА1234ВВ">
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🧪 Тестирование API</h2>
+        
+        <div class="test-section info">
+            <h3>1. Проверка структуры данных</h3>
+            <button onclick="showDataStructure()">Показать структуру данных</button>
+            <div id="dataStructureResult"></div>
+        </div>
+        
+        <div class="test-section warning">
+            <h3>2. Тест создания бронирования (без авторизации)</h3>
+            <button onclick="testGuestBooking()" id="testGuestBtn">Создать бронирование как гость</button>
+            <div id="guestBookingResult"></div>
+        </div>
+        
+        <div class="test-section info">
+            <h3>3. Проверка ошибок валидации</h3>
+            <button onclick="testValidationErrors()">Тест с пустыми данными</button>
+            <div id="validationResult"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Результаты тестирования</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        // Устанавливаем завтрашнюю дату по умолчанию
+        document.getElementById('currentDate').textContent = new Date().toLocaleString('ru-RU');
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('bookingDate').value = tomorrow.toISOString().split('T')[0];
+
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        let testResults = [];
+
+        function addTestResult(test, status, message, data = null) {
+            testResults.push({
+                test,
+                status,
+                message,
+                data,
+                timestamp: new Date().toLocaleString('ru-RU')
+            });
+            updateTestResults();
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = testResults.map(result => `
+                <div class="test-section ${result.status}">
+                    <h4>${result.test}</h4>
+                    <p><strong>Статус:</strong> ${result.status.toUpperCase()}</p>
+                    <p><strong>Сообщение:</strong> ${result.message}</p>
+                    <p><strong>Время:</strong> ${result.timestamp}</p>
+                    ${result.data ? `<pre>${JSON.stringify(result.data, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function getFormData() {
+            return {
+                client: {
+                    first_name: document.getElementById('clientFirstName').value,
+                    last_name: document.getElementById('clientLastName').value,
+                    phone: document.getElementById('clientPhone').value,
+                    email: document.getElementById('clientEmail').value,
+                },
+                booking: {
+                    service_point_id: parseInt(document.getElementById('servicePointId').value),
+                    service_category_id: 1,
+                    booking_date: document.getElementById('bookingDate').value,
+                    start_time: document.getElementById('startTime').value,
+                    service_recipient_first_name: document.getElementById('clientFirstName').value,
+                    service_recipient_last_name: document.getElementById('clientLastName').value,
+                    service_recipient_phone: document.getElementById('clientPhone').value,
+                    service_recipient_email: document.getElementById('clientEmail').value,
+                    notes: 'Тестовое бронирование для проверки исправления',
+                },
+                car: {
+                    car_type_id: 1,
+                    car_brand: 'Toyota',
+                    car_model: 'Camry',
+                    license_plate: document.getElementById('licensePlate').value,
+                },
+                services: [],
+                duration_minutes: 60,
+            };
+        }
+
+        function showDataStructure() {
+            const data = getFormData();
+            document.getElementById('dataStructureResult').innerHTML = `
+                <h4>Структура данных для отправки:</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            addTestResult('Проверка структуры данных', 'info', 'Структура данных соответствует ожиданиям бэкенда', data);
+        }
+
+        async function testGuestBooking() {
+            const btn = document.getElementById('testGuestBtn');
+            btn.disabled = true;
+            btn.textContent = 'Создание...';
+
+            try {
+                const data = getFormData();
+                
+                const response = await fetch(`${API_BASE_URL}/client_bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Включаем cookies
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('guestBookingResult').innerHTML = `
+                        <div class="success">
+                            <h4>✅ Успех! Бронирование создано</h4>
+                            <p><strong>ID бронирования:</strong> ${result.id}</p>
+                            <p><strong>Статус:</strong> ${result.status?.display_name || result.status}</p>
+                            <p><strong>Дата:</strong> ${result.booking_date}</p>
+                            <p><strong>Время:</strong> ${result.start_time}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    addTestResult('Создание бронирования гостем', 'success', `Бронирование успешно создано с ID: ${result.id}`, result);
+                } else {
+                    document.getElementById('guestBookingResult').innerHTML = `
+                        <div class="error">
+                            <h4>❌ Ошибка ${response.status}</h4>
+                            <p><strong>Сообщение:</strong> ${result.error || result.message}</p>
+                            ${result.details ? `<p><strong>Детали:</strong> ${Array.isArray(result.details) ? result.details.join(', ') : result.details}</p>` : ''}
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    addTestResult('Создание бронирования гостем', 'error', `Ошибка ${response.status}: ${result.error || result.message}`, result);
+                }
+            } catch (error) {
+                document.getElementById('guestBookingResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ Ошибка сети</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                addTestResult('Создание бронирования гостем', 'error', `Ошибка сети: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Создать бронирование как гость';
+            }
+        }
+
+        async function testValidationErrors() {
+            try {
+                const invalidData = {
+                    client: {
+                        first_name: '',
+                        last_name: '',
+                        phone: '',
+                        email: 'invalid-email',
+                    },
+                    booking: {
+                        service_point_id: null,
+                        service_category_id: null,
+                        booking_date: '',
+                        start_time: '',
+                    },
+                    car: {
+                        car_type_id: null,
+                        license_plate: '',
+                    }
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/client_bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(invalidData)
+                });
+
+                const result = await response.json();
+
+                document.getElementById('validationResult').innerHTML = `
+                    <h4>Ответ с невалидными данными (ожидается ошибка 422):</h4>
+                    <p><strong>Статус:</strong> ${response.status}</p>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (response.status === 422) {
+                    addTestResult('Проверка валидации', 'success', 'Валидация работает корректно - возвращается ошибка 422', result);
+                } else {
+                    addTestResult('Проверка валидации', 'warning', `Неожиданный статус: ${response.status}`, result);
+                }
+            } catch (error) {
+                document.getElementById('validationResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ Ошибка сети</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                addTestResult('Проверка валидации', 'error', `Ошибка сети: ${error.message}`);
+            }
+        }
+
+        // Автоматически показываем структуру данных при загрузке
+        window.onload = function() {
+            showDataStructure();
+        };
+    </script>
+</body>
+</html> 

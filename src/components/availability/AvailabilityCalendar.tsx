@@ -100,16 +100,9 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       return date.getDay() === 0; // Воскресенье
     }
     
-    // Для дней с servicePointId проверяем кэш
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const cacheKey = `${servicePointId}-${dateStr}-${categoryId || 'all'}`;
-    const cachedResult = availabilityCache[cacheKey];
-    
-    if (cachedResult !== undefined) {
-      return !cachedResult; // Если недоступен, то отключаем
-    }
-    
-    // Если нет данных в кэше, по умолчанию разрешаем (будет проверено при клике)
+    // Для дней с servicePointId НЕ блокируем дни по умолчанию
+    // Позволяем пользователю выбрать любую дату в разрешенном диапазоне
+    // Информация о доступности будет показана после выбора
     return false;
   };
 
@@ -119,16 +112,14 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
       return;
     }
     
-    // Если есть servicePointId, проверяем доступность через API
-    if (servicePointId) {
-      const isAvailable = await checkDateAvailability(date);
-      if (!isAvailable) {
-        // Если день недоступен, не выбираем его
-        return;
-      }
-    }
-    
+    // Всегда позволяем выбрать дату, даже если она недоступна
+    // Информация о недоступности будет показана в DayDetailsPanel
     onDateChange(date);
+    
+    // Если есть servicePointId, проверяем доступность через API для кэширования
+    if (servicePointId) {
+      await checkDateAvailability(date);
+    }
   };
 
   return (

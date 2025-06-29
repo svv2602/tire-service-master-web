@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка исправления бронирования</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4caf50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .info { border-color: #2196f3; background-color: #e3f2fd; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976d2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .instruction {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 5px solid #4caf50;
+            margin: 20px 0;
+        }
+        
+        .step {
+            background: #f0f8ff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Проверка исправления ошибки 422 при создании бронирования</h1>
+        <p><strong>Цель:</strong> Убедиться, что незалогиненный пользователь может создать бронирование</p>
+        <p><strong>Дата:</strong> <span id="currentDate"></span></p>
+    </div>
+
+    <div class="container">
+        <h2>📋 Инструкции для тестирования</h2>
+        
+        <div class="instruction">
+            <h3>🎯 Что было исправлено:</h3>
+            <ul>
+                <li>Изменена структура данных с <code>client_attributes</code> на <code>client</code></li>
+                <li>Добавлена структура <code>booking</code> и <code>car</code></li>
+                <li>Улучшена обработка ошибок в фронтенде</li>
+                <li>Добавлено отладочное логирование</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h4>Шаг 1: Проверка API напрямую</h4>
+            <button onclick="testApiDirect()">Тестировать API напрямую</button>
+            <div id="apiDirectResult"></div>
+        </div>
+
+        <div class="step">
+            <h4>Шаг 2: Тестирование через фронтенд</h4>
+            <p>1. Откройте <a href="http://localhost:3008/client/booking/new-with-availability" target="_blank">форму бронирования</a></p>
+            <p>2. Заполните все шаги формы</p>
+            <p>3. Проверьте консоль браузера на наличие лога: <code>🚀 Отправляем данные бронирования:</code></p>
+            <p>4. Убедитесь, что бронирование создается без ошибки 422</p>
+            <button onclick="openBookingForm()">Открыть форму бронирования</button>
+        </div>
+
+        <div class="step">
+            <h4>Шаг 3: Проверка структуры данных</h4>
+            <p>В консоли браузера должна быть структура:</p>
+            <pre id="expectedStructure"></pre>
+            <button onclick="showExpectedStructure()">Показать ожидаемую структуру</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>🧪 Автоматические тесты</h2>
+        
+        <div class="test-section info">
+            <h3>1. Тест API с новой структурой данных</h3>
+            <button onclick="testNewDataStructure()" id="testApiBtn">Тестировать новую структуру</button>
+            <div id="newStructureResult"></div>
+        </div>
+        
+        <div class="test-section warning">
+            <h3>2. Тест старой структуры (должен вернуть ошибку)</h3>
+            <button onclick="testOldDataStructure()">Тестировать старую структуру</button>
+            <div id="oldStructureResult"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Результаты тестирования</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <script>
+        document.getElementById('currentDate').textContent = new Date().toLocaleString('ru-RU');
+
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        let testResults = [];
+
+        function addTestResult(test, status, message, data = null) {
+            testResults.push({
+                test,
+                status,
+                message,
+                data,
+                timestamp: new Date().toLocaleString('ru-RU')
+            });
+            updateTestResults();
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = testResults.map(result => `
+                <div class="test-section ${result.status}">
+                    <h4>${result.test}</h4>
+                    <p><strong>Статус:</strong> ${result.status.toUpperCase()}</p>
+                    <p><strong>Сообщение:</strong> ${result.message}</p>
+                    <p><strong>Время:</strong> ${result.timestamp}</p>
+                    ${result.data ? `<pre>${JSON.stringify(result.data, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function showExpectedStructure() {
+            const structure = {
+                client: {
+                    first_name: "Имя",
+                    last_name: "Фамилия",
+                    phone: "+380XXXXXXXXX",
+                    email: "email@example.com"
+                },
+                booking: {
+                    service_point_id: 1,
+                    service_category_id: 1,
+                    booking_date: "2025-01-28",
+                    start_time: "10:00",
+                    service_recipient_first_name: "Имя",
+                    service_recipient_last_name: "Фамилия",
+                    service_recipient_phone: "+380XXXXXXXXX",
+                    service_recipient_email: "email@example.com",
+                    notes: "Комментарий"
+                },
+                car: {
+                    car_type_id: 1,
+                    car_brand: "Toyota",
+                    car_model: "Camry",
+                    license_plate: "АА1234ВВ"
+                },
+                services: [],
+                duration_minutes: 60
+            };
+            
+            document.getElementById('expectedStructure').textContent = JSON.stringify(structure, null, 2);
+        }
+
+        function openBookingForm() {
+            window.open('http://localhost:3008/client/booking/new-with-availability', '_blank');
+        }
+
+        async function testApiDirect() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/service_points`);
+                if (response.ok) {
+                    document.getElementById('apiDirectResult').innerHTML = `
+                        <div class="success">
+                            <p>✅ API доступен и работает</p>
+                            <p>Статус: ${response.status}</p>
+                        </div>
+                    `;
+                    addTestResult('Проверка доступности API', 'success', 'API работает корректно');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                document.getElementById('apiDirectResult').innerHTML = `
+                    <div class="error">
+                        <p>❌ Ошибка подключения к API</p>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                addTestResult('Проверка доступности API', 'error', `Ошибка: ${error.message}`);
+            }
+        }
+
+        async function testNewDataStructure() {
+            const btn = document.getElementById('testApiBtn');
+            btn.disabled = true;
+            btn.textContent = 'Тестирование...';
+
+            try {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const testData = {
+                    client: {
+                        first_name: "Тест",
+                        last_name: "Исправления",
+                        phone: "+380881234567",
+                        email: "test.fix@example.com"
+                    },
+                    booking: {
+                        service_point_id: 1,
+                        service_category_id: 1,
+                        booking_date: tomorrow.toISOString().split('T')[0],
+                        start_time: "16:00",
+                        service_recipient_first_name: "Тест",
+                        service_recipient_last_name: "Исправления",
+                        service_recipient_phone: "+380881234567",
+                        service_recipient_email: "test.fix@example.com",
+                        notes: "Тестовое бронирование для проверки исправления"
+                    },
+                    car: {
+                        car_type_id: 1,
+                        car_brand: "Nissan",
+                        car_model: "Qashqai",
+                        license_plate: "ТТ1111ЕЕ"
+                    },
+                    services: [],
+                    duration_minutes: 60
+                };
+
+                const response = await fetch(`${API_BASE_URL}/client_bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(testData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('newStructureResult').innerHTML = `
+                        <div class="success">
+                            <h4>✅ Новая структура работает!</h4>
+                            <p><strong>ID бронирования:</strong> ${result.id}</p>
+                            <p><strong>Статус:</strong> ${result.status?.display_name || result.status}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    addTestResult('Тест новой структуры данных', 'success', `Бронирование создано с ID: ${result.id}`, result);
+                } else {
+                    document.getElementById('newStructureResult').innerHTML = `
+                        <div class="error">
+                            <h4>❌ Ошибка ${response.status}</h4>
+                            <p>${result.error || result.message}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                    addTestResult('Тест новой структуры данных', 'error', `Ошибка ${response.status}: ${result.error || result.message}`, result);
+                }
+            } catch (error) {
+                document.getElementById('newStructureResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ Ошибка сети</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                addTestResult('Тест новой структуры данных', 'error', `Ошибка сети: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Тестировать новую структуру';
+            }
+        }
+
+        async function testOldDataStructure() {
+            try {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                // Старая структура данных (должна вызвать ошибку)
+                const oldData = {
+                    service_point_id: 1,
+                    service_category_id: 1,
+                    booking_date: tomorrow.toISOString().split('T')[0],
+                    start_time: "17:00",
+                    client_attributes: {
+                        first_name: "Старая",
+                        last_name: "Структура",
+                        phone: "+380771234567",
+                        email: "old.structure@example.com"
+                    },
+                    car_type_id: 1,
+                    license_plate: "СС7777ОО"
+                };
+
+                const response = await fetch(`${API_BASE_URL}/client_bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(oldData)
+                });
+
+                const result = await response.json();
+
+                document.getElementById('oldStructureResult').innerHTML = `
+                    <h4>Результат старой структуры (статус ${response.status}):</h4>
+                    <pre>${JSON.stringify(result, null, 2)}</pre>
+                `;
+
+                if (response.status === 422) {
+                    addTestResult('Тест старой структуры данных', 'success', 'Старая структура корректно отклонена с ошибкой 422', result);
+                } else {
+                    addTestResult('Тест старой структуры данных', 'warning', `Неожиданный статус: ${response.status}`, result);
+                }
+            } catch (error) {
+                document.getElementById('oldStructureResult').innerHTML = `
+                    <div class="error">
+                        <h4>❌ Ошибка сети</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                addTestResult('Тест старой структуры данных', 'error', `Ошибка сети: ${error.message}`);
+            }
+        }
+
+        // Автоматически показываем ожидаемую структуру и тестируем API при загрузке
+        window.onload = function() {
+            showExpectedStructure();
+            testApiDirect();
+        };
+    </script>
+</body>
+</html> 

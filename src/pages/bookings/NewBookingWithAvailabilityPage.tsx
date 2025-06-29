@@ -372,32 +372,42 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setIsSubmitting(true);
       setSubmitError(null);
 
-      // Подготавливаем данные для отправки
+      // Подготавливаем данные для отправки в формате, ожидаемом бэкендом
       const bookingData = {
-        service_point_id: formData.service_point_id,
-        service_category_id: formData.service_category_id,
-        booking_date: formData.booking_date,
-        start_time: formData.start_time,
-        duration_minutes: formData.duration_minutes || 30,
-        client_attributes: {
+        // Данные клиента (для незалогиненных пользователей)
+        client: {
           first_name: formData.client.first_name,
           last_name: formData.client.last_name,
           phone: formData.client.phone,
           email: formData.client.email,
         },
-        service_recipient_attributes: {
-          first_name: formData.service_recipient.first_name,
-          last_name: formData.service_recipient.last_name,
-          phone: formData.service_recipient.phone,
-          email: formData.service_recipient.email,
+        // Данные бронирования
+        booking: {
+          service_point_id: formData.service_point_id,
+          service_category_id: formData.service_category_id,
+          booking_date: formData.booking_date,
+          start_time: formData.start_time,
+          service_recipient_first_name: formData.service_recipient.first_name,
+          service_recipient_last_name: formData.service_recipient.last_name,
+          service_recipient_phone: formData.service_recipient.phone,
+          service_recipient_email: formData.service_recipient.email,
+          notes: formData.notes,
         },
-        car_type_id: formData.car_type_id,
-        car_brand: formData.car_brand,
-        car_model: formData.car_model,
-        license_plate: formData.license_plate,
+        // Данные автомобиля
+        car: {
+          car_type_id: formData.car_type_id,
+          car_brand: formData.car_brand,
+          car_model: formData.car_model,
+          license_plate: formData.license_plate,
+        },
+        // Услуги (если есть)
         services: formData.services,
-        notes: formData.notes,
+        // Длительность
+        duration_minutes: formData.duration_minutes || 30,
       };
+
+      // Отладочная информация
+      console.log('🚀 Отправляем данные бронирования:', JSON.stringify(bookingData, null, 2));
 
       const response = await createClientBooking(bookingData).unwrap();
 
@@ -412,6 +422,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         setExistingUserDialogOpen(true);
       } else {
         setSubmitError(
+          error?.data?.error || 
           error?.data?.message || 
           error?.message || 
           'Произошла ошибка при создании бронирования'
