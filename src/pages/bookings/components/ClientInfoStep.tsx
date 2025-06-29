@@ -370,6 +370,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Alert>
       )}
       
+      {/* Информация о клиенте */}
       <Grid container spacing={3}>
         {/* Имя */}
         <Grid item xs={12} sm={6}>
@@ -391,7 +392,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             fullWidth
           />
         </Grid>
-
+        
         {/* Фамилия */}
         <Grid item xs={12} sm={6}>
           <TextField
@@ -412,7 +413,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
           />
         </Grid>
         
-        {/* Телефон */}
+        {/* Телефон - блок 1 поднят выше */}
         <Grid item xs={12} sm={6}>
           <PhoneField
             value={formData.client.phone}
@@ -441,38 +442,54 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             fullWidth
           />
         </Grid>
+        
+        {/* Блок "Получатель услуги" - блок 2 опущен ниже, выровнен по левому краю поля Имя */}
+        <Grid item xs={12} sm={6}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'flex-start',
+            mt: 1,
+            p: 2,
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            bgcolor: 'background.paper'
+          }}>
+            <PersonAddIcon sx={{ mr: 2, fontSize: 24, color: 'primary.main' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Получатель услуги
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Кто будет получать услугу
+              </Typography>
+            </Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isSelfService}
+                  onChange={(e) => handleSelfServiceToggle(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label="Получаю услугу сам"
+              labelPlacement="start"
+            />
+          </Box>
+        </Grid>
       </Grid>
       
       {/* Разделитель */}
       <Divider sx={{ my: 4 }} />
       
-      {/* Получатель услуги */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <PersonAddIcon sx={{ mr: 2, fontSize: 28, color: 'primary.main' }} />
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 0.5 }}>
-              Получатель услуги
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Укажите, кто будет получать услугу (может отличаться от заказчика)
-            </Typography>
-          </Box>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isSelfService}
-                onChange={(e) => handleSelfServiceToggle(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Получаю услугу сам"
-            labelPlacement="start"
-          />
-        </Box>
-        
-        {/* Поля получателя услуги (показываются только если не самообслуживание) */}
-        {!isSelfService && (
+      {/* Поля получателя услуги (показываются только если не самообслуживание) */}
+      {!isSelfService && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 2 }}>
+            Данные получателя услуги
+          </Typography>
+          
           <Grid container spacing={3}>
             {/* Имя получателя */}
             <Grid item xs={12} sm={6}>
@@ -547,41 +564,16 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
               />
             </Grid>
           </Grid>
-        )}
-        
-        {/* Информация при самообслуживании */}
-        {isSelfService && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            ✅ Вы получите услугу сами. Будут использованы ваши контактные данные.
-          </Alert>
-        )}
-      </Box>
+        </Box>
+      )}
       
-      {/* Настройки уведомлений */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        📧 Настройки уведомлений
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={receiveNotifications}
-              onChange={(e) => handleNotificationsChange(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Получать SMS и email уведомления о статусе записи"
-          sx={{ mt: 1, display: 'block' }}
-        />
-      </Alert>
-      
-      {/* Информация о конфиденциальности */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        🔒 Ваши персональные данные используются только для обработки бронирования 
-        и не передаются третьим лицам. Подробнее в{' '}
-        <Typography component="span" color="primary" sx={{ cursor: 'pointer', textDecoration: 'underline' }}>
-          политике конфиденциальности
-        </Typography>
-      </Alert>
-      
+      {/* Информация при самообслуживании */}
+      {isSelfService && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          ✅ Вы получите услугу сами. Будут использованы ваши контактные данные.
+        </Alert>
+      )}
+
       {/* Уведомление о незаполненных обязательных полях */}
       {(!isValid) && (
         <Alert severity="warning" sx={{ mt: 3 }}>

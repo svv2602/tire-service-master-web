@@ -13,6 +13,8 @@ import {
   ListItemIcon,
   ListItemText,
   Alert,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -378,6 +380,30 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
         )}
       </Grid>
       
+      {/* Настройки уведомлений */}
+      <Alert severity="info" sx={{ mt: 4 }}>
+        📧 Настройки уведомлений
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={true}
+              color="primary"
+            />
+          }
+          label="Получать SMS и email уведомления о статусе записи"
+          sx={{ mt: 1, display: 'block' }}
+        />
+      </Alert>
+      
+      {/* Информация о конфиденциальности */}
+      <Alert severity="info" sx={{ mt: 3 }}>
+        🔒 Ваши персональные данные используются только для обработки бронирования 
+        и не передаются третьим лицам. Подробнее в{' '}
+        <Typography component="span" color="primary" sx={{ cursor: 'pointer', textDecoration: 'underline' }}>
+          политике конфиденциальности
+        </Typography>
+      </Alert>
+
       {/* Важная информация */}
       <Alert severity="warning" sx={{ mt: 4 }}>
         ⚠️ После подтверждения записи вам будет отправлено SMS с деталями
