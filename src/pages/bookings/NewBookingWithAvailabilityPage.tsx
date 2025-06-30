@@ -204,6 +204,51 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, [isAuthenticated, user, currentUser, isLoadingCurrentUser, currentUserError]);
   
+  // ✅ Предзаполнение данных из location.state (город с главной страницы)
+  useEffect(() => {
+    const stateData = location.state as any;
+    
+    if (stateData) {
+      console.log('📍 Получены данные из location.state:', stateData);
+      
+      // Обновляем formData с данными из location.state
+      setFormData(prev => {
+        const updatedData = { ...prev };
+        
+        // Предзаполнение города
+        if (stateData.cityId && stateData.cityName) {
+          updatedData.city_id = stateData.cityId;
+          console.log(`🏙️ Предзаполнен город: ${stateData.cityName} (ID: ${stateData.cityId})`);
+        }
+        
+        // Предзаполнение сервисной точки (если передана)
+        if (stateData.servicePointId) {
+          updatedData.service_point_id = stateData.servicePointId;
+          console.log(`🏢 Предзаполнена сервисная точка: ID ${stateData.servicePointId}`);
+        }
+        
+        // Предзаполнение категории (если передана)
+        if (stateData.service_category_id) {
+          updatedData.service_category_id = stateData.service_category_id;
+          console.log(`🔧 Предзаполнена категория: ID ${stateData.service_category_id}`);
+        }
+        
+        return updatedData;
+      });
+      
+      // Определяем начальный шаг в зависимости от переданных данных
+      if (stateData.step1Completed || (stateData.cityId && stateData.servicePointId)) {
+        // Если город и сервисная точка уже выбраны, переходим к выбору даты и времени
+        setActiveStep(2);
+        console.log('⏭️ Переход на шаг выбора даты и времени (шаг 2)');
+      } else if (stateData.cityId) {
+        // Если выбран только город, переходим к выбору категории
+        setActiveStep(0);
+        console.log('⏭️ Переход на шаг выбора категории (шаг 0)');
+      }
+    }
+  }, []);
+  
   // Мутация для создания бронирования
   const [createClientBooking] = useCreateClientBookingMutation();
   

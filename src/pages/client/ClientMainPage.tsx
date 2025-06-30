@@ -207,18 +207,22 @@ const ClientMainPage: React.FC = () => {
                             onChange={(event, newValue) => setSelectedCity(newValue)}
                             options={cities}
                             getOptionLabel={(option) => option.name}
-                            renderOption={(props, option) => (
-                              <Box component="li" {...props}>
-                                <Box>
-                                  <Typography variant="body1">{option.name}</Typography>
-                                  {option.region_name && (
-                                    <Typography variant="caption" color="text.secondary">
-                                      {option.region_name}
-                                    </Typography>
-                                  )}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            renderOption={(props, option) => {
+                              const { key, ...otherProps } = props;
+                              return (
+                                <Box component="li" key={key} {...otherProps}>
+                                  <Box>
+                                    <Typography variant="body1">{option.name}</Typography>
+                                    {option.region_name && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        {option.region_name}
+                                      </Typography>
+                                    )}
+                                  </Box>
                                 </Box>
-                              </Box>
-                            )}
+                              );
+                            }}
                             renderInput={(params) => (
                               <TextField
                                 {...params}

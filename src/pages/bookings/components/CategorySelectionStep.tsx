@@ -120,20 +120,24 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
           onChange={(event, newValue) => handleCityChange(newValue)}
           options={cities}
           getOptionLabel={(option) => option.name}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
           loading={citiesLoading || isCityLoading}
-          renderOption={(props, option) => (
-            <Box component="li" {...props}>
-              <LocationOnIcon sx={{ mr: 1, color: 'text.secondary' }} />
-              <Box>
-                <Typography variant="body1">{option.name}</Typography>
-                {option.region && (
-                  <Typography variant="caption" color="text.secondary">
-                    {option.region.name}
-                  </Typography>
-                )}
+          renderOption={(props, option) => {
+            const { key, ...otherProps } = props;
+            return (
+              <Box component="li" key={key} {...otherProps}>
+                <LocationOnIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                <Box>
+                  <Typography variant="body1">{option.name}</Typography>
+                  {option.region && (
+                    <Typography variant="caption" color="text.secondary">
+                      {option.region.name}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          )}
+            );
+          }}
           renderInput={(params) => (
             <TextField
               {...params}

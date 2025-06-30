@@ -283,6 +283,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
             onChange={(_, newValue) => handleCityChange(newValue)}
             options={cities}
             getOptionLabel={(option) => option.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
             loading={isLoadingCities}
             renderInput={(params) => (
               <TextField
