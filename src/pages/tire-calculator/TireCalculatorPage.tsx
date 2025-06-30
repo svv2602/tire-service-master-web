@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { 
   Box, 
   Typography, 
@@ -30,7 +30,6 @@ import { getTablePageStyles } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
 import TireInputForm from './components/TireInputForm';
 import TireResultsTable from './components/TireResultsTable';
-import TireVisualization from './components/TireVisualization';
 import SpeedometerImpactCard from './components/SpeedometerImpactCard';
 import TireConverterCard from './components/TireConverterCard';
 import TireSizeCalculatorCard from './components/TireSizeCalculatorCard';
@@ -38,6 +37,9 @@ import TireSizeCalculatorCard from './components/TireSizeCalculatorCard';
 const TireCalculatorPage: React.FC = () => {
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // ✅ Ref для автоматической прокрутки к результатам
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   // Состояния компонента
   const [originalTire, setOriginalTire] = useState<TireSize>({
@@ -94,6 +96,9 @@ const TireCalculatorPage: React.FC = () => {
       
       const result = calculateTireAlternatives(searchParams);
       setCalculatorResult(result);
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (error) {
       console.error('Ошибка при расчете альтернативных размеров:', error);
     } finally {
@@ -285,18 +290,6 @@ const TireCalculatorPage: React.FC = () => {
                     color="secondary"
                     variant="outlined"
                   />
-                  {calculatorResult.searchParams.originalSize.loadIndex && (
-                    <Chip 
-                      label={`Нагрузка: ${calculatorResult.searchParams.originalSize.loadIndex}`}
-                      variant="outlined"
-                    />
-                  )}
-                  {calculatorResult.searchParams.originalSize.speedIndex && (
-                    <Chip 
-                      label={`Скорость: ${calculatorResult.searchParams.originalSize.speedIndex}`}
-                      variant="outlined"
-                    />
-                  )}
                 </Box>
                 
                 <Typography variant="body2" color="text.secondary">
@@ -308,12 +301,15 @@ const TireCalculatorPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Визуализация */}
-            <Card sx={{ mb: 3 }}>
+            {/* Таблица результатов */}
+            <Card sx={{ mb: 3 }} ref={resultsRef}>
               <CardContent>
-                <TireVisualization 
+                <Typography variant="h6" gutterBottom>
+                  Альтернативные размеры
+                </Typography>
+                <TireResultsTable 
+                  alternatives={calculatorResult.alternatives}
                   originalDiameter={calculatorResult.originalDiameter}
-                  alternatives={calculatorResult.alternatives.slice(0, 5)} // Показываем первые 5
                 />
               </CardContent>
             </Card>
@@ -337,21 +333,6 @@ const TireCalculatorPage: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* Таблица результатов */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Альтернативные размеры
-                </Typography>
-                <TireResultsTable 
-                  alternatives={calculatorResult.alternatives}
-                  originalDiameter={calculatorResult.originalDiameter}
-                />
-              </CardContent>
-            </Card>
           </>
         )}
 
