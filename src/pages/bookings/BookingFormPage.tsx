@@ -15,7 +15,7 @@ import {
   Grid,
   useTheme,
   FormHelperText,
-
+  Chip,
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
@@ -44,7 +44,7 @@ import { AvailabilitySelector } from '../../components/availability';
 import { useGetSlotsForCategoryQuery } from '../../api/availability.api';
 import { format, parseISO, addDays } from 'date-fns';
 import type { AvailableTimeSlot } from '../../types/availability';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 // Импорты централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
@@ -128,6 +128,10 @@ const BookingFormPage: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   
+  // ✅ Состояния для API запросов (чтобы избежать проблем с порядком инициализации)
+  const [currentServicePointId, setCurrentServicePointId] = useState<number>(0);
+  const [currentCategoryId, setCurrentCategoryId] = useState<number>(0);
+  
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
   const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({} as any);
@@ -136,19 +140,6 @@ const BookingFormPage: React.FC = () => {
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   
   const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || serviceCategoriesLoading || (isEditMode && bookingLoading) || loading;
-
-  // ✅ API для получения доступных временных слотов
-  const { data: availabilityData, isLoading: isLoadingAvailability } = useGetSlotsForCategoryQuery(
-    {
-      servicePointId: Number(formik.values.service_point_id) || 0,
-      categoryId: Number(formik.values.category_id) || 0,
-      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
-    },
-    { 
-      skip: !Number(formik.values.service_point_id) || !Number(formik.values.category_id) || !selectedDate || !timePickerOpen,
-      refetchOnMountOrArgChange: true
-    }
-  );
 
   // ✅ Функция для извлечения времени из полной даты
   const extractTimeFromDateTime = (dateTimeString: string): string => {
@@ -274,7 +265,11 @@ const BookingFormPage: React.FC = () => {
       formik.setFieldValue('client_id', booking.client_id || ''); // ✅ Может быть null для гостевых
 
       formik.setFieldValue('car_type_id', booking.car_type_id || '');
-      formik.setFieldValue('category_id', booking.category_id || '');
+      formik.setFieldValue('category_id', booking.service_category_id || '');
+      
+      // ✅ Обновляем состояния для API запросов
+      setCurrentServicePointId(Number(booking.service_point_id) || 0);
+      setCurrentCategoryId(Number(booking.service_category_id) || 0);
       formik.setFieldValue('booking_date', booking.booking_date || '');
       // ✅ Извлекаем время из полной даты
       formik.setFieldValue('start_time', extractTimeFromDateTime(booking.start_time || ''));
@@ -319,70 +314,52 @@ const BookingFormPage: React.FC = () => {
     }
   }, [isEditMode, bookingData, formik.setFieldValue, setServices]);
 
-  // ✅ Временно отключено - API для получения доступных временных слотов
-  /*
+  // ✅ API для получения доступных временных слотов
   const { data: availabilityData, isLoading: isLoadingAvailability } = useGetSlotsForCategoryQuery(
     {
-      servicePointId: Number(formik.values.service_point_id) || 0,
-      categoryId: 1, // Для админки используем общую категорию
+      servicePointId: currentServicePointId,
+      categoryId: currentCategoryId,
       date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
     },
     { 
-      skip: !Number(formik.values.service_point_id) || !selectedDate || !timePickerOpen,
-      // Добавляем обработку ошибок
+      skip: !currentServicePointId || !currentCategoryId || !selectedDate || !timePickerOpen,
       refetchOnMountOrArgChange: true
     }
   );
 
-  // ✅ Получение доступных временных слотов
+  // ✅ Преобразование данных API в формат для AvailabilitySelector
   const availableTimeSlots = useMemo(() => {
     if (!availabilityData?.slots || availabilityData.slots.length === 0) {
       return [];
     }
 
-    // Группируем слоты по времени начала
+    // Группируем слоты по времени начала для подсчета доступных постов
     const groupedByTime = availabilityData.slots.reduce((acc, slot) => {
       const timeKey = slot.start_time;
       
       if (!acc[timeKey]) {
         acc[timeKey] = {
           time: timeKey,
-          posts: [],
           available_posts: 0,
           total_posts: 0,
-          duration_minutes: slot.duration_minutes
+          duration_minutes: slot.duration_minutes,
+          can_book: true
         };
       }
       
-      acc[timeKey].posts.push(slot);
-      acc[timeKey].available_posts += 1; // Все слоты в ответе доступны
+      acc[timeKey].available_posts += 1;
       acc[timeKey].total_posts += 1;
       
       return acc;
-    }, {} as Record<string, {
-      time: string;
-      posts: any[];
-      available_posts: number;
-      total_posts: number;
-      duration_minutes: number;
-    }>);
+    }, {} as Record<string, AvailableTimeSlot>);
 
-    // Преобразуем в массив и сортируем по времени
-    return Object.values(groupedByTime)
-      .map(group => ({
-        time: group.time,
-        available_posts: group.available_posts,
-        total_posts: group.total_posts,
-        can_book: group.available_posts > 0,
-        duration_minutes: group.duration_minutes
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
+    return Object.values(groupedByTime).sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
-  */
 
   // Мемоизированные обработчики
   const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('service_point_id', event.target.value);
+    setCurrentServicePointId(Number(event.target.value) || 0);
   }, [formik.setFieldValue]);
 
   const handleClientChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -390,17 +367,14 @@ const BookingFormPage: React.FC = () => {
     formik.setFieldValue('client_id', clientId);
   }, [formik.setFieldValue]);
 
-
-
   const handleCarTypeChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('car_type_id', event.target.value);
   }, [formik.setFieldValue]);
 
   const handleCategoryChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('category_id', event.target.value);
+    setCurrentCategoryId(Number(event.target.value) || 0);
   }, [formik.setFieldValue]);
-
-
 
   const handleNotesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     formik.setFieldValue('notes', event.target.value);
@@ -435,12 +409,12 @@ const BookingFormPage: React.FC = () => {
 
   // ✅ Обработчики для модального окна выбора времени
   const handleOpenTimePicker = useCallback(() => {
-    if (!Number(formik.values.service_point_id)) {
+    if (!currentServicePointId) {
       setError('Сначала выберите точку обслуживания');
       return;
     }
     
-    if (!Number(formik.values.category_id)) {
+    if (!currentCategoryId) {
       setError('Сначала выберите категорию услуг');
       return;
     }
@@ -457,7 +431,7 @@ const BookingFormPage: React.FC = () => {
     }
     
     setTimePickerOpen(true);
-  }, [formik.values.service_point_id, formik.values.category_id, formik.values.booking_date, selectedDate]);
+  }, [currentServicePointId, currentCategoryId, formik.values.booking_date, selectedDate]);
 
   const handleCloseTimePicker = useCallback(() => {
     setTimePickerOpen(false);
@@ -494,65 +468,6 @@ const BookingFormPage: React.FC = () => {
       setError(null); // Очищаем ошибки
     }
   }, [selectedDate, selectedTimeSlot]);
-
-  // ✅ Временно отключено - Обработчики для модального окна выбора времени
-  /*
-  const handleOpenTimePicker = useCallback(() => {
-    if (!Number(formik.values.service_point_id)) {
-      setError('Сначала выберите точку обслуживания');
-      return;
-    }
-    
-    // Инициализируем дату если не выбрана
-    if (!selectedDate && formik.values.booking_date) {
-      try {
-        setSelectedDate(parseISO(formik.values.booking_date));
-      } catch (error) {
-        setSelectedDate(addDays(new Date(), 1)); // Завтра по умолчанию
-      }
-    } else if (!selectedDate) {
-      setSelectedDate(addDays(new Date(), 1)); // Завтра по умолчанию
-    }
-    
-    setTimePickerOpen(true);
-  }, [formik.values.service_point_id, formik.values.booking_date, selectedDate]);
-
-  const handleCloseTimePicker = useCallback(() => {
-    setTimePickerOpen(false);
-  }, []);
-
-  const handleDateChange = useCallback((date: Date | null) => {
-    setSelectedDate(date);
-    setSelectedTimeSlot(null); // Сбрасываем время при изменении даты
-    
-    if (date) {
-      formik.setFieldValue('booking_date', format(date, 'yyyy-MM-dd'));
-      formik.setFieldValue('start_time', '');
-    }
-  }, [formik.setFieldValue]);
-
-  const handleTimeSlotChange = useCallback((timeSlot: string | null, slotData?: AvailableTimeSlot) => {
-    setSelectedTimeSlot(timeSlot);
-    
-    if (timeSlot) {
-      formik.setFieldValue('start_time', timeSlot);
-      // Автоматически рассчитываем время окончания на основе длительности слота
-      if (slotData?.duration_minutes) {
-        const [hours, minutes] = timeSlot.split(':').map(Number);
-        const endDate = new Date();
-        endDate.setHours(hours, minutes + slotData.duration_minutes);
-        formik.setFieldValue('end_time', endDate.toTimeString().substring(0, 5));
-      }
-    }
-  }, [formik.setFieldValue]);
-
-  const handleConfirmTimeSelection = useCallback(() => {
-    if (selectedDate && selectedTimeSlot) {
-      setTimePickerOpen(false);
-      setError(null); // Очищаем ошибки
-    }
-  }, [selectedDate, selectedTimeSlot]);
-  */
   
   // Получение централизованных стилей для консистентного дизайна
   const cardStyles = getCardStyles(theme, 'primary');
@@ -663,8 +578,6 @@ const BookingFormPage: React.FC = () => {
               </FormControl>
             </Grid>
             
-
-            
             <Grid item xs={12} md={6}>
               <FormControl 
                 fullWidth 
@@ -721,36 +634,88 @@ const BookingFormPage: React.FC = () => {
               </Typography>
             </Grid>
             
-            {/* ✅ Временное решение - простые поля для отладки */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Дата"
-                type="date"
-                value={formik.values.booking_date}
-                onChange={(e) => formik.setFieldValue('booking_date', e.target.value)}
-                error={formik.touched.booking_date && Boolean(formik.errors.booking_date)}
-                helperText={formik.touched.booking_date && formik.errors.booking_date}
-                InputLabelProps={{ shrink: true }}
-                sx={textFieldStyles}
-              />
+            {/* ✅ Информационное отображение сохраненных даты и времени */}
+            <Grid item xs={12}>
+              <Box sx={{ 
+                p: 2, 
+                border: `1px solid ${theme.palette.divider}`, 
+                borderRadius: 1,
+                backgroundColor: theme.palette.background.default
+              }}>
+                <Typography variant="body2" sx={{ mb: 1, color: theme.palette.text.secondary }}>
+                  Выбранные дата и время
+                </Typography>
+                
+                {formik.values.booking_date && formik.values.start_time ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <Chip
+                        label={`📅 ${formik.values.booking_date}`}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                      />
+                      <Chip
+                        label={`🕐 ${formik.values.start_time} - ${formik.values.end_time || 'не указано'}`}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                      />
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={handleOpenTimePicker}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Изменить дату и время
+                      </Button>
+                      <Button
+                        variant="text"
+                        size="small"
+                        color="error"
+                        onClick={() => {
+                          formik.setFieldValue('booking_date', '');
+                          formik.setFieldValue('start_time', '');
+                          formik.setFieldValue('end_time', '');
+                          setSelectedDate(null);
+                          setSelectedTimeSlot(null);
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Очистить
+                      </Button>
+                    </Box>
+                  </Box>
+                ) : (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Дата и время не выбраны
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      onClick={handleOpenTimePicker}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Выбрать дату и время записи
+                    </Button>
+                  </Box>
+                )}
+                
+                {/* Отображение ошибок валидации */}
+                {(formik.touched.booking_date && formik.errors.booking_date) && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                    {formik.errors.booking_date}
+                  </Typography>
+                )}
+                {(formik.touched.start_time && formik.errors.start_time) && (
+                  <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                    {formik.errors.start_time}
+                  </Typography>
+                )}
+              </Box>
             </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Время начала"
-                type="time"
-                value={formik.values.start_time}
-                onChange={handleStartTimeChange}
-                error={formik.touched.start_time && Boolean(formik.errors.start_time)}
-                helperText={formik.touched.start_time && formik.errors.start_time}
-                InputLabelProps={{ shrink: true }}
-                sx={textFieldStyles}
-              />
-            </Grid>
-            
-
             
             <Grid item xs={12}>
               <TextField
@@ -896,7 +861,41 @@ const BookingFormPage: React.FC = () => {
         </Box>
       </form>
 
-{/* Модальное окно временно отключено для отладки */}
+      {/* ✅ Модальное окно выбора времени */}
+      <Dialog
+        open={timePickerOpen}
+        onClose={handleCloseTimePicker}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Выберите дату и время записи
+        </DialogTitle>
+        <DialogContent>
+          <AvailabilitySelector
+            servicePointId={currentServicePointId}
+            categoryId={currentCategoryId}
+            selectedDate={selectedDate}
+            selectedTimeSlot={selectedTimeSlot}
+            availableTimeSlots={availableTimeSlots}
+            isLoading={isLoadingAvailability}
+            onDateChange={handleDateChange}
+            onTimeSlotChange={handleTimeSlotChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseTimePicker}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleConfirmTimeSelection}
+            variant="contained"
+            disabled={!selectedDate || !selectedTimeSlot}
+          >
+            Подтвердить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

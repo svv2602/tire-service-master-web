@@ -59,7 +59,7 @@ export const bookingsApi = baseApi.injectEndpoints({
       query: (booking) => ({
         url: 'bookings',
         method: 'POST',
-        body: booking,
+        body: { booking },
       }),
       transformResponse: (response: any) => {
         const transformed = transformPaginatedResponse<Booking>(response);
@@ -72,7 +72,7 @@ export const bookingsApi = baseApi.injectEndpoints({
       query: ({ id, booking }) => ({
         url: `bookings/${id}`,
         method: 'PUT',
-        body: booking,
+        body: { booking },
       }),
       transformResponse: (response: any) => {
         const transformed = transformPaginatedResponse<Booking>(response);
