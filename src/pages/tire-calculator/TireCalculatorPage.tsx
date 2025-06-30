@@ -96,9 +96,16 @@ const TireCalculatorPage: React.FC = () => {
       
       const result = calculateTireAlternatives(searchParams);
       setCalculatorResult(result);
-      if (resultsRef.current) {
-        resultsRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      
+      // ✅ Прокрутка к результатам с задержкой для обновления DOM
+      setTimeout(() => {
+        if (resultsRef.current) {
+          resultsRef.current.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start' 
+          });
+        }
+      }, 100);
     } catch (error) {
       console.error('Ошибка при расчете альтернативных размеров:', error);
     } finally {
