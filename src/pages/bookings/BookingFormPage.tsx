@@ -79,7 +79,8 @@ const validationSchema = yup.object({
   car_id: yup.number().nullable(),
   car_type_id: yup.number().required('Выберите тип автомобиля'),
   booking_date: yup.string().required('Выберите дату'),
-  start_time: yup.string().required('Выберите время записи'),
+  start_time: yup.string().required('Выберите время начала'),
+  end_time: yup.string().required('Выберите время окончания'),
   notes: yup.string(),
   // ✅ Валидация для гостевых бронирований
   service_recipient_first_name: yup.string().when('client_id', {
@@ -135,6 +136,31 @@ const BookingFormPage: React.FC = () => {
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   
   const isLoading = servicePointsLoading || carsLoading || clientsLoading || carTypesLoading || (isEditMode && bookingLoading) || loading;
+
+  // ✅ Функция для извлечения времени из полной даты
+  const extractTimeFromDateTime = (dateTimeString: string): string => {
+    if (!dateTimeString) return '';
+    
+    try {
+      // Если это уже время в формате HH:mm, возвращаем как есть
+      if (/^\d{2}:\d{2}$/.test(dateTimeString)) {
+        return dateTimeString;
+      }
+      
+      // Если это полная дата, извлекаем время
+      const date = new Date(dateTimeString);
+      if (isNaN(date.getTime())) {
+        console.warn('Неверный формат даты:', dateTimeString);
+        return '';
+      }
+      
+      // Возвращаем время в формате HH:mm
+      return date.toTimeString().substring(0, 5);
+    } catch (error) {
+      console.error('Ошибка парсинга времени:', error);
+      return '';
+    }
+  };
 
   // Функция для расчета времени окончания (по умолчанию +1 час)
   const calculateEndTime = (startDate: Date): string => {
@@ -235,7 +261,8 @@ const BookingFormPage: React.FC = () => {
       formik.setFieldValue('car_id', booking.car_id || '');
       formik.setFieldValue('car_type_id', booking.car_type_id || '');
       formik.setFieldValue('booking_date', booking.booking_date || '');
-      formik.setFieldValue('start_time', booking.start_time || '');
+      // ✅ Извлекаем время из полной даты
+      formik.setFieldValue('start_time', extractTimeFromDateTime(booking.start_time || ''));
       formik.setFieldValue('status_id', booking.status_id || BookingStatusEnum.PENDING);
       formik.setFieldValue('notes', booking.notes || '');
       
@@ -360,6 +387,25 @@ const BookingFormPage: React.FC = () => {
 
   const handleNotesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     formik.setFieldValue('notes', event.target.value);
+  }, [formik]);
+
+  // ✅ Обработчик изменения времени начала с автоматическим расчетом времени окончания
+  const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const startTime = event.target.value;
+    formik.setFieldValue('start_time', startTime);
+    
+    // Автоматически устанавливаем время окончания (+1 час)
+    if (startTime) {
+      try {
+        const [hours, minutes] = startTime.split(':').map(Number);
+        const endDate = new Date();
+        endDate.setHours(hours + 1, minutes);
+        const endTime = endDate.toTimeString().substring(0, 5);
+        formik.setFieldValue('end_time', endTime);
+      } catch (error) {
+        console.error('Ошибка расчета времени окончания:', error);
+      }
+    }
   }, [formik]);
 
   const handleBack = useCallback(() => {
@@ -618,9 +664,23 @@ const BookingFormPage: React.FC = () => {
                 label="Время начала"
                 type="time"
                 value={formik.values.start_time}
-                onChange={(e) => formik.setFieldValue('start_time', e.target.value)}
+                onChange={handleStartTimeChange}
                 error={formik.touched.start_time && Boolean(formik.errors.start_time)}
                 helperText={formik.touched.start_time && formik.errors.start_time}
+                InputLabelProps={{ shrink: true }}
+                sx={textFieldStyles}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Время окончания"
+                type="time"
+                value={formik.values.end_time}
+                onChange={(e) => formik.setFieldValue('end_time', e.target.value)}
+                error={formik.touched.end_time && Boolean(formik.errors.end_time)}
+                helperText={formik.touched.end_time && formik.errors.end_time}
                 InputLabelProps={{ shrink: true }}
                 sx={textFieldStyles}
               />
