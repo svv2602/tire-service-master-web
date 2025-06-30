@@ -240,8 +240,52 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             </Typography>
             
             <List dense>
-              {/* Информация о клиенте */}
-              {formData.client && (
+              {/* ✅ Информация о получателе услуги (для всех типов бронирований) */}
+              {formData.service_recipient && (
+                <>
+                  {/* Имя и фамилия */}
+                  {(formData.service_recipient.first_name || formData.service_recipient.last_name) && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <PersonIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Имя"
+                        secondary={`${formData.service_recipient.first_name || ''}${formData.service_recipient.last_name ? ' ' + formData.service_recipient.last_name : ''}`.trim()}
+                      />
+                    </ListItem>
+                  )}
+                  
+                  {/* Телефон */}
+                  {formData.service_recipient.phone && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <PhoneIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Телефон"
+                        secondary={formData.service_recipient.phone}
+                      />
+                    </ListItem>
+                  )}
+                  
+                  {/* Email (если указан) */}
+                  {formData.service_recipient.email && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <EmailIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Email"
+                        secondary={formData.service_recipient.email}
+                      />
+                    </ListItem>
+                  )}
+                </>
+              )}
+              
+              {/* ✅ Fallback: показываем старую структуру для совместимости */}
+              {!formData.service_recipient && formData.client && (
                 <>
                   {/* Имя и фамилия */}
                   {formData.client.first_name && (
@@ -282,6 +326,16 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     </ListItem>
                   )}
                 </>
+              )}
+              
+              {/* ✅ Сообщение если нет контактной информации */}
+              {!formData.service_recipient && !formData.client && (
+                <ListItem>
+                  <ListItemText
+                    primary="Контактная информация не указана"
+                    secondary="Вернитесь к шагу 'Контактная информация' для заполнения данных"
+                  />
+                </ListItem>
               )}
             </List>
           </Paper>

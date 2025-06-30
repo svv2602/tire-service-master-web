@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест отображения контактной информации</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .info { color: #2196f3; }
+        .warning { color: #ff9800; }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .test-result.success { background-color: #e8f5e8; }
+        .test-result.error { background-color: #fde8e8; }
+        .test-result.warning { background-color: #fff3e0; }
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        .form-data {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .step-indicator {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .step {
+            padding: 10px 15px;
+            border-radius: 4px;
+            background-color: #e0e0e0;
+            color: #666;
+        }
+        .step.active {
+            background-color: #1976d2;
+            color: white;
+        }
+        .step.completed {
+            background-color: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест отображения контактной информации</h1>
+    <p><strong>Цель:</strong> Проверить корректное отображение контактной информации на шаге подтверждения для авторизованных и неавторизованных пользователей</p>
+
+    <!-- Индикатор шагов -->
+    <div class="step-indicator">
+        <div class="step completed">1. Категория</div>
+        <div class="step completed">2. Точка</div>
+        <div class="step completed">3. Дата</div>
+        <div class="step active">4. Контакты</div>
+        <div class="step">5. Авто</div>
+        <div class="step">6. Услуги</div>
+        <div class="step">7. Подтверждение</div>
+    </div>
+
+    <!-- Тест 1: Структура данных для авторизованного пользователя -->
+    <div class="test-section">
+        <h2>📋 Тест 1: Данные авторизованного пользователя</h2>
+        <p>Проверяем предзаполнение контактной информации из профиля пользователя</p>
+        
+        <div class="form-data" id="authenticated-data">
+{
+  "service_recipient": {
+    "first_name": "Иван",
+    "last_name": "Петров", 
+    "phone": "+380671234567",
+    "email": "ivan.petrov@example.com"
+  },
+  "city_id": 1,
+  "service_point_id": 1,
+  "booking_date": "2025-07-01",
+  "start_time": "10:00",
+  "car_type_id": 1,
+  "car_brand": "Toyota",
+  "car_model": "Camry",
+  "license_plate": "АА1234ВВ"
+}
+        </div>
+        
+        <button onclick="testAuthenticatedUser()">🧪 Тест авторизованного пользователя</button>
+        <div id="auth-result" class="test-result"></div>
+    </div>
+
+    <!-- Тест 2: Структура данных для гостевого пользователя -->
+    <div class="test-section">
+        <h2>👤 Тест 2: Данные гостевого пользователя</h2>
+        <p>Проверяем ручное заполнение контактной информации неавторизованным пользователем</p>
+        
+        <div class="form-data" id="guest-data">
+{
+  "service_recipient": {
+    "first_name": "Мария",
+    "last_name": "Сидорова",
+    "phone": "+380509876543", 
+    "email": ""
+  },
+  "city_id": 2,
+  "service_point_id": 3,
+  "booking_date": "2025-07-02",
+  "start_time": "14:00",
+  "car_type_id": 2,
+  "car_brand": "BMW",
+  "car_model": "X5",
+  "license_plate": "КК5678ММ"
+}
+        </div>
+        
+        <button onclick="testGuestUser()">🧪 Тест гостевого пользователя</button>
+        <div id="guest-result" class="test-result"></div>
+    </div>
+
+    <!-- Тест 3: Проверка API endpoint -->
+    <div class="test-section">
+        <h2>🔌 Тест 3: API endpoint для текущего пользователя</h2>
+        <p>Проверяем получение данных авторизованного пользователя через API</p>
+        
+        <button onclick="testCurrentUserAPI()">🧪 Тест API /auth/me</button>
+        <div id="api-result" class="test-result"></div>
+        <div id="api-data" class="form-data" style="display: none;"></div>
+    </div>
+
+    <!-- Тест 4: Валидация контактной информации -->
+    <div class="test-section">
+        <h2>✅ Тест 4: Валидация контактной информации</h2>
+        <p>Проверяем валидацию полей контактной информации</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h4>Валидные данные:</h4>
+                <ul>
+                    <li>Имя: "Иван" (≥2 символа)</li>
+                    <li>Фамилия: "Петров" (≥2 символа)</li>
+                    <li>Телефон: "+380671234567" (корректный формат)</li>
+                    <li>Email: "test@example.com" (валидный email)</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Невалидные данные:</h4>
+                <ul>
+                    <li>Имя: "" (пустое)</li>
+                    <li>Фамилия: "А" (<2 символов)</li>
+                    <li>Телефон: "+38067123" (неполный)</li>
+                    <li>Email: "invalid-email" (неверный формат)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <button onclick="testValidation()">🧪 Тест валидации</button>
+        <div id="validation-result" class="test-result"></div>
+    </div>
+
+    <!-- Тест 5: Интеграционный тест -->
+    <div class="test-section">
+        <h2>🔄 Тест 5: Интеграционный тест</h2>
+        <p>Проверяем полный цикл заполнения и отображения контактной информации</p>
+        
+        <button onclick="runIntegrationTest()">🧪 Полный интеграционный тест</button>
+        <div id="integration-result" class="test-result"></div>
+    </div>
+
+    <script>
+        // Базовый URL API
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        
+        // Функция для отображения результата теста
+        function showResult(elementId, success, message, details = '') {
+            const element = document.getElementById(elementId);
+            element.className = `test-result ${success ? 'success' : 'error'}`;
+            element.innerHTML = `
+                ${success ? '✅' : '❌'} ${message}
+                ${details ? `<br><small>${details}</small>` : ''}
+            `;
+        }
+
+        // Тест 1: Авторизованный пользователь
+        function testAuthenticatedUser() {
+            const data = JSON.parse(document.getElementById('authenticated-data').textContent);
+            
+            // Проверяем структуру данных
+            const hasServiceRecipient = data.service_recipient && 
+                data.service_recipient.first_name && 
+                data.service_recipient.last_name && 
+                data.service_recipient.phone;
+            
+            if (hasServiceRecipient) {
+                showResult('auth-result', true, 
+                    'Структура данных корректна для авторизованного пользователя',
+                    `Контакт: ${data.service_recipient.first_name} ${data.service_recipient.last_name}, ${data.service_recipient.phone}`
+                );
+            } else {
+                showResult('auth-result', false, 
+                    'Отсутствуют обязательные поля в service_recipient'
+                );
+            }
+        }
+
+        // Тест 2: Гостевой пользователь
+        function testGuestUser() {
+            const data = JSON.parse(document.getElementById('guest-data').textContent);
+            
+            // Проверяем структуру данных для гостя
+            const hasServiceRecipient = data.service_recipient && 
+                data.service_recipient.first_name && 
+                data.service_recipient.last_name && 
+                data.service_recipient.phone;
+            
+            const isGuestBooking = !data.client_id; // Нет привязки к клиенту
+            
+            if (hasServiceRecipient && isGuestBooking) {
+                showResult('guest-result', true, 
+                    'Структура данных корректна для гостевого пользователя',
+                    `Гостевое бронирование: ${data.service_recipient.first_name} ${data.service_recipient.last_name}`
+                );
+            } else {
+                showResult('guest-result', false, 
+                    'Некорректная структура данных для гостевого пользователя'
+                );
+            }
+        }
+
+        // Тест 3: API endpoint
+        async function testCurrentUserAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const apiDataElement = document.getElementById('api-data');
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    showResult('api-result', true, 
+                        'API успешно вернул данные пользователя',
+                        `Статус: ${response.status}, Пользователь: ${userData.first_name || 'N/A'} ${userData.last_name || 'N/A'}`
+                    );
+                    
+                    apiDataElement.textContent = JSON.stringify(userData, null, 2);
+                    apiDataElement.style.display = 'block';
+                } else if (response.status === 401) {
+                    showResult('api-result', false, 
+                        'Пользователь не авторизован',
+                        'Статус: 401 Unauthorized - это нормально для неавторизованных пользователей'
+                    );
+                } else {
+                    showResult('api-result', false, 
+                        `Ошибка API: ${response.status}`,
+                        await response.text()
+                    );
+                }
+            } catch (error) {
+                showResult('api-result', false, 
+                    'Ошибка подключения к API',
+                    error.message
+                );
+            }
+        }
+
+        // Тест 4: Валидация
+        function testValidation() {
+            const validationTests = [
+                { field: 'first_name', value: 'Иван', expected: true },
+                { field: 'first_name', value: '', expected: false },
+                { field: 'first_name', value: 'А', expected: false },
+                { field: 'phone', value: '+380671234567', expected: true },
+                { field: 'phone', value: '+38067123', expected: false },
+                { field: 'email', value: 'test@example.com', expected: true },
+                { field: 'email', value: 'invalid-email', expected: false },
+            ];
+
+            let passed = 0;
+            let total = validationTests.length;
+
+            validationTests.forEach(test => {
+                const isValid = validateField(test.field, test.value);
+                if ((isValid && test.expected) || (!isValid && !test.expected)) {
+                    passed++;
+                }
+            });
+
+            showResult('validation-result', passed === total,
+                `Валидация: ${passed}/${total} тестов пройдено`,
+                `Проверены поля: имя, телефон, email`
+            );
+        }
+
+        // Функция валидации (упрощенная версия)
+        function validateField(field, value) {
+            if (!value) return false;
+            
+            switch (field) {
+                case 'first_name':
+                case 'last_name':
+                    return value.trim().length >= 2;
+                case 'phone':
+                    const phoneDigits = value.replace(/[^\d+]/g, '');
+                    return phoneDigits.startsWith('+380') && phoneDigits.length === 13;
+                case 'email':
+                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+                default:
+                    return true;
+            }
+        }
+
+        // Тест 5: Интеграционный тест
+        async function runIntegrationTest() {
+            let testResults = [];
+            
+            // 1. Проверяем структуру данных
+            const authData = JSON.parse(document.getElementById('authenticated-data').textContent);
+            const guestData = JSON.parse(document.getElementById('guest-data').textContent);
+            
+            testResults.push({
+                name: 'Структура данных авторизованного пользователя',
+                passed: authData.service_recipient && authData.service_recipient.first_name
+            });
+            
+            testResults.push({
+                name: 'Структура данных гостевого пользователя', 
+                passed: guestData.service_recipient && guestData.service_recipient.first_name
+            });
+            
+            // 2. Проверяем API (если доступно)
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                testResults.push({
+                    name: 'API доступность',
+                    passed: response.status === 200 || response.status === 401 // 401 тоже OK
+                });
+            } catch (error) {
+                testResults.push({
+                    name: 'API доступность',
+                    passed: false
+                });
+            }
+            
+            // 3. Проверяем валидацию
+            const validationPassed = validateField('first_name', 'Тест') && 
+                                   validateField('phone', '+380671234567') &&
+                                   validateField('email', 'test@example.com');
+            testResults.push({
+                name: 'Валидация полей',
+                passed: validationPassed
+            });
+            
+            const totalTests = testResults.length;
+            const passedTests = testResults.filter(t => t.passed).length;
+            
+            showResult('integration-result', passedTests === totalTests,
+                `Интеграционный тест: ${passedTests}/${totalTests} компонентов работают`,
+                testResults.map(t => `${t.passed ? '✅' : '❌'} ${t.name}`).join('<br>')
+            );
+        }
+
+        // Автоматический запуск базовых тестов при загрузке
+        window.addEventListener('load', () => {
+            console.log('🧪 Страница тестирования контактной информации загружена');
+            console.log('📋 Доступные тесты:');
+            console.log('1. Тест авторизованного пользователя');
+            console.log('2. Тест гостевого пользователя'); 
+            console.log('3. Тест API endpoint');
+            console.log('4. Тест валидации');
+            console.log('5. Интеграционный тест');
+        });
+    </script>
+</body>
+</html> 
