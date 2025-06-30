@@ -168,8 +168,23 @@ const BookingFormPage: React.FC = () => {
 
   // Функция для расчета времени окончания (по умолчанию +1 час)
   const calculateEndTime = (startDate: Date): string => {
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-    return endDate.toTimeString().substring(0, 5);
+    const endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + 1); // Добавляем 1 час по умолчанию
+    return endDate.toTimeString().substring(0, 5); // Возвращаем в формате HH:mm
+  };
+
+  // ✅ Функция форматирования даты в формат dd.mm.yyyy
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return '';
+    
+    try {
+      // Парсим дату в формате yyyy-mm-dd
+      const [year, month, day] = dateString.split('-');
+      return `${day}.${month}.${year}`;
+    } catch (error) {
+      console.error('Ошибка форматирования даты:', error);
+      return dateString; // Возвращаем исходную строку в случае ошибки
+    }
   };
 
   // Мемоизированные начальные значения
@@ -650,7 +665,7 @@ const BookingFormPage: React.FC = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                       <Chip
-                        label={`📅 ${formik.values.booking_date}`}
+                        label={`📅 ${formatDateForDisplay(formik.values.booking_date)}`}
                         color="primary"
                         variant="outlined"
                         size="small"
