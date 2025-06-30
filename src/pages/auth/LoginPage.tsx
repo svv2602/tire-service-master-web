@@ -21,6 +21,7 @@ import {
 } from '../../styles';
 import CloseIcon from '@mui/icons-material/Close';
 import ClientLayout from '../../components/client/ClientLayout';
+import { UserRole } from '../../types';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -36,7 +37,7 @@ const LoginPage: React.FC = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading: reduxLoading, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { loading: reduxLoading, isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
   const theme = useTheme();
   const authStyles = getAuthStyles(theme);
@@ -45,16 +46,33 @@ const LoginPage: React.FC = () => {
   // Отключаем форму, если пользователь уже аутентифицирован  
   useEffect(() => {
     if (isAuthenticated && !isNavigatingRef.current) {
-      console.log('User is authenticated, navigating to dashboard');
+      console.log('User is authenticated, navigating based on role');
       isNavigatingRef.current = true;
       
-      const returnPath = sessionStorage.getItem('returnPath') || '/client';
+      // Определяем путь по умолчанию в зависимости от роли пользователя
+      let defaultPath = '/client';
+      if (user) {
+        // Если роль админ, партнер, менеджер или оператор - идем в админку
+        const isAdminRole = user.role === UserRole.ADMIN || 
+                           user.role === UserRole.PARTNER || 
+                           user.role === UserRole.MANAGER || 
+                           user.role === UserRole.OPERATOR;
+        
+        if (isAdminRole) {
+          defaultPath = '/admin/dashboard';
+          console.log('Admin/Partner/Manager/Operator user, redirecting to admin dashboard');
+        } else {
+          console.log('Client user, redirecting to client area');
+        }
+      }
+      
+      const returnPath = sessionStorage.getItem('returnPath') || defaultPath;
       sessionStorage.removeItem('returnPath');
       
-      console.log('Navigating to:', returnPath);
+      console.log('Navigating to:', returnPath, 'User role:', user?.role);
       navigate(returnPath, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
   
   // Объединяем состояния загрузки
   const loading = localLoading || reduxLoading || isSubmitting;
