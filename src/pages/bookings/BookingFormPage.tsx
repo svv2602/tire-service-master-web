@@ -67,13 +67,29 @@ interface BookingDetails {
 // Схема валидации для формы бронирования
 const validationSchema = yup.object({
   service_point_id: yup.number().required('Выберите точку обслуживания'),
-  client_id: yup.number().required('Выберите клиента'),
+  client_id: yup.number().nullable(), // ✅ Клиент опционален для гостевых бронирований
   car_id: yup.number().nullable(),
   car_type_id: yup.number().required('Выберите тип автомобиля'),
   booking_date: yup.string().required('Выберите дату'),
   start_time: yup.string().required('Выберите время начала'),
   end_time: yup.string().required('Выберите время окончания'),
   notes: yup.string(),
+  // ✅ Валидация для гостевых бронирований
+  service_recipient_first_name: yup.string().when('client_id', {
+    is: (client_id: number | null) => !client_id,
+    then: (schema) => schema.required('Имя получателя услуги обязательно для гостевых бронирований'),
+    otherwise: (schema) => schema.optional()
+  }),
+  service_recipient_last_name: yup.string().when('client_id', {
+    is: (client_id: number | null) => !client_id,
+    then: (schema) => schema.required('Фамилия получателя услуги обязательна для гостевых бронирований'),
+    otherwise: (schema) => schema.optional()
+  }),
+  service_recipient_phone: yup.string().when('client_id', {
+    is: (client_id: number | null) => !client_id,
+    then: (schema) => schema.required('Телефон получателя услуги обязателен для гостевых бронирований'),
+    otherwise: (schema) => schema.optional()
+  }),
 });
 
 /**
@@ -127,11 +143,15 @@ const BookingFormPage: React.FC = () => {
     notes: '',
     services: [] as BookingService[],
     total_price: '0',
-    // Поля получателя услуги (опционально для админской формы)
+    // ✅ Поля получателя услуги (для гостевых бронирований)
     service_recipient_first_name: '',
     service_recipient_last_name: '',
     service_recipient_phone: '',
     service_recipient_email: '',
+    // ✅ Поля данных автомобиля (для гостевых бронирований)
+    car_brand: '',
+    car_model: '',
+    license_plate: '',
   }), []);
 
   const formik = useFormik({
@@ -144,7 +164,7 @@ const BookingFormPage: React.FC = () => {
         
         // Подготовка данных для API (админская форма)
         const bookingData = {
-          client_id: Number(values.client_id),
+          client_id: values.client_id ? Number(values.client_id) : null, // ✅ Поддержка гостевых бронирований
           service_point_id: Number(values.service_point_id),
           car_id: values.car_id ? Number(values.car_id) : null,
           car_type_id: Number(values.car_type_id),
@@ -159,11 +179,15 @@ const BookingFormPage: React.FC = () => {
             price: service.price
           })),
           total_price: services.reduce((sum, service) => sum + (service.price * service.quantity), 0).toString(),
-          // Поля получателя услуги для админской формы (опционально)
+          // ✅ Поля получателя услуги (для гостевых бронирований)
           service_recipient_first_name: values.service_recipient_first_name || '',
           service_recipient_last_name: values.service_recipient_last_name || '',
           service_recipient_phone: values.service_recipient_phone || '',
-          service_recipient_email: values.service_recipient_email || ''
+          service_recipient_email: values.service_recipient_email || '',
+          // ✅ Поля данных автомобиля (для гостевых бронирований)
+          car_brand: values.car_brand || '',
+          car_model: values.car_model || '',
+          license_plate: values.license_plate || ''
         };
 
         if (isEditMode && id) {
@@ -192,21 +216,34 @@ const BookingFormPage: React.FC = () => {
   // Загрузка данных существующего бронирования при редактировании
   useEffect(() => {
     if (isEditMode && bookingData) {
-      const booking = bookingData as unknown as BookingDetails;
+      const booking = bookingData as any; // ✅ Используем any для гибкости с новыми полями
       
-      formik.setFieldValue('service_point_id', booking.service_point_id);
-      formik.setFieldValue('client_id', booking.client_id);
-      formik.setFieldValue('car_id', booking.car_id);
-      formik.setFieldValue('car_type_id', booking.car_type_id);
-      formik.setFieldValue('booking_date', booking.booking_date);
-      formik.setFieldValue('start_time', booking.start_time);
-      formik.setFieldValue('end_time', booking.end_time);
-      formik.setFieldValue('status_id', booking.status_id);
+      formik.setFieldValue('service_point_id', booking.service_point_id || '');
+      formik.setFieldValue('client_id', booking.client_id || ''); // ✅ Может быть null для гостевых
+      formik.setFieldValue('car_id', booking.car_id || '');
+      formik.setFieldValue('car_type_id', booking.car_type_id || '');
+      formik.setFieldValue('booking_date', booking.booking_date || '');
+      formik.setFieldValue('start_time', booking.start_time || '');
+      formik.setFieldValue('end_time', booking.end_time || '');
+      formik.setFieldValue('status_id', booking.status_id || BookingStatusEnum.PENDING);
       formik.setFieldValue('notes', booking.notes || '');
+      
+      // ✅ Загрузка данных получателя услуги (для гостевых бронирований)
+      if (booking.service_recipient) {
+        formik.setFieldValue('service_recipient_first_name', booking.service_recipient.first_name || '');
+        formik.setFieldValue('service_recipient_last_name', booking.service_recipient.last_name || '');
+        formik.setFieldValue('service_recipient_phone', booking.service_recipient.phone || '');
+        formik.setFieldValue('service_recipient_email', booking.service_recipient.email || '');
+      }
+      
+      // ✅ Загрузка данных автомобиля (для гостевых бронирований)
+      formik.setFieldValue('car_brand', booking.car_brand || '');
+      formik.setFieldValue('car_model', booking.car_model || '');
+      formik.setFieldValue('license_plate', booking.license_plate || '');
       
       // Загрузка услуг бронирования, если они есть
       if (booking.booking_services && booking.booking_services.length > 0) {
-        const loadedServices = booking.booking_services.map(bs => ({
+        const loadedServices = booking.booking_services.map((bs: any) => ({
           service_id: bs.service_id,
           name: bs.service_name,
           price: bs.price,
@@ -223,7 +260,8 @@ const BookingFormPage: React.FC = () => {
   }, [formik]);
 
   const handleClientChange = useCallback((event: SelectChangeEvent<string>) => {
-    formik.setFieldValue('client_id', event.target.value);
+    const clientId = event.target.value === '' ? null : Number(event.target.value);
+    formik.setFieldValue('client_id', clientId);
   }, [formik]);
 
   const handleCarChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -352,10 +390,14 @@ const BookingFormPage: React.FC = () => {
                 <InputLabel id="client-label">Клиент</InputLabel>
                 <Select
                   labelId="client-label"
-                  value={formik.values.client_id}
+                  value={formik.values.client_id || ''}
                   onChange={handleClientChange}
                   label="Клиент"
                 >
+                  {/* ✅ Опция для гостевого бронирования */}
+                  <MenuItem value="">
+                    <em>Гостевое бронирование (без регистрации)</em>
+                  </MenuItem>
                   {clientsData?.data?.map((client: Client) => (
                     <MenuItem key={client.id} value={client.id}>
                       {client.name || `${client.first_name} ${client.last_name}`} ({client.phone || client.email})
@@ -484,6 +526,108 @@ const BookingFormPage: React.FC = () => {
             </Grid>
           </Grid>
         </Paper>
+        
+        {/* ✅ Секция для редактирования данных гостевых бронирований */}
+        {(!formik.values.client_id || isEditMode) && (
+          <Paper sx={{ ...cardStyles, mt: SIZES.spacing.lg }}>
+            <Typography variant="h6" sx={{ mb: SIZES.spacing.md }}>
+              Данные получателя услуги {!formik.values.client_id && '(Гостевое бронирование)'}
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Имя получателя услуги"
+                  value={formik.values.service_recipient_first_name}
+                  onChange={(e) => formik.setFieldValue('service_recipient_first_name', e.target.value)}
+                  error={formik.touched.service_recipient_first_name && Boolean(formik.errors.service_recipient_first_name)}
+                  helperText={formik.touched.service_recipient_first_name && formik.errors.service_recipient_first_name}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Фамилия получателя услуги"
+                  value={formik.values.service_recipient_last_name}
+                  onChange={(e) => formik.setFieldValue('service_recipient_last_name', e.target.value)}
+                  error={formik.touched.service_recipient_last_name && Boolean(formik.errors.service_recipient_last_name)}
+                  helperText={formik.touched.service_recipient_last_name && formik.errors.service_recipient_last_name}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Телефон получателя услуги"
+                  value={formik.values.service_recipient_phone}
+                  onChange={(e) => formik.setFieldValue('service_recipient_phone', e.target.value)}
+                  error={formik.touched.service_recipient_phone && Boolean(formik.errors.service_recipient_phone)}
+                  helperText={formik.touched.service_recipient_phone && formik.errors.service_recipient_phone}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Email получателя услуги (опционально)"
+                  type="email"
+                  value={formik.values.service_recipient_email}
+                  onChange={(e) => formik.setFieldValue('service_recipient_email', e.target.value)}
+                  error={formik.touched.service_recipient_email && Boolean(formik.errors.service_recipient_email)}
+                  helperText={formik.touched.service_recipient_email && formik.errors.service_recipient_email}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" sx={{ mt: SIZES.spacing.md, mb: SIZES.spacing.sm }}>
+                  Данные автомобиля
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Марка автомобиля"
+                  value={formik.values.car_brand}
+                  onChange={(e) => formik.setFieldValue('car_brand', e.target.value)}
+                  error={formik.touched.car_brand && Boolean(formik.errors.car_brand)}
+                  helperText={formik.touched.car_brand && formik.errors.car_brand}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Модель автомобиля"
+                  value={formik.values.car_model}
+                  onChange={(e) => formik.setFieldValue('car_model', e.target.value)}
+                  error={formik.touched.car_model && Boolean(formik.errors.car_model)}
+                  helperText={formik.touched.car_model && formik.errors.car_model}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Номер автомобиля"
+                  value={formik.values.license_plate}
+                  onChange={(e) => formik.setFieldValue('license_plate', e.target.value)}
+                  error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
+                  helperText={formik.touched.license_plate && formik.errors.license_plate}
+                  sx={textFieldStyles}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        )}
         
         {/* Здесь можно добавить секцию для выбора услуг */}
         

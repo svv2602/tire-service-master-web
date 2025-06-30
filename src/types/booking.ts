@@ -69,9 +69,9 @@ export interface BookingServiceDetails {
 }
 
 export interface BookingFormData {
-  service_category_id: number;
+  service_category_id?: number;
   service_point_id: number | null;
-  client_id: number;
+  client_id: number | null; // ✅ Поддержка гостевых бронирований (может быть null)
   car_id: number | null;
   booking_date: string;
   start_time: string;
@@ -82,10 +82,15 @@ export interface BookingFormData {
   notes?: string;
   car_type_id?: number;
   services: BookingService[];
+  // ✅ Поля получателя услуги (для гостевых бронирований)
   service_recipient_first_name: string;
   service_recipient_last_name: string;
   service_recipient_phone: string;
   service_recipient_email?: string;
+  // ✅ Поля данных автомобиля (для гостевых бронирований)
+  car_brand?: string;
+  car_model?: string;
+  license_plate?: string;
 }
 
 export interface BookingFilter extends PaginationFilter {
