@@ -28,12 +28,12 @@ import {
   BookingServiceDetails
 } from '../../types/booking';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
-import { useGetCarsQuery } from '../../api/cars.api';
+
 import { useGetClientsQuery } from '../../api/clients.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
 import { ServicePoint } from '../../types/models';
 import { Client } from '../../types/client';
-import { Car, CarType } from '../../types/car';
+import { CarType } from '../../types/car';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { SelectChangeEvent } from '@mui/material';
@@ -62,7 +62,6 @@ interface BookingDetails {
   id: string;
   client_id: string;
   service_point_id: string;
-  car_id: string | null;
   car_type_id: string;
   booking_date: string;
   start_time: string;
@@ -76,7 +75,6 @@ interface BookingDetails {
 const validationSchema = yup.object({
   service_point_id: yup.number().required('Выберите точку обслуживания'),
   client_id: yup.number().nullable(), // ✅ Клиент опционален для гостевых бронирований
-  car_id: yup.number().nullable(),
   car_type_id: yup.number().required('Выберите тип автомобиля'),
   booking_date: yup.string().required('Выберите дату'),
   start_time: yup.string().required('Выберите время начала'),
@@ -130,12 +128,12 @@ const BookingFormPage: React.FC = () => {
   
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
-  const { data: carsData, isLoading: carsLoading } = useGetCarsQuery({} as any);
+
   const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({} as any);
   const { data: carTypesData, isLoading: carTypesLoading } = useGetCarTypesQuery();
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   
-  const isLoading = servicePointsLoading || carsLoading || clientsLoading || carTypesLoading || (isEditMode && bookingLoading) || loading;
+  const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || (isEditMode && bookingLoading) || loading;
 
   // ✅ Функция для извлечения времени из полной даты
   const extractTimeFromDateTime = (dateTimeString: string): string => {
@@ -172,7 +170,6 @@ const BookingFormPage: React.FC = () => {
   const initialValues = useMemo(() => ({
     service_point_id: '',
     client_id: '',
-    car_id: '',
     car_type_id: '',
     booking_date: new Date().toISOString().split('T')[0],
     start_time: new Date().toTimeString().substring(0, 5),
@@ -204,7 +201,7 @@ const BookingFormPage: React.FC = () => {
         const bookingData = {
           client_id: values.client_id ? Number(values.client_id) : null, // ✅ Поддержка гостевых бронирований
           service_point_id: Number(values.service_point_id),
-          car_id: values.car_id ? Number(values.car_id) : null,
+
           car_type_id: Number(values.car_type_id),
           booking_date: values.booking_date,
           start_time: values.start_time,
@@ -258,7 +255,7 @@ const BookingFormPage: React.FC = () => {
       
       formik.setFieldValue('service_point_id', booking.service_point_id || '');
       formik.setFieldValue('client_id', booking.client_id || ''); // ✅ Может быть null для гостевых
-      formik.setFieldValue('car_id', booking.car_id || '');
+
       formik.setFieldValue('car_type_id', booking.car_type_id || '');
       formik.setFieldValue('booking_date', booking.booking_date || '');
       // ✅ Извлекаем время из полной даты
@@ -302,7 +299,7 @@ const BookingFormPage: React.FC = () => {
         setServices(loadedServices);
       }
     }
-  }, [isEditMode, bookingData, formik]);
+  }, [isEditMode, bookingData, formik.setFieldValue, setServices]);
 
   // ✅ Временно отключено - API для получения доступных временных слотов
   /*
@@ -368,26 +365,24 @@ const BookingFormPage: React.FC = () => {
   // Мемоизированные обработчики
   const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('service_point_id', event.target.value);
-  }, [formik]);
+  }, [formik.setFieldValue]);
 
   const handleClientChange = useCallback((event: SelectChangeEvent<string>) => {
     const clientId = event.target.value === '' ? null : Number(event.target.value);
     formik.setFieldValue('client_id', clientId);
-  }, [formik]);
+  }, [formik.setFieldValue]);
 
-  const handleCarChange = useCallback((event: SelectChangeEvent<string>) => {
-    formik.setFieldValue('car_id', event.target.value);
-  }, [formik]);
+
 
   const handleCarTypeChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('car_type_id', event.target.value);
-  }, [formik]);
+  }, [formik.setFieldValue]);
 
 
 
   const handleNotesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     formik.setFieldValue('notes', event.target.value);
-  }, [formik]);
+  }, [formik.setFieldValue]);
 
   // ✅ Обработчик изменения времени начала с автоматическим расчетом времени окончания
   const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,7 +401,7 @@ const BookingFormPage: React.FC = () => {
         console.error('Ошибка расчета времени окончания:', error);
       }
     }
-  }, [formik]);
+  }, [formik.setFieldValue]);
 
   const handleBack = useCallback(() => {
     navigate('/admin/bookings');
@@ -584,33 +579,7 @@ const BookingFormPage: React.FC = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} md={6}>
-              <FormControl 
-                fullWidth 
-                error={formik.touched.car_id && Boolean(formik.errors.car_id)}
-                sx={textFieldStyles}
-              >
-                <InputLabel id="car-label">Автомобиль</InputLabel>
-                <Select
-                  labelId="car-label"
-                  value={formik.values.car_id}
-                  onChange={handleCarChange}
-                  label="Автомобиль"
-                >
-                  <MenuItem value="">
-                    <em>Не выбран</em>
-                  </MenuItem>
-                  {carsData?.map((car: Car) => (
-                    <MenuItem key={car.id} value={car.id}>
-                      {car.brand} {car.model} ({car.license_plate || 'Без номера'})
-                    </MenuItem>
-                  ))}
-                </Select>
-                {formik.touched.car_id && formik.errors.car_id && (
-                  <FormHelperText>{formik.errors.car_id as string}</FormHelperText>
-                )}
-              </FormControl>
-            </Grid>
+
             
             <Grid item xs={12} md={6}>
               <FormControl 
