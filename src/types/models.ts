@@ -63,6 +63,7 @@ export interface Partner {
   company_description?: string;
   contact_person?: string;
   logo_url?: string;
+  logo?: string; // Добавляем поле для URL Active Storage логотипа
   website?: string;
   tax_number?: string;
   legal_address?: string;
@@ -228,6 +229,7 @@ export interface PartnerFormData {
   company_description: string | undefined;
   contact_person: string | undefined;
   logo_url: string | undefined;
+  logo_file?: File; // Добавляем поле для загрузки файла логотипа
   website: string | undefined;
   tax_number: string | undefined;
   legal_address: string | undefined;

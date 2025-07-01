@@ -31,20 +31,93 @@ export const partnersApi = baseApi.injectEndpoints({
     }),
     
     createPartner: build.mutation<Partner, { partner: PartnerFormData }>({
-      query: (data) => ({
-        url: 'partners',
-        method: 'POST',
-        body: data,
-      }),
+      query: (data) => {
+        console.log('=== createPartner API query ===');
+        console.log('Partner data:', data.partner);
+        console.log('Has logo file:', (data.partner as any).logo_file instanceof File);
+        
+        // Если есть файл логотипа, используем FormData
+        if ((data.partner as any).logo_file instanceof File) {
+          console.log('Using FormData because logo_file is a File');
+          const formData = new FormData();
+          
+          // Добавляем все поля партнера
+          Object.entries(data.partner).forEach(([key, value]) => {
+            if (key === 'logo_file' && value instanceof File) {
+              formData.append('partner[logo]', value);
+            } else if (key === 'user_attributes' && value) {
+              // Обрабатываем вложенные атрибуты пользователя
+              Object.entries(value as any).forEach(([userKey, userValue]) => {
+                if (userValue !== undefined && userValue !== null) {
+                  formData.append(`partner[user_attributes][${userKey}]`, String(userValue));
+                }
+              });
+            } else if (value !== undefined && value !== null && key !== 'logo_url') {
+              formData.append(`partner[${key}]`, String(value));
+            }
+          });
+          
+          return {
+            url: 'partners',
+            method: 'POST',
+            body: formData,
+          };
+        } else {
+          // Если нет файла, используем JSON
+          console.log('Using JSON because no file upload');
+          return {
+            url: 'partners',
+            method: 'POST',
+            body: data,
+          };
+        }
+      },
       invalidatesTags: ['Partners'],
     }),
     
     updatePartner: build.mutation<Partner, { id: number; partner: Partial<PartnerFormData> }>({
-      query: ({ id, partner }) => ({
-        url: `partners/${id}`,
-        method: 'PATCH',
-        body: { partner },
-      }),
+      query: ({ id, partner }) => {
+        console.log('=== updatePartner API query ===');
+        console.log('ID:', id);
+        console.log('Partner data:', partner);
+        console.log('Has logo file:', (partner as any).logo_file instanceof File);
+        
+        // Если есть файл логотипа, используем FormData
+        if ((partner as any).logo_file instanceof File) {
+          console.log('Using FormData because logo_file is a File');
+          const formData = new FormData();
+          
+          // Добавляем все поля партнера
+          Object.entries(partner).forEach(([key, value]) => {
+            if (key === 'logo_file' && value instanceof File) {
+              formData.append('partner[logo]', value);
+            } else if (key === 'user_attributes' && value) {
+              // Обрабатываем вложенные атрибуты пользователя
+              Object.entries(value as any).forEach(([userKey, userValue]) => {
+                if (userValue !== undefined && userValue !== null) {
+                  formData.append(`partner[user_attributes][${userKey}]`, String(userValue));
+                }
+              });
+            } else if (value !== undefined && value !== null && key !== 'logo_url') {
+              formData.append(`partner[${key}]`, String(value));
+            }
+          });
+          
+          return {
+            url: `partners/${id}`,
+            method: 'PATCH',
+            body: formData,
+          };
+        } else {
+          // Если нет файла, используем JSON
+          console.log('Using JSON because no file upload');
+          return {
+            url: `partners/${id}`,
+            method: 'PATCH',
+            body: { partner },
+          };
+        }
+      },
       invalidatesTags: (_result, _err, { id }) => [
         { type: 'Partners' as const, id },
         'Partners',

@@ -96,6 +96,7 @@ interface FormValues {
   company_description: string | undefined;
   contact_person: string | undefined;
   logo_url: string | undefined;
+  logo_file?: File | null;
   website: string | undefined;
   tax_number: string | undefined;
   legal_address: string | undefined;
@@ -175,7 +176,7 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
     .nullable(),
   
   contact_person: yup.string()
-    .required('Контактное лицо обязательно')
+    .nullable()
     .min(2, 'ФИО должно быть не менее 2 символов'),
   
   website: yup.string()
@@ -476,7 +477,6 @@ const PartnerFormPage: React.FC = () => {
   const getRequiredFieldErrors = () => {
     const requiredFields = {
       company_name: 'Название компании',
-      contact_person: 'Контактное лицо',
       legal_address: 'Юридический адрес',
       region_id: 'Регион',
       city_id: 'Город',
@@ -534,10 +534,19 @@ const PartnerFormPage: React.FC = () => {
 
   // Функция для форматирования данных перед отправкой
   const formatPartnerData = (values: FormValues): PartnerFormData => {
+    console.log('🔧 formatPartnerData получил values:', values);
+    console.log('🖼️ logo_file в values:', values.logo_file);
+    console.log('🖼️ logo_file instanceof File:', values.logo_file instanceof File);
+    
+    // Автоматически генерируем contact_person из имени и фамилии пользователя
+    const contactPerson = values.user 
+      ? `${values.user.first_name} ${values.user.last_name}`.trim()
+      : values.contact_person || '';
+
     const formattedData: PartnerFormData = {
       company_name: values.company_name,
       company_description: values.company_description || undefined,
-      contact_person: values.contact_person || undefined,
+      contact_person: contactPerson, // Используем автоматически сгенерированное значение
       logo_url: values.logo_url || undefined,
       website: values.website || undefined,
       tax_number: values.tax_number || undefined,
@@ -545,7 +554,12 @@ const PartnerFormPage: React.FC = () => {
       region_id: values.region_id,
       city_id: values.city_id,
       is_active: values.is_active,
+      // Добавляем файл логотипа, если он есть
+      ...(values.logo_file && { logo_file: values.logo_file } as any),
     };
+    
+    console.log('📦 formattedData до добавления user_attributes:', formattedData);
+    console.log('🖼️ logo_file в formattedData:', (formattedData as any).logo_file);
 
     // Добавляем данные пользователя при создании
     if (!isEdit && values.user) {
@@ -583,6 +597,11 @@ const PartnerFormPage: React.FC = () => {
 
   // Обработчик отправки формы
   const handleSubmit = async (values: FormValues, { setTouched }: any) => {
+    console.log('🚀 handleSubmit вызван');
+    console.log('📋 Значения формы:', values);
+    console.log('✅ Форма валидна:', formik.isValid);
+    console.log('📁 Файл логотипа:', values.logo_file);
+    
     try {
       setApiError(null);
       setSuccessMessage(null);
@@ -590,6 +609,7 @@ const PartnerFormPage: React.FC = () => {
       
       // Проверяем валидность формы
       if (!formik.isValid) {
+        console.log('❌ Форма не валидна, ошибки:', formik.errors);
         const touchedFields = Object.keys(formik.values).reduce((acc, field) => {
           acc[field] = true;
           if (field === 'user' && formik.values.user) {
@@ -605,16 +625,31 @@ const PartnerFormPage: React.FC = () => {
         return;
       }
       
+      console.log('📤 Начинаем форматирование данных...');
       const formattedData = formatPartnerData(values);
+      console.log('📦 Данные отформатированы, отправляем на сервер...');
       
       if (isEdit && id) {
+        console.log('🔄 Обновляем партнера ID:', id);
         const response = await updatePartner({ id: parseInt(id), partner: formattedData }).unwrap();
-        console.log('Ответ сервера при обновлении:', response);
+        console.log('✅ Ответ сервера при обновлении:', response);
+        console.log('🖼️ Логотип в ответе сервера:', response.logo);
+        console.log('🖼️ logo_url в ответе сервера:', response.logo_url);
+        
+        // Обновляем preview логотипа, если есть новый логотип
+        if (response.logo) {
+          console.log('🔄 Обновляем preview логотипа на:', response.logo);
+          setLogoPreview(response.logo);
+          // Очищаем файл, так как логотип уже загружен
+          setLogoFile(null);
+        }
+        
         setSuccessMessage('Партнер успешно обновлен');
         setTimeout(() => navigate('/admin/partners'), 1500);
       } else {
+        console.log('➕ Создаем нового партнера');
         const response = await createPartner({ partner: formattedData }).unwrap();
-        console.log('Ответ сервера при создании:', response);
+        console.log('✅ Ответ сервера при создании:', response);
         setSuccessMessage('Партнер успешно создан');
         navigate('/admin/partners');
       }
@@ -823,6 +858,48 @@ const PartnerFormPage: React.FC = () => {
   };
 
   // Функция для переключения активности партнера
+  // Константы для работы с файлами
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+  // Обработчик изменения логотипа
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Валидация размера файла
+      if (file.size > MAX_FILE_SIZE) {
+        setApiError('Размер файла не должен превышать 5MB');
+        setTimeout(() => setApiError(null), 3000);
+        return;
+      }
+
+      // Валидация типа файла
+      if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
+        setApiError('Поддерживаются только изображения в форматах JPEG, PNG, GIF, WebP');
+        setTimeout(() => setApiError(null), 3000);
+        return;
+      }
+
+      setLogoFile(file);
+      formik.setFieldValue('logo_file', file);
+      
+      // Создание предпросмотра
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Обработчик удаления логотипа
+  const handleLogoDelete = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    formik.setFieldValue('logo_file', null);
+    formik.setFieldValue('logo_url', '');
+  };
+
   const handlePartnerActiveToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newActiveStatus = e.target.checked;
     
@@ -875,6 +952,19 @@ const PartnerFormPage: React.FC = () => {
       }
     }
   };
+
+  // Эффект для установки предпросмотра логотипа при редактировании
+  useEffect(() => {
+    // Приоритет у нового поля logo (Active Storage), потом logo_url
+    const logoToUse = partner?.logo || partner?.logo_url;
+    if (logoToUse) {
+      const logoUrl = logoToUse.startsWith('http') || logoToUse.startsWith('/storage/')
+        ? logoToUse
+        : `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}${logoToUse}`;
+      setLogoPreview(logoUrl);
+      console.log('🖼️ Установлен preview логотипа:', logoUrl);
+    }
+  }, [partner]);
 
   // Функция для смены вкладки
   const handleTabChange = (event: React.SyntheticEvent, value: any) => setActiveTab(Number(value));
@@ -1051,18 +1141,57 @@ const PartnerFormPage: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  name="logo_url"
-                  label="URL логотипа"
-                  placeholder="https://example.com/logo.png"
-                  value={formik.values.logo_url}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.logo_url && Boolean(formik.errors.logo_url)}
-                  helperText={formik.touched.logo_url && formik.errors.logo_url}
-                  sx={textFieldStyles}
-                />
+                <Box sx={textFieldStyles}>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                    Логотип партнера
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {/* Предпросмотр логотипа */}
+                    <Avatar
+                      src={logoPreview || undefined}
+                      variant="square"
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        bgcolor: theme.palette.grey[200],
+                      }}
+                    >
+                      {!logoPreview && <BrokenImageIcon />}
+                    </Avatar>
+
+                    {/* Кнопки управления логотипом */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <input
+                        accept="image/*"
+                        id="logo-upload"
+                        type="file"
+                        onChange={handleLogoChange}
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor="logo-upload">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}>
+                          <IconButton color="primary" component="span">
+                            <UploadIcon />
+                          </IconButton>
+                          <Typography variant="body2" color="primary">
+                            Загрузить лого
+                          </Typography>
+                        </Box>
+                      </label>
+                      
+                      {logoPreview && (
+                        <IconButton color="error" onClick={handleLogoDelete}>
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Box>
+
+                  <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
+                    Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB
+                  </Typography>
+                </Box>
               </Grid>
 
               {/* Юридическая информация */}
@@ -1220,7 +1349,7 @@ const PartnerFormPage: React.FC = () => {
                       fontSize: SIZES.fontSize.lg 
                     }}
                   >
-                    Данные пользователя
+                    Данные администратора Партнера
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                   <Grid container spacing={2}>
@@ -1315,7 +1444,7 @@ const PartnerFormPage: React.FC = () => {
                         fontSize: SIZES.fontSize.lg 
                       }}
                     >
-                      Данные пользователя
+                      Данные администратора Партнера
                     </Typography>
                     <Divider sx={{ mb: SIZES.spacing.md }} />
                   </Grid>

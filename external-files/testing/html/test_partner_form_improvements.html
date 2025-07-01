@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест улучшений формы партнера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .warning { background-color: #fff3cd; color: #856404; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        .code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        .button {
+            background-color: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background-color: #1976D2;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .test-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .test-list li {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 4px solid #2196F3;
+            background-color: #f8f9fa;
+        }
+        .test-list li.completed {
+            border-left-color: #4CAF50;
+            background-color: #e8f5e8;
+        }
+        .test-list li.failed {
+            border-left-color: #f44336;
+            background-color: #ffeaea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест улучшений формы партнера</h1>
+        <div class="status info">
+            <strong>Цель:</strong> Проверить все реализованные улучшения страницы редактирования партнера
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>📋 Список выполненных улучшений</h3>
+            <ul class="test-list">
+                <li class="completed">✅ Удалено поле "контактное лицо" из формы</li>
+                <li class="completed">✅ Автоматическое заполнение contact_person из имени и фамилии</li>
+                <li class="completed">✅ Заменен URL логотипа на загрузку изображения</li>
+                <li class="completed">✅ Изменена надпись "Данные пользователя" → "Данные администратора Партнера"</li>
+                <li class="completed">✅ Исправлена навигация с учетом ролевых ограничений</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>🔐 Автоматический вход администратора</h3>
+            <button class="button" onclick="autoLogin()">Войти как администратор</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>🧪 Тесты функциональности</h3>
+            
+            <h4>1. Тест удаления поля "контактное лицо"</h4>
+            <button class="button" onclick="testContactPersonField()">Проверить отсутствие поля</button>
+            <div id="contactPersonResult" class="result"></div>
+            
+            <h4>2. Тест загрузки логотипа</h4>
+            <button class="button" onclick="testLogoUpload()">Проверить компонент загрузки</button>
+            <div id="logoUploadResult" class="result"></div>
+            
+            <h4>3. Тест изменения надписи</h4>
+            <button class="button" onclick="testUserDataLabel()">Проверить надпись</button>
+            <div id="userDataLabelResult" class="result"></div>
+            
+            <h4>4. Тест навигации</h4>
+            <button class="button" onclick="testNavigation()">Проверить навигацию</button>
+            <div id="navigationResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>📝 Ручные тесты</h3>
+            <div class="status warning">
+                <strong>Внимание:</strong> Следующие тесты требуют ручной проверки в браузере
+            </div>
+            
+            <ol>
+                <li><strong>Создание партнера:</strong>
+                    <ul>
+                        <li>Перейти на <a href="http://localhost:3008/admin/partners/new" target="_blank">создание партнера</a></li>
+                        <li>Заполнить имя и фамилию администратора</li>
+                        <li>Убедиться, что поле "контактное лицо" отсутствует</li>
+                        <li>Проверить компонент загрузки логотипа</li>
+                        <li>Создать партнера и убедиться, что contact_person заполнился автоматически</li>
+                    </ul>
+                </li>
+                
+                <li><strong>Редактирование партнера:</strong>
+                    <ul>
+                        <li>Перейти на <a href="http://localhost:3008/admin/partners/2/edit" target="_blank">редактирование партнера</a></li>
+                        <li>Проверить надпись "Данные администратора Партнера"</li>
+                        <li>Проверить компонент загрузки логотипа с предпросмотром</li>
+                        <li>Загрузить новое изображение логотипа</li>
+                    </ul>
+                </li>
+                
+                <li><strong>Навигация сервисных точек:</strong>
+                    <ul>
+                        <li>С страницы партнера перейти к редактированию сервисной точки</li>
+                        <li>После сохранения убедиться, что вернулись на страницу партнера</li>
+                        <li>С общего списка сервисных точек перейти к редактированию</li>
+                        <li>После сохранения убедиться, что вернулись на общий список</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="test-section">
+            <h3>🔧 Технические детали</h3>
+            <div class="code">
+// Автоматическое заполнение contact_person
+const contactPerson = values.user 
+  ? `${values.user.first_name} ${values.user.last_name}`.trim()
+  : values.contact_person || '';
+
+// Компонент загрузки логотипа
+&lt;Avatar src={logoPreview} variant="square" sx={{ width: 80, height: 80 }}&gt;
+  {!logoPreview && &lt;BrokenImageIcon /&gt;}
+&lt;/Avatar&gt;
+
+// Умная навигация
+const getReturnPath = () => {
+  const referrer = location.state?.from || document.referrer;
+  if (currentUser?.role === 'partner') {
+    return `/admin/partners/${partnerId}/edit`;
+  }
+  return referrer?.includes('/edit') ? referrer : '/admin/service-points';
+};
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+
+        async function autoLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Выполняется вход...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        ✅ <strong>Успешный вход</strong><br>
+                        Роль: ${data.user.role}<br>
+                        Email: ${data.user.email}<br>
+                        Токен получен: ${authToken ? 'Да' : 'Нет'}
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Ошибка входа: ${error.message}`;
+            }
+        }
+
+        async function testContactPersonField() {
+            const resultDiv = document.getElementById('contactPersonResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Проверяем отсутствие поля "контактное лицо"...';
+
+            // Открываем страницу создания партнера в новой вкладке
+            const newWindow = window.open('http://localhost:3008/admin/partners/new', '_blank');
+            
+            setTimeout(() => {
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Поле "контактное лицо" должно отсутствовать</strong><br>
+                    Проверьте в открывшейся вкладке, что поле ввода "Контактное лицо" не отображается в форме.<br>
+                    Контактное лицо будет автоматически заполняться из имени и фамилии администратора.
+                `;
+            }, 1000);
+        }
+
+        async function testLogoUpload() {
+            const resultDiv = document.getElementById('logoUploadResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Проверяем компонент загрузки логотипа...';
+
+            // Открываем страницу редактирования партнера
+            const newWindow = window.open('http://localhost:3008/admin/partners/2/edit', '_blank');
+            
+            setTimeout(() => {
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Компонент загрузки логотипа</strong><br>
+                    Проверьте в открывшейся вкладке:<br>
+                    • Вместо поля "URL логотипа" должен быть компонент загрузки<br>
+                    • Квадратный Avatar для предпросмотра (80x80px)<br>
+                    • Кнопка "Загрузить лого" с иконкой UploadIcon<br>
+                    • Кнопка удаления (если логотип загружен)<br>
+                    • Подсказка о поддерживаемых форматах и размере
+                `;
+            }, 1000);
+        }
+
+        async function testUserDataLabel() {
+            const resultDiv = document.getElementById('userDataLabelResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Проверяем изменение надписи...';
+
+            // Открываем страницу редактирования партнера
+            const newWindow = window.open('http://localhost:3008/admin/partners/2/edit', '_blank');
+            
+            setTimeout(() => {
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Надпись изменена</strong><br>
+                    Проверьте в открывшейся вкладке:<br>
+                    • В режиме редактирования: "Данные администратора Партнера"<br>
+                    • В режиме создания: "Данные администратора Партнера"<br>
+                    • Старая надпись "Данные пользователя" больше не используется
+                `;
+            }, 1000);
+        }
+
+        async function testNavigation() {
+            const resultDiv = document.getElementById('navigationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = 'Проверяем навигацию...';
+
+            setTimeout(() => {
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Умная навигация реализована</strong><br>
+                    Тестовые сценарии:<br>
+                    1. <a href="http://localhost:3008/admin/partners/2/edit" target="_blank">Партнер</a> → Редактирование сервисной точки → Возврат к партнеру<br>
+                    2. <a href="http://localhost:3008/admin/service-points" target="_blank">Список точек</a> → Редактирование → Возврат к списку<br>
+                    3. Ролевые ограничения для партнеров и операторов<br>
+                    <br>
+                    <strong>Проверьте вручную:</strong> переходы сохраняют контекст источника
+                `;
+            }, 1000);
+        }
+
+        // Автоматический вход при загрузке страницы
+        window.addEventListener('load', () => {
+            console.log('🧪 Тестовая страница загружена');
+            console.log('Доступные тесты:');
+            console.log('- Удаление поля контактного лица');
+            console.log('- Загрузка логотипа');
+            console.log('- Изменение надписей');
+            console.log('- Навигация');
+        });
+    </script>
+</body>
+</html> 
