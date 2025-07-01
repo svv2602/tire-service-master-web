@@ -31,6 +31,7 @@ import {
   useGetPartnersQuery, 
   useDeletePartnerMutation, 
   useTogglePartnerActiveMutation,
+  useGetPartnerRelatedDataQuery,
 } from '../../api';
 import { Partner } from '../../types/models';
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -84,6 +85,7 @@ const PartnersPage: React.FC = () => {
   
   // Состояние для диалогов и ошибок
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -107,6 +109,12 @@ const PartnersPage: React.FC = () => {
 
   const [deletePartner] = useDeletePartnerMutation();
   const [togglePartnerActive] = useTogglePartnerActiveMutation();
+  
+  // Запрос связанных данных для выбранного партнера (только при открытии диалога деактивации)
+  const { data: relatedData, isLoading: relatedDataLoading } = useGetPartnerRelatedDataQuery(
+    selectedPartner?.id || 0,
+    { skip: !selectedPartner?.id || !deactivateDialogOpen }
+  );
 
   const partners = partnersData?.data || [];
   const totalItems = partnersData?.pagination?.total_count || partners.length;
@@ -133,14 +141,20 @@ const PartnersPage: React.FC = () => {
 
   const handleDeleteClick = useCallback((partner: Partner) => {
     setSelectedPartner(partner);
-    setDeleteDialogOpen(true);
+    if (partner.is_active) {
+      // Если партнер активен, показываем диалог деактивации
+      setDeactivateDialogOpen(true);
+    } else {
+      // Если партнер неактивен, показываем обычный диалог удаления
+      setDeleteDialogOpen(true);
+    }
   }, []);
 
   const handleEditPartner = useCallback((id: number) => {
     navigate(`/admin/partners/${id}/edit`);
   }, [navigate]);
 
-  const handleDeleteConfirm = useCallback(async () => {
+  const handleDeactivateConfirm = useCallback(async () => {
     if (selectedPartner) {
       try {
         const response = await deletePartner(selectedPartner.id).unwrap();
@@ -148,12 +162,44 @@ const PartnersPage: React.FC = () => {
         // Проверяем, была ли выполнена деактивация вместо удаления
         if (response && typeof response === 'object' && 'action' in response && response.action === 'deactivated') {
           setErrorMessage(null);
-          setDeleteDialogOpen(false);
+          setDeactivateDialogOpen(false);
           setSelectedPartner(null);
           // Показываем информационное сообщение о деактивации
           setSuccessMessage(response.message || 'Партнер был деактивирован. Теперь вы можете его удалить.');
           return;
         }
+        
+        // Если вернулось что-то другое, закрываем диалог
+        setDeactivateDialogOpen(false);
+        setSelectedPartner(null);
+        setErrorMessage(null);
+        setSuccessMessage('Партнер успешно деактивирован.');
+      } catch (error: any) {
+        let errorMessage = 'Ошибка при деактивации партнера';
+        
+        if (error.data?.error) {
+          errorMessage = error.data.error;
+        } else if (error.data?.message) {
+          errorMessage = error.data.message;
+        } else if (error.data?.errors) {
+          const errors = error.data.errors as Record<string, string[]>;
+          errorMessage = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setErrorMessage(errorMessage);
+        setDeactivateDialogOpen(false);
+      }
+    }
+  }, [selectedPartner, deletePartner]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (selectedPartner) {
+      try {
+        await deletePartner(selectedPartner.id).unwrap();
         
         // Обычное удаление
         setDeleteDialogOpen(false);
@@ -415,6 +461,91 @@ const PartnersPage: React.FC = () => {
         )}
       </Box>
 
+      {/* Модальное окно подтверждения деактивации */}
+      <Modal
+        open={deactivateDialogOpen}
+        onClose={() => setDeactivateDialogOpen(false)}
+        title="Подтверждение деактивации партнера"
+        actions={
+          <>
+            <Button 
+              onClick={() => setDeactivateDialogOpen(false)}
+            >
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleDeactivateConfirm} 
+              color="warning" 
+              variant="contained"
+              disabled={relatedDataLoading}
+            >
+              Деактивировать
+            </Button>
+          </>
+        }
+      >
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Деактивация партнера <strong>"{selectedPartner?.company_name}"</strong>
+          </Typography>
+          
+          {relatedDataLoading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={20} />
+              <Typography>Загрузка связанных данных...</Typography>
+            </Box>
+          ) : relatedData ? (
+            <Box>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                При деактивации партнера будут также деактивированы:
+              </Typography>
+              
+              {relatedData.service_points_count > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    🏢 Сервисные точки ({relatedData.service_points_count}):
+                  </Typography>
+                  <Box sx={{ pl: 2 }}>
+                    {relatedData.service_points.map(sp => (
+                      <Typography key={sp.id} variant="body2" color={sp.is_active ? 'text.primary' : 'text.secondary'}>
+                        • {sp.name} {!sp.is_active && '(уже неактивна)'}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              
+              {relatedData.operators_count > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    👥 Сотрудники ({relatedData.operators_count}):
+                  </Typography>
+                  <Box sx={{ pl: 2 }}>
+                    {relatedData.operators.map(op => (
+                      <Typography key={op.id} variant="body2">
+                        • {op.user.first_name} {op.user.last_name} ({op.user.email})
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              
+              {relatedData.service_points_count === 0 && relatedData.operators_count === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  У этого партнера нет связанных сервисных точек или сотрудников.
+                </Typography>
+              )}
+              
+              <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic' }}>
+                Вы уверены, что хотите продолжить?
+              </Typography>
+            </Box>
+          ) : (
+            <Typography>Не удалось загрузить информацию о связанных данных.</Typography>
+          )}
+        </Box>
+      </Modal>
+
       {/* Модальное окно подтверждения удаления */}
       <Modal
         open={deleteDialogOpen}
@@ -432,25 +563,15 @@ const PartnersPage: React.FC = () => {
               color="error" 
               variant="contained"
             >
-              {selectedPartner?.is_active ? 'Деактивировать' : 'Удалить'}
+              Удалить
             </Button>
           </>
         }
       >
         <Typography>
-          {selectedPartner?.is_active ? (
-            <>
-              Партнер <strong>"{selectedPartner?.company_name}"</strong> активен. 
-              <br /><br />
-              Сначала он будет деактивирован, после чего вы сможете его удалить.
-            </>
-          ) : (
-            <>
-              Вы действительно хотите удалить партнера <strong>"{selectedPartner?.company_name}"</strong>? 
-              <br /><br />
-              Это действие нельзя будет отменить.
-            </>
-          )}
+          Вы действительно хотите удалить партнера <strong>"{selectedPartner?.company_name}"</strong>? 
+          <br /><br />
+          Это действие нельзя будет отменить.
         </Typography>
       </Modal>
     </Box>

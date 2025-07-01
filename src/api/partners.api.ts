@@ -70,6 +70,16 @@ export const partnersApi = baseApi.injectEndpoints({
         'Partners',
       ],
     }),
+
+    getPartnerRelatedData: build.query<{
+      service_points_count: number;
+      operators_count: number;
+      service_points: Array<{ id: number; name: string; is_active: boolean }>;
+      operators: Array<{ id: number; user: { first_name: string; last_name: string; email: string } }>;
+    }, number>({
+      query: (id) => `partners/${id}/related_data`,
+      providesTags: (_result, _err, id) => [{ type: 'Partners' as const, id }],
+    }),
     
     // Создание тестового партнера
     createTestPartner: build.mutation<Partner, void>({
@@ -89,5 +99,6 @@ export const {
   useUpdatePartnerMutation,
   useDeletePartnerMutation,
   useTogglePartnerActiveMutation,
+  useGetPartnerRelatedDataQuery,
   useCreateTestPartnerMutation,
 } = partnersApi; 
