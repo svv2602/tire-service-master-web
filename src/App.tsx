@@ -30,19 +30,17 @@ const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 
 // Ленивая загрузка страниц сервисных точек
 const ServicePointsPage = lazy(() => import('./pages/service-points/ServicePointsPage'));
-const ServicePointFormPageNew = lazy(() => import('./pages/service-points/ServicePointFormPageNew'));
+const ServicePointFormPage = lazy(() => import('./pages/service-points/ServicePointFormPage'));
 const ServicePointDetailPage = lazy(() => import('./pages/service-points/ServicePointDetailPage'));
 const ServicePointPhotosPage = lazy(() => import('./pages/service-points/ServicePointPhotosPage'));
 const ServicePointServicesPage = lazy(() => import('./pages/service-points/ServicePointServicesPage'));
 
 // Ленивая загрузка страниц услуг
 const ServicesPage = lazy(() => import('./pages/services/NewServicesPage').then(module => ({ default: module.ServicesPage })));
-const ServicesPageNew = lazy(() => import('./pages/services/ServicesPageNew'));
 const ServiceFormPage = lazy(() => import('./pages/services/ServiceFormPage'));
 
 // Ленивая загрузка страниц клиентов
 const ClientsPage = lazy(() => import('./pages/clients/ClientsPage'));
-const ClientsPageNew = lazy(() => import('./pages/clients/ClientsPageNew'));
 const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
@@ -59,12 +57,10 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 
 // Ленивая загрузка страниц пользователей
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
-const UsersPageNew = lazy(() => import('./pages/users/UsersPageNew'));
 const UserForm = lazy(() => import('./pages/users/UserForm'));
 
 // Ленивая загрузка страниц регионов и городов
 const RegionsPage = lazy(() => import('./pages/regions/RegionsPage'));
-const RegionsPageNew = lazy(() => import('./pages/catalog/RegionsPageNew'));
 const RegionFormPage = lazy(() => import('./pages/regions/RegionFormPage'));
 const CitiesPage = lazy(() => import('./pages/catalog/CitiesPage'));
 
@@ -72,14 +68,9 @@ const CitiesPage = lazy(() => import('./pages/catalog/CitiesPage'));
 const WordWrapTestPage = lazy(() => import('./pages/testing/WordWrapTestPage'));
 const TableUnificationTest = lazy(() => import('./pages/testing/TableUnificationTest'));
 const PageTableTest = lazy(() => import('./pages/testing/PageTableTest'));
-const ReviewsPageNew = lazy(() => import('./pages/reviews/ReviewsPageNew'));
-const BookingsPageNew = lazy(() => import('./pages/bookings/BookingsPageNew'));
-const ServicePointsPageNew = lazy(() => import('./pages/service-points/ServicePointsPageNew'));
-const CitiesPageNew = lazy(() => import('./pages/catalog/CitiesPageNew'));
 
 // Ленивая загрузка страниц брендов автомобилей
 const CarBrandsPage = lazy(() => import('./pages/car-brands/CarBrandsPage'));
-const CarBrandsPageNew = lazy(() => import('./pages/car-brands/CarBrandsPageNew'));
 const CarBrandFormPage = lazy(() => import('./pages/car-brands/CarBrandFormPage'));
 
 // Ленивая загрузка страниц отзывов
@@ -90,8 +81,8 @@ const ReviewFormPage = lazy(() => import('./pages/reviews/ReviewFormPage'));
 
 // Ленивая загрузка страниц статей (админка)
 const ArticlesPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticlesPage })));
-const ArticlesPageNew = lazy(() => import('./pages/articles/ArticlesPageNew'));
-const PageContentPageNew = lazy(() => import('./pages/page-content/PageContentPageNew'));
+
+
 const CreateArticlePage = lazy(() => import('./pages/articles').then(module => ({ default: module.CreateArticlePage })));
 const EditArticlePage = lazy(() => import('./pages/articles').then(module => ({ default: module.EditArticlePage })));
 const ArticleViewPage = lazy(() => import('./pages/articles').then(module => ({ default: module.ArticleViewPage })));
@@ -123,10 +114,10 @@ const PageContentFormPage = lazy(() => import('./pages/page-content/PageContentF
 const PageContentManagement = lazy(() => import('./pages/admin/PageContentManagement'));
 
 // Ленивая загрузка новых мигрированных страниц
-const RegionsManagementPageNew = lazy(() => import('./pages/regions-management/RegionsManagementPageNew'));
-const ClientCarsPageNew = lazy(() => import('./pages/clients/ClientCarsPageNew'));
-const MyReviewsPageNew = lazy(() => import('./pages/reviews/MyReviewsPageNew'));
-const RegionsPageNewAdmin = lazy(() => import('./pages/regions/RegionsPageNew'));
+
+
+
+
 
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
@@ -238,14 +229,14 @@ function App() {
                       <Route path="partners" element={<PartnersPage />} />
                       <Route path="partners/new" element={<PartnerFormPage />} />
                       <Route path="partners/:id/edit" element={<PartnerFormPage />} />
-                      <Route path="testing/users-new" element={<UsersPageNew />} />
+
                       <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
-                      <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />
-                      <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPageNew />} />
+                      <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPage />} />
+                      <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
                       {/* Маршруты для сервисных точек */}
                       <Route path="service-points" element={<ServicePointsPage />} />
                       <Route path="service-points/:id" element={<ServicePointDetailPage />} />
-                      <Route path="service-points/:id/edit" element={<ServicePointFormPageNew />} />
+                                              <Route path="service-points/:id/edit" element={<ServicePointFormPage />} />
                       <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
                       <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
                       {/* Маршруты для клиентов */}
@@ -319,20 +310,6 @@ function App() {
                       <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
                       <Route path="testing/table-unification" element={<TableUnificationTest />} />
                       <Route path="testing/page-table" element={<PageTableTest />} />
-                      <Route path="testing/reviews-new" element={<ReviewsPageNew />} />
-                      <Route path="testing/bookings-new" element={<BookingsPageNew />} />
-                      <Route path="testing/service-points-new" element={<ServicePointsPageNew />} />
-                      <Route path="testing/cities-new" element={<CitiesPageNew />} />
-                      <Route path="testing/regions-new" element={<RegionsPageNew />} />
-                      <Route path="testing/car-brands-new" element={<CarBrandsPageNew />} />
-                      <Route path="testing/services-new" element={<ServicesPageNew />} />
-                      <Route path="testing/clients-new" element={<ClientsPageNew />} />
-                      <Route path="testing/articles-new" element={<ArticlesPageNew />} />
-                      <Route path="testing/page-content-new" element={<PageContentPageNew />} />
-                      <Route path="testing/regions-management-new" element={<RegionsManagementPageNew />} />
-                      <Route path="testing/client-cars-new" element={<ClientCarsPageNew />} />
-                      <Route path="testing/my-reviews-new" element={<MyReviewsPageNew />} />
-                      <Route path="testing/regions-admin-new" element={<RegionsPageNewAdmin />} />
                     </Route>
                     
                     {/* Маршрут по умолчанию */}

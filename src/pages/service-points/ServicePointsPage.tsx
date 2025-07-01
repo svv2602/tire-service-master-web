@@ -1,70 +1,47 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  useTheme,
-  InputAdornment,
-  IconButton,
+import { 
+  Box,
+  Chip,
+  Typography,
   Avatar,
+  Tooltip
 } from '@mui/material';
 import {
-  Search as SearchIcon,
+  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Add as AddIcon,
   Business as BusinessIcon,
-  Refresh as RefreshIcon,
+  LocationOn as LocationIcon,
+  Phone as PhoneIcon,
+  Schedule as ScheduleIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+
+// Импорты UI компонентов
+import { PageTable } from '../../components/common/PageTable';
+import Notification from '../../components/Notification';
+import { getTablePageStyles } from '../../styles';
+
+// Импорты API
 import {
   useGetServicePointsQuery,
   useDeleteServicePointMutation,
   useGetRegionsQuery,
   useGetCitiesQuery,
 } from '../../api';
+
+// Типы
 import type { ServicePoint } from '../../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
 
-// Импорты UI компонентов
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Tooltip,
-  Button,
-  TextField,
-  Alert,
-  Chip,
-  Pagination,
-  Modal,
-  Table,
-  type Column
-} from '../../components/ui';
-import { Select } from '../../components/ui/Select';
-import AutoComplete from '../../components/ui/AutoComplete';
-import type { AutoCompleteOption } from '../../components/ui/AutoComplete/types';
-
-// Импорт централизованных стилей
-import { getTablePageStyles } from '../../styles/components';
-
-// Хук для debounce поиска сервисных точек
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
+interface ServicePointsPageNewProps {}
 
 // Функция для форматирования рабочих часов
 const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
-  if (!workingHours) return 'График работы не указан';
+  if (!workingHours) return 'График не указан';
 
   const days = {
     monday: 'Пн',
@@ -113,608 +90,350 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
     result += `; Выходные: ${weekends.join(', ')}`;
   }
 
-  return result || 'График работы не указан';
+  return result || 'График не указан';
 };
 
-// Мемоизированный компонент строки сервисной точки удален - заменен на колонки UI Table
-
-/**
- * Компонент страницы списка сервисных точек
- * Отображает таблицу всех сервисных точек с возможностями поиска, фильтрации и управления
- * Поддерживает пагинацию, удаление записей и навигацию к формам редактирования
- * Включает фильтры по регионам и городам для удобного поиска
- */
-const ServicePointsPage: React.FC = () => {
+const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const navigate = useNavigate();
   const { id: partnerId } = useParams<{ id: string }>();
   const theme = useTheme();
-  
-  // Получаем централизованные стили из системы стилей
   const tablePageStyles = getTablePageStyles(theme);
   
-  // Состояние для поиска, фильтрации и пагинации
-  const [search, setSearch] = useState('');
-  const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
-  const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
-  const [selectedRegion, setSelectedRegion] = useState<AutoCompleteOption | null>(null);
-  const [selectedCity, setSelectedCity] = useState<AutoCompleteOption | null>(null);
-  const [selectedIsActive, setSelectedIsActive] = useState<string>(''); // '' | 'true' | 'false'
-  const [selectedWorkStatus, setSelectedWorkStatus] = useState<string>(''); // '' | 'working' | 'temporarily_closed' | etc.
+  // Состояние для фильтров и поиска
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('all');
+  const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [page, setPage] = useState(0);
-  const [pageSize] = useState(25);
-  
-  // Состояние для диалогов и ошибок
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedServicePoint, setSelectedServicePoint] = useState<ServicePoint | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
-  // Debounce для поиска
-  const debouncedSearch = useDebounce(search, 300);
+  // Константы
+  const PER_PAGE = 25;
 
   // Мемоизированные параметры запроса
   const queryParams = useMemo(() => ({
-    query: debouncedSearch || undefined,
-    city_id: selectedCityId || undefined,
-    region_id: selectedRegionId || undefined,
-    is_active: selectedIsActive || undefined,
-    work_status: selectedWorkStatus || undefined,
+    query: searchQuery || undefined,
+    city_id: selectedCity !== 'all' ? Number(selectedCity) : undefined,
+    region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
     page: page + 1,
-    per_page: pageSize,
-  }), [debouncedSearch, selectedCityId, selectedRegionId, selectedIsActive, selectedWorkStatus, page, pageSize]);
+    per_page: PER_PAGE,
+  }), [searchQuery, selectedCity, selectedRegion, page]);
 
-  // RTK Query хуки
+  // API запросы
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
     { 
-      region_id: selectedRegionId ? Number(selectedRegionId) : undefined,
+      region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
       page: 1,
-      per_page: 1000 // Увеличиваем лимит для полной загрузки городов
-    }
-    // Убираем skip - загружаем все города или по выбранному региону
+      per_page: 100
+    },
+    { skip: selectedRegion === 'all' }
   );
-  const { data: servicePointsData, isLoading: servicePointsLoading, error, refetch } = useGetServicePointsQuery(queryParams);
-  const [deleteServicePoint, { isLoading: isDeleting }] = useDeleteServicePointMutation();
+  const { data: servicePointsData, isLoading, error } = useGetServicePointsQuery(queryParams);
+  const [deleteServicePoint] = useDeleteServicePointMutation();
 
-  const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
-  const servicePoints = servicePointsData?.data || [];
+  // Фильтрация данных
+  const filteredData = useMemo(() => {
+    let filtered = servicePointsData?.data || [];
+
+    // Фильтр по статусу
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(sp => 
+        selectedStatus === 'active' ? sp.is_active : !sp.is_active
+      );
+    }
+
+    return filtered;
+  }, [servicePointsData?.data, selectedStatus]);
+
   const totalItems = servicePointsData?.pagination?.total_count || 0;
 
-  // Подготавливаем данные для AutoComplete
-  const regionOptions: AutoCompleteOption[] = useMemo(() => 
-    regionsData?.data?.map((region) => ({
-      id: region.id,
-      label: region.name
-    })) || [], [regionsData]);
-
-  const cityOptions: AutoCompleteOption[] = useMemo(() => 
-    citiesData?.data?.map((city) => ({
-      id: city.id,
-      label: city.name
-    })) || [], [citiesData]);
-
-  // Автоматическое обновление данных каждые 30 секунд для отображения изменений состояния
-  React.useEffect(() => {
-    const interval = setInterval(() => {
-      refetch();
-    }, 30000); // 30 секунд
-
-    return () => clearInterval(interval);
-  }, [refetch]);
-
-  // Мемоизированные обработчики событий
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-    setPage(0); // Сбрасываем на первую страницу при поиске
-  }, []);
-
-  const handleRegionChange = useCallback((value: string | number) => {
-    const regionId = value === '' ? '' : Number(value);
-    setSelectedRegionId(regionId);
-    setSelectedCityId(''); // Сбрасываем выбранный город
-    setPage(0);
-  }, []);
-
-  const handleCityChange = useCallback((value: string | number) => {
-    const cityId = value === '' ? '' : Number(value);
-    setSelectedCityId(cityId);
-    setPage(0);
-  }, []);
-
-  // Обработчики для AutoComplete
-  const handleRegionAutoCompleteChange = useCallback((value: AutoCompleteOption | null) => {
-    setSelectedRegion(value);
-    setSelectedRegionId(value ? value.id as number : '');
-    setSelectedCity(null); // Сбрасываем выбранный город
-    setSelectedCityId('');
-    setPage(0);
-  }, []);
-
-  const handleCityAutoCompleteChange = useCallback((value: AutoCompleteOption | null) => {
-    setSelectedCity(value);
-    setSelectedCityId(value ? value.id as number : '');
-    setPage(0);
-  }, []);
-
-  const handleIsActiveChange = useCallback((value: string | number) => {
-    setSelectedIsActive(value.toString());
-    setPage(0);
-  }, []);
-
-  const handleWorkStatusChange = useCallback((value: string | number) => {
-    setSelectedWorkStatus(value.toString());
-    setPage(0);
-  }, []);
-
+  // Обработчики событий
   const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage - 1);
-    window.scrollTo(0, 0);
+    setPage(newPage);
   }, []);
 
-  const handleDeleteClick = useCallback((servicePoint: ServicePoint) => {
-    setSelectedServicePoint(servicePoint);
-    setDeleteDialogOpen(true);
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setPage(0);
   }, []);
 
-  const handleEditClick = useCallback((servicePoint: ServicePoint) => {
-    // partner_id обязателен для сервисной точки
-    const partnerId = servicePoint.partner_id || servicePoint.partner?.id;
-    if (!partnerId) {
-      console.error('КРИТИЧЕСКАЯ ОШИБКА: Сервисная точка без partner_id!', servicePoint);
-      alert('Ошибка: Сервисная точка не связана с партнером. Обратитесь к администратору.');
-      return;
+  const handleRegionFilterChange = useCallback((region: string) => {
+    setSelectedRegion(region);
+    setSelectedCity('all'); // Сбрасываем город при смене региона
+    setPage(0);
+  }, []);
+
+  const handleCityFilterChange = useCallback((city: string) => {
+    setSelectedCity(city);
+    setPage(0);
+  }, []);
+
+  const handleStatusFilterChange = useCallback((status: string) => {
+    setSelectedStatus(status);
+    setPage(0);
+  }, []);
+
+  const showNotification = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
+    setNotification({ open: true, message, severity });
+  }, []);
+
+  const handleCloseNotification = useCallback(() => {
+    setNotification(prev => ({ ...prev, open: false }));
+  }, []);
+
+  // Обработка удаления
+  const handleDelete = useCallback(async (servicePoint: ServicePoint) => {
+    try {
+      await deleteServicePoint({ partner_id: servicePoint.partner_id, id: servicePoint.id }).unwrap();
+      showNotification(`Сервисная точка "${servicePoint.name}" успешно удалена`, 'success');
+    } catch (error) {
+      console.error('Ошибка при удалении сервисной точки:', error);
+      showNotification('Ошибка при удалении сервисной точки', 'error');
     }
-    navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`, {
-      state: { from: '/admin/service-points' }
-    });
-  }, [navigate]);
+  }, [deleteServicePoint, showNotification]);
 
-  const handleDeleteConfirm = useCallback(async () => {
-    if (selectedServicePoint && !isDeleting) {
-      try {
-        await deleteServicePoint({
-          partner_id: selectedServicePoint.partner_id,
-          id: selectedServicePoint.id
-        }).unwrap();
-        setErrorMessage(null);
-        setDeleteDialogOpen(false);
-        setSelectedServicePoint(null);
-      } catch (error: any) {
-        console.error('Ошибка при удалении сервисной точки:', error);
-        let errorMsg = 'Произошла ошибка при удалении сервисной точки';
-        
-        // Обрабатываем различные форматы ошибок от API
-        if (error.data?.error) {
-          // Основной формат ошибок с ограничениями
-          errorMsg = error.data.error;
-        } else if (error.data?.message) {
-          // Альтернативный формат
-          errorMsg = error.data.message;
-        } else if (error.data?.errors) {
-          // Ошибки валидации
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMsg = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.message) {
-          errorMsg = error.message;
-        }
-        setErrorMessage(errorMsg);
-        setDeleteDialogOpen(false);
+  // Конфигурация заголовка
+  const headerConfig = useMemo(() => ({
+    title: 'Сервисные точки',
+    subtitle: 'Управление сервисными точками и их настройками',
+    actions: [
+      {
+        label: 'Добавить сервисную точку',
+        icon: <AddIcon />,
+        onClick: () => {
+          if (partnerId) {
+            navigate(`/admin/partners/${partnerId}/service-points/new`, {
+              state: { from: `/admin/partners/${partnerId}/service-points` }
+            });
+          } else {
+            showNotification('Для создания сервисной точки необходимо выбрать партнера', 'warning');
+            navigate('/admin/partners');
+          }
+        },
+        variant: 'contained' as const,
+        color: 'primary' as const
       }
-    }
-  }, [selectedServicePoint, isDeleting, deleteServicePoint]);
+    ]
+  }), [navigate, partnerId, showNotification]);
 
-  const handleCloseDialog = useCallback(() => {
-    setDeleteDialogOpen(false);
-    setSelectedServicePoint(null);
-  }, []);
+  // Конфигурация поиска
+  const searchConfig = useMemo(() => ({
+    placeholder: 'Поиск по названию или адресу...',
+    value: searchQuery,
+    onChange: handleSearchChange
+  }), [searchQuery, handleSearchChange]);
 
-  // Определение колонок для UI Table
-  const columns: Column[] = useMemo(() => [
+  // Конфигурация фильтров
+  const filtersConfig = useMemo(() => [
     {
-      id: 'servicePoint',
+      id: 'region',
+      key: 'region',
+      type: 'select' as const,
+      label: 'Регион',
+      value: selectedRegion,
+      onChange: handleRegionFilterChange,
+      options: [
+        { value: 'all', label: 'Все регионы' },
+        ...(regionsData?.data?.map((region) => ({
+          value: region.id.toString(),
+          label: region.name
+        })) || [])
+      ]
+    },
+    {
+      id: 'city',
+      key: 'city',
+      type: 'select' as const,
+      label: 'Город',
+      value: selectedCity,
+      onChange: handleCityFilterChange,
+      disabled: selectedRegion === 'all',
+      options: [
+        { value: 'all', label: 'Все города' },
+        ...(citiesData?.data?.map((city) => ({
+          value: city.id.toString(),
+          label: city.name
+        })) || [])
+      ]
+    },
+    {
+      id: 'status',
+      key: 'status',
+      type: 'select' as const,
+      label: 'Статус',
+      value: selectedStatus,
+      onChange: handleStatusFilterChange,
+      options: [
+        { value: 'all', label: 'Все' },
+        { value: 'active', label: 'Активные' },
+        { value: 'inactive', label: 'Неактивные' }
+      ]
+    }
+  ], [selectedRegion, selectedCity, selectedStatus, regionsData, citiesData, handleRegionFilterChange, handleCityFilterChange, handleStatusFilterChange]);
+
+  // Конфигурация колонок
+  const columns = useMemo(() => [
+    {
+      id: 'service_point',
+      key: 'name' as keyof ServicePoint,
       label: 'Сервисная точка',
-      minWidth: 250,
-      wrap: true,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Box sx={tablePageStyles.avatarContainer}>
-            <Avatar sx={{ bgcolor: 'primary.main' }}>
-              <BusinessIcon />
-            </Avatar>
-            <Box>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {servicePoint.name}
-              </Typography>
+      sortable: false,
+      render: (servicePoint: ServicePoint) => (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+            <BusinessIcon />
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              {servicePoint.name}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+              <LocationIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
               <Typography variant="body2" color="text.secondary">
                 {servicePoint.address}
               </Typography>
             </Box>
+            {servicePoint.phone && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <PhoneIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                <Typography variant="body2" color="text.secondary">
+                  {servicePoint.phone}
+                </Typography>
+              </Box>
+            )}
           </Box>
-        );
-      },
+        </Box>
+      )
     },
     {
-      id: 'region',
-      label: 'Область',
-      minWidth: 120,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Typography variant="body2">
-            {servicePoint.city?.region?.name || 'Не указана'}
-          </Typography>
-        );
-      },
+      id: 'partner',
+      key: 'partner' as keyof ServicePoint,
+      label: 'Партнер',
+      sortable: true,
+      hideOnMobile: true,
+      render: (servicePoint: ServicePoint) => (
+        <Typography variant="body2">
+          {servicePoint.partner?.name || 'Не указан'}
+        </Typography>
+      )
     },
     {
-      id: 'city',
-      label: 'Город', 
-      minWidth: 120,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Typography variant="body2">
-            {servicePoint.city?.name || 'Не указан'}
-          </Typography>
-        );
-      },
-    },
-    {
-      id: 'working_hours',
+      id: 'schedule',
+      key: 'working_hours' as keyof ServicePoint,
       label: 'График работы',
-      minWidth: 200,
-      wrap: true,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Typography variant="body2">
-            {formatWorkingHours(servicePoint.working_hours)}
-          </Typography>
-        );
-      },
-    },
-    {
-      id: 'contact_phone', 
-      label: 'Контакты',
-      minWidth: 130,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Typography variant="body2">
-            {servicePoint.contact_phone || 'Не указан'}
-          </Typography>
-        );
-      },
+      sortable: false,
+      hideOnMobile: true,
+      render: (servicePoint: ServicePoint) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <Tooltip title={formatWorkingHours(servicePoint.working_hours)} arrow>
+            <Typography variant="body2" sx={{ 
+              maxWidth: 200,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {formatWorkingHours(servicePoint.working_hours)}
+            </Typography>
+          </Tooltip>
+        </Box>
+      )
     },
     {
       id: 'status',
-      label: 'Активность',
-      minWidth: 100,
-      align: 'center' as const,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Chip
-            label={servicePoint.is_active ? 'Активна' : 'Неактивна'}
-            color={servicePoint.is_active ? 'success' : 'error'}
-            size="small"
-          />
-        );
+      key: 'is_active' as keyof ServicePoint,
+      label: 'Статус',
+      sortable: true,
+      render: (servicePoint: ServicePoint) => (
+        <Chip 
+          label={servicePoint.is_active ? 'Активна' : 'Неактивна'} 
+          size="small"
+          color={servicePoint.is_active ? 'success' : 'default'}
+          icon={servicePoint.is_active ? <VisibilityIcon /> : <VisibilityOffIcon />}
+        />
+      )
+    }
+  ], []);
+
+  // Конфигурация действий
+  const actionsConfig = useMemo(() => [
+    {
+      key: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (servicePoint: ServicePoint) => {
+        if (partnerId) {
+          navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`, {
+            state: { from: `/admin/partners/${partnerId}/service-points` }
+          });
+        } else {
+          navigate(`/admin/service-points/${servicePoint.id}/edit`, {
+            state: { from: '/admin/service-points' }
+          });
+        }
       },
+      color: 'primary' as const
     },
     {
-      id: 'work_status',
-      label: 'Состояние',
-      minWidth: 130,
-      align: 'center' as const,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        const getWorkStatusColor = (status: string) => {
-          switch (status) {
-            case 'working': return 'success';
-            case 'temporarily_closed': return 'warning';
-            case 'maintenance': return 'info';
-            case 'suspended': return 'error';
-            default: return 'default';
-          }
-        };
-        
-        const getWorkStatusLabel = (status: string) => {
-          switch (status) {
-            case 'working': return 'Работает';
-            case 'temporarily_closed': return 'Временно закрыта';
-            case 'maintenance': return 'Техобслуживание';
-            case 'suspended': return 'Приостановлена';
-            default: return status;
-          }
-        };
-        
-        return (
-          <Chip
-            label={getWorkStatusLabel(servicePoint.work_status || 'working')}
-            color={getWorkStatusColor(servicePoint.work_status || 'working') as any}
-            size="small"
-          />
-        );
-      },
-    },
-    {
-      id: 'actions',
-      label: 'Действия',
-      minWidth: 120,
-      align: 'right' as const,
-      format: (value: any, row: any) => {
-        const servicePoint = row as ServicePoint;
-        return (
-          <Box sx={tablePageStyles.actionsContainer}>
-            <Tooltip title="Редактировать">
-              <IconButton
-                onClick={() => handleEditClick(servicePoint)}
-                size="small"
-                sx={tablePageStyles.actionButton}
-              >
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Удалить">
-              <IconButton
-                onClick={() => handleDeleteClick(servicePoint)}
-                size="small"
-                color="error"
-                sx={tablePageStyles.actionButton}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        );
-      },
-    },
-  ], [tablePageStyles, handleEditClick, handleDeleteClick]);
-
-  // Отображение состояний загрузки и ошибок
-  if (isLoading && !servicePointsData) {
-    return (
-      <Box sx={tablePageStyles.loadingContainer}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={tablePageStyles.pageContainer}>
-        <Alert severity="error">
-          Ошибка при загрузке сервисных точек: {error.toString()}
-        </Alert>
-      </Box>
-    );
-  }
+      key: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: handleDelete,
+      color: 'error' as const,
+      confirmationText: 'Вы уверены, что хотите удалить эту сервисную точку?'
+    }
+  ], [navigate, partnerId, handleDelete]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      {/* Отображение ошибок */}
-      {errorMessage && (
-        <Box sx={{ mb: 2 }}>
-          <Alert severity="error" onClose={() => setErrorMessage(null)}>
-            {errorMessage}
-          </Alert>
-        </Box>
-      )}
-
-      {/* Заголовок и кнопки добавления и обновления */}
-      <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4">
-          Сервисные точки
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            if (partnerId) {
-              navigate(`/admin/partners/${partnerId}/service-points/new`);
-            } else {
-              // Если нет partnerId, нужно сначала выбрать партнера
-              alert('Для создания сервисной точки необходимо выбрать партнера. Перейдите в раздел "Партнеры" и создайте сервисную точку оттуда.');
-              navigate('/admin/partners');
+      <PageTable<ServicePoint>
+        header={headerConfig}
+        search={searchConfig}
+        filters={filtersConfig}
+        columns={columns}
+        rows={filteredData}
+        actions={actionsConfig}
+        loading={isLoading}
+        pagination={{
+          page,
+          totalItems,
+          rowsPerPage: PER_PAGE,
+          onPageChange: handlePageChange
+        }}
+        emptyState={{
+          title: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedStatus !== 'all' ? 'Сервисные точки не найдены' : 'Нет сервисных точек',
+          description: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedStatus !== 'all'
+            ? 'Попробуйте изменить критерии поиска'
+            : 'Создайте первую сервисную точку для начала работы',
+          action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedStatus === 'all') ? {
+            label: 'Добавить сервисную точку',
+            icon: <AddIcon />,
+            onClick: () => {
+              if (partnerId) {
+                navigate(`/admin/partners/${partnerId}/service-points/new`);
+              } else {
+                navigate('/admin/partners');
+              }
             }
-          }}
-          size="small"
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          Добавить сервисную точку
-        </Button>
+          } : undefined
+        }}
+      />
 
-        <Button
-          variant="outlined"
-          startIcon={<RefreshIcon />}
-          onClick={() => refetch()}
-          size="small"
-          sx={{ whiteSpace: 'nowrap' }}
-          disabled={isLoading}
-        >
-          Обновить
-        </Button>
-      </Box>
-
-      {/* Фильтры и поиск */}
-      <Box sx={{ 
-        mb: 3, 
-        display: 'flex', 
-        gap: 2, 
-        alignItems: 'center', 
-        flexWrap: 'wrap'
-      }}>
-        <TextField
-          placeholder="Поиск по названию или адресу"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={handleSearchChange}
-          sx={{ 
-            maxWidth: 400, 
-            flexGrow: 1 
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        
-        <AutoComplete
-          label="Регион"
-          value={selectedRegion}
-          onChange={handleRegionAutoCompleteChange}
-          options={regionOptions}
-          placeholder="Введите название региона"
-          TextFieldProps={{ size: 'small' }}
-          sx={{ minWidth: 200 }}
-        />
-
-        <AutoComplete
-          label="Город"
-          value={selectedCity}
-          onChange={handleCityAutoCompleteChange}
-          options={cityOptions}
-          placeholder="Введите название города"
-          TextFieldProps={{ size: 'small' }}
-          sx={{ minWidth: 200 }}
-        />
-
-        <Select
-          label="Активность"
-          value={selectedIsActive}
-          onChange={handleIsActiveChange}
-          options={[
-            { value: '', label: 'Все' },
-            { value: 'true', label: 'Активные' },
-            { value: 'false', label: 'Неактивные' }
-          ]}
-          size="small"
-          sx={{ minWidth: 120 }}
-        />
-
-        <Select
-          label="Состояние"
-          value={selectedWorkStatus}
-          onChange={handleWorkStatusChange}
-          options={[
-            { value: '', label: 'Все состояния' },
-            { value: 'working', label: 'Работает' },
-            { value: 'temporarily_closed', label: 'Временно закрыта' },
-            { value: 'maintenance', label: 'Техобслуживание' },
-            { value: 'suspended', label: 'Приостановлена' }
-          ]}
-          size="small"
-          sx={{ minWidth: 160 }}
-        />
-      </Box>
-
-      {/* Статистика */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Найдено сервисных точек: <strong>{totalItems}</strong>
-        </Typography>
-        {servicePoints.length > 0 && (
-          <>
-            <Typography variant="body2" color="success.main">
-              Активных: <strong>{servicePoints.filter(sp => sp.is_active).length}</strong>
-            </Typography>
-            {servicePoints.filter(sp => !sp.is_active).length > 0 && (
-              <Typography variant="body2" color="error.main">
-                Неактивных: <strong>{servicePoints.filter(sp => !sp.is_active).length}</strong>
-              </Typography>
-            )}
-            <Typography variant="body2" color="success.main">
-              Работающих: <strong>{servicePoints.filter(sp => sp.work_status === 'working').length}</strong>
-            </Typography>
-            {servicePoints.filter(sp => sp.work_status === 'temporarily_closed').length > 0 && (
-              <Typography variant="body2" color="warning.main">
-                Временно закрытых: <strong>{servicePoints.filter(sp => sp.work_status === 'temporarily_closed').length}</strong>
-              </Typography>
-            )}
-            {servicePoints.filter(sp => sp.work_status === 'maintenance').length > 0 && (
-              <Typography variant="body2" color="info.main">
-                На техобслуживании: <strong>{servicePoints.filter(sp => sp.work_status === 'maintenance').length}</strong>
-              </Typography>
-            )}
-            {servicePoints.filter(sp => sp.work_status === 'suspended').length > 0 && (
-              <Typography variant="body2" color="error.main">
-                Приостановленных: <strong>{servicePoints.filter(sp => sp.work_status === 'suspended').length}</strong>
-              </Typography>
-            )}
-          </>
-        )}
-      </Box>
-
-      {/* Таблица сервисных точек с UI Table компонентом */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <Table 
-          columns={columns}
-          rows={servicePoints.length > 0 ? servicePoints : []}
-        />
-        {servicePoints.length === 0 && (
-          <Box sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
-              {page > 0 ? "На этой странице нет данных" : "Нет данных для отображения"}
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {/* Пагинация */}
-      {Math.ceil(totalItems / pageSize) > 1 && (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          mt: 3
-        }}>
-          <Pagination
-            count={Math.ceil(totalItems / pageSize)}
-            page={page + 1}
-            onChange={handlePageChange}
-            disabled={isLoading}
-            color="primary"
-          />
-        </Box>
-      )}
-
-      {/* Модальное окно подтверждения удаления */}
-      <Modal
-        open={deleteDialogOpen}
-        onClose={isDeleting ? undefined : handleCloseDialog}
-        title="Подтверждение удаления"
-        maxWidth={400}
-        actions={
-          <>
-            <Button
-              onClick={handleCloseDialog}
-              disabled={isDeleting}
-            >
-              Отмена
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              color="error"
-              variant="contained"
-              disabled={isDeleting}
-              startIcon={isDeleting ? <CircularProgress size={20} color="inherit" /> : <DeleteIcon />}
-            >
-              {isDeleting ? 'Удаление...' : 'Удалить'}
-            </Button>
-          </>
-        }
-      >
-        <Typography>
-          Вы действительно хотите удалить сервисную точку "{selectedServicePoint?.name}"?
-          Это действие нельзя будет отменить.
-        </Typography>
-      </Modal>
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };

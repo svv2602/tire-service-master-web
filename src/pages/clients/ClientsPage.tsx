@@ -1,24 +1,27 @@
+/**
+ * ClientsPageNew - Новая версия страницы управления клиентами
+ * Миграция на PageTable компонент для унификации дизайна
+ */
+
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  InputAdornment,
-  CircularProgress,
-  IconButton,
-  Tooltip,
   Avatar,
   Chip,
-  Switch,
-  FormControlLabel,
+  useTheme,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
+  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Add as AddIcon,
   Person as PersonIcon,
   DirectionsCar as CarIcon,
+  Phone as PhoneIcon,
+  Email as EmailIcon,
+  CalendarToday as CalendarTodayIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@mui/material/styles';
 import { 
   useGetClientsQuery, 
   useDeleteClientMutation,
@@ -30,40 +33,41 @@ import { ApiResponse } from '../../types/models';
 import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
-import { 
-  Box,
-  Button, 
-  TextField, 
-  Alert, 
-  Pagination, 
-  Modal,
-  Typography,
-  Table,
-  type Column 
-} from '../../components/ui';
+import { Box, Typography } from '../../components/ui';
+import { PageTable } from '../../components/common/PageTable';
+import type { 
+  PageHeaderConfig, 
+  SearchConfig, 
+  FilterConfig, 
+  ActionConfig,
+  Column
+} from '../../components/common/PageTable';
+import Notification from '../../components/Notification';
 
 // Импорт централизованных стилей
-import { getTablePageStyles } from '../../styles/components';
-
-// Константы
-const PER_PAGE = 25;
+import { getTablePageStyles } from '../../styles';
 
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-
-  // Инициализация стилей
   const tablePageStyles = getTablePageStyles(theme);
-  
-  // Состояние для поиска и пагинации
+
+  // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
   const [showInactive, setShowInactive] = useState(false);
-  
-  // Состояние для диалогов
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const PER_PAGE = 25;
+
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // Дебаунсированный поиск
   const debouncedSearch = useDebounce(search, 300);
@@ -79,76 +83,27 @@ const ClientsPage: React.FC = () => {
   // RTK Query хуки
   const { 
     data: clientsData, 
-    isLoading: clientsLoading, 
-    error: clientsError 
+    isLoading, 
+    error 
   } = useGetClientsQuery(queryParams, {
     refetchOnMountOrArgChange: true,
   });
 
-  const [deleteClient, { isLoading: deleteLoading }] = useDeleteClientMutation();
+  const [deleteClient] = useDeleteClientMutation();
   const [updateClient] = useUpdateClientMutation();
 
-  const isLoading = clientsLoading || deleteLoading;
-  const error = clientsError;
   const clients = (clientsData as unknown as ApiResponse<Client>)?.data || [];
   const totalItems = (clientsData as unknown as ApiResponse<Client>)?.pagination?.total_count || 0;
 
-  // Мемоизированные обработчики событий
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
+  // Обработчики событий
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setPage(0);
   }, []);
 
-  const handleDeleteClick = useCallback((client: Client) => {
-    setSelectedClient(client);
-    setDeleteDialogOpen(true);
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
   }, []);
-
-  const handleDeleteConfirm = useCallback(async () => {
-    if (selectedClient) {
-      try {
-        await deleteClient(selectedClient.id.toString()).unwrap();
-        setDeleteDialogOpen(false);
-        setSelectedClient(null);
-        setErrorMessage(null);
-      } catch (error: any) {
-        let errorMessage = 'Ошибка при удалении клиента';
-        
-        if (error.data?.error) {
-          errorMessage = error.data.error;
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.data?.errors) {
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        setErrorMessage(errorMessage);
-        setDeleteDialogOpen(false);
-      }
-    }
-  }, [selectedClient, deleteClient]);
-
-  const handleCloseDialog = useCallback(() => {
-    setDeleteDialogOpen(false);
-    setSelectedClient(null);
-  }, []);
-
-  const handleAddClient = useCallback(() => {
-    navigate('/admin/clients/new');
-  }, [navigate]);
-
-  const handleEditClient = useCallback((clientId: string) => {
-    navigate(`/admin/clients/${clientId}/edit`);
-  }, [navigate]);
-
-  const handleViewCars = useCallback((clientId: string) => {
-    navigate(`/clients/${clientId}/cars`);
-  }, [navigate]);
 
   const handleToggleStatus = useCallback(async (client: Client) => {
     try {
@@ -162,7 +117,12 @@ const ClientsPage: React.FC = () => {
         id: client.id.toString(), 
         client: updateData 
       }).unwrap();
-      setErrorMessage(null);
+      
+      setNotification({
+        open: true,
+        message: `Статус клиента ${client.first_name} ${client.last_name} изменен`,
+        severity: 'success'
+      });
     } catch (error: any) {
       let errorMessage = 'Ошибка при изменении статуса клиента';
       
@@ -170,267 +130,260 @@ const ClientsPage: React.FC = () => {
         errorMessage = error.data.error;
       } else if (error.data?.message) {
         errorMessage = error.data.message;
-      } else if (error.data?.errors) {
-        const errors = error.data.errors as Record<string, string[]>;
-        errorMessage = Object.entries(errors)
-          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-          .join('; ');
-      } else if (error.message) {
-        errorMessage = error.message;
       }
       
-      setErrorMessage(errorMessage);
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
     }
   }, [updateClient]);
 
-  // Определение колонок таблицы
-  const columns: Column[] = useMemo(() => [
+  const handleDelete = useCallback(async (client: Client) => {
+    try {
+      await deleteClient(client.id.toString()).unwrap();
+      setNotification({
+        open: true,
+        message: `Клиент ${client.first_name} ${client.last_name} успешно удален`,
+        severity: 'success'
+      });
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при удалении клиента';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      }
+      
+      setNotification({
+        open: true,
+        message: errorMessage,
+        severity: 'error'
+      });
+    }
+  }, [deleteClient]);
+
+  const handleCloseNotification = useCallback(() => {
+    setNotification(prev => ({ ...prev, open: false }));
+  }, []);
+
+  // Конфигурация PageTable
+  const headerConfig: PageHeaderConfig = useMemo(() => ({
+    title: 'Клиенты (PageTable)',
+    actions: [
+      {
+        id: 'add',
+        label: 'Добавить клиента',
+        icon: <AddIcon />,
+        onClick: () => navigate('/admin/clients/new'),
+        variant: 'contained'
+      }
+    ]
+  }), [navigate]);
+
+  const searchConfig: SearchConfig = useMemo(() => ({
+    placeholder: 'Поиск по имени, email или телефону...',
+    value: search,
+    onChange: handleSearchChange
+  }), [search, handleSearchChange]);
+
+  const filtersConfig: FilterConfig[] = useMemo(() => [
+    {
+      id: 'status',
+      label: 'Статус',
+      type: 'select',
+      value: showInactive ? 'all' : 'active',
+      options: [
+        { value: 'active', label: 'Только активные' },
+        { value: 'all', label: 'Все клиенты' }
+      ],
+      onChange: (value: any) => {
+        setShowInactive(value === 'all');
+        setPage(0);
+      }
+    }
+  ], [showInactive]);
+
+  const columns: Column<Client>[] = useMemo(() => [
     {
       id: 'client',
       label: 'Клиент',
-      minWidth: 200,
-      wrap: true,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <Box sx={tablePageStyles.avatarContainer}>
-            <Avatar sx={{ opacity: client.is_active ? 1 : 0.5 }}>
-              <PersonIcon />
-            </Avatar>
-            <Box>
-              <Typography color={client.is_active ? 'text.primary' : 'text.secondary'}>
-                {client.first_name} {client.last_name}
-                {!client.is_active && <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />}
-              </Typography>
-            </Box>
+      sortable: true,
+      render: (client: Client) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Avatar sx={{ 
+            opacity: client.is_active ? 1 : 0.5,
+            bgcolor: client.is_active ? theme.palette.primary.main : theme.palette.grey[400]
+          }}>
+            <PersonIcon />
+          </Avatar>
+          <Box>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: 600,
+                color: client.is_active ? 'text.primary' : 'text.secondary'
+              }}
+            >
+              {client.first_name} {client.last_name}
+            </Typography>
+            {client.email && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                <EmailIcon sx={{ fontSize: '14px', color: theme.palette.text.secondary }} />
+                <Typography 
+                  variant="caption" 
+                  sx={{ color: theme.palette.text.secondary }}
+                >
+                  {client.email}
+                </Typography>
+              </Box>
+            )}
           </Box>
-        );
-      },
+        </Box>
+      )
     },
     {
       id: 'phone',
       label: 'Телефон',
-      minWidth: 130,
-      wrap: true,
+      align: 'center',
+      hideOnMobile: true,
+      render: (client: Client) => (
+        client.phone ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <PhoneIcon sx={{ fontSize: '16px', color: theme.palette.text.secondary }} />
+            <Typography variant="body2">
+              {client.phone}
+            </Typography>
+          </Box>
+        ) : (
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+            -
+          </Typography>
+        )
+      )
     },
     {
-      id: 'email',
-      label: 'Email',
-      minWidth: 180,
-      wrap: true,
+      id: 'cars',
+      label: 'Автомобили',
+      align: 'center',
+      hideOnMobile: true,
+      render: (client: Client) => (
+        <Chip
+          icon={<CarIcon sx={{ fontSize: '16px !important' }} />}
+          label={client.cars?.length || 0}
+          size="small"
+          variant="outlined"
+          color="primary"
+          clickable
+          onClick={() => navigate(`/admin/clients/${client.id}/cars`)}
+        />
+      )
     },
     {
       id: 'is_active',
       label: 'Статус',
-      minWidth: 100,
-      align: 'center' as const,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={client.is_active}
-                onChange={() => handleToggleStatus(client)}
-                size="small"
-              />
-            }
-            label=""
-            sx={{ m: 0 }}
-          />
-        );
-      },
+      align: 'center',
+      render: (client: Client) => (
+        <Chip
+          label={client.is_active ? 'Активен' : 'Неактивен'}
+          color={client.is_active ? 'success' : 'default'}
+          size="small"
+        />
+      )
     },
     {
-      id: 'actions',
-      label: 'Действия',
-      minWidth: 150,
-      align: 'right' as const,
-      format: (value: any, row: any) => {
-        const client = row as Client;
-        return (
-          <Box sx={tablePageStyles.actionsContainer}>
-            <Tooltip title="Автомобили">
-              <IconButton
-                onClick={() => handleViewCars(client.id.toString())}
-                size="small"
-                color="primary"
-                sx={tablePageStyles.actionButton}
-              >
-                <CarIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Редактировать">
-              <IconButton
-                onClick={() => handleEditClient(client.id.toString())}
-                size="small"
-                sx={tablePageStyles.actionButton}
-              >
-                <EditIcon />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Удалить">
-              <IconButton
-                onClick={() => handleDeleteClick(client)}
-                size="small"
-                color="error"
-                sx={tablePageStyles.actionButton}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        );
-      },
+      id: 'created_at',
+      label: 'Дата регистрации',
+      align: 'center',
+      hideOnMobile: true,
+      render: (client: Client) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <CalendarTodayIcon sx={{ fontSize: '16px', color: theme.palette.text.secondary }} />
+          <Typography variant="body2">
+            {client.created_at ? new Date(client.created_at).toLocaleDateString('ru-RU', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }) : '-'}
+          </Typography>
+        </Box>
+      )
+    }
+  ], [theme.palette]);
+
+  const actionsConfig: ActionConfig<Client>[] = useMemo(() => [
+    {
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/edit`),
+      color: 'primary'
     },
-  ], [tablePageStyles, handleToggleStatus, handleViewCars, handleEditClient, handleDeleteClick]);
-
-  // Отображение состояний загрузки и ошибок
-  if (isLoading) {
-    return (
-      <Box sx={tablePageStyles.loadingContainer}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={tablePageStyles.errorContainer}>
-        <Alert severity="error">
-          Ошибка при загрузке клиентов: {error.toString()}
-        </Alert>
-      </Box>
-    );
-  }
+    {
+      label: 'Автомобили',
+      icon: <CarIcon />,
+      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/cars`),
+      color: 'info'
+    },
+    {
+      label: (client: Client) => client.is_active ? 'Деактивировать' : 'Активировать',
+      icon: (client: Client) => client.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
+      onClick: (client: Client) => handleToggleStatus(client),
+      color: 'warning'
+    },
+    {
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (client: Client) => handleDelete(client),
+      color: 'error',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы действительно хотите удалить этого клиента? Это действие нельзя будет отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      }
+    }
+  ], [navigate, handleToggleStatus, handleDelete]);
 
   return (
-    <Box sx={tablePageStyles.pageContainer}>
-      {/* Отображение ошибок */}
-      {errorMessage && (
-        <Box sx={{ mb: 2 }}>
-          <Alert severity="error" onClose={() => setErrorMessage(null)}>
-            {errorMessage}
-          </Alert>
-        </Box>
-      )}
+    <Box sx={tablePageStyles.container}>
+      <PageTable<Client>
+        header={headerConfig}
+        search={searchConfig}
+        filters={filtersConfig}
+        columns={columns}
+        rows={clients}
+        actions={actionsConfig}
+        loading={isLoading}
+        pagination={{
+          page,
+          totalItems,
+          rowsPerPage: PER_PAGE,
+          onPageChange: handlePageChange
+        }}
+        emptyState={{
+          title: search || showInactive ? 'Клиенты не найдены' : 'Нет клиентов',
+          description: search || showInactive 
+            ? 'Попробуйте изменить критерии поиска'
+            : 'Создайте первого клиента для начала работы',
+          action: (!search && !showInactive) ? {
+            label: 'Добавить клиента',
+            icon: <AddIcon />,
+            onClick: () => navigate('/admin/clients/new')
+          } : undefined
+        }}
+      />
 
-      {/* Заголовок */}
-      <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
-          Клиенты
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleAddClient}
-          sx={tablePageStyles.createButton}
-        >
-          Добавить клиента
-        </Button>
-      </Box>
-
-      {/* Поиск */}
-      <Box sx={tablePageStyles.filtersContainer}>
-        <TextField
-          placeholder="Поиск по имени, фамилии, email или номеру телефона..."
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={handleSearchChange}
-          sx={tablePageStyles.searchField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-              color="primary"
-            />
-          }
-          label={
-            <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
-              <Typography variant="body2">
-                Показать деактивированных
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {showInactive ? 'Показаны все клиенты' : 'Показаны только активные'}
-              </Typography>
-            </Box>
-          }
-          sx={{ ml: 2 }}
-        />
-      </Box>
-
-      {/* Статистика */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Найдено клиентов: <strong>{totalItems}</strong>
-        </Typography>
-        {clients.length > 0 && (
-          <>
-            <Typography variant="body2" color="success.main">
-              Активных: <strong>{clients.filter(client => client.is_active).length}</strong>
-            </Typography>
-            {clients.filter(client => !client.is_active).length > 0 && (
-              <Typography variant="body2" color="error.main">
-                Деактивированных: <strong>{clients.filter(client => !client.is_active).length}</strong>
-              </Typography>
-            )}
-          </>
-        )}
-        <Typography variant="caption" color="text.secondary">
-          {!showInactive && '(только активные)'}
-          {showInactive && '(включая деактивированных)'}
-        </Typography>
-      </Box>
-
-      {/* Таблица клиентов с UI Table компонентом */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <Table 
-          columns={columns} 
-          rows={clients}
-        />
-        <Box sx={tablePageStyles.paginationContainer}>
-          <Pagination
-            count={Math.ceil(totalItems / PER_PAGE)}
-            page={page + 1}
-            onChange={(newPage) => setPage(newPage - 1)}
-            color="primary"
-            disabled={totalItems <= PER_PAGE}
-          />
-        </Box>
-      </Box>
-
-      {/* Модальное окно подтверждения удаления */}
-      <Modal 
-        open={deleteDialogOpen} 
-        onClose={handleCloseDialog}
-        title="Подтверждение удаления"
-        maxWidth={400}
-        actions={
-          <>
-            <Button onClick={handleCloseDialog}>Отмена</Button>
-            <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-              Удалить
-            </Button>
-          </>
-        }
-      >
-        <Typography>
-          Вы действительно хотите удалить клиента {selectedClient?.first_name} {selectedClient?.last_name}?
-          Это действие нельзя будет отменить.
-        </Typography>
-      </Modal>
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
+      />
     </Box>
   );
 };
 
-export default ClientsPage;
+export default ClientsPage; 

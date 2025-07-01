@@ -1,5 +1,6 @@
 /**
- * CarBrandsPage - Страница управления брендами автомобилей
+ * CarBrandsPageNew - Новая версия страницы управления брендами автомобилей
+ * Миграция на PageTable компонент для унификации дизайна
  * 
  * Функциональность:
  * - Просмотр всех брендов автомобилей в табличном формате
@@ -10,30 +11,18 @@
  * - Удаление брендов с подтверждением
  * - Переключение статуса активности
  * - Пагинация результатов
- * - Централизованная система стилей для консистентного дизайна
+ * - Использование PageTable для унифицированного UI
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  InputAdornment,
-  CircularProgress,
+  Avatar,
   IconButton,
   Tooltip,
-  Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   useTheme,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   DirectionsCar as CarIcon,
@@ -41,6 +30,9 @@ import {
   ToggleOff as ToggleOffIcon,
   CalendarToday as CalendarTodayIcon,
   FormatListNumbered as FormatListNumberedIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
+  DriveEta as DriveEtaIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -49,19 +41,18 @@ import {
   useToggleCarBrandActiveMutation,
 } from '../../api/carBrands.api';
 import { CarBrand } from '../../types/car';
-import Notification from '../../components/Notification';
 import config from '../../config';
 
 // Импорты UI компонентов
-import { 
-  Box,
-  Button, 
-  TextField, 
-  Typography,
-  Table,
-  type Column
-} from '../../components/ui';
-import { Pagination } from '../../components/ui/Pagination';
+import { Box, Typography } from '../../components/ui';
+import { PageTable } from '../../components/common/PageTable';
+import type { 
+  PageHeaderConfig, 
+  SearchConfig, 
+  FilterConfig, 
+  Column, 
+  ActionConfig 
+} from '../../components/common/PageTable';
 
 // Импорт централизованных стилей
 import { getTablePageStyles, SIZES } from '../../styles';
@@ -74,32 +65,19 @@ const CarBrandsPage: React.FC = () => {
   const tablePageStyles = getTablePageStyles(theme);
   
   // Функция для формирования URL логотипа
-  const getLogoUrl = (logo: string | null): string | undefined => {
+  const getLogoUrl = useCallback((logo: string | null): string | undefined => {
     if (!logo) return undefined;
     if (logo.startsWith('http') || logo.startsWith('/storage/')) {
       return logo;
     }
     return `${config.API_URL}${logo}`;
-  };
+  }, []);
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string>('');
   const [page, setPage] = useState(0);
   const rowsPerPage = 25;
-  
-  // Состояние для диалогов и уведомлений
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<{ id: number; name: string } | null>(null);
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    severity: 'success' | 'error' | 'info' | 'warning';
-  }>({
-    open: false,
-    message: '',
-    severity: 'info'
-  });
 
   // RTK Query хуки
   const { 
@@ -117,61 +95,31 @@ const CarBrandsPage: React.FC = () => {
   const [toggleActive] = useToggleCarBrandActiveMutation();
 
   // Мемоизированные обработчики событий
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
-    setPage(0);
-  }, []);
-
-  const handleActiveFilterChange = useCallback((event: any) => {
-    setActiveFilter(event.target.value);
-    setPage(0);
-  }, []);
-
-  const handleChangePage = useCallback((newPage: number) => {
-    setPage(newPage - 1);
-  }, []);
-
-  const handleDeleteClick = useCallback((brand: CarBrand) => {
-    setSelectedBrand({ id: brand.id, name: brand.name });
-    setDeleteDialogOpen(true);
-  }, []);
-
-  const handleEditClick = useCallback((brandId: number) => {
-    navigate(`/admin/car-brands/${brandId}/edit`);
-  }, [navigate]);
-
   const handleToggleActive = useCallback(async (brand: CarBrand) => {
     try {
       await toggleActive({ 
         id: brand.id.toString(), 
         is_active: !brand.is_active 
       }).unwrap();
-      setNotification({
-        open: true,
-        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`,
-        severity: 'success'
-      });
+      return {
+        success: true,
+        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`
+      };
     } catch (error) {
-      setNotification({
-        open: true,
-        message: 'Ошибка при изменении статуса бренда',
-        severity: 'error'
-      });
+      return {
+        success: false,
+        message: 'Ошибка при изменении статуса бренда'
+      };
     }
   }, [toggleActive]);
 
-  const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedBrand) return;
-    
+  const handleDeleteBrand = useCallback(async (brand: CarBrand) => {
     try {
-      await deleteBrand(selectedBrand.id.toString()).unwrap();
-      setNotification({
-        open: true,
-        message: 'Бренд успешно удален',
-        severity: 'success'
-      });
-      setDeleteDialogOpen(false);
-      setSelectedBrand(null);
+      await deleteBrand(brand.id.toString()).unwrap();
+      return {
+        success: true,
+        message: 'Бренд успешно удален'
+      };
     } catch (error: any) {
       let errorMessage = 'Ошибка при удалении бренда';
       
@@ -183,266 +131,179 @@ const CarBrandsPage: React.FC = () => {
         errorMessage = Object.values(error.data.errors).join(', ');
       }
       
-      setNotification({
-        open: true,
-        message: errorMessage,
-        severity: 'error'
-      });
+      return {
+        success: false,
+        message: errorMessage
+      };
     }
-  }, [selectedBrand, deleteBrand]);
+  }, [deleteBrand]);
 
-  const handleDeleteCancel = useCallback(() => {
-    setDeleteDialogOpen(false);
-    setSelectedBrand(null);
-  }, []);
-
-  const handleCloseNotification = useCallback(() => {
-    setNotification(prev => ({ ...prev, open: false }));
-  }, []);
-
-  // Конфигурация колонок таблицы
-  const columns: Column[] = useMemo(() => [
+  // Конфигурация фильтров
+  const filtersConfig: FilterConfig[] = useMemo(() => [
     {
-      id: 'brand',
+      id: 'status',
+      type: 'select',
+      label: 'Статус',
+      value: activeFilter,
+      onChange: (value: any) => {
+        setActiveFilter(value as string);
+        setPage(0);
+      },
+      options: [
+        { value: 'all', label: 'Все' },
+        { value: 'active', label: 'Активные' },
+        { value: 'inactive', label: 'Неактивные' },
+      ],
+    },
+  ], [activeFilter]);
+
+  // Конфигурация колонок
+  const columns: Column<CarBrand>[] = useMemo(() => [
+    {
+      id: 'name',
       label: 'Бренд',
-      wrap: true,
-      format: (value, row: CarBrand) => (
+      sortable: true,
+      render: (brand: CarBrand) => (
         <Box sx={tablePageStyles.avatarContainer}>
-          {row.logo ? (
+          {brand.logo ? (
             <Avatar 
-              src={getLogoUrl(row.logo)} 
-              alt={row.name}
-              variant="rounded"
-              sx={{ 
-                width: SIZES.icon.medium * 1.5, 
-                height: SIZES.icon.medium * 1.5,
-                borderRadius: SIZES.borderRadius.xs
-              }}
+              src={brand.logo} 
+              alt={brand.name}
+              sx={{ width: 40, height: 40 }}
             />
           ) : (
-            <Avatar
-              variant="rounded"
-              sx={{ 
-                width: SIZES.icon.medium * 1.5, 
-                height: SIZES.icon.medium * 1.5,
-                borderRadius: SIZES.borderRadius.xs,
-                bgcolor: 'grey.200'
-              }}
-            >
-              <CarIcon color="disabled" />
+            <Avatar sx={{ width: 40, height: 40, bgcolor: 'grey.300' }}>
+              <DriveEtaIcon />
             </Avatar>
           )}
-          <Typography variant="body2" fontWeight="medium">
-            {row.name}
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {brand.name}
           </Typography>
         </Box>
-      )
+      ),
     },
     {
-      id: 'is_active',
+      id: 'status',
       label: 'Статус',
       align: 'center',
-      format: (value, row: CarBrand) => (
-        <Tooltip title={`Нажмите чтобы ${row.is_active ? 'деактивировать' : 'активировать'}`}>
+      hideOnMobile: false,
+      render: (brand: CarBrand) => (
+        <Tooltip title={`Нажмите чтобы ${brand.is_active ? 'деактивировать' : 'активировать'}`}>
           <IconButton
-            onClick={() => handleToggleActive(row)}
-            color={row.is_active ? 'success' : 'default'}
+            onClick={() => handleToggleActive(brand)}
             size="small"
+            sx={{ 
+              color: brand.is_active ? 'success.main' : 'error.main',
+              '&:hover': { 
+                backgroundColor: brand.is_active ? 'success.light' : 'error.light',
+                opacity: 0.1
+              }
+            }}
           >
-            {row.is_active ? <ToggleOnIcon /> : <ToggleOffIcon />}
+            {brand.is_active ? <CheckCircleIcon /> : <CancelIcon />}
           </IconButton>
         </Tooltip>
-      )
+      ),
     },
     {
       id: 'models_count',
-      label: 'Кол-во моделей',
+      label: 'Моделей',
       align: 'center',
-      format: (value, row: CarBrand) => (
+      hideOnMobile: true,
+      render: (brand: CarBrand) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <FormatListNumberedIcon fontSize="small" color="action" />
           <Typography variant="body2">
-            {row.models_count || 0}
+            {brand.models_count || 0}
           </Typography>
         </Box>
-      )
+      ),
     },
     {
       id: 'created_at',
       label: 'Дата создания',
       align: 'center',
-      format: (value, row: CarBrand) => (
+      hideOnMobile: true,
+      render: (brand: CarBrand) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <CalendarTodayIcon fontSize="small" color="action" />
           <Typography variant="body2">
-            {new Date(row.created_at).toLocaleDateString('ru-RU')}
+            {new Date(brand.created_at).toLocaleDateString('ru-RU')}
           </Typography>
         </Box>
-      )
+      ),
+    },
+  ], [tablePageStyles, handleToggleActive]);
+
+  // Конфигурация действий
+  const actionsConfig: ActionConfig<CarBrand>[] = useMemo(() => [
+    {
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`)
     },
     {
-      id: 'actions',
-      label: 'Действия',
-      align: 'right',
-      format: (value, row: CarBrand) => (
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton
-              onClick={() => handleEditClick(row.id)}
-              size="small"
-              sx={tablePageStyles.actionButton}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton
-              onClick={() => handleDeleteClick(row)}
-              size="small"
-              color="error"
-              sx={tablePageStyles.actionButton}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      color: 'error',
+      onClick: (brand: CarBrand) => handleDeleteBrand(brand),
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите удаление',
+        message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      },
     }
-  ], [tablePageStyles, getLogoUrl, handleToggleActive, handleEditClick, handleDeleteClick]);
+  ], [navigate, handleDeleteBrand]);
 
-  // Отображение состояний загрузки и ошибок
-  if (isLoading) {
-    return (
-      <Box sx={tablePageStyles.loadingContainer}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box sx={tablePageStyles.errorContainer}>
-        <Alert severity="error">
-          ❌ Ошибка при загрузке брендов: {error.toString()}
-        </Alert>
-      </Box>
-    );
-  }
-
+  // Извлечение данных из ответа API
   const brands = brandsData?.data || [];
   const totalItems = brandsData?.pagination?.total_count || 0;
 
   return (
-    <Box sx={tablePageStyles.pageContainer}>
-      {/* Заголовок и кнопка добавления */}
-      <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
-          Бренды автомобилей
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/admin/car-brands/new')}
-          sx={tablePageStyles.createButton}
-        >
-          Добавить бренд
-        </Button>
-      </Box>
-
-      {/* Фильтры и поиск */}
-      <Box sx={tablePageStyles.filtersContainer}>
-        <TextField
-          placeholder="Поиск по названию бренда"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={handleSearchChange}
-          sx={tablePageStyles.searchField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        
-        <FormControl size="small" sx={tablePageStyles.filterSelect}>
-          <InputLabel>Статус</InputLabel>
-          <Select
-            value={activeFilter}
-            onChange={handleActiveFilterChange}
-            label="Статус"
-          >
-            <MenuItem value="">Все</MenuItem>
-            <MenuItem value="true">Активные</MenuItem>
-            <MenuItem value="false">Неактивные</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-
-      {/* Таблица брендов */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <Table
-          columns={columns}
-          rows={brands}
-        />
-        
-        {/* Пагинация */}
-        {totalItems > rowsPerPage && (
-          <Box sx={tablePageStyles.paginationContainer}>
-            <Pagination
-              count={Math.ceil(totalItems / rowsPerPage)}
-              page={page + 1}
-              onChange={handleChangePage}
-              disabled={isLoading}
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* Диалог подтверждения удаления */}
-      <Dialog 
-        open={deleteDialogOpen} 
-        onClose={handleDeleteCancel}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Подтвердите удаление
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            Вы уверены, что хотите удалить бренд "{selectedBrand?.name}"?
-            Это действие нельзя отменить.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ gap: 1, p: 2 }}>
-          <Button 
-            onClick={handleDeleteCancel}
-            variant="outlined"
-          >
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirm} 
-            color="error" 
-            variant="contained"
-          >
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Уведомления */}
-      <Notification
-        open={notification.open}
-        message={notification.message}
-        severity={notification.severity}
-        onClose={handleCloseNotification}
-      />
-    </Box>
+    <PageTable<CarBrand>
+      header={{
+        title: 'Бренды автомобилей (PageTable)',
+        actions: [
+          {
+            label: 'Добавить бренд',
+            icon: <AddIcon />,
+            color: 'primary',
+            variant: 'contained',
+            onClick: () => navigate('/admin/car-brands/new'),
+          },
+        ],
+      }}
+      search={{
+        placeholder: 'Поиск по названию бренда...',
+        value: search,
+        onChange: setSearch,
+      }}
+      filters={filtersConfig}
+      columns={columns}
+      rows={brands}
+      actions={actionsConfig}
+      loading={isLoading}
+      pagination={{
+        page,
+        rowsPerPage,
+        totalItems,
+        onPageChange: setPage,
+      }}
+      emptyState={{
+        title: search || activeFilter !== '' ? 'Бренды не найдены' : 'Нет брендов автомобилей',
+        description: search || activeFilter !== '' 
+          ? 'Попробуйте изменить критерии поиска'
+          : 'Создайте первый бренд автомобиля для начала работы',
+        action: (!search && activeFilter === '') ? {
+          label: 'Добавить бренд',
+          icon: <AddIcon />,
+          onClick: () => navigate('/admin/car-brands/new')
+        } : undefined
+      }}
+    />
   );
 };
 
-export default CarBrandsPage;
+export default CarBrandsPage; 

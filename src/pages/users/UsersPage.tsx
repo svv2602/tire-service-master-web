@@ -1,3 +1,17 @@
+/**
+ * Страница управления пользователями (PageTable версия)
+ * 
+ * Функциональность:
+ * - Отображение списка пользователей с помощью PageTable
+ * - Поиск по email, имени, фамилии, телефону
+ * - Фильтрация активных/неактивных пользователей
+ * - Пагинация результатов
+ * - Редактирование и деактивация пользователей
+ * - Отображение ролей с цветовой индикацией
+ * - Подтверждения email и телефона
+ * - Унифицированный UI с остальными страницами
+ */
+
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -5,23 +19,18 @@ import { RootState } from '../../store/store';
 import {
   Box,
   Typography,
-  InputAdornment,
-  CircularProgress,
-  IconButton,
   Avatar,
-  FormControlLabel,
-  Switch,
   Tooltip,
   useTheme
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
   Person as PersonIcon,
   Check as CheckIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  RestoreFromTrash as RestoreIcon
 } from '@mui/icons-material';
 import {
   useGetUsersQuery,
@@ -34,18 +43,19 @@ import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
 import {
-  Button,
-  TextField,
   Alert,
   Chip,
-  Pagination,
-  Modal,
-  Table,
-  type Column
 } from '../../components/ui';
 
-// Импорт централизованных стилей
-import { getTablePageStyles } from '../../styles/components';
+// Импорт PageTable компонента
+import { PageTable } from '../../components/common/PageTable';
+import type { 
+  PageHeaderConfig, 
+  SearchConfig, 
+  FilterConfig,
+  ActionConfig
+} from '../../components/common/PageTable';
+import type { Column } from '../../components/ui/Table/Table';
 
 export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -54,25 +64,13 @@ export const UsersPage: React.FC = () => {
   // Redux state
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   
-  // Получаем централизованные стили таблицы
-  const tablePageStyles = getTablePageStyles(theme);
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<number | null>(null);
   const [showInactive, setShowInactive] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
 
   // Дебаунс для поиска
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
-
-  // Отладочная информация
-  React.useEffect(() => {
-    console.log('UsersPage: статус авторизации:', isAuthenticated ? 'авторизован' : 'не авторизован');
-    console.log('UsersPage: фильтр showInactive:', showInactive);
-    console.log('UsersPage: параметр active для API:', showInactive ? undefined : true);
-  }, [showInactive, isAuthenticated]);
 
   // Сброс страницы при изменении фильтра
   React.useEffect(() => {
@@ -127,18 +125,27 @@ export const UsersPage: React.FC = () => {
   }, []);
 
   // Обработчики событий
-  const handleCreate = useCallback(() => {
-    navigate('/admin/users/new');
-  }, [navigate]);
-
-  const handleEdit = useCallback((id: number) => {
-    navigate(`/admin/users/${id}/edit`);
-  }, [navigate]);
-
-  const handleDelete = useCallback((id: number) => {
-    setUserToDelete(id);
-    setDeleteDialogOpen(true);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
   }, []);
+
+  const handlePageChange = useCallback((newPage: number) => {
+    setPage(newPage);
+  }, []);
+
+  const handleEdit = useCallback((user: User) => {
+    navigate(`/admin/users/${user.id}/edit`);
+  }, [navigate]);
+
+  const handleDeactivate = useCallback(async (user: User) => {
+    try {
+      await deleteUser(user.id.toString()).unwrap();
+      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
+    } catch (error) {
+      console.error('Ошибка при деактивации пользователя:', error);
+      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
+    }
+  }, [deleteUser, enqueueSnackbar]);
 
   const handleToggleStatus = useCallback(async (user: User) => {
     try {
@@ -169,14 +176,51 @@ export const UsersPage: React.FC = () => {
     }
   }, [updateUser, enqueueSnackbar]);
 
-  // Конфигурация колонок таблицы
+  // Конфигурация заголовка
+  const headerConfig: PageHeaderConfig = useMemo(() => ({
+    title: 'Управление пользователями (PageTable)',
+    actions: [
+      {
+        id: 'create-user',
+        label: 'Создать пользователя',
+        icon: <AddIcon />,
+        onClick: () => navigate('/admin/users/new'),
+        variant: 'contained',
+      }
+    ]
+  }), [navigate]);
+
+  // Конфигурация поиска
+  const searchConfig: SearchConfig = useMemo(() => ({
+    placeholder: 'Поиск по email, имени, фамилии или номеру телефона...',
+    value: searchQuery,
+    onChange: handleSearchChange,
+  }), [searchQuery, handleSearchChange]);
+
+  // Конфигурация фильтров
+  const filtersConfig: FilterConfig[] = useMemo(() => [
+    {
+      id: 'show_inactive',
+      label: 'Статус пользователей',
+      type: 'select',
+      value: showInactive ? 'all' : 'active',
+      options: [
+        { value: 'active', label: 'Только активные' },
+        { value: 'all', label: 'Все пользователи' }
+      ],
+      onChange: (value: string) => setShowInactive(value === 'all'),
+    }
+  ], [showInactive]);
+
+  // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
     {
       id: 'user',
       label: 'Пользователь',
       wrap: true,
-      format: (value, row: User) => (
-        <Box sx={tablePageStyles.avatarContainer}>
+      minWidth: 200,
+      format: (_value: any, row: User) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ width: 32, height: 32, opacity: row.is_active ? 1 : 0.5 }}>
             <PersonIcon />
           </Avatar>
@@ -187,13 +231,13 @@ export const UsersPage: React.FC = () => {
               color={row.is_active ? 'text.primary' : 'text.secondary'}
             >
               {row.first_name} {row.last_name}
-              {!row.is_active && (
-                <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />
-              )}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               ID: {row.id}
             </Typography>
+            {!row.is_active && (
+              <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />
+            )}
           </Box>
         </Box>
       )
@@ -201,18 +245,30 @@ export const UsersPage: React.FC = () => {
     {
       id: 'email',
       label: 'Email',
-      wrap: true
+      wrap: true,
+      hideOnMobile: true,
+      format: (_value: any, row: User) => (
+        <Typography variant="body2">
+          {row.email}
+        </Typography>
+      )
     },
     {
       id: 'phone',
       label: 'Телефон',
-      wrap: true
+      wrap: true,
+      hideOnMobile: true,
+      format: (_value: any, row: User) => (
+        <Typography variant="body2">
+          {row.phone || 'Не указан'}
+        </Typography>
+      )
     },
     {
       id: 'role',
       label: 'Роль',
       align: 'center',
-      format: (value, row: User) => (
+      format: (_value: any, row: User) => (
         <Chip
           label={getRoleName(row.role)}
           color={getRoleColor(row.role)}
@@ -229,20 +285,14 @@ export const UsersPage: React.FC = () => {
       )
     },
     {
-      id: 'is_active',
-      label: 'Активен',
+      id: 'status',
+      label: 'Статус',
       align: 'center',
-      format: (value, row: User) => (
-        <FormControlLabel
-          control={
-            <Switch
-              checked={row.is_active}
-              onChange={() => handleToggleStatus(row)}
-              size="small"
-            />
-          }
-          label=""
-          sx={{ m: 0 }}
+      format: (_value: any, row: User) => (
+        <Chip
+          label={row.is_active ? 'Активен' : 'Деактивирован'}
+          color={row.is_active ? 'success' : 'error'}
+          size="small"
         />
       )
     },
@@ -250,7 +300,8 @@ export const UsersPage: React.FC = () => {
       id: 'verifications',
       label: 'Подтверждения',
       align: 'center',
-      format: (value, row: User) => (
+      hideOnMobile: true,
+      format: (_value: any, row: User) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           {row.email_verified ? (
             <Tooltip title="Email подтвержден">
@@ -272,215 +323,92 @@ export const UsersPage: React.FC = () => {
           )}
         </Box>
       )
+    }
+  ], [getRoleName, getRoleColor]);
+
+  // Конфигурация действий
+  const actionsConfig: ActionConfig[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (user: User) => handleEdit(user),
+      color: 'primary',
     },
     {
-      id: 'actions',
-      label: 'Действия',
-      align: 'center',
-      format: (value, row: User) => (
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton
-              onClick={() => handleEdit(row.id)}
-              size="small"
-              color="primary"
-              disabled={isDeleting}
-              sx={tablePageStyles.actionButton}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          {row.is_active ? (
-            <Tooltip title="Деактивировать">
-              <IconButton
-                onClick={() => handleDelete(row.id)}
-                size="small"
-                color="error"
-                disabled={isDeleting}
-                sx={tablePageStyles.actionButton}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Tooltip title="Реактивировать">
-              <IconButton
-                onClick={() => handleToggleStatus(row)}
-                size="small"
-                color="success"
-                disabled={isDeleting}
-                sx={tablePageStyles.actionButton}
-              >
-                <CheckIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      )
+      id: 'toggle-status',
+      label: 'Изменить статус',
+      icon: <DeleteIcon />,
+      onClick: (user: User) => user.is_active ? handleDeactivate(user) : handleToggleStatus(user),
+      color: 'error',
+      requireConfirmation: true,
+      confirmationText: 'Вы уверены, что хотите изменить статус этого пользователя?',
     }
-  ], [handleEdit, handleDelete, handleToggleStatus, getRoleName, getRoleColor, isDeleting, tablePageStyles]);
+  ], [handleEdit, handleDeactivate, handleToggleStatus]);
 
-  const handleConfirmDelete = useCallback(async () => {
-    if (!userToDelete) return;
+  // Конфигурация пагинации
+  const paginationConfig = useMemo(() => ({
+    page: page,
+    rowsPerPage: 25,
+    totalItems: totalItems,
+    onPageChange: handlePageChange,
+  }), [page, totalItems, handlePageChange]);
 
-    try {
-      await deleteUser(userToDelete.toString()).unwrap();
-      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
-    } catch (error) {
-      console.error('Ошибка при деактивации пользователя:', error);
-      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
-    } finally {
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
-  }, [userToDelete, deleteUser, enqueueSnackbar]);
-
-  const handlePageChange = useCallback((page: number) => {
-    setPage(page);
-  }, []);
+  // Отображение ошибки загрузки
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">
+          Ошибка при загрузке пользователей: {error.toString()}
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={tablePageStyles.pageContainer}>
-      {/* Заголовок и кнопка создания */}
-      <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4" component="h1" sx={tablePageStyles.pageTitle}>
-          Управление пользователями
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleCreate}
-          sx={tablePageStyles.createButton}
-        >
-          Создать пользователя
-        </Button>
-      </Box>
-
-      {/* Поиск и фильтры */}
-      <Box sx={tablePageStyles.searchContainer}>
-        <Box sx={tablePageStyles.filtersContainer}>
-          <TextField
-            placeholder="Поиск по email, имени, фамилии или номеру телефона..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={tablePageStyles.searchField}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={showInactive}
-                onChange={(e) => setShowInactive(e.target.checked)}
-                color="primary"
-              />
-            }
-            label={
-              <Box sx={{ display: 'flex', flexDirection: 'column', ml: 1 }}>
-                <Typography variant="body2">
-                  Показать деактивированных
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {showInactive ? 'Показаны все пользователи' : 'Показаны только активные'}
-                </Typography>
-              </Box>
-            }
-            sx={{ ml: 2 }}
-          />
-        </Box>
-      </Box>
-
+    <Box>
       {/* Статистика */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Найдено пользователей: <strong>{totalItems}</strong>
-        </Typography>
-        {users.length > 0 && (
-          <>
-            <Typography variant="body2" color="success.main">
-              Активных: <strong>{activeUsersCount}</strong>
+      {users.length > 0 && (
+        <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Найдено пользователей: <strong>{totalItems}</strong>
+          </Typography>
+          <Typography variant="body2" color="success.main">
+            Активных: <strong>{activeUsersCount}</strong>
+          </Typography>
+          {inactiveUsersCount > 0 && (
+            <Typography variant="body2" color="error.main">
+              Деактивированных: <strong>{inactiveUsersCount}</strong>
             </Typography>
-            {inactiveUsersCount > 0 && (
-              <Typography variant="body2" color="error.main">
-                Деактивированных: <strong>{inactiveUsersCount}</strong>
-              </Typography>
-            )}
-          </>
-        )}
-        <Typography variant="caption" color="text.secondary">
-          {!showInactive && '(только активные)'}
-          {showInactive && '(включая деактивированных)'}
-        </Typography>
-      </Box>
-
-      {/* Контент */}
-      {isLoading ? (
-        <Box sx={tablePageStyles.loadingContainer}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Box sx={tablePageStyles.errorContainer}>
-          <Alert severity="error" sx={tablePageStyles.errorAlert}>
-            Ошибка при загрузке пользователей: {error.toString()}
-          </Alert>
-        </Box>
-      ) : (
-        <>
-          {/* Таблица пользователей */}
-          <Table 
-            columns={columns} 
-            rows={users} 
-            sx={{ opacity: isDeleting ? 0.6 : 1 }}
-          />
-
-          {/* Пагинация */}
-          {totalPages > 1 && (
-            <Box sx={tablePageStyles.paginationContainer}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-              />
-            </Box>
           )}
-        </>
+          <Typography variant="caption" color="text.secondary">
+            {!showInactive && '(только активные)'}
+            {showInactive && '(включая деактивированных)'}
+          </Typography>
+        </Box>
       )}
 
-      {/* Модальное окно подтверждения удаления */}
-      <Modal
-        open={deleteDialogOpen}
-        onClose={!isDeleting ? () => setDeleteDialogOpen(false) : undefined}
-        title="Подтверждение деактивации"
-        maxWidth={400}
-        actions={
-          <>
-            <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
-              Отмена
-            </Button>
-            <Button
-              onClick={handleConfirmDelete}
-              color="error"
-              variant="contained"
-              disabled={isDeleting}
-              startIcon={isDeleting ? <CircularProgress size={16} /> : null}
-            >
-              {isDeleting ? 'Деактивация...' : 'Деактивировать'}
-            </Button>
-          </>
+      {/* PageTable */}
+      <PageTable<User>
+        header={headerConfig}
+        search={searchConfig}
+        filters={filtersConfig}
+        columns={columns}
+        rows={users}
+        actions={actionsConfig}
+        loading={isLoading}
+        pagination={paginationConfig}
+        responsive={true}
+        empty={
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              {searchQuery ? 'Пользователи не найдены' : 'Нет пользователей'}
+            </Typography>
+          </Box>
         }
-      >
-        <Typography>
-          Вы уверены, что хотите деактивировать этого пользователя? Пользователь будет исключен из активных операций, но его данные сохранятся в системе.
-        </Typography>
-      </Modal>
+      />
     </Box>
   );
 };
 
-export default UsersPage;
+export default UsersPage; 
