@@ -58,9 +58,9 @@ const validationSchema = Yup.object({
   is_active: Yup.boolean(),
 });
 
-// Константы для работы с файлами
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+// Константы для работы с файлами (синхронизированы с бэкендом)
+const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB (как на бэкенде)
+const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png']; // Только JPEG и PNG как на бэкенде
 
 /**
  * CarBrandFormPage - Основной компонент страницы формы бренда автомобиля
@@ -109,12 +109,18 @@ export const CarBrandFormPage: React.FC = () => {
             is_active: values.is_active,
           };
           
-          // Добавляем logo только если это файл
+          // Добавляем logo только если это новый файл (File объект)
+          // Если logo это строка (URL), значит логотип не изменился и не нужно его отправлять
           if (values.logo instanceof File) {
             updateData.logo = values.logo;
             console.log('Logo is a File, will use FormData');
+          } else if (values.logo === null) {
+            // Если logo === null, значит пользователь удалил логотип
+            updateData.logo = null;
+            console.log('Logo is null, will remove logo');
           } else {
-            console.log('Logo is not a File, will use JSON');
+            // Если logo это строка (URL), не отправляем его - логотип не изменился
+            console.log('Logo is URL string, not sending logo field');
           }
           
           console.log('Update data:', {
@@ -140,7 +146,21 @@ export const CarBrandFormPage: React.FC = () => {
         setTimeout(() => navigate('/admin/car-brands'), 1000);
       } catch (error: any) {
         console.error('Submit error:', error);
-        setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
+        
+        // Обработка ошибок валидации от API
+        if (error?.data?.errors) {
+          // Если есть массив ошибок (например, для валидации полей)
+          const errorMessages = Array.isArray(error.data.errors) 
+            ? error.data.errors.join(', ')
+            : Object.values(error.data.errors).flat().join(', ');
+          setSubmitError(errorMessages);
+        } else if (error?.data?.message) {
+          setSubmitError(error.data.message);
+        } else if (error?.status === 422) {
+          setSubmitError('Ошибка валидации данных. Проверьте правильность заполнения всех полей.');
+        } else {
+          setSubmitError('Произошла ошибка при сохранении');
+        }
       }
     },
   });
@@ -160,13 +180,13 @@ export const CarBrandFormPage: React.FC = () => {
     if (file) {
       // Валидация размера файла
       if (file.size > MAX_FILE_SIZE) {
-        setSubmitError('Размер файла не должен превышать 5MB');
+        setSubmitError('Размер файла не должен превышать 1MB');
         return;
       }
 
       // Валидация типа файла
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-        setSubmitError('Поддерживаются только изображения в форматах JPEG, PNG, GIF, WebP');
+        setSubmitError('Поддерживаются только изображения в форматах JPEG, PNG');
         return;
       }
 
@@ -311,7 +331,7 @@ export const CarBrandFormPage: React.FC = () => {
                  </Box>
 
                 <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
-                  Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB
+                  Поддерживаются форматы: JPEG, PNG. Максимальный размер: 1MB
                 </Typography>
               </Box>
 

@@ -119,9 +119,25 @@ export const carBrandsApi = baseApi.injectEndpoints({
             method: 'PATCH',
             body: formData,
           };
+        } else if (data.logo === null) {
+          // Если logo === null, значит нужно удалить логотип, используем FormData
+          console.log('Using FormData to remove logo (logo === null)');
+          const formData = new FormData();
+          if (data.name !== undefined) {
+            formData.append('car_brand[name]', data.name);
+          }
+          formData.append('car_brand[logo]', 'null'); // Отправляем строку 'null' для удаления
+          if (data.is_active !== undefined) {
+            formData.append('car_brand[is_active]', String(data.is_active));
+          }
+          return {
+            url: `car_brands/${id}`,
+            method: 'PATCH',
+            body: formData,
+          };
         } else {
-          // Если нет файла, используем JSON
-          console.log('Using JSON because no file upload');
+          // Если нет изменений логотипа, используем JSON
+          console.log('Using JSON because no logo changes');
           const jsonData: any = {};
           if (data.name !== undefined) {
             jsonData.name = data.name;
