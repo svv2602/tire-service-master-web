@@ -29,6 +29,9 @@ import type {
 } from '../../components/common/PageTable';
 import type { Column } from '../../components/ui/Table/Table';
 
+// Прямой импорт ActionsMenu для избежания проблем с экспортом
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
+
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
 
@@ -175,6 +178,33 @@ const CitiesPage: React.FC = () => {
     },
   ], [regionFilter, handleRegionFilterChange, regions]);
 
+  // Конфигурация действий для ActionsMenu
+  const cityActions: ActionItem<City>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (city: City) => handleEditCity(city),
+      color: 'primary',
+      tooltip: 'Редактировать город'
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (city: City) => handleDeleteCity(city),
+      color: 'error',
+      tooltip: 'Удалить город',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы действительно хотите удалить этот город? Это действие нельзя будет отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      },
+    }
+  ], [handleEditCity, handleDeleteCity]);
+
   const columns: Column[] = useMemo(() => [
     {
       id: 'name',
@@ -232,25 +262,22 @@ const CitiesPage: React.FC = () => {
         );
       }
     },
-  ], [regions, tablePageStyles, handleToggleStatus]);
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      format: (_value: any, city: City) => (
+        <ActionsMenu 
+          actions={cityActions} 
+          item={city} 
+          menuThreshold={0}
+          sx={{ display: 'flex', justifyContent: 'flex-end' }}
+        />
+      )
+    },
+  ], [regions, tablePageStyles, handleToggleStatus, cityActions]);
 
-  const actionsConfig: ActionConfig[] = useMemo(() => [
-    {
-      id: 'edit',
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (city: City) => handleEditCity(city),
-    },
-    {
-      id: 'delete',
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      color: 'error',
-      onClick: (city: City) => handleDeleteCity(city),
-      requireConfirmation: true,
-      confirmationText: 'Вы действительно хотите удалить этот город? Это действие нельзя будет отменить.',
-    },
-  ], [handleEditCity, handleDeleteCity]);
+
 
   if (isLoading) {
     return (
@@ -278,7 +305,6 @@ const CitiesPage: React.FC = () => {
         filters={filtersConfig}
         columns={columns}
         rows={cities}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={{
           page,
