@@ -46,6 +46,7 @@ export * from './AppBar';
 export * from './AutoComplete';
 export * from './Table';
 export * from './PhoneField';
+export * from './ActionsMenu';
 
 // Экспорт Container из MUI (так как он не требует кастомизации)
 export { Container, Box, CircularProgress } from '@mui/material'; 
