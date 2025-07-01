@@ -17,6 +17,7 @@ import {
   Switch,
   useTheme,
   Tooltip,
+  IconButton,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -37,6 +38,7 @@ import {
   useGetRegionsQuery,
   useGetCitiesQuery,
   useGetServicePointsByPartnerIdQuery,
+  useUpdateServicePointMutation,
 } from '../../api';
 import { getRoleId } from '../../utils/roles.utils';
 import { PartnerFormData, ServicePoint } from '../../types/models';
@@ -299,6 +301,7 @@ const PartnerFormPage: React.FC = () => {
   const [createOperator] = useCreateOperatorMutation();
   const [updateOperator] = useUpdateOperatorMutation();
   const [deleteOperator] = useDeleteOperatorMutation();
+  const [updateServicePoint] = useUpdateServicePointMutation();
   const [operatorModalOpen, setOperatorModalOpen] = useState(false);
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
 
@@ -314,8 +317,30 @@ const PartnerFormPage: React.FC = () => {
   };
   // Удалить/деактивировать оператора
   const handleDeleteOperator = async (operator: Operator) => {
-    await deleteOperator({ id: operator.id, partnerId });
-    refetchOperators();
+    try {
+      if (operator.is_active) {
+        // Если оператор активен - деактивируем его
+        await updateOperator({ 
+          id: operator.id, 
+          data: { 
+            user: {
+              is_active: false
+            }
+          } 
+        }).unwrap();
+        setSuccessMessage('Сотрудник деактивирован');
+      } else {
+        // Если оператор неактивен - удаляем его
+        await deleteOperator({ id: operator.id, partnerId }).unwrap();
+        setSuccessMessage('Сотрудник удален');
+      }
+      refetchOperators();
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Ошибка при деактивации/удалении сотрудника:', error);
+      setApiError('Не удалось деактивировать/удалить сотрудника');
+      setTimeout(() => setApiError(null), 3000);
+    }
   };
   // Сохранить оператора (добавить/редактировать)
   const handleSaveOperator = async (data: any): Promise<void> => {
@@ -332,6 +357,57 @@ const PartnerFormPage: React.FC = () => {
       // Пробрасываем ошибку для обработки в OperatorModal
       console.error('Ошибка при сохранении оператора в PartnerFormPage:', error);
       throw error;
+    }
+  };
+
+  // --- Исправляем функцию для изменения статуса сервисной точки ---
+  const handleToggleServicePointStatus = async (servicePoint: ServicePoint) => {
+    try {
+      await updateServicePoint({ 
+        id: servicePoint.id.toString(), 
+        partnerId: partnerId,
+        servicePoint: { 
+          is_active: !servicePoint.is_active 
+        } 
+      }).unwrap();
+      
+      // Обновляем список сервисных точек без вызова хука внутри функции
+      setTimeout(() => {
+        // Принудительно обновляем страницу для отображения изменений
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error('Ошибка при изменении статуса сервисной точки:', error);
+      setApiError('Не удалось изменить статус сервисной точки');
+    }
+  };
+
+  // --- Исправляем функцию для изменения статуса оператора ---
+  const handleToggleOperatorStatus = async (operator: Operator) => {
+    try {
+      await updateOperator({ 
+        id: operator.id, 
+        data: { 
+          user: {
+            first_name: operator.user.first_name,
+            last_name: operator.user.last_name,
+            email: operator.user.email,
+            phone: operator.user.phone,
+            is_active: !operator.is_active
+          },
+          operator: {
+            position: operator.position,
+            access_level: operator.access_level
+          }
+        } 
+      }).unwrap();
+      refetchOperators();
+      setSuccessMessage(operator.is_active ? 'Сотрудник деактивирован' : 'Сотрудник активирован');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Ошибка при изменении статуса оператора:', error);
+      setApiError('Не удалось изменить статус сотрудника');
+      setTimeout(() => setApiError(null), 3000);
     }
   };
 
@@ -601,29 +677,17 @@ const PartnerFormPage: React.FC = () => {
       id: 'is_active',
       label: 'Статус',
       format: (value, row: ServicePoint) => (
-        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          {row.is_active ? (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: 'success.main',
-                fontWeight: 'bold'
-              }}
-            >
-              Активна
-            </Typography>
-          ) : (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: 'error.main',
-                fontWeight: 'bold'
-              }}
-            >
-              Неактивна
-            </Typography>
-          )}
-        </Box>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={row.is_active}
+              onChange={() => handleToggleServicePointStatus(row)}
+              size="small"
+            />
+          }
+          label=""
+          sx={{ m: 0 }}
+        />
       ),
       align: 'center',
       minWidth: 100,
@@ -710,13 +774,41 @@ const PartnerFormPage: React.FC = () => {
           { id: 'phone', label: 'Телефон', format: (_: any, row: Operator) => row.user.phone },
           { id: 'position', label: 'Должность', format: (_: any, row: Operator) => row.position },
           { id: 'access_level', label: 'Доступ', format: (_: any, row: Operator) => row.access_level },
-          { id: 'status', label: 'Статус', format: (_: any, row: Operator) => row.is_active ? 'Активен' : 'Неактивен' },
+          { id: 'status', label: 'Статус', format: (_: any, row: Operator) => (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={row.is_active}
+                  onChange={() => handleToggleOperatorStatus(row)}
+                  size="small"
+                />
+              }
+              label=""
+              sx={{ m: 0 }}
+            />
+          ) },
           { id: 'actions', label: 'Действия', format: (_: any, row: Operator) => (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button size="small" onClick={() => handleEditOperator(row)}>Редактировать</Button>
-              <Button size="small" color="error" onClick={() => handleDeleteOperator(row)}>
-                {row.is_active ? 'Деактивировать' : 'Удалить'}
-              </Button>
+            <Box sx={tablePageStyles.actionsContainer}>
+              <Tooltip title="Редактировать">
+                <IconButton
+                  onClick={() => handleEditOperator(row)}
+                  size="small"
+                  color="primary"
+                  sx={tablePageStyles.actionButton}
+                >
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={row.is_active ? "Деактивировать" : "Удалить"}>
+                <IconButton
+                  onClick={() => handleDeleteOperator(row)}
+                  size="small"
+                  color="error"
+                  sx={tablePageStyles.actionButton}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
           ) },
         ]}
