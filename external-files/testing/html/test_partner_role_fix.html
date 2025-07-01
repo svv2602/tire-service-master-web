@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Создание партнера с правильной ролью</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f5f5f5; 
+        }
+        .container { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .success { 
+            background-color: #d4edda; 
+            border-color: #c3e6cb; 
+            color: #155724; 
+        }
+        .error { 
+            background-color: #f8d7da; 
+            border-color: #f5c6cb; 
+            color: #721c24; 
+        }
+        .info { 
+            background-color: #d1ecf1; 
+            border-color: #bee5eb; 
+            color: #0c5460; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 4px; 
+            overflow-x: auto; 
+            white-space: pre-wrap; 
+        }
+        .role-mapping { 
+            background: #fff3cd; 
+            border: 1px solid #ffeaa7; 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест: Создание партнера с правильной ролью</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация о тесте</h3>
+            <p><strong>Цель:</strong> Проверить что при создании партнера пользователь получает роль 'partner' (ID=4)</p>
+            <p><strong>Проблема:</strong> Ранее пользователь получал роль 'operator' (ID=3) из-за неправильного маппинга в roles.utils.ts</p>
+            <p><strong>Исправление:</strong> Обновлен маппинг ролей в соответствии с базой данных</p>
+        </div>
+
+        <div class="role-mapping">
+            <h4>🔄 Правильный маппинг ролей:</h4>
+            <ul>
+                <li>admin: ID=1</li>
+                <li>manager: ID=2</li>
+                <li>operator: ID=3</li>
+                <li><strong>partner: ID=4</strong></li>
+                <li>client: ID=5</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Тестирование API</h3>
+            <button onclick="testCreatePartner()">1. Создать тестового партнера</button>
+            <button onclick="testRoleMapping()">2. Проверить маппинг ролей</button>
+            <button onclick="checkAllRoles()">3. Проверить все роли в БД</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Результаты тестирования</h3>
+            <div id="test-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            resultsDiv.innerHTML += `<div class="test-section ${className}">
+                <strong>[${timestamp}]</strong> ${message}
+            </div>`;
+        }
+
+        function displayApiResult(title, data, isError = false) {
+            const resultsDiv = document.getElementById('api-results');
+            const className = isError ? 'error' : 'success';
+            resultsDiv.innerHTML += `<div class="test-section ${className}">
+                <h4>${title}</h4>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>`;
+        }
+
+        async function testCreatePartner() {
+            try {
+                log('🚀 Создаем тестового партнера...');
+                
+                const partnerData = {
+                    partner: {
+                        company_name: `Тест Компания ${Date.now()}`,
+                        company_description: 'Тестовая компания для проверки ролей',
+                        contact_person: 'Тест Контакт',
+                        legal_address: 'ул. Тестовая, 123',
+                        user_attributes: {
+                            email: `test_partner_${Date.now()}@example.com`,
+                            password: 'password123',
+                            first_name: 'Тест',
+                            last_name: 'Партнер',
+                            phone: '+380671234567'
+                        }
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/partners`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(partnerData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayApiResult('✅ Партнер создан успешно', result);
+                    log(`✅ Партнер создан: ID=${result.id}, User ID=${result.user_id}`, 'success');
+                    
+                    // Проверяем роль созданного пользователя
+                    await checkUserRole(result.user_id);
+                } else {
+                    displayApiResult('❌ Ошибка создания партнера', result, true);
+                    log(`❌ Ошибка: ${result.message || 'Неизвестная ошибка'}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                displayApiResult('❌ Ошибка сети', { error: error.message }, true);
+            }
+        }
+
+        async function checkUserRole(userId) {
+            try {
+                log(`🔍 Проверяем роль пользователя ID=${userId}...`);
+                
+                const response = await fetch(`${API_BASE}/users/${userId}`);
+                const user = await response.json();
+                
+                if (response.ok) {
+                    const expectedRoleId = 4; // partner
+                    const actualRoleId = user.role_id;
+                    
+                    if (actualRoleId === expectedRoleId) {
+                        log(`✅ Роль пользователя корректна: role_id=${actualRoleId} (partner)`, 'success');
+                        displayApiResult('✅ Роль пользователя проверена', {
+                            user_id: userId,
+                            role_id: actualRoleId,
+                            expected: expectedRoleId,
+                            status: 'CORRECT'
+                        });
+                    } else {
+                        log(`❌ Неправильная роль: ожидалось ${expectedRoleId}, получено ${actualRoleId}`, 'error');
+                        displayApiResult('❌ Неправильная роль пользователя', {
+                            user_id: userId,
+                            role_id: actualRoleId,
+                            expected: expectedRoleId,
+                            status: 'INCORRECT'
+                        }, true);
+                    }
+                } else {
+                    log(`❌ Ошибка получения пользователя: ${user.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка проверки роли: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRoleMapping() {
+            log('🧪 Тестируем маппинг ролей...');
+            
+            // Симуляция функций из roles.utils.ts
+            const getRoleId = (role) => {
+                switch (role) {
+                    case 'admin': return 1;
+                    case 'manager': return 2;
+                    case 'operator': return 3;
+                    case 'partner': return 4;
+                    case 'client': return 5;
+                    default: return 5;
+                }
+            };
+
+            const getRoleFromId = (roleId) => {
+                switch (roleId) {
+                    case 1: return 'ADMIN';
+                    case 2: return 'MANAGER';
+                    case 3: return 'OPERATOR';
+                    case 4: return 'PARTNER';
+                    case 5: return 'CLIENT';
+                    default: return 'CLIENT';
+                }
+            };
+
+            const testCases = [
+                { role: 'partner', expectedId: 4 },
+                { role: 'operator', expectedId: 3 },
+                { role: 'admin', expectedId: 1 },
+                { role: 'manager', expectedId: 2 },
+                { role: 'client', expectedId: 5 }
+            ];
+
+            let allCorrect = true;
+            const results = [];
+
+            testCases.forEach(({ role, expectedId }) => {
+                const actualId = getRoleId(role);
+                const roleFromId = getRoleFromId(actualId);
+                const isCorrect = actualId === expectedId;
+                
+                results.push({
+                    role,
+                    expected_id: expectedId,
+                    actual_id: actualId,
+                    role_from_id: roleFromId,
+                    correct: isCorrect
+                });
+
+                if (!isCorrect) {
+                    allCorrect = false;
+                    log(`❌ Маппинг роли '${role}': ожидалось ${expectedId}, получено ${actualId}`, 'error');
+                } else {
+                    log(`✅ Маппинг роли '${role}': ${actualId} ✓`, 'success');
+                }
+            });
+
+            displayApiResult(
+                allCorrect ? '✅ Все маппинги ролей корректны' : '❌ Найдены ошибки в маппинге ролей',
+                results,
+                !allCorrect
+            );
+        }
+
+        async function checkAllRoles() {
+            try {
+                log('🔍 Получаем все роли из базы данных...');
+                
+                // Создаем тестового пользователя для получения токена
+                const authResponse = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    })
+                });
+
+                if (!authResponse.ok) {
+                    log('❌ Не удалось авторизоваться для получения ролей', 'error');
+                    return;
+                }
+
+                const authData = await authResponse.json();
+                
+                // Получаем роли (предполагаем что есть такой endpoint)
+                const rolesResponse = await fetch(`${API_BASE}/user_roles`, {
+                    headers: {
+                        'Authorization': `Bearer ${authData.tokens?.access}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (rolesResponse.ok) {
+                    const roles = await rolesResponse.json();
+                    displayApiResult('📋 Роли из базы данных', roles);
+                    log(`✅ Получено ${roles.length} ролей из БД`, 'success');
+                } else {
+                    log('ℹ️ Endpoint /user_roles недоступен, используем известные роли');
+                    displayApiResult('📋 Известные роли (из тестирования)', [
+                        { id: 1, name: 'admin' },
+                        { id: 2, name: 'manager' },
+                        { id: 3, name: 'operator' },
+                        { id: 4, name: 'partner' },
+                        { id: 5, name: 'client' }
+                    ]);
+                }
+            } catch (error) {
+                log(`❌ Ошибка получения ролей: ${error.message}`, 'error');
+            }
+        }
+
+        // Автоматический запуск тестов при загрузке
+        window.onload = function() {
+            log('🚀 Тестирование исправления ролей партнеров начато');
+            testRoleMapping();
+        };
+    </script>
+</body>
+</html> 

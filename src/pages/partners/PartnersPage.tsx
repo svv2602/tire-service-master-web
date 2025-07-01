@@ -86,6 +86,7 @@ const PartnersPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Debounce для поиска
   const debouncedSearch = useDebounce(search, 300);
@@ -142,10 +143,23 @@ const PartnersPage: React.FC = () => {
   const handleDeleteConfirm = useCallback(async () => {
     if (selectedPartner) {
       try {
-        await deletePartner(selectedPartner.id).unwrap();
+        const response = await deletePartner(selectedPartner.id).unwrap();
+        
+        // Проверяем, была ли выполнена деактивация вместо удаления
+        if (response && typeof response === 'object' && 'action' in response && response.action === 'deactivated') {
+          setErrorMessage(null);
+          setDeleteDialogOpen(false);
+          setSelectedPartner(null);
+          // Показываем информационное сообщение о деактивации
+          setSuccessMessage(response.message || 'Партнер был деактивирован. Теперь вы можете его удалить.');
+          return;
+        }
+        
+        // Обычное удаление
         setDeleteDialogOpen(false);
         setSelectedPartner(null);
         setErrorMessage(null);
+        setSuccessMessage('Партнер успешно удален.');
       } catch (error: any) {
         let errorMessage = 'Ошибка при удалении партнера';
         
@@ -313,11 +327,19 @@ const PartnersPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      {/* Отображение ошибок */}
+      {/* Отображение ошибок и успешных сообщений */}
       {errorMessage && (
         <Box sx={{ mb: 2 }}>
           <Alert severity="error" onClose={() => setErrorMessage(null)}>
             {errorMessage}
+          </Alert>
+        </Box>
+      )}
+      
+      {successMessage && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="success" onClose={() => setSuccessMessage(null)}>
+            {successMessage}
           </Alert>
         </Box>
       )}
@@ -410,13 +432,25 @@ const PartnersPage: React.FC = () => {
               color="error" 
               variant="contained"
             >
-              Удалить
+              {selectedPartner?.is_active ? 'Деактивировать' : 'Удалить'}
             </Button>
           </>
         }
       >
         <Typography>
-          Вы действительно хотите удалить этого партнера? Это действие нельзя будет отменить.
+          {selectedPartner?.is_active ? (
+            <>
+              Партнер <strong>"{selectedPartner?.company_name}"</strong> активен. 
+              <br /><br />
+              Сначала он будет деактивирован, после чего вы сможете его удалить.
+            </>
+          ) : (
+            <>
+              Вы действительно хотите удалить партнера <strong>"{selectedPartner?.company_name}"</strong>? 
+              <br /><br />
+              Это действие нельзя будет отменить.
+            </>
+          )}
         </Typography>
       </Modal>
     </Box>

@@ -51,7 +51,7 @@ export const partnersApi = baseApi.injectEndpoints({
       ],
     }),
     
-    deletePartner: build.mutation<void, number>({
+    deletePartner: build.mutation<{ action?: string; message?: string; partner?: Partner } | void, number>({
       query: (id) => ({
         url: `partners/${id}`,
         method: 'DELETE',
