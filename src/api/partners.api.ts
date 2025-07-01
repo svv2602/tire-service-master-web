@@ -74,8 +74,25 @@ export const partnersApi = baseApi.injectEndpoints({
     getPartnerRelatedData: build.query<{
       service_points_count: number;
       operators_count: number;
-      service_points: Array<{ id: number; name: string; is_active: boolean }>;
-      operators: Array<{ id: number; user: { first_name: string; last_name: string; email: string } }>;
+      service_points: Array<{ 
+        id: number; 
+        name: string; 
+        address: string;
+        is_active: boolean;
+        work_status: string;
+      }>;
+      operators: Array<{ 
+        id: number; 
+        is_active: boolean;
+        position: string;
+        user: { 
+          id: number;
+          first_name: string; 
+          last_name: string; 
+          email: string;
+          is_active: boolean;
+        } 
+      }>;
     }, number>({
       query: (id) => `partners/${id}/related_data`,
       providesTags: (_result, _err, id) => [{ type: 'Partners' as const, id }],

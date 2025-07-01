@@ -508,7 +508,10 @@ const PartnersPage: React.FC = () => {
                   <Box sx={{ pl: 2 }}>
                     {relatedData.service_points.map(sp => (
                       <Typography key={sp.id} variant="body2" color={sp.is_active ? 'text.primary' : 'text.secondary'}>
-                        • {sp.name} {!sp.is_active && '(уже неактивна)'}
+                        • {sp.name} - {sp.is_active ? '✅ Активна' : '❌ Неактивна'} 
+                        {sp.work_status && ` (${sp.work_status === 'working' ? 'Работает' : 
+                                                sp.work_status === 'temporarily_closed' ? 'Временно закрыта' : 
+                                                'Закрыта'})`}
                       </Typography>
                     ))}
                   </Box>
@@ -522,8 +525,10 @@ const PartnersPage: React.FC = () => {
                   </Typography>
                   <Box sx={{ pl: 2 }}>
                     {relatedData.operators.map(op => (
-                      <Typography key={op.id} variant="body2">
-                        • {op.user.first_name} {op.user.last_name} ({op.user.email})
+                      <Typography key={op.id} variant="body2" color={(op.is_active && op.user?.is_active) ? 'text.primary' : 'text.secondary'}>
+                        • {op.user?.first_name || 'Имя не указано'} {op.user?.last_name || ''} ({op.user?.email || 'Email не указан'}) - {' '}
+                        {(op.is_active && op.user?.is_active) ? '✅ Активен' : '❌ Неактивен'}
+                        {op.position && ` (${op.position})`}
                       </Typography>
                     ))}
                   </Box>
