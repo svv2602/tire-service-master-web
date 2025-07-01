@@ -39,6 +39,8 @@ import {
   type Column
 } from '../../components/ui';
 import { Select } from '../../components/ui/Select';
+import AutoComplete from '../../components/ui/AutoComplete';
+import type { AutoCompleteOption } from '../../components/ui/AutoComplete/types';
 
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles/components';
@@ -134,6 +136,8 @@ const ServicePointsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
   const [selectedRegionId, setSelectedRegionId] = useState<number | ''>('');
+  const [selectedRegion, setSelectedRegion] = useState<AutoCompleteOption | null>(null);
+  const [selectedCity, setSelectedCity] = useState<AutoCompleteOption | null>(null);
   const [selectedIsActive, setSelectedIsActive] = useState<string>(''); // '' | 'true' | 'false'
   const [selectedWorkStatus, setSelectedWorkStatus] = useState<string>(''); // '' | 'working' | 'temporarily_closed' | etc.
   const [page, setPage] = useState(0);
@@ -164,9 +168,9 @@ const ServicePointsPage: React.FC = () => {
     { 
       region_id: selectedRegionId ? Number(selectedRegionId) : undefined,
       page: 1,
-      per_page: 100
-    },
-    { skip: !selectedRegionId }
+      per_page: 1000 // Увеличиваем лимит для полной загрузки городов
+    }
+    // Убираем skip - загружаем все города или по выбранному региону
   );
   const { data: servicePointsData, isLoading: servicePointsLoading, error, refetch } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint, { isLoading: isDeleting }] = useDeleteServicePointMutation();
@@ -174,6 +178,19 @@ const ServicePointsPage: React.FC = () => {
   const isLoading = servicePointsLoading || regionsLoading || citiesLoading || isDeleting;
   const servicePoints = servicePointsData?.data || [];
   const totalItems = servicePointsData?.pagination?.total_count || 0;
+
+  // Подготавливаем данные для AutoComplete
+  const regionOptions: AutoCompleteOption[] = useMemo(() => 
+    regionsData?.data?.map((region) => ({
+      id: region.id,
+      label: region.name
+    })) || [], [regionsData]);
+
+  const cityOptions: AutoCompleteOption[] = useMemo(() => 
+    citiesData?.data?.map((city) => ({
+      id: city.id,
+      label: city.name
+    })) || [], [citiesData]);
 
   // Автоматическое обновление данных каждые 30 секунд для отображения изменений состояния
   React.useEffect(() => {
@@ -200,6 +217,21 @@ const ServicePointsPage: React.FC = () => {
   const handleCityChange = useCallback((value: string | number) => {
     const cityId = value === '' ? '' : Number(value);
     setSelectedCityId(cityId);
+    setPage(0);
+  }, []);
+
+  // Обработчики для AutoComplete
+  const handleRegionAutoCompleteChange = useCallback((value: AutoCompleteOption | null) => {
+    setSelectedRegion(value);
+    setSelectedRegionId(value ? value.id as number : '');
+    setSelectedCity(null); // Сбрасываем выбранный город
+    setSelectedCityId('');
+    setPage(0);
+  }, []);
+
+  const handleCityAutoCompleteChange = useCallback((value: AutoCompleteOption | null) => {
+    setSelectedCity(value);
+    setSelectedCityId(value ? value.id as number : '');
     setPage(0);
   }, []);
 
@@ -532,35 +564,24 @@ const ServicePointsPage: React.FC = () => {
           }}
         />
         
-        <Select
+        <AutoComplete
           label="Регион"
-          value={selectedRegionId}
-          onChange={handleRegionChange}
-          options={[
-            { value: '', label: 'Все регионы' },
-            ...(regionsData?.data?.map((region) => ({
-              value: region.id,
-              label: region.name
-            })) || [])
-          ]}
-          size="small"
-          sx={{ minWidth: 150 }}
+          value={selectedRegion}
+          onChange={handleRegionAutoCompleteChange}
+          options={regionOptions}
+          placeholder="Введите название региона"
+          TextFieldProps={{ size: 'small' }}
+          sx={{ minWidth: 200 }}
         />
 
-        <Select
+        <AutoComplete
           label="Город"
-          value={selectedCityId}
-          onChange={handleCityChange}
-          options={[
-            { value: '', label: 'Все города' },
-            ...(citiesData?.data?.map((city) => ({
-              value: city.id,
-              label: city.name
-            })) || [])
-          ]}
-          disabled={!selectedRegionId}
-          size="small"
-          sx={{ minWidth: 150 }}
+          value={selectedCity}
+          onChange={handleCityAutoCompleteChange}
+          options={cityOptions}
+          placeholder="Введите название города"
+          TextFieldProps={{ size: 'small' }}
+          sx={{ minWidth: 200 }}
         />
 
         <Select
