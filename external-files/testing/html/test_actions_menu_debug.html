@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест ActionsMenu - Отладка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            border-left: 4px solid #2196f3;
+            background: #f8f9fa;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            border-left-color: #d32f2f;
+        }
+        .success {
+            color: #2e7d32;
+            background: #e8f5e9;
+            border-left-color: #2e7d32;
+        }
+        .warning {
+            color: #f57c00;
+            background: #fff3e0;
+            border-left-color: #f57c00;
+        }
+        .code {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Отладка ActionsMenu в UsersPage</h1>
+    
+    <div class="test-container">
+        <h2>Проблема</h2>
+        <div class="test-step error">
+            <strong>Симптом:</strong> На странице /admin/users отображаются старые иконки действий (карандаш и корзина) вместо нового компонента ActionsMenu
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Проверки</h2>
+        
+        <div class="test-step">
+            <strong>1. Проверка файла UsersPage.tsx:</strong>
+            <div class="code">
+✅ ActionsMenu импортирован: import { ActionsMenu } from '../../components/ui'
+✅ Колонка actions настроена: format: () => &lt;ActionsMenu actions={userActions} item={row} /&gt;
+✅ userActions определен с правильными ActionItem&lt;User&gt;[]
+✅ НЕ передается старый actions prop в PageTable
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>2. Проверка PageTable.tsx:</strong>
+            <div class="code">
+⚠️  PageTable автоматически добавляет RowActions если передан actions prop
+✅ В UsersPage НЕ передается actions prop в PageTable
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>3. Проверка компонента ActionsMenu:</strong>
+            <div class="code">
+✅ Файл существует: src/components/ui/ActionsMenu/ActionsMenu.tsx
+✅ Экспорт правильный: export { ActionsMenu, default } from './ActionsMenu'
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Возможные причины</h2>
+        
+        <div class="test-step warning">
+            <strong>1. Кэш браузера:</strong>
+            Браузер использует старую версию JavaScript файлов
+        </div>
+        
+        <div class="test-step warning">
+            <strong>2. Проблема компиляции:</strong>
+            Webpack не пересобрал файлы после изменений
+        </div>
+        
+        <div class="test-step warning">
+            <strong>3. Ошибка в консоли:</strong>
+            JavaScript ошибка блокирует отображение нового компонента
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>План диагностики</h2>
+        
+        <div class="test-step">
+            <strong>Шаг 1:</strong> Откройте DevTools (F12) и проверьте консоль на ошибки
+            <button onclick="window.open('http://localhost:3008/admin/users', '_blank')">Открыть /admin/users</button>
+        </div>
+        
+        <div class="test-step">
+            <strong>Шаг 2:</strong> Жесткая перезагрузка страницы (Ctrl+Shift+R)
+        </div>
+        
+        <div class="test-step">
+            <strong>Шаг 3:</strong> Проверьте Network tab - загружаются ли новые JS файлы
+        </div>
+        
+        <div class="test-step">
+            <strong>Шаг 4:</strong> Проверьте Elements tab - есть ли ActionsMenu в DOM
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Что искать в консоли</h2>
+        
+        <div class="info-box">
+            <strong>Возможные ошибки:</strong>
+            <ul>
+                <li><code>Cannot resolve module 'ActionsMenu'</code></li>
+                <li><code>ActionsMenu is not a function</code></li>
+                <li><code>Cannot read property 'map' of undefined</code> (в userActions)</li>
+                <li><code>Module not found</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Временное решение</h2>
+        
+        <div class="test-step">
+            Если проблема в кэше, попробуйте:
+            <ol>
+                <li>Очистить кэш браузера (Ctrl+Shift+Delete)</li>
+                <li>Перезапустить сервер разработки</li>
+                <li>Открыть в режиме инкогнито</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 Тест ActionsMenu загружен');
+        console.log('Откройте /admin/users и проверьте консоль на ошибки');
+        
+        // Функция для проверки доступности сервера
+        function checkServer() {
+            fetch('http://localhost:3008/admin/users')
+                .then(response => {
+                    console.log('✅ Сервер доступен:', response.status);
+                })
+                .catch(error => {
+                    console.error('❌ Сервер недоступен:', error);
+                });
+        }
+        
+        checkServer();
+    </script>
+</body>
+</html> 

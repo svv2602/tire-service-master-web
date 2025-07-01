@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест ActionsMenu в PartnersPage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4caf50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        .info { border-color: #2196f3; background-color: #e3f2fd; }
+        
+        .test-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover { background: #1976d2; }
+        
+        .log {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест ActionsMenu в PartnersPage</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация о тесте</h3>
+            <p><strong>Цель:</strong> Проверить работу ActionsMenu компонента в PartnersPage</p>
+            <p><strong>URL для проверки:</strong> <a href="http://localhost:3008/admin/partners" target="_blank">http://localhost:3008/admin/partners</a></p>
+            <p><strong>Дата:</strong> <span id="currentDate"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Чек-лист проверки</h3>
+            
+            <h4>1. Загрузка страницы</h4>
+            <label><input type="checkbox" id="page-loads"> Страница /admin/partners загружается без ошибок</label><br>
+            <label><input type="checkbox" id="no-console-errors"> В консоли браузера нет ошибок импорта</label><br>
+            <label><input type="checkbox" id="table-renders"> Таблица партнеров отображается</label><br>
+
+            <h4>2. ActionsMenu компонент</h4>
+            <label><input type="checkbox" id="actions-column"> Колонка "Действия" присутствует в таблице</label><br>
+            <label><input type="checkbox" id="menu-button"> Кнопка меню (три точки) отображается для каждого партнера</label><br>
+            <label><input type="checkbox" id="menu-opens"> При клике на кнопку открывается выпадающее меню</label><br>
+
+            <h4>3. Действия в меню</h4>
+            <label><input type="checkbox" id="edit-action"> Действие "Редактировать" присутствует</label><br>
+            <label><input type="checkbox" id="service-points-action"> Действие "Сервисные точки" присутствует</label><br>
+            <label><input type="checkbox" id="delete-action"> Действие "Удалить" присутствует</label><br>
+
+            <h4>4. Функциональность действий</h4>
+            <label><input type="checkbox" id="edit-works"> "Редактировать" переходит на страницу редактирования</label><br>
+            <label><input type="checkbox" id="service-points-works"> "Сервисные точки" переходит к управлению точками</label><br>
+            <label><input type="checkbox" id="delete-works"> "Удалить" открывает диалог подтверждения</label><br>
+
+            <h4>5. UX элементы</h4>
+            <label><input type="checkbox" id="tooltips-work"> Подсказки (tooltips) отображаются при наведении</label><br>
+            <label><input type="checkbox" id="icons-display"> Иконки действий отображаются корректно</label><br>
+            <label><input type="checkbox" id="colors-correct"> Цвета действий соответствуют назначению</label><br>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Быстрые тесты</h3>
+            <button class="test-button" onclick="openPartnersPage()">Открыть страницу партнеров</button>
+            <button class="test-button" onclick="checkConsoleErrors()">Проверить консоль</button>
+            <button class="test-button" onclick="generateTestReport()">Сгенерировать отчет</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Лог тестирования</h3>
+            <div id="testLog" class="log">Готов к тестированию...\n</div>
+        </div>
+
+        <div class="test-section" id="resultSection" style="display: none;">
+            <h3>📋 Результат тестирования</h3>
+            <div id="testResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Установка текущей даты
+        document.getElementById('currentDate').textContent = new Date().toLocaleString('ru-RU');
+
+        function log(message) {
+            const logElement = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString('ru-RU');
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function openPartnersPage() {
+            log('Открываю страницу партнеров...');
+            window.open('http://localhost:3008/admin/partners', '_blank');
+            log('Страница открыта в новой вкладке');
+        }
+
+        function checkConsoleErrors() {
+            log('Инструкция: Откройте DevTools (F12) и проверьте консоль на наличие ошибок');
+            log('Ищите ошибки типа "Element type is invalid" или "Cannot resolve module"');
+        }
+
+        function generateTestReport() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let passed = 0;
+            let total = checkboxes.length;
+            
+            const results = [];
+            checkboxes.forEach(checkbox => {
+                const label = checkbox.parentElement.textContent.trim();
+                const status = checkbox.checked ? '✅' : '❌';
+                results.push(`${status} ${label}`);
+                if (checkbox.checked) passed++;
+            });
+
+            const percentage = Math.round((passed / total) * 100);
+            let resultClass = 'error';
+            if (percentage >= 90) resultClass = 'success';
+            else if (percentage >= 70) resultClass = 'warning';
+
+            const resultSection = document.getElementById('resultSection');
+            const resultDiv = document.getElementById('testResult');
+            
+            resultDiv.innerHTML = `
+                <div class="${resultClass}">
+                    <h4>Результат: ${passed}/${total} тестов пройдено (${percentage}%)</h4>
+                    <div style="margin-top: 10px;">
+                        ${results.join('<br>')}
+                    </div>
+                </div>
+            `;
+            
+            resultSection.style.display = 'block';
+            log(`Отчет сгенерирован: ${passed}/${total} тестов пройдено (${percentage}%)`);
+        }
+
+        // Автоматическое логирование изменений чекбоксов
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox') {
+                const label = e.target.parentElement.textContent.trim();
+                const status = e.target.checked ? 'ПРОЙДЕН' : 'НЕ ПРОЙДЕН';
+                log(`Тест "${label}": ${status}`);
+            }
+        });
+
+        log('Тест инициализирован. Откройте страницу партнеров и проверьте каждый пункт.');
+    </script>
+</body>
+</html> 

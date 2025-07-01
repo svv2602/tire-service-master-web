@@ -32,6 +32,7 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   Business as BusinessIcon,
+  Store as StoreIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -49,12 +50,14 @@ import {
   Alert,
 } from '../../components/ui';
 
+// Прямой импорт ActionsMenu для избежания проблем с экспортом
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
+
 // Импорт PageTable компонента
 import { PageTable } from '../../components/common/PageTable';
 import type { 
   PageHeaderConfig, 
   SearchConfig, 
-  ActionConfig,
   FilterConfig,
   PageTableProps 
 } from '../../components/common/PageTable';
@@ -308,6 +311,34 @@ const PartnersPage: React.FC = () => {
     },
   ], [statusFilter, handleStatusFilterChange]);
 
+  // Конфигурация действий для ActionsMenu
+  const partnerActions: ActionItem<Partner>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (partner: Partner) => handleEditPartner(partner),
+      color: 'primary',
+      tooltip: 'Редактировать данные партнера'
+    },
+    {
+      id: 'service-points',
+      label: 'Сервисные точки',
+      icon: <StoreIcon />,
+      onClick: (partner: Partner) => navigate(`/admin/partners/${partner.id}/service-points`),
+      color: 'info',
+      tooltip: 'Управление сервисными точками партнера'
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (partner: Partner) => handleDeletePartner(partner),
+      color: 'error',
+      tooltip: 'Удалить партнера'
+    }
+  ], [handleEditPartner, handleDeletePartner, navigate]);
+
   // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
     {
@@ -385,27 +416,17 @@ const PartnersPage: React.FC = () => {
           sx={{ m: 0 }}
         />
       )
-    }
-  ], [getPartnerInitials, handleToggleStatus]);
-
-  // Конфигурация действий
-  const actionsConfig: ActionConfig[] = useMemo(() => [
-    {
-      id: 'edit',
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (partner: Partner) => handleEditPartner(partner),
-      color: 'primary',
     },
     {
-      id: 'delete',
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      onClick: (partner: Partner) => handleDeletePartner(partner),
-      color: 'error',
-      requireConfirmation: false, // Убираем стандартное подтверждение, так как обрабатываем сами
+      id: 'actions',
+      label: 'Действия',
+      align: 'center',
+      minWidth: 120,
+      format: (_value: any, row: Partner) => (
+        <ActionsMenu actions={partnerActions} item={row} menuThreshold={1} />
+      )
     }
-  ], [handleEditPartner, handleDeletePartner]);
+  ], [getPartnerInitials, handleToggleStatus, partnerActions]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({
@@ -461,7 +482,6 @@ const PartnersPage: React.FC = () => {
         filters={filtersConfig}
         columns={columns}
         rows={partners}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={paginationConfig}
         responsive={true}

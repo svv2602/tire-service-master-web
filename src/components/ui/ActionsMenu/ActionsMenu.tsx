@@ -316,4 +316,4 @@ export const ActionsMenu = <T,>({
   );
 };
 
-export default ActionsMenu; 
+// Компонент экспортируется только как именованный экспорт 

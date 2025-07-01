@@ -33,13 +33,13 @@ import { ApiResponse } from '../../types/models';
 import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
-import { Box, Typography } from '../../components/ui';
+import { Box, Typography, ActionsMenu } from '../../components/ui';
+import type { ActionItem } from '../../components/ui';
 import { PageTable } from '../../components/common/PageTable';
 import type { 
   PageHeaderConfig, 
   SearchConfig, 
   FilterConfig, 
-  ActionConfig,
   Column
 } from '../../components/common/PageTable';
 import Notification from '../../components/Notification';
@@ -171,7 +171,7 @@ const ClientsPage: React.FC = () => {
 
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Клиенты (PageTable)',
+    title: 'Клиенты',
     actions: [
       {
         id: 'add',
@@ -205,6 +205,56 @@ const ClientsPage: React.FC = () => {
       }
     }
   ], [showInactive]);
+
+  // Конфигурация действий для ActionsMenu
+  const clientActions: ActionItem<Client>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/edit`),
+      color: 'primary',
+      tooltip: 'Редактировать данные клиента'
+    },
+    {
+      id: 'cars',
+      label: 'Автомобили',
+      icon: <CarIcon />,
+      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/cars`),
+      color: 'info',
+      tooltip: 'Управление автомобилями клиента'
+    },
+    {
+      id: 'toggle-status',
+      label: (client: Client) => client.is_active ? 'Деактивировать' : 'Активировать',
+      icon: (client: Client) => client.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
+      onClick: (client: Client) => handleToggleStatus(client),
+      color: (client: Client) => client.is_active ? 'warning' : 'success',
+      tooltip: (client: Client) => client.is_active ? 'Деактивировать клиента' : 'Активировать клиента',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение изменения статуса',
+        message: 'Вы действительно хотите изменить статус клиента?',
+        confirmLabel: 'Изменить',
+        cancelLabel: 'Отмена',
+      }
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (client: Client) => handleDelete(client),
+      color: 'error',
+      tooltip: 'Удалить клиента',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы действительно хотите удалить этого клиента? Это действие нельзя будет отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      }
+    }
+  ], [navigate, handleToggleStatus, handleDelete]);
 
   const columns: Column<Client>[] = useMemo(() => [
     {
@@ -310,42 +360,17 @@ const ClientsPage: React.FC = () => {
           </Typography>
         </Box>
       )
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      align: 'center',
+      minWidth: 120,
+      render: (client: Client) => (
+        <ActionsMenu actions={clientActions} item={client} />
+      )
     }
-  ], [theme.palette]);
-
-  const actionsConfig: ActionConfig<Client>[] = useMemo(() => [
-    {
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/edit`),
-      color: 'primary'
-    },
-    {
-      label: 'Автомобили',
-      icon: <CarIcon />,
-      onClick: (client: Client) => navigate(`/admin/clients/${client.id}/cars`),
-      color: 'info'
-    },
-    {
-      label: (client: Client) => client.is_active ? 'Деактивировать' : 'Активировать',
-      icon: (client: Client) => client.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
-      onClick: (client: Client) => handleToggleStatus(client),
-      color: 'warning'
-    },
-    {
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      onClick: (client: Client) => handleDelete(client),
-      color: 'error',
-      requireConfirmation: true,
-      confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить этого клиента? Это действие нельзя будет отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
-      }
-    }
-  ], [navigate, handleToggleStatus, handleDelete]);
+  ], [theme.palette, clientActions]);
 
   return (
     <Box sx={tablePageStyles.container}>
@@ -355,7 +380,7 @@ const ClientsPage: React.FC = () => {
         filters={filtersConfig}
         columns={columns}
         rows={clients}
-        actions={actionsConfig}
+
         loading={isLoading}
         pagination={{
           page,

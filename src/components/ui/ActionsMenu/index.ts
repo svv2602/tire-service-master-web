@@ -1,4 +1,4 @@
-export { ActionsMenu, default } from './ActionsMenu';
+export { ActionsMenu } from './ActionsMenu';
 export type { 
   ActionItem, 
   ConfirmationConfig, 

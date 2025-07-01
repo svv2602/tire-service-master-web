@@ -30,7 +30,8 @@ import {
   Person as PersonIcon,
   Check as CheckIcon,
   Close as CloseIcon,
-  RestoreFromTrash as RestoreIcon
+  RestoreFromTrash as RestoreIcon,
+  Visibility as VisibilityIcon
 } from '@mui/icons-material';
 import {
   useGetUsersQuery,
@@ -38,14 +39,15 @@ import {
   useUpdateUserMutation
 } from '../../api/users.api';
 import type { User, UserFormData } from '../../types/user';
-import { useSnackbar } from 'notistack';
 import { useDebounce } from '../../hooks/useDebounce';
 
 // Импорты UI компонентов
 import {
   Alert,
   Chip,
+  ActionsMenu,
 } from '../../components/ui';
+import type { ActionItem } from '../../components/ui';
 
 // Импорт PageTable компонента
 import { PageTable } from '../../components/common/PageTable';
@@ -56,6 +58,7 @@ import type {
   ActionConfig
 } from '../../components/common/PageTable';
 import type { Column } from '../../components/ui/Table/Table';
+import Notification from '../../components/Notification';
 
 export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,7 +70,17 @@ export const UsersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [showInactive, setShowInactive] = useState(false);
-  const { enqueueSnackbar } = useSnackbar();
+  
+  // Состояние для уведомлений
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'info' | 'warning';
+  }>({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
   // Дебаунс для поиска
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -140,12 +153,20 @@ export const UsersPage: React.FC = () => {
   const handleDeactivate = useCallback(async (user: User) => {
     try {
       await deleteUser(user.id.toString()).unwrap();
-      enqueueSnackbar('Пользователь успешно деактивирован', { variant: 'success' });
+      setNotification({
+        open: true,
+        message: 'Пользователь успешно деактивирован',
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Ошибка при деактивации пользователя:', error);
-      enqueueSnackbar('Ошибка при деактивации пользователя', { variant: 'error' });
+      setNotification({
+        open: true,
+        message: 'Ошибка при деактивации пользователя',
+        severity: 'error'
+      });
     }
-  }, [deleteUser, enqueueSnackbar]);
+  }, [deleteUser]);
 
   const handleToggleStatus = useCallback(async (user: User) => {
     try {
@@ -166,15 +187,24 @@ export const UsersPage: React.FC = () => {
         data: updateData
       }).unwrap();
 
-      enqueueSnackbar(
-        user.is_active ? 'Пользователь деактивирован' : 'Пользователь активирован',
-        { variant: 'success' }
-      );
+      setNotification({
+        open: true,
+        message: user.is_active ? 'Пользователь деактивирован' : 'Пользователь активирован',
+        severity: 'success'
+      });
     } catch (error) {
       console.error('Ошибка при изменении статуса пользователя:', error);
-      enqueueSnackbar('Ошибка при изменении статуса пользователя', { variant: 'error' });
+      setNotification({
+        open: true,
+        message: 'Ошибка при изменении статуса пользователя',
+        severity: 'error'
+      });
     }
-  }, [updateUser, enqueueSnackbar]);
+  }, [updateUser]);
+
+  const handleCloseNotification = useCallback(() => {
+    setNotification(prev => ({ ...prev, open: false }));
+  }, []);
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({
@@ -211,6 +241,41 @@ export const UsersPage: React.FC = () => {
       onChange: (value: string) => setShowInactive(value === 'all'),
     }
   ], [showInactive]);
+
+  // Конфигурация действий для ActionsMenu
+  const userActions: ActionItem<User>[] = useMemo(() => [
+    {
+      id: 'view',
+      label: 'Просмотр',
+      icon: <VisibilityIcon />,
+      onClick: (user: User) => navigate(`/admin/users/${user.id}`),
+      color: 'info',
+      tooltip: 'Просмотр детальной информации о пользователе'
+    },
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (user: User) => handleEdit(user),
+      color: 'primary',
+      tooltip: 'Редактировать данные пользователя'
+    },
+    {
+      id: 'toggle-status',
+      label: (user: User) => user.is_active ? 'Деактивировать' : 'Активировать',
+      icon: (user: User) => user.is_active ? <DeleteIcon /> : <RestoreIcon />,
+      onClick: (user: User) => user.is_active ? handleDeactivate(user) : handleToggleStatus(user),
+      color: (user: User) => user.is_active ? 'error' : 'success',
+      tooltip: (user: User) => user.is_active ? 'Деактивировать пользователя' : 'Активировать пользователя',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение изменения статуса',
+        message: 'Вы действительно хотите изменить статус этого пользователя?',
+        confirmLabel: 'Подтвердить',
+        cancelLabel: 'Отмена'
+      }
+    }
+  ], [handleEdit, handleDeactivate, handleToggleStatus, navigate]);
 
   // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
@@ -323,28 +388,17 @@ export const UsersPage: React.FC = () => {
           )}
         </Box>
       )
-    }
-  ], [getRoleName, getRoleColor]);
-
-  // Конфигурация действий
-  const actionsConfig: ActionConfig[] = useMemo(() => [
-    {
-      id: 'edit',
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (user: User) => handleEdit(user),
-      color: 'primary',
     },
     {
-      id: 'toggle-status',
-      label: 'Изменить статус',
-      icon: <DeleteIcon />,
-      onClick: (user: User) => user.is_active ? handleDeactivate(user) : handleToggleStatus(user),
-      color: 'error',
-      requireConfirmation: true,
-      confirmationText: 'Вы уверены, что хотите изменить статус этого пользователя?',
+      id: 'actions',
+      label: 'Действия',
+      align: 'center',
+      minWidth: 120,
+      format: (_value: any, row: User) => (
+        <ActionsMenu actions={userActions} item={row} menuThreshold={1} />
+      )
     }
-  ], [handleEdit, handleDeactivate, handleToggleStatus]);
+  ], [getRoleName, getRoleColor, userActions]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({
@@ -395,7 +449,6 @@ export const UsersPage: React.FC = () => {
         filters={filtersConfig}
         columns={columns}
         rows={users}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={paginationConfig}
         responsive={true}
@@ -406,6 +459,14 @@ export const UsersPage: React.FC = () => {
             </Typography>
           </Box>
         }
+      />
+
+      {/* Notification */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={handleCloseNotification}
       />
     </Box>
   );
