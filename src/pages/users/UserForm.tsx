@@ -292,7 +292,7 @@ const UserForm: React.FC = () => {
         </Typography>
       </Box>
           
-      <form onSubmit={formik.handleSubmit}>
+      <form onSubmit={formik.handleSubmit} autoComplete="off">
         <Paper sx={cardStyles}>
           <Grid container spacing={SIZES.spacing.lg}>
             {/* Основная информация */}
@@ -320,6 +320,7 @@ const UserForm: React.FC = () => {
                 error={(formik.touched.email || showValidationErrors) && Boolean(formik.errors.email)}
                 helperText={(formik.touched.email || showValidationErrors) && formik.errors.email}
                 sx={textFieldStyles}
+                autoComplete="off"
               />
             </Grid>
 
@@ -462,6 +463,7 @@ const UserForm: React.FC = () => {
                 error={(formik.touched.password || showValidationErrors) && Boolean(formik.errors.password)}
                 helperText={(formik.touched.password || showValidationErrors) && formik.errors.password}
                 sx={textFieldStyles}
+                autoComplete="off"
               />
             </Grid>
 
@@ -478,6 +480,7 @@ const UserForm: React.FC = () => {
                 error={(formik.touched.password_confirmation || showValidationErrors) && Boolean(formik.errors.password_confirmation)}
                 helperText={(formik.touched.password_confirmation || showValidationErrors) && formik.errors.password_confirmation}
                 sx={textFieldStyles}
+                autoComplete="off"
               />
             </Grid>
 
