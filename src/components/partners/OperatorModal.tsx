@@ -8,7 +8,8 @@ import {
   TextField,
   Grid,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Alert
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -18,7 +19,7 @@ import { PhoneField } from '../ui/PhoneField';
 interface OperatorModalProps {
   open: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any) => Promise<void>;
   operator: Operator | null;
 }
 
@@ -36,6 +37,16 @@ const validationSchema = (isEdit: boolean) =>
 
 export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onSave, operator }) => {
   const isEdit = Boolean(operator);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    if (open) {
+      setSuccessMessage(null);
+      setErrorMessage(null);
+    }
+  }, [open]);
+  
   const formik = useFormik({
     initialValues: {
       first_name: operator?.user.first_name || '',
@@ -49,24 +60,49 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
     },
     enableReinitialize: true,
     validationSchema: validationSchema(isEdit),
-    onSubmit: (values) => {
-      const data: any = {
-        user: {
-          first_name: values.first_name,
-          last_name: values.last_name,
-          email: values.email,
-          phone: values.phone,
-          is_active: values.is_active,
-        },
-        operator: {
-          position: values.position,
-          access_level: values.access_level,
-          is_active: values.is_active,
-        },
-      };
-      if (!isEdit) data.user.password = values.password;
-      if (isEdit && values.password) data.user.password = values.password;
-      onSave(data);
+    onSubmit: async (values) => {
+      try {
+        setSuccessMessage(null);
+        setErrorMessage(null);
+        
+        const data: any = {
+          user: {
+            first_name: values.first_name,
+            last_name: values.last_name,
+            email: values.email,
+            phone: values.phone,
+            is_active: values.is_active,
+          },
+          operator: {
+            position: values.position,
+            access_level: values.access_level,
+            is_active: values.is_active,
+          },
+        };
+        if (!isEdit) data.user.password = values.password;
+        if (isEdit && values.password) data.user.password = values.password;
+        
+        await onSave(data);
+        
+        setSuccessMessage(isEdit ? 'Сотрудник успешно обновлен' : 'Сотрудник успешно добавлен');
+        
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } catch (error: any) {
+        console.error('Ошибка при сохранении сотрудника:', error);
+        
+        let message = 'Произошла ошибка при сохранении сотрудника';
+        if (error.data?.errors) {
+          message = Object.entries(error.data.errors)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+        } else if (error.error) {
+          message = error.error;
+        }
+        
+        setErrorMessage(message);
+      }
     },
   });
 
@@ -75,6 +111,16 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
       <DialogTitle>{isEdit ? 'Редактировать сотрудника' : 'Добавить сотрудника'}</DialogTitle>
       <form onSubmit={formik.handleSubmit} autoComplete="off">
         <DialogContent>
+          {successMessage && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {successMessage}
+            </Alert>
+          )}
+          {errorMessage && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField

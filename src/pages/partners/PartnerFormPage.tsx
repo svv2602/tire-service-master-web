@@ -318,14 +318,21 @@ const PartnerFormPage: React.FC = () => {
     refetchOperators();
   };
   // Сохранить оператора (добавить/редактировать)
-  const handleSaveOperator = async (data: any) => {
-    if (editingOperator) {
-      await updateOperator({ id: editingOperator.id, data });
-    } else {
-      await createOperator({ partnerId, data });
+  const handleSaveOperator = async (data: any): Promise<void> => {
+    try {
+      if (editingOperator) {
+        await updateOperator({ id: editingOperator.id, data }).unwrap();
+      } else {
+        await createOperator({ partnerId, data }).unwrap();
+      }
+      // Обновляем список операторов
+      refetchOperators();
+      // Модальное окно закроется автоматически через setTimeout в OperatorModal
+    } catch (error) {
+      // Пробрасываем ошибку для обработки в OperatorModal
+      console.error('Ошибка при сохранении оператора в PartnerFormPage:', error);
+      throw error;
     }
-    setOperatorModalOpen(false);
-    refetchOperators();
   };
 
   // Функция для получения списка незаполненных обязательных полей
