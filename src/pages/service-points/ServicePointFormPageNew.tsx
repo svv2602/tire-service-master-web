@@ -16,7 +16,7 @@ import {
   Stack,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useSelector } from 'react-redux';
@@ -103,9 +103,58 @@ const ServicePointFormPageNew: React.FC = () => {
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
+  const location = useLocation();
   
-  // Получаем токен из Redux state
+  // Получаем токен и информацию о пользователе из Redux state
   const authToken = useSelector((state: any) => state.auth?.accessToken);
+  const currentUser = useSelector((state: any) => state.auth?.user);
+  
+  // Определяем откуда пришел пользователь для правильного возврата
+  const getReturnPath = () => {
+    // Проверяем referrer или state из location
+    const referrer = location.state?.from || document.referrer;
+    const userRole = currentUser?.role;
+    
+    console.log('=== Определение пути возврата ===');
+    console.log('location.state?.from:', location.state?.from);
+    console.log('document.referrer:', document.referrer);
+    console.log('partnerId:', partnerId);
+    console.log('userRole:', userRole);
+    
+    // Если пришли из страницы редактирования партнера
+    if (referrer && referrer.includes(`/admin/partners/${partnerId}/edit`)) {
+      return `/admin/partners/${partnerId}/edit`;
+    }
+    
+    // Если пришли из списка сервисных точек партнера
+    if (referrer && referrer.includes(`/admin/partners/${partnerId}/service-points`)) {
+      return `/admin/partners/${partnerId}/service-points`;
+    }
+    
+    // Если пришли из общего списка сервисных точек (только для админов)
+    if (referrer && referrer.includes('/admin/service-points') && userRole === 'admin') {
+      return '/admin/service-points';
+    }
+    
+    // Логика возврата в зависимости от роли пользователя
+    if (userRole === 'partner' && currentUser.partner_id) {
+      // Партнеры возвращаются на свою страницу редактирования
+      return `/admin/partners/${currentUser.partner_id}/edit`;
+    }
+    
+    if (userRole === 'operator' && currentUser.operator?.partner_id) {
+      // Операторы возвращаются к списку сервисных точек своего партнера
+      return `/admin/partners/${currentUser.operator.partner_id}/service-points`;
+    }
+    
+    // Если есть partnerId, по умолчанию возвращаемся к списку сервисных точек партнера
+    if (partnerId) {
+      return `/admin/partners/${partnerId}/service-points`;
+    }
+    
+    // По умолчанию возвращаемся к общему списку (только для админов)
+    return userRole === 'admin' ? '/admin/service-points' : '/admin';
+  };
   
   // Отладочная информация для проверки параметров URL
   console.log('=== URL параметры ===');
@@ -202,7 +251,7 @@ const ServicePointFormPageNew: React.FC = () => {
     return result;
   };
 
-  // Проверяем корректность данных
+  // Проверяем корректность данных и права доступа
   useEffect(() => {
     if (isEditMode && !partnerId) {
       console.error('ОШИБКА: Попытка редактирования сервисной точки без partnerId в URL');
@@ -218,7 +267,33 @@ const ServicePointFormPageNew: React.FC = () => {
       navigate('/partners');
       return;
     }
-  }, [isEditMode, partnerId, navigate]);
+    
+    // Проверяем права доступа для партнеров и операторов
+    if (currentUser && partnerId) {
+      const userRole = currentUser.role;
+      console.log('=== Проверка прав доступа ===');
+      console.log('Роль пользователя:', userRole);
+      console.log('partnerId из URL:', partnerId);
+      console.log('ID партнера пользователя:', currentUser.partner_id);
+      console.log('ID оператора пользователя:', currentUser.operator_id);
+      
+      // Если пользователь - партнер, может работать только со своими сервисными точками
+      if (userRole === 'partner' && currentUser.partner_id && Number(partnerId) !== currentUser.partner_id) {
+        console.error('ОШИБКА: Партнер пытается получить доступ к чужим сервисным точкам');
+        alert('Ошибка: У вас нет прав для работы с сервисными точками этого партнера');
+        navigate(`/admin/partners/${currentUser.partner_id}/edit`);
+        return;
+      }
+      
+      // Если пользователь - оператор, может работать только с сервисными точками своего партнера
+      if (userRole === 'operator' && currentUser.operator?.partner_id && Number(partnerId) !== currentUser.operator.partner_id) {
+        console.error('ОШИБКА: Оператор пытается получить доступ к чужим сервисным точкам');
+        alert('Ошибка: У вас нет прав для работы с сервисными точками этого партнера');
+        navigate(`/admin/partners/${currentUser.operator.partner_id}/service-points`);
+        return;
+      }
+    }
+  }, [isEditMode, partnerId, navigate, currentUser]);
 
   // Нормализуем данные расписания (конвертируем строки в булевы значения)
   const normalizedWorkingHours = useMemo(() => {
@@ -550,7 +625,10 @@ const ServicePointFormPageNew: React.FC = () => {
         }
 
         setTimeout(() => {
-          navigate(partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points');
+          const returnPath = getReturnPath();
+          console.log('=== Возврат после сохранения ===');
+          console.log('Возвращаемся на:', returnPath);
+          navigate(returnPath);
         }, 1000);
       } catch (error: any) {
         console.error('Ошибка при сохранении:', error);
@@ -651,7 +729,10 @@ const ServicePointFormPageNew: React.FC = () => {
   };
 
   const handleGoBack = () => {
-    navigate(partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points');
+    const returnPath = getReturnPath();
+    console.log('=== Возврат через кнопку "Назад" ===');
+    console.log('Возвращаемся на:', returnPath);
+    navigate(returnPath);
   };
 
   const handleStepClick = (stepIndex: number) => {

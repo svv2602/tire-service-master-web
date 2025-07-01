@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест ограничений деактивации партнера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f8fff8; }
+        .error { border-color: #f44336; background-color: #fff8f8; }
+        .info { border-color: #2196F3; background-color: #f8f9ff; }
+        .warning { border-color: #ff9800; background-color: #fff8f0; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976D2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success-result { background: #e8f5e8; color: #2e7d32; }
+        .error-result { background: #ffebee; color: #c62828; }
+        .info-result { background: #e3f2fd; color: #1565c0; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .active { background: #4CAF50; color: white; }
+        .inactive { background: #f44336; color: white; }
+        .working { background: #2196F3; color: white; }
+        .closed { background: #ff9800; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест ограничений деактивации партнера</h1>
+    <p>Проверка логики: если партнер деактивирован, то нельзя активировать подчиненные записи</p>
+
+    <!-- Секция авторизации -->
+    <div class="container">
+        <h2>🔐 Авторизация</h2>
+        <div class="test-section info">
+            <h3>Автоматический вход администратора</h3>
+            <button onclick="autoLogin()">Войти как админ</button>
+            <div id="authResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Секция тестирования backend валидации -->
+    <div class="container">
+        <h2>🔧 Backend валидация</h2>
+        <div class="test-section warning">
+            <h3>Тест 1: Попытка активировать сервисную точку неактивного партнера</h3>
+            <p>Деактивируем партнера и пытаемся активировать его сервисную точку</p>
+            <button onclick="testServicePointValidation()">Тестировать валидацию сервисной точки</button>
+            <div id="servicePointValidationResult" class="result"></div>
+        </div>
+
+        <div class="test-section warning">
+            <h3>Тест 2: Попытка активировать оператора неактивного партнера</h3>
+            <p>Деактивируем партнера и пытаемся активировать его оператора</p>
+            <button onclick="testOperatorValidation()">Тестировать валидацию оператора</button>
+            <div id="operatorValidationResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Секция тестирования frontend -->
+    <div class="container">
+        <h2>🖥️ Frontend функциональность</h2>
+        <div class="test-section info">
+            <h3>Тест 3: Переключатель партнера с автоматической деактивацией</h3>
+            <p>Проверяем, что при деактивации партнера деактивируются все связанные записи</p>
+            <button onclick="testPartnerToggle()">Тестировать переключатель партнера</button>
+            <div id="partnerToggleResult" class="result"></div>
+        </div>
+
+        <div class="test-section info">
+            <h3>Тест 4: Проверка ограничений в UI</h3>
+            <p>Проверяем, что UI не позволяет активировать подчиненные записи</p>
+            <button onclick="testUIRestrictions()">Тестировать UI ограничения</button>
+            <div id="uiRestrictionsResult" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Секция статуса -->
+    <div class="container">
+        <h2>📊 Текущий статус</h2>
+        <div class="test-section">
+            <h3>Партнер и связанные записи</h3>
+            <button onclick="checkCurrentStatus()">Проверить статус</button>
+            <div id="statusResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+        let testPartnerId = 1; // ID партнера для тестирования
+
+        // Автоматическая авторизация
+        async function autoLogin() {
+            const resultDiv = document.getElementById('authResult');
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'admin123'
+                    }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    resultDiv.className = 'result success-result';
+                    resultDiv.textContent = `✅ Авторизация успешна\nПользователь: ${data.user.first_name} ${data.user.last_name}\nРоль: ${data.user.role}`;
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Ошибка авторизации');
+                }
+            } catch (error) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = `❌ Ошибка авторизации: ${error.message}`;
+            }
+        }
+
+        // Тест валидации сервисной точки
+        async function testServicePointValidation() {
+            const resultDiv = document.getElementById('servicePointValidationResult');
+            if (!authToken) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = '❌ Сначала авторизуйтесь';
+                return;
+            }
+
+            try {
+                resultDiv.className = 'result info-result';
+                resultDiv.textContent = '⏳ Выполняется тестирование валидации...';
+
+                // 1. Деактивируем партнера
+                const deactivateResponse = await fetch(`${API_BASE}/partners/${testPartnerId}/toggle_active`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        partner: { is_active: false }
+                    }),
+                    credentials: 'include'
+                });
+
+                if (!deactivateResponse.ok) {
+                    throw new Error('Не удалось деактивировать партнера');
+                }
+
+                // 2. Получаем сервисные точки партнера
+                const servicePointsResponse = await fetch(`${API_BASE}/service_points?partner_id=${testPartnerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                const servicePointsData = await servicePointsResponse.json();
+                const servicePoints = servicePointsData.data || [];
+                
+                if (servicePoints.length === 0) {
+                    throw new Error('У партнера нет сервисных точек для тестирования');
+                }
+
+                const servicePoint = servicePoints[0];
+
+                // 3. Пытаемся активировать сервисную точку
+                const activateResponse = await fetch(`${API_BASE}/service_points/${servicePoint.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        service_point: { is_active: true }
+                    }),
+                    credentials: 'include'
+                });
+
+                if (activateResponse.ok) {
+                    resultDiv.className = 'result error-result';
+                    resultDiv.textContent = '❌ ОШИБКА: Валидация не сработала! Сервисная точка была активирована, хотя партнер неактивен.';
+                } else {
+                    const error = await activateResponse.json();
+                    resultDiv.className = 'result success-result';
+                    resultDiv.textContent = `✅ Валидация работает корректно!\nОшибка: ${error.errors?.is_active?.[0] || error.message}`;
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = `❌ Ошибка тестирования: ${error.message}`;
+            }
+        }
+
+        // Тест валидации оператора
+        async function testOperatorValidation() {
+            const resultDiv = document.getElementById('operatorValidationResult');
+            if (!authToken) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = '❌ Сначала авторизуйтесь';
+                return;
+            }
+
+            try {
+                resultDiv.className = 'result info-result';
+                resultDiv.textContent = '⏳ Выполняется тестирование валидации оператора...';
+
+                // 1. Получаем операторов партнера
+                const operatorsResponse = await fetch(`${API_BASE}/operators?partner_id=${testPartnerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                const operatorsData = await operatorsResponse.json();
+                const operators = operatorsData.data || [];
+                
+                if (operators.length === 0) {
+                    throw new Error('У партнера нет операторов для тестирования');
+                }
+
+                const operator = operators[0];
+
+                // 2. Пытаемся активировать оператора (партнер уже должен быть неактивен из предыдущего теста)
+                const activateResponse = await fetch(`${API_BASE}/operators/${operator.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        operator: { is_active: true }
+                    }),
+                    credentials: 'include'
+                });
+
+                if (activateResponse.ok) {
+                    resultDiv.className = 'result error-result';
+                    resultDiv.textContent = '❌ ОШИБКА: Валидация не сработала! Оператор был активирован, хотя партнер неактивен.';
+                } else {
+                    const error = await activateResponse.json();
+                    resultDiv.className = 'result success-result';
+                    resultDiv.textContent = `✅ Валидация работает корректно!\nОшибка: ${error.errors?.is_active?.[0] || error.message}`;
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = `❌ Ошибка тестирования: ${error.message}`;
+            }
+        }
+
+        // Тест переключателя партнера
+        async function testPartnerToggle() {
+            const resultDiv = document.getElementById('partnerToggleResult');
+            if (!authToken) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = '❌ Сначала авторизуйтесь';
+                return;
+            }
+
+            try {
+                resultDiv.className = 'result info-result';
+                resultDiv.textContent = '⏳ Тестирование переключателя партнера...';
+
+                // 1. Активируем партнера
+                const activateResponse = await fetch(`${API_BASE}/partners/${testPartnerId}/toggle_active`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        partner: { is_active: true }
+                    }),
+                    credentials: 'include'
+                });
+
+                if (!activateResponse.ok) {
+                    throw new Error('Не удалось активировать партнера');
+                }
+
+                // 2. Деактивируем партнера (должно деактивировать связанные записи)
+                const deactivateResponse = await fetch(`${API_BASE}/partners/${testPartnerId}/toggle_active`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        partner: { is_active: false }
+                    }),
+                    credentials: 'include'
+                });
+
+                if (!deactivateResponse.ok) {
+                    throw new Error('Не удалось деактивировать партнера');
+                }
+
+                // 3. Проверяем статус связанных записей
+                await checkCurrentStatus();
+
+                resultDiv.className = 'result success-result';
+                resultDiv.textContent = '✅ Переключатель партнера работает! Проверьте статус ниже.';
+
+            } catch (error) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = `❌ Ошибка тестирования: ${error.message}`;
+            }
+        }
+
+        // Тест UI ограничений
+        async function testUIRestrictions() {
+            const resultDiv = document.getElementById('uiRestrictionsResult');
+            resultDiv.className = 'result info-result';
+            resultDiv.textContent = `📋 Инструкции для ручного тестирования UI:
+
+1. Откройте страницу редактирования партнера: http://localhost:3008/admin/partners/${testPartnerId}/edit
+
+2. Убедитесь, что партнер деактивирован (переключатель "Активный партнер" выключен)
+
+3. Перейдите на вкладки "Сервисные точки" и "Сотрудники"
+
+4. Попробуйте активировать любую сервисную точку или сотрудника
+
+5. Должно появиться сообщение об ошибке: "Нельзя активировать, так как партнер неактивен"
+
+6. Активируйте партнера и повторите попытку - теперь должно работать`;
+        }
+
+        // Проверка текущего статуса
+        async function checkCurrentStatus() {
+            const resultDiv = document.getElementById('statusResult');
+            if (!authToken) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = '❌ Сначала авторизуйтесь';
+                return;
+            }
+
+            try {
+                resultDiv.className = 'result info-result';
+                resultDiv.textContent = '⏳ Загрузка статуса...';
+
+                // Получаем данные партнера
+                const partnerResponse = await fetch(`${API_BASE}/partners/${testPartnerId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                const partner = await partnerResponse.json();
+
+                // Получаем связанные данные
+                const relatedResponse = await fetch(`${API_BASE}/partners/${testPartnerId}/related_data`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    credentials: 'include'
+                });
+
+                const relatedData = await relatedResponse.json();
+
+                let statusText = `📊 Статус партнера "${partner.company_name}":
+${partner.is_active ? '🟢 Активен' : '🔴 Неактивен'}
+
+🏢 Сервисные точки (${relatedData.service_points.length}):`;
+
+                relatedData.service_points.forEach(sp => {
+                    statusText += `\n  • ${sp.name}: ${sp.is_active ? '🟢 Активна' : '🔴 Неактивна'} (${sp.work_status})`;
+                });
+
+                statusText += `\n\n👥 Сотрудники (${relatedData.operators.length}):`;
+                relatedData.operators.forEach(op => {
+                    statusText += `\n  • ${op.user.first_name} ${op.user.last_name}: ${op.is_active ? '🟢 Активен' : '🔴 Неактивен'}`;
+                });
+
+                resultDiv.className = 'result info-result';
+                resultDiv.textContent = statusText;
+
+            } catch (error) {
+                resultDiv.className = 'result error-result';
+                resultDiv.textContent = `❌ Ошибка получения статуса: ${error.message}`;
+            }
+        }
+
+        // Автоматическая авторизация при загрузке
+        window.onload = function() {
+            autoLogin();
+        };
+    </script>
+</body>
+</html> 

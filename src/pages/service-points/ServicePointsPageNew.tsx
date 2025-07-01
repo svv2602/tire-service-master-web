@@ -211,7 +211,9 @@ const ServicePointsPageNew: React.FC<ServicePointsPageNewProps> = () => {
         icon: <AddIcon />,
         onClick: () => {
           if (partnerId) {
-            navigate(`/admin/partners/${partnerId}/service-points/new`);
+            navigate(`/admin/partners/${partnerId}/service-points/new`, {
+              state: { from: `/admin/partners/${partnerId}/service-points` }
+            });
           } else {
             showNotification('Для создания сервисной точки необходимо выбрать партнера', 'warning');
             navigate('/admin/partners');
@@ -370,9 +372,13 @@ const ServicePointsPageNew: React.FC<ServicePointsPageNewProps> = () => {
       icon: <EditIcon />,
       onClick: (servicePoint: ServicePoint) => {
         if (partnerId) {
-          navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`);
+          navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`, {
+            state: { from: `/admin/partners/${partnerId}/service-points` }
+          });
         } else {
-          navigate(`/admin/service-points/${servicePoint.id}/edit`);
+          navigate(`/admin/service-points/${servicePoint.id}/edit`, {
+            state: { from: '/admin/service-points' }
+          });
         }
       },
       color: 'primary' as const

@@ -18,6 +18,16 @@ import {
   useTheme,
   Tooltip,
   IconButton,
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tabs,
+  Tab,
+  Chip,
+  Snackbar,
+  SelectChangeEvent,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -29,7 +39,9 @@ import {
   LocationOn as LocationOnIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Add as AddIcon
+  Add as AddIcon,
+  Upload as UploadIcon,
+  BrokenImage as BrokenImageIcon
 } from '@mui/icons-material';
 import { 
   useGetPartnerByIdQuery, 
@@ -39,14 +51,14 @@ import {
   useGetCitiesQuery,
   useGetServicePointsByPartnerIdQuery,
   useUpdateServicePointMutation,
+  useTogglePartnerActiveMutation,
 } from '../../api';
 import { getRoleId } from '../../utils/roles.utils';
 import { PartnerFormData, ServicePoint } from '../../types/models';
-import { SelectChangeEvent } from '@mui/material';
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
 // Импорт UI компонентов
-import { Tabs, TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
+import { TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
 import { phoneValidation } from '../../utils/validation';
 import { useGetOperatorsByPartnerQuery, useCreateOperatorMutation, useUpdateOperatorMutation, useDeleteOperatorMutation, Operator, UpdateOperatorRequest } from '../../api/operators.api';
 import { OperatorModal } from '../../components/partners/OperatorModal';
@@ -277,6 +289,7 @@ const PartnerFormPage: React.FC = () => {
   
   const [createPartner, { isLoading: createLoading }] = useCreatePartnerMutation();
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
+  const [togglePartnerActive] = useTogglePartnerActiveMutation();
 
   // Загрузка сервисных точек партнера (только в режиме редактирования)
   const { data: servicePointsData, isLoading: servicePointsLoading, refetch: refetchServicePoints } = useGetServicePointsByPartnerIdQuery(
@@ -304,6 +317,8 @@ const PartnerFormPage: React.FC = () => {
   const [updateServicePoint] = useUpdateServicePointMutation();
   const [operatorModalOpen, setOperatorModalOpen] = useState(false);
   const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Открыть модалку для добавления
   const handleAddOperator = () => {
@@ -373,6 +388,13 @@ const PartnerFormPage: React.FC = () => {
 
   // --- Исправляем функцию для изменения статуса сервисной точки ---
   const handleToggleServicePointStatus = async (servicePoint: ServicePoint) => {
+    // Проверяем, можно ли активировать сервисную точку
+    if (!servicePoint.is_active && !formik.values.is_active) {
+      setApiError('Нельзя активировать сервисную точку, так как партнер неактивен');
+      setTimeout(() => setApiError(null), 3000);
+      return;
+    }
+    
     try {
       console.log('Изменение статуса сервисной точки:', servicePoint.id, 'на', !servicePoint.is_active);
       
@@ -394,15 +416,26 @@ const PartnerFormPage: React.FC = () => {
       
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при изменении статуса сервисной точки:', error);
-      setApiError('Не удалось изменить статус сервисной точки');
+      // Проверяем, есть ли сообщение об ошибке валидации
+      const errorMessage = error?.data?.errors?.is_active?.[0] || 
+                          error?.data?.message || 
+                          'Не удалось изменить статус сервисной точки';
+      setApiError(errorMessage);
       setTimeout(() => setApiError(null), 3000);
     }
   };
 
   // --- Исправляем функцию для изменения статуса оператора ---
   const handleToggleOperatorStatus = async (operator: Operator) => {
+    // Проверяем, можно ли активировать оператора
+    if (!operator.is_active && !formik.values.is_active) {
+      setApiError('Нельзя активировать сотрудника, так как партнер неактивен');
+      setTimeout(() => setApiError(null), 3000);
+      return;
+    }
+    
     try {
       console.log('Изменение статуса оператора:', operator.id, 'на', !operator.is_active);
       
@@ -428,9 +461,13 @@ const PartnerFormPage: React.FC = () => {
       
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка при изменении статуса оператора:', error);
-      setApiError('Не удалось изменить статус сотрудника');
+      // Проверяем, есть ли сообщение об ошибке валидации
+      const errorMessage = error?.data?.errors?.is_active?.[0] || 
+                          error?.data?.message || 
+                          'Не удалось изменить статус сотрудника';
+      setApiError(errorMessage);
       setTimeout(() => setApiError(null), 3000);
     }
   };
@@ -750,7 +787,9 @@ const PartnerFormPage: React.FC = () => {
   // Обработчики для сервисных точек
   const handleEditServicePoint = (servicePointId: number) => {
     if (id) {
-      navigate(`/admin/partners/${id}/service-points/${servicePointId}/edit`);
+      navigate(`/admin/partners/${id}/service-points/${servicePointId}/edit`, {
+        state: { from: `/admin/partners/${id}/edit` }
+      });
     }
   };
 
@@ -761,7 +800,9 @@ const PartnerFormPage: React.FC = () => {
 
   const handleAddServicePoint = () => {
     if (id) {
-      navigate(`/admin/partners/${id}/service-points/new`);
+      navigate(`/admin/partners/${id}/service-points/new`, {
+        state: { from: `/admin/partners/${id}/edit` }
+      });
     }
   };
 
@@ -781,8 +822,62 @@ const PartnerFormPage: React.FC = () => {
     formik.setFieldValue('city_id', newCityId);
   };
 
+  // Функция для переключения активности партнера
+  const handlePartnerActiveToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newActiveStatus = e.target.checked;
+    
+    // Если деактивируем партнера и это режим редактирования
+    if (!newActiveStatus && isEdit && partnerId) {
+      // Показываем диалог подтверждения
+      if (window.confirm(
+        'При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники. Продолжить?'
+      )) {
+        try {
+          // Вызываем API для деактивации партнера (это автоматически деактивирует связанные записи)
+          await togglePartnerActive({ 
+            id: partnerId, 
+            isActive: false 
+          }).unwrap();
+          
+          formik.setFieldValue('is_active', false);
+          setSuccessMessage('Партнер и все связанные записи успешно деактивированы');
+          
+          // Обновляем данные сервисных точек и операторов
+          if (servicePointsData) {
+            refetchServicePoints();
+          }
+          if (operators) {
+            refetchOperators();
+          }
+        } catch (error: any) {
+          setApiError(error?.data?.message || 'Ошибка при деактивации партнера');
+          setTimeout(() => setApiError(null), 3000);
+        }
+      }
+    } else {
+      // Для активации или при создании просто меняем значение
+      if (newActiveStatus && isEdit && partnerId) {
+        try {
+          await togglePartnerActive({ 
+            id: partnerId, 
+            isActive: true 
+          }).unwrap();
+          
+          formik.setFieldValue('is_active', true);
+          setSuccessMessage('Партнер успешно активирован');
+          setTimeout(() => setSuccessMessage(null), 3000);
+        } catch (error: any) {
+          setApiError(error?.data?.message || 'Ошибка при активации партнера');
+          setTimeout(() => setApiError(null), 3000);
+        }
+      } else {
+        formik.setFieldValue('is_active', newActiveStatus);
+      }
+    }
+  };
+
   // Функция для смены вкладки
-  const handleTabChange = (value: string | number) => setActiveTab(Number(value));
+  const handleTabChange = (event: React.SyntheticEvent, value: any) => setActiveTab(Number(value));
 
   // Вкладка "Сотрудники"
   const renderOperatorsTab = () => (
@@ -886,8 +981,11 @@ const PartnerFormPage: React.FC = () => {
           <Tabs
             value={activeTab}
             onChange={handleTabChange}
-            tabs={tabs}
-          />
+          >
+            {tabs.map((tab, index) => (
+              <Tab key={index} label={tab.label} />
+            ))}
+          </Tabs>
         </Box>
       )}
           
@@ -919,20 +1017,7 @@ const PartnerFormPage: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  required
-                  name="contact_person"
-                  label="Контактное лицо"
-                  value={formik.values.contact_person}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={(formik.touched.contact_person || showValidationErrors) && Boolean(formik.errors.contact_person)}
-                  helperText={(formik.touched.contact_person || showValidationErrors) && formik.errors.contact_person}
-                  sx={textFieldStyles}
-                />
-              </Grid>
+
 
               <Grid item xs={12}>
                 <TextField
@@ -1110,12 +1195,17 @@ const PartnerFormPage: React.FC = () => {
                     control={
                       <Switch
                         checked={formik.values.is_active}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => formik.setFieldValue('is_active', e.target.checked)}
+                        onChange={handlePartnerActiveToggle}
                         name="is_active"
                       />
                     }
                     label="Активный партнер"
                   />
+                  {!formik.values.is_active && (
+                    <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
+                      При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники
+                    </Typography>
+                  )}
                 </Box>
               </Grid>
 
