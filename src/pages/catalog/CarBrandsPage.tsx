@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -41,6 +41,9 @@ import { Switch } from '../../components/ui/Switch';
 import { Pagination } from '../../components/ui/Pagination';
 import { Snackbar } from '../../components/ui/Snackbar';
 import { Table, Column } from '../../components/ui/Table';
+
+// Прямой импорт ActionsMenu для избежания проблем с экспортом
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 
 interface CarBrandsState {
   open: boolean;
@@ -159,6 +162,26 @@ const CarBrandsPage: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  // Конфигурация действий для ActionsMenu
+  const carBrandActions: ActionItem<CarBrand>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`),
+      color: 'primary',
+      tooltip: 'Редактировать бренд'
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (brand: CarBrand) => handleDeleteClick({ id: brand.id, name: brand.name }),
+      color: 'error',
+      tooltip: 'Удалить бренд'
+    }
+  ], [navigate]);
+
   // Конфигурация колонок для таблицы
   const columns: Column[] = [
     {
@@ -261,38 +284,18 @@ const CarBrandsPage: React.FC = () => {
       label: 'Действия',
       minWidth: 120,
       align: 'right',
-      format: (value: any, brand: CarBrand) => (
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: SIZES.spacing.xs }}>
-          <Tooltip title="Редактировать">
-            <IconButton 
-              size="small"
-              onClick={() => navigate(`/admin/car-brands/${brand.id}/edit`)}
-              sx={{ 
-                color: theme.palette.primary.main,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.primary.main}15`
-                }
-              }}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton 
-              size="small"
-              onClick={() => handleDeleteClick(brand)}
-              color="error"
-              sx={{
-                '&:hover': {
-                  backgroundColor: `${theme.palette.error.main}15`
-                }
-              }}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )
+      format: (_value: any, brand: CarBrand) => {
+        console.log('🔧 CarBrandsPage - Rendering actions for brand:', brand.name, 'Actions count:', carBrandActions.length);
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', border: '1px solid red', padding: '4px' }}>
+            <ActionsMenu 
+              actions={carBrandActions} 
+              item={brand} 
+              menuThreshold={0}
+            />
+          </Box>
+        );
+      }
     }
   ];
 

@@ -54,6 +54,9 @@ import type {
   ActionConfig 
 } from '../../components/common/PageTable';
 
+// Прямой импорт ActionsMenu для избежания проблем с экспортом
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
+
 // Импорт централизованных стилей
 import { getTablePageStyles, SIZES } from '../../styles';
 
@@ -157,6 +160,33 @@ const CarBrandsPage: React.FC = () => {
     },
   ], [activeFilter]);
 
+  // Конфигурация действий для ActionsMenu
+  const carBrandActions: ActionItem<CarBrand>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`),
+      color: 'primary',
+      tooltip: 'Редактировать бренд'
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (brand: CarBrand) => handleDeleteBrand(brand),
+      color: 'error',
+      tooltip: 'Удалить бренд',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите удаление',
+        message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      },
+    }
+  ], [navigate, handleDeleteBrand]);
+
   // Конфигурация колонок
   const columns: Column<CarBrand>[] = useMemo(() => [
     {
@@ -233,29 +263,21 @@ const CarBrandsPage: React.FC = () => {
         </Box>
       ),
     },
-  ], [tablePageStyles, handleToggleActive]);
-
-  // Конфигурация действий
-  const actionsConfig: ActionConfig<CarBrand>[] = useMemo(() => [
     {
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`)
+      id: 'actions',
+      label: 'Действия',
+      align: 'right',
+      hideOnMobile: false,
+      render: (brand: CarBrand) => (
+        <ActionsMenu 
+          actions={carBrandActions} 
+          item={brand} 
+          menuThreshold={0}
+          sx={{ display: 'flex', justifyContent: 'flex-end' }}
+        />
+      ),
     },
-    {
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      color: 'error',
-      onClick: (brand: CarBrand) => handleDeleteBrand(brand),
-      requireConfirmation: true,
-      confirmationConfig: {
-        title: 'Подтвердите удаление',
-        message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
-      },
-    }
-  ], [navigate, handleDeleteBrand]);
+  ], [tablePageStyles, handleToggleActive, carBrandActions]);
 
   // Извлечение данных из ответа API
   const brands = brandsData?.data || [];
@@ -283,7 +305,6 @@ const CarBrandsPage: React.FC = () => {
       filters={filtersConfig}
       columns={columns}
       rows={brands}
-      actions={actionsConfig}
       loading={isLoading}
       pagination={{
         page,
