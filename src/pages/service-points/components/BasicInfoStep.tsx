@@ -96,7 +96,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
               }}
               onBlur={formik.handleBlur}
               label="Партнер"
-              disabled={partnersLoading}
+              disabled={partnersLoading || isEditMode}
             >
               <MenuItem value="0" disabled>
                 {partnersLoading ? 'Загрузка...' : 'Выберите партнера'}
@@ -109,6 +109,11 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             </Select>
             {formik.touched.partner_id && formik.errors.partner_id && (
               <FormHelperText>{formik.errors.partner_id}</FormHelperText>
+            )}
+            {isEditMode && (
+              <FormHelperText sx={{ color: 'text.secondary' }}>
+                Партнер не может быть изменен после создания сервисной точки
+              </FormHelperText>
             )}
           </FormControl>
         </Grid>

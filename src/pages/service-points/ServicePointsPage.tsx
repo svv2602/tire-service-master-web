@@ -371,15 +371,11 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       label: 'Редактировать',
       icon: <EditIcon />,
       onClick: (servicePoint: ServicePoint) => {
-        if (partnerId) {
-          navigate(`/admin/partners/${partnerId}/service-points/${servicePoint.id}/edit`, {
-            state: { from: `/admin/partners/${partnerId}/service-points` }
-          });
-        } else {
-          navigate(`/admin/service-points/${servicePoint.id}/edit`, {
-            state: { from: '/admin/service-points' }
-          });
-        }
+        // Всегда используем partner_id из сервисной точки для формирования корректного URL
+        const partnerIdToUse = partnerId || servicePoint.partner_id;
+        navigate(`/admin/partners/${partnerIdToUse}/service-points/${servicePoint.id}/edit`, {
+          state: { from: partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points' }
+        });
       },
       color: 'primary' as const
     },
