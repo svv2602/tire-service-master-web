@@ -46,6 +46,8 @@ import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePage
 // Импорт UI компонентов
 import { Tabs, TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
 import { phoneValidation } from '../../utils/validation';
+import { useGetOperatorsByPartnerQuery, useCreateOperatorMutation, useUpdateOperatorMutation, useDeleteOperatorMutation, Operator } from '../../api/operators.api';
+import { OperatorModal } from '../../components/partners/OperatorModal';
 
 /**
  * Страница формы партнера - создание и редактирование партнеров
@@ -291,6 +293,41 @@ const PartnerFormPage: React.FC = () => {
   // Состояние для отображения ошибок валидации
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
+  // --- Сотрудники (операторы) ---
+  const partnerId = id ? parseInt(id) : 0;
+  const { data: operators = [], isLoading: operatorsLoading, refetch: refetchOperators } = useGetOperatorsByPartnerQuery(partnerId, { skip: !isEdit });
+  const [createOperator] = useCreateOperatorMutation();
+  const [updateOperator] = useUpdateOperatorMutation();
+  const [deleteOperator] = useDeleteOperatorMutation();
+  const [operatorModalOpen, setOperatorModalOpen] = useState(false);
+  const [editingOperator, setEditingOperator] = useState<Operator | null>(null);
+
+  // Открыть модалку для добавления
+  const handleAddOperator = () => {
+    setEditingOperator(null);
+    setOperatorModalOpen(true);
+  };
+  // Открыть модалку для редактирования
+  const handleEditOperator = (operator: Operator) => {
+    setEditingOperator(operator);
+    setOperatorModalOpen(true);
+  };
+  // Удалить/деактивировать оператора
+  const handleDeleteOperator = async (operator: Operator) => {
+    await deleteOperator({ id: operator.id, partnerId });
+    refetchOperators();
+  };
+  // Сохранить оператора (добавить/редактировать)
+  const handleSaveOperator = async (data: any) => {
+    if (editingOperator) {
+      await updateOperator({ id: editingOperator.id, data });
+    } else {
+      await createOperator({ partnerId, data });
+    }
+    setOperatorModalOpen(false);
+    refetchOperators();
+  };
+
   // Функция для получения списка незаполненных обязательных полей
   const getRequiredFieldErrors = () => {
     const requiredFields = {
@@ -300,10 +337,10 @@ const PartnerFormPage: React.FC = () => {
       region_id: 'Регион',
       city_id: 'Город',
       ...((!isEdit) && {
-        'user.email': 'Email пользователя',
-        'user.phone': 'Телефон пользователя',
-        'user.first_name': 'Имя пользователя',
-        'user.last_name': 'Фамилия пользователя'
+        'user.email': 'Email Партнера',
+        'user.phone': 'Телефон Партнера',
+        'user.first_name': 'Имя Партнера',
+        'user.last_name': 'Фамилия Партнера'
       })
     };
 
@@ -378,17 +415,21 @@ const PartnerFormPage: React.FC = () => {
       };
     }
 
-    // При редактировании отправляем только новый пароль, если он был указан
-    if (isEdit && values.new_password?.trim() && partner?.user?.id) {
+    // Всегда отправляем user_attributes с ролью Партнер при редактировании
+    if (isEdit && partner?.user?.id && values.user) {
       formattedData.user_attributes = {
         id: partner.user.id,
-        email: partner.user.email || '',
-        phone: partner.user.phone || '',
-        first_name: partner.user.first_name || '',
-        last_name: partner.user.last_name || '',
-        role_id: getRoleId('partner'),
-        password: values.new_password.trim(),
-        password_confirmation: values.new_password.trim()
+        email: values.user.email,
+        phone: values.user.phone,
+        first_name: values.user.first_name,
+        last_name: values.user.last_name,
+        role_id: getRoleId('partner'), // Гарантируем роль Партнер
+        ...(values.new_password?.trim()
+          ? {
+              password: values.new_password.trim(),
+              password_confirmation: values.new_password.trim(),
+            }
+          : {}),
       };
     }
 
@@ -463,7 +504,12 @@ const PartnerFormPage: React.FC = () => {
         region_id: partner.region_id || undefined,
         city_id: partner.city_id || undefined,
         is_active: partner.is_active ?? true,
-        user: null,
+        user: {
+          email: partner.user?.email || '',
+          phone: partner.user?.phone || '',
+          first_name: partner.user?.first_name || '',
+          last_name: partner.user?.last_name || '',
+        },
         new_password: '',
       };
     }
@@ -499,17 +545,15 @@ const PartnerFormPage: React.FC = () => {
     onSubmit: handleSubmit,
   });
 
-  // Определяем вкладки для режима редактирования
+  // Вкладки для режима редактирования
   const tabs = useMemo(() => {
     const baseTabs = [
       { label: 'Основная информация', value: 0 },
     ];
-
-    // Добавляем вкладку сервисных точек только в режиме редактирования
     if (isEdit) {
       baseTabs.push({ label: 'Сервисные точки', value: 1 });
+      baseTabs.push({ label: 'Сотрудники', value: 2 });
     }
-
     return baseTabs;
   }, [isEdit]);
 
@@ -642,10 +686,40 @@ const PartnerFormPage: React.FC = () => {
     formik.setFieldValue('city_id', newCityId);
   };
 
-  // Обработчик изменения вкладки
-  const handleTabChange = (newValue: string | number) => {
-    setActiveTab(newValue as number);
-  };
+  // Функция для смены вкладки
+  const handleTabChange = (value: string | number) => setActiveTab(Number(value));
+
+  // Вкладка "Сотрудники"
+  const renderOperatorsTab = () => (
+    <Box sx={{ mt: 2 }}>
+      <Button variant="contained" color="primary" onClick={handleAddOperator} sx={{ mb: 2 }}>
+        Добавить сотрудника
+      </Button>
+      {/* Таблица сотрудников */}
+      <Table
+        columns={[
+          { id: 'fio', label: 'ФИО', format: (_: any, row: Operator) => `${row.user.first_name} ${row.user.last_name}` },
+          { id: 'email', label: 'Email', format: (_: any, row: Operator) => row.user.email },
+          { id: 'phone', label: 'Телефон', format: (_: any, row: Operator) => row.user.phone },
+          { id: 'position', label: 'Должность', format: (_: any, row: Operator) => row.position },
+          { id: 'access_level', label: 'Доступ', format: (_: any, row: Operator) => row.access_level },
+          { id: 'status', label: 'Статус', format: (_: any, row: Operator) => row.is_active ? 'Активен' : 'Неактивен' },
+          { id: 'actions', label: 'Действия', format: (_: any, row: Operator) => (
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button size="small" onClick={() => handleEditOperator(row)}>Редактировать</Button>
+              <Button size="small" color="error" onClick={() => handleDeleteOperator(row)}>
+                {row.is_active ? 'Деактивировать' : 'Удалить'}
+              </Button>
+            </Box>
+          ) },
+        ]}
+        rows={operators}
+        loading={operatorsLoading}
+      />
+      {/* Модальное окно для добавления/редактирования сотрудника (реализовать отдельно) */}
+      <OperatorModal open={operatorModalOpen} onClose={() => setOperatorModalOpen(false)} onSave={handleSaveOperator} operator={editingOperator} />
+    </Box>
+  );
 
   if (partnerLoading) {
     return (
@@ -690,7 +764,6 @@ const PartnerFormPage: React.FC = () => {
             value={activeTab}
             onChange={handleTabChange}
             tabs={tabs}
-            variant="standard"
           />
         </Box>
       )}
@@ -941,36 +1014,56 @@ const PartnerFormPage: React.FC = () => {
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        disabled
+                        required
+                        name="user.email"
                         label="Email"
-                        value={partner?.user?.email || ''}
+                        type="email"
+                        value={formik.values.user?.email || ''}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean((formik.touched.user as any)?.email && (formik.errors.user as any)?.email)}
+                        helperText={(formik.touched.user as any)?.email && (formik.errors.user as any)?.email}
+                        sx={textFieldStyles}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <PhoneField
+                        fullWidth
+                        required
+                        name="user.phone"
+                        value={formik.values.user?.phone || ''}
+                        onChange={(value) => formik.setFieldValue('user.phone', value)}
+                        onBlur={() => formik.setFieldTouched('user.phone', true)}
+                        error={Boolean((formik.touched.user as any)?.phone && (formik.errors.user as any)?.phone)}
+                        helperText={(formik.touched.user as any)?.phone && (formik.errors.user as any)?.phone}
                         sx={textFieldStyles}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        disabled
-                        label="Телефон"
-                        value={partner?.user?.phone || ''}
-                        sx={textFieldStyles}
-                      />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        disabled
+                        required
+                        name="user.first_name"
                         label="Имя"
-                        value={partner?.user?.first_name || ''}
+                        value={formik.values.user?.first_name || ''}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean((formik.touched.user as any)?.first_name && (formik.errors.user as any)?.first_name)}
+                        helperText={(formik.touched.user as any)?.first_name && (formik.errors.user as any)?.first_name}
                         sx={textFieldStyles}
                       />
                     </Grid>
                     <Grid item xs={12} md={6}>
                       <TextField
                         fullWidth
-                        disabled
+                        required
+                        name="user.last_name"
                         label="Фамилия"
-                        value={partner?.user?.last_name || ''}
+                        value={formik.values.user?.last_name || ''}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        error={Boolean((formik.touched.user as any)?.last_name && (formik.errors.user as any)?.last_name)}
+                        helperText={(formik.touched.user as any)?.last_name && (formik.errors.user as any)?.last_name}
                         sx={textFieldStyles}
                       />
                     </Grid>
@@ -1225,6 +1318,13 @@ const PartnerFormPage: React.FC = () => {
                 </>
               )}
             </Paper>
+          </TabPanel>
+        )}
+
+        {/* Вкладка "Сотрудники" */}
+        {isEdit && (
+          <TabPanel value={activeTab} index={2}>
+            {renderOperatorsTab()}
           </TabPanel>
         )}
       </form>

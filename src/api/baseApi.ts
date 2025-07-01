@@ -1,13 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { useDispatch } from 'react-redux';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import config from '../config';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+import { config } from '../config';
 
 // Создаем базовый query
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${API_BASE_URL}/api/v1`,
+  baseUrl: `${config.API_URL}${config.API_PREFIX}`,
   credentials: 'include', // Включаем передачу cookies для cookie-based аутентификации
   prepareHeaders: (headers, { getState }) => {
     // При cookie-based аутентификации:
