@@ -2,29 +2,36 @@
  * Страница управления партнерами
  * 
  * Функциональность:
- * - Отображение списка партнеров в табличном формате
- * - Поиск партнеров по названию компании
+ * - Отображение списка партнеров с помощью PageTable
+ * - Поиск партнеров по названию компании, контактному лицу, телефону
+ * - Фильтр по статусу активности
  * - Пагинация результатов
- * - Редактирование партнеров (переход к форме редактирования)
- * - Удаление партнеров с подтверждением
- * - Изменение статуса активности партнеров
- * - Централизованная система стилей для консистентного UI
+ * - Редактирование и удаление партнеров
+ * - Переключение статуса активности через Switch
+ * - Диалог подтверждения деактивации с информацией о связанных данных
+ * - Унифицированный UI с остальными страницами
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  CircularProgress,
+  Avatar,
   IconButton,
   Tooltip,
-  Avatar,
   useTheme,
-  InputAdornment,
+  FormControlLabel,
+  Switch,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  CircularProgress,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -34,27 +41,26 @@ import {
   useGetPartnerRelatedDataQuery,
 } from '../../api';
 import { Partner } from '../../types/models';
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { SerializedError } from '@reduxjs/toolkit';
 
 // Импорты UI компонентов
 import {
   Box,
   Typography,
-  Button,
-  TextField,
   Alert,
-  Pagination,
-  Chip,
-  Table,
-  type Column,
 } from '../../components/ui';
-import { Modal } from '../../components/ui/Modal';
 
-// Импорты централизованных стилей
-import { getTablePageStyles } from '../../styles/components';
+// Импорт PageTable компонента
+import { PageTable } from '../../components/common/PageTable';
+import type { 
+  PageHeaderConfig, 
+  SearchConfig, 
+  ActionConfig,
+  FilterConfig,
+  PageTableProps 
+} from '../../components/common/PageTable';
+import type { Column } from '../../components/ui/Table/Table';
 
-// Хук для debounce поиска партнеров
+// Хук для debounce поиска
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -75,20 +81,21 @@ const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   
-  // Инициализация централизованных стилей
-  const tablePageStyles = getTablePageStyles(theme);
-  
-  // Состояние для поиска и пагинации
+  // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>(''); // '' = все, 'true' = активные, 'false' = неактивные
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
   
-  // Состояние для диалогов и ошибок
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
-  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  // Состояние для ошибок
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Состояние для диалога подтверждения деактивации
+  const [deactivateDialog, setDeactivateDialog] = useState<{
+    open: boolean;
+    partner: Partner | null;
+    isFromDelete: boolean; // true если диалог открыт из кнопки удаления
+  }>({ open: false, partner: null, isFromDelete: false });
 
   // Debounce для поиска
   const debouncedSearch = useDebounce(search, 300);
@@ -96,9 +103,10 @@ const PartnersPage: React.FC = () => {
   // Мемоизированные параметры запроса
   const queryParams = useMemo(() => ({
     query: debouncedSearch || undefined,
+    is_active: statusFilter ? statusFilter === 'true' : undefined,
     page: page + 1,
     per_page: pageSize,
-  }), [debouncedSearch, page, pageSize]);
+  }), [debouncedSearch, statusFilter, page, pageSize]);
 
   // RTK Query хуки
   const { 
@@ -109,28 +117,24 @@ const PartnersPage: React.FC = () => {
 
   const [deletePartner] = useDeletePartnerMutation();
   const [togglePartnerActive] = useTogglePartnerActiveMutation();
-  
+
   // Запрос связанных данных для выбранного партнера (только при открытии диалога деактивации)
   const { data: relatedData, isLoading: relatedDataLoading } = useGetPartnerRelatedDataQuery(
-    selectedPartner?.id || 0,
-    { skip: !selectedPartner?.id || !deactivateDialogOpen }
+    deactivateDialog.partner?.id || 0,
+    { skip: !deactivateDialog.partner?.id || !deactivateDialog.open }
   );
 
   const partners = partnersData?.data || [];
   const totalItems = partnersData?.pagination?.total_count || partners.length;
 
-  // Вспомогательная функция для получения текста ошибки
-  const getErrorMessage = (error: FetchBaseQueryError | SerializedError): string => {
-    if ('status' in error) {
-      const fetchError = error as FetchBaseQueryError;
-      return (fetchError.data as { message?: string })?.message || 'Ошибка сервера';
-    }
-    return (error as SerializedError).message || 'Неизвестная ошибка';
-  };
+  // Обработчики событий
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(0);
+  }, []);
 
-  // Мемоизированные обработчики событий
-  const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(event.target.value);
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value);
     setPage(0);
   }, []);
 
@@ -139,104 +143,57 @@ const PartnersPage: React.FC = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleDeleteClick = useCallback((partner: Partner) => {
-    setSelectedPartner(partner);
-    if (partner.is_active) {
-      // Если партнер активен, показываем диалог деактивации
-      setDeactivateDialogOpen(true);
-    } else {
-      // Если партнер неактивен, показываем обычный диалог удаления
-      setDeleteDialogOpen(true);
-    }
-  }, []);
-
-  const handleEditPartner = useCallback((id: number) => {
-    navigate(`/admin/partners/${id}/edit`);
+  const handleEditPartner = useCallback((partner: Partner) => {
+    navigate(`/admin/partners/${partner.id}/edit`);
   }, [navigate]);
 
-  const handleDeactivateConfirm = useCallback(async () => {
-    if (selectedPartner) {
-      try {
-        const response = await deletePartner(selectedPartner.id).unwrap();
-        
-        // Проверяем, была ли выполнена деактивация вместо удаления
-        if (response && typeof response === 'object' && 'action' in response && response.action === 'deactivated') {
-          setErrorMessage(null);
-          setDeactivateDialogOpen(false);
-          setSelectedPartner(null);
-          // Показываем информационное сообщение о деактивации
-          setSuccessMessage(response.message || 'Партнер был деактивирован. Теперь вы можете его удалить.');
-          return;
-        }
-        
-        // Если вернулось что-то другое, закрываем диалог
-        setDeactivateDialogOpen(false);
-        setSelectedPartner(null);
-        setErrorMessage(null);
-        setSuccessMessage('Партнер успешно деактивирован.');
-      } catch (error: any) {
-        let errorMessage = 'Ошибка при деактивации партнера';
-        
-        if (error.data?.error) {
-          errorMessage = error.data.error;
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.data?.errors) {
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        setErrorMessage(errorMessage);
-        setDeactivateDialogOpen(false);
-      }
+  const handleDeletePartner = useCallback(async (partner: Partner) => {
+    // Если партнер активен, сначала показываем диалог деактивации
+    if (partner.is_active) {
+      setDeactivateDialog({ open: true, partner, isFromDelete: true });
+      return;
     }
-  }, [selectedPartner, deletePartner]);
 
-  const handleDeleteConfirm = useCallback(async () => {
-    if (selectedPartner) {
-      try {
-        await deletePartner(selectedPartner.id).unwrap();
-        
-        // Обычное удаление
-        setDeleteDialogOpen(false);
-        setSelectedPartner(null);
-        setErrorMessage(null);
-        setSuccessMessage('Партнер успешно удален.');
-      } catch (error: any) {
-        let errorMessage = 'Ошибка при удалении партнера';
-        
-        if (error.data?.error) {
-          errorMessage = error.data.error;
-        } else if (error.data?.message) {
-          errorMessage = error.data.message;
-        } else if (error.data?.errors) {
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        setErrorMessage(errorMessage);
-        setDeleteDialogOpen(false);
+    // Если партнер неактивен, выполняем удаление
+    try {
+      await deletePartner(partner.id).unwrap();
+      setErrorMessage(null);
+    } catch (error: any) {
+      let errorMessage = 'Ошибка при удалении партнера';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      setErrorMessage(errorMessage);
     }
-  }, [selectedPartner, deletePartner]);
+  }, [deletePartner]);
 
   const handleToggleStatus = useCallback(async (partner: Partner) => {
+    // Если партнер активен и мы хотим его деактивировать, показываем диалог подтверждения
+    if (partner.is_active) {
+      setDeactivateDialog({ open: true, partner, isFromDelete: false });
+      return;
+    }
+
+    // Если партнер неактивен, активируем его без подтверждения
     try {
       await togglePartnerActive({
         id: partner.id,
-        isActive: !partner.is_active
+        isActive: true
       }).unwrap();
       setErrorMessage(null);
     } catch (error: any) {
-      let errorMessage = 'Ошибка при изменении статуса партнера';
+      let errorMessage = 'Ошибка при активации партнера';
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -255,19 +212,111 @@ const PartnersPage: React.FC = () => {
     }
   }, [togglePartnerActive]);
 
-  // Мемоизированная функция для получения инициалов
+  // Обработчик подтверждения деактивации партнера
+  const handleConfirmDeactivation = useCallback(async () => {
+    if (!deactivateDialog.partner) return;
+
+    const isFromDelete = deactivateDialog.isFromDelete;
+
+    try {
+      if (isFromDelete) {
+        // Если диалог открыт из кнопки удаления, используем API удаления
+        // Backend сам деактивирует партнера и вернет соответствующее сообщение
+        const response = await deletePartner(deactivateDialog.partner.id).unwrap();
+        
+        // Проверяем, была ли выполнена деактивация вместо удаления
+        if (response && typeof response === 'object' && 'action' in response && response.action === 'deactivated') {
+          setErrorMessage(null);
+          setDeactivateDialog({ open: false, partner: null, isFromDelete: false });
+          // Можно показать сообщение о том, что партнер деактивирован и теперь его можно удалить
+          return;
+        }
+      } else {
+        // Если диалог открыт из Switch, используем API переключения статуса
+        await togglePartnerActive({
+          id: deactivateDialog.partner.id,
+          isActive: false
+        }).unwrap();
+      }
+      
+      setErrorMessage(null);
+      setDeactivateDialog({ open: false, partner: null, isFromDelete: false });
+    } catch (error: any) {
+      let errorMessage = isFromDelete ? 'Ошибка при удалении партнера' : 'Ошибка при деактивации партнера';
+      
+      if (error.data?.error) {
+        errorMessage = error.data.error;
+      } else if (error.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error.data?.errors) {
+        const errors = error.data.errors as Record<string, string[]>;
+        errorMessage = Object.entries(errors)
+          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+          .join('; ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrorMessage(errorMessage);
+    }
+  }, [deactivateDialog.partner, deactivateDialog.isFromDelete, togglePartnerActive, deletePartner]);
+
+  // Обработчик отмены деактивации
+  const handleCancelDeactivation = useCallback(() => {
+    setDeactivateDialog({ open: false, partner: null, isFromDelete: false });
+  }, []);
+
+  // Функция для получения инициалов партнера
   const getPartnerInitials = useCallback((partner: Partner) => {
     return partner.company_name.charAt(0).toUpperCase() || 'П';
   }, []);
 
-  // Конфигурация колонок таблицы
+  // Конфигурация заголовка
+  const headerConfig: PageHeaderConfig = useMemo(() => ({
+    title: 'Партнеры',
+    actions: [
+      {
+        id: 'add-partner',
+        label: 'Добавить партнера',
+        icon: <AddIcon />,
+        onClick: () => navigate('/admin/partners/new'),
+        variant: 'contained',
+      }
+    ]
+  }), [navigate]);
+
+  // Конфигурация поиска
+  const searchConfig: SearchConfig = useMemo(() => ({
+    placeholder: 'Поиск по названию компании, контактному лицу или номеру телефона...',
+    value: search,
+    onChange: handleSearchChange,
+  }), [search, handleSearchChange]);
+
+  // Конфигурация фильтров
+  const filtersConfig: FilterConfig[] = useMemo(() => [
+    {
+      id: 'status',
+      label: 'Статус активности',
+      type: 'select',
+      value: statusFilter,
+      onChange: handleStatusFilterChange,
+      options: [
+        { value: '', label: 'Все партнеры' },
+        { value: 'true', label: 'Только активные' },
+        { value: 'false', label: 'Только неактивные' },
+      ],
+    },
+  ], [statusFilter, handleStatusFilterChange]);
+
+  // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
     {
       id: 'company',
       label: 'Партнер',
       wrap: true,
-      format: (value, row: Partner) => (
-        <Box sx={tablePageStyles.avatarContainer}>
+      minWidth: 250,
+      format: (_value: any, row: Partner) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main' }}>
             {getPartnerInitials(row)}
           </Avatar>
@@ -275,9 +324,11 @@ const PartnersPage: React.FC = () => {
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {row.company_name}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {row.company_description}
-            </Typography>
+            {row.company_description && (
+              <Typography variant="body2" color="text.secondary">
+                {row.company_description}
+              </Typography>
+            )}
           </Box>
         </Box>
       )
@@ -286,16 +337,21 @@ const PartnersPage: React.FC = () => {
       id: 'contact_person',
       label: 'Контактное лицо',
       wrap: true,
-      format: (value, row: Partner) => (
-        <Typography variant="body2">
-          {row.contact_person}
-        </Typography>
+      hideOnMobile: true,
+      format: (_value: any, row: Partner) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <BusinessIcon color="action" />
+          <Typography variant="body2">
+            {row.contact_person || 'Не указано'}
+          </Typography>
+        </Box>
       )
     },
     {
       id: 'phone',
       label: 'Телефон',
-      format: (value, row: Partner) => (
+      hideOnMobile: true,
+      format: (_value: any, row: Partner) => (
         <Typography variant="body2">
           {row.user?.phone || 'Не указан'}
         </Typography>
@@ -304,7 +360,8 @@ const PartnersPage: React.FC = () => {
     {
       id: 'email',
       label: 'Email',
-      format: (value, row: Partner) => (
+      hideOnMobile: true,
+      format: (_value: any, row: Partner) => (
         <Typography variant="body2">
           {row.user?.email || 'Не указан'}
         </Typography>
@@ -314,66 +371,64 @@ const PartnersPage: React.FC = () => {
       id: 'is_active',
       label: 'Статус',
       align: 'center',
-      format: (value, row: Partner) => (
-        <Chip
-          label={row.is_active ? 'Активен' : 'Неактивен'}
-          color={row.is_active ? 'success' : 'error'}
-          size="small"
+      format: (_value: any, row: Partner) => (
+        <FormControlLabel
+          control={
+            <Switch
+              checked={row.is_active}
+              onChange={() => handleToggleStatus(row)}
+              size="small"
+              color="primary"
+            />
+          }
+          label=""
+          sx={{ m: 0 }}
         />
       )
+    }
+  ], [getPartnerInitials, handleToggleStatus]);
+
+  // Конфигурация действий
+  const actionsConfig: ActionConfig[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (partner: Partner) => handleEditPartner(partner),
+      color: 'primary',
     },
     {
-      id: 'actions',
-      label: 'Действия',
-      align: 'right',
-      format: (value, row: Partner) => (
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton
-              onClick={() => handleEditPartner(row.id)}
-              size="small"
-              sx={tablePageStyles.actionButton}
-            >
-              <EditIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton
-              onClick={() => handleDeleteClick(row)}
-              size="small"
-              color="error"
-              sx={tablePageStyles.actionButton}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (partner: Partner) => handleDeletePartner(partner),
+      color: 'error',
+      requireConfirmation: false, // Убираем стандартное подтверждение, так как обрабатываем сами
     }
-  ], [tablePageStyles, getPartnerInitials, handleEditPartner, handleDeleteClick]);
+  ], [handleEditPartner, handleDeletePartner]);
 
-  // Отображение состояний загрузки и ошибок
-  if (isLoading && !partnersData) {
-    return (
-      <Box sx={tablePageStyles.loadingContainer}>
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Конфигурация пагинации
+  const paginationConfig = useMemo(() => ({
+    page: page + 1,
+    rowsPerPage: pageSize,
+    totalItems: totalItems,
+    onPageChange: handlePageChange,
+  }), [page, pageSize, totalItems, handlePageChange]);
 
+  // Отображение ошибки загрузки
   if (error) {
     return (
-      <Box sx={tablePageStyles.pageContainer}>
+      <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке партнеров: {getErrorMessage(error)}
+          Ошибка при загрузке партнеров: {(error as any)?.data?.message || 'Неизвестная ошибка'}
         </Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={tablePageStyles.pageContainer}>
-      {/* Отображение ошибок и успешных сообщений */}
+    <Box>
+      {/* Отображение ошибок операций */}
       {errorMessage && (
         <Box sx={{ mb: 2 }}>
           <Alert severity="error" onClose={() => setErrorMessage(null)}>
@@ -381,206 +436,143 @@ const PartnersPage: React.FC = () => {
           </Alert>
         </Box>
       )}
-      
-      {successMessage && (
-        <Box sx={{ mb: 2 }}>
-          <Alert severity="success" onClose={() => setSuccessMessage(null)}>
-            {successMessage}
-          </Alert>
-        </Box>
-      )}
-
-      {/* Заголовок и кнопки действий */}
-      <Box sx={tablePageStyles.pageHeader}>
-        <Typography variant="h4" sx={tablePageStyles.pageTitle}>
-          Партнеры
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/admin/partners/new')}
-          sx={tablePageStyles.createButton}
-        >
-          Добавить партнера
-        </Button>
-      </Box>
-
-      {/* Поиск */}
-      <Box sx={tablePageStyles.filtersContainer}>
-        <TextField
-          placeholder="Поиск по названию компании, контактному лицу или номеру телефона..."
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={handleSearchChange}
-          sx={tablePageStyles.searchField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
 
       {/* Статистика */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          Найдено партнеров: <strong>{totalItems}</strong>
-        </Typography>
-        {partners.length > 0 && (
+      {partners.length > 0 && (
+        <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Найдено партнеров: <strong>{totalItems}</strong>
+          </Typography>
           <Typography variant="body2" color="success.main">
             Активных: <strong>{partners.filter(p => p.is_active).length}</strong>
           </Typography>
-        )}
-        {partners.filter(p => !p.is_active).length > 0 && (
-          <Typography variant="body2" color="error.main">
-            Неактивных: <strong>{partners.filter(p => !p.is_active).length}</strong>
-          </Typography>
-        )}
-      </Box>
-
-      {/* Таблица партнеров */}
-      <Box sx={tablePageStyles.tableContainer}>
-        <Table
-          columns={columns}
-          rows={partners}
-        />
-        
-        {/* Пагинация */}
-        {Math.ceil(totalItems / pageSize) > 1 && (
-          <Box sx={tablePageStyles.paginationContainer}>
-            <Pagination
-              count={Math.ceil(totalItems / pageSize)}
-              page={page + 1}
-              onChange={handlePageChange}
-              disabled={isLoading}
-            />
-          </Box>
-        )}
-      </Box>
-
-      {/* Модальное окно подтверждения деактивации */}
-      <Modal
-        open={deactivateDialogOpen}
-        onClose={() => setDeactivateDialogOpen(false)}
-        title="Подтверждение деактивации партнера"
-        actions={
-          <>
-            <Button 
-              onClick={() => setDeactivateDialogOpen(false)}
-            >
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleDeactivateConfirm} 
-              color="warning" 
-              variant="contained"
-              disabled={relatedDataLoading}
-            >
-              Деактивировать
-            </Button>
-          </>
-        }
-      >
-        <Box>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Деактивация партнера <strong>"{selectedPartner?.company_name}"</strong>
-          </Typography>
-          
-          {relatedDataLoading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CircularProgress size={20} />
-              <Typography>Загрузка связанных данных...</Typography>
-            </Box>
-          ) : relatedData ? (
-            <Box>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                При деактивации партнера будут также деактивированы:
-              </Typography>
-              
-              {relatedData.service_points_count > 0 && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    🏢 Сервисные точки ({relatedData.service_points_count}):
-                  </Typography>
-                  <Box sx={{ pl: 2 }}>
-                    {relatedData.service_points.map(sp => (
-                      <Typography key={sp.id} variant="body2" color={sp.is_active ? 'text.primary' : 'text.secondary'}>
-                        • {sp.name} - {sp.is_active ? '✅ Активна' : '❌ Неактивна'} 
-                        {sp.work_status && ` (${sp.work_status === 'working' ? 'Работает' : 
-                                                sp.work_status === 'temporarily_closed' ? 'Временно закрыта' : 
-                                                'Закрыта'})`}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-              
-              {relatedData.operators_count > 0 && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    👥 Сотрудники ({relatedData.operators_count}):
-                  </Typography>
-                  <Box sx={{ pl: 2 }}>
-                    {relatedData.operators.map(op => (
-                      <Typography key={op.id} variant="body2" color={(op.is_active && op.user?.is_active) ? 'text.primary' : 'text.secondary'}>
-                        • {op.user?.first_name || 'Имя не указано'} {op.user?.last_name || ''} ({op.user?.email || 'Email не указан'}) - {' '}
-                        {(op.is_active && op.user?.is_active) ? '✅ Активен' : '❌ Неактивен'}
-                        {op.position && ` (${op.position})`}
-                      </Typography>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-              
-              {relatedData.service_points_count === 0 && relatedData.operators_count === 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  У этого партнера нет связанных сервисных точек или сотрудников.
-                </Typography>
-              )}
-              
-              <Typography variant="body2" sx={{ mt: 2, fontStyle: 'italic' }}>
-                Вы уверены, что хотите продолжить?
-              </Typography>
-            </Box>
-          ) : (
-            <Typography>Не удалось загрузить информацию о связанных данных.</Typography>
+          {partners.filter(p => !p.is_active).length > 0 && (
+            <Typography variant="body2" color="error.main">
+              Неактивных: <strong>{partners.filter(p => !p.is_active).length}</strong>
+            </Typography>
           )}
         </Box>
-      </Modal>
+      )}
 
-      {/* Модальное окно подтверждения удаления */}
-      <Modal
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        title="Подтверждение удаления"
-        actions={
-          <>
-            <Button 
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleDeleteConfirm} 
-              color="error" 
-              variant="contained"
-            >
-              Удалить
-            </Button>
-          </>
+      {/* PageTable */}
+      <PageTable<Partner>
+        header={headerConfig}
+        search={searchConfig}
+        filters={filtersConfig}
+        columns={columns}
+        rows={partners}
+        actions={actionsConfig}
+        loading={isLoading}
+        pagination={paginationConfig}
+        responsive={true}
+        empty={
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" color="text.secondary">
+              {search || statusFilter ? 'Партнеры не найдены' : 'Нет партнеров'}
+            </Typography>
+          </Box>
         }
+      />
+
+      {/* Диалог подтверждения деактивации партнера */}
+      <Dialog
+        open={deactivateDialog.open}
+        onClose={handleCancelDeactivation}
+        maxWidth="md"
+        fullWidth
       >
-        <Typography>
-          Вы действительно хотите удалить партнера <strong>"{selectedPartner?.company_name}"</strong>? 
-          <br /><br />
-          Это действие нельзя будет отменить.
-        </Typography>
-      </Modal>
+        <DialogTitle>
+          {deactivateDialog.isFromDelete ? 'Подтверждение удаления партнера' : 'Подтверждение деактивации партнера'}
+        </DialogTitle>
+        <DialogContent>
+          {deactivateDialog.partner && (
+            <Box>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                {deactivateDialog.isFromDelete ? (
+                  <>
+                    Вы действительно хотите удалить партнера <strong>{deactivateDialog.partner.company_name}</strong>?
+                    <br />
+                    <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
+                      Поскольку партнер активен, сначала он будет деактивирован.
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    Вы действительно хотите деактивировать партнера <strong>{deactivateDialog.partner.company_name}</strong>?
+                  </>
+                )}
+              </Typography>
+              
+              {relatedDataLoading ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 2 }}>
+                  <CircularProgress size={20} />
+                  <Typography>Загрузка связанных данных...</Typography>
+                </Box>
+              ) : relatedData ? (
+                <Box>
+                  <Typography variant="body1" sx={{ mb: 2, color: 'warning.main' }}>
+                    При деактивации партнера будут также деактивированы:
+                  </Typography>
+                  
+                  {relatedData.service_points_count > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        🏢 Сервисные точки ({relatedData.service_points_count}):
+                      </Typography>
+                      <Box sx={{ pl: 2 }}>
+                        {relatedData.service_points.map(sp => (
+                          <Typography key={sp.id} variant="body2" color={sp.is_active ? 'text.primary' : 'text.secondary'}>
+                            • {sp.name} - {sp.is_active ? '✅ Активна' : '❌ Неактивна'} 
+                            {sp.work_status && ` (${sp.work_status === 'working' ? 'Работает' : 
+                                                    sp.work_status === 'temporarily_closed' ? 'Временно закрыта' : 
+                                                    'Закрыта'})`}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                  
+                  {relatedData.operators_count > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                        👥 Сотрудники ({relatedData.operators_count}):
+                      </Typography>
+                      <Box sx={{ pl: 2 }}>
+                        {relatedData.operators.map(op => (
+                          <Typography key={op.id} variant="body2" color={op.is_active ? 'text.primary' : 'text.secondary'}>
+                            • {op.user.first_name} {op.user.last_name} ({op.position}) - {op.is_active ? '✅ Активен' : '❌ Неактивен'}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                  
+                  {relatedData.service_points_count === 0 && relatedData.operators_count === 0 && (
+                    <Typography variant="body2" color="success.main">
+                      У этого партнера нет активных сервисных точек и сотрудников.
+                    </Typography>
+                  )}
+                </Box>
+              ) : null}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDeactivation} color="inherit">
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleConfirmDeactivation} 
+            color="error" 
+            variant="contained"
+            disabled={relatedDataLoading}
+          >
+            {deactivateDialog.isFromDelete ? 'Удалить' : 'Деактивировать'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
 
-export default PartnersPage;
+export default PartnersPage; 

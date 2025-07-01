@@ -26,7 +26,6 @@ const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
 
 // Ленивая загрузка страниц партнеров
 const PartnersPage = lazy(() => import('./pages/partners/PartnersPage'));
-const PartnersPageNew = lazy(() => import('./pages/partners/PartnersPageNew'));
 const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 
 // Ленивая загрузка страниц сервисных точек
@@ -239,9 +238,6 @@ function App() {
                       <Route path="partners" element={<PartnersPage />} />
                       <Route path="partners/new" element={<PartnerFormPage />} />
                       <Route path="partners/:id/edit" element={<PartnerFormPage />} />
-                      
-                      {/* Тестирование PageTable */}
-                      <Route path="testing/partners-new" element={<PartnersPageNew />} />
                       <Route path="testing/users-new" element={<UsersPageNew />} />
                       <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
                       <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPageNew />} />

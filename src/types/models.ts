@@ -271,7 +271,7 @@ export interface ServicePointFilter extends PaginationFilter {
 }
 
 export interface PartnerFilter extends PaginationFilter {
-  search?: string;
+  query?: string;
   is_active?: boolean;
   region_id?: number;
   city_id?: number;
