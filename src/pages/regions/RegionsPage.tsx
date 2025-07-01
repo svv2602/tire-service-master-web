@@ -20,6 +20,7 @@ import { useTheme } from '@mui/material/styles';
 
 // Импорты UI компонентов
 import { PageTable } from '../../components/common/PageTable';
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import Notification from '../../components/Notification';
 import { getTablePageStyles } from '../../styles';
 
@@ -33,9 +34,9 @@ import {
 // Типы
 import type { Region } from '../../types/models';
 
-interface RegionsPageNewProps {}
+interface RegionsPageProps {}
 
-const RegionsPage: React.FC<RegionsPageNewProps> = () => {
+const RegionsPage: React.FC<RegionsPageProps> = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
@@ -181,6 +182,52 @@ const RegionsPage: React.FC<RegionsPageNewProps> = () => {
     }
   ], [selectedStatus, handleStatusFilterChange]);
 
+  // Конфигурация действий для ActionsMenu
+  const regionActions: ActionItem<Region>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (region: Region) => navigate(`/admin/regions/${region.id}/edit`),
+      color: 'primary',
+      tooltip: 'Редактировать регион'
+    },
+    {
+      id: 'cities',
+      label: 'Города',
+      icon: <LocationCityIcon />,
+      onClick: (region: Region) => navigate(`/admin/regions/${region.id}/cities`),
+      color: 'info',
+      tooltip: 'Управление городами региона'
+    },
+    {
+      id: 'toggle',
+      label: (region: Region) => region.is_active ? 'Деактивировать' : 'Активировать',
+      icon: (region: Region) => region.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
+      onClick: handleToggleStatus,
+      color: (region: Region) => region.is_active ? 'warning' : 'success',
+      tooltip: (region: Region) => region.is_active ? 'Деактивировать регион' : 'Активировать регион',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение изменения статуса',
+        message: 'Вы действительно хотите изменить статус этого региона?',
+      }
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: handleDelete,
+      color: 'error',
+      tooltip: 'Удалить регион',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы уверены, что хотите удалить этот регион? Это действие нельзя отменить.',
+      }
+    }
+  ], [navigate, handleToggleStatus, handleDelete]);
+
   // Конфигурация колонок
   const columns = useMemo(() => [
     {
@@ -259,41 +306,21 @@ const RegionsPage: React.FC<RegionsPageNewProps> = () => {
           {formatDate(region.created_at)}
         </Typography>
       )
+    },
+    {
+      id: 'actions',
+      key: 'actions' as keyof Region,
+      label: 'Действия',
+      sortable: false,
+      render: (region: Region) => (
+        <ActionsMenu
+          actions={regionActions}
+          item={region}
+          menuThreshold={0}
+        />
+      )
     }
-  ], [formatDate]);
-
-  // Конфигурация действий
-  const actionsConfig = useMemo(() => [
-    {
-      key: 'edit',
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (region: Region) => navigate(`/admin/regions/${region.id}/edit`),
-      color: 'primary' as const
-    },
-    {
-      key: 'cities',
-      label: 'Города',
-      icon: <LocationCityIcon />,
-      onClick: (region: Region) => navigate(`/admin/regions/${region.id}/cities`),
-      color: 'info' as const
-    },
-    {
-      key: 'toggle',
-      label: (region: Region) => region.is_active ? 'Деактивировать' : 'Активировать',
-      icon: (region: Region) => region.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
-      onClick: handleToggleStatus,
-      color: 'warning' as const
-    },
-    {
-      key: 'delete',
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      onClick: handleDelete,
-      color: 'error' as const,
-      confirmationText: 'Вы уверены, что хотите удалить этот регион?'
-    }
-  ], [navigate, handleToggleStatus, handleDelete]);
+  ], [formatDate, regionActions]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -303,7 +330,6 @@ const RegionsPage: React.FC<RegionsPageNewProps> = () => {
         filters={filtersConfig}
         columns={columns}
         rows={regions}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={{
           page: page + 1,
@@ -334,4 +360,5 @@ const RegionsPage: React.FC<RegionsPageNewProps> = () => {
   );
 };
 
+export { RegionsPage };
 export default RegionsPage; 

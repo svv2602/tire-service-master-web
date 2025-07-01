@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест RegionsPage с ActionsMenu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4caf50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        .info { border-color: #2196f3; background-color: #e3f2fd; }
+        
+        h1 { color: #333; text-align: center; }
+        h2 { color: #555; margin-top: 0; }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "☐ ";
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .url {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .action-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .action-edit { background-color: #e3f2fd; }
+        .action-cities { background-color: #e0f2f1; }
+        .action-toggle { background-color: #fff3e0; }
+        .action-delete { background-color: #ffebee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест RegionsPage с ActionsMenu</h1>
+        
+        <div class="test-section info">
+            <h2>📋 Информация о тесте</h2>
+            <p><strong>Страница:</strong> RegionsPage (<code>/admin/regions</code>)</p>
+            <p><strong>Компонент:</strong> ActionsMenu с 4 действиями</p>
+            <p><strong>Дата:</strong> 2025-01-27</p>
+            <p><strong>Статус:</strong> ✅ Миграция завершена</p>
+        </div>
+
+        <div class="test-section warning">
+            <h2>🔗 URL для тестирования</h2>
+            <div class="url">
+                <a href="http://localhost:3008/admin/regions" target="_blank">
+                    http://localhost:3008/admin/regions
+                </a>
+            </div>
+            <p><em>Откройте эту ссылку в новой вкладке для тестирования</em></p>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 4 действия в ActionsMenu</h2>
+            <div class="actions-grid">
+                <div class="action-item action-edit">
+                    <strong>🔧 Редактировать</strong><br>
+                    <small>Цвет: Синий (primary)</small><br>
+                    <small>Переход на страницу редактирования</small>
+                </div>
+                <div class="action-item action-cities">
+                    <strong>🏙️ Города</strong><br>
+                    <small>Цвет: Голубой (info)</small><br>
+                    <small>Управление городами региона</small>
+                </div>
+                <div class="action-item action-toggle">
+                    <strong>🔄 Активировать/Деактивировать</strong><br>
+                    <small>Цвет: Зеленый/Оранжевый</small><br>
+                    <small>Динамическая метка и цвет</small>
+                </div>
+                <div class="action-item action-delete">
+                    <strong>🗑️ Удалить</strong><br>
+                    <small>Цвет: Красный (error)</small><br>
+                    <small>С диалогом подтверждения</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Чек-лист тестирования</h2>
+            <ul class="checklist">
+                <li>Страница загружается без ошибок</li>
+                <li>Отображается колонка "Действия" с кнопкой меню (три точки)</li>
+                <li>При клике на меню отображаются 4 действия</li>
+                <li>Действие "Редактировать" работает корректно</li>
+                <li>Действие "Города" работает корректно</li>
+                <li>Действие "Активировать/Деактивировать" показывает диалог подтверждения</li>
+                <li>Действие "Удалить" показывает диалог подтверждения</li>
+                <li>Подсказки (tooltips) отображаются при наведении</li>
+                <li>Фильтрация по статусу работает</li>
+                <li>Поиск по названию региона работает</li>
+                <li>Пагинация работает корректно</li>
+                <li>Нет ошибок в консоли браузера</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Особенности для проверки</h2>
+            
+            <h3>Динамические действия:</h3>
+            <ul>
+                <li><strong>Переключение статуса:</strong> Метка меняется с "Активировать" на "Деактивировать"</li>
+                <li><strong>Цвет иконки:</strong> Зеленый для активации, оранжевый для деактивации</li>
+                <li><strong>Подсказки:</strong> Tooltip меняется в зависимости от статуса</li>
+            </ul>
+            
+            <h3>Диалоги подтверждения:</h3>
+            <ul>
+                <li><strong>Переключение статуса:</strong> "Подтверждение изменения статуса"</li>
+                <li><strong>Удаление:</strong> "Подтверждение удаления" с предупреждением о необратимости</li>
+            </ul>
+        </div>
+
+        <div class="test-section success">
+            <h2>🎉 Ожидаемый результат</h2>
+            <p>После успешного тестирования:</p>
+            <ul>
+                <li>✅ RegionsPage использует ActionsMenu вместо старых кнопок</li>
+                <li>✅ Все 4 действия работают корректно</li>
+                <li>✅ Диалоги подтверждения появляются для опасных операций</li>
+                <li>✅ Подсказки отображаются при наведении</li>
+                <li>✅ Интерфейс унифицирован с другими страницами</li>
+            </ul>
+        </div>
+
+        <div class="test-section info">
+            <h2>📊 Прогресс миграции</h2>
+            <p><strong>Завершено:</strong> 7/10 страниц (70%)</p>
+            <ul>
+                <li>✅ UsersPage</li>
+                <li>✅ ClientsPage</li>
+                <li>✅ PartnersPage</li>
+                <li>✅ CarBrandsPage</li>
+                <li>✅ CitiesPage</li>
+                <li>✅ CarModelsList</li>
+                <li>✅ <strong>RegionsPage</strong></li>
+            </ul>
+            <p><strong>Следующие:</strong> ReviewsPage, BookingsPage, ServicePointsPage</p>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность к чек-листу
+        document.querySelectorAll('.checklist li').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.style.textDecoration === 'line-through') {
+                    this.style.textDecoration = 'none';
+                    this.style.color = 'inherit';
+                    this.querySelector('::before') || (this.innerHTML = '☐ ' + this.innerHTML.replace('☑ ', ''));
+                } else {
+                    this.style.textDecoration = 'line-through';
+                    this.style.color = '#888';
+                    this.innerHTML = this.innerHTML.replace('☐ ', '☑ ');
+                }
+            });
+            item.style.cursor = 'pointer';
+        });
+
+        console.log('🧪 RegionsPage ActionsMenu Test готов');
+        console.log('📍 URL: http://localhost:3008/admin/regions');
+        console.log('🎯 Проверьте 4 действия в выпадающем меню');
+    </script>
+</body>
+</html> 

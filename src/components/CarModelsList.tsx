@@ -16,7 +16,6 @@ import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  IconButton,
   Button,
   Dialog,
   DialogTitle,
@@ -29,13 +28,13 @@ import {
   Alert,
   DialogContentText,
   Chip,
-  Tooltip,
   useTheme,
 } from '@mui/material';
 
 // UI компоненты
 import { Table, Column } from '../components/ui/Table';
 import { Pagination as UIPagination } from '../components/ui/Pagination';
+import { ActionsMenu, ActionItem } from '../components/ui/ActionsMenu/ActionsMenu';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -100,6 +99,31 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [updateModel] = useUpdateCarModelMutation();
   const [deleteModel] = useDeleteCarModelMutation();
 
+  // Конфигурация действий для ActionsMenu
+  const modelActions: ActionItem<CarModel>[] = [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      color: 'primary',
+      tooltip: 'Редактировать модель',
+      onClick: (model: CarModel) => handleOpenDialog(model),
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      color: 'error',
+      tooltip: 'Удалить модель',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите удаление',
+        message: 'Вы уверены, что хотите удалить эту модель? Это действие нельзя отменить.',
+      },
+      onClick: (model: CarModel) => handleOpenDeleteDialog(model),
+    },
+  ];
+
   // Конфигурация колонок для UI Table
   const columns: Column[] = [
     { 
@@ -138,32 +162,11 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       minWidth: 120,
       align: 'right',
       format: (value: any, row: CarModel) => (
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton 
-              size="small"
-              onClick={() => handleOpenDialog(row)}
-              sx={tablePageStyles.actionButton}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton 
-              size="small"
-              onClick={() => handleOpenDeleteDialog(row)}
-              sx={{
-                ...tablePageStyles.actionButton,
-                color: theme.palette.error.main,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.error.main}15`,
-                }
-              }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <ActionsMenu
+          actions={modelActions}
+          item={row}
+          menuThreshold={0}
+        />
       )
     }
   ];

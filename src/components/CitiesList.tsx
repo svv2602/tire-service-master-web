@@ -36,6 +36,7 @@ import { Switch } from '../components/ui/Switch';
 import { Chip } from '../components/ui/Chip';
 import { Pagination } from '../components/ui/Pagination';
 import { Table, Column } from '../components/ui/Table';
+import { ActionsMenu, ActionItem } from '../components/ui/ActionsMenu/ActionsMenu';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -179,6 +180,33 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   };
 
   /**
+   * Конфигурация действий для ActionsMenu
+   */
+  const cityActions: ActionItem<City>[] = [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (city: City) => handleOpenDialog(city),
+      color: 'primary',
+      tooltip: 'Редактировать город'
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      onClick: (city: City) => handleOpenDeleteDialog(city),
+      color: 'error',
+      tooltip: 'Удалить город',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы уверены, что хотите удалить этот город? Это действие нельзя отменить.',
+      }
+    }
+  ];
+
+  /**
    * Конфигурация колонок для UI Table
    */
   const columns: Column[] = [
@@ -218,32 +246,11 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       align: 'right',
       minWidth: 120,
       format: (value: any, row: City) => (
-        <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
-            <IconButton 
-              size="small"
-              onClick={() => handleOpenDialog(row)}
-              sx={tablePageStyles.actionButton}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Удалить">
-            <IconButton 
-              size="small"
-              onClick={() => handleOpenDeleteDialog(row)}
-              sx={{
-                ...tablePageStyles.actionButton,
-                '&:hover': {
-                  backgroundColor: `${theme.palette.error.main}15`,
-                  color: theme.palette.error.main
-                }
-              }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <ActionsMenu
+          actions={cityActions}
+          item={row}
+          menuThreshold={0}
+        />
       )
     }
   ];

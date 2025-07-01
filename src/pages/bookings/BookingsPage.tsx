@@ -24,9 +24,10 @@ import type {
   PageHeaderConfig,
   SearchConfig,
   Column,
-  ActionConfig,
-  ConfirmationDialogConfig
 } from '../../components/common/PageTable';
+
+// Импорт ActionsMenu компонента
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -126,6 +127,41 @@ const BookingsPage: React.FC = () => {
     onClear: () => setSearch(''),
   }), [search]);
 
+  // Конфигурация действий для ActionsMenu
+  const bookingActions: ActionItem<Booking>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      color: 'primary',
+      tooltip: 'Редактировать бронирование',
+      onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
+    },
+    {
+      id: 'toggle-status',
+      label: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
+      icon: (booking: Booking) => booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />,
+      color: (booking: Booking) => booking.status_id === 2 ? 'warning' : 'success',
+      tooltip: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
+      onClick: handleToggleStatus,
+    },
+    {
+      id: 'delete',
+      label: 'Удалить',
+      icon: <DeleteIcon />,
+      color: 'error',
+      tooltip: 'Удалить бронирование',
+      onClick: handleDeleteBooking,
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтверждение удаления',
+        message: 'Вы действительно хотите удалить бронирование? Это действие нельзя будет отменить.',
+        confirmLabel: 'Удалить',
+        cancelLabel: 'Отмена',
+      },
+    },
+  ], [navigate, handleToggleStatus, handleDeleteBooking]);
+
   // Определение колонок
   const columns: Column<Booking>[] = useMemo(() => [
     {
@@ -177,38 +213,20 @@ const BookingsPage: React.FC = () => {
         size: 'small',
       }),
     },
-  ], [tablePageStyles, getStatusLabel, getStatusColor]);
-
-  // Конфигурация действий
-  const actionsConfig: ActionConfig<Booking>[] = useMemo(() => [
     {
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
-      tooltip: 'Редактировать',
+      id: 'actions',
+      label: 'Действия',
+      minWidth: 120,
+      align: 'center',
+      format: (value: any, booking: Booking) => (
+        <ActionsMenu<Booking>
+          actions={bookingActions}
+          item={booking}
+          menuThreshold={0}
+        />
+      ),
     },
-    {
-      label: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
-      icon: (booking: Booking) => booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />,
-      onClick: handleToggleStatus,
-      tooltip: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Отметить как завершенное',
-      color: (booking: Booking) => booking.status_id === 2 ? 'warning' : 'success',
-    },
-    {
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      onClick: handleDeleteBooking,
-      tooltip: 'Удалить',
-      color: 'error',
-      requireConfirmation: true,
-      confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить бронирование? Это действие нельзя будет отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
-      } as ConfirmationDialogConfig,
-    },
-  ], [navigate, handleToggleStatus, handleDeleteBooking]);
+  ], [tablePageStyles, getStatusLabel, getStatusColor, bookingActions]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -236,7 +254,6 @@ const BookingsPage: React.FC = () => {
         search={searchConfig}
         columns={columns}
         rows={bookings}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={{
           page,
