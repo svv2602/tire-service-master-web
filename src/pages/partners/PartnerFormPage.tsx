@@ -48,7 +48,7 @@ import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePage
 // Импорт UI компонентов
 import { Tabs, TabPanel, Table, type Column, Pagination, PhoneField } from '../../components/ui';
 import { phoneValidation } from '../../utils/validation';
-import { useGetOperatorsByPartnerQuery, useCreateOperatorMutation, useUpdateOperatorMutation, useDeleteOperatorMutation, Operator } from '../../api/operators.api';
+import { useGetOperatorsByPartnerQuery, useCreateOperatorMutation, useUpdateOperatorMutation, useDeleteOperatorMutation, Operator, UpdateOperatorRequest } from '../../api/operators.api';
 import { OperatorModal } from '../../components/partners/OperatorModal';
 
 /**
@@ -279,7 +279,7 @@ const PartnerFormPage: React.FC = () => {
   const [updatePartner, { isLoading: updateLoading }] = useUpdatePartnerMutation();
 
   // Загрузка сервисных точек партнера (только в режиме редактирования)
-  const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsByPartnerIdQuery(
+  const { data: servicePointsData, isLoading: servicePointsLoading, refetch: refetchServicePoints } = useGetServicePointsByPartnerIdQuery(
     { 
       partner_id: id ? parseInt(id) : 0,
       page: 1,
@@ -318,15 +318,22 @@ const PartnerFormPage: React.FC = () => {
   // Удалить/деактивировать оператора
   const handleDeleteOperator = async (operator: Operator) => {
     try {
+      console.log('Деактивация/удаление оператора:', operator.id, 'текущий статус:', operator.is_active);
+      
       if (operator.is_active) {
         // Если оператор активен - деактивируем его
+        const requestData = {
+          user: {
+            is_active: false
+          },
+          operator: {
+            is_active: false
+          }
+        };
+        
         await updateOperator({ 
           id: operator.id, 
-          data: { 
-            user: {
-              is_active: false
-            }
-          } 
+          data: requestData
         }).unwrap();
         setSuccessMessage('Сотрудник деактивирован');
       } else {
@@ -334,7 +341,11 @@ const PartnerFormPage: React.FC = () => {
         await deleteOperator({ id: operator.id, partnerId }).unwrap();
         setSuccessMessage('Сотрудник удален');
       }
+      
+      // Обновляем список операторов
       refetchOperators();
+      
+      // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error('Ошибка при деактивации/удалении сотрудника:', error);
@@ -363,46 +374,59 @@ const PartnerFormPage: React.FC = () => {
   // --- Исправляем функцию для изменения статуса сервисной точки ---
   const handleToggleServicePointStatus = async (servicePoint: ServicePoint) => {
     try {
+      console.log('Изменение статуса сервисной точки:', servicePoint.id, 'на', !servicePoint.is_active);
+      
       await updateServicePoint({ 
         id: servicePoint.id.toString(), 
         partnerId: partnerId,
         servicePoint: { 
-          is_active: !servicePoint.is_active 
+          is_active: !servicePoint.is_active
         } 
       }).unwrap();
       
-      // Обновляем список сервисных точек без вызова хука внутри функции
-      setTimeout(() => {
-        // Принудительно обновляем страницу для отображения изменений
-        window.location.reload();
-      }, 500);
+      // Обновляем список сервисных точек
+      refetchServicePoints();
+      
+      // Отображаем сообщение об успехе
+      setSuccessMessage(servicePoint.is_active 
+        ? 'Сервисная точка деактивирована' 
+        : 'Сервисная точка активирована');
+      
+      // Скрываем сообщение через 3 секунды
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error('Ошибка при изменении статуса сервисной точки:', error);
       setApiError('Не удалось изменить статус сервисной точки');
+      setTimeout(() => setApiError(null), 3000);
     }
   };
 
   // --- Исправляем функцию для изменения статуса оператора ---
   const handleToggleOperatorStatus = async (operator: Operator) => {
     try {
+      console.log('Изменение статуса оператора:', operator.id, 'на', !operator.is_active);
+      
+      const requestData = {
+        user: {
+          is_active: !operator.is_active
+        },
+        operator: {
+          is_active: !operator.is_active
+        }
+      };
+      
       await updateOperator({ 
         id: operator.id, 
-        data: { 
-          user: {
-            first_name: operator.user.first_name,
-            last_name: operator.user.last_name,
-            email: operator.user.email,
-            phone: operator.user.phone,
-            is_active: !operator.is_active
-          },
-          operator: {
-            position: operator.position,
-            access_level: operator.access_level
-          }
-        } 
+        data: requestData
       }).unwrap();
+      
+      // Обновляем список операторов
       refetchOperators();
+      
+      // Отображаем сообщение об успехе
       setSuccessMessage(operator.is_active ? 'Сотрудник деактивирован' : 'Сотрудник активирован');
+      
+      // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error('Ошибка при изменении статуса оператора:', error);
