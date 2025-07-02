@@ -133,6 +133,8 @@ export interface PageTableProps<T = any> {
   search?: SearchConfig;
   /** Конфигурация фильтров */
   filters?: FilterConfig[];
+  /** Кастомный контент между фильтрами и таблицей */
+  customContent?: React.ReactNode;
   /** Колонки таблицы */
   columns: Column<T>[];
   /** Данные таблицы */

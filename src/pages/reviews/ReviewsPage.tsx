@@ -517,9 +517,6 @@ const ReviewsPage: React.FC = () => {
 
   return (
     <>
-      {/* Статистика */}
-      {getStatistics()}
-
       {/* Основная таблица */}
       <PageTable<ReviewWithClient>
         header={headerConfig}
@@ -534,6 +531,7 @@ const ReviewsPage: React.FC = () => {
           totalItems,
           onPageChange: setPage
         }}
+        customContent={getStatistics()}
       />
 
       {/* Компонент уведомлений */}

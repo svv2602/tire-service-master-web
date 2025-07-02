@@ -16,6 +16,7 @@ export const PageTable = <T,>({
   header,
   search,
   filters = [],
+  customContent,
   columns,
   rows,
   actions = [],
@@ -97,6 +98,13 @@ export const PageTable = <T,>({
         filters={filters}
         onClearFilters={handleClearFilters}
       />
+
+      {/* Кастомный контент */}
+      {customContent && (
+        <Box sx={{ mb: 2 }}>
+          {customContent}
+        </Box>
+      )}
 
       {/* Таблица */}
       <Table
