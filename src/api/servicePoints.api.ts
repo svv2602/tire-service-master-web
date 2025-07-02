@@ -231,8 +231,8 @@ export const servicePointsApi = baseApi.injectEndpoints({
       },
     }),
 
-    // Удаление сервисной точки
-    deleteServicePoint: builder.mutation<void, { partner_id: number; id: number }>({
+    // Умное удаление сервисной точки (деактивация или полное удаление)
+    deleteServicePoint: builder.mutation<{ message: string; action: 'deactivated' | 'deleted' }, { partner_id: number; id: number }>({
       query: ({ partner_id, id }) => ({
         url: `/partners/${partner_id.toString()}/service_points/${id.toString()}`,
         method: 'DELETE',

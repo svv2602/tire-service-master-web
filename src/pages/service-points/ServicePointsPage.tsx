@@ -23,6 +23,7 @@ import { useTheme } from '@mui/material/styles';
 // Импорты UI компонентов
 import { PageTable } from '../../components/common/PageTable';
 import Notification from '../../components/Notification';
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import { getTablePageStyles } from '../../styles';
 
 // Импорты API
@@ -31,6 +32,7 @@ import {
   useDeleteServicePointMutation,
   useGetRegionsQuery,
   useGetCitiesQuery,
+  useGetPartnersQuery,
 } from '../../api';
 
 // Типы
@@ -103,6 +105,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [selectedPartner, setSelectedPartner] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [notification, setNotification] = useState<{
@@ -123,9 +126,10 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     query: searchQuery || undefined,
     city_id: selectedCity !== 'all' ? Number(selectedCity) : undefined,
     region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
+    partner_id: selectedPartner !== 'all' ? Number(selectedPartner) : undefined,
     page: page + 1,
     per_page: PER_PAGE,
-  }), [searchQuery, selectedCity, selectedRegion, page]);
+  }), [searchQuery, selectedCity, selectedRegion, selectedPartner, page]);
 
   // API запросы
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
@@ -137,6 +141,10 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     },
     { skip: selectedRegion === 'all' }
   );
+  const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({
+    page: 1,
+    per_page: 100
+  });
   const { data: servicePointsData, isLoading, error } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint] = useDeleteServicePointMutation();
 
@@ -182,6 +190,11 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     setPage(0);
   }, []);
 
+  const handlePartnerFilterChange = useCallback((partner: string) => {
+    setSelectedPartner(partner);
+    setPage(0);
+  }, []);
+
   const showNotification = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setNotification({ open: true, message, severity });
   }, []);
@@ -190,16 +203,76 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     setNotification(prev => ({ ...prev, open: false }));
   }, []);
 
-  // Обработка удаления
-  const handleDelete = useCallback(async (servicePoint: ServicePoint) => {
+  // Умная обработка удаления
+  const handleSmartDelete = useCallback(async (servicePoint: ServicePoint) => {
     try {
-      await deleteServicePoint({ partner_id: servicePoint.partner_id, id: servicePoint.id }).unwrap();
-      showNotification(`Сервисная точка "${servicePoint.name}" успешно удалена`, 'success');
-    } catch (error) {
+      const result = await deleteServicePoint({ partner_id: servicePoint.partner_id, id: servicePoint.id }).unwrap();
+      
+      // Определяем тип уведомления и сообщение на основе действия
+      let severity: 'success' | 'warning' | 'info' = 'success';
+      let message = result.message;
+      
+      switch (result.action) {
+        case 'deactivated':
+          severity = 'warning';
+          message = `Сервисная точка "${servicePoint.name}" деактивирована. ${result.message}`;
+          break;
+        case 'deleted':
+          severity = 'success';
+          message = `Сервисная точка "${servicePoint.name}" полностью удалена из системы.`;
+          break;
+        default:
+          severity = 'info';
+      }
+      
+      showNotification(message, severity);
+    } catch (error: any) {
       console.error('Ошибка при удалении сервисной точки:', error);
-      showNotification('Ошибка при удалении сервисной точки', 'error');
+      
+      // Обработка различных типов ошибок
+      if (error.data?.action === 'blocked') {
+        const message = error.data.message || 'Невозможно удалить сервисную точку из-за связанных записей';
+        showNotification(message, 'error');
+      } else {
+        showNotification('Произошла ошибка при удалении сервисной точки', 'error');
+      }
     }
   }, [deleteServicePoint, showNotification]);
+
+  // Конфигурация действий для ActionsMenu
+  const servicePointActions: ActionItem<ServicePoint>[] = useMemo(() => [
+    {
+      id: 'edit',
+      label: 'Редактировать',
+      icon: <EditIcon />,
+      onClick: (servicePoint: ServicePoint) => {
+        // Всегда используем partner_id из сервисной точки для формирования корректного URL
+        const partnerIdToUse = partnerId || servicePoint.partner_id;
+        navigate(`/admin/partners/${partnerIdToUse}/service-points/${servicePoint.id}/edit`, {
+          state: { from: partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points' }
+        });
+      },
+      color: 'primary',
+      tooltip: 'Редактировать сервисную точку'
+    },
+    {
+      id: 'delete',
+      label: (servicePoint: ServicePoint) => servicePoint.is_active ? 'Деактивировать' : 'Удалить',
+      icon: (servicePoint: ServicePoint) => servicePoint.is_active ? <VisibilityOffIcon /> : <DeleteIcon />,
+      onClick: handleSmartDelete,
+      color: (servicePoint: ServicePoint) => servicePoint.is_active ? 'warning' : 'error',
+      tooltip: (servicePoint: ServicePoint) => servicePoint.is_active 
+        ? 'Деактивировать сервисную точку' 
+        : 'Полностью удалить сервисную точку (если нет связанных записей)',
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите действие',
+        message: 'Вы уверены, что хотите выполнить это действие?',
+        confirmLabel: 'Подтвердить',
+        cancelLabel: 'Отмена',
+      },
+    }
+  ], [navigate, partnerId, handleSmartDelete]);
 
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
@@ -266,6 +339,21 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       ]
     },
     {
+      id: 'partner',
+      key: 'partner',
+      type: 'select' as const,
+      label: 'Партнер',
+      value: selectedPartner,
+      onChange: handlePartnerFilterChange,
+      options: [
+        { value: 'all', label: 'Все партнеры' },
+        ...(partnersData?.data?.map((partner) => ({
+          value: partner.id.toString(),
+          label: partner.company_name
+        })) || [])
+      ]
+    },
+    {
       id: 'status',
       key: 'status',
       type: 'select' as const,
@@ -278,7 +366,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         { value: 'inactive', label: 'Неактивные' }
       ]
     }
-  ], [selectedRegion, selectedCity, selectedStatus, regionsData, citiesData, handleRegionFilterChange, handleCityFilterChange, handleStatusFilterChange]);
+  ], [selectedRegion, selectedCity, selectedPartner, selectedStatus, regionsData, citiesData, partnersData, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange]);
 
   // Конфигурация колонок
   const columns = useMemo(() => [
@@ -322,8 +410,25 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
         <Typography variant="body2">
-          {servicePoint.partner?.name || 'Не указан'}
+          {servicePoint.partner?.company_name || 'Не указан'}
         </Typography>
+      )
+    },
+    {
+      id: 'location',
+      key: 'city' as keyof ServicePoint,
+      label: 'Область / Город',
+      sortable: true,
+      hideOnMobile: true,
+      render: (servicePoint: ServicePoint) => (
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+            {servicePoint.city?.region?.name || 'Не указана'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {servicePoint.city?.name || 'Не указан'}
+          </Typography>
+        </Box>
       )
     },
     {
@@ -361,33 +466,22 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
           icon={servicePoint.is_active ? <VisibilityIcon /> : <VisibilityOffIcon />}
         />
       )
-    }
-  ], []);
-
-  // Конфигурация действий
-  const actionsConfig = useMemo(() => [
-    {
-      key: 'edit',
-      label: 'Редактировать',
-      icon: <EditIcon />,
-      onClick: (servicePoint: ServicePoint) => {
-        // Всегда используем partner_id из сервисной точки для формирования корректного URL
-        const partnerIdToUse = partnerId || servicePoint.partner_id;
-        navigate(`/admin/partners/${partnerIdToUse}/service-points/${servicePoint.id}/edit`, {
-          state: { from: partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points' }
-        });
-      },
-      color: 'primary' as const
     },
     {
-      key: 'delete',
-      label: 'Удалить',
-      icon: <DeleteIcon />,
-      onClick: handleDelete,
-      color: 'error' as const,
-      confirmationText: 'Вы уверены, что хотите удалить эту сервисную точку?'
+      id: 'actions',
+      key: 'actions' as keyof ServicePoint,
+      label: 'Действия',
+      sortable: false,
+      render: (servicePoint: ServicePoint) => (
+        <ActionsMenu 
+          actions={servicePointActions} 
+          item={servicePoint} 
+          menuThreshold={1}
+          sx={{ display: 'flex', justifyContent: 'flex-end' }}
+        />
+      )
     }
-  ], [navigate, partnerId, handleDelete]);
+  ], [servicePointActions]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -397,7 +491,6 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         filters={filtersConfig}
         columns={columns}
         rows={filteredData}
-        actions={actionsConfig}
         loading={isLoading}
         pagination={{
           page,
@@ -406,11 +499,11 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedStatus !== 'all' ? 'Сервисные точки не найдены' : 'Нет сервисных точек',
-          description: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedStatus !== 'all'
+          title: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all' ? 'Сервисные точки не найдены' : 'Нет сервисных точек',
+          description: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all'
             ? 'Попробуйте изменить критерии поиска'
             : 'Создайте первую сервисную точку для начала работы',
-          action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedStatus === 'all') ? {
+          action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedPartner === 'all' && selectedStatus === 'all') ? {
             label: 'Добавить сервисную точку',
             icon: <AddIcon />,
             onClick: () => {
