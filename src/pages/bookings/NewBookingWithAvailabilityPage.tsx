@@ -439,6 +439,11 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const renderCurrentStep = () => {
     const CurrentStepComponent = STEPS[activeStep].component;
     
+    // Для шага CarTypeStep передаем дополнительный проп onStepChange
+    const additionalProps = STEPS[activeStep].id === 'car-type' 
+      ? { onStepChange: setActiveStep }
+      : {};
+    
     return (
       <CurrentStepComponent
         formData={formData}
@@ -446,6 +451,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         onNext={handleNext}
         onBack={handleBack}
         isValid={isCurrentStepValid}
+        {...additionalProps}
       />
     );
   };

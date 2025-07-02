@@ -1,6 +1,8 @@
 // Шаг 4: Информация об автомобиле
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
 import {
   Box,
   Typography,
@@ -16,24 +18,30 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Divider,
 } from '@mui/material';
 import {
   ConfirmationNumber as LicensePlateIcon,
   ExpandMore as ExpandMoreIcon,
   DirectionsCar as CarIcon,
+  MyLocation as MyCarIcon,
+  Star as StarIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
 // Импорт UI компонентов
 import { TextField } from '../../../components/ui/TextField';
 import { Select } from '../../../components/ui/Select';
+import { Button } from '../../../components/ui/Button';
 
 // Импорт API хуков
 import { useGetCarTypesQuery } from '../../../api/carTypes.api';
 import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery } from '../../../api';
+import { useGetMyClientCarsQuery } from '../../../api/clients.api';
 
 // Импорт типов - используем any для совместимости
 import { CarType } from '../../../types/car';
+import { ClientCar } from '../../../types/client';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
@@ -44,16 +52,24 @@ interface CarTypeStepProps {
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
+  onStepChange?: (stepIndex: number) => void; // Добавляем возможность перехода на конкретный шаг
 }
 
 const CarTypeStep: React.FC<CarTypeStepProps> = ({
   formData,
   setFormData,
   isValid,
+  onNext,
+  onStepChange,
 }) => {
   const theme = useTheme();
+  
+  // Получаем информацию о текущем пользователе
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
   const [carTypeAccordionOpen, setCarTypeAccordionOpen] = useState(false);
+  const [myCarAccordionOpen, setMyCarAccordionOpen] = useState(false);
   const [errors, setErrors] = useState({
     license_plate: '',
   });
@@ -69,26 +85,59 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     { skip: !selectedBrandId }
   );
   
+  // Загрузка автомобилей клиента (только для авторизованных пользователей)
+  const { 
+    data: clientCars, 
+    isLoading: isLoadingClientCars, 
+    error: clientCarsError 
+  } = useGetMyClientCarsQuery(undefined, { 
+    skip: !isAuthenticated || !user 
+  });
+  
   // Получаем данные из API
   const carTypes = carTypesData || [];
   const brands = useMemo(() => brandsData?.data || [], [brandsData]);
   const models = modelsData?.car_models || [];
   
+  // Состояние для отслеживания того, был ли выбран автомобиль клиента
+  const [wasClientCarSelected, setWasClientCarSelected] = useState(false);
+  
   // Автоматически открываем аккордеон при загрузке компонента (если тип не выбран)
   useEffect(() => {
     if (!formData.car_type_id && carTypes.length > 0) {
-      setCarTypeAccordionOpen(true);
+      // Если есть автомобили клиента, открываем их, иначе типы авто
+      if (isAuthenticated && clientCars && clientCars.length > 0) {
+        setMyCarAccordionOpen(true);
+      } else {
+        setCarTypeAccordionOpen(true);
+      }
     }
-  }, [formData.car_type_id, carTypes.length]);
+  }, [formData.car_type_id, carTypes.length, isAuthenticated, clientCars]);
   
   // Устанавливаем фокус на номер авто после выбора типа
   useEffect(() => {
-    if (formData.car_type_id && !carTypeAccordionOpen) {
+    if (formData.car_type_id && !carTypeAccordionOpen && !myCarAccordionOpen) {
       setTimeout(() => {
         licensePlateRef.current?.focus();
       }, 300); // Небольшая задержка для завершения анимации аккордеона
     }
-  }, [formData.car_type_id, carTypeAccordionOpen]);
+  }, [formData.car_type_id, carTypeAccordionOpen, myCarAccordionOpen]);
+  
+  // Автоматический переход на следующий шаг при заполнении всех обязательных полей
+  useEffect(() => {
+    // Проверяем, что форма валидна и был выбран автомобиль клиента
+    if (isValid && wasClientCarSelected) {
+      // Небольшая задержка для визуального эффекта
+      setTimeout(() => {
+        // Переходим сразу на шаг "Услуги" (индекс 5) вместо следующего по порядку
+        if (onStepChange) {
+          onStepChange(5); // Шаг "Услуги"
+        } else {
+          onNext(); // Fallback на следующий шаг
+        }
+      }, 1000);
+    }
+  }, [isValid, wasClientCarSelected, onNext, onStepChange]);
   
   // Валидация номера автомобиля
   const validateLicensePlate = (value: string) => {
@@ -96,6 +145,46 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       return 'Номер автомобиля обязателен для заполнения';
     }
     return '';
+  };
+  
+  // Обработчик выбора автомобиля клиента
+  const handleClientCarSelect = (clientCar: ClientCar) => {
+    // Заполняем все данные из выбранного автомобиля
+    setFormData((prev: any) => ({
+      ...prev,
+      car_type_id: clientCar.car_type_id || null,
+      license_plate: clientCar.license_plate,
+      car_brand: clientCar.brand?.name || '',
+      car_model: clientCar.model?.name || '',
+      car_year: clientCar.year,
+    }));
+    
+    // Устанавливаем выбранную марку для каскадного выбора
+    if (clientCar.brand) {
+      setSelectedBrandId(clientCar.brand.id);
+    }
+    
+    // Сворачиваем аккордеон после выбора
+    setMyCarAccordionOpen(false);
+    
+    // Отмечаем, что был выбран автомобиль клиента
+    setWasClientCarSelected(true);
+    
+    // Если тип авто установлен, переходим сразу на шаг услуг
+    if (clientCar.car_type_id) {
+      // Небольшая задержка для визуального эффекта
+      setTimeout(() => {
+        // Переходим сразу на шаг "Услуги" (индекс 5) вместо следующего по порядку
+        if (onStepChange) {
+          onStepChange(5); // Шаг "Услуги"
+        } else {
+          onNext(); // Fallback на следующий шаг
+        }
+      }, 800);
+    } else {
+      // Если тип авто не был установлен, открываем аккордеон типов
+      setCarTypeAccordionOpen(true);
+    }
   };
   
   // Обработчики изменения полей
@@ -207,6 +296,59 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     );
   };
   
+  // Рендер карточки автомобиля клиента
+  const renderClientCarCard = (clientCar: ClientCar) => {
+    return (
+      <Card
+        key={clientCar.id}
+        sx={{
+          ...getCardStyles(theme),
+          border: '1px solid',
+          borderColor: 'divider',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            borderColor: 'primary.main',
+            transform: 'translateY(-2px)',
+            boxShadow: theme.shadows[4],
+          },
+        }}
+      >
+        <CardActionArea onClick={() => handleClientCarSelect(clientCar)}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+              <Typography variant="h6" component="h3" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                {clientCar.license_plate}
+                {clientCar.is_primary && (
+                  <StarIcon sx={{ color: 'warning.main', fontSize: 20 }} />
+                )}
+              </Typography>
+            </Box>
+            
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {clientCar.brand?.name || 'Неизвестная марка'} {clientCar.model?.name || 'Неизвестная модель'}
+            </Typography>
+            
+            {clientCar.year && (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Год: {clientCar.year}
+              </Typography>
+            )}
+            
+            {clientCar.car_type && (
+              <Chip
+                label={clientCar.car_type.name}
+                size="small"
+                variant="outlined"
+                color="primary"
+              />
+            )}
+          </CardContent>
+        </CardActionArea>
+      </Card>
+    );
+  };
+  
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
@@ -222,6 +364,90 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       </Box>
       
       <Grid container spacing={3}>
+        {/* Мои автомобили - показываем только для авторизованных пользователей */}
+        {isAuthenticated && (
+          <Grid item xs={12}>
+            <Accordion 
+              expanded={myCarAccordionOpen} 
+              onChange={(_, expanded) => setMyCarAccordionOpen(expanded)}
+              sx={{ 
+                border: `1px solid ${theme.palette.divider}`,
+                '&:before': { display: 'none' },
+                boxShadow: 'none',
+              }}
+            >
+              <AccordionSummary 
+                expandIcon={<ExpandMoreIcon />}
+                sx={{ 
+                  backgroundColor: theme.palette.info.light,
+                  '&.Mui-expanded': {
+                    minHeight: 56,
+                  },
+                  '& .MuiAccordionSummary-content': {
+                    margin: '12px 0',
+                    '&.Mui-expanded': {
+                      margin: '12px 0',
+                    },
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <MyCarIcon color="info" />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    Мои автомобили
+                  </Typography>
+                  {clientCars && clientCars.length > 0 && (
+                    <Chip
+                      label={`${clientCars.length} авто`}
+                      color="info"
+                      size="small"
+                      variant="filled"
+                      sx={{ ml: 2 }}
+                    />
+                  )}
+                </Box>
+              </AccordionSummary>
+              
+              <AccordionDetails>
+                {clientCarsError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    Ошибка загрузки автомобилей. Попробуйте обновить страницу.
+                  </Alert>
+                )}
+                
+                {isLoadingClientCars ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : !clientCars || clientCars.length === 0 ? (
+                  <Alert severity="info">
+                    У вас пока нет сохраненных автомобилей. Вы можете добавить их в профиле или заполнить данные ниже.
+                  </Alert>
+                ) : (
+                  <Grid container spacing={2}>
+                    {clientCars.map((clientCar) => (
+                      <Grid item xs={12} sm={6} md={4} key={clientCar.id}>
+                        {renderClientCarCard(clientCar)}
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+              </AccordionDetails>
+            </Accordion>
+          </Grid>
+        )}
+        
+        {/* Разделитель, если есть мои автомобили */}
+        {isAuthenticated && clientCars && clientCars.length > 0 && (
+          <Grid item xs={12}>
+            <Divider>
+              <Typography variant="body2" color="text.secondary">
+                или выберите тип автомобиля вручную
+              </Typography>
+            </Divider>
+          </Grid>
+        )}
+        
         {/* Выбор типа автомобиля - Аккордеон */}
         <Grid item xs={12}>
           <Accordion 
@@ -373,7 +599,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       
       {/* Информация */}
       <Alert severity="info" sx={{ mt: 3 }}>
-        💡 Указание марки и модели автомобиля поможет мастеру лучше подготовиться к обслуживанию
+        💡 {isAuthenticated 
+          ? 'Выберите один из своих автомобилей или укажите данные вручную. Указание марки и модели поможет мастеру лучше подготовиться к обслуживанию'
+          : 'Указание марки и модели автомобиля поможет мастеру лучше подготовиться к обслуживанию'
+        }
       </Alert>
       
       {/* Уведомление о незаполненных обязательных полях */}
@@ -400,7 +629,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       {/* Информационное сообщение */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {wasClientCarSelected 
+            ? '✅ Автомобиль выбран! Переход к выбору услуг...'
+            : '✅ Все обязательные поля заполнены. Можете перейти к следующему шагу.'
+          }
         </Alert>
       )}
     </Box>
