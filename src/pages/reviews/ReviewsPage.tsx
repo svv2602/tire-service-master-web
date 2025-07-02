@@ -315,10 +315,13 @@ const ReviewsPage: React.FC = () => {
       type: 'select',
       value: statusFilter,
       onChange: (value: string | number) => setStatusFilter(value as ReviewStatus | ''),
-      options: Object.entries(REVIEW_STATUSES).map(([value, { label }]) => ({
-        value,
-        label
-      }))
+      options: [
+        { value: '', label: 'Все статусы' },
+        ...Object.entries(REVIEW_STATUSES).map(([value, { label }]) => ({
+          value,
+          label
+        }))
+      ]
     },
     {
       id: 'service_point',
@@ -326,10 +329,13 @@ const ReviewsPage: React.FC = () => {
       type: 'select',
       value: servicePointId,
       onChange: (value: string | number) => setServicePointId(value as string),
-      options: servicePoints.map(point => ({
-        value: point.id.toString(),
-        label: point.name
-      }))
+      options: [
+        { value: '', label: 'Все сервисные точки' },
+        ...servicePoints.map(point => ({
+          value: point.id.toString(),
+          label: point.name
+        }))
+      ]
     }
   ];
 
