@@ -7,6 +7,11 @@ import {
   Alert,
   Paper,
   FormHelperText,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Chip,
+  Stack
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { format, parseISO, addDays } from 'date-fns';
@@ -14,9 +19,14 @@ import { ru } from 'date-fns/locale';
 import {
   LocationOn as LocationIcon,
 } from '@mui/icons-material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 // Импорт компонентов доступности
-import { AvailabilitySelector } from '../../../components/availability';
+import { AvailabilityCalendar } from '../../../components/availability/AvailabilityCalendar';
+import { DayDetailsPanel } from '../../../components/availability/DayDetailsPanel';
+import TimeSlotPicker from '../../../components/availability/TimeSlotPicker';
 
 // Импорт API хуков
 import { useGetSlotsForCategoryQuery } from '../../../api/availability.api';
@@ -43,6 +53,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const [expandedPanel, setExpandedPanel] = useState<'date' | 'time'>('date');
   
   // Эффект для фокуса на календаре при монтировании компонента
   useEffect(() => {
@@ -154,16 +165,18 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       .sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
   
-  // Обработчик изменения даты
+  // Обработчик выбора даты с переходом к выбору времени
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
-    setSelectedTimeSlot(null); // Сбрасываем время при изменении даты
-    
+    setSelectedTimeSlot(null);
     setFormData((prev: any) => ({
       ...prev,
       booking_date: date ? format(date, 'yyyy-MM-dd') : '',
       start_time: '',
     }));
+    if (date) {
+      setExpandedPanel('time');
+    }
   };
   
   // Загрузка информации о точке обслуживания
@@ -172,14 +185,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     { skip: !formData.service_point_id }
   );
   
-  // Обработчик изменения времени
+  // Обработчик выбора времени
   const handleTimeSlotChange = (timeSlot: string | null, slotData?: any) => {
     setSelectedTimeSlot(timeSlot);
-    
     setFormData((prev: any) => ({
       ...prev,
       start_time: timeSlot || '',
-      duration_minutes: slotData?.duration_minutes, // Сохраняем длительность слота
+      duration_minutes: slotData?.duration_minutes,
     }));
   };
 
@@ -220,9 +232,6 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             )}
           </Box>
         </Box>
-        <Typography variant="body2" color="text.secondary">
-          Выберите удобные дату и время для вашего визита
-        </Typography>
       </Paper>
       
       {/* Ошибка загрузки доступности */}
@@ -232,20 +241,63 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         </Alert>
       )}
 
-      {/* Селектор доступности с рефом для фокуса */}
-      <Box ref={calendarRef} sx={{ mb: 3 }}>
-        <AvailabilitySelector
-          servicePointId={formData.service_point_id}
-          selectedDate={selectedDate}
-          onDateChange={handleDateChange}
-          selectedTimeSlot={selectedTimeSlot}
-          onTimeSlotChange={handleTimeSlotChange}
-          availableTimeSlots={availableTimeSlots}
-          isLoading={isLoadingAvailability}
-          servicePointPhone={servicePointData?.contact_phone || servicePointData?.phone}
-          categoryId={formData.service_category_id}
-        />
-      </Box>
+      {/* Аккордеон выбора даты */}
+      <Accordion expanded={expandedPanel === 'date'} onChange={() => setExpandedPanel('date')}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <CalendarMonthIcon sx={{ color: 'primary.main' }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Выберите дату
+            </Typography>
+            {selectedDate && (
+              <Chip label={format(selectedDate, 'd MMMM yyyy', { locale: ru })} color="success" size="small" />
+            )}
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: '1 1 300px', minWidth: 280 }}>
+              <AvailabilityCalendar
+                selectedDate={selectedDate}
+                onDateChange={handleDateChange}
+                isLoading={isLoadingAvailability}
+                servicePointId={formData.service_point_id}
+                categoryId={formData.service_category_id}
+              />
+            </Box>
+            <Box sx={{ flex: '1 1 300px', minWidth: 280 }}>
+              <DayDetailsPanel
+                selectedDate={selectedDate}
+                selectedTimeSlot={null}
+                isLoading={isLoadingAvailability}
+              />
+            </Box>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+      {/* Аккордеон выбора времени */}
+      <Accordion expanded={expandedPanel === 'time'} onChange={() => setExpandedPanel('time')} disabled={!selectedDate}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <AccessTimeIcon sx={{ color: 'primary.main' }} />
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+              Выберите время
+            </Typography>
+            {selectedTimeSlot && (
+              <Chip label={selectedTimeSlot} color="success" size="small" />
+            )}
+          </Stack>
+        </AccordionSummary>
+        <AccordionDetails>
+          <TimeSlotPicker
+            selectedTimeSlot={selectedTimeSlot}
+            onTimeSlotChange={handleTimeSlotChange}
+            availableTimeSlots={availableTimeSlots}
+            isLoading={isLoadingAvailability}
+            hideSelectedChip={true}
+          />
+        </AccordionDetails>
+      </Accordion>
 
       
       {/* Валидация */}
@@ -284,7 +336,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       
       {/* Информационное сообщение */}
       {isValid && (
-        <Alert severity="info" sx={{ mt: 3 }}>
+        <Alert severity="success" sx={{ mt: 3 }}>
           Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}

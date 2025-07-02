@@ -308,11 +308,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             </Box>
           ) : services.length === 0 ? (
             <Alert severity="info">
-              {formData.service_category_id 
-                ? 'Для выбранной категории услуг в данной точке обслуживания нет доступных услуг.'
-                : 'Список услуг для данной точки обслуживания пуст.'
-              } 
-              Вы можете обсудить необходимые услуги с мастером на месте.
+              Для выбранной сервисной точки не указан список услуг.
             </Alert>
           ) : (
             <Grid container spacing={2}>
@@ -411,8 +407,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       </Grid>
       
       {/* Информационное сообщение */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        Этап выбора услуг завершен. Можете перейти к следующему шагу.
+      <Alert severity="success" sx={{ mt: 3 }}>
+        Все обязательные поля заполнены. Можете перейти к следующему шагу.
       </Alert>
     </Box>
   );

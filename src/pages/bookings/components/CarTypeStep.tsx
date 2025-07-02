@@ -68,7 +68,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
-  const [carTypeAccordionOpen, setCarTypeAccordionOpen] = useState(false);
+  const [typeAccordionOpen, setTypeAccordionOpen] = useState(true);
+  const [numberAccordionOpen, setNumberAccordionOpen] = useState(false);
+  const [brandAccordionOpen, setBrandAccordionOpen] = useState(false);
+  const [modelAccordionOpen, setModelAccordionOpen] = useState(false);
   const [myCarAccordionOpen, setMyCarAccordionOpen] = useState(false);
   const [errors, setErrors] = useState({
     license_plate: '',
@@ -109,19 +112,19 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       if (isAuthenticated && clientCars && clientCars.length > 0) {
         setMyCarAccordionOpen(true);
       } else {
-        setCarTypeAccordionOpen(true);
+        setTypeAccordionOpen(true);
       }
     }
   }, [formData.car_type_id, carTypes.length, isAuthenticated, clientCars]);
   
   // Устанавливаем фокус на номер авто после выбора типа
   useEffect(() => {
-    if (formData.car_type_id && !carTypeAccordionOpen && !myCarAccordionOpen) {
+    if (formData.car_type_id && !typeAccordionOpen && !myCarAccordionOpen) {
       setTimeout(() => {
         licensePlateRef.current?.focus();
       }, 300); // Небольшая задержка для завершения анимации аккордеона
     }
-  }, [formData.car_type_id, carTypeAccordionOpen, myCarAccordionOpen]);
+  }, [formData.car_type_id, typeAccordionOpen, myCarAccordionOpen]);
   
   // Автоматический переход на следующий шаг при заполнении всех обязательных полей
   useEffect(() => {
@@ -183,7 +186,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       }, 800);
     } else {
       // Если тип авто не был установлен, открываем аккордеон типов
-      setCarTypeAccordionOpen(true);
+      setTypeAccordionOpen(true);
     }
   };
   
@@ -193,9 +196,8 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       ...prev,
       car_type_id: carType.id,
     }));
-    
-    // Сворачиваем аккордеон после выбора
-    setCarTypeAccordionOpen(false);
+    setTypeAccordionOpen(false);
+    setNumberAccordionOpen(true);
   };
   
   const handleBrandChange = (brandId: number) => {
@@ -204,8 +206,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     setFormData((prev: any) => ({
       ...prev,
       car_brand: selectedBrand?.name || '',
-      car_model: '', // Сбрасываем модель при смене бренда
+      car_model: '',
     }));
+    setBrandAccordionOpen(false);
+    setModelAccordionOpen(true);
   };
   
   const handleModelChange = (modelId: number) => {
@@ -216,18 +220,25 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     }));
   };
   
+  // Обработчик изменения номера автомобиля
   const handleLicensePlateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setFormData((prev: any) => ({
       ...prev,
-      license_plate: value.toUpperCase(), // Автоматически переводим в верхний регистр
+      license_plate: value.toUpperCase(),
     }));
-    
     const error = validateLicensePlate(value);
-    setErrors(prev => ({
-      ...prev,
-      license_plate: error,
-    }));
+    setErrors(prev => ({ ...prev, license_plate: error }));
+  };
+  
+  // Обработчик потери фокуса для номера автомобиля
+  const handleLicensePlateBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    const error = validateLicensePlate(value);
+    if (!error && value.trim()) {
+      setNumberAccordionOpen(false);
+      setBrandAccordionOpen(true);
+    }
   };
   
   // Инициализация выбранного бренда
@@ -351,17 +362,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <CarIcon sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-        <Box>
-          <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 0.5 }}>
-            Информация об автомобиле
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Шаг 4 из 6: Укажите тип и номер вашего автомобиля
-          </Typography>
-        </Box>
-      </Box>
+      {/* Заголовок секции */}
+      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
+        Информация об автомобиле
+      </Typography>
       
       <Grid container spacing={3}>
         {/* Мои автомобили - показываем только для авторизованных пользователей */}
@@ -379,7 +383,6 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
               <AccordionSummary 
                 expandIcon={<ExpandMoreIcon />}
                 sx={{ 
-                  backgroundColor: theme.palette.info.light,
                   '&.Mui-expanded': {
                     minHeight: 56,
                   },
@@ -391,21 +394,18 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                   },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <MyCarIcon color="info" />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Мои автомобили
-                  </Typography>
-                  {clientCars && clientCars.length > 0 && (
-                    <Chip
-                      label={`${clientCars.length} авто`}
-                      color="info"
-                      size="small"
-                      variant="filled"
-                      sx={{ ml: 2 }}
-                    />
-                  )}
-                </Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  Мои автомобили
+                </Typography>
+                {clientCars && clientCars.length > 0 && (
+                  <Chip
+                    label={`${clientCars.length} авто`}
+                    color="info"
+                    size="small"
+                    variant="filled"
+                    sx={{ ml: 2 }}
+                  />
+                )}
               </AccordionSummary>
               
               <AccordionDetails>
@@ -448,56 +448,23 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           </Grid>
         )}
         
-        {/* Выбор типа автомобиля - Аккордеон */}
+        {/* 1. Тип автомобиля */}
         <Grid item xs={12}>
-          <Accordion 
-            expanded={carTypeAccordionOpen} 
-            onChange={(_, expanded) => setCarTypeAccordionOpen(expanded)}
-            sx={{ 
-              border: `1px solid ${theme.palette.divider}`,
-              '&:before': { display: 'none' },
-              boxShadow: 'none',
-            }}
-          >
-            <AccordionSummary 
-              expandIcon={<ExpandMoreIcon />}
-              sx={{ 
-                backgroundColor: formData.car_type_id ? theme.palette.success.light : theme.palette.grey[50],
-                '&.Mui-expanded': {
-                  minHeight: 56,
-                },
-                '& .MuiAccordionSummary-content': {
-                  margin: '12px 0',
-                  '&.Mui-expanded': {
-                    margin: '12px 0',
-                  },
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CarIcon color={formData.car_type_id ? 'success' : 'action'} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  1. Тип автомобиля *
-                </Typography>
-                {formData.car_type_id && (
-                  <Chip
-                    label={getSelectedCarTypeName()}
-                    color="success"
-                    size="small"
-                    variant="filled"
-                    sx={{ ml: 2 }}
-                  />
-                )}
-              </Box>
+          <Accordion expanded={typeAccordionOpen} onChange={(_, expanded) => setTypeAccordionOpen(expanded)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                1. Тип автомобиля *
+              </Typography>
+              {formData.car_type_id && (
+                <Chip label={getSelectedCarTypeName()} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
+              )}
             </AccordionSummary>
-            
             <AccordionDetails>
               {carTypesError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                   Ошибка загрузки типов автомобилей. Попробуйте обновить страницу.
                 </Alert>
               )}
-              
               {isLoadingCarTypes ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                   <CircularProgress />
@@ -515,7 +482,6 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                   ))}
                 </Grid>
               )}
-              
               {!formData.car_type_id && carTypes.length > 0 && (
                 <FormHelperText error sx={{ mt: 1 }}>
                   Выберите тип автомобиля для продолжения
@@ -525,76 +491,89 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           </Accordion>
         </Grid>
         
-        {/* Номер автомобиля - показываем только после выбора типа */}
-        {formData.car_type_id && (
-          <Grid item xs={12} sm={6}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              2. Номер автомобиля *
-            </Typography>
-            
-            <TextField
-              ref={licensePlateRef}
-              label="Номер автомобиля"
-              value={formData.license_plate}
-              onChange={handleLicensePlateChange}
-              placeholder="АА1234ВВ"
-              required
-              error={!!errors.license_plate}
-              helperText={errors.license_plate || 'Государственный номер автомобиля'}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <LicensePlateIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-              fullWidth
-            />
-          </Grid>
-        )}
+        {/* 2. Номер автомобиля */}
+        <Grid item xs={12}>
+          <Accordion expanded={numberAccordionOpen} disabled={!formData.car_type_id} onChange={(_, expanded) => setNumberAccordionOpen(expanded)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                2. Номер автомобиля *
+              </Typography>
+              {formData.license_plate && !errors.license_plate && (
+                <Chip label={formData.license_plate} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
+              )}
+            </AccordionSummary>
+            <AccordionDetails>
+              <TextField
+                ref={licensePlateRef}
+                label="Номер автомобиля"
+                value={formData.license_plate}
+                onChange={handleLicensePlateChange}
+                onBlur={handleLicensePlateBlur}
+                placeholder="АА1234ВВ"
+                required
+                error={!!errors.license_plate}
+                helperText={errors.license_plate || 'Государственный номер автомобиля'}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LicensePlateIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+                fullWidth
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
         
-        {/* Марка автомобиля - показываем только после выбора типа */}
-        {formData.car_type_id && (
-          <Grid item xs={12} sm={6}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              3. Марка автомобиля (необязательно)
-            </Typography>
-            
-            <Select
-              label="Марка"
-              value={selectedBrandId || ''}
-              onChange={(value) => handleBrandChange(Number(value))}
-              options={brands.map(brand => ({
-                value: brand.id,
-                label: brand.name,
-              }))}
-              placeholder="Выберите марку"
-              fullWidth
-            />
-          </Grid>
-        )}
+        {/* 3. Марка автомобиля */}
+        <Grid item xs={12}>
+          <Accordion expanded={brandAccordionOpen} disabled={!formData.license_plate || !!errors.license_plate} onChange={(_, expanded) => setBrandAccordionOpen(expanded)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                3. Марка автомобиля (необязательно)
+              </Typography>
+              {formData.car_brand && (
+                <Chip label={formData.car_brand} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
+              )}
+            </AccordionSummary>
+            <AccordionDetails>
+              <Select
+                label="Марка"
+                value={selectedBrandId || ''}
+                onChange={(value) => handleBrandChange(Number(value))}
+                options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
+                placeholder="Выберите марку"
+                fullWidth
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
         
-        {/* Модель автомобиля - показываем только после выбора марки */}
-        {formData.car_type_id && selectedBrandId && (
-          <Grid item xs={12} sm={6}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              4. Модель автомобиля (необязательно)
-            </Typography>
-            
-            <Select
-              label="Модель"
-              value={models.find(m => m.name === formData.car_model)?.id || ''}
-              onChange={(value) => handleModelChange(Number(value))}
-              options={models.map(model => ({
-                value: model.id,
-                label: model.name,
-              }))}
-              placeholder="Выберите модель"
-              disabled={!selectedBrandId}
-              fullWidth
-            />
-          </Grid>
-        )}
+        {/* 4. Модель автомобиля */}
+        <Grid item xs={12}>
+          <Accordion expanded={modelAccordionOpen} disabled={!selectedBrandId} onChange={(_, expanded) => setModelAccordionOpen(expanded)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                4. Модель автомобиля (необязательно)
+              </Typography>
+              {formData.car_model && (
+                <Chip label={formData.car_model} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
+              )}
+            </AccordionSummary>
+            <AccordionDetails>
+              <Select
+                label="Модель"
+                value={models.find(m => m.name === formData.car_model)?.id || ''}
+                onChange={(value) => handleModelChange(Number(value))}
+                options={models.map(model => ({ value: model.id, label: model.name }))}
+                placeholder="Выберите модель"
+                disabled={!selectedBrandId}
+                fullWidth
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Grid>
       </Grid>
       
       {/* Информация */}
@@ -629,10 +608,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       {/* Информационное сообщение */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          {wasClientCarSelected 
-            ? '✅ Автомобиль выбран! Переход к выбору услуг...'
-            : '✅ Все обязательные поля заполнены. Можете перейти к следующему шагу.'
-          }
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>
