@@ -102,6 +102,7 @@ export interface BookingFilter extends PaginationFilter {
   date?: string;
   from_date?: string;
   to_date?: string;
+  city_id?: number;
   sort_by?: string;
   sort_order?: string;
 }

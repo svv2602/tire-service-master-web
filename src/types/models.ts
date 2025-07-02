@@ -212,9 +212,26 @@ export interface Booking {
   updated_at: string;
   
   // Связанные объекты
-  service_point?: ServicePoint;
+  service_point?: ServicePoint & {
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
   client?: Client;
   car?: Car;
+  service_recipient?: {
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    phone: string;
+    email?: string;
+  };
+  service_category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
 }
 
 // Интерфейсы для форм

@@ -171,7 +171,20 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             value={filter.value || ''}
             onChange={(e) => filter.onChange(e.target.value)}
             InputLabelProps={{ shrink: true }}
-            sx={{ minWidth: 150 }}
+            sx={{ 
+              minWidth: 150,
+              // Исправляем иконку календаря в темной теме
+              '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                filter: theme.palette.mode === 'dark' ? 'invert(1)' : 'none',
+                cursor: 'pointer',
+              },
+              '& input[type="date"]::-webkit-inner-spin-button': {
+                display: 'none',
+              },
+              '& input[type="date"]::-webkit-clear-button': {
+                display: 'none',
+              }
+            }}
           />
         );
 

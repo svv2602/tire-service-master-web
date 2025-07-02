@@ -8,6 +8,12 @@ export interface BookingsQueryParams {
   query?: string;
   status?: BookingStatus;
   service_point_id?: number;
+  city_id?: number;
+  service_category_id?: number;
+  from_date?: string;
+  to_date?: string;
+  sort_by?: string;
+  sort_order?: string;
   page?: number;
   per_page?: number;
 }
