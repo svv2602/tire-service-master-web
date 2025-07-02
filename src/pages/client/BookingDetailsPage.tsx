@@ -29,7 +29,8 @@ import {
   Build as ServiceIcon,
   Comment as CommentIcon,
   Category as CategoryIcon,
-  Phone as PhoneIcon
+  Phone as PhoneIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -132,6 +133,10 @@ const BookingDetailsPage: React.FC = () => {
   // Приводим данные к нужному типу
   const booking = bookingData as unknown as DetailedBooking;
   
+  // Отладочная информация
+  console.log('📋 BookingDetailsPage - bookingData:', bookingData);
+  console.log('🏢 BookingDetailsPage - service_point:', booking?.service_point);
+  
   // Мутация для отмены бронирования
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   
@@ -180,6 +185,11 @@ const BookingDetailsPage: React.FC = () => {
   // Проверяем, может ли пользователь отменить бронирование
   const canCancel = booking && booking.status_id === 1; // Статус "pending"
   
+  // Обработчик создания новой записи
+  const handleNewBooking = () => {
+    navigate('/client/booking');
+  };
+  
   // Определяем статус бронирования для BadgeStatus
   const getStatusLabel = (statusId: number) => {
     switch (statusId) {
@@ -193,16 +203,12 @@ const BookingDetailsPage: React.FC = () => {
 
   // Форматирование информации о сервисной точке
   const formatServicePointInfo = (servicePoint: DetailedBooking['service_point']) => {
-    console.log('🏢 Service Point Data:', servicePoint); // Отладочная информация
-    
     if (!servicePoint) {
-      console.log('❌ Service point is null/undefined');
       return '—';
     }
     
     // Проверяем, есть ли название
     if (!servicePoint.name || servicePoint.name.includes('Точка обслуживания #')) {
-      console.log('⚠️ Service point name is generic:', servicePoint.name);
       // Пытаемся использовать данные из адреса если название не информативно
       if (servicePoint.address) {
         const parts = [servicePoint.address];
@@ -228,10 +234,7 @@ const BookingDetailsPage: React.FC = () => {
       parts.push(`г. ${servicePoint.city.name}`);
     }
     
-    const result = parts.join(', ');
-    console.log('🎯 Formatted service point info:', result);
-    
-    return result || 'Сервисная точка';
+    return parts.join(', ') || 'Сервисная точка';
   };
   
   // Если данные загружаются
@@ -267,6 +270,22 @@ const BookingDetailsPage: React.FC = () => {
   
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
+      {/* Навигационная панель с заголовком и кнопкой создания записи */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          Мои записи
+        </Typography>
+        
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleNewBooking}
+          sx={primaryButtonStyles}
+        >
+          Новая запись
+        </Button>
+      </Box>
+      
       <PageHeader 
         title="Детали бронирования"
         breadcrumbs={[
