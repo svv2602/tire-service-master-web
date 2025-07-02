@@ -50,10 +50,59 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
     }
   };
 
-  // Форматирование даты
+  // Форматирование даты в формате dd.mm.yyyy
   const formattedDate = booking.booking_date 
-    ? format(new Date(booking.booking_date), 'd MMMM yyyy', { locale: ru })
+    ? format(new Date(booking.booking_date), 'dd.MM.yyyy')
     : '';
+
+  // Форматирование времени - только начальное время
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    
+    try {
+      // Если время в формате ISO (2000-01-01T09:35:00.000+02:00)
+      if (timeString.includes('T')) {
+        const date = new Date(timeString);
+        return format(date, 'HH:mm');
+      }
+      
+      // Если время в формате HH:mm
+      if (timeString.match(/^\d{2}:\d{2}$/)) {
+        return timeString;
+      }
+      
+      // Попытка парсинга как время
+      const date = new Date(`2000-01-01T${timeString}`);
+      return format(date, 'HH:mm');
+    } catch (error) {
+      console.warn('Ошибка форматирования времени:', timeString);
+      return timeString;
+    }
+  };
+
+  // Функция для форматирования информации о сервисной точке
+  const formatServicePointInfo = () => {
+    if (booking.service_point) {
+      const { name, address, city } = booking.service_point;
+      const cityName = city?.name || '';
+      
+      // Формируем полный адрес
+      const fullAddress = cityName ? `${address}, ${cityName}` : address;
+      
+      return {
+        name: name || `Сервисная точка #${booking.service_point.id}`,
+        address: fullAddress
+      };
+    }
+    
+    // Fallback если нет данных о сервисной точке
+    return {
+      name: `${t('Сервисная точка')} #${booking.service_point_id}`,
+      address: ''
+    };
+  };
+
+  const servicePointInfo = formatServicePointInfo();
 
   // Переход на страницу деталей записи
   const handleViewDetails = () => {
@@ -97,17 +146,24 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
             <Box display="flex" alignItems="center" mb={1}>
               <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
               <Typography variant="body2">
-                {booking.start_time}{booking.end_time ? ` - ${booking.end_time}` : ''}
+                {formatTime(booking.start_time)}
               </Typography>
             </Box>
           </Grid>
           
           <Grid item xs={12}>
-            <Box display="flex" alignItems="center" mb={1}>
-              <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body2" noWrap>
-                {t('Сервисная точка')} #{booking.service_point_id}
-              </Typography>
+            <Box display="flex" alignItems="flex-start" mb={1}>
+              <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', mt: 0.2 }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 'medium', lineHeight: 1.2 }}>
+                  {servicePointInfo.name}
+                </Typography>
+                {servicePointInfo.address && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
+                    {servicePointInfo.address}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </Grid>
           

@@ -40,6 +40,16 @@ export interface Booking {
     name: string;
     description?: string;
   };
+  service_point?: {
+    id: number;
+    name: string;
+    address: string;
+    phone?: string;
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
   services: {
     service_id: string;
     quantity: number;

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { format } from 'date-fns';
 import { Box, Typography, CircularProgress, Chip } from '../../components/ui';
 import {
   Edit as EditIcon,
@@ -524,7 +525,7 @@ const BookingsPage: React.FC = () => {
           <ScheduleIcon fontSize="small" color="action" />
           <Box>
             <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-              {new Date(booking.booking_date).toLocaleDateString('ru-RU')}
+              {format(new Date(booking.booking_date), 'dd.MM.yyyy')}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
               {formatTime(booking.start_time)}
@@ -669,7 +670,7 @@ const BookingsPage: React.FC = () => {
                     • <strong>Телефон:</strong> {confirmDialog.booking.service_recipient?.phone || '-'}
                   </Typography>
                   <Typography variant="body2">
-                    • <strong>Дата:</strong> {new Date(confirmDialog.booking.booking_date).toLocaleDateString('ru-RU')}
+                    • <strong>Дата:</strong> {format(new Date(confirmDialog.booking.booking_date), 'dd.MM.yyyy')}
                   </Typography>
                   <Typography variant="body2">
                     • <strong>Время:</strong> {formatTime(confirmDialog.booking.start_time)}

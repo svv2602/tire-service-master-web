@@ -16,45 +16,98 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
+  Chip
 } from '@mui/material';
 import {
   CalendarToday as CalendarIcon,
   AccessTime as TimeIcon,
   LocationOn as LocationIcon,
   DirectionsCar as CarIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Person as PersonIcon,
+  Build as ServiceIcon,
+  Comment as CommentIcon,
+  Category as CategoryIcon,
+  Phone as PhoneIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useGetBookingByIdQuery, useCancelBookingMutation } from '../../api/bookings.api';
-import { BookingFormData, BookingService } from '../../types/booking';
 import { getThemeColors, getButtonStyles } from '../../styles';
 import { useTheme } from '@mui/material/styles';
 import PageHeader from '../../components/common/PageHeader';
 import BookingStatusBadge from '../../components/bookings/BookingStatusBadge';
 
-// Расширенный интерфейс для сервиса бронирования с дополнительными полями
-interface ExtendedBookingService extends BookingService {
-  id?: number;
-  name?: string;
-}
-
-// Расширенный интерфейс для данных бронирования с дополнительными полями
-interface ExtendedBooking extends BookingFormData {
+// Интерфейс для полных данных бронирования
+interface DetailedBooking {
   id: number;
+  client_id: number;
+  service_point_id: number;
+  car_id: number | null;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
   status_id: number;
-  services: ExtendedBookingService[];
+  notes?: string;
+  car_brand?: string;
+  car_model?: string;
+  license_plate?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Связанные объекты
+  status: {
+    id: number;
+    name: string;
+    color: string;
+  };
+  service_point: {
+    id: number;
+    name: string;
+    address: string;
+    phone?: string;
+    city?: {
+      id: number;
+      name: string;
+    };
+  };
+  client?: {
+    id: number;
+    name: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email: string;
+  };
+  service_recipient?: {
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    phone: string;
+    email?: string;
+    is_self_service: boolean;
+  };
+  service_category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
   car?: {
-    brand?: string;
-    model?: string;
-    year?: string;
-    license_plate?: string;
+    id: number;
+    brand: string;
+    model: string;
+    year: number;
   };
-  service_point?: {
-    name?: string;
-    address?: string;
-  };
+  booking_services?: Array<{
+    id: number;
+    service_id: number;
+    service_name: string;
+    price: number;
+    quantity: number;
+    total_price: number;
+  }>;
+  is_guest_booking?: boolean;
 }
 
 const BookingDetailsPage: React.FC = () => {
@@ -77,16 +130,34 @@ const BookingDetailsPage: React.FC = () => {
   });
   
   // Приводим данные к нужному типу
-  const booking = bookingData as unknown as ExtendedBooking;
+  const booking = bookingData as unknown as DetailedBooking;
   
   // Мутация для отмены бронирования
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   
-  // Форматирование даты
+  // Функция форматирования времени
+  const formatTime = (timeString: string): string => {
+    if (!timeString) return '—';
+    
+    // Если это ISO дата-время, извлекаем время
+    if (timeString.includes('T')) {
+      const date = new Date(timeString);
+      return format(date, 'HH:mm');
+    }
+    
+    // Если это время в формате HH:mm или HH:mm:ss
+    if (timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+      return timeString.substring(0, 5); // Возвращаем только HH:mm
+    }
+    
+    return timeString;
+  };
+  
+  // Форматирование даты в формат dd.MM.yyyy
   const formatBookingDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return format(date, 'd MMMM yyyy (EEEE)', { locale: ru });
+      return format(date, 'dd.MM.yyyy');
     } catch (e) {
       return dateString;
     }
@@ -107,7 +178,29 @@ const BookingDetailsPage: React.FC = () => {
   };
   
   // Проверяем, может ли пользователь отменить бронирование
-  const canCancel = booking && booking.status_id === 1; // Предполагаем, что 1 - это статус "pending"
+  const canCancel = booking && booking.status_id === 1; // Статус "pending"
+  
+  // Определяем статус бронирования для BadgeStatus
+  const getStatusLabel = (statusId: number) => {
+    switch (statusId) {
+      case 1: return 'pending';
+      case 2: return 'confirmed';
+      case 3: return 'cancelled';
+      case 4: return 'completed';
+      default: return 'unknown';
+    }
+  };
+
+  // Форматирование информации о сервисной точке
+  const formatServicePointInfo = (servicePoint: DetailedBooking['service_point']) => {
+    if (!servicePoint) return '—';
+    
+    const parts = [servicePoint.name];
+    if (servicePoint.address) parts.push(servicePoint.address);
+    if (servicePoint.city?.name) parts.push(`г. ${servicePoint.city.name}`);
+    
+    return parts.join(', ');
+  };
   
   // Если данные загружаются
   if (isLoading) {
@@ -138,21 +231,10 @@ const BookingDetailsPage: React.FC = () => {
     );
   }
   
-  // Определяем статус бронирования
-  const getStatusLabel = (statusId: number) => {
-    switch (statusId) {
-      case 1: return 'pending';
-      case 2: return 'confirmed';
-      case 3: return 'completed';
-      case 4: return 'cancelled';
-      default: return 'unknown';
-    }
-  };
-  
   const bookingStatus = getStatusLabel(booking.status_id);
   
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 3 }}>
       <PageHeader 
         title="Детали бронирования"
         breadcrumbs={[
@@ -162,147 +244,256 @@ const BookingDetailsPage: React.FC = () => {
         ]}
       />
       
-      <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        {/* Заголовок с номером записи и статусом */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
             Запись №{booking.id}
           </Typography>
           <BookingStatusBadge status={bookingStatus} />
         </Box>
         
-        <Divider sx={{ mb: 3 }} />
+        <Divider sx={{ mb: 2 }} />
         
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CalendarIcon sx={{ mr: 1, color: colors.primary }} />
-                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Дата
-                </Typography>
-              </Box>
+        {/* Основная информация о бронировании - компактная сетка */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          {/* Дата и время в одной строке */}
+          <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <CalendarIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                Дата:
+              </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatBookingDate(booking.booking_date)}
               </Typography>
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <TimeIcon sx={{ mr: 1, color: colors.primary }} />
-                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Время
-                </Typography>
-              </Box>
+          <Grid item xs={12} sm={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <TimeIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                Время:
+              </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {booking.start_time} - {booking.end_time}
+                {formatTime(booking.start_time)}
               </Typography>
             </Box>
           </Grid>
           
-          <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocationIcon sx={{ mr: 1, color: colors.primary }} />
-                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Сервисный центр
-                </Typography>
-              </Box>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {booking.service_point?.name || '—'}
+          {/* Категория услуг */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <CategoryIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                Категория:
               </Typography>
-              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                {booking.service_point?.address || '—'}
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {booking.service_category?.name || '—'}
               </Typography>
             </Box>
           </Grid>
         </Grid>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Информация о сервисной точке - компактно */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+            <LocationIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem', mt: 0.1 }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                Сервисная точка:
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, lineHeight: 1.3 }}>
+                {formatServicePointInfo(booking.service_point)}
+              </Typography>
+              
+              {booking.service_point?.phone && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                  <PhoneIcon sx={{ mr: 1, color: colors.textSecondary, fontSize: '1rem' }} />
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                    {booking.service_point.phone}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Box>
         
-        <Divider sx={{ my: 3 }} />
+        <Divider sx={{ my: 2 }} />
         
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Автомобиль
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <CarIcon sx={{ mr: 1, color: colors.primary }} />
-            <Typography variant="body1">
-              {booking.car?.brand} {booking.car?.model} ({booking.car?.year})
+        {/* Информация об автомобиле - компактно */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <CarIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+            <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+              Автомобиль:
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              {booking.car_brand && booking.car_model 
+                ? `${booking.car_brand} ${booking.car_model}` 
+                : booking.car 
+                  ? `${booking.car.brand} ${booking.car.model} (${booking.car.year})`
+                  : '—'
+              }
             </Typography>
           </Box>
           
-          <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-            Гос. номер: <strong>{booking.car?.license_plate || '—'}</strong>
-          </Typography>
-        </Box>
-        
-        <Divider sx={{ my: 3 }} />
-        
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Услуги
-          </Typography>
-          
-          {booking.services && booking.services.length > 0 ? (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {booking.services.map((service, index) => (
-                <BookingStatusBadge 
-                  key={service.id || service.service_id || index} 
-                  customLabel={`${(service as ExtendedBookingService).name || `Услуга ${service.service_id}`} (${service.quantity} шт.)`}
-                  status="default"
-                  size="small"
-                />
-              ))}
+          {booking.license_plate && (
+            <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                Номер:
+              </Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                {booking.license_plate}
+              </Typography>
             </Box>
-          ) : (
-            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              Нет выбранных услуг
-            </Typography>
           )}
         </Box>
         
-        {booking.notes && (
+        {/* Получатель услуги - компактно */}
+        {booking.service_recipient && (
           <>
-            <Divider sx={{ my: 3 }} />
-            
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Примечания
-              </Typography>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <PersonIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+                <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                  Получатель:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {booking.service_recipient.full_name || 
+                   `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` || 
+                   '—'}
+                </Typography>
+              </Box>
               
-              <Typography variant="body2">
-                {booking.notes}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
+                <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                  Телефон:
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {booking.service_recipient.phone || '—'}
+                </Typography>
+                
+                {booking.is_guest_booking && (
+                  <Chip 
+                    label="Гость" 
+                    color="info" 
+                    size="small" 
+                    sx={{ ml: 2, height: 20, fontSize: '0.7rem' }} 
+                  />
+                )}
+              </Box>
             </Box>
           </>
         )}
         
-        <Divider sx={{ my: 3 }} />
+        {/* Услуги - компактно */}
+        {booking.booking_services && booking.booking_services.length > 0 && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                <ServiceIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
+                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+                  Услуги:
+                </Typography>
+              </Box>
+              
+              <Box sx={{ ml: 3 }}>
+                {booking.booking_services.map((service, index) => (
+                  <Box key={service.id || index} sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    py: 0.5,
+                    borderBottom: index < booking.booking_services!.length - 1 ? `1px solid ${colors.borderPrimary}` : 'none'
+                  }}>
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        {service.service_name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                        {service.quantity} шт. × {service.price} грн
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: colors.primary }}>
+                      {service.total_price} грн
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          </>
+        )}
         
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        {/* Примечания - компактно */}
+        {booking.notes && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1 }}>
+                <CommentIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem', mt: 0.1 }} />
+                <Box>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                    Примечания:
+                  </Typography>
+                  <Typography variant="body2" sx={{ backgroundColor: colors.backgroundField, p: 1, borderRadius: 1 }}>
+                    {booking.notes}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          </>
+        )}
+        
+        <Divider sx={{ my: 2 }} />
+        
+        {/* Кнопки действий - компактно */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
           <Button 
             variant="outlined" 
             startIcon={<ArrowBackIcon />} 
             component={Link} 
             to="/client/bookings"
-            sx={secondaryButtonStyles}
+            sx={{ ...secondaryButtonStyles, minWidth: 'auto' }}
+            size="small"
           >
-            Назад к списку
+            Назад
           </Button>
           
-          {canCancel && (
-            <Button 
-              variant="contained" 
-              color="error"
-              onClick={() => setCancelDialogOpen(true)}
-              disabled={isCancelling}
-              sx={dangerButtonStyles}
-            >
-              {isCancelling ? <CircularProgress size={24} /> : 'Отменить запись'}
-            </Button>
-          )}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {/* Кнопка перенести запись (только для подтвержденных и ожидающих) */}
+            {(booking.status_id === 1 || booking.status_id === 2) && (
+              <Button 
+                variant="outlined" 
+                color="primary"
+                component={Link}
+                to={`/client/bookings/${booking.id}/reschedule`}
+                sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
+                size="small"
+              >
+                Перенести
+              </Button>
+            )}
+            
+            {/* Кнопка отмены (только для ожидающих подтверждения) */}
+            {canCancel && (
+              <Button 
+                variant="contained" 
+                color="error"
+                onClick={() => setCancelDialogOpen(true)}
+                disabled={isCancelling}
+                sx={{ ...dangerButtonStyles, minWidth: 'auto' }}
+                size="small"
+              >
+                {isCancelling ? <CircularProgress size={16} /> : 'Отменить'}
+              </Button>
+            )}
+          </Box>
         </Box>
       </Paper>
       

@@ -171,6 +171,31 @@ const RescheduleBookingPage: React.FC = () => {
   // Проверка возможности сохранения
   const canSave = selectedDate && selectedTimeSlot && !isUpdating;
 
+  // Функция для форматирования времени - только начальное время
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    
+    try {
+      // Если время в формате ISO (2000-01-01T09:35:00.000+02:00)
+      if (timeString.includes('T')) {
+        const date = new Date(timeString);
+        return format(date, 'HH:mm');
+      }
+      
+      // Если время в формате HH:mm
+      if (timeString.match(/^\d{2}:\d{2}$/)) {
+        return timeString;
+      }
+      
+      // Попытка парсинга как время
+      const date = new Date(`2000-01-01T${timeString}`);
+      return format(date, 'HH:mm');
+    } catch (error) {
+      console.warn('Ошибка форматирования времени:', timeString);
+      return timeString;
+    }
+  };
+
   if (isLoadingBooking) {
     return (
       <ClientLayout>
@@ -253,10 +278,10 @@ const RescheduleBookingPage: React.FC = () => {
             
             <Box mt={2} mb={2}>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Дата')}:</strong> {format(parseISO(booking.booking_date), 'd MMMM yyyy', { locale: ru })}
+                <strong>{t('Дата')}:</strong> {format(parseISO(booking.booking_date), 'dd.MM.yyyy')}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Время')}:</strong> {booking.start_time}{booking.end_time ? ` - ${booking.end_time}` : ''}
+                <strong>{t('Время')}:</strong> {formatTime(booking.start_time)}
               </Typography>
               <Typography variant="body1" gutterBottom>
                 <strong>{t('Сервисная точка')}:</strong> {servicePointData?.name || `#${booking.service_point_id}`}
@@ -291,8 +316,6 @@ const RescheduleBookingPage: React.FC = () => {
             />
           </Box>
 
-
-
           {/* Информация о выбранной дате и времени */}
           {selectedDate && selectedTimeSlot && (
             <Paper elevation={1} sx={{ p: 3, mt: 3, bgcolor: colors.backgroundSecondary }}>
@@ -300,7 +323,7 @@ const RescheduleBookingPage: React.FC = () => {
                 {t('Новая дата и время')}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Дата')}:</strong> {format(selectedDate, 'd MMMM yyyy', { locale: ru })}
+                <strong>{t('Дата')}:</strong> {format(selectedDate, 'dd.MM.yyyy')}
               </Typography>
               <Typography variant="body1">
                 <strong>{t('Время')}:</strong> {selectedTimeSlot}

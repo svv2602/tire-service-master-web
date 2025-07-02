@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления формата даты в записях клиента</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 0 5px 5px 0;
+        }
+        .expected {
+            background-color: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        .changed {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .important {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            font-weight: bold;
+        }
+        .code {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        .url {
+            color: #667eea;
+            font-weight: bold;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status.before { background-color: #ffebee; color: #c62828; }
+        .status.after { background-color: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗓️ Тест исправления формата даты в записях клиента</h1>
+            <p>Проверка изменения формата даты с "d MMMM yyyy" на "dd.MM.yyyy" и отображения только начального времени</p>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">📋 Описание изменений</h2>
+            
+            <div class="test-step changed">
+                <h3>🔄 Что изменилось:</h3>
+                <ul>
+                    <li><strong>Формат даты:</strong> с "3 июля 2025" на "03.07.2025"</li>
+                    <li><strong>Время:</strong> только начальное время (без end_time)</li>
+                    <li><strong>Компоненты:</strong> BookingCard.tsx, RescheduleBookingPage.tsx, BookingsPage.tsx</li>
+                </ul>
+            </div>
+
+            <div class="test-step expected">
+                <h3>✅ Ожидаемый результат:</h3>
+                <div class="code">
+                    <strong>До:</strong> "3 июля 2025" + "09:00 - 10:00"<br>
+                    <strong>После:</strong> "03.07.2025" + "09:00"
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🧪 Сценарии тестирования</h2>
+
+            <div class="test-step">
+                <h3>1. Страница "Мои записи" (/client/bookings)</h3>
+                <ol>
+                    <li>Откройте <span class="url">http://localhost:3008/client/bookings</span></li>
+                    <li>Войдите как клиент: <code>client@test.com / client123</code></li>
+                    <li>Проверьте формат даты в карточках записей</li>
+                    <li>Проверьте отображение времени (только начальное)</li>
+                </ol>
+                
+                <div class="expected">
+                    <strong>Ожидается:</strong>
+                    <ul>
+                        <li>Дата: "03.07.2025" (вместо "3 июля 2025")</li>
+                        <li>Время: "09:00" (без " - 10:00")</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>2. Страница переноса записи (/client/bookings/{id}/reschedule)</h3>
+                <ol>
+                    <li>Откройте запись для переноса</li>
+                    <li>Проверьте секцию "Текущая запись"</li>
+                    <li>Проверьте секцию "Новая дата и время" при выборе</li>
+                </ol>
+                
+                <div class="expected">
+                    <strong>Ожидается:</strong>
+                    <ul>
+                        <li>Текущая запись: дата "03.07.2025", время "09:00"</li>
+                        <li>Новая запись: дата "04.07.2025" при выборе</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>3. Админская страница (/admin/bookings)</h3>
+                <ol>
+                    <li>Откройте <span class="url">http://localhost:3008/admin/bookings</span></li>
+                    <li>Войдите как админ: <code>admin@test.com / admin123</code></li>
+                    <li>Проверьте колонку "Дата и время"</li>
+                    <li>Проверьте диалог подтверждения изменения статуса</li>
+                </ol>
+                
+                <div class="expected">
+                    <strong>Ожидается:</strong>
+                    <ul>
+                        <li>В таблице: "03.07.2025" + "09:00"</li>
+                        <li>В диалоге: "Дата: 03.07.2025"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">🔍 Технические детали</h2>
+
+            <div class="test-step">
+                <h3>📁 Измененные файлы:</h3>
+                <div class="code">
+1. <strong>BookingCard.tsx</strong>
+   - Дата: format(new Date(booking.booking_date), 'dd.MM.yyyy')
+   - Время: formatTime(booking.start_time) // только начальное
+
+2. <strong>RescheduleBookingPage.tsx</strong>
+   - Текущая запись: format(parseISO(booking.booking_date), 'dd.MM.yyyy')
+   - Время: formatTime(booking.start_time)
+   - Новая запись: format(selectedDate, 'dd.MM.yyyy')
+
+3. <strong>BookingsPage.tsx</strong> (админка)
+   - Таблица: format(new Date(booking.booking_date), 'dd.MM.yyyy')
+   - Диалог: format(new Date(confirmDialog.booking.booking_date), 'dd.MM.yyyy')
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>⚙️ Функция форматирования времени:</h3>
+                <div class="code">
+const formatTime = (timeString: string) => {
+  if (!timeString) return '';
+  
+  try {
+    // ISO формат: 2000-01-01T09:35:00.000+02:00
+    if (timeString.includes('T')) {
+      const date = new Date(timeString);
+      return format(date, 'HH:mm');
+    }
+    
+    // HH:mm формат
+    if (timeString.match(/^\d{2}:\d{2}$/)) {
+      return timeString;
+    }
+    
+    // Парсинг как время
+    const date = new Date(`2000-01-01T${timeString}`);
+    return format(date, 'HH:mm');
+  } catch (error) {
+    return timeString;
+  }
+};
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">✅ Чеклист проверки</h2>
+
+            <div class="test-step">
+                <h3>Проверьте каждый пункт:</h3>
+                <ul>
+                    <li>□ Карточки записей в /client/bookings показывают дату в формате dd.MM.yyyy</li>
+                    <li>□ Время в карточках показывает только начальное время (без диапазона)</li>
+                    <li>□ Страница переноса показывает правильный формат даты</li>
+                    <li>□ Админская страница показывает правильный формат в таблице</li>
+                    <li>□ Диалог подтверждения в админке показывает правильную дату</li>
+                    <li>□ Нет ошибок в консоли браузера</li>
+                    <li>□ Все функции работают корректно</li>
+                </ul>
+            </div>
+
+            <div class="test-step important">
+                <h3>🚨 Важные моменты:</h3>
+                <ul>
+                    <li>Убедитесь, что изменения применились во всех местах</li>
+                    <li>Проверьте разные записи с разными датами</li>
+                    <li>Проверьте работу в разных браузерах</li>
+                    <li>Убедитесь, что функциональность не нарушена</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="test-title">📊 Результаты тестирования</h2>
+            
+            <div class="test-step">
+                <p><strong>Дата тестирования:</strong> <span id="testDate"></span></p>
+                <p><strong>Статус:</strong> 
+                    <span class="status before">ДО: "3 июля 2025, 09:00 - 10:00"</span>
+                    <span class="status after">ПОСЛЕ: "03.07.2025, 09:00"</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testDate').textContent = new Date().toLocaleString('ru-RU');
+        
+        // Добавляем интерактивность для чеклиста
+        document.querySelectorAll('li').forEach(li => {
+            if (li.textContent.includes('□')) {
+                li.style.cursor = 'pointer';
+                li.addEventListener('click', function() {
+                    if (this.textContent.includes('□')) {
+                        this.textContent = this.textContent.replace('□', '✅');
+                        this.style.color = '#2e7d32';
+                    } else {
+                        this.textContent = this.textContent.replace('✅', '□');
+                        this.style.color = '#333';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

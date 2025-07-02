@@ -30,6 +30,14 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
     end_time: modelBooking.end_time,
     notes: modelBooking.notes,
     status_id: modelBooking.status_id,
+    service_category: modelBooking.service_category,
+    service_point: modelBooking.service_point ? {
+      id: modelBooking.service_point.id,
+      name: modelBooking.service_point.name,
+      address: modelBooking.service_point.address,
+      phone: modelBooking.service_point.phone || modelBooking.service_point.contact_phone,
+      city: modelBooking.service_point.city
+    } : undefined,
     services: modelBooking.services?.map(s => ({
       service_id: String(s.service_id),
       quantity: s.quantity,
