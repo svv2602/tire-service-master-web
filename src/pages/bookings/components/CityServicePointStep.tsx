@@ -266,12 +266,8 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       
       {/* Уведомление о автоматическом переходе */}
       {isValid && !autoFilledData && (
-        <Alert 
-          severity="success" 
-          icon={<CheckCircleIcon />}
-          sx={{ mb: 3 }}
-        >
-          ✅ Город и точка обслуживания выбраны. Переход к выбору даты и времени через несколько секунд...
+        <Alert severity="success">
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
       
@@ -377,7 +373,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       
       {/* Информационное сообщение */}
       {(isValid) && (
-        <Alert severity="info" sx={{ mt: 3 }}>
+        <Alert severity="success" sx={{ mt: 3 }}>
           Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}

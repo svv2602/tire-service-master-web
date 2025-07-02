@@ -232,9 +232,10 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         </>
       )}
 
-      {selectedCity && formData.service_category_id && (
+      {/* Сообщение о выборе категории */}
+      {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          ✅ Категория услуг выбрана. Переход к выбору сервисной точки...
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>

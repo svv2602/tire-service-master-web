@@ -17,6 +17,7 @@ interface TimeSlotPickerProps {
   onTimeSlotChange: (timeSlot: string | null, slotData?: AvailableTimeSlot) => void;
   availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
+  hideSelectedChip?: boolean;
 }
 
 export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
@@ -24,19 +25,13 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   onTimeSlotChange,
   availableTimeSlots,
   isLoading = false,
+  hideSelectedChip = false,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <TimeIcon sx={{ mr: 1, color: colors.primary }} />
-        <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary }}>
-          Выберите время
-        </Typography>
-      </Box>
-
       {isLoading ? (
         <Box sx={{ mt: 2 }}>
           <Skeleton variant="rectangular" height={40} sx={{ mb: 1 }} />
@@ -116,7 +111,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
         </Box>
       )}
       
-      {selectedTimeSlot && (
+      {!hideSelectedChip && selectedTimeSlot && (
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Chip
             color="primary"

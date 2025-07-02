@@ -124,13 +124,13 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+      {/* Удаляем внутренний заголовок */}
+      {/* <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <CalendarIcon sx={{ mr: 1, color: colors.primary }} />
         <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary }}>
           Выберите дату
         </Typography>
-      </Box>
-
+      </Box> */}
       {isLoading ? (
         <Skeleton variant="rectangular" height={320} />
       ) : (
@@ -223,8 +223,6 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           }}
         />
       )}
-
-
     </Box>
   );
 };

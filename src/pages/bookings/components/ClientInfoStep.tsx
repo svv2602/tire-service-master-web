@@ -136,18 +136,9 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   return (
     <Box>
       {/* Заголовок */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" component="h2" sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ContactPageIcon color="primary" />
-          Контактная информация
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {isAuthenticated 
-            ? "Проверьте и при необходимости измените контактную информацию"
-            : "Укажите контактную информацию для связи и уведомлений о бронировании"
-          }
-        </Typography>
-      </Box>
+      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
+        Контактная информация
+      </Typography>
 
       {/* Статус пользователя */}
       {isAuthenticated ? (
@@ -274,9 +265,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
 
       {isFormValid() && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          <Typography variant="body2">
-            ✅ Контактная информация заполнена корректно. Можете переходить к следующему шагу.
-          </Typography>
+          Все обязательные поля заполнены. Можете перейти к следующему шагу.
         </Alert>
       )}
     </Box>
