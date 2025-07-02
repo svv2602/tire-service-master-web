@@ -22,6 +22,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   const getStatusColor = (status: BookingStatusEnum) => {
     switch (status) {
       case BookingStatusEnum.PENDING:
+        return 'warning';
+      case BookingStatusEnum.CONFIRMED:
         return 'primary';
       case BookingStatusEnum.COMPLETED:
         return 'success';
@@ -37,6 +39,8 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
     switch (status) {
       case BookingStatusEnum.PENDING:
         return t('Ожидает');
+      case BookingStatusEnum.CONFIRMED:
+        return t('Подтверждено');
       case BookingStatusEnum.COMPLETED:
         return t('Завершено');
       case BookingStatusEnum.CANCELLED:
@@ -59,6 +63,12 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   // Переход на страницу переноса записи
   const handleReschedule = () => {
     navigate(`/client/bookings/${booking.id}/reschedule`);
+  };
+
+  // Отмена записи
+  const handleCancel = () => {
+    // TODO: Реализовать отмену записи
+    console.log('Отмена записи:', booking.id);
   };
 
   return (
@@ -87,7 +97,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
             <Box display="flex" alignItems="center" mb={1}>
               <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
               <Typography variant="body2">
-                {booking.start_time} - {booking.end_time}
+                {booking.start_time}{booking.end_time ? ` - ${booking.end_time}` : ''}
               </Typography>
             </Box>
           </Grid>
@@ -119,14 +129,14 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
           {t('Подробнее')}
         </Button>
         
-        {booking.status === BookingStatusEnum.PENDING && (
+        {(booking.status === BookingStatusEnum.PENDING || booking.status === BookingStatusEnum.CONFIRMED) && (
           <Button size="small" color="primary" onClick={handleReschedule}>
             {t('Перенести')}
           </Button>
         )}
         
-        {booking.status === BookingStatusEnum.PENDING && (
-          <Button size="small" color="error">
+        {(booking.status === BookingStatusEnum.PENDING || booking.status === BookingStatusEnum.CONFIRMED) && (
+          <Button size="small" color="error" onClick={handleCancel}>
             {t('Отменить')}
           </Button>
         )}

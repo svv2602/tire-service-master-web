@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme } from '@mui/material';
+import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme, Button } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
+import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import BookingsList from '../../components/bookings/BookingsList';
@@ -11,6 +12,8 @@ import { useTranslation } from 'react-i18next';
 import { Booking as ModelBooking } from '../../types/models';
 import { Booking } from '../../types/booking';
 import { getThemeColors, getButtonStyles } from '../../styles';
+import { Add as AddIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import ClientLayout from '../../components/client/ClientLayout';
 
 // Функция для конвертации типов Booking
@@ -50,7 +53,8 @@ const MyBookingsPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
-  const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const primaryButtonStyles = getButtonStyles(theme, 'primary');
+  const navigate = useNavigate();
   
   const currentUser = useSelector(selectCurrentUser);
   const [tabValue, setTabValue] = useState<number>(0);
@@ -58,49 +62,19 @@ const MyBookingsPage: React.FC = () => {
     status: BookingStatusEnum.PENDING,
   });
 
-  // Получаем client_id из текущего пользователя
-  // Временное решение: используем отдельный запрос для получения client_id
-  const clientId = currentUser?.role === 'client' ? '1' : null; // Hardcode для тестирования
+  // Получаем актуальную информацию о пользователе из API
+  const { data: userFromApi } = useGetCurrentUserQuery(undefined, {
+    skip: !currentUser // Пропускаем запрос если пользователь не авторизован
+  });
 
-  // Отладочная информация
-  console.log('MyBookingsPage - currentUser:', currentUser);
-  console.log('MyBookingsPage - currentUser.id:', currentUser?.id);
-  console.log('MyBookingsPage - currentUser.role:', currentUser?.role);
-  console.log('MyBookingsPage - clientId:', clientId);
+  // Определяем client_id из API данных или из Redux
+  const clientId = userFromApi?.client_id || currentUser?.client_id;
   
   // Запрос на получение записей клиента
-  const { data: bookingsData, isLoading, isError, error } = useGetBookingsByClientQuery(
+  const { data: bookingsData, isLoading, isError, error, refetch } = useGetBookingsByClientQuery(
     clientId ? String(clientId) : '', 
     { skip: !clientId }
   );
-
-  // Отладочная информация для запроса
-  console.log('MyBookingsPage - RTK Query state:', {
-    data: bookingsData,
-    isLoading,
-    isError,
-    error,
-    currentUserId: currentUser?.id,
-    skip: !currentUser?.id
-  });
-
-  // Детальная отладочная информация для данных
-  if (bookingsData?.data) {
-    console.log('MyBookingsPage - Raw bookings data:', bookingsData.data);
-    console.log('MyBookingsPage - Current filters:', filters);
-    console.log('MyBookingsPage - Filter status:', filters.status);
-    console.log('MyBookingsPage - BookingStatusEnum values:', BookingStatusEnum);
-    
-    bookingsData.data.forEach((booking, index) => {
-      console.log(`Booking ${index}:`, {
-        id: booking.id,
-        status_id: booking.status_id,
-        status: booking.status_id as BookingStatusEnum,
-        filterStatus: filters.status,
-        matches: booking.status_id === filters.status
-      });
-    });
-  }
 
   // Обработчик изменения вкладки
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -123,69 +97,59 @@ const MyBookingsPage: React.FC = () => {
     setFilters({ ...filters, ...newFilters });
   };
 
-  // RTK Query автоматически обновляется при изменении параметров
-  // useEffect с refetch не нужен
+  // Обработчик создания новой записи
+  const handleNewBooking = () => {
+    navigate('/client/booking');
+  };
 
   // Если пользователь не авторизован, показываем предложение войти
   if (!currentUser) {
     return <LoginPrompt />;
   }
 
-  // Конвертируем данные бронирований
+  // Если нет client_id, показываем сообщение об ошибке
+  if (!clientId) {
+    return (
+      <ClientLayout>
+        <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+          <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Alert severity="error">
+              Не удалось определить профиль клиента. Обратитесь к администратору.
+            </Alert>
+          </Container>
+        </Box>
+      </ClientLayout>
+    );
+  }
+
+  // Конвертируем данные бронирований и применяем фильтры
   const convertedBookings = bookingsData?.data
-    ? bookingsData.data.map(convertBooking)
+    ? bookingsData.data
+        .map(convertBooking)
         .filter(booking => booking.status === filters.status)
     : [];
-
-  // Для тестирования - показываем все записи без фильтрации
-  const allConvertedBookings = bookingsData?.data
-    ? bookingsData.data.map(convertBooking)
-    : [];
-
-  console.log('MyBookingsPage - convertedBookings:', convertedBookings);
-  console.log('MyBookingsPage - allConvertedBookings (без фильтра):', allConvertedBookings);
 
   return (
     <ClientLayout>
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            {t('Мои записи')}
-          </Typography>
-
-          {/* Отладочная информация в режиме разработки */}
-          {process.env.NODE_ENV === 'development' && (
-            <Paper sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
-              <Typography variant="h6" gutterBottom>🔍 Отладочная информация</Typography>
-              <Typography variant="body2">Пользователь ID: {currentUser?.id || 'Не найден'}</Typography>
-              <Typography variant="body2">Роль пользователя: {currentUser?.role || 'Не найдена'}</Typography>
-              <Typography variant="body2">Client ID: {clientId || 'Не найден'}</Typography>
-              <Typography variant="body2">Загрузка: {isLoading ? 'Да' : 'Нет'}</Typography>
-              <Typography variant="body2">Ошибка: {isError ? 'Да' : 'Нет'}</Typography>
-              <Typography variant="body2">Данные получены: {bookingsData ? 'Да' : 'Нет'}</Typography>
-              <Typography variant="body2">Количество записей: {bookingsData?.data?.length || 0}</Typography>
-              <Typography variant="body2">Текущий фильтр статус: {filters.status}</Typography>
-              <Typography variant="body2">Отфильтровано записей: {convertedBookings.length}</Typography>
-              <Typography variant="body2">Активная вкладка: {tabValue}</Typography>
-              {bookingsData?.data && bookingsData.data.length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="body2" fontWeight="bold">Статусы записей:</Typography>
-                  {bookingsData.data.map((booking, index) => (
-                    <Typography key={index} variant="body2" sx={{ ml: 2 }}>
-                      Запись {booking.id}: status_id={booking.status_id} 
-                      {booking.status_id === filters.status ? ' ✅' : ' ❌'}
-                    </Typography>
-                  ))}
-                </Box>
-              )}
-              {error && (
-                <Typography variant="body2" color="error">
-                  Детали ошибки: {JSON.stringify(error)}
-                </Typography>
-              )}
-            </Paper>
-          )}
+          {/* Заголовок с кнопкой создания записи */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Typography variant="h4" component="h1">
+              {t('Мои записи')}
+            </Typography>
+            
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleNewBooking}
+              sx={primaryButtonStyles}
+            >
+              Новая запись
+            </Button>
+          </Box>
           
+          {/* Вкладки статусов */}
           <Paper sx={{ mb: 3 }}>
             <Tabs 
               value={tabValue} 
@@ -201,33 +165,54 @@ const MyBookingsPage: React.FC = () => {
             </Tabs>
           </Paper>
           
+          {/* Фильтры */}
           <BookingFilters 
             filters={filters} 
             onFilterChange={handleFilterChange} 
           />
           
+          {/* Список бронирований */}
           <Box mt={3}>
             {isLoading ? (
               <Box display="flex" justifyContent="center" my={4}>
                 <CircularProgress />
               </Box>
             ) : isError ? (
-              <Alert severity="error">❌ {t('Произошла ошибка при загрузке записей')}</Alert>
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {t('Произошла ошибка при загрузке записей')}
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => refetch()}
+                  sx={{ ml: 2 }}
+                >
+                  Повторить
+                </Button>
+              </Alert>
             ) : convertedBookings.length > 0 ? (
               <BookingsList 
                 bookings={convertedBookings} 
               />
-            ) : allConvertedBookings.length > 0 ? (
-              <Box>
-                <Alert severity="warning" sx={{ mb: 2 }}>
-                  ⚠️ Записи найдены, но не соответствуют текущему фильтру. Показаны все записи для диагностики:
-                </Alert>
-                <BookingsList 
-                  bookings={allConvertedBookings} 
-                />
-              </Box>
             ) : (
-              <Alert severity="info">💡 {t('У вас нет записей с выбранными параметрами')}</Alert>
+              <Alert severity="info" sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6" gutterBottom>
+                  {t('У вас нет записей')}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                  {tabValue === 0 && 'У вас нет предстоящих записей'}
+                  {tabValue === 1 && 'У вас нет подтвержденных записей'}
+                  {tabValue === 2 && 'У вас нет завершенных записей'}
+                  {tabValue === 3 && 'У вас нет отмененных записей'}
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleNewBooking}
+                  sx={primaryButtonStyles}
+                >
+                  Создать первую запись
+                </Button>
+              </Alert>
             )}
           </Box>
         </Container>
