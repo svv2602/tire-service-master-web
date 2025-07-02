@@ -1,6 +1,6 @@
 import { BaseModel } from './models';
 import { User } from './user';
-import { CarBrand, CarModel } from './car';
+import { CarBrand, CarModel, CarType } from './car';
 
 // Интерфейс клиента
 export interface Client extends BaseModel {
@@ -54,6 +54,7 @@ export interface ClientCar extends BaseModel {
   tire_type_id?: number;
   brand?: CarBrand;
   model?: CarModel;
+  car_type?: CarType;
   tire_type?: TireType;
 }
 

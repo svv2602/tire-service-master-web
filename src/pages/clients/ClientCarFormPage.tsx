@@ -18,9 +18,14 @@ import {
   useTheme,
   FormControlLabel,
   Checkbox,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { useGetClientByIdQuery } from '../../api/clients.api';
 import { useGetClientCarByIdQuery, useCreateClientCarMutation, useUpdateClientCarMutation } from '../../api/clients.api';
+import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery, useGetCarTypesQuery } from '../../api';
 import { ClientCarFormData } from '../../types/client';
 import { getCardStyles, getButtonStyles, getTextFieldStyles, getTablePageStyles } from '../../styles/components';
 import { SIZES } from '../../styles/theme';
@@ -73,6 +78,15 @@ const ClientCarFormPage: React.FC = () => {
     { clientId: clientId || '', carId: carId || '' },
     { skip: !isEditMode }
   );
+
+  /**
+   * RTK Query хуки для загрузки справочников
+   */
+  const { data: carBrandsData, isLoading: isLoadingBrands } = useGetCarBrandsQuery({});
+  const { data: carTypesData, isLoading: isLoadingTypes } = useGetCarTypesQuery();
+
+  const carBrands = carBrandsData?.data || [];
+  const carTypes = carTypesData || [];
 
   /**
    * Мутации для создания и обновления автомобиля
@@ -132,6 +146,15 @@ const ClientCarFormPage: React.FC = () => {
       }
     },
   });
+
+  /**
+   * API запрос для моделей автомобилей (зависит от выбранной марки)
+   */
+  const { data: carModelsData, isLoading: isLoadingModels } = useGetCarModelsByBrandIdQuery(
+    { brandId: formik.values.brand_id.toString() },
+    { skip: !formik.values.brand_id }
+  );
+  const carModels = carModelsData?.car_models || [];
 
   /**
    * Мемоизированный обработчик отмены операции
@@ -209,32 +232,71 @@ const ClientCarFormPage: React.FC = () => {
           <Grid container spacing={SIZES.spacing.lg}>
             {/* Поле марки автомобиля */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="brand_id"
-                label="Марка (ID)"
-                type="number"
-                value={formik.values.brand_id}
-                onChange={formik.handleChange}
+              <FormControl 
+                fullWidth 
                 error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
-                helperText={formik.touched.brand_id && formik.errors.brand_id}
                 sx={textFieldStyles}
-              />
+              >
+                <InputLabel>Марка автомобиля *</InputLabel>
+                <Select
+                  name="brand_id"
+                  value={formik.values.brand_id || ''}
+                  onChange={(e) => {
+                    formik.setFieldValue('brand_id', Number(e.target.value));
+                    // Сбрасываем модель при смене марки
+                    formik.setFieldValue('model_id', 0);
+                  }}
+                  label="Марка автомобиля *"
+                  disabled={isLoadingBrands}
+                >
+                  <MenuItem value="">
+                    <em>Выберите марку</em>
+                  </MenuItem>
+                  {carBrands.map((brand) => (
+                    <MenuItem key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.brand_id && formik.errors.brand_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.brand_id}
+                  </Typography>
+                )}
+              </FormControl>
             </Grid>
 
             {/* Поле модели автомобиля */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="model_id"
-                label="Модель (ID)"
-                type="number"
-                value={formik.values.model_id}
-                onChange={formik.handleChange}
+              <FormControl 
+                fullWidth 
                 error={formik.touched.model_id && Boolean(formik.errors.model_id)}
-                helperText={formik.touched.model_id && formik.errors.model_id}
                 sx={textFieldStyles}
-              />
+                disabled={!formik.values.brand_id || isLoadingModels}
+              >
+                <InputLabel>Модель автомобиля *</InputLabel>
+                <Select
+                  name="model_id"
+                  value={formik.values.model_id || ''}
+                  onChange={(e) => formik.setFieldValue('model_id', Number(e.target.value))}
+                  label="Модель автомобиля *"
+                  disabled={!formik.values.brand_id || isLoadingModels}
+                >
+                  <MenuItem value="">
+                    <em>Выберите модель</em>
+                  </MenuItem>
+                  {carModels.map((model) => (
+                    <MenuItem key={model.id} value={model.id}>
+                      {model.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.model_id && formik.errors.model_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.model_id}
+                  </Typography>
+                )}
+              </FormControl>
             </Grid>
 
             {/* Поле года выпуска */}
@@ -268,17 +330,34 @@ const ClientCarFormPage: React.FC = () => {
 
             {/* Поле типа автомобиля */}
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                name="car_type_id"
-                label="Тип автомобиля (ID)"
-                type="number"
-                value={formik.values.car_type_id}
-                onChange={formik.handleChange}
+              <FormControl 
+                fullWidth 
                 error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
-                helperText={formik.touched.car_type_id && formik.errors.car_type_id}
                 sx={textFieldStyles}
-              />
+              >
+                <InputLabel>Тип автомобиля</InputLabel>
+                <Select
+                  name="car_type_id"
+                  value={formik.values.car_type_id || ''}
+                  onChange={(e) => formik.setFieldValue('car_type_id', Number(e.target.value) || null)}
+                  label="Тип автомобиля"
+                  disabled={isLoadingTypes}
+                >
+                  <MenuItem value="">
+                    <em>Выберите тип (необязательно)</em>
+                  </MenuItem>
+                  {carTypes.map((type) => (
+                    <MenuItem key={type.id} value={type.id}>
+                      {type.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formik.touched.car_type_id && formik.errors.car_type_id && (
+                  <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                    {formik.errors.car_type_id}
+                  </Typography>
+                )}
+              </FormControl>
             </Grid>
 
             {/* Поле основного автомобиля */}

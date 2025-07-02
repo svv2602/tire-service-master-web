@@ -176,6 +176,7 @@ const ClientProfilePage: React.FC = () => {
       .required('Номер автомобиля обязателен'),
     car_type_id: Yup.number()
       .nullable(),
+    is_primary: Yup.boolean(),
   });
 
   // Formik для управления формой профиля
@@ -247,6 +248,7 @@ const ClientProfilePage: React.FC = () => {
       year: new Date().getFullYear(),
       license_plate: '',
       car_type_id: 0,
+      is_primary: false,
     },
     validationSchema: carValidationSchema,
     onSubmit: async (values) => {
@@ -309,6 +311,7 @@ const ClientProfilePage: React.FC = () => {
         year: car.year,
         license_plate: car.license_plate,
         car_type_id: car.car_type_id || 0,
+        is_primary: car.is_primary || false,
       });
     } else {
       setEditingCar(null);
@@ -559,18 +562,20 @@ const ClientProfilePage: React.FC = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <CarIcon color="primary" />
-                          <Typography variant="h6">
-                            {car.brand?.name} {car.model?.name}
-                          </Typography>
-                          {car.is_primary && (
-                            <Chip
-                              icon={<StarIcon />}
-                              label="Основной"
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                            />
-                          )}
+                          <Box>
+                            <Typography variant="h6" sx={{ mb: 0.5 }}>
+                              {car.brand?.name || 'Неизвестная марка'} {car.model?.name || 'Неизвестная модель'}
+                            </Typography>
+                            {car.is_primary && (
+                              <Chip
+                                icon={<StarIcon />}
+                                label="Основной"
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
                         </Box>
                         <Box>
                           <Tooltip title="Редактировать">
@@ -593,17 +598,23 @@ const ClientProfilePage: React.FC = () => {
                         </Box>
                       </Box>
                       
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Год: {car.year}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Номер: {car.license_plate}
-                      </Typography>
-                      {car.car_type_id && (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Тип: {car.car_type_id}
+                          <strong>Марка:</strong> {car.brand?.name || 'Не указана'}
                         </Typography>
-                      )}
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Модель:</strong> {car.model?.name || 'Не указана'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Год:</strong> {car.year}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Номер:</strong> {car.license_plate}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Тип:</strong> {car.car_type?.name || 'Не указан'}
+                        </Typography>
+                      </Box>
                     </Card>
                   </Grid>
                 ))}
@@ -799,6 +810,30 @@ const ClientProfilePage: React.FC = () => {
                     </MenuItem>
                   ))}
                 </TextField>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={carFormik.values.is_primary || false}
+                      onChange={(e) => carFormik.setFieldValue('is_primary', e.target.checked)}
+                      name="is_primary"
+                      color="primary"
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <StarIcon color={carFormik.values.is_primary ? 'primary' : 'disabled'} />
+                      <Typography variant="body2">
+                        Сделать основным автомобилем
+                      </Typography>
+                    </Box>
+                  }
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                  Основной автомобиль будет предложен по умолчанию при бронировании услуг
+                </Typography>
               </Grid>
             </Grid>
           </DialogContent>
