@@ -77,13 +77,7 @@ export const PageTable = <T,>({
     return tableColumns;
   }, [columns, actions]);
 
-  // Обработчик очистки фильтров
-  const handleClearFilters = () => {
-    filters.forEach((filter: any) => {
-      const clearValue = filter.clearValue !== undefined ? filter.clearValue : (Array.isArray(filter.value) ? [] : '');
-      filter.onChange(clearValue);
-    });
-  };
+
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -96,7 +90,6 @@ export const PageTable = <T,>({
       <SearchAndFilters
         search={search}
         filters={filters}
-        onClearFilters={handleClearFilters}
       />
 
       {/* Кастомный контент */}

@@ -24,7 +24,6 @@ import { SearchConfig, FilterConfig } from './index';
 interface SearchAndFiltersProps {
   search?: SearchConfig;
   filters?: FilterConfig[];
-  onClearFilters?: () => void;
 }
 
 /**
@@ -32,20 +31,12 @@ interface SearchAndFiltersProps {
  */
 export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   search,
-  filters = [],
-  onClearFilters
+  filters = []
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Проверяем есть ли активные фильтры
-  const hasActiveFilters = filters.some(filter => {
-    const value = filter.value;
-    const clearValue = filter.clearValue !== undefined ? filter.clearValue : (Array.isArray(value) ? [] : '');
-    
-    if (Array.isArray(value)) return value.length > 0;
-    return value !== undefined && value !== null && value !== clearValue;
-  });
+
 
   const renderFilter = (filter: FilterConfig) => {
     switch (filter.type) {
@@ -262,21 +253,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
                 {filters.map(renderFilter)}
               </Box>
 
-              {/* Кнопка очистки фильтров */}
-              {hasActiveFilters && onClearFilters && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<ClearIcon />}
-                  onClick={onClearFilters}
-                  sx={{ 
-                    whiteSpace: 'nowrap',
-                    minWidth: isMobile ? '100%' : 'auto'
-                  }}
-                >
-                  Сбросить фильтры
-                </Button>
-              )}
+
             </Stack>
           </Grid>
         )}
