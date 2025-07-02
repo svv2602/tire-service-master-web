@@ -78,7 +78,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
 
   // Обработчики событий
   const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage - 1);
+    setPage(newPage);
   }, []);
 
   const handleSearchChange = useCallback((query: string) => {
@@ -332,7 +332,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
         rows={regions}
         loading={isLoading}
         pagination={{
-          page: page + 1,
+          page: page,
           totalItems,
           rowsPerPage: PER_PAGE,
           onPageChange: handlePageChange

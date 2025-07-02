@@ -254,8 +254,8 @@ const MyReviewsPage: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Pagination
             count={totalPages}
-            page={page + 1}
-            onChange={(newPage: number) => setPage(newPage - 1)}
+            page={page}
+            onChange={(newPage: number) => setPage(newPage)}
             color="primary"
           />
         </Box>

@@ -78,7 +78,7 @@ const ArticlesPageNew: React.FC = () => {
     query: searchQuery || undefined,
     category: selectedCategory || undefined,
     status: selectedStatus || undefined,
-    page: page + 1,
+    page: page,
     per_page: PER_PAGE
   }), [searchQuery, selectedCategory, selectedStatus, page]);
 

@@ -142,7 +142,7 @@ const PartnersPage: React.FC = () => {
   }, []);
 
   const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage - 1);
+    setPage(newPage);
     window.scrollTo(0, 0);
   }, []);
 
@@ -430,7 +430,7 @@ const PartnersPage: React.FC = () => {
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({
-    page: page + 1,
+    page: page,
     rowsPerPage: pageSize,
     totalItems: totalItems,
     onPageChange: handlePageChange,

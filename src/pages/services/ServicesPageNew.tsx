@@ -71,7 +71,7 @@ const ServicesPageNew: React.FC = () => {
   } = useGetServiceCategoriesQuery({
     query: search || undefined,
     active: activeFilter !== '' ? activeFilter === 'true' : undefined,
-    page: page + 1,
+    page: page,
     per_page: PER_PAGE,
   });
 

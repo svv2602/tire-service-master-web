@@ -120,7 +120,7 @@ const ReviewsPage: React.FC = () => {
     search: search || undefined,
     status: statusFilter || undefined,
     service_point_id: servicePointId ? Number(servicePointId) : undefined,
-    page: page + 1,
+    page: page + 1, // Backend ожидает 1-based страницы
     per_page: rowsPerPage,
   } as ReviewFilter);
 
@@ -131,8 +131,8 @@ const ReviewsPage: React.FC = () => {
   const isLoading = reviewsLoading || deleteLoading;
   
   // Обрабатываем данные отзывов от сериализатора
-  const reviews = (Array.isArray(reviewsData) 
-    ? reviewsData.map((review: any) => ({
+  const reviews = (reviewsData?.data 
+    ? reviewsData.data.map((review: any) => ({
         ...review,
         user_id: review.user_id || review.client_id || review.client?.id,
         client_id: review.client_id || review.client?.id,
@@ -153,7 +153,7 @@ const ReviewsPage: React.FC = () => {
       }))
     : []) as ReviewWithClient[];
   
-  const totalItems = reviews.length;
+  const totalItems = reviewsData?.pagination?.total_items || 0;
   const servicePoints = servicePointsData?.data || [];
 
   // Состояние для уведомлений

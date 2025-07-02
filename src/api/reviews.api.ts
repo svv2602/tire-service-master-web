@@ -3,17 +3,27 @@ import { baseApi } from './baseApi';
 import { Review, ApiResponse, ReviewFilter } from '../types/models';
 import { ReviewFormData, ReviewResponseData } from '../types/review';
 
+interface ReviewsApiResponse {
+  data: Review[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total_items: number;
+    total_pages: number;
+  };
+}
+
 export const reviewsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getReviews: build.query<Review[], ReviewFilter>({
+    getReviews: build.query<ReviewsApiResponse, ReviewFilter>({
       query: (filter: ReviewFilter) => ({
         url: 'reviews',
         params: filter,
       }),
-      providesTags: (result: Review[] | undefined) =>
-        result
+      providesTags: (result: ReviewsApiResponse | undefined) =>
+        result?.data
           ? [
-              ...result.map(({ id }) => ({ type: 'Review' as const, id })),
+              ...result.data.map((review: Review) => ({ type: 'Review' as const, id: review.id })),
               'Review',
             ]
           : ['Review'],

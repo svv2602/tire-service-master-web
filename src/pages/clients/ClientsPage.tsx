@@ -75,7 +75,7 @@ const ClientsPage: React.FC = () => {
   // Формируем параметры запроса
   const queryParams = useMemo(() => ({
     query: debouncedSearch,
-    page: page + 1,
+    page: page,
     per_page: PER_PAGE,
     active: showInactive ? undefined : true,
   } as ClientFilter), [debouncedSearch, page, showInactive]);

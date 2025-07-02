@@ -90,7 +90,7 @@ const CarBrandsPage: React.FC = () => {
   } = useGetCarBrandsQuery({
     query: search || undefined,
     is_active: activeFilter !== '' ? activeFilter === 'true' : undefined,
-    page: page + 1,
+    page: page,
     per_page: rowsPerPage,
   });
 

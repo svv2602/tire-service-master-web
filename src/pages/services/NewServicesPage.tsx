@@ -253,7 +253,7 @@ export const ServicesPage: React.FC = () => {
    * Обработчик смены страницы пагинации
    */
   const handlePageChange = (newPage: number) => {
-    setPage(newPage - 1);
+    setPage(newPage);
   };
 
   // Обработка ошибки загрузки
@@ -326,7 +326,7 @@ export const ServicesPage: React.FC = () => {
           <Box sx={tablePageStyles.paginationContainer}>
             <Pagination
               count={Math.ceil(totalCount / PER_PAGE)}
-              page={page + 1}
+              page={page}
               onChange={handlePageChange}
               disabled={isLoading}
             />

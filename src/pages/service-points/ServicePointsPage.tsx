@@ -128,7 +128,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
     partner_id: selectedPartner !== 'all' ? Number(selectedPartner) : undefined,
     is_active: selectedStatus !== 'all' ? (selectedStatus === 'active' ? 'true' : 'false') : undefined,
-    page: page + 1,
+    page: page,
     per_page: PER_PAGE,
   }), [searchQuery, selectedCity, selectedRegion, selectedPartner, selectedStatus, page]);
 
