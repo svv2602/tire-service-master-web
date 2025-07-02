@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useTheme, Avatar, Alert, Chip } from '@mui/material';
-import { Box, Typography, CircularProgress } from '../../components/ui';
+import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Chip } from '../../components/ui';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -13,6 +13,7 @@ import {
   Sort as SortIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +44,21 @@ const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // Состояния для интерактивного статуса
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState<null | HTMLElement>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    booking: Booking | null;
+    newStatus: number;
+    newStatusLabel: string;
+  }>({
+    open: false,
+    booking: null,
+    newStatus: 0,
+    newStatusLabel: '',
+  });
   
   // Состояние для поиска, фильтров, сортировки и пагинации
   const [search, setSearch] = useState('');
@@ -164,7 +180,76 @@ const BookingsPage: React.FC = () => {
     }
   }, []);
 
+  // Обработчики для интерактивного статуса
+  const handleStatusChipClick = useCallback((event: React.MouseEvent<HTMLElement>, booking: Booking) => {
+    setStatusMenuAnchor(event.currentTarget);
+    setSelectedBooking(booking);
+  }, []);
+
+  const handleStatusMenuClose = useCallback(() => {
+    setStatusMenuAnchor(null);
+    setSelectedBooking(null);
+  }, []);
+
+  const handleStatusSelect = useCallback((newStatusId: number) => {
+    if (!selectedBooking) return;
+    
+    const newStatusLabel = getStatusLabel(newStatusId);
+    setConfirmDialog({
+      open: true,
+      booking: selectedBooking,
+      newStatus: newStatusId,
+      newStatusLabel,
+    });
+    handleStatusMenuClose();
+  }, [selectedBooking, getStatusLabel, handleStatusMenuClose]);
+
+  const handleConfirmStatusChange = useCallback(async () => {
+    if (!confirmDialog.booking) return;
+    
+    try {
+      await updateBooking({
+        id: confirmDialog.booking.id.toString(),
+        booking: { 
+          status_id: confirmDialog.newStatus
+        }
+      }).unwrap();
+      
+      setConfirmDialog({
+        open: false,
+        booking: null,
+        newStatus: 0,
+        newStatusLabel: '',
+      });
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  }, [confirmDialog, updateBooking]);
+
+  const handleCancelStatusChange = useCallback(() => {
+    setConfirmDialog({
+      open: false,
+      booking: null,
+      newStatus: 0,
+      newStatusLabel: '',
+    });
+  }, []);
+
   // Обработчики действий
+  const handleStatusChange = useCallback(async (booking: Booking, newStatusId: number) => {
+    try {
+      await updateBooking({
+        id: booking.id.toString(),
+        booking: { 
+          status_id: newStatusId
+        }
+      }).unwrap();
+    } catch (error) {
+      console.error('Ошибка при изменении статуса:', error);
+    }
+  }, [updateBooking]);
+
+  // Устаревший обработчик для совместимости с ActionsMenu
   const handleToggleStatus = useCallback(async (booking: Booking) => {
     try {
       await updateBooking({
@@ -304,7 +389,7 @@ const BookingsPage: React.FC = () => {
 
   // Примечание: сортировка управляется автоматически через PageTable
 
-  // Конфигурация действий для ActionsMenu
+  // Конфигурация действий для ActionsMenu (упрощенная, статус теперь меняется в таблице)
   const bookingActions: ActionItem<Booking>[] = useMemo(() => [
     {
       id: 'edit',
@@ -313,14 +398,6 @@ const BookingsPage: React.FC = () => {
       color: 'primary',
       tooltip: 'Редактировать бронирование',
       onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
-    },
-    {
-      id: 'toggle-status',
-      label: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Подтвердить',
-      icon: (booking: Booking) => booking.status_id === 2 ? <CloseIcon /> : <CheckIcon />,
-      color: (booking: Booking) => booking.status_id === 2 ? 'warning' : 'success',
-      tooltip: (booking: Booking) => booking.status_id === 2 ? 'Отметить как ожидающее' : 'Подтвердить бронирование',
-      onClick: handleToggleStatus,
     },
     {
       id: 'delete',
@@ -337,7 +414,7 @@ const BookingsPage: React.FC = () => {
         cancelLabel: 'Отмена',
       },
     },
-  ], [navigate, handleToggleStatus, handleDeleteBooking]);
+  ], [navigate, handleDeleteBooking]);
 
   // Определение колонок
   const columns: Column<Booking>[] = useMemo(() => [
@@ -441,11 +518,20 @@ const BookingsPage: React.FC = () => {
       minWidth: 120,
       align: 'center',
       sortable: false,
-      format: (value: any, booking: Booking) => (
+              format: (value: any, booking: Booking) => (
         <Chip
           label={getStatusLabel(booking.status_id)}
           color={getStatusColor(booking.status_id)}
           size="small"
+          clickable
+          icon={<ExpandMoreIcon />}
+          onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
+          sx={{ 
+            cursor: 'pointer',
+            '&:hover': {
+              opacity: 0.8,
+            },
+          }}
         />
       ),
     },
@@ -463,7 +549,7 @@ const BookingsPage: React.FC = () => {
         />
       ),
     },
-  ], [tablePageStyles, formatTime, getStatusLabel, getStatusColor, bookingActions]);
+     ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, handleStatusChipClick, bookingActions]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -500,6 +586,86 @@ const BookingsPage: React.FC = () => {
           onPageChange: setPage,
         }}
       />
+      
+      {/* Меню выбора статуса */}
+      <Menu
+        anchorEl={statusMenuAnchor}
+        open={Boolean(statusMenuAnchor)}
+        onClose={handleStatusMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        <MenuItem onClick={() => handleStatusSelect(1)}>
+          <Chip label="В ожидании" color="warning" size="small" sx={{ mr: 1 }} />
+          В ожидании
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusSelect(2)}>
+          <Chip label="Подтверждено" color="primary" size="small" sx={{ mr: 1 }} />
+          Подтверждено
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusSelect(3)}>
+          <Chip label="Отменено" color="error" size="small" sx={{ mr: 1 }} />
+          Отменено
+        </MenuItem>
+        <MenuItem onClick={() => handleStatusSelect(4)}>
+          <Chip label="Завершено" color="success" size="small" sx={{ mr: 1 }} />
+          Завершено
+        </MenuItem>
+      </Menu>
+
+      {/* Диалог подтверждения изменения статуса */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={handleCancelStatusChange}
+        aria-labelledby="confirm-status-change-title"
+        aria-describedby="confirm-status-change-description"
+      >
+        <DialogTitle id="confirm-status-change-title">
+          Подтверждение изменения статуса
+        </DialogTitle>
+        <DialogContent>
+          <Typography id="confirm-status-change-description">
+            Вы действительно хотите изменить статус бронирования на "{confirmDialog.newStatusLabel}"?
+          </Typography>
+          {confirmDialog.booking && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Детали бронирования:
+              </Typography>
+              <Typography variant="body2">
+                <strong>Клиент:</strong> {confirmDialog.booking.service_recipient 
+                  ? `${confirmDialog.booking.service_recipient.first_name} ${confirmDialog.booking.service_recipient.last_name}` 
+                  : 'Данные отсутствуют'}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Дата:</strong> {new Date(confirmDialog.booking.booking_date).toLocaleDateString('ru-RU')}
+              </Typography>
+              <Typography variant="body2">
+                <strong>Время:</strong> {formatTime(confirmDialog.booking.start_time)}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelStatusChange} color="inherit">
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleConfirmStatusChange} 
+            color="primary" 
+            variant="contained"
+            autoFocus
+          >
+            Подтвердить
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
