@@ -666,7 +666,13 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             </Box>
             
             <Chip 
-              label={servicePoint.work_status || (servicePoint.is_active ? 'Працює' : 'Не працює')} 
+              label={
+                servicePoint.work_status === 'working' || servicePoint.work_status === 'Працює'
+                  ? 'Работает'
+                  : servicePoint.work_status === 'Не працює' || servicePoint.work_status === 'not_working'
+                  ? 'Не работает'
+                  : servicePoint.work_status || (servicePoint.is_active !== false ? 'Работает' : 'Не работает')
+              }
               size="small" 
               color={servicePoint.is_active !== false ? 'success' : 'default'}
               variant="outlined"
@@ -688,46 +694,6 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         <Collapse in={true}>
           <Divider sx={{ my: 2 }} />
           
-          {/* Описание */}
-          {servicePoint.description && servicePoint.description.trim() && (
-            <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  cursor: 'pointer' 
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDescriptionExpanded(!descriptionExpanded);
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <DescriptionIcon sx={{ color: theme.palette.primary.main }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Опис
-                  </Typography>
-                </Box>
-                {descriptionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </Box>
-              
-              <Collapse in={descriptionExpanded}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mt: 2, 
-                    color: colors.textPrimary,
-                    lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap'
-                  }}
-                >
-                  {servicePoint.description}
-                </Typography>
-              </Collapse>
-            </Paper>
-          )}
-          
           {/* Доступные категории услуг */}
           <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
             <Box 
@@ -745,7 +711,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BuildIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Доступні категорії послуг ({isLoadingCategories ? '...' : categories.length})
+                  Доступные категории услуг ({isLoadingCategories ? '...' : categories.length})
                 </Typography>
               </Box>
               {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -765,7 +731,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary={category.name}
-                        secondary={`${category.description || 'Опис категорії'} • ${category.services_count || 0} послуг`}
+                        secondary={`${category.description || 'Описание категории'} • ${category.services_count || 0} услуг`}
                         primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -774,7 +740,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                 </List>
               ) : (
                 <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  Категорії послуг не завантажені
+                  Категории услуг не загружены
                 </Typography>
               )}
             </Collapse>
@@ -797,7 +763,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Графік роботи
+                  График работы
                 </Typography>
               </Box>
               {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -858,13 +824,13 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
           </Button>
         )}
         <Box sx={{ flexGrow: 1 }} />
-        {/* Кнопка 'Обрати' */}
+        {/* Кнопка 'Выбрать' */}
         {showSelectButton && (
           <>
             {isSelected ? (
               <Chip
                 icon={<CheckCircleIcon />}
-                label="Обрано"
+                label="Выбрано"
                 color="primary"
                 size="small"
                 variant="filled"
@@ -882,7 +848,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                   '&:hover': { bgcolor: theme.palette.primary.dark }
                 }}
               >
-                Обрати
+                Выбрать
               </Button>
             )}
           </>
