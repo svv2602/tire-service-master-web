@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useTheme, Avatar, Alert } from '@mui/material';
+import { useTheme, Avatar, Alert, Chip } from '@mui/material';
 import { Box, Typography, CircularProgress } from '../../components/ui';
 import {
   Edit as EditIcon,
@@ -206,12 +206,13 @@ const BookingsPage: React.FC = () => {
       label: 'Статус',
       minWidth: 120,
       align: 'center',
-      format: (value: any, booking: Booking) => ({
-        type: 'chip',
-        label: getStatusLabel(booking.status_id),
-        color: getStatusColor(booking.status_id),
-        size: 'small',
-      }),
+      format: (value: any, booking: Booking) => (
+        <Chip
+          label={getStatusLabel(booking.status_id)}
+          color={getStatusColor(booking.status_id)}
+          size="small"
+        />
+      ),
     },
     {
       id: 'actions',
