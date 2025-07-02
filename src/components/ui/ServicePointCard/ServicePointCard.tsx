@@ -94,7 +94,8 @@ const PhotoGallery: React.FC<{
   showCounter?: boolean;
   fallbackIcon?: React.ReactNode;
   servicePointName?: string;
-}> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗', servicePointName }) => {
+  disableGalleryOpen?: boolean;
+}> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗', servicePointName, disableGalleryOpen = false }) => {
   const theme = useTheme();
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
@@ -163,7 +164,7 @@ const PhotoGallery: React.FC<{
               opacity: hasPhotos ? 1 : 0,
             }
           }}
-          onClick={handleOpenModal}
+          onClick={disableGalleryOpen ? undefined : handleOpenModal}
         >
           {hasPhotos ? (
             <CardMedia
@@ -634,6 +635,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         showCounter={true}
         fallbackIcon="🚗"
         servicePointName={servicePoint.name}
+        disableGalleryOpen={true}
       />
 
       <CardContent onClick={showSelectButton ? handleSelect : undefined} sx={{ cursor: showSelectButton ? 'pointer' : 'default' }}>
@@ -682,8 +684,8 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
           )}
         </Box>
 
-        {/* Детальная информация (свернуто по умолчанию) */}
-        <Collapse in={showDetails}>
+        {/* Детальная информация (теперь всегда развернута) */}
+        <Collapse in={true}>
           <Divider sx={{ my: 2 }} />
           
           {/* Описание */}
@@ -830,19 +832,9 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         </Collapse>
       </CardContent>
 
+      {/* CardActions: возвращаем кнопки 'Подробнее' и 'Обрати', но без 'Детальніше'/'Згорнути' */}
       <CardActions sx={{ p: 2, pt: 0 }}>
-        <Button
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowDetails(!showDetails);
-          }}
-          sx={{ color: colors.textSecondary }}
-        >
-          {showDetails ? 'Згорнути' : 'Детальніше'}
-        </Button>
-        
-        {/* Ссылка на детальную страницу */}
+        {/* Кнопка 'Подробнее' */}
         {showDetailsLink && (
           <Button
             size="small"
@@ -865,28 +857,8 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             Подробнее
           </Button>
         )}
-        
         <Box sx={{ flexGrow: 1 }} />
-        
-        {/* Кнопки действий */}
-        {showBookButton && (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<BookIcon />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBook();
-            }}
-            sx={{ 
-              bgcolor: theme.palette.primary.main,
-              '&:hover': { bgcolor: theme.palette.primary.dark }
-            }}
-          >
-            Записатися
-          </Button>
-        )}
-        
+        {/* Кнопка 'Обрати' */}
         {showSelectButton && (
           <>
             {isSelected ? (
