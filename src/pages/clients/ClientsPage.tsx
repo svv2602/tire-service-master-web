@@ -169,6 +169,20 @@ const ClientsPage: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   }, []);
 
+  // Функция для получения инициалов клиента
+  const getClientInitials = useCallback((client: Client): string => {
+    if (client.first_name && client.last_name) {
+      return `${client.first_name.charAt(0)}${client.last_name.charAt(0)}`.toUpperCase();
+    }
+    if (client.first_name) {
+      return client.first_name.charAt(0).toUpperCase();
+    }
+    if (client.last_name) {
+      return client.last_name.charAt(0).toUpperCase();
+    }
+    return 'К'; // К = Клиент
+  }, []);
+
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
     title: 'Клиенты',
@@ -265,16 +279,17 @@ const ClientsPage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar sx={{ 
             opacity: client.is_active ? 1 : 0.5,
-            bgcolor: client.is_active ? theme.palette.primary.main : theme.palette.grey[400]
+            bgcolor: 'primary.main'
           }}>
-            <PersonIcon />
+            {getClientInitials(client)}
           </Avatar>
           <Box>
             <Typography 
               variant="body2" 
               sx={{ 
                 fontWeight: 600,
-                color: client.is_active ? 'text.primary' : 'text.secondary'
+                color: client.is_active ? 'text.primary' : 'text.secondary',
+                wordBreak: 'break-word'
               }}
             >
               {client.first_name} {client.last_name}
@@ -284,7 +299,7 @@ const ClientsPage: React.FC = () => {
                 <EmailIcon sx={{ fontSize: '14px', color: theme.palette.text.secondary }} />
                 <Typography 
                   variant="caption" 
-                  sx={{ color: theme.palette.text.secondary }}
+                  sx={{ color: theme.palette.text.secondary, wordBreak: 'break-word' }}
                 >
                   {client.email}
                 </Typography>
@@ -303,7 +318,7 @@ const ClientsPage: React.FC = () => {
         client.phone ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <PhoneIcon sx={{ fontSize: '16px', color: theme.palette.text.secondary }} />
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
               {client.phone}
             </Typography>
           </Box>
@@ -370,7 +385,7 @@ const ClientsPage: React.FC = () => {
         <ActionsMenu actions={clientActions} item={client} />
       )
     }
-  ], [theme.palette, clientActions]);
+  ], [theme.palette, getClientInitials, clientActions, navigate]);
 
   return (
     <Box sx={tablePageStyles.container}>

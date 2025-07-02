@@ -137,6 +137,20 @@ export const UsersPage: React.FC = () => {
     }
   }, []);
 
+  // Функция для получения инициалов пользователя
+  const getUserInitials = useCallback((user: User): string => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
+    }
+    if (user.first_name) {
+      return user.first_name.charAt(0).toUpperCase();
+    }
+    if (user.last_name) {
+      return user.last_name.charAt(0).toUpperCase();
+    }
+    return 'П'; // П = Пользователь
+  }, []);
+
   // Обработчики событий
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
@@ -286,14 +300,18 @@ export const UsersPage: React.FC = () => {
       minWidth: 200,
       format: (_value: any, row: User) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ width: 32, height: 32, opacity: row.is_active ? 1 : 0.5 }}>
-            <PersonIcon />
+          <Avatar sx={{ 
+            bgcolor: 'primary.main',
+            opacity: row.is_active ? 1 : 0.5 
+          }}>
+            {getUserInitials(row)}
           </Avatar>
           <Box>
             <Typography 
               variant="body2" 
               fontWeight="medium" 
               color={row.is_active ? 'text.primary' : 'text.secondary'}
+              sx={{ wordBreak: 'break-word' }}
             >
               {row.first_name} {row.last_name}
             </Typography>
@@ -313,7 +331,7 @@ export const UsersPage: React.FC = () => {
       wrap: true,
       hideOnMobile: true,
       format: (_value: any, row: User) => (
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
           {row.email}
         </Typography>
       )
@@ -324,7 +342,7 @@ export const UsersPage: React.FC = () => {
       wrap: true,
       hideOnMobile: true,
       format: (_value: any, row: User) => (
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
           {row.phone || 'Не указан'}
         </Typography>
       )
@@ -398,7 +416,7 @@ export const UsersPage: React.FC = () => {
         <ActionsMenu actions={userActions} item={row} menuThreshold={1} />
       )
     }
-  ], [getRoleName, getRoleColor, userActions]);
+  ], [getRoleName, getRoleColor, getUserInitials, userActions]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({

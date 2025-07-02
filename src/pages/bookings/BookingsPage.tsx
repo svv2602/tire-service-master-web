@@ -13,7 +13,7 @@ import {
   Sort as SortIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
-  ExpandMore as ExpandMoreIcon,
+
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,8 @@ import {
   useGetBookingsQuery,
   useDeleteBookingMutation,
   useUpdateBookingMutation,
+  useUpdateBookingStatusMutation,
+  useGetBookingStatusesQuery,
 } from '../../api/bookings.api';
 import { useGetCitiesWithServicePointsQuery } from '../../api/cities.api';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
@@ -108,9 +110,11 @@ const BookingsPage: React.FC = () => {
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({});
   const { data: serviceCategoriesData, isLoading: serviceCategoriesLoading } = useGetServiceCategoriesQuery({});
+  const { data: bookingStatusesData, isLoading: bookingStatusesLoading } = useGetBookingStatusesQuery();
 
   const [deleteBooking, { isLoading: deleteLoading }] = useDeleteBookingMutation();
   const [updateBooking] = useUpdateBookingMutation();
+  const [updateBookingStatus] = useUpdateBookingStatusMutation();
 
   const isLoading = bookingsLoading || deleteLoading;
   const error = bookingsError;
@@ -119,6 +123,7 @@ const BookingsPage: React.FC = () => {
   const cities = citiesData?.data || [];
   const servicePoints = servicePointsData?.data || [];
   const serviceCategories = serviceCategoriesData?.data || [];
+  const bookingStatuses = bookingStatusesData || [];
 
   // Вспомогательные функции
   const formatTime = useCallback((timeString: string): string => {
@@ -161,23 +166,42 @@ const BookingsPage: React.FC = () => {
   }, []);
 
   const getStatusLabel = useCallback((statusId: number): string => {
-    switch (statusId) {
-      case 1: return 'В ожидании';
-      case 2: return 'Подтверждено';
-      case 3: return 'Отменено';
-      case 4: return 'Завершено';
-      default: return `Статус ${statusId}`;
-    }
-  }, []);
+    const status = bookingStatuses.find(s => s.id === statusId);
+    return status?.name || `Статус ${statusId}`;
+  }, [bookingStatuses]);
 
   const getStatusColor = useCallback((statusId: number): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
-    switch (statusId) {
-      case 1: return 'warning';
-      case 2: return 'primary';
-      case 3: return 'error';
-      case 4: return 'success';
+    const status = bookingStatuses.find(s => s.id === statusId);
+    if (!status?.color) return 'default';
+    
+    // Маппинг цветов из API на цвета MUI Chip
+    switch (status.color.toLowerCase()) {
+      case 'orange':
+      case 'warning': return 'warning';
+      case 'blue':
+      case 'primary': return 'primary';
+      case 'red':
+      case 'error': return 'error';
+      case 'green':
+      case 'success': return 'success';
+      case 'info': return 'info';
+      case 'secondary': return 'secondary';
       default: return 'default';
     }
+  }, [bookingStatuses]);
+
+  // Функция для получения инициалов клиента
+  const getClientInitials = useCallback((booking: Booking): string => {
+    if (booking.service_recipient?.first_name && booking.service_recipient?.last_name) {
+      return `${booking.service_recipient.first_name.charAt(0)}${booking.service_recipient.last_name.charAt(0)}`.toUpperCase();
+    }
+    if (booking.service_recipient?.first_name) {
+      return booking.service_recipient.first_name.charAt(0).toUpperCase();
+    }
+    if (booking.service_recipient?.last_name) {
+      return booking.service_recipient.last_name.charAt(0).toUpperCase();
+    }
+    return 'К'; // К = Клиент
   }, []);
 
   // Обработчики для интерактивного статуса
@@ -208,11 +232,9 @@ const BookingsPage: React.FC = () => {
     if (!confirmDialog.booking) return;
     
     try {
-      await updateBooking({
+      await updateBookingStatus({
         id: confirmDialog.booking.id.toString(),
-        booking: { 
-          status_id: confirmDialog.newStatus
-        }
+        status_id: confirmDialog.newStatus
       }).unwrap();
       
       setConfirmDialog({
@@ -224,7 +246,7 @@ const BookingsPage: React.FC = () => {
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
-  }, [confirmDialog, updateBooking]);
+  }, [confirmDialog, updateBookingStatus]);
 
   const handleCancelStatusChange = useCallback(() => {
     setConfirmDialog({
@@ -326,11 +348,9 @@ const BookingsPage: React.FC = () => {
       onChange: (value) => setStatusFilter(value as number | ''),
       options: [
         { value: '', label: 'Все статусы' },
-        { value: 1, label: 'В ожидании' },
-        { value: 2, label: 'Подтверждено' },
-        { value: 3, label: 'Отменено' },
-        { value: 4, label: 'Завершено' },
+        ...bookingStatuses.map(status => ({ value: status.id, label: status.name })),
       ],
+      loading: bookingStatusesLoading,
     },
     {
       id: 'city',
@@ -384,7 +404,8 @@ const BookingsPage: React.FC = () => {
     },
   ], [
     statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter,
-    cities, servicePoints, serviceCategories, citiesLoading, servicePointsLoading, serviceCategoriesLoading
+    cities, servicePoints, serviceCategories, bookingStatuses,
+    citiesLoading, servicePointsLoading, serviceCategoriesLoading, bookingStatusesLoading
   ]);
 
   // Примечание: сортировка управляется автоматически через PageTable
@@ -426,10 +447,10 @@ const BookingsPage: React.FC = () => {
       sortable: false,
       format: (value: any, booking: Booking) => (
         <Box sx={tablePageStyles.avatarContainer}>
-          <Avatar>
-            {booking.service_recipient?.first_name?.charAt(0) || booking.service_recipient?.last_name?.charAt(0) || '?'}
+          <Avatar sx={{ bgcolor: 'primary.main' }}>
+            {getClientInitials(booking)}
           </Avatar>
-          <Typography>
+          <Typography sx={{ wordBreak: 'break-word' }}>
             {booking.service_recipient ? 
               `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` : 
               'Данные отсутствуют'
@@ -447,7 +468,7 @@ const BookingsPage: React.FC = () => {
       format: (value: any, booking: Booking) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <PhoneIcon fontSize="small" color="action" />
-          <Typography variant="body2">
+          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
             {booking.service_recipient?.phone || '-'}
           </Typography>
         </Box>
@@ -462,7 +483,7 @@ const BookingsPage: React.FC = () => {
       format: (value: any, booking: Booking) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocationCityIcon fontSize="small" color="action" />
-          <Typography variant="body2">
+          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
             {booking.service_point?.city?.name || '-'}
           </Typography>
         </Box>
@@ -476,7 +497,7 @@ const BookingsPage: React.FC = () => {
       hideOnMobile: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
           {booking.service_point?.name || '-'}
         </Typography>
       ),
@@ -488,7 +509,7 @@ const BookingsPage: React.FC = () => {
       hideOnMobile: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Typography variant="body2">
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
           {booking.service_category?.name || '-'}
         </Typography>
       ),
@@ -502,10 +523,10 @@ const BookingsPage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ScheduleIcon fontSize="small" color="action" />
           <Box>
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
               {new Date(booking.booking_date).toLocaleDateString('ru-RU')}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
               {formatTime(booking.start_time)}
             </Typography>
           </Box>
@@ -519,20 +540,19 @@ const BookingsPage: React.FC = () => {
       align: 'center',
       sortable: false,
               format: (value: any, booking: Booking) => (
-        <Chip
-          label={getStatusLabel(booking.status_id)}
-          color={getStatusColor(booking.status_id)}
-          size="small"
-          clickable
-          icon={<ExpandMoreIcon />}
-          onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
+        <Typography 
+          variant="body2" 
           sx={{ 
+            wordBreak: 'break-word',
             cursor: 'pointer',
             '&:hover': {
               opacity: 0.8,
             },
           }}
-        />
+          onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
+        >
+          {getStatusLabel(booking.status_id)} ▼
+        </Typography>
       ),
     },
     {
@@ -549,7 +569,7 @@ const BookingsPage: React.FC = () => {
         />
       ),
     },
-     ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, handleStatusChipClick, bookingActions]);
+     ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, getClientInitials, handleStatusChipClick, bookingActions]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -601,54 +621,67 @@ const BookingsPage: React.FC = () => {
           horizontal: 'left',
         }}
       >
-        <MenuItem onClick={() => handleStatusSelect(1)}>
-          <Chip label="В ожидании" color="warning" size="small" sx={{ mr: 1 }} />
-          В ожидании
-        </MenuItem>
-        <MenuItem onClick={() => handleStatusSelect(2)}>
-          <Chip label="Подтверждено" color="primary" size="small" sx={{ mr: 1 }} />
-          Подтверждено
-        </MenuItem>
-        <MenuItem onClick={() => handleStatusSelect(3)}>
-          <Chip label="Отменено" color="error" size="small" sx={{ mr: 1 }} />
-          Отменено
-        </MenuItem>
-        <MenuItem onClick={() => handleStatusSelect(4)}>
-          <Chip label="Завершено" color="success" size="small" sx={{ mr: 1 }} />
-          Завершено
-        </MenuItem>
+        {bookingStatuses.map((status) => (
+          <MenuItem key={status.id} onClick={() => handleStatusSelect(status.id)}>
+            {status.name}
+          </MenuItem>
+        ))}
       </Menu>
 
       {/* Диалог подтверждения изменения статуса */}
       <Dialog
         open={confirmDialog.open}
         onClose={handleCancelStatusChange}
-        aria-labelledby="confirm-status-change-title"
-        aria-describedby="confirm-status-change-description"
+        maxWidth="md"
+        fullWidth
       >
-        <DialogTitle id="confirm-status-change-title">
+        <DialogTitle>
           Подтверждение изменения статуса
         </DialogTitle>
         <DialogContent>
-          <Typography id="confirm-status-change-description">
-            Вы действительно хотите изменить статус бронирования на "{confirmDialog.newStatusLabel}"?
-          </Typography>
           {confirmDialog.booking && (
-            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Детали бронирования:
+            <Box>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Вы действительно хотите изменить статус бронирования на <strong>"{confirmDialog.newStatusLabel}"</strong>?
               </Typography>
-              <Typography variant="body2">
-                <strong>Клиент:</strong> {confirmDialog.booking.service_recipient 
-                  ? `${confirmDialog.booking.service_recipient.first_name} ${confirmDialog.booking.service_recipient.last_name}` 
-                  : 'Данные отсутствуют'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Дата:</strong> {new Date(confirmDialog.booking.booking_date).toLocaleDateString('ru-RU')}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Время:</strong> {formatTime(confirmDialog.booking.start_time)}
-              </Typography>
+              
+              <Box sx={{ 
+                mt: 2, 
+                p: 2, 
+                bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50', 
+                borderRadius: 1,
+                border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300]}`,
+              }}>
+                <Typography variant="body2" sx={{ 
+                  fontWeight: 'bold', 
+                  mb: 1,
+                  color: theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'
+                }}>
+                  📋 Детали бронирования:
+                </Typography>
+                <Box sx={{ pl: 2 }}>
+                  <Typography variant="body2">
+                    • <strong>Клиент:</strong> {confirmDialog.booking.service_recipient 
+                      ? `${confirmDialog.booking.service_recipient.first_name} ${confirmDialog.booking.service_recipient.last_name}` 
+                      : 'Данные отсутствуют'}
+                  </Typography>
+                  <Typography variant="body2">
+                    • <strong>Телефон:</strong> {confirmDialog.booking.service_recipient?.phone || '-'}
+                  </Typography>
+                  <Typography variant="body2">
+                    • <strong>Дата:</strong> {new Date(confirmDialog.booking.booking_date).toLocaleDateString('ru-RU')}
+                  </Typography>
+                  <Typography variant="body2">
+                    • <strong>Время:</strong> {formatTime(confirmDialog.booking.start_time)}
+                  </Typography>
+                  <Typography variant="body2">
+                    • <strong>Сервисная точка:</strong> {confirmDialog.booking.service_point?.name || '-'}
+                  </Typography>
+                  <Typography variant="body2">
+                    • <strong>Тип услуг:</strong> {confirmDialog.booking.service_category?.name || '-'}
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
           )}
         </DialogContent>

@@ -144,6 +144,14 @@ export const bookingsApi = baseApi.injectEndpoints({
       },
       invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
+
+    getBookingStatuses: builder.query<Array<{ id: number; name: string; color?: string }>, void>({
+      query: () => ({
+        url: 'booking_statuses',
+        method: 'GET',
+      }),
+      providesTags: ['Booking'],
+    }),
   }),
 });
 
@@ -159,4 +167,5 @@ export const {
   useUpdateBookingStatusMutation,
   useDeleteBookingMutation,
   useCancelBookingMutation,
+  useGetBookingStatusesQuery,
 } = bookingsApi;

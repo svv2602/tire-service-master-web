@@ -20,7 +20,7 @@ import {
 import { 
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
-import { useCreateBookingMutation, useUpdateBookingMutation, useGetBookingByIdQuery } from '../../api/bookings.api';
+import { useCreateBookingMutation, useUpdateBookingMutation, useGetBookingByIdQuery, useGetBookingStatusesQuery } from '../../api/bookings.api';
 import { 
   BookingStatusEnum, 
   BookingService,
@@ -138,8 +138,9 @@ const BookingFormPage: React.FC = () => {
   const { data: carTypesData, isLoading: carTypesLoading } = useGetCarTypesQuery();
   const { data: serviceCategoriesData, isLoading: serviceCategoriesLoading } = useGetServiceCategoriesQuery({});
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
+  const { data: bookingStatusesData, isLoading: bookingStatusesLoading } = useGetBookingStatusesQuery();
   
-  const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || serviceCategoriesLoading || (isEditMode && bookingLoading) || loading;
+  const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || serviceCategoriesLoading || bookingStatusesLoading || (isEditMode && bookingLoading) || loading;
 
   // ✅ Функция для извлечения времени из полной даты
   const extractTimeFromDateTime = (dateTimeString: string): string => {
@@ -395,6 +396,10 @@ const BookingFormPage: React.FC = () => {
     formik.setFieldValue('notes', event.target.value);
   }, [formik.setFieldValue]);
 
+  const handleStatusChange = useCallback((event: SelectChangeEvent<string>) => {
+    formik.setFieldValue('status_id', Number(event.target.value));
+  }, [formik.setFieldValue]);
+
   // ✅ Обработчик изменения времени начала с автоматическим расчетом времени окончания
   const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const startTime = event.target.value;
@@ -642,6 +647,34 @@ const BookingFormPage: React.FC = () => {
                 )}
               </FormControl>
             </Grid>
+
+            {/* Поле статуса бронирования (только для редактирования) */}
+            {isEditMode && (
+              <Grid item xs={12} md={6}>
+                <FormControl 
+                  fullWidth 
+                  error={formik.touched.status_id && Boolean(formik.errors.status_id)}
+                  sx={textFieldStyles}
+                >
+                  <InputLabel id="status-label">Статус бронирования</InputLabel>
+                  <Select
+                    labelId="status-label"
+                    value={formik.values.status_id?.toString() || ''}
+                    onChange={handleStatusChange}
+                    label="Статус бронирования"
+                  >
+                    {bookingStatusesData?.map((status) => (
+                      <MenuItem key={status.id} value={status.id}>
+                        {status.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.status_id && formik.errors.status_id && (
+                    <FormHelperText>{formik.errors.status_id as string}</FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+            )}
             
             <Grid item xs={12}>
               <Typography variant="subtitle1" sx={{ mt: SIZES.spacing.md, mb: SIZES.spacing.sm }}>
