@@ -384,11 +384,11 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const handleGoToProfile = () => {
     handleSuccessDialogClose();
     if (currentUser) {
-      navigate('/my-bookings');
+      navigate('/client/bookings');
     } else {
       navigate('/client/auth/login', {
         state: { 
-          redirectTo: '/my-bookings',
+          redirectTo: '/client/bookings',
           message: 'Войдите в систему, чтобы просмотреть ваши бронирования'
         }
       });
@@ -559,13 +559,13 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         title="Бронирование создано!"
         message={
           isAuthenticated 
-            ? "Ваше бронирование успешно создано. Вы можете просмотреть его в личном кабинете или создать новое бронирование."
+            ? "Ваше бронирование успешно создано. Вы можете просмотреть его в личном кабинете или вернуться на главную."
             : "Ваше гостевое бронирование успешно создано! Информация о бронировании отправлена на указанный номер телефона."
         }
         primaryButtonText={isAuthenticated ? 'Мои бронирования' : 'На главную'}
-        secondaryButtonText="Создать еще одно"
+        secondaryButtonText="Возврат на главную"
         onPrimaryAction={isAuthenticated ? handleGoToProfile : handleGoHome}
-        onSecondaryAction={handleCreateAnother}
+        onSecondaryAction={handleGoHome}
       />
       
       {/* Диалог существующего пользователя (не используется для гостевых бронирований) */}

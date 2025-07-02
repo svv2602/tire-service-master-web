@@ -55,8 +55,8 @@ export const bookingsApi = baseApi.injectEndpoints({
         method: 'GET',
       }),
       transformResponse: (response: any) => {
-        const transformed = transformPaginatedResponse<Booking>(response);
-        return transformed.data[0];
+        console.log('🔍 BookingById raw response:', response);
+        return response;
       },
       providesTags: (_result, _error, id) => [{ type: 'Booking', id }],
     }),
@@ -120,11 +120,11 @@ export const bookingsApi = baseApi.injectEndpoints({
     cancelBooking: builder.mutation<Booking, string>({
       query: (id) => ({
         url: `bookings/${id}/cancel`,
-        method: 'PATCH',
+        method: 'POST',
       }),
       transformResponse: (response: any) => {
-        const transformed = transformPaginatedResponse<Booking>(response);
-        return transformed.data[0];
+        console.log('🔍 CancelBooking raw response:', response);
+        return response;
       },
       invalidatesTags: (_result, _error, id) => [
         { type: 'Booking', id: 'LIST' },

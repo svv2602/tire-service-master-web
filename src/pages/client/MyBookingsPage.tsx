@@ -96,7 +96,8 @@ const MyBookingsPage: React.FC = () => {
     } else if (newValue === 2) {
       setFilters({ ...filters, status: BookingStatusEnum.COMPLETED });
     } else if (newValue === 3) {
-      setFilters({ ...filters, status: BookingStatusEnum.CANCELLED });
+      // Для отмененных записей - показываем записи с любым статусом отмены
+      setFilters({ ...filters, status: undefined }); // Убираем фильтр статуса, будем фильтровать отдельно
     }
   };
 
@@ -134,7 +135,27 @@ const MyBookingsPage: React.FC = () => {
   const convertedBookings = bookingsData?.data
     ? bookingsData.data
         .map(convertBooking)
-        .filter(booking => booking.status === filters.status)
+        .filter(booking => {
+          // Для вкладки "Отмененные" (tabValue === 3) показываем все отмененные статусы
+          if (tabValue === 3) {
+            return booking.status === BookingStatusEnum.CANCELLED_BY_CLIENT || 
+                   booking.status === BookingStatusEnum.CANCELLED_BY_PARTNER ||
+                   booking.status === BookingStatusEnum.NO_SHOW;
+          }
+          // Для вкладки "Подтвержденные" (tabValue === 1) показываем подтвержденные и в процессе
+          if (tabValue === 1) {
+            return booking.status === BookingStatusEnum.CONFIRMED || 
+                   booking.status === BookingStatusEnum.IN_PROGRESS;
+          }
+          // Для остальных вкладок используем точное соответствие статуса
+          return booking.status === filters.status;
+        })
+        .sort((a, b) => {
+          // Сортировка от самых свежих к старым по дате и времени бронирования
+          const dateTimeA = new Date(`${a.booking_date}T${a.start_time}`).getTime();
+          const dateTimeB = new Date(`${b.booking_date}T${b.start_time}`).getTime();
+          return dateTimeB - dateTimeA; // Убывающий порядок (свежие сверху)
+        })
     : [];
 
   return (
