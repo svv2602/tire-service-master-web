@@ -193,13 +193,45 @@ const BookingDetailsPage: React.FC = () => {
 
   // Форматирование информации о сервисной точке
   const formatServicePointInfo = (servicePoint: DetailedBooking['service_point']) => {
-    if (!servicePoint) return '—';
+    console.log('🏢 Service Point Data:', servicePoint); // Отладочная информация
     
-    const parts = [servicePoint.name];
-    if (servicePoint.address) parts.push(servicePoint.address);
-    if (servicePoint.city?.name) parts.push(`г. ${servicePoint.city.name}`);
+    if (!servicePoint) {
+      console.log('❌ Service point is null/undefined');
+      return '—';
+    }
     
-    return parts.join(', ');
+    // Проверяем, есть ли название
+    if (!servicePoint.name || servicePoint.name.includes('Точка обслуживания #')) {
+      console.log('⚠️ Service point name is generic:', servicePoint.name);
+      // Пытаемся использовать данные из адреса если название не информативно
+      if (servicePoint.address) {
+        const parts = [servicePoint.address];
+        if (servicePoint.city?.name) parts.push(`г. ${servicePoint.city.name}`);
+        return parts.join(', ');
+      }
+    }
+    
+    const parts = [];
+    
+    // Добавляем название если оно есть и информативно
+    if (servicePoint.name && !servicePoint.name.includes('Точка обслуживания #')) {
+      parts.push(servicePoint.name);
+    }
+    
+    // Добавляем адрес
+    if (servicePoint.address) {
+      parts.push(servicePoint.address);
+    }
+    
+    // Добавляем город
+    if (servicePoint.city?.name) {
+      parts.push(`г. ${servicePoint.city.name}`);
+    }
+    
+    const result = parts.join(', ');
+    console.log('🎯 Formatted service point info:', result);
+    
+    return result || 'Сервисная точка';
   };
   
   // Если данные загружаются
