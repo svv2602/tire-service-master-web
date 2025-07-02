@@ -69,13 +69,17 @@ export interface FilterConfig {
   /** Название фильтра */
   label: string;
   /** Тип фильтра */
-  type: 'select' | 'multiselect' | 'date' | 'dateRange' | 'text';
+  type: 'select' | 'multiselect' | 'autocomplete' | 'date' | 'dateRange' | 'text';
   /** Опции для select/multiselect */
   options?: Array<{ value: string | number; label: string }>;
   /** Текущее значение */
   value?: any;
+  /** Значение для сброса (по умолчанию пустая строка) */
+  clearValue?: any;
   /** Плейсхолдер */
   placeholder?: string;
+  /** Деактивирован ли фильтр */
+  disabled?: boolean;
   /** Обработчик изменения */
   onChange: (value: any) => void;
 }

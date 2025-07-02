@@ -13,7 +13,8 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
-  Grid
+  Grid,
+  Autocomplete
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -40,8 +41,10 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
   // Проверяем есть ли активные фильтры
   const hasActiveFilters = filters.some(filter => {
     const value = filter.value;
+    const clearValue = filter.clearValue !== undefined ? filter.clearValue : (Array.isArray(value) ? [] : '');
+    
     if (Array.isArray(value)) return value.length > 0;
-    return value !== undefined && value !== null && value !== '';
+    return value !== undefined && value !== null && value !== clearValue;
   });
 
   const renderFilter = (filter: FilterConfig) => {
@@ -52,16 +55,15 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             key={filter.id} 
             size="small" 
             sx={{ minWidth: 150 }}
+            disabled={filter.disabled}
           >
             <InputLabel>{filter.label}</InputLabel>
             <Select
               value={filter.value || ''}
               label={filter.label}
               onChange={(e) => filter.onChange(e.target.value)}
+              disabled={filter.disabled}
             >
-              <MenuItem value="">
-                <em>Все</em>
-              </MenuItem>
               {filter.options?.map((option: any) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -69,6 +71,40 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               ))}
             </Select>
           </FormControl>
+        );
+
+      case 'autocomplete':
+        return (
+          <Autocomplete
+            key={filter.id}
+            size="small"
+            sx={{ minWidth: 200 }}
+            disabled={filter.disabled}
+            options={filter.options || []}
+            getOptionLabel={(option: any) => option.label || ''}
+            value={filter.options?.find((opt: any) => opt.value === filter.value) || null}
+            onChange={(event, newValue) => {
+              filter.onChange(newValue ? newValue.value : filter.clearValue || '');
+            }}
+            freeSolo
+            onInputChange={(event, newInputValue) => {
+              // Если пользователь вводит текст вручную, используем его как значение
+              if (event && event.type === 'change') {
+                filter.onChange(newInputValue || filter.clearValue || '');
+              }
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={filter.label}
+                placeholder={filter.placeholder}
+                onFocus={(e) => {
+                  // Выделяем весь текст при получении фокуса
+                  e.target.select();
+                }}
+              />
+            )}
+          />
         );
 
       case 'multiselect':
@@ -117,6 +153,10 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             placeholder={filter.placeholder}
             value={filter.value || ''}
             onChange={(e) => filter.onChange(e.target.value)}
+            onFocus={(e) => {
+              // Выделяем весь текст при получении фокуса
+              e.target.select();
+            }}
             sx={{ minWidth: 150 }}
           />
         );
@@ -156,6 +196,10 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
               placeholder={search.placeholder || 'Поиск...'}
               value={search.value}
               onChange={(e) => search.onChange(e.target.value)}
+              onFocus={(e) => {
+                // Выделяем весь текст при получении фокуса
+                e.target.select();
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">

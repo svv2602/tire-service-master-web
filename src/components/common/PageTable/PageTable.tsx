@@ -79,11 +79,8 @@ export const PageTable = <T,>({
   // Обработчик очистки фильтров
   const handleClearFilters = () => {
     filters.forEach((filter: any) => {
-      if (Array.isArray(filter.value)) {
-        filter.onChange([]);
-      } else {
-        filter.onChange('');
-      }
+      const clearValue = filter.clearValue !== undefined ? filter.clearValue : (Array.isArray(filter.value) ? [] : '');
+      filter.onChange(clearValue);
     });
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Box,
@@ -127,20 +127,18 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     city_id: selectedCity !== 'all' ? Number(selectedCity) : undefined,
     region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
     partner_id: selectedPartner !== 'all' ? Number(selectedPartner) : undefined,
+    is_active: selectedStatus !== 'all' ? (selectedStatus === 'active' ? 'true' : 'false') : undefined,
     page: page + 1,
     per_page: PER_PAGE,
-  }), [searchQuery, selectedCity, selectedRegion, selectedPartner, page]);
+  }), [searchQuery, selectedCity, selectedRegion, selectedPartner, selectedStatus, page]);
 
   // API запросы
   const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(
-    { 
-      region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
-      page: 1,
-      per_page: 100
-    },
-    { skip: selectedRegion === 'all' }
-  );
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery({
+    region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
+    page: 1,
+    per_page: 100
+  });
   const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({
     page: 1,
     per_page: 100
@@ -148,23 +146,21 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const { data: servicePointsData, isLoading, error } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint] = useDeleteServicePointMutation();
 
-  // Фильтрация данных
-  const filteredData = useMemo(() => {
-    let filtered = servicePointsData?.data || [];
-
-    // Фильтр по статусу
-    if (selectedStatus !== 'all') {
-      filtered = filtered.filter(sp => 
-        selectedStatus === 'active' ? sp.is_active : !sp.is_active
-      );
+  // Эффект для автоматической установки фильтра партнера при наличии partnerId в URL
+  useEffect(() => {
+    if (partnerId && selectedPartner === 'all') {
+      setSelectedPartner(partnerId);
     }
+  }, [partnerId, selectedPartner]);
 
-    return filtered;
-  }, [servicePointsData?.data, selectedStatus]);
+  // Убираем клиентскую фильтрацию - теперь все фильтры обрабатываются на сервере
+  const filteredData = useMemo(() => {
+    return servicePointsData?.data || [];
+  }, [servicePointsData?.data]);
 
   const totalItems = servicePointsData?.pagination?.total_count || 0;
 
-  // Обработчики событий
+  // Обработчики событий с дополнительной отладкой
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
   }, []);
@@ -194,6 +190,17 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     setSelectedPartner(partner);
     setPage(0);
   }, []);
+
+  // Обработчик сброса всех фильтров
+  const handleClearAllFilters = useCallback(() => {
+    setSearchQuery('');
+    setSelectedRegion('all');
+    setSelectedCity('all');
+    // Если есть partnerId в URL, оставляем его, иначе сбрасываем
+    setSelectedPartner(partnerId || 'all');
+    setSelectedStatus('all');
+    setPage(0);
+  }, [partnerId]);
 
   const showNotification = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setNotification({ open: true, message, severity });
@@ -274,10 +281,18 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     }
   ], [navigate, partnerId, handleSmartDelete]);
 
+  // Получаем информацию о выбранном партнере для заголовка
+  const selectedPartnerInfo = useMemo(() => {
+    if (selectedPartner === 'all' || !partnersData?.data) return null;
+    return partnersData.data.find(partner => partner.id.toString() === selectedPartner);
+  }, [selectedPartner, partnersData]);
+
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
-    title: 'Сервисные точки',
-    subtitle: 'Управление сервисными точками и их настройками',
+    title: selectedPartnerInfo ? `Сервисные точки - ${selectedPartnerInfo.company_name}` : 'Сервисные точки',
+    subtitle: selectedPartnerInfo 
+      ? `Управление сервисными точками партнера "${selectedPartnerInfo.company_name}"`
+      : 'Управление сервисными точками и их настройками',
     actions: [
       {
         label: 'Добавить сервисную точку',
@@ -296,7 +311,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         color: 'primary' as const
       }
     ]
-  }), [navigate, partnerId, showNotification]);
+  }), [navigate, partnerId, showNotification, selectedPartnerInfo]);
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
@@ -310,10 +325,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'region',
       key: 'region',
-      type: 'select' as const,
+      type: 'autocomplete' as const,
       label: 'Регион',
       value: selectedRegion,
       onChange: handleRegionFilterChange,
+      clearValue: 'all', // Значение для сброса
+      placeholder: 'Выберите или введите регион...',
       options: [
         { value: 'all', label: 'Все регионы' },
         ...(regionsData?.data?.map((region) => ({
@@ -325,11 +342,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'city',
       key: 'city',
-      type: 'select' as const,
+      type: 'autocomplete' as const,
       label: 'Город',
       value: selectedCity,
       onChange: handleCityFilterChange,
-      disabled: selectedRegion === 'all',
+      clearValue: 'all', // Значение для сброса
+      placeholder: 'Выберите или введите город...',
       options: [
         { value: 'all', label: 'Все города' },
         ...(citiesData?.data?.map((city) => ({
@@ -341,10 +359,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'partner',
       key: 'partner',
-      type: 'select' as const,
+      type: 'autocomplete' as const,
       label: 'Партнер',
       value: selectedPartner,
       onChange: handlePartnerFilterChange,
+      clearValue: 'all', // Значение для сброса
+      placeholder: 'Выберите или введите партнера...',
       options: [
         { value: 'all', label: 'Все партнеры' },
         ...(partnersData?.data?.map((partner) => ({
@@ -360,6 +380,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       label: 'Статус',
       value: selectedStatus,
       onChange: handleStatusFilterChange,
+      clearValue: 'all', // Значение для сброса
       options: [
         { value: 'all', label: 'Все' },
         { value: 'active', label: 'Активные' },
