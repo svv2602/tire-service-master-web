@@ -19,7 +19,13 @@ import {
   Container,
   Breadcrumbs,
   Link,
-  Collapse
+  Collapse,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  CardActionArea
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -35,7 +41,8 @@ import {
   ExpandLess as ExpandLessIcon,
   CalendarToday as CalendarIcon,
   NavigateNext as NavigateNextIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -44,6 +51,9 @@ import {
   useGetCityByIdQuery,
   useGetServicePointServicesQuery
 } from '../../api';
+import { useGetServicePostsQuery } from '../../api/servicePoints.api';
+import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
+import { ServicePost } from '../../types/models';
 import { getThemeColors } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
 
@@ -184,6 +194,8 @@ const ServicePointDetailPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const [servicesExpanded, setServicesExpanded] = useState(true);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
 
   const { data: servicePointData, isLoading, error } = useGetServicePointByIdQuery(id || '', {
     skip: !id
@@ -199,34 +211,81 @@ const ServicePointDetailPage: React.FC = () => {
     skip: !id
   });
 
-  // Получаем категории услуг с их услугами
+  // Загружаем посты сервисной точки для проверки доступности категорий
+  const { data: servicePostsData, isLoading: isLoadingPosts, error: postsError } = useGetServicePostsQuery(id || '', {
+    skip: !id
+  });
+
+  // Загружаем все категории для получения названий
+  const { data: categoriesResponse } = useGetServiceCategoriesQuery({});
+  
+  console.log('🔍 Загрузка постов:', {
+    id,
+    isLoadingPosts,
+    postsError,
+    servicePostsData,
+    postsWithCategories: servicePostsData?.map(p => ({ 
+      id: p.id, 
+      name: p.name, 
+      category_id: p.service_category_id, 
+      category: p.service_category 
+    }))
+  });
+
+  // Получаем категории на основе активных постов (независимо от услуг)
   const serviceCategories = useMemo(() => {
-    if (!servicesData) return [];
+    if (!servicePostsData || !categoriesResponse?.data) return [];
+    
+    // Получаем список категорий, для которых есть активные посты
+    const activeCategoryIds = new Set<number>();
+    servicePostsData.forEach((post: ServicePost) => {
+      if (post.is_active && post.service_category_id) {
+        activeCategoryIds.add(post.service_category_id);
+      }
+    });
+    
+    console.log('🔧 Активные категории постов:', Array.from(activeCategoryIds));
     
     const categoriesMap = new Map();
-    servicesData.forEach(service => {
-      if (service.category && service.is_available) {
-        const categoryId = service.category.id;
-        if (!categoriesMap.has(categoryId)) {
-          categoriesMap.set(categoryId, {
-            id: service.category.id,
-            name: service.category.name,
-            description: service.category.description,
-            services: []
-          });
-        }
-        categoriesMap.get(categoryId).services.push({
-          id: service.id,
-          name: service.name,
-          description: service.description,
-          price: service.current_price,
-          duration: service.duration
+    
+    // Создаем категории на основе активных постов
+    Array.from(activeCategoryIds).forEach(categoryId => {
+      const categoryInfo = categoriesResponse.data.find(cat => cat.id === categoryId);
+      if (categoryInfo) {
+        categoriesMap.set(categoryId, {
+          id: categoryId,
+          name: categoryInfo.name,
+          description: categoryInfo.description,
+          services: []
         });
       }
     });
     
-    return Array.from(categoriesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [servicesData]);
+    // Затем добавляем услуги, если они есть
+    if (servicesData) {
+      servicesData.forEach(service => {
+        if (service.category && service.is_available) {
+          const categoryId = service.category.id;
+          
+          // Добавляем услуги только в те категории, которые уже есть (на основе постов)
+          if (categoriesMap.has(categoryId)) {
+            categoriesMap.get(categoryId).services.push({
+              id: service.id,
+              name: service.name,
+              description: service.description,
+              price: service.current_price,
+              duration: service.duration
+            });
+          }
+        }
+      });
+    }
+    
+    const result = Array.from(categoriesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    console.log('🎯 Доступные категории для бронирования:', result.map(c => ({ id: c.id, name: c.name, servicesCount: c.services.length })));
+    
+    return result;
+  }, [servicePostsData, categoriesResponse?.data, servicesData]);
 
   // Преобразуем расписание из API в удобный формат
   const schedule: WorkingSchedule[] = useMemo(() => {
@@ -252,22 +311,65 @@ const ServicePointDetailPage: React.FC = () => {
     });
   }, [servicePointData?.working_hours]);
 
-
-
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleBooking = () => {
-    // Переходим на форму бронирования с предзаполненными данными
-    // Шаг 2 - выбор даты и времени (город и точка уже выбраны)
-    navigate('/client/booking', {
-      state: { 
-        servicePointId: parseInt(id || '0'),
-        cityId: servicePointData?.city?.id,
-        step1Completed: true // Указываем что первый шаг уже завершен
-      }
+    console.log('🎯 handleBooking вызван, serviceCategories:', serviceCategories);
+    
+    // Проверяем, есть ли доступные категории услуг
+    if (serviceCategories.length === 0) {
+      console.warn('⚠️ Нет доступных категорий услуг');
+      alert('В данной сервисной точке нет доступных категорий услуг');
+      return;
+    }
+    
+    // Если есть только одна категория, сразу переходим к бронированию
+    if (serviceCategories.length === 1) {
+      console.log('📍 Только одна категория, прямой переход:', serviceCategories[0]);
+      handleCategorySelect(serviceCategories[0]);
+      return;
+    }
+    
+    // Иначе открываем модальное окно для выбора категории
+    console.log('📋 Открываем модальное окно выбора категории');
+    setCategoryModalOpen(true);
+  };
+
+  const handleCategorySelect = (category: ServiceCategory) => {
+    console.log('🎯 handleCategorySelect вызван с категорией:', category);
+    console.log('📍 Текущие данные сервисной точки:', {
+      id: id,
+      cityId: servicePointData?.city?.id,
+      cityName: servicePointData?.city?.name
     });
+    
+    setSelectedCategory(category);
+    setCategoryModalOpen(false);
+    
+    const navigationData = { 
+      servicePointId: parseInt(id || '0'),
+      cityId: servicePointData?.city?.id,
+      cityName: servicePointData?.city?.name,
+      service_category_id: category.id,
+      step1Completed: true // Указываем что первый шаг уже завершен
+    };
+    
+    console.log('🎯 Навигация к /client/booking с данными:', navigationData);
+    console.log('🔄 Выполняем navigate...');
+    
+    // Переходим на форму бронирования с предзаполненными данными
+    navigate('/client/booking', {
+      state: navigationData
+    });
+    
+    console.log('✅ navigate выполнен');
+  };
+
+  const handleCloseModal = () => {
+    setCategoryModalOpen(false);
+    setSelectedCategory(null);
   };
 
   if (error) {
@@ -455,59 +557,86 @@ const ServicePointDetailPage: React.FC = () => {
                         
                         {/* Список услуг в категории */}
                         <Box sx={{ width: 'calc(100% - 36px)', ml: 4.5, overflow: 'hidden' }}>
-                          {category.services.map((service: ServicePointService, serviceIndex: number) => (
-                            <Paper 
-                              key={service.id} 
-                              variant="outlined" 
-                              sx={{ 
-                                p: 2, 
-                                mb: serviceIndex < category.services.length - 1 ? 1 : 0,
-                                bgcolor: 'action.hover',
-                                maxWidth: '100%',
-                                overflow: 'hidden'
-                              }}
-                            >
-                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
-                                <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                  <Typography 
-                                    variant="body2" 
-                                    sx={{ 
-                                      fontWeight: 500, 
-                                      mb: 0.5,
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap'
-                                    }}
-                                  >
-                                    {service.name}
-                                  </Typography>
-                                  {service.description && (
+                          {category.services.length > 0 ? (
+                            category.services.map((service: ServicePointService, serviceIndex: number) => (
+                              <Paper 
+                                key={service.id} 
+                                variant="outlined" 
+                                sx={{ 
+                                  p: 2, 
+                                  mb: serviceIndex < category.services.length - 1 ? 1 : 0,
+                                  bgcolor: 'action.hover',
+                                  maxWidth: '100%',
+                                  overflow: 'hidden'
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                                     <Typography 
-                                      variant="caption" 
-                                      color="text.secondary" 
+                                      variant="body2" 
                                       sx={{ 
-                                        display: 'block', 
-                                        mb: 1,
+                                        fontWeight: 500, 
+                                        mb: 0.5,
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap'
                                       }}
                                     >
-                                      {service.description}
+                                      {service.name}
                                     </Typography>
-                                  )}
-                                  <Typography variant="caption" color="text.secondary">
-                                    Длительность: {service.duration} мин
-                                  </Typography>
+                                    {service.description && (
+                                      <Typography 
+                                        variant="caption" 
+                                        color="text.secondary" 
+                                        sx={{ 
+                                          display: 'block', 
+                                          mb: 1,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap'
+                                        }}
+                                      >
+                                        {service.description}
+                                      </Typography>
+                                    )}
+                                    <Typography variant="caption" color="text.secondary">
+                                      Длительность: {service.duration} мин
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ flexShrink: 0 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                      {service.price} грн
+                                    </Typography>
+                                  </Box>
                                 </Box>
-                                <Box sx={{ flexShrink: 0 }}>
-                                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                    {service.price} грн
+                              </Paper>
+                            ))
+                          ) : (
+                            <Paper 
+                              variant="outlined" 
+                              sx={{ 
+                                p: 2, 
+                                bgcolor: 'warning.light',
+                                border: '1px solid',
+                                borderColor: 'warning.main',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                              }}
+                            >
+                              <PhoneIcon sx={{ color: 'warning.dark', fontSize: '1rem' }} />
+                              <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 500, color: 'warning.dark' }}>
+                                  Услуги в данной категории уточняйте по контактному телефону
+                                </Typography>
+                                {servicePointData.contact_phone && (
+                                  <Typography variant="caption" color="warning.dark">
+                                    Телефон: {servicePointData.contact_phone}
                                   </Typography>
-                                </Box>
+                                )}
                               </Box>
                             </Paper>
-                          ))}
+                          )}
                         </Box>
                       </ListItem>
                       {categoryIndex < serviceCategories.length - 1 && <Divider sx={{ my: 2 }} />}
@@ -641,6 +770,101 @@ const ServicePointDetailPage: React.FC = () => {
           </Button>
         </Grid>
       </Grid>
+
+      {/* Модальное окно выбора категории услуг */}
+      <Dialog
+        open={categoryModalOpen}
+        onClose={handleCloseModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxHeight: '80vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          pb: 1
+        }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+            Выберите категорию услуг
+          </Typography>
+          <IconButton
+            aria-label="закрыть"
+            onClick={handleCloseModal}
+            sx={{ color: 'grey.500' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pt: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Пожалуйста, выберите категорию услуг для записи в {servicePointData?.name}
+          </Typography>
+          
+          <Grid container spacing={2}>
+            {serviceCategories.map((category) => (
+              <Grid item xs={12} sm={6} md={4} key={category.id}>
+                <Card 
+                  sx={{ 
+                    height: '100%',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: theme.shadows[4]
+                    }
+                  }}
+                >
+                  <CardActionArea 
+                    onClick={() => handleCategorySelect(category)}
+                    sx={{ height: '100%', p: 2 }}
+                  >
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <BuildIcon sx={{ color: 'primary.main', mr: 1 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                          {category.name}
+                        </Typography>
+                      </Box>
+                      
+                      {category.description && (
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary" 
+                          sx={{ mb: 2, flex: 1 }}
+                        >
+                          {category.description}
+                        </Typography>
+                      )}
+                      
+                      <Box sx={{ mt: 'auto' }}>
+                        <Chip 
+                          label={`${category.services.length} ${category.services.length === 1 ? 'услуга' : 'услуги'}`}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </Box>
+                    </Box>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+        
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleCloseModal} variant="outlined">
+            Отмена
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
     </ClientLayout>
   );

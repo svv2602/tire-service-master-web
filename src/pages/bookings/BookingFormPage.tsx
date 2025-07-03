@@ -69,7 +69,7 @@ interface BookingDetails {
   start_time: string;
   end_time: string;
   notes: string;
-  status_id: number;
+  status_id: string; // Теперь строка, а не число
   booking_services: BookingServiceDetails[];
 }
 
@@ -770,7 +770,7 @@ const BookingFormPage: React.FC = () => {
                     label="Статус бронирования"
                   >
                     {bookingStatusesData?.map((status) => (
-                      <MenuItem key={status.key} value={status.key}>
+                      <MenuItem key={status.key || status.id} value={status.key || status.id}>
                         {status.name}
                       </MenuItem>
                     ))}

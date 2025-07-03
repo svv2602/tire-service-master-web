@@ -74,7 +74,7 @@ const BookingsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Состояние фильтров
-  const [statusFilter, setStatusFilter] = useState<string | ''>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<number | ''>('');
   const [servicePointFilter, setServicePointFilter] = useState<number | ''>('');
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<number | ''>('');
@@ -182,7 +182,7 @@ const BookingsPage: React.FC = () => {
     if (!status) return 'Неизвестно';
     
     if (typeof status === 'string') {
-      const statusObj = bookingStatuses.find(s => s.key === status);
+      const statusObj = bookingStatuses.find(s => (s.key || s.id) === status);
       return statusObj?.name || status;
     }
     
@@ -203,7 +203,7 @@ const BookingsPage: React.FC = () => {
       statusKey = status.name;
     }
     
-    const statusObj = bookingStatuses.find(s => s.key === statusKey);
+    const statusObj = bookingStatuses.find(s => (s.key || s.id) === statusKey);
     if (!statusObj?.color) return 'default';
     
     // Маппинг цветов из API на цвета MUI Chip
@@ -266,7 +266,7 @@ const BookingsPage: React.FC = () => {
       await updateBooking({
         id: confirmDialog.booking.id.toString(),
         booking: { 
-          status: confirmDialog.newStatus
+          status_id: confirmDialog.newStatus
         }
       }).unwrap();
       
@@ -302,7 +302,7 @@ const BookingsPage: React.FC = () => {
       await updateBooking({
         id: booking.id.toString(),
         booking: { 
-          status: newStatusKey
+          status_id: newStatusKey
         }
       }).unwrap();
     } catch (error) {
@@ -319,7 +319,7 @@ const BookingsPage: React.FC = () => {
       await updateBooking({
         id: booking.id.toString(),
         booking: { 
-          status: newStatus
+          status_id: newStatus
         }
       }).unwrap();
     } catch (error) {
@@ -396,7 +396,7 @@ const BookingsPage: React.FC = () => {
       value: statusFilter,
       onChange: (value) => setStatusFilter(value as string),
       options: bookingStatuses.map(status => ({
-        value: status.key,
+        value: status.key || status.id?.toString() || '',
         label: status.name
       })),
       loading: bookingStatusesLoading,
@@ -697,7 +697,7 @@ const BookingsPage: React.FC = () => {
         }}
       >
         {bookingStatuses.map((status) => (
-          <MenuItem key={status.key} onClick={() => handleStatusSelect(status.key)}>
+          <MenuItem key={status.key || status.id} onClick={() => handleStatusSelect(status.key || status.id.toString())}>
             {status.name}
           </MenuItem>
         ))}

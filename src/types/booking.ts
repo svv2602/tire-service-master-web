@@ -36,6 +36,18 @@ export const BOOKING_STATUSES = {
   NO_SHOW: 'no_show' as const,
 } as const;
 
+// ✅ ВРЕМЕННАЯ СОВМЕСТИМОСТЬ: BookingStatusEnum для старого кода
+export enum BookingStatusEnum {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed', 
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled_by_client', // Для обратной совместимости
+  CANCELLED_BY_CLIENT = 'cancelled_by_client',
+  CANCELLED_BY_PARTNER = 'cancelled_by_partner',
+  NO_SHOW = 'no_show'
+}
+
 export interface ServiceRecipient {
   first_name: string;
   last_name: string;
@@ -108,6 +120,7 @@ export interface BookingFormData {
   start_time: string;
   end_time: string;
   status?: BookingStatus; // ✅ Строковый статус вместо status_id
+  status_id?: BookingStatus; // ✅ Добавлен для совместимости с формами
   total_price?: string;
   payment_method?: string;
   notes?: string;

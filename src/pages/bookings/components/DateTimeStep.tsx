@@ -110,15 +110,49 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [formData.booking_date, formData.start_time, setFormData]);
   
+  // Отладочная информация для API запроса слотов
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const apiParams = {
+        servicePointId: formData.service_point_id?.toString() || '0',
+        categoryId: formData.service_category_id,
+        date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
+      };
+      const skipCondition = !formData.service_point_id || !formData.service_category_id || !selectedDate;
+      
+      console.log('🕒 DateTimeStep API параметры:', {
+        apiParams,
+        skipCondition,
+        formData: {
+          service_point_id: formData.service_point_id,
+          service_category_id: formData.service_category_id,
+          selectedDate: selectedDate
+        }
+      });
+    }
+  }, [formData.service_point_id, formData.service_category_id, selectedDate]);
+
   // Загрузка доступных временных слотов с учетом категории
   const { data: availabilityData, isLoading: isLoadingAvailability, error: availabilityError } = useGetSlotsForCategoryQuery(
     {
-      servicePointId: formData.service_point_id?.toString() || '0',
-      categoryId: formData.service_category_id,
+      servicePointId: Number(formData.service_point_id) || 0,
+      categoryId: Number(formData.service_category_id) || 0,
       date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
     },
     { skip: !formData.service_point_id || !formData.service_category_id || !selectedDate }
   );
+
+  // Отладочная информация для API ответа
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 Данные доступности слотов:', {
+        availabilityData,
+        isLoadingAvailability,
+        availabilityError,
+        selectedDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null
+      });
+    }
+  }, [availabilityData, isLoadingAvailability, availabilityError, selectedDate]);
   
   // Получаем доступные временные слоты
   const availableTimeSlots = useMemo(() => {
@@ -154,7 +188,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }>);
 
     // Преобразуем в массив и сортируем по времени
-    return Object.values(groupedByTime)
+    const processedSlots = Object.values(groupedByTime)
       .map(group => ({
         time: group.time,
         available_posts: group.available_posts,
@@ -163,6 +197,18 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         duration_minutes: group.duration_minutes
       }))
       .sort((a, b) => a.time.localeCompare(b.time));
+
+    // Отладочная информация для обработанных слотов
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⏰ Обработанные временные слоты:', {
+        originalSlots: availabilityData?.slots?.length || 0,
+        groupedByTime: Object.keys(groupedByTime).length,
+        processedSlots: processedSlots.length,
+        slots: processedSlots
+      });
+    }
+
+    return processedSlots;
   }, [availabilityData]);
   
   // Обработчик выбора даты с переходом к выбору времени

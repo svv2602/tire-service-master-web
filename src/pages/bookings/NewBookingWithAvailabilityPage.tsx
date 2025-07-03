@@ -150,8 +150,15 @@ const initialFormData: BookingFormData = {
 };
 
 const NewBookingWithAvailabilityPage: React.FC = () => {
+  console.log('🚀 NewBookingWithAvailabilityPage загружен');
+  
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Отладочная информация в самом начале
+  console.log('📍 location.pathname:', location.pathname);
+  console.log('📍 location.state:', location.state);
+  console.log('📍 location.search:', location.search);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const colors = getThemeColors(theme);
@@ -207,6 +214,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
     const stateData = location.state as any;
+    console.log('🔍 Проверка location.state:', stateData);
     
     if (stateData) {
       console.log('📍 Получены данные из location.state:', stateData);
@@ -233,16 +241,22 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           console.log(`🔧 Предзаполнена категория: ID ${stateData.service_category_id}`);
         }
         
+        console.log('📋 Окончательные данные formData после обновления:', updatedData);
+        
         return updatedData;
       });
       
       // Определяем начальный шаг в зависимости от переданных данных
-      if (stateData.step1Completed || (stateData.cityId && stateData.servicePointId)) {
-        // Если город и сервисная точка уже выбраны, переходим к выбору даты и времени
+      if (stateData.step1Completed || (stateData.cityId && stateData.servicePointId && stateData.service_category_id)) {
+        // Если город, сервисная точка и категория уже выбраны, переходим к выбору даты и времени
         setActiveStep(2);
         console.log('⏭️ Переход на шаг выбора даты и времени (шаг 2)');
+      } else if (stateData.cityId && stateData.servicePointId) {
+        // Если выбраны город и сервисная точка, но не категория, переходим к выбору категории
+        setActiveStep(0);
+        console.log('⏭️ Переход на шаг выбора категории (шаг 0)');
       } else if (stateData.cityId) {
-        // Если выбран только город, переходим к выбору категории
+        // Если выбран только город, переходим к выбору категории и точки
         setActiveStep(0);
         console.log('⏭️ Переход на шаг выбора категории (шаг 0)');
       }

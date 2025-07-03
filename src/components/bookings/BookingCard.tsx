@@ -9,7 +9,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingStatus';
+import { getStatusDisplayName, getStatusChipColor, isCancelledStatus } from '../../utils/bookingStatus';
 
 interface BookingCardProps {
   booking: Booking;

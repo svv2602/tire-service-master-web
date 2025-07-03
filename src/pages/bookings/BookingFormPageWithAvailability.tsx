@@ -249,7 +249,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
           quantity: s.quantity,
           price: s.price
         })),
-        status_id: 1, // статус "Новое"
+        status_id: 'pending', // статус "Новое" - теперь строка
         total_price: totalPrice.toString() // API ожидает строку
       };
 
