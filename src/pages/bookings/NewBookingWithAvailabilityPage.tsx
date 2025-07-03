@@ -563,9 +563,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             : "Ваше гостевое бронирование успешно создано! Информация о бронировании отправлена на указанный номер телефона."
         }
         primaryButtonText={isAuthenticated ? 'Мои бронирования' : 'На главную'}
-        secondaryButtonText="Возврат на главную"
         onPrimaryAction={isAuthenticated ? handleGoToProfile : handleGoHome}
-        onSecondaryAction={handleGoHome}
+        {...(isAuthenticated ? { secondaryButtonText: 'Возврат на главную', onSecondaryAction: handleGoHome } : {})}
       />
       
       {/* Диалог существующего пользователя (не используется для гостевых бронирований) */}

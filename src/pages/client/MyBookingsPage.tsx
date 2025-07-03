@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme, Button } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
@@ -15,9 +15,15 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ClientLayout from '../../components/client/ClientLayout';
+import { convertStatusToEnum, isCancelledStatus } from '../../utils/bookingStatus';
 
 // Функция для конвертации типов Booking
 const convertBooking = (modelBooking: ModelBooking): Booking => {
+  // Извлекаем статус из API ответа
+  const statusName = typeof modelBooking.status === 'string' 
+    ? modelBooking.status 
+    : modelBooking.status?.name || 'pending';
+    
   return {
     id: String(modelBooking.id),
     client_id: String(modelBooking.client_id),
@@ -43,7 +49,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
       quantity: s.quantity,
       price: s.price
     })) || [],
-    status: modelBooking.status_id as BookingStatusEnum,
+    status: convertStatusToEnum({ name: statusName }), // Передаем объект с именем статуса
     scheduled_at: modelBooking.booking_date + ' ' + modelBooking.start_time,
     created_at: modelBooking.created_at,
     updated_at: modelBooking.updated_at
@@ -71,18 +77,48 @@ const MyBookingsPage: React.FC = () => {
   });
 
   // Получаем актуальную информацию о пользователе из API
-  const { data: userFromApi } = useGetCurrentUserQuery(undefined, {
+  const { data: userFromApi, isLoading: isLoadingUser, error: userError } = useGetCurrentUserQuery(undefined, {
     skip: !currentUser // Пропускаем запрос если пользователь не авторизован
   });
 
+  // ✅ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ
+  useEffect(() => {
+    console.log('🔍 MyBookingsPage Debug Info:');
+    console.log('- currentUser (Redux):', currentUser);
+    console.log('- userFromApi (RTK Query):', userFromApi);
+    console.log('- isLoadingUser:', isLoadingUser);
+    console.log('- userError:', userError);
+    console.log('- currentUser?.client_id:', currentUser?.client_id);
+    console.log('- userFromApi?.client_id:', userFromApi?.client_id);
+  }, [currentUser, userFromApi, isLoadingUser, userError]);
+
   // Определяем client_id из API данных или из Redux
   const clientId = userFromApi?.client_id || currentUser?.client_id;
+  
+  // ✅ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ДЛЯ CLIENT_ID
+  useEffect(() => {
+    console.log('🎯 Client ID Resolution:');
+    console.log('- Final clientId:', clientId);
+    console.log('- Type of clientId:', typeof clientId);
+    console.log('- Will skip bookings query?', !clientId);
+  }, [clientId]);
   
   // Запрос на получение записей клиента
   const { data: bookingsData, isLoading, isError, error, refetch } = useGetBookingsByClientQuery(
     clientId ? String(clientId) : '', 
     { skip: !clientId }
   );
+
+  // ✅ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ДЛЯ БРОНИРОВАНИЙ
+  useEffect(() => {
+    console.log('📋 Bookings Query Debug:');
+    console.log('- bookingsData:', bookingsData);
+    console.log('- isLoading:', isLoading);
+    console.log('- isError:', isError);
+    console.log('- error:', error);
+    console.log('- Query clientId parameter:', clientId ? String(clientId) : '');
+    console.log('- Skip condition:', !clientId);
+  }, [bookingsData, isLoading, isError, error, clientId]);
 
   // Обработчик изменения вкладки
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -111,44 +147,45 @@ const MyBookingsPage: React.FC = () => {
     navigate('/client/booking');
   };
 
-  // Если пользователь не авторизован, показываем предложение войти
-  if (!currentUser) {
-    return <LoginPrompt />;
-  }
-
-  // Если нет client_id, показываем сообщение об ошибке
-  if (!clientId) {
-    return (
-      <ClientLayout>
-        <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-          <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Alert severity="error">
-              Не удалось определить профиль клиента. Обратитесь к администратору.
-            </Alert>
-          </Container>
-        </Box>
-      </ClientLayout>
-    );
-  }
-
   // Конвертируем данные бронирований и применяем фильтры
   const convertedBookings = bookingsData?.data
     ? bookingsData.data
-        .map(convertBooking)
+        .map(booking => {
+          const converted = convertBooking(booking);
+          console.log('🔄 Converting booking:', {
+            original: booking,
+            converted: converted,
+            originalStatus: booking.status,
+            convertedStatus: converted.status
+          });
+          return converted;
+        })
         .filter(booking => {
+          console.log('🔍 Filtering booking:', {
+            bookingId: booking.id,
+            bookingStatus: booking.status,
+            tabValue: tabValue,
+            filterStatus: filters.status,
+            isCancelled: isCancelledStatus(booking.status)
+          });
+          
           // Для вкладки "Отмененные" (tabValue === 3) показываем все отмененные статусы
           if (tabValue === 3) {
-            return booking.status === BookingStatusEnum.CANCELLED_BY_CLIENT || 
-                   booking.status === BookingStatusEnum.CANCELLED_BY_PARTNER ||
-                   booking.status === BookingStatusEnum.NO_SHOW;
+            const result = isCancelledStatus(booking.status);
+            console.log('- Tab 3 (Cancelled) filter result:', result);
+            return result;
           }
           // Для вкладки "Подтвержденные" (tabValue === 1) показываем подтвержденные и в процессе
           if (tabValue === 1) {
-            return booking.status === BookingStatusEnum.CONFIRMED || 
+            const result = booking.status === BookingStatusEnum.CONFIRMED || 
                    booking.status === BookingStatusEnum.IN_PROGRESS;
+            console.log('- Tab 1 (Confirmed) filter result:', result);
+            return result;
           }
           // Для остальных вкладок используем точное соответствие статуса
-          return booking.status === filters.status;
+          const result = booking.status === filters.status;
+          console.log('- Default filter result:', result, `(${booking.status} === ${filters.status})`);
+          return result;
         })
         .sort((a, b) => {
           // Сортировка от самых свежих к старым по дате и времени бронирования
@@ -158,6 +195,54 @@ const MyBookingsPage: React.FC = () => {
         })
     : [];
 
+  // ✅ ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ДЛЯ РЕЗУЛЬТАТОВ ФИЛЬТРАЦИИ
+  useEffect(() => {
+    console.log('📊 Bookings Filter Results:');
+    console.log('- Raw bookings count:', bookingsData?.data?.length || 0);
+    console.log('- Filtered bookings count:', convertedBookings.length);
+    console.log('- Current tab:', tabValue);
+    console.log('- Current filter status:', filters.status);
+    console.log('- Filtered bookings:', convertedBookings);
+  }, [bookingsData, convertedBookings, tabValue, filters.status]);
+
+  // Если пользователь не авторизован, показываем предложение войти
+  if (!currentUser) {
+    return <LoginPrompt />;
+  }
+
+  // Если нет client_id, показываем сообщение об ошибке с отладочной информацией
+  if (!clientId) {
+    return (
+      <ClientLayout>
+        <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+          <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Alert severity="error">
+              <Typography variant="h6" gutterBottom>
+                Не удалось определить профиль клиента
+              </Typography>
+              <Typography variant="body2" component="div">
+                Отладочная информация:
+                <br />• currentUser: {currentUser ? 'есть' : 'нет'}
+                <br />• currentUser.client_id: {currentUser?.client_id || 'не задан'}
+                <br />• userFromApi: {userFromApi ? 'есть' : 'нет'}
+                <br />• userFromApi.client_id: {userFromApi?.client_id || 'не задан'}
+                <br />• isLoadingUser: {isLoadingUser ? 'да' : 'нет'}
+                <br />• userError: {userError ? JSON.stringify(userError) : 'нет'}
+              </Typography>
+              <Button 
+                variant="outlined" 
+                onClick={() => window.location.reload()} 
+                sx={{ mt: 2 }}
+              >
+                Перезагрузить страницу
+              </Button>
+            </Alert>
+          </Container>
+        </Box>
+      </ClientLayout>
+    );
+  }
+
   return (
     <ClientLayout>
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
@@ -165,7 +250,7 @@ const MyBookingsPage: React.FC = () => {
           {/* Заголовок с кнопкой создания записи */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h4" component="h1">
-              {t('Мои записи')}
+              {t('Мои записи')} (Client ID: {clientId})
             </Typography>
             
             <Button
@@ -205,10 +290,19 @@ const MyBookingsPage: React.FC = () => {
             {isLoading ? (
               <Box display="flex" justifyContent="center" my={4}>
                 <CircularProgress />
+                <Typography sx={{ ml: 2 }}>
+                  Загружаем бронирования для клиента {clientId}...
+                </Typography>
               </Box>
             ) : isError ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {t('Произошла ошибка при загрузке записей')}
+                <br />
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Ошибка: {error ? JSON.stringify(error) : 'Неизвестная ошибка'}
+                  <br />
+                  Client ID: {clientId}
+                </Typography>
                 <Button 
                   variant="outlined" 
                   size="small" 
@@ -232,6 +326,10 @@ const MyBookingsPage: React.FC = () => {
                   {tabValue === 1 && 'У вас нет подтвержденных записей'}
                   {tabValue === 2 && 'У вас нет завершенных записей'}
                   {tabValue === 3 && 'У вас нет отмененных записей'}
+                  <br />
+                  Client ID: {clientId}
+                  <br />
+                  Всего записей в ответе: {bookingsData?.data?.length || 0}
                 </Typography>
                 <Button
                   variant="contained"

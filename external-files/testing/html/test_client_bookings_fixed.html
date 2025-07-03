@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Исправление отображения бронирований клиента</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        .status.warning { background-color: #fff3cd; color: #856404; }
+        .status.info { background-color: #d1ecf1; color: #0c5460; }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+        
+        .api-response {
+            background-color: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .fix-description {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .test-result {
+            background-color: #f0f8ff;
+            border: 2px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background-color: #0056b3;
+        }
+        
+        .button.secondary {
+            background-color: #6c757d;
+        }
+        
+        .button.secondary:hover {
+            background-color: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Исправление проблемы с отображением бронирований клиента</h1>
+        
+        <div class="fix-description">
+            <h3>Проблема и решение:</h3>
+            <p><strong>Проблема:</strong> Бронирования клиента не отображались в личном кабинете из-за несоответствия ID статусов между фронтендом и бэкендом.</p>
+            <p><strong>Решение:</strong> Изменили систему статусов с жестко заданных ID на гибкую систему с названиями статусов.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="step">
+            <h3>Шаг 1: Авторизация клиента</h3>
+            <p>Авторизуемся как клиент для получения доступа к API:</p>
+            <div class="code-block">
+                POST /api/v1/auth/login
+                {
+                  "auth": {
+                    "email": "client@test.com",
+                    "password": "client123"
+                  }
+                }
+            </div>
+            <button class="button" onclick="loginClient()">Выполнить авторизацию</button>
+            <div id="login-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 2: Получение данных пользователя</h3>
+            <p>Получаем информацию о текущем пользователе и его client_id:</p>
+            <div class="code-block">
+                GET /api/v1/auth/me
+            </div>
+            <button class="button" onclick="getCurrentUser()">Получить данные пользователя</button>
+            <div id="user-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 3: Получение статусов бронирований</h3>
+            <p>Проверяем, какие статусы доступны в системе:</p>
+            <div class="code-block">
+                GET /api/v1/booking_statuses
+            </div>
+            <button class="button" onclick="getBookingStatuses()">Получить статусы</button>
+            <div id="statuses-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 4: Получение бронирований клиента</h3>
+            <p>Получаем бронирования для клиента с ID, полученным на шаге 2:</p>
+            <div class="code-block">
+                GET /api/v1/clients/{client_id}/bookings
+            </div>
+            <button class="button" onclick="getClientBookings()">Получить бронирования</button>
+            <div id="bookings-result"></div>
+        </div>
+
+        <div class="step">
+            <h3>Шаг 5: Тестирование фронтенда</h3>
+            <p>Открыть страницу личного кабинета клиента и проверить отображение бронирований:</p>
+            <div class="code-block">
+                URL: http://localhost:3008/client/bookings
+            </div>
+            <button class="button" onclick="openClientBookings()">Открыть личный кабинет</button>
+            
+            <div class="test-result">
+                <h4>Ожидаемый результат:</h4>
+                <ul>
+                    <li>✅ Страница загружается без ошибок</li>
+                    <li>✅ Отображается Client ID в заголовке</li>
+                    <li>✅ Показывается список бронирований</li>
+                    <li>✅ Бронирование отображается на правильной вкладке (Предстоящие для статуса "В ожидании")</li>
+                    <li>✅ В консоли видны отладочные сообщения с данными</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>📊 Техническая информация об исправлении</h2>
+        
+        <div class="fix-description">
+            <h3>Изменения в коде:</h3>
+            
+            <h4>1. Обновлен BookingStatusEnum (types/booking.ts):</h4>
+            <div class="code-block">
+// Было (жестко заданные ID):
+export enum BookingStatusEnum {
+  PENDING = 1,
+  CONFIRMED = 2,
+  // ...
+}
+
+// Стало (названия статусов):
+export enum BookingStatusEnum {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  // ...
+}
+            </div>
+            
+            <h4>2. Создана утилита для работы со статусами (utils/bookingStatus.ts):</h4>
+            <div class="code-block">
+export const convertStatusToEnum = (statusData: any): BookingStatusEnum => {
+  const statusName = statusData.name.toLowerCase();
+  switch (statusName) {
+    case 'в ожидании':
+    case 'pending':
+      return BookingStatusEnum.PENDING;
+    // ...
+  }
+};
+            </div>
+            
+            <h4>3. Обновлена функция convertBooking в MyBookingsPage.tsx:</h4>
+            <div class="code-block">
+// Используем утилитарную функцию для преобразования статуса
+status: convertStatusToEnum(modelBooking.status)
+            </div>
+            
+            <h4>4. Улучшена логика фильтрации:</h4>
+            <div class="code-block">
+// Используем утилиты для проверки статусов
+if (tabValue === 3) {
+  return isCancelledStatus(booking.status);
+}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        let clientId = null;
+
+        async function makeRequest(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                },
+                credentials: 'include'
+            };
+            
+            const response = await fetch(`http://localhost:8000/api/v1${url}`, {
+                ...defaultOptions,
+                ...options
+            });
+            
+            return response;
+        }
+
+        async function loginClient() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<div class="status info">Выполняется авторизация...</div>';
+            
+            try {
+                const response = await makeRequest('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'client@test.com',
+                            password: 'client123'
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.tokens.access;
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Авторизация успешна</div>
+                        <div class="api-response">
+                            <strong>Пользователь:</strong> ${data.user.first_name} ${data.user.last_name}<br>
+                            <strong>Email:</strong> ${data.user.email}<br>
+                            <strong>Роль:</strong> ${data.user.role}<br>
+                            <strong>ID:</strong> ${data.user.id}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Ошибка авторизации: ${data.error || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        async function getCurrentUser() {
+            const resultDiv = document.getElementById('user-result');
+            resultDiv.innerHTML = '<div class="status info">Получение данных пользователя...</div>';
+            
+            try {
+                const response = await makeRequest('/auth/me');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    clientId = data.user.client_id;
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Данные пользователя получены</div>
+                        <div class="api-response">
+                            <strong>User ID:</strong> ${data.user.id}<br>
+                            <strong>Client ID:</strong> ${data.user.client_id}<br>
+                            <strong>Имя:</strong> ${data.user.first_name} ${data.user.last_name}<br>
+                            <strong>Телефон:</strong> ${data.user.phone}<br>
+                            <strong>Email:</strong> ${data.user.email}<br>
+                            <strong>Роль:</strong> ${data.user.role}<br>
+                            ${data.client ? `<strong>Всего бронирований:</strong> ${data.client.total_bookings}` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Ошибка получения данных: ${data.error || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        async function getBookingStatuses() {
+            const resultDiv = document.getElementById('statuses-result');
+            resultDiv.innerHTML = '<div class="status info">Получение статусов...</div>';
+            
+            try {
+                const response = await makeRequest('/booking_statuses');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const statusesHtml = data.map(status => 
+                        `<div style="margin: 5px 0; padding: 5px; background: ${status.color}20; border-left: 3px solid ${status.color};">
+                            <strong>ID ${status.id}:</strong> ${status.name} (${status.description})
+                        </div>`
+                    ).join('');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="status success">✅ Статусы получены</div>
+                        <div class="api-response">
+                            <strong>Доступные статусы:</strong><br>
+                            ${statusesHtml}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Ошибка получения статусов: ${data.error || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        async function getClientBookings() {
+            const resultDiv = document.getElementById('bookings-result');
+            
+            if (!clientId) {
+                resultDiv.innerHTML = '<div class="status warning">⚠️ Сначала получите данные пользователя (Шаг 2)</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="status info">Получение бронирований...</div>';
+            
+            try {
+                const response = await makeRequest(`/clients/${clientId}/bookings`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.data && data.data.length > 0) {
+                        const bookingsHtml = data.data.map(booking => 
+                            `<div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <strong>Бронирование #${booking.id}</strong><br>
+                                <strong>Дата:</strong> ${booking.booking_date}<br>
+                                <strong>Время:</strong> ${booking.start_time}<br>
+                                <strong>Статус ID:</strong> ${booking.status_id}<br>
+                                <strong>Статус:</strong> ${booking.status ? booking.status.name : 'Не указан'}<br>
+                                <strong>Сервисная точка:</strong> ${booking.service_point ? booking.service_point.name : 'Не указана'}<br>
+                                <strong>Получатель:</strong> ${booking.service_recipient ? booking.service_recipient.full_name : 'Не указан'}
+                            </div>`
+                        ).join('');
+                        
+                        resultDiv.innerHTML = `
+                            <div class="status success">✅ Бронирования получены (${data.data.length})</div>
+                            <div class="api-response">
+                                ${bookingsHtml}
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="status warning">⚠️ У клиента нет бронирований</div>
+                            <div class="api-response">
+                                Ответ API: <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML = `<div class="status error">❌ Ошибка получения бронирований: ${data.error || 'Неизвестная ошибка'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="status error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        function openClientBookings() {
+            window.open('http://localhost:3008/client/bookings', '_blank');
+        }
+
+        // Автоматически выполняем первые шаги при загрузке страницы
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                loginClient().then(() => {
+                    setTimeout(() => {
+                        getCurrentUser().then(() => {
+                            setTimeout(() => {
+                                getBookingStatuses();
+                            }, 1000);
+                        });
+                    }, 1000);
+                });
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

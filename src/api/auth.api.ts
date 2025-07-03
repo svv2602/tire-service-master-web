@@ -164,6 +164,28 @@ export const authApi = baseApi.injectEndpoints({
         }
       },
     }),
+
+    // Смена пароля пользователя
+    changePassword: builder.mutation<CurrentUserResponse, { id: number; password: string; password_confirmation: string }>({
+      query: ({ id, password, password_confirmation }) => ({
+        url: `users/${id}`,
+        method: 'PUT',
+        body: { user: { password, password_confirmation } },
+        credentials: 'include',
+      }),
+      transformResponse: (response: { user: CurrentUserResponse }) => {
+        console.log('🔄 Пароль успешно изменён:', response);
+        return response.user;
+      },
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('❌ Ошибка смены пароля:', response);
+        return {
+          status: response.status,
+          data: response.data?.errors || response.data?.error || 'Ошибка смены пароля'
+        };
+      },
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
@@ -174,4 +196,5 @@ export const {
   useRefreshTokenMutation,
   useLogoutMutation,
   useUpdateProfileMutation,
+  useChangePasswordMutation,
 } = authApi; 

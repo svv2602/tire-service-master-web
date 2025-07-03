@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отладка API клиентских бронирований</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .response {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .info { border-left: 4px solid #007bff; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .highlight { background: #fff3cd; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Отладка API клиентских бронирований</h1>
+        <p>Проверяем, почему не отображаются бронирования в личном кабинете клиента</p>
+    </div>
+
+    <div class="container step info">
+        <h3>Шаг 1: Авторизация клиента</h3>
+        <button onclick="loginClient()">Войти как client@test.com</button>
+        <div id="login-response" class="response"></div>
+    </div>
+
+    <div class="container step info">
+        <h3>Шаг 2: Получение данных текущего пользователя</h3>
+        <button onclick="getCurrentUser()" disabled id="get-user-btn">Получить данные пользователя (/auth/me)</button>
+        <div id="user-response" class="response"></div>
+    </div>
+
+    <div class="container step info">
+        <h3>Шаг 3: Получение бронирований клиента</h3>
+        <button onclick="getClientBookings()" disabled id="get-bookings-btn">Получить бронирования (/clients/{id}/bookings)</button>
+        <div id="bookings-response" class="response"></div>
+    </div>
+
+    <div class="container step info">
+        <h3>Шаг 4: Проверка фронтенд API</h3>
+        <button onclick="testFrontendAPI()" disabled id="test-frontend-btn">Тестировать фронтенд API</button>
+        <div id="frontend-response" class="response"></div>
+    </div>
+
+    <script>
+        let accessToken = '';
+        let clientId = '';
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const FRONTEND_BASE = 'http://localhost:3008';
+
+        async function loginClient() {
+            const loginBtn = document.querySelector('button');
+            const responseDiv = document.getElementById('login-response');
+            
+            try {
+                loginBtn.disabled = true;
+                responseDiv.textContent = 'Выполняется вход...';
+                
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'client@test.com',
+                            password: 'client123'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    accessToken = data.tokens.access;
+                    responseDiv.textContent = `✅ Успешная авторизация!\n\nПользователь: ${data.user.first_name} ${data.user.last_name}\nEmail: ${data.user.email}\nРоль: ${data.user.role}\nТокен: ${accessToken.substring(0, 50)}...\n\nПолный ответ:\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step success';
+                    
+                    // Активируем следующую кнопку
+                    document.getElementById('get-user-btn').disabled = false;
+                } else {
+                    responseDiv.textContent = `❌ Ошибка авторизации: ${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+                responseDiv.parentElement.className = 'container step error';
+            } finally {
+                loginBtn.disabled = false;
+            }
+        }
+
+        async function getCurrentUser() {
+            const btn = document.getElementById('get-user-btn');
+            const responseDiv = document.getElementById('user-response');
+            
+            try {
+                btn.disabled = true;
+                responseDiv.textContent = 'Получение данных пользователя...';
+                
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    clientId = data.user.client_id;
+                    responseDiv.textContent = `✅ Данные пользователя получены!\n\nUser ID: ${data.user.id}\nClient ID: ${data.user.client_id}\nИмя: ${data.user.first_name} ${data.user.last_name}\nТелефон: ${data.user.phone}\nEmail: ${data.user.email}\n\nИнформация о клиенте:\nВсего бронирований: ${data.client?.total_bookings || 'N/A'}\nЗавершенных: ${data.client?.completed_bookings || 'N/A'}\n\nПолный ответ:\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step success';
+                    
+                    // Активируем следующую кнопку
+                    document.getElementById('get-bookings-btn').disabled = false;
+                } else {
+                    responseDiv.textContent = `❌ Ошибка получения данных: ${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+                responseDiv.parentElement.className = 'container step error';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function getClientBookings() {
+            const btn = document.getElementById('get-bookings-btn');
+            const responseDiv = document.getElementById('bookings-response');
+            
+            try {
+                btn.disabled = true;
+                responseDiv.textContent = 'Получение бронирований клиента...';
+                
+                const response = await fetch(`${API_BASE}/clients/${clientId}/bookings`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const bookings = data.data || [];
+                    responseDiv.textContent = `✅ Бронирования получены!\n\nКоличество: ${bookings.length}\nClient ID: ${clientId}\n\n`;
+                    
+                    if (bookings.length > 0) {
+                        bookings.forEach((booking, index) => {
+                            responseDiv.textContent += `Бронирование ${index + 1}:\n`;
+                            responseDiv.textContent += `- ID: ${booking.id}\n`;
+                            responseDiv.textContent += `- Дата: ${booking.booking_date}\n`;
+                            responseDiv.textContent += `- Время: ${booking.start_time}\n`;
+                            responseDiv.textContent += `- Статус: ${booking.status?.name || 'N/A'}\n`;
+                            responseDiv.textContent += `- Сервисная точка: ${booking.service_point?.name || 'N/A'}\n`;
+                            responseDiv.textContent += `- Получатель: ${booking.service_recipient?.full_name || 'N/A'}\n\n`;
+                        });
+                    } else {
+                        responseDiv.textContent += '⚠️ Бронирований не найдено.\n\n';
+                    }
+                    
+                    responseDiv.textContent += `Полный ответ:\n${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step success';
+                    
+                    // Активируем следующую кнопку
+                    document.getElementById('test-frontend-btn').disabled = false;
+                } else {
+                    responseDiv.textContent = `❌ Ошибка получения бронирований: ${JSON.stringify(data, null, 2)}`;
+                    responseDiv.parentElement.className = 'container step error';
+                }
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+                responseDiv.parentElement.className = 'container step error';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testFrontendAPI() {
+            const btn = document.getElementById('test-frontend-btn');
+            const responseDiv = document.getElementById('frontend-response');
+            
+            try {
+                btn.disabled = true;
+                responseDiv.textContent = 'Тестирование фронтенд API...';
+                
+                // Тестируем фронтенд страницу
+                responseDiv.textContent = `🔍 Анализ проблемы:\n\n`;
+                responseDiv.textContent += `1. ✅ Backend API работает корректно\n`;
+                responseDiv.textContent += `2. ✅ Авторизация проходит успешно\n`;
+                responseDiv.textContent += `3. ✅ Client ID получен: ${clientId}\n`;
+                responseDiv.textContent += `4. ✅ Бронирования возвращаются из API\n\n`;
+                
+                responseDiv.textContent += `🚨 ВОЗМОЖНЫЕ ПРИЧИНЫ ПРОБЛЕМЫ НА ФРОНТЕНДЕ:\n\n`;
+                responseDiv.textContent += `A) Проблема с cookie-based авторизацией в браузере\n`;
+                responseDiv.textContent += `B) Неправильная передача client_id в useGetBookingsByClientQuery\n`;
+                responseDiv.textContent += `C) Проблема с transformResponse в RTK Query\n`;
+                responseDiv.textContent += `D) Проблема с CORS или credentials в запросах\n\n`;
+                
+                responseDiv.textContent += `📋 РЕКОМЕНДАЦИИ ДЛЯ ИСПРАВЛЕНИЯ:\n\n`;
+                responseDiv.textContent += `1. Проверить консоль браузера на странице /client/bookings\n`;
+                responseDiv.textContent += `2. Проверить Network tab для запроса к /clients/${clientId}/bookings\n`;
+                responseDiv.textContent += `3. Убедиться, что cookies передаются в запросах\n`;
+                responseDiv.textContent += `4. Проверить, что client_id корректно извлекается из useGetCurrentUserQuery\n`;
+                responseDiv.textContent += `5. Добавить отладочные console.log в MyBookingsPage.tsx\n\n`;
+                
+                responseDiv.textContent += `🔗 Ссылки для тестирования:\n`;
+                responseDiv.textContent += `- Фронтенд: ${FRONTEND_BASE}/client/bookings\n`;
+                responseDiv.textContent += `- API: ${API_BASE}/clients/${clientId}/bookings\n`;
+                
+                responseDiv.parentElement.className = 'container step info';
+                
+            } catch (error) {
+                responseDiv.textContent = `❌ Ошибка: ${error.message}`;
+                responseDiv.parentElement.className = 'container step error';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html> 

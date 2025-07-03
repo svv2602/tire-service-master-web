@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест бронирований для client321@test.com</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест бронирований для client321@test.com</h1>
+
+    <div class="test-section">
+        <h2>1. Авторизация</h2>
+        <button onclick="testLogin()">Войти как client321@test.com</button>
+        <div id="loginResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Получение данных пользователя</h2>
+        <button onclick="testGetCurrentUser()">Получить данные пользователя</button>
+        <div id="userResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Получение бронирований</h2>
+        <button onclick="testGetBookings()">Получить бронирования</button>
+        <div id="bookingsResult" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Тест API напрямую</h2>
+        <button onclick="testDirectAPI()">Прямой запрос к API</button>
+        <div id="directResult" class="log"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authCookies = '';
+
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            element.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('loginResult', 'Отправляем запрос на авторизацию...');
+                
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'client321@test.com',
+                            password: 'client321'
+                        }
+                    })
+                });
+
+                log('loginResult', `Статус ответа: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('loginResult', '✅ Авторизация успешна!', 'success');
+                    log('loginResult', `Пользователь: ${data.user.first_name} ${data.user.last_name}`);
+                    log('loginResult', `Email: ${data.user.email}`);
+                    log('loginResult', `Client ID: ${data.user.client_id || 'не задан'}`);
+                    log('loginResult', `Роль: ${data.user.role}`);
+                    
+                    // Сохраняем куки для последующих запросов
+                    const setCookieHeader = response.headers.get('Set-Cookie');
+                    if (setCookieHeader) {
+                        authCookies = setCookieHeader;
+                        log('loginResult', 'Куки сохранены для последующих запросов');
+                    }
+                } else {
+                    log('loginResult', `❌ Ошибка авторизации: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log('loginResult', `❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetCurrentUser() {
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('userResult', 'Получаем данные текущего пользователя...');
+                
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                log('userResult', `Статус ответа: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('userResult', '✅ Данные пользователя получены!', 'success');
+                    log('userResult', `JSON ответ: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const errorData = await response.json();
+                    log('userResult', `❌ Ошибка: ${JSON.stringify(errorData)}`, 'error');
+                }
+            } catch (error) {
+                log('userResult', `❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetBookings() {
+            const resultDiv = document.getElementById('bookingsResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('bookingsResult', 'Получаем бронирования для клиента 28...');
+                
+                const response = await fetch(`${API_BASE}/clients/28/bookings`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                log('bookingsResult', `Статус ответа: ${response.status}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('bookingsResult', '✅ Бронирования получены!', 'success');
+                    log('bookingsResult', `Количество бронирований: ${data.data ? data.data.length : 0}`);
+                    log('bookingsResult', `JSON ответ: ${JSON.stringify(data, null, 2)}`);
+                } else {
+                    const errorData = await response.json();
+                    log('bookingsResult', `❌ Ошибка: ${JSON.stringify(errorData)}`, 'error');
+                }
+            } catch (error) {
+                log('bookingsResult', `❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('directResult');
+            resultDiv.innerHTML = '';
+            
+            try {
+                log('directResult', 'Проверяем, существует ли бронирование ID 28...');
+                
+                // Сначала проверим, есть ли бронирование с ID 28
+                const bookingResponse = await fetch(`${API_BASE}/bookings/28`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                log('directResult', `Статус ответа для booking/28: ${bookingResponse.status}`);
+                
+                if (bookingResponse.ok) {
+                    const bookingData = await bookingResponse.json();
+                    log('directResult', '✅ Бронирование найдено!', 'success');
+                    log('directResult', `Бронирование: ${JSON.stringify(bookingData, null, 2)}`);
+                } else {
+                    const errorData = await bookingResponse.json();
+                    log('directResult', `❌ Бронирование не найдено: ${JSON.stringify(errorData)}`, 'error');
+                }
+
+                // Теперь проверим все бронирования
+                log('directResult', 'Получаем все бронирования...');
+                const allBookingsResponse = await fetch(`${API_BASE}/bookings`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                log('directResult', `Статус ответа для всех бронирований: ${allBookingsResponse.status}`);
+                
+                if (allBookingsResponse.ok) {
+                    const allBookingsData = await allBookingsResponse.json();
+                    log('directResult', `Всего бронирований: ${allBookingsData.data ? allBookingsData.data.length : 0}`);
+                    
+                    // Фильтруем бронирования для клиента 28
+                    const client28Bookings = allBookingsData.data?.filter(b => b.client_id === 28) || [];
+                    log('directResult', `Бронирований для клиента 28: ${client28Bookings.length}`);
+                    
+                    if (client28Bookings.length > 0) {
+                        log('directResult', `Бронирования клиента 28: ${JSON.stringify(client28Bookings, null, 2)}`);
+                    }
+                } else {
+                    const errorData = await allBookingsResponse.json();
+                    log('directResult', `❌ Ошибка получения всех бронирований: ${JSON.stringify(errorData)}`, 'error');
+                }
+
+            } catch (error) {
+                log('directResult', `❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        // Автоматически запускаем тест при загрузке страницы
+        window.onload = function() {
+            log('loginResult', 'Страница загружена. Нажмите кнопки для тестирования.');
+        };
+    </script>
+</body>
+</html> 

@@ -26,6 +26,7 @@ import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
 import { phoneValidation } from '../../utils/validation';
 import * as yup from 'yup';
+import { useChangePasswordMutation } from '../../api/auth.api';
 
 // Импорты UI компонентов
 import { Button } from '../../components/ui/Button';
@@ -62,6 +63,9 @@ const ProfilePage: React.FC = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [changePassword, setChangePassword] = useState(false);
+  
+  // Хук для смены пароля
+  const [changePasswordApi, { isLoading: isChangingPassword }] = useChangePasswordMutation();
   
   // Вывод данных пользователя в консоль для отладки
   useEffect(() => {
@@ -129,40 +133,49 @@ const ProfilePage: React.FC = () => {
   };
 
   // Сохранение данных профиля
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     setLoading(true);
     setError(null);
 
     // Проверка паролей при изменении
     if (changePassword) {
       if (formData.newPassword !== formData.confirmPassword) {
-        setError('Новий пароль та підтвердження не співпадають');
+        setError('Новый пароль и подтверждение не совпадают');
         setLoading(false);
         return;
       }
       if (formData.newPassword.length < 8) {
-        setError('Новий пароль повинен містити мінімум 8 символів');
+        setError('Новый пароль должен содержать минимум 8 символов');
         setLoading(false);
         return;
       }
-    }
-
-    // Имитация отправки данных на сервер
-    setTimeout(() => {
-      // Сбрасываем поля пароля
-      if (changePassword) {
+      try {
+        // Отправляем запрос на смену пароля
+        if (user?.id) {
+          await changePasswordApi({
+            id: user.id,
+            password: formData.newPassword,
+            password_confirmation: formData.confirmPassword,
+          }).unwrap();
+        }
+        setSaveSuccess(true);
+        setChangePassword(false);
         setFormData({
           ...formData,
           oldPassword: '',
           newPassword: '',
           confirmPassword: '',
         });
-        setChangePassword(false);
+      } catch (err: any) {
+        setError(err?.data || 'Ошибка смены пароля');
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
-      setSaveSuccess(true);
-    }, 1000);
+      return;
+    }
+    // ... здесь может быть логика обновления других данных профиля ...
+    setLoading(false);
+    setSaveSuccess(true);
   };
 
   // Обработчик закрытия уведомления
@@ -543,9 +556,9 @@ const ProfilePage: React.FC = () => {
                   <Button
                     variant="contained"
                     color="primary"
-                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                    startIcon={loading || isChangingPassword ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                     onClick={handleSaveProfile}
-                    disabled={loading}
+                    disabled={loading || isChangingPassword}
                     sx={primaryButtonStyles}
                   >
                     Зберегти зміни

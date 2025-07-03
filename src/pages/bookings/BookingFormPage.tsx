@@ -221,22 +221,42 @@ const BookingFormPage: React.FC = () => {
         setLoading(true);
         
         // Подготовка данных для API (админская форма)
+        // ✅ Функция получения строкового статуса
+        // Теперь status_id в форме уже содержит строковый ключ, просто возвращаем его
+        const getStatusString = (statusKey: any): string => {
+          // Если это уже строка, возвращаем как есть
+          if (typeof statusKey === 'string') {
+            return statusKey;
+          }
+          
+          // Если это число (старый формат), преобразуем
+          if (typeof statusKey === 'number') {
+            const statusIdToKeyMap: Record<number, string> = {
+              9: 'pending',
+              10: 'confirmed',
+              11: 'in_progress',
+              12: 'completed',
+              13: 'cancelled_by_client',
+              14: 'cancelled_by_partner',
+              15: 'no_show'
+            };
+            return statusIdToKeyMap[statusKey] || 'pending';
+          }
+          
+          return 'pending'; // По умолчанию
+        };
+        
         const bookingData = {
-          client_id: values.client_id ? Number(values.client_id) : null, // ✅ Поддержка гостевых бронирований
-          service_point_id: Number(values.service_point_id),
-
+          // ✅ Убираем поля, которые не разрешены для обновления
+          // client_id и service_point_id не должны изменяться при редактировании
           car_type_id: Number(values.car_type_id),
-          category_id: Number(values.category_id),
+          service_category_id: Number(values.category_id), // ✅ Исправлено название поля
           booking_date: values.booking_date,
           start_time: values.start_time,
           end_time: values.end_time,
-          status_id: values.status_id,
+          status: getStatusString(values.status_id), // ✅ Получение строкового статуса
           notes: values.notes || '',
-          services: services.map(service => ({
-            service_id: service.service_id,
-            quantity: service.quantity,
-            price: service.price
-          })),
+          // ✅ Убираем services - они обрабатываются отдельно
           total_price: services.reduce((sum, service) => sum + (service.price * service.quantity), 0).toString(),
           // ✅ Поля получателя услуги (для гостевых бронирований)
           service_recipient_first_name: values.service_recipient_first_name || '',
@@ -248,6 +268,17 @@ const BookingFormPage: React.FC = () => {
           car_model: values.car_model || '',
           license_plate: values.license_plate || ''
         };
+        
+        // ✅ Для создания нового бронирования добавляем обязательные поля
+        if (!isEditMode) {
+          (bookingData as any).client_id = values.client_id ? Number(values.client_id) : null;
+          (bookingData as any).service_point_id = Number(values.service_point_id);
+          (bookingData as any).services = services.map(service => ({
+            service_id: service.service_id,
+            quantity: service.quantity,
+            price: service.price
+          }));
+        }
 
         if (isEditMode && id) {
           await updateBooking({ 
@@ -288,8 +319,66 @@ const BookingFormPage: React.FC = () => {
       setCurrentCategoryId(Number(booking.service_category_id) || 0);
       formik.setFieldValue('booking_date', booking.booking_date || '');
       // ✅ Извлекаем время из полной даты
-      formik.setFieldValue('start_time', extractTimeFromDateTime(booking.start_time || ''));
-      formik.setFieldValue('status_id', booking.status_id || BookingStatusEnum.PENDING);
+      const startTime = extractTimeFromDateTime(booking.start_time || '');
+      formik.setFieldValue('start_time', startTime);
+      
+      // ✅ Автоматически пересчитываем время окончания на основе времени начала
+      if (startTime) {
+        try {
+          const [hours, minutes] = startTime.split(':').map(Number);
+          const endDate = new Date();
+          endDate.setHours(hours + 1, minutes); // +1 час по умолчанию
+          const calculatedEndTime = endDate.toTimeString().substring(0, 5);
+          formik.setFieldValue('end_time', calculatedEndTime);
+          
+          console.log('🕐 Пересчет времени окончания при загрузке:', {
+            originalStartTime: booking.start_time,
+            extractedStartTime: startTime,
+            calculatedEndTime: calculatedEndTime
+          });
+        } catch (error) {
+          console.error('Ошибка пересчета времени окончания:', error);
+          // Fallback - используем исходное время окончания
+          formik.setFieldValue('end_time', extractTimeFromDateTime(booking.end_time || ''));
+        }
+      } else {
+        // Если нет времени начала, используем исходное время окончания
+        formik.setFieldValue('end_time', extractTimeFromDateTime(booking.end_time || ''));
+      }
+      
+      // ✅ Установка статуса из данных бронирования
+      // Используем строковые ключи статусов вместо числовых ID
+      let statusKey = 'pending'; // По умолчанию "pending"
+      
+      if (booking.status) {
+        // Если есть строковый статус, используем его напрямую
+        if (typeof booking.status === 'string') {
+          statusKey = booking.status;
+        } else if (typeof booking.status === 'object' && booking.status.name) {
+          statusKey = booking.status.name;
+        }
+      } else if (booking.status_id) {
+        // Если есть старый status_id, маппим его на строковые ключи
+        const statusIdToKeyMap: Record<number, string> = {
+          9: 'pending',
+          10: 'confirmed',
+          11: 'in_progress',
+          12: 'completed',
+          13: 'cancelled_by_client',
+          14: 'cancelled_by_partner',
+          15: 'no_show'
+        };
+        statusKey = statusIdToKeyMap[Number(booking.status_id)] || 'pending';
+      }
+      
+      console.log('🔄 Загрузка статуса бронирования:', {
+        bookingStatusId: booking.status_id,
+        bookingStatus: booking.status,
+        resultStatusKey: statusKey
+      });
+      
+      formik.setFieldValue('status_id', statusKey);
+      
       formik.setFieldValue('notes', booking.notes || '');
       
       // ✅ Инициализация временно отключена для отладки
@@ -397,7 +486,7 @@ const BookingFormPage: React.FC = () => {
   }, [formik.setFieldValue]);
 
   const handleStatusChange = useCallback((event: SelectChangeEvent<string>) => {
-    formik.setFieldValue('status_id', Number(event.target.value));
+    formik.setFieldValue('status_id', event.target.value);
   }, [formik.setFieldValue]);
 
   // ✅ Обработчик изменения времени начала с автоматическим расчетом времени окончания
@@ -472,13 +561,30 @@ const BookingFormPage: React.FC = () => {
     
     if (timeSlot) {
       formik.setFieldValue('start_time', timeSlot);
-      // Автоматически рассчитываем время окончания на основе длительности слота
+      // ✅ Автоматически рассчитываем время окончания на основе длительности слота
       if (slotData?.duration_minutes) {
         const [hours, minutes] = timeSlot.split(':').map(Number);
         const endDate = new Date();
         endDate.setHours(hours, minutes + slotData.duration_minutes);
-        formik.setFieldValue('end_time', endDate.toTimeString().substring(0, 5));
+        const endTime = endDate.toTimeString().substring(0, 5);
+        formik.setFieldValue('end_time', endTime);
+        
+        console.log('🕐 Автоматический расчет времени:', {
+          startTime: timeSlot,
+          durationMinutes: slotData.duration_minutes,
+          endTime: endTime
+        });
+      } else {
+        // Если нет данных о длительности, устанавливаем +1 час по умолчанию
+        const [hours, minutes] = timeSlot.split(':').map(Number);
+        const endDate = new Date();
+        endDate.setHours(hours + 1, minutes);
+        const endTime = endDate.toTimeString().substring(0, 5);
+        formik.setFieldValue('end_time', endTime);
       }
+    } else {
+      // Если время не выбрано, очищаем время окончания
+      formik.setFieldValue('end_time', '');
     }
   }, [formik.setFieldValue]);
 
@@ -659,12 +765,12 @@ const BookingFormPage: React.FC = () => {
                   <InputLabel id="status-label">Статус бронирования</InputLabel>
                   <Select
                     labelId="status-label"
-                    value={formik.values.status_id?.toString() || ''}
+                    value={formik.values.status_id || ''}
                     onChange={handleStatusChange}
                     label="Статус бронирования"
                   >
                     {bookingStatusesData?.map((status) => (
-                      <MenuItem key={status.id} value={status.id}>
+                      <MenuItem key={status.key} value={status.key}>
                         {status.name}
                       </MenuItem>
                     ))}
