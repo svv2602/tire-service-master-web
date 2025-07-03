@@ -366,6 +366,20 @@ const MainLayout: React.FC = () => {
             description: 'Управление бронированиями',
           },
           {
+            text: '📅 Календарь записей',
+            icon: <EventNoteIcon />,
+            path: '/admin/calendar',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
+            description: 'Календарное представление бронирований',
+          },
+          {
+            text: '📊 Аналитика и отчеты',
+            icon: <ReportIcon />,
+            path: '/admin/analytics',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
+            description: 'Аналитика и статистика бронирований',
+          },
+          {
             text: 'Мои бронирования',
             icon: <EventNoteIcon />,
             path: '/admin/my-bookings',

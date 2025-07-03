@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Очистка кэша</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .cache-info {
+            background: #f0f8ff;
+            border: 1px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .step {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .button {
+            background: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔄 Очистка кэша браузера</h1>
+    
+    <div class="cache-info">
+        <h3>Если новые пункты меню не видны, попробуйте:</h3>
+    </div>
+
+    <div class="step">
+        <h4>1. Жесткое обновление страницы</h4>
+        <p>Нажмите <strong>Ctrl + F5</strong> (Windows/Linux) или <strong>Cmd + Shift + R</strong> (Mac)</p>
+        <button class="button" onclick="location.reload(true)">🔄 Обновить страницу</button>
+    </div>
+
+    <div class="step">
+        <h4>2. Очистить кэш браузера</h4>
+        <p>Откройте DevTools (F12) → Network → поставьте галочку "Disable cache"</p>
+        <button class="button" onclick="clearCache()">🗑️ Очистить кэш</button>
+    </div>
+
+    <div class="step">
+        <h4>3. Открыть в режиме инкогнито</h4>
+        <p>Нажмите <strong>Ctrl + Shift + N</strong> и перейдите на сайт заново</p>
+        <button class="button" onclick="openIncognito()">🕵️ Инструкция для инкогнито</button>
+    </div>
+
+    <div class="step">
+        <h4>4. Прямые ссылки на новые страницы</h4>
+        <a href="http://localhost:3008/admin/calendar" class="button">📅 Календарь</a>
+        <a href="http://localhost:3008/admin/analytics" class="button">📊 Аналитика</a>
+        <a href="http://localhost:3008/admin" class="button">🏠 Админ-панель</a>
+    </div>
+
+    <div class="cache-info">
+        <p><strong>Время создания:</strong> <span id="timestamp"></span></p>
+        <p><strong>Версия компонентов:</strong> 2.0 (с новыми пунктами меню)</p>
+    </div>
+
+    <script>
+        // Отображаем текущее время
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('ru-RU');
+        
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) {
+                        caches.delete(name);
+                    });
+                });
+                alert('✅ Кэш очищен! Обновите страницу.');
+            } else {
+                alert('ℹ️ Автоматическая очистка кэша не поддерживается. Используйте Ctrl+F5');
+            }
+        }
+        
+        function openIncognito() {
+            alert('🕵️ Откройте новое окно в режиме инкогнито:\n\n' +
+                  'Chrome: Ctrl+Shift+N\n' +
+                  'Firefox: Ctrl+Shift+P\n' +
+                  'Safari: Cmd+Shift+N\n\n' +
+                  'Затем перейдите на http://localhost:3008');
+        }
+        
+        // Проверяем доступность админ-панели
+        fetch('http://localhost:3008/admin')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Админ-панель доступна');
+                } else {
+                    console.log('❌ Проблемы с доступом к админ-панели');
+                }
+            })
+            .catch(err => {
+                console.log('❌ Сервер недоступен:', err);
+            });
+    </script>
+</body>
+</html>

@@ -115,9 +115,9 @@ const PageContentManagement = lazy(() => import('./pages/admin/PageContentManage
 
 // Ленивая загрузка новых мигрированных страниц
 
-
-
-
+// Ленивая загрузка страниц календаря и аналитики
+const BookingCalendarPage = lazy(() => import('./pages/admin/BookingCalendarPage'));
+const BookingAnalyticsPage = lazy(() => import('./pages/admin/BookingAnalyticsPage'));
 
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
@@ -278,7 +278,8 @@ function App() {
                       <Route path="services/new" element={<ServiceFormPage />} />
                       <Route path="services/:id/edit" element={<ServiceFormPage />} />
                       {/* Маршруты для отчетов */}
-                      <Route path="analytics" element={<div>Аналитика и отчеты (в разработке)</div>} />
+                      <Route path="analytics" element={<BookingAnalyticsPage />} />
+                      <Route path="calendar" element={<BookingCalendarPage />} />
                       <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
                       {/* Маршрут для пользователей */}
                       <Route path="users" element={<UsersPage />} />

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест календаря и аналитики</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .link-box {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .link-box h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-link {
+            display: inline-block;
+            background: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background: #1565c0;
+        }
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Тестирование новых страниц календаря и аналитики</h1>
+    
+    <div class="note">
+        <strong>📋 Инструкция:</strong><br>
+        1. Сначала войдите в систему как администратор<br>
+        2. Затем переходите по ссылкам ниже для тестирования новых страниц
+    </div>
+
+    <div class="link-box">
+        <h3>🔐 Авторизация</h3>
+        <p>Сначала войдите как администратор:</p>
+        <a href="http://localhost:3008/login" class="test-link">🔑 Страница входа</a>
+        <p><strong>Данные для входа:</strong><br>
+        Email: admin@test.com<br>
+        Пароль: admin123</p>
+    </div>
+
+    <div class="link-box">
+        <h3>📅 Календарь бронирований</h3>
+        <p>Новая страница с календарным представлением записей:</p>
+        <a href="http://localhost:3008/admin/calendar" class="test-link">📅 Календарь записей</a>
+        <p><strong>Функции:</strong> Просмотр по дням/неделям/месяцам, массовые операции</p>
+    </div>
+
+    <div class="link-box">
+        <h3>📊 Аналитика и отчеты</h3>
+        <p>Страница с детальной аналитикой бронирований:</p>
+        <a href="http://localhost:3008/admin/analytics" class="test-link">📊 Аналитика</a>
+        <p><strong>Функции:</strong> Графики, статистика, экспорт данных</p>
+    </div>
+
+    <div class="link-box">
+        <h3>🏠 Основные страницы</h3>
+        <a href="http://localhost:3008/admin" class="test-link">🏠 Админ-панель</a>
+        <a href="http://localhost:3008/admin/bookings" class="test-link">📋 Все бронирования</a>
+        <a href="http://localhost:3008/admin/dashboard" class="test-link">📊 Дашборд</a>
+    </div>
+
+    <div class="note">
+        <strong>🔍 Отладка меню:</strong><br>
+        Если новые пункты не видны в боковом меню, попробуйте:<br>
+        • Очистить кэш браузера (Ctrl+F5)<br>
+        • Открыть в режиме инкогнито<br>
+        • Проверить консоль браузера на ошибки<br>
+        • Перейти по прямым ссылкам выше
+    </div>
+
+    <script>
+        // Проверяем доступность страниц
+        function checkPageAvailability() {
+            const links = [
+                'http://localhost:3008/admin/calendar',
+                'http://localhost:3008/admin/analytics'
+            ];
+            
+            console.log('🔍 Проверяем доступность новых страниц...');
+            
+            links.forEach(link => {
+                fetch(link, {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                }).then(() => {
+                    console.log(`✅ ${link} - доступна`);
+                }).catch(err => {
+                    console.log(`❌ ${link} - недоступна:`, err);
+                });
+            });
+        }
+        
+        // Запускаем проверку через 2 секунды
+        setTimeout(checkPageAvailability, 2000);
+    </script>
+</body>
+</html>

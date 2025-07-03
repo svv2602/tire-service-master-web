@@ -322,6 +322,15 @@ export interface BookingFilter extends PaginationFilter {
   query?: string;
   status?: string;
   booking_id?: string;
+  service_point_id?: number;
+  client_id?: number;
+  service_category_id?: number;
+  date?: string;
+  from_date?: string;
+  to_date?: string;
+  city_id?: number;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 // Статус сервисной точки
