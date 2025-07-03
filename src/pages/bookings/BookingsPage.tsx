@@ -54,12 +54,12 @@ const BookingsPage: React.FC = () => {
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     booking: Booking | null;
-    newStatus: number;
+    newStatus: string;
     newStatusLabel: string;
   }>({
     open: false,
     booking: null,
-    newStatus: 0,
+    newStatus: '',
     newStatusLabel: '',
   });
   
@@ -73,7 +73,7 @@ const BookingsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Состояние фильтров
-  const [statusFilter, setStatusFilter] = useState<number | ''>('');
+  const [statusFilter, setStatusFilter] = useState<string | ''>('');
   const [cityFilter, setCityFilter] = useState<number | ''>('');
   const [servicePointFilter, setServicePointFilter] = useState<number | ''>('');
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<number | ''>('');
@@ -90,7 +90,7 @@ const BookingsPage: React.FC = () => {
     };
     
     if (search) params.query = search;
-    if (statusFilter) params.status_id = Number(statusFilter);
+    if (statusFilter) params.status = statusFilter;
     if (cityFilter) params.city_id = Number(cityFilter);
     if (servicePointFilter) params.service_point_id = Number(servicePointFilter);
     if (serviceCategoryFilter) params.service_category_id = Number(serviceCategoryFilter);
@@ -166,17 +166,36 @@ const BookingsPage: React.FC = () => {
     return timeString;
   }, []);
 
-  const getStatusLabel = useCallback((statusId: number): string => {
-    const status = bookingStatuses.find(s => s.id === statusId);
-    return status?.name || `Статус ${statusId}`;
+  const getStatusLabel = useCallback((status: string | { name: string } | undefined): string => {
+    if (!status) return 'Неизвестно';
+    
+    if (typeof status === 'string') {
+      const statusObj = bookingStatuses.find(s => s.key === status);
+      return statusObj?.name || status;
+    }
+    
+    if (typeof status === 'object' && status.name) {
+      return status.name;
+    }
+    
+    return 'Неизвестно';
   }, [bookingStatuses]);
 
-  const getStatusColor = useCallback((statusId: number): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
-    const status = bookingStatuses.find(s => s.id === statusId);
-    if (!status?.color) return 'default';
+  const getStatusColor = useCallback((status: string | { name: string } | undefined): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+    if (!status) return 'default';
+    
+    let statusKey = '';
+    if (typeof status === 'string') {
+      statusKey = status;
+    } else if (typeof status === 'object' && status.name) {
+      statusKey = status.name;
+    }
+    
+    const statusObj = bookingStatuses.find(s => s.key === statusKey);
+    if (!statusObj?.color) return 'default';
     
     // Маппинг цветов из API на цвета MUI Chip
-    switch (status.color.toLowerCase()) {
+    switch (statusObj.color.toLowerCase()) {
       case 'orange':
       case 'warning': return 'warning';
       case 'blue':
@@ -216,14 +235,14 @@ const BookingsPage: React.FC = () => {
     setSelectedBooking(null);
   }, []);
 
-  const handleStatusSelect = useCallback((newStatusId: number) => {
+  const handleStatusSelect = useCallback((newStatusKey: string) => {
     if (!selectedBooking) return;
     
-    const newStatusLabel = getStatusLabel(newStatusId);
+    const newStatusLabel = getStatusLabel(newStatusKey);
     setConfirmDialog({
       open: true,
       booking: selectedBooking,
-      newStatus: newStatusId,
+      newStatus: newStatusKey,
       newStatusLabel,
     });
     handleStatusMenuClose();
@@ -233,38 +252,40 @@ const BookingsPage: React.FC = () => {
     if (!confirmDialog.booking) return;
     
     try {
-      await updateBookingStatus({
+      await updateBooking({
         id: confirmDialog.booking.id.toString(),
-        status_id: confirmDialog.newStatus
+        booking: { 
+          status: confirmDialog.newStatus
+        }
       }).unwrap();
       
       setConfirmDialog({
         open: false,
         booking: null,
-        newStatus: 0,
+        newStatus: '',
         newStatusLabel: '',
       });
     } catch (error) {
       console.error('Ошибка при изменении статуса:', error);
     }
-  }, [confirmDialog, updateBookingStatus]);
+  }, [confirmDialog, updateBooking]);
 
   const handleCancelStatusChange = useCallback(() => {
     setConfirmDialog({
       open: false,
       booking: null,
-      newStatus: 0,
+      newStatus: '',
       newStatusLabel: '',
     });
   }, []);
 
   // Обработчики действий
-  const handleStatusChange = useCallback(async (booking: Booking, newStatusId: number) => {
+  const handleStatusChange = useCallback(async (booking: Booking, newStatusKey: string) => {
     try {
       await updateBooking({
         id: booking.id.toString(),
         booking: { 
-          status_id: newStatusId
+          status: newStatusKey
         }
       }).unwrap();
     } catch (error) {
@@ -275,10 +296,13 @@ const BookingsPage: React.FC = () => {
   // Устаревший обработчик для совместимости с ActionsMenu
   const handleToggleStatus = useCallback(async (booking: Booking) => {
     try {
+      const currentStatus = typeof booking.status === 'string' ? booking.status : 'pending';
+      const newStatus = currentStatus === 'pending' ? 'confirmed' : 'pending';
+      
       await updateBooking({
         id: booking.id.toString(),
         booking: { 
-          status_id: booking.status_id === 1 ? 2 : 1
+          status: newStatus
         }
       }).unwrap();
     } catch (error) {
@@ -317,8 +341,6 @@ const BookingsPage: React.FC = () => {
         id: 'sort',
         label: `Сортировка: ${sortOrder === 'asc' ? 'по возрастанию' : 'по убыванию'}`,
         icon: sortOrder === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
-        variant: 'outlined',
-        color: 'primary',
         onClick: handleSort,
       },
       {
@@ -329,14 +351,14 @@ const BookingsPage: React.FC = () => {
         onClick: handleCreateBooking,
       },
     ],
-  }), [handleCreateBooking, handleSort, sortOrder]);
+  }), [sortOrder, handleSort, handleCreateBooking]);
 
   // Конфигурация поиска
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по имени, фамилии, email или номеру телефона получателя услуги',
     value: search,
     onChange: setSearch,
-    onClear: () => setSearch(''),
+    placeholder: 'Поиск по клиенту, телефону, номеру авто...',
+    debounceMs: 300,
   }), [search]);
 
   // Конфигурация фильтров
@@ -346,11 +368,11 @@ const BookingsPage: React.FC = () => {
       label: 'Статус',
       type: 'select',
       value: statusFilter,
-      onChange: (value) => setStatusFilter(value as number | ''),
-      options: [
-        { value: '', label: 'Все статусы' },
-        ...bookingStatuses.map(status => ({ value: status.id, label: status.name })),
-      ],
+      onChange: (value) => setStatusFilter(value as string),
+      options: bookingStatuses.map(status => ({
+        value: status.key,
+        label: status.name
+      })),
       loading: bookingStatusesLoading,
     },
     {
@@ -358,23 +380,23 @@ const BookingsPage: React.FC = () => {
       label: 'Город',
       type: 'select',
       value: cityFilter,
-      onChange: (value) => setCityFilter(value as number | ''),
-      options: [
-        { value: '', label: 'Все города' },
-        ...cities.map(city => ({ value: city.id, label: city.name })),
-      ],
+      onChange: (value) => setCityFilter(value as number),
+      options: cities.map(city => ({
+        value: city.id,
+        label: city.name
+      })),
       loading: citiesLoading,
     },
     {
       id: 'service_point',
-      label: 'Сервисная точка',
+      label: 'Точка обслуживания',
       type: 'select',
       value: servicePointFilter,
-      onChange: (value) => setServicePointFilter(value as number | ''),
-      options: [
-        { value: '', label: 'Все точки' },
-        ...servicePoints.map(sp => ({ value: sp.id, label: sp.name })),
-      ],
+      onChange: (value) => setServicePointFilter(value as number),
+      options: servicePoints.map(sp => ({
+        value: sp.id,
+        label: sp.name
+      })),
       loading: servicePointsLoading,
     },
     {
@@ -382,11 +404,11 @@ const BookingsPage: React.FC = () => {
       label: 'Тип услуг',
       type: 'select',
       value: serviceCategoryFilter,
-      onChange: (value) => setServiceCategoryFilter(value as number | ''),
-      options: [
-        { value: '', label: 'Все типы услуг' },
-        ...serviceCategories.map(category => ({ value: category.id, label: category.name })),
-      ],
+      onChange: (value) => setServiceCategoryFilter(value as number),
+      options: serviceCategories.map(sc => ({
+        value: sc.id,
+        label: sc.name
+      })),
       loading: serviceCategoriesLoading,
     },
     {
@@ -540,7 +562,7 @@ const BookingsPage: React.FC = () => {
       minWidth: 120,
       align: 'center',
       sortable: false,
-              format: (value: any, booking: Booking) => (
+      format: (value: any, booking: Booking) => (
         <Typography 
           variant="body2" 
           sx={{ 
@@ -552,7 +574,7 @@ const BookingsPage: React.FC = () => {
           }}
           onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
         >
-          {getStatusLabel(booking.status_id)} ▼
+          {getStatusLabel(booking.status)} ▼
         </Typography>
       ),
     },
@@ -623,7 +645,7 @@ const BookingsPage: React.FC = () => {
         }}
       >
         {bookingStatuses.map((status) => (
-          <MenuItem key={status.id} onClick={() => handleStatusSelect(status.id)}>
+          <MenuItem key={status.key} onClick={() => handleStatusSelect(status.key)}>
             {status.name}
           </MenuItem>
         ))}
