@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест действий с клиентскими бронированиями - Tire Service</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #1976d2;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .test-url {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-bottom: 15px;
+            border-left: 4px solid #1976d2;
+        }
+        .test-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.confirmed { background: #d1ecf1; color: #0c5460; }
+        .status.completed { background: #d4edda; color: #155724; }
+        .status.cancelled { background: #f8d7da; color: #721c24; }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .api-test {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .api-test code {
+            background: #e8f0fe;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #1976d2;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #1565c0;
+        }
+        .button.danger {
+            background: #d32f2f;
+        }
+        .button.danger:hover {
+            background: #c62828;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Тестирование действий с клиентскими бронированиями</h1>
+            <p>Проверка функциональности отмены и переноса записей клиентами</p>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📋 Страница клиентских бронирований</div>
+            <div class="test-url">http://localhost:3008/client/bookings</div>
+            <div class="test-description">
+                <p><strong>Что тестируем:</strong></p>
+                <ul class="feature-list">
+                    <li>Отображение списка бронирований клиента</li>
+                    <li>Кнопки "Перенести" и "Отменить" для активных записей</li>
+                    <li>Диалог подтверждения отмены с полем комментария</li>
+                    <li>Автоматическое обновление списка после действий</li>
+                    <li>Цветные статусы бронирований</li>
+                </ul>
+                
+                <p><strong>Статусы, для которых доступны действия:</strong></p>
+                <span class="status pending">Pending</span>
+                <span class="status confirmed">Confirmed</span>
+                
+                <p style="margin-top: 15px;"><strong>Недоступно для:</strong></p>
+                <span class="status completed">Completed</span>
+                <span class="status cancelled">Cancelled</span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">❌ Тестирование отмены бронирования</div>
+            <div class="test-description">
+                <p><strong>Шаги для тестирования:</strong></p>
+                <ol>
+                    <li>Войдите как клиент: <code>client@test.com / client123</code></li>
+                    <li>Перейдите на страницу "Мои записи"</li>
+                    <li>Найдите запись со статусом "Pending" или "Confirmed"</li>
+                    <li>Нажмите кнопку "Отменить"</li>
+                    <li>В диалоге введите причину отмены (необязательно)</li>
+                    <li>Подтвердите отмену</li>
+                </ol>
+                
+                <div class="api-test">
+                    <strong>API запрос:</strong><br>
+                    <code>DELETE /api/v1/client_bookings/{id}</code><br>
+                    <strong>Тело запроса:</strong><br>
+                    <code>{ "cancellation_comment": "Причина отмены" }</code>
+                </div>
+                
+                <p><strong>Ожидаемый результат:</strong></p>
+                <ul>
+                    <li>Статус записи изменится на "Cancelled"</li>
+                    <li>Запись переместится во вкладку "Отмененные"</li>
+                    <li>Кнопки действий исчезнут</li>
+                    <li>Список автоматически обновится</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📅 Тестирование переноса бронирования</div>
+            <div class="test-url">http://localhost:3008/client/bookings/{id}/reschedule</div>
+            <div class="test-description">
+                <p><strong>Шаги для тестирования:</strong></p>
+                <ol>
+                    <li>На странице "Мои записи" нажмите "Перенести"</li>
+                    <li>Выберите новую дату (не раньше завтра)</li>
+                    <li>Выберите доступное время из списка слотов</li>
+                    <li>Нажмите "Сохранить изменения"</li>
+                </ol>
+                
+                <div class="api-test">
+                    <strong>API запрос:</strong><br>
+                    <code>POST /api/v1/client_bookings/{id}/reschedule</code><br>
+                    <strong>Тело запроса:</strong><br>
+                    <code>{ "new_date": "2025-01-15", "new_time": "14:00" }</code>
+                </div>
+                
+                <p><strong>Ожидаемый результат:</strong></p>
+                <ul>
+                    <li>Дата и время записи обновятся</li>
+                    <li>Перенаправление на страницу деталей записи</li>
+                    <li>Уведомление об успешном переносе</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🔍 Проверка обновления интерфейса</div>
+            <div class="test-description">
+                <p><strong>Что проверить:</strong></p>
+                <ul class="feature-list">
+                    <li>Список бронирований обновляется без перезагрузки страницы</li>
+                    <li>Статусы отображаются правильными цветами</li>
+                    <li>Кнопки действий скрываются для неактивных записей</li>
+                    <li>Фильтрация по вкладкам работает корректно</li>
+                    <li>Диалоги закрываются после успешных операций</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">⚠️ Тестирование ошибок</div>
+            <div class="test-description">
+                <p><strong>Сценарии ошибок для проверки:</strong></p>
+                <ul>
+                    <li><strong>Отмена завершенной записи:</strong> должна показать ошибку</li>
+                    <li><strong>Перенос на прошедшую дату:</strong> должна показать ошибку</li>
+                    <li><strong>Перенос на занятое время:</strong> должна показать "время недоступно"</li>
+                    <li><strong>Отсутствие соединения:</strong> должна показать ошибку сети</li>
+                </ul>
+                
+                <div class="warning">
+                    <strong>⚠️ Важно:</strong> Все ошибки должны отображаться в понятном для пользователя виде, 
+                    без технических деталей. Интерфейс должен оставаться отзывчивым.
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🚀 Быстрые ссылки для тестирования</div>
+            <div class="test-description">
+                <a href="http://localhost:3008/login" class="button">Войти как клиент</a>
+                <a href="http://localhost:3008/client/bookings" class="button">Мои записи</a>
+                <a href="http://localhost:3008/client/booking" class="button">Новая запись</a>
+                <a href="http://localhost:3008/admin/bookings" class="button">Админ: Бронирования</a>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 Результаты тестирования</div>
+            <div class="test-description">
+                <p><strong>Отметьте выполненные тесты:</strong></p>
+                <div style="margin: 15px 0;">
+                    <input type="checkbox" id="test1"> <label for="test1">Отмена записи работает</label><br>
+                    <input type="checkbox" id="test2"> <label for="test2">Перенос записи работает</label><br>
+                    <input type="checkbox" id="test3"> <label for="test3">Интерфейс обновляется автоматически</label><br>
+                    <input type="checkbox" id="test4"> <label for="test4">Ошибки обрабатываются корректно</label><br>
+                    <input type="checkbox" id="test5"> <label for="test5">Диалоги работают правильно</label><br>
+                    <input type="checkbox" id="test6"> <label for="test6">Статусы отображаются цветными</label><br>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Простая логика для сохранения состояния чекбоксов
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                localStorage.setItem(this.id, this.checked);
+            });
+            
+            // Восстанавливаем состояние
+            const saved = localStorage.getItem(checkbox.id);
+            if (saved === 'true') {
+                checkbox.checked = true;
+            }
+        });
+    </script>
+</body>
+</html> 

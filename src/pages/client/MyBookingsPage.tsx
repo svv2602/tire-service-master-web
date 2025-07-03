@@ -257,6 +257,7 @@ const MyBookingsPage: React.FC = () => {
             ) : convertedBookings.length > 0 ? (
               <BookingsList 
                 bookings={convertedBookings} 
+                onBookingUpdated={refetch}
               />
             ) : (
               <Alert severity="info" sx={{ textAlign: 'center', py: 4 }}>

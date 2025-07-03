@@ -62,6 +62,11 @@ export interface ClientBookingResponse {
   }>;
   total_price: number;
   notes?: string;
+  service_category?: {
+    id: number;
+    name: string;
+    description?: string;
+  };
   created_at: string;
   updated_at: string;
 }
