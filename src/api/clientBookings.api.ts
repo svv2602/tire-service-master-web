@@ -148,7 +148,7 @@ export const clientBookingsApi = baseApi.injectEndpoints({
       cancellation_comment?: string;
     }>({
       query: ({ id, ...params }) => ({
-        url: `/client_bookings/${id}`,
+        url: `/client_bookings/${id}/cancel`,
         method: 'DELETE',
         body: params,
       }),

@@ -309,13 +309,29 @@ const RescheduleBookingPage: React.FC = () => {
           {/* Информация о выбранной дате и времени */}
           {selectedDate && selectedTimeSlot && (
             <Paper elevation={1} sx={{ p: 3, mt: 3, bgcolor: colors.backgroundSecondary }}>
-              <Typography variant="h6" gutterBottom>
-                {t('Новая дата и время')}
-              </Typography>
+              {/* Заголовок с кнопкой справа */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Typography variant="h6">
+                  {t('Новая дата и время')}
+                </Typography>
+                
+                {/* Кнопка подтверждения справа */}
+                <Button
+                  variant="contained"
+                  startIcon={isUpdating ? <CircularProgress size={20} /> : <SaveIcon />}
+                  onClick={handleReschedule}
+                  disabled={!canSave}
+                  sx={primaryButtonStyles}
+                  size="large"
+                >
+                  {isUpdating ? t('Сохранение...') : t('Подтвердить перенос')}
+                </Button>
+              </Box>
+              
               <Typography variant="body1" gutterBottom>
                 <strong>{t('Дата')}:</strong> {format(selectedDate, 'dd.MM.yyyy')}
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="body1" gutterBottom>
                 <strong>{t('Время')}:</strong> {selectedTimeSlot}
                 {(() => {
                   const selectedSlotData = availableTimeSlots.find(slot => slot.time === selectedTimeSlot);

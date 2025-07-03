@@ -34,11 +34,11 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useGetBookingByIdQuery, useCancelBookingMutation } from '../../api/bookings.api';
+import { useGetClientBookingQuery, useCancelClientBookingMutation } from '../../api/clientBookings.api';
 import { getThemeColors, getButtonStyles } from '../../styles';
 import { useTheme } from '@mui/material/styles';
-import PageHeader from '../../components/common/PageHeader';
 import BookingStatusBadge from '../../components/bookings/BookingStatusBadge';
+import ClientLayout from '../../components/client/ClientLayout';
 
 // Интерфейс для полных данных бронирования
 interface DetailedBooking {
@@ -126,19 +126,17 @@ const BookingDetailsPage: React.FC = () => {
   const [cancelError, setCancelError] = useState<string | null>(null);
   
   // Запрос данных бронирования
-  const { data: bookingData, isLoading, error } = useGetBookingByIdQuery(id || '', {
+  const { data: bookingData, isLoading, error } = useGetClientBookingQuery(id || '', {
     skip: !id
   });
   
   // Приводим данные к нужному типу
-  const booking = bookingData as unknown as DetailedBooking;
+  const booking = bookingData;
   
-  // Отладочная информация
-  console.log('📋 BookingDetailsPage - bookingData:', bookingData);
-  console.log('🏢 BookingDetailsPage - service_point:', booking?.service_point);
+
   
   // Мутация для отмены бронирования
-  const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
+  const [cancelBooking, { isLoading: isCancelling }] = useCancelClientBookingMutation();
   
   // Функция форматирования времени
   const formatTime = (timeString: string): string => {
@@ -173,7 +171,11 @@ const BookingDetailsPage: React.FC = () => {
     if (!id) return;
     
     try {
-      await cancelBooking(id).unwrap();
+      await cancelBooking({
+        id: id,
+        cancellation_reason_id: 10, // "Изменение расписания"
+        cancellation_comment: 'Отменено клиентом через веб-интерфейс'
+      }).unwrap();
       setCancelDialogOpen(false);
       // Обновляем страницу или перенаправляем пользователя
       window.location.reload();
@@ -183,7 +185,7 @@ const BookingDetailsPage: React.FC = () => {
   };
   
   // Проверяем, может ли пользователь отменить бронирование
-  const canCancel = booking && booking.status_id === 1; // Статус "pending"
+  const canCancel = booking && (booking.status.name === 'pending' || booking.status.name === 'confirmed');
   
   // Обработчик создания новой записи
   const handleNewBooking = () => {
@@ -191,14 +193,8 @@ const BookingDetailsPage: React.FC = () => {
   };
   
   // Определяем статус бронирования для BadgeStatus
-  const getStatusLabel = (statusId: number) => {
-    switch (statusId) {
-      case 1: return 'pending';
-      case 2: return 'confirmed';
-      case 3: return 'cancelled';
-      case 4: return 'completed';
-      default: return 'unknown';
-    }
+  const getStatusLabel = (statusName: string) => {
+    return statusName || 'unknown';
   };
 
   // Форматирование информации о сервисной точке
@@ -240,36 +236,41 @@ const BookingDetailsPage: React.FC = () => {
   // Если данные загружаются
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-        <CircularProgress />
-      </Box>
+      <ClientLayout>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+          <CircularProgress />
+        </Box>
+      </ClientLayout>
     );
   }
   
   // Если произошла ошибка
   if (error || !booking) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Не удалось загрузить данные бронирования. Пожалуйста, попробуйте позже.
-        </Alert>
-        <Button 
-          variant="outlined" 
-          startIcon={<ArrowBackIcon />} 
-          component={Link} 
-          to="/client/bookings"
-          sx={secondaryButtonStyles}
-        >
-          Вернуться к списку
-        </Button>
-      </Container>
+      <ClientLayout>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Не удалось загрузить данные бронирования. Пожалуйста, попробуйте позже.
+          </Alert>
+          <Button 
+            variant="outlined" 
+            startIcon={<ArrowBackIcon />} 
+            component={Link} 
+            to="/client/bookings"
+            sx={secondaryButtonStyles}
+          >
+            Вернуться к списку
+          </Button>
+        </Container>
+      </ClientLayout>
     );
   }
   
-  const bookingStatus = getStatusLabel(booking.status_id);
+  const bookingStatus = getStatusLabel(booking.status.name);
   
   return (
-    <Container maxWidth="md" sx={{ py: 3 }}>
+    <ClientLayout>
+      <Container maxWidth="md" sx={{ py: 3 }}>
       {/* Навигационная панель с заголовком и кнопкой создания записи */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
@@ -286,14 +287,7 @@ const BookingDetailsPage: React.FC = () => {
         </Button>
       </Box>
       
-      <PageHeader 
-        title="Детали бронирования"
-        breadcrumbs={[
-          { label: 'Главная', link: '/client' },
-          { label: 'Мои записи', link: '/client/bookings' },
-          { label: `Запись №${booking.id}`, link: '' }
-        ]}
-      />
+
       
       <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
         {/* Заголовок с номером записи и статусом */}
@@ -383,41 +377,37 @@ const BookingDetailsPage: React.FC = () => {
               Автомобиль:
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {booking.car_brand && booking.car_model 
-                ? `${booking.car_brand} ${booking.car_model}` 
-                : booking.car 
-                  ? `${booking.car.brand} ${booking.car.model} (${booking.car.year})`
-                  : '—'
+              {booking.car_info?.brand && booking.car_info?.model 
+                ? `${booking.car_info.brand} ${booking.car_info.model}` 
+                : booking.car_info?.type || '—'
               }
             </Typography>
           </Box>
           
-          {booking.license_plate && (
+          {booking.car_info?.license_plate && (
             <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
                 Номер:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {booking.license_plate}
+                {booking.car_info.license_plate}
               </Typography>
             </Box>
           )}
         </Box>
         
         {/* Получатель услуги - компактно */}
-        {booking.service_recipient && (
+        {booking.client && (
           <>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <PersonIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                  Получатель:
+                  Клиент:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {booking.service_recipient.full_name || 
-                   `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` || 
-                   '—'}
+                  {booking.client.name || '—'}
                 </Typography>
               </Box>
               
@@ -426,24 +416,15 @@ const BookingDetailsPage: React.FC = () => {
                   Телефон:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {booking.service_recipient.phone || '—'}
+                  {booking.client.phone || '—'}
                 </Typography>
-                
-                {booking.is_guest_booking && (
-                  <Chip 
-                    label="Гость" 
-                    color="info" 
-                    size="small" 
-                    sx={{ ml: 2, height: 20, fontSize: '0.7rem' }} 
-                  />
-                )}
               </Box>
             </Box>
           </>
         )}
         
         {/* Услуги - компактно */}
-        {booking.booking_services && booking.booking_services.length > 0 && (
+        {booking.services && booking.services.length > 0 && (
           <>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ mb: 2 }}>
@@ -455,24 +436,24 @@ const BookingDetailsPage: React.FC = () => {
               </Box>
               
               <Box sx={{ ml: 3 }}>
-                {booking.booking_services.map((service, index) => (
+                {booking.services.map((service, index) => (
                   <Box key={service.id || index} sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center',
                     py: 0.5,
-                    borderBottom: index < booking.booking_services!.length - 1 ? `1px solid ${colors.borderPrimary}` : 'none'
+                    borderBottom: index < booking.services!.length - 1 ? `1px solid ${colors.borderPrimary}` : 'none'
                   }}>
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {service.service_name}
+                        {service.name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: colors.textSecondary }}>
                         {service.quantity} шт. × {service.price} грн
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: colors.primary }}>
-                      {service.total_price} грн
+                      {service.quantity * service.price} грн
                     </Typography>
                   </Box>
                 ))}
@@ -516,33 +497,73 @@ const BookingDetailsPage: React.FC = () => {
             Назад
           </Button>
           
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {/* Кнопка перенести запись (только для подтвержденных и ожидающих) */}
-                            {(booking.status.id === 1 || booking.status.id === 2) && (
-              <Button 
-                variant="outlined" 
-                color="primary"
-                component={Link}
-                to={`/client/bookings/${booking.id}/reschedule`}
-                sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
-                size="small"
-              >
-                Перенести
-              </Button>
+          <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column', alignItems: 'flex-end' }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              {/* Кнопка перенести запись (только для подтвержденных и ожидающих) */}
+              {(booking.status.name === 'pending' || booking.status.name === 'confirmed') && (
+                <Button 
+                  variant="outlined" 
+                  color="primary"
+                  component={Link}
+                  to={`/client/bookings/${booking.id}/reschedule`}
+                  sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
+                  size="small"
+                >
+                  Перенести
+                </Button>
+              )}
+              
+              {/* Кнопка отмены (только для ожидающих подтверждения) */}
+              {canCancel && (
+                <Button 
+                  variant="contained" 
+                  color="error"
+                  onClick={() => setCancelDialogOpen(true)}
+                  disabled={isCancelling}
+                  sx={{ ...dangerButtonStyles, minWidth: 'auto' }}
+                  size="small"
+                >
+                  {isCancelling ? <CircularProgress size={16} /> : 'Отменить'}
+                </Button>
+              )}
+              
+              {/* Кнопка создать новое бронирование для отмененных записей */}
+              {(booking.status.name === 'cancelled_by_client' || booking.status.name === 'cancelled_by_admin') && (
+                <Button 
+                  variant="contained" 
+                  color="primary"
+                  component={Link}
+                  to="/client/booking/new-with-availability"
+                  sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
+                  size="small"
+                >
+                  Новая запись
+                </Button>
+              )}
+            </Box>
+            
+            {/* Информационное сообщение для отмененных бронирований */}
+            {(booking.status.name === 'cancelled_by_client' || booking.status.name === 'cancelled_by_admin') && (
+              <Typography variant="caption" sx={{ 
+                color: colors.textSecondary, 
+                fontSize: '0.75rem',
+                textAlign: 'right',
+                maxWidth: '200px'
+              }}>
+                Запись отменена. Действия недоступны.
+              </Typography>
             )}
             
-            {/* Кнопка отмены (только для ожидающих подтверждения) */}
-            {canCancel && (
-              <Button 
-                variant="contained" 
-                color="error"
-                onClick={() => setCancelDialogOpen(true)}
-                disabled={isCancelling}
-                sx={{ ...dangerButtonStyles, minWidth: 'auto' }}
-                size="small"
-              >
-                {isCancelling ? <CircularProgress size={16} /> : 'Отменить'}
-              </Button>
+            {/* Информационное сообщение для завершенных бронирований */}
+            {booking.status.name === 'completed' && (
+              <Typography variant="caption" sx={{ 
+                color: colors.textSecondary, 
+                fontSize: '0.75rem',
+                textAlign: 'right',
+                maxWidth: '200px'
+              }}>
+                Услуга выполнена. Изменения недоступны.
+              </Typography>
             )}
           </Box>
         </Box>
@@ -584,6 +605,7 @@ const BookingDetailsPage: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Container>
+    </ClientLayout>
   );
 };
 
