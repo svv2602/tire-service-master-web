@@ -125,20 +125,31 @@ const MyBookingsPage: React.FC = () => {
           return converted;
         })
         .filter(booking => {
+          // Фильтрация по дате (общая для всех вкладок)
+          let dateOk = true;
+          if (filters.dateFrom) {
+            dateOk = dateOk && booking.booking_date >= filters.dateFrom;
+          }
+          if (filters.dateTo) {
+            dateOk = dateOk && booking.booking_date <= filters.dateTo;
+          }
+          if (!dateOk) return false;
+
           // Для вкладки "Отмененные" (tabValue === 3) показываем все отмененные статусы
           if (tabValue === 3) {
-            const result = isCancelledStatus(booking.status);
-            return result;
+            return isCancelledStatus(String(booking.status));
           }
           // Для вкладки "Подтвержденные" (tabValue === 1) показываем подтвержденные и в процессе
           if (tabValue === 1) {
-            const result = booking.status === BookingStatusEnum.CONFIRMED || 
-                   booking.status === BookingStatusEnum.IN_PROGRESS;
-            return result;
+            const statusNum = Number(booking.status);
+            return statusNum === BookingStatusEnum.CONFIRMED || 
+                   statusNum === BookingStatusEnum.IN_PROGRESS;
           }
           // Для остальных вкладок используем точное соответствие статуса
-          const result = booking.status === filters.status;
-          return result;
+          if (filters.status !== undefined) {
+            return Number(booking.status) === filters.status;
+          }
+          return true;
         })
         .sort((a, b) => {
           // Сортировка от самых свежих к старым по дате и времени бронирования
