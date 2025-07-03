@@ -166,11 +166,11 @@ const authSlice = createSlice({
 });
 
 // Создаем асинхронные thunks
-export const login = createAsyncThunk<LoginResponse, { email: string; password: string }>(
+export const login = createAsyncThunk<LoginResponse, { login: string; password: string }>(
   'auth/login',
-  async ({ email, password }) => {
+  async ({ login, password }) => {
     try {
-      const requestData = { auth: { email, password } };
+      const requestData = { auth: { login, password } };
       console.log('DEBUG: Login request data:', JSON.stringify(requestData, null, 2));
       console.log('DEBUG: Using direct axios call with cookies support');
       
