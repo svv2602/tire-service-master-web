@@ -178,49 +178,7 @@ const BookingsPage: React.FC = () => {
     return timeString;
   }, []);
 
-  const getStatusLabel = useCallback((status: string | { name: string } | undefined): string => {
-    if (!status) return 'Неизвестно';
-    
-    if (typeof status === 'string') {
-      const statusObj = bookingStatuses.find(s => (s.key || s.id) === status);
-      return statusObj?.name || status;
-    }
-    
-    if (typeof status === 'object' && status.name) {
-      return status.name;
-    }
-    
-    return 'Неизвестно';
-  }, [bookingStatuses]);
 
-  const getStatusColor = useCallback((status: string | { name: string } | undefined): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
-    if (!status) return 'default';
-    
-    let statusKey = '';
-    if (typeof status === 'string') {
-      statusKey = status;
-    } else if (typeof status === 'object' && status.name) {
-      statusKey = status.name;
-    }
-    
-    const statusObj = bookingStatuses.find(s => (s.key || s.id) === statusKey);
-    if (!statusObj?.color) return 'default';
-    
-    // Маппинг цветов из API на цвета MUI Chip
-    switch (statusObj.color.toLowerCase()) {
-      case 'orange':
-      case 'warning': return 'warning';
-      case 'blue':
-      case 'primary': return 'primary';
-      case 'red':
-      case 'error': return 'error';
-      case 'green':
-      case 'success': return 'success';
-      case 'info': return 'info';
-      case 'secondary': return 'secondary';
-      default: return 'default';
-    }
-  }, [bookingStatuses]);
 
   // Функция для получения инициалов клиента
   const getClientInitials = useCallback((booking: Booking): string => {
@@ -250,14 +208,14 @@ const BookingsPage: React.FC = () => {
   const handleStatusSelect = useCallback((newStatusKey: string) => {
     if (!selectedBooking) return;
     
-    const newStatusLabel = getStatusLabel(newStatusKey);
+    const newStatusLabel = getStatusDisplayName(newStatusKey);
     setConfirmDialog({
       open: true,
       booking: selectedBooking,
       newStatus: newStatusKey,
     });
     handleStatusMenuClose();
-  }, [selectedBooking, getStatusLabel, handleStatusMenuClose]);
+  }, [selectedBooking, handleStatusMenuClose]);
 
   const handleConfirmStatusChange = useCallback(async () => {
     if (!confirmDialog.booking) return;
@@ -395,10 +353,13 @@ const BookingsPage: React.FC = () => {
       type: 'select',
       value: statusFilter,
       onChange: (value) => setStatusFilter(value as string),
-      options: bookingStatuses.map(status => ({
-        value: status.key || status.id?.toString() || '',
-        label: status.name
-      })),
+      options: [
+        { value: '', label: 'Все статусы' },
+        ...bookingStatuses.map(status => ({
+          value: status.key || status.id?.toString() || '',
+          label: status.name
+        }))
+      ],
       loading: bookingStatusesLoading,
     },
     {
@@ -407,10 +368,13 @@ const BookingsPage: React.FC = () => {
       type: 'select',
       value: cityFilter,
       onChange: (value) => setCityFilter(value as number),
-      options: cities.map(city => ({
-        value: city.id,
-        label: city.name
-      })),
+      options: [
+        { value: '', label: 'Все города' },
+        ...cities.map(city => ({
+          value: city.id,
+          label: city.name
+        }))
+      ],
       loading: citiesLoading,
     },
     {
@@ -419,10 +383,13 @@ const BookingsPage: React.FC = () => {
       type: 'select',
       value: servicePointFilter,
       onChange: (value) => setServicePointFilter(value as number),
-      options: servicePoints.map(sp => ({
-        value: sp.id,
-        label: sp.name
-      })),
+      options: [
+        { value: '', label: 'Все точки обслуживания' },
+        ...servicePoints.map(sp => ({
+          value: sp.id,
+          label: sp.name
+        }))
+      ],
       loading: servicePointsLoading,
     },
     {
@@ -431,10 +398,13 @@ const BookingsPage: React.FC = () => {
       type: 'select',
       value: serviceCategoryFilter,
       onChange: (value) => setServiceCategoryFilter(value as number),
-      options: serviceCategories.map(sc => ({
-        value: sc.id,
-        label: sc.name
-      })),
+      options: [
+        { value: '', label: 'Все типы услуг' },
+        ...serviceCategories.map(sc => ({
+          value: sc.id,
+          label: sc.name
+        }))
+      ],
       loading: serviceCategoriesLoading,
     },
     {
@@ -589,10 +559,8 @@ const BookingsPage: React.FC = () => {
       align: 'center',
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Typography 
-          variant="body2" 
+        <Box
           sx={{ 
-            wordBreak: 'break-word',
             cursor: 'pointer',
             '&:hover': {
               opacity: 0.8,
@@ -600,8 +568,15 @@ const BookingsPage: React.FC = () => {
           }}
           onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
         >
-          {getStatusLabel(booking.status)} ▼
-        </Typography>
+          <Chip
+            label={getStatusDisplayName(booking.status)}
+            color={getStatusChipColor(booking.status)}
+            size="small"
+            sx={{ 
+              minWidth: 100,
+            }}
+          />
+        </Box>
       ),
     },
     {
@@ -618,7 +593,7 @@ const BookingsPage: React.FC = () => {
         />
       ),
     },
-  ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, getClientInitials, handleStatusChipClick, bookingActions]);
+  ], [tablePageStyles, formatTime, getClientInitials, handleStatusChipClick, bookingActions]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -641,10 +616,6 @@ const BookingsPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      <Typography variant="h4" sx={tablePageStyles.pageTitle}>
-        {t('Управление бронированиями')}
-      </Typography>
-      
       {bookingsError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {t('Ошибка при загрузке данных')}
@@ -701,7 +672,7 @@ const BookingsPage: React.FC = () => {
           {confirmDialog.booking && (
             <Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Вы действительно хотите изменить статус бронирования на <strong>"{getStatusLabel(confirmDialog.newStatus)}"</strong>?
+                Вы действительно хотите изменить статус бронирования на <strong>"{getStatusDisplayName(confirmDialog.newStatus)}"</strong>?
               </Typography>
               
               <Box sx={{ 
