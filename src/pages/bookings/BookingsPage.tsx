@@ -664,22 +664,6 @@ const BookingsPage: React.FC = () => {
           totalItems,
           onPageChange: setPage,
         }}
-        actions={[
-          {
-            label: t('Редактировать'),
-            onClick: (booking) => navigate(`/admin/bookings/${booking.id}/edit`),
-            color: 'primary',
-            icon: <EditIcon />,
-          },
-          {
-            label: t('Удалить'),
-            onClick: handleDeleteBooking,
-            color: 'error',
-            confirmationText: t('Вы уверены, что хотите удалить это бронирование?'),
-            icon: <DeleteIcon />,
-          },
-        ]}
-
       />
       
       {/* Меню выбора статуса */}

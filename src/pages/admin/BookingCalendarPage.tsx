@@ -15,12 +15,30 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Paper,
+  Grid,
+  Chip,
+  SelectChangeEvent,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { BookingCalendar } from '../../components/calendar/BookingCalendar';
-import { useGetBookingsQuery, useUpdateBookingStatusMutation, useCancelBookingMutation } from '../../api/bookings.api';
-import { Booking } from '../../types/models';
+import { 
+  useGetBookingsQuery, 
+  useUpdateBookingStatusMutation, 
+  useCancelBookingMutation 
+} from '../../api/bookings.api';
+import { 
+  useGetServicePointsQuery 
+} from '../../api/servicePoints.api';
+import { 
+  useGetServiceCategoriesQuery 
+} from '../../api/services.api';
+import { Booking, ServicePoint, ServiceCategory } from '../../types/models';
 import { format } from 'date-fns';
+import {
+  FilterList as FilterIcon,
+  Clear as ClearIcon,
+} from '@mui/icons-material';
 
 const BookingCalendarPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,8 +48,23 @@ const BookingCalendarPage: React.FC = () => {
     start: new Date(),
     end: new Date(),
   });
+  
+  // Новые фильтры
+  const [filters, setFilters] = useState<{
+    servicePointId?: number;
+    categoryId?: number;
+  }>({});
 
-  // API запросы
+  // API запросы для фильтров
+  const { data: servicePointsResponse } = useGetServicePointsQuery({
+    per_page: 100, // Загружаем все сервисные точки
+  });
+  
+  const { data: categoriesResponse } = useGetServiceCategoriesQuery({
+    per_page: 100, // Загружаем все категории
+  });
+
+  // API запрос для бронирований с фильтрами
   const { 
     data: bookingsResponse, 
     isLoading, 
@@ -40,6 +73,8 @@ const BookingCalendarPage: React.FC = () => {
   } = useGetBookingsQuery({
     from_date: format(dateRange.start, 'yyyy-MM-dd'),
     to_date: format(dateRange.end, 'yyyy-MM-dd'),
+    service_point_id: filters.servicePointId,
+    service_category_id: filters.categoryId,
     per_page: 1000, // Загружаем много записей для календаря
   });
 
@@ -60,8 +95,34 @@ const BookingCalendarPage: React.FC = () => {
   }>({ open: false, message: '', severity: 'info' });
 
   const bookings = bookingsResponse?.data || [];
+  const servicePoints = servicePointsResponse?.data || [];
+  const categories = categoriesResponse?.data || [];
 
-  // Обработчики событий
+  // Обработчики фильтров
+  const handleServicePointChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+    setFilters(prev => ({
+      ...prev,
+      servicePointId: value ? Number(value) : undefined
+    }));
+  };
+
+  const handleCategoryChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value;
+    setFilters(prev => ({
+      ...prev,
+      categoryId: value ? Number(value) : undefined
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+  };
+
+  // Подсчет активных фильтров
+  const activeFiltersCount = Object.values(filters).filter(Boolean).length;
+
+  // Обработчики событий календаря
   const handleDateRangeChange = useCallback((start: Date, end: Date) => {
     setDateRange({ start, end });
   }, []);
@@ -137,6 +198,98 @@ const BookingCalendarPage: React.FC = () => {
         </Typography>
       </Box>
 
+      {/* Панель фильтров */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <FilterIcon sx={{ mr: 1 }} />
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Фильтры
+          </Typography>
+          {activeFiltersCount > 0 && (
+            <Chip 
+              label={`Активно: ${activeFiltersCount}`} 
+              color="primary" 
+              size="small" 
+              sx={{ mr: 1 }}
+            />
+          )}
+          <Button
+            startIcon={<ClearIcon />}
+            onClick={clearFilters}
+            disabled={activeFiltersCount === 0}
+            size="small"
+          >
+            Очистить
+          </Button>
+        </Box>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Сервисная точка</InputLabel>
+              <Select
+                value={filters.servicePointId?.toString() || ''}
+                onChange={handleServicePointChange}
+                label="Сервисная точка"
+              >
+                <MenuItem value="">
+                  <em>Все сервисные точки</em>
+                </MenuItem>
+                {servicePoints.map((point: ServicePoint) => (
+                  <MenuItem key={point.id} value={point.id.toString()}>
+                    {point.name} - {point.address}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Категория услуг</InputLabel>
+              <Select
+                value={filters.categoryId?.toString() || ''}
+                onChange={handleCategoryChange}
+                label="Категория услуг"
+              >
+                <MenuItem value="">
+                  <em>Все категории</em>
+                </MenuItem>
+                {categories.map((category: ServiceCategory) => (
+                  <MenuItem key={category.id} value={category.id.toString()}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Индикаторы активных фильтров */}
+        {activeFiltersCount > 0 && (
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {filters.servicePointId && (
+              <Chip
+                label={`Точка: ${servicePoints.find(p => p.id === filters.servicePointId)?.name || 'Неизвестно'}`}
+                onDelete={() => setFilters(prev => ({ ...prev, servicePointId: undefined }))}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+            {filters.categoryId && (
+              <Chip
+                label={`Категория: ${categories.find(c => c.id === filters.categoryId)?.name || 'Неизвестно'}`}
+                onDelete={() => setFilters(prev => ({ ...prev, categoryId: undefined }))}
+                color="primary"
+                variant="outlined"
+                size="small"
+              />
+            )}
+          </Box>
+        )}
+      </Paper>
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           Ошибка при загрузке данных: {error.toString()}
@@ -150,6 +303,13 @@ const BookingCalendarPage: React.FC = () => {
         onDateRangeChange={handleDateRangeChange}
         onBulkAction={handleBulkAction}
         showBulkActions={true}
+        totalBookings={bookingsResponse?.pagination?.total_count}
+        appliedFilters={{
+          servicePoint: filters.servicePointId ? 
+            servicePoints.find(p => p.id === filters.servicePointId)?.name : undefined,
+          category: filters.categoryId ? 
+            categories.find(c => c.id === filters.categoryId)?.name : undefined,
+        }}
       />
 
       {/* Диалог массовых действий */}

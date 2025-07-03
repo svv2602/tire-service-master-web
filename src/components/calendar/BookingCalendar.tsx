@@ -46,6 +46,11 @@ interface BookingCalendarProps {
   onDateRangeChange?: (startDate: Date, endDate: Date) => void;
   onBulkAction?: (bookings: Booking[], action: string) => void;
   showBulkActions?: boolean;
+  totalBookings?: number;
+  appliedFilters?: {
+    servicePoint?: string;
+    category?: string;
+  };
 }
 
 export const BookingCalendar: React.FC<BookingCalendarProps> = ({
@@ -55,6 +60,8 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   onDateRangeChange,
   onBulkAction,
   showBulkActions = false,
+  totalBookings,
+  appliedFilters,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -170,65 +177,132 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
 
   // Отображение заголовка
   const renderHeader = () => (
-    <Box sx={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      mb: 3,
-      flexWrap: 'wrap',
-      gap: 2
-    }}>
-      {/* Навигация */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <IconButton onClick={() => navigateCalendar('prev')}>
-          <ChevronLeftIcon />
-        </IconButton>
-        
-        <Button 
-          variant="outlined" 
-          onClick={() => navigateCalendar('today')}
-          startIcon={<TodayIcon />}
-          sx={{ minWidth: 120 }}
-        >
-          Сегодня
-        </Button>
-        
-        <IconButton onClick={() => navigateCalendar('next')}>
-          <ChevronRightIcon />
-        </IconButton>
-        
-        <Typography variant="h5" sx={{ ml: 2, fontWeight: 600 }}>
-          {view === 'day' && format(currentDate, 'd MMMM yyyy', { locale: ru })}
-          {view === 'week' && `${format(dateRange.start, 'd MMM', { locale: ru })} - ${format(dateRange.end, 'd MMM yyyy', { locale: ru })}`}
-          {view === 'month' && format(currentDate, 'MMMM yyyy', { locale: ru })}
-        </Typography>
+    <>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 2,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        {/* Навигация */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton onClick={() => navigateCalendar('prev')}>
+            <ChevronLeftIcon />
+          </IconButton>
+          
+          <Button 
+            variant="outlined" 
+            onClick={() => navigateCalendar('today')}
+            startIcon={<TodayIcon />}
+            sx={{ minWidth: 120 }}
+          >
+            Сегодня
+          </Button>
+          
+          <IconButton onClick={() => navigateCalendar('next')}>
+            <ChevronRightIcon />
+          </IconButton>
+          
+          <Typography variant="h5" sx={{ ml: 2, fontWeight: 600 }}>
+            {view === 'day' && format(currentDate, 'd MMMM yyyy', { locale: ru })}
+            {view === 'week' && `${format(dateRange.start, 'd MMM', { locale: ru })} - ${format(dateRange.end, 'd MMM yyyy', { locale: ru })}`}
+            {view === 'month' && format(currentDate, 'MMMM yyyy', { locale: ru })}
+          </Typography>
+        </Box>
+
+        {/* Переключатели вида */}
+        <ButtonGroup variant="outlined" size="small">
+          <Button 
+            variant={view === 'day' ? 'contained' : 'outlined'}
+            onClick={() => setView('day')}
+            startIcon={<CalendarViewIcon />}
+          >
+            День
+          </Button>
+          <Button 
+            variant={view === 'week' ? 'contained' : 'outlined'}
+            onClick={() => setView('week')}
+            startIcon={<ViewWeekIcon />}
+          >
+            Неделя
+          </Button>
+          <Button 
+            variant={view === 'month' ? 'contained' : 'outlined'}
+            onClick={() => setView('month')}
+            startIcon={<ViewModuleIcon />}
+          >
+            Месяц
+          </Button>
+        </ButtonGroup>
       </Box>
 
-      {/* Переключатели вида */}
-      <ButtonGroup variant="outlined" size="small">
-        <Button 
-          variant={view === 'day' ? 'contained' : 'outlined'}
-          onClick={() => setView('day')}
-          startIcon={<CalendarViewIcon />}
-        >
-          День
-        </Button>
-        <Button 
-          variant={view === 'week' ? 'contained' : 'outlined'}
-          onClick={() => setView('week')}
-          startIcon={<ViewWeekIcon />}
-        >
-          Неделя
-        </Button>
-        <Button 
-          variant={view === 'month' ? 'contained' : 'outlined'}
-          onClick={() => setView('month')}
-          startIcon={<ViewModuleIcon />}
-        >
-          Месяц
-        </Button>
-      </ButtonGroup>
-    </Box>
+      {/* Статистика и информация о фильтрах */}
+      <Box sx={{ 
+        mb: 3, 
+        p: 2, 
+        bgcolor: colors.backgroundSecondary, 
+        borderRadius: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body1">
+            <strong>Найдено бронирований:</strong> {bookings.length}
+            {totalBookings && totalBookings !== bookings.length && (
+              <span style={{ color: colors.textSecondary }}>
+                {' '}из {totalBookings} общих
+              </span>
+            )}
+          </Typography>
+          
+          {appliedFilters && (appliedFilters.servicePoint || appliedFilters.category) && (
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {appliedFilters.servicePoint && (
+                <Chip 
+                  label={`Точка: ${appliedFilters.servicePoint}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {appliedFilters.category && (
+                <Chip 
+                  label={`Категория: ${appliedFilters.category}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+            </Box>
+          )}
+        </Box>
+
+        {/* Статистика по статусам */}
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          {['pending', 'confirmed', 'completed', 'cancelled'].map(status => {
+            const count = bookings.filter(b => b.status === status).length;
+            if (count === 0) return null;
+            
+            return (
+              <Chip
+                key={status}
+                label={`${getStatusDisplayName(status)}: ${count}`}
+                size="small"
+                sx={{
+                  backgroundColor: getStatusChipColor(status),
+                  color: theme.palette.getContrastText(getStatusChipColor(status)),
+                }}
+              />
+            );
+          })}
+        </Box>
+      </Box>
+    </>
   );
 
   // Массовые действия
