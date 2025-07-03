@@ -23,7 +23,7 @@ import TextField from '../../../components/ui/TextField';
 import PhoneField from '../../../components/ui/PhoneField';
 
 // Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
+import { BookingFormData } from '../../../types/booking';
 
 interface ClientInfoStepProps {
   formData: BookingFormData;

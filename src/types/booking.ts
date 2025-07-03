@@ -111,30 +111,46 @@ export interface BookingServiceDetails {
   total_price: number;
 }
 
+// Добавляем интерфейс BookingFormData для форм бронирования
 export interface BookingFormData {
-  service_category_id?: number;
+  // Шаг 0: Выбор категории услуг
+  service_category_id: number;
+  
+  // Шаг 1: Город и точка обслуживания
+  city_id: number | null;
   service_point_id: number | null;
-  client_id: number | null; // ✅ Поддержка гостевых бронирований (может быть null)
-  car_id: number | null;
+  
+  // Шаг 2: Дата и время
   booking_date: string;
   start_time: string;
-  end_time: string;
-  status?: BookingStatus; // ✅ Строковый статус вместо status_id
-  status_id?: BookingStatus; // ✅ Добавлен для совместимости с формами
-  total_price?: string;
-  payment_method?: string;
-  notes?: string;
-  car_type_id?: number;
-  services: BookingService[];
-  // ✅ Поля получателя услуги (для гостевых бронирований)
-  service_recipient_first_name: string;
-  service_recipient_last_name: string;
-  service_recipient_phone: string;
-  service_recipient_email?: string;
-  // ✅ Поля данных автомобиля (для гостевых бронирований)
-  car_brand?: string;
-  car_model?: string;
-  license_plate?: string;
+  duration_minutes?: number; // Длительность выбранного слота
+  
+  // Получатель услуги (обязательно)
+  service_recipient: {
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email?: string;
+  };
+  
+  // Шаг 4: Тип автомобиля
+  car_type_id: number | null;
+  car_brand: string;
+  car_model: string;
+  license_plate: string;
+  
+  // Шаг 5: Услуги (опционально)
+  services: Array<{
+    service_id: number;
+    quantity: number;
+    price: number;
+  }>;
+  
+  // Шаг 6: Комментарий (опционально)
+  notes: string;
+  
+  // Дополнительные поля для API совместимости
+  status_id?: string;
 }
 
 export interface BookingFilter extends PaginationFilter {

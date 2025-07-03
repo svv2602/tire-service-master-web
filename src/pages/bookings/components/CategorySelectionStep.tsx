@@ -14,10 +14,11 @@ import {
 import { LocationOn as LocationOnIcon } from '@mui/icons-material';
 import { useGetServiceCategoriesByCityIdQuery } from '../../../api/serviceCategories.api';
 import { useGetCityByIdQuery, useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
+import { BookingFormData } from '../../../types/booking';
 
 interface CategorySelectionStepProps {
-  formData: any; // Используем any для совместимости с существующей структурой
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: BookingFormData;
+  setFormData: React.Dispatch<React.SetStateAction<BookingFormData>>;
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
@@ -50,11 +51,11 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   const selectedCity = cityResponse?.data;
 
   const handleCityChange = (newCity: any) => {
-    setFormData((prev: any) => ({
+    setFormData((prev) => ({
       ...prev,
       city_id: newCity ? newCity.id : null,
       // Сбрасываем зависимые поля при смене города
-      service_category_id: null,
+      service_category_id: 0,
       service_point_id: null,
       booking_date: '',
       start_time: ''
@@ -62,7 +63,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   };
 
   const handleCategorySelect = (categoryId: number) => {
-    setFormData((prev: any) => ({ 
+    setFormData((prev) => ({ 
       ...prev,
       service_category_id: categoryId,
       // Сбрасываем следующие шаги при смене категории

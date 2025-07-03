@@ -174,6 +174,25 @@ export const clientBookingsApi = baseApi.injectEndpoints({
         { type: 'Booking', id },
       ],
     }),
+
+    // Привязка гостевого бронирования к клиенту
+    assignBookingToClient: builder.mutation<{
+      message: string;
+      booking: ClientBookingResponse;
+    }, {
+      id: string;
+      client_id: number;
+    }>({
+      query: ({ id, client_id }) => ({
+        url: `/client_bookings/${id}/assign_to_client`,
+        method: 'POST',
+        body: { client_id },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Booking', id: 'LIST' },
+        { type: 'Booking', id },
+      ],
+    }),
   }),
 });
 
@@ -185,4 +204,5 @@ export const {
   useUpdateClientBookingMutation,
   useCancelClientBookingMutation,
   useRescheduleClientBookingMutation,
+  useAssignBookingToClientMutation,
 } = clientBookingsApi;

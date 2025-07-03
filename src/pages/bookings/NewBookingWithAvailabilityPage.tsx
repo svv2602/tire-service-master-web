@@ -25,6 +25,7 @@ import {
 import Stepper from '../../components/ui/Stepper';
 import { SuccessDialog } from '../../components/ui/Dialog';
 import ExistingUserDialog from '../../components/booking/ExistingUserDialog';
+import { CreateAccountDialog } from '../../components/booking/CreateAccountDialog';
 
 // Импорт шагов формы
 import {
@@ -50,44 +51,8 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 
 import ClientLayout from '../../components/client/ClientLayout';
 
-// ✅ Обновленные типы для поддержки гостевых бронирований
-export interface BookingFormData {
-  // Шаг 0: Выбор категории услуг
-  service_category_id: number;
-  
-  // Шаг 1: Город и точка обслуживания
-  city_id: number | null;
-  service_point_id: number | null;
-  
-  // Шаг 2: Дата и время
-  booking_date: string;
-  start_time: string;
-  duration_minutes?: number; // Длительность выбранного слота
-  
-  // Получатель услуги (обязательно)
-  service_recipient: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    email?: string;
-  };
-  
-  // Шаг 4: Тип автомобиля
-  car_type_id: number | null;
-  car_brand: string;
-  car_model: string;
-  license_plate: string;
-  
-  // Шаг 5: Услуги (опционально)
-  services: Array<{
-    service_id: number;
-    quantity: number;
-    price: number;
-  }>;
-  
-  // Шаг 6: Комментарий (опционально)
-  notes: string;
-}
+// Импорт типов
+import { BookingFormData } from '../../types/booking';
 
 // Конфигурация шагов
 const STEPS = [
@@ -180,6 +145,9 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // Состояние диалога существующего пользователя
   const [existingUserDialogOpen, setExistingUserDialogOpen] = useState(false);
   const [existingUserData, setExistingUserData] = useState<any>(null);
+  
+  // Состояние диалога создания аккаунта
+  const [createAccountDialogOpen, setCreateAccountDialogOpen] = useState(false);
   
   const { data: currentUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
     undefined, // Параметры не нужны
@@ -448,6 +416,29 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     // Переходим на шаг ввода контактной информации
     setActiveStep(3);
   };
+
+  // Обработчики диалога создания аккаунта
+  const handleAccountCreated = (userData: any) => {
+    console.log('✅ Аккаунт создан и бронирование привязано:', userData);
+    setCreateAccountDialogOpen(false);
+    
+    // Перенаправляем в личный кабинет с задержкой для обновления состояния
+    setTimeout(() => {
+      navigate('/client/bookings', {
+        state: { 
+          message: 'Добро пожаловать! Ваш аккаунт создан и бронирование добавлено в личный кабинет.'
+        }
+      });
+    }, 1000);
+  };
+
+  const handleContinueWithoutAccount = () => {
+    console.log('ℹ️ Пользователь продолжил без создания аккаунта');
+    setCreateAccountDialogOpen(false);
+    
+    // Перенаправляем на главную
+    navigate('/client');
+  };
   
   // Рендер текущего шага
   const renderCurrentStep = () => {
@@ -576,9 +567,21 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             ? "Ваше бронирование успешно создано. Вы можете просмотреть его в личном кабинете или вернуться на главную."
             : "Ваше гостевое бронирование успешно создано! Информация о бронировании отправлена на указанный номер телефона."
         }
-        primaryButtonText={isAuthenticated ? 'Мои бронирования' : 'На главную'}
-        onPrimaryAction={isAuthenticated ? handleGoToProfile : handleGoHome}
-        {...(isAuthenticated ? { secondaryButtonText: 'Возврат на главную', onSecondaryAction: handleGoHome } : {})}
+        primaryButtonText={
+          isAuthenticated 
+            ? 'Мои бронирования' 
+            : 'Создать ЛК и записать в него бронирование'
+        }
+        onPrimaryAction={
+          isAuthenticated 
+            ? handleGoToProfile 
+            : () => {
+                setSuccessDialogOpen(false);
+                setCreateAccountDialogOpen(true);
+              }
+        }
+        secondaryButtonText={isAuthenticated ? 'Возврат на главную' : 'На главную'}
+        onSecondaryAction={handleGoHome}
       />
       
       {/* Диалог существующего пользователя (не используется для гостевых бронирований) */}
@@ -591,6 +594,16 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           onContinueAsGuest={handleContinueAsGuest}
         />
       )}
+
+      {/* Диалог создания аккаунта для гостевых бронирований */}
+      <CreateAccountDialog
+        open={createAccountDialogOpen}
+        onClose={() => setCreateAccountDialogOpen(false)}
+        bookingData={formData}
+        createdBooking={createdBooking}
+        onAccountCreated={handleAccountCreated}
+        onContinueWithoutAccount={handleContinueWithoutAccount}
+      />
     </ClientLayout>
   );
 };

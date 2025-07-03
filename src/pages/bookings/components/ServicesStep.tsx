@@ -30,7 +30,7 @@ import { useTheme } from '@mui/material/styles';
 import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
 
 // Импорт типов
-import { BookingFormData } from '../NewBookingWithAvailabilityPage';
+import { BookingFormData } from '../../../types/booking';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
