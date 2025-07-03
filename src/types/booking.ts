@@ -14,7 +14,7 @@ export enum BookingStatusEnum {
   NO_SHOW = 7          // Не явился
 }
 
-export type BookingStatus = BookingStatusEnum;
+export type BookingStatus = BookingStatusEnum | string;
 
 export interface ServiceRecipient {
   first_name: string;
