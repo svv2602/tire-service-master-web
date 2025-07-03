@@ -7,7 +7,7 @@ import { selectCurrentUser } from '../../store/slices/authSlice';
 import BookingsList from '../../components/bookings/BookingsList';
 import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
-import { BookingStatusEnum } from '../../types/booking';
+import { BookingStatusKey, BOOKING_STATUSES } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
 import { Booking as ModelBooking } from '../../types/models';
 import { Booking } from '../../types/booking';
@@ -15,14 +15,12 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import ClientLayout from '../../components/client/ClientLayout';
-import { convertStatusToEnum, isCancelledStatus } from '../../utils/bookingStatus';
+import { convertStatusToKey, isCancelledStatus } from '../../utils/bookingStatus';
 
 // Функция для конвертации типов Booking
 const convertBooking = (modelBooking: ModelBooking): Booking => {
-  // Извлекаем статус из API ответа
-  const statusName = typeof modelBooking.status === 'string' 
-    ? modelBooking.status 
-    : modelBooking.status?.name || 'pending';
+  // Извлекаем статус из API ответа - теперь это всегда строка
+  const statusName = modelBooking.status || 'pending';
     
   return {
     id: String(modelBooking.id),
@@ -35,7 +33,6 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
     start_time: modelBooking.start_time,
     end_time: modelBooking.end_time,
     notes: modelBooking.notes,
-    status_id: modelBooking.status_id,
     service_category: modelBooking.service_category,
     service_point: modelBooking.service_point ? {
       id: modelBooking.service_point.id,
@@ -49,7 +46,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
       quantity: s.quantity,
       price: s.price
     })) || [],
-    status: convertStatusToEnum({ name: statusName }), // Передаем объект с именем статуса
+    status: convertStatusToKey(statusName),
     scheduled_at: modelBooking.booking_date + ' ' + modelBooking.start_time,
     created_at: modelBooking.created_at,
     updated_at: modelBooking.updated_at
@@ -58,7 +55,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
 
 // Интерфейс для фильтров
 interface BookingsFilter {
-  status?: BookingStatusEnum;
+  status?: BookingStatusKey;
   dateFrom?: string;
   dateTo?: string;
 }
@@ -73,7 +70,7 @@ const MyBookingsPage: React.FC = () => {
   const currentUser = useSelector(selectCurrentUser);
   const [tabValue, setTabValue] = useState<number>(0);
   const [filters, setFilters] = useState<BookingsFilter>({
-    status: BookingStatusEnum.PENDING,
+    status: BOOKING_STATUSES.PENDING,
   });
 
   // Получаем актуальную информацию о пользователе из API
@@ -96,11 +93,11 @@ const MyBookingsPage: React.FC = () => {
     
     // Обновляем фильтры в зависимости от выбранной вкладки
     if (newValue === 0) {
-      setFilters({ ...filters, status: BookingStatusEnum.PENDING });
+      setFilters({ ...filters, status: BOOKING_STATUSES.PENDING });
     } else if (newValue === 1) {
-      setFilters({ ...filters, status: BookingStatusEnum.CONFIRMED });
+      setFilters({ ...filters, status: BOOKING_STATUSES.CONFIRMED });
     } else if (newValue === 2) {
-      setFilters({ ...filters, status: BookingStatusEnum.COMPLETED });
+      setFilters({ ...filters, status: BOOKING_STATUSES.COMPLETED });
     } else if (newValue === 3) {
       // Для отмененных записей - показываем записи с любым статусом отмены
       setFilters({ ...filters, status: undefined }); // Убираем фильтр статуса, будем фильтровать отдельно
@@ -141,13 +138,12 @@ const MyBookingsPage: React.FC = () => {
           }
           // Для вкладки "Подтвержденные" (tabValue === 1) показываем подтвержденные и в процессе
           if (tabValue === 1) {
-            const statusNum = Number(booking.status);
-            return statusNum === BookingStatusEnum.CONFIRMED || 
-                   statusNum === BookingStatusEnum.IN_PROGRESS;
+            return booking.status === BOOKING_STATUSES.CONFIRMED || 
+                   booking.status === BOOKING_STATUSES.IN_PROGRESS;
           }
           // Для остальных вкладок используем точное соответствие статуса
           if (filters.status !== undefined) {
-            return Number(booking.status) === filters.status;
+            return booking.status === filters.status;
           }
           return true;
         })

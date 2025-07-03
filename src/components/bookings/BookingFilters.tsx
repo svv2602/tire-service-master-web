@@ -1,12 +1,12 @@
 import React from 'react';
 import { Paper, Grid, TextField, Box, Button } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { BookingStatusEnum } from '../../types/booking';
+import { BookingStatusKey } from '../../types/booking';
 import { useTranslation } from 'react-i18next';
 
 interface BookingFiltersProps {
   filters: {
-    status?: BookingStatusEnum;
+    status?: BookingStatusKey;
     dateFrom?: string;
     dateTo?: string;
   };

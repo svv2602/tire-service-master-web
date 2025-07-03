@@ -1,90 +1,78 @@
 import React from 'react';
-import { Paper, Typography, Box, Stepper, Step, StepLabel } from '@mui/material';
-import { Booking, BookingStatusEnum } from '../../types/booking';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { Box, Typography, Stepper, Step, StepLabel } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { Booking, BOOKING_STATUSES, BookingStatusKey } from '../../types/booking';
+import { getStatusDisplayName, convertStatusToKey } from '../../utils/bookingStatus';
 
 interface BookingStatusProps {
   booking: Booking;
 }
 
-const BookingStatus: React.FC<BookingStatusProps> = ({ booking }) => {
+// Функция для определения активного шага
+const getActiveStep = (status: string): number => {
+  const statusKey = convertStatusToKey(status);
+  
+  switch (statusKey) {
+    case BOOKING_STATUSES.PENDING:
+      return 0;
+    case BOOKING_STATUSES.CONFIRMED:
+      return 1;
+    case BOOKING_STATUSES.IN_PROGRESS:
+      return 2;
+    case BOOKING_STATUSES.COMPLETED:
+      return 3;
+    case BOOKING_STATUSES.CANCELLED_BY_CLIENT:
+    case BOOKING_STATUSES.CANCELLED_BY_PARTNER:
+    case BOOKING_STATUSES.NO_SHOW:
+      return -1; // Особый случай для отмененных записей
+    default:
+      return 0;
+  }
+};
+
+export const BookingStatus: React.FC<BookingStatusProps> = ({ booking }) => {
   const { t } = useTranslation();
-
-  // Определение активного шага на основе статуса
-  const getActiveStep = (status: BookingStatusEnum) => {
-    switch (status) {
-      case BookingStatusEnum.PENDING:
-        return 0;
-      case BookingStatusEnum.COMPLETED:
-        return 2;
-      case BookingStatusEnum.CANCELLED:
-        return -1; // Особый случай для отмененных записей
-      default:
-        return 0;
-    }
-  };
-
-  // Форматирование даты
-  const formatDateTime = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'd MMMM yyyy, HH:mm', { locale: ru });
-    } catch (error) {
-      return dateString;
-    }
-  };
 
   // Получение активного шага
   const activeStep = getActiveStep(booking.status);
 
   // Шаги процесса
   const steps = [
-    t('Запись создана'),
-    t('Ожидает обслуживания'),
-    t('Обслуживание завершено')
+    t('В ожидании'),
+    t('Подтверждено'),
+    t('В процессе'),
+    t('Завершено')
   ];
 
+  const statusKey = convertStatusToKey(booking.status);
+  const isCancelled = statusKey === BOOKING_STATUSES.CANCELLED_BY_CLIENT || 
+                      statusKey === BOOKING_STATUSES.CANCELLED_BY_PARTNER || 
+                      statusKey === BOOKING_STATUSES.NO_SHOW;
+
   return (
-    <Paper elevation={2} sx={{ p: 3 }}>
+    <Box>
       <Typography variant="h6" gutterBottom>
-        {t('Статус записи')}
+        {t('Статус бронирования')}
       </Typography>
 
-      {booking.status === BookingStatusEnum.CANCELLED ? (
+      {isCancelled ? (
         <Box mt={2}>
           <Typography variant="body1" color="error" gutterBottom>
             {t('Запись отменена')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t('Дата отмены')}: {formatDateTime(booking.updated_at)}
+            {getStatusDisplayName(booking.status)}
           </Typography>
         </Box>
       ) : (
-        <>
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ mt: 2 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-          
-          <Box mt={3}>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t('Запись создана')}: {formatDateTime(booking.created_at)}
-            </Typography>
-            
-            {booking.status === BookingStatusEnum.COMPLETED && (
-              <Typography variant="body2" color="text.secondary">
-                {t('Обслуживание завершено')}: {formatDateTime(booking.updated_at)}
-              </Typography>
-            )}
-          </Box>
-        </>
+        <Stepper activeStep={activeStep} alternativeLabel>
+          {steps.map((label, index) => (
+            <Step key={label} completed={index < activeStep}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
       )}
-    </Paper>
+    </Box>
   );
-};
-
-export default BookingStatus; 
+}; 

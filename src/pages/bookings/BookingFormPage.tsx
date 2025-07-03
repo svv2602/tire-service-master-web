@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useCreateBookingMutation, useUpdateBookingMutation, useGetBookingByIdQuery, useGetBookingStatusesQuery } from '../../api/bookings.api';
 import { 
-  BookingStatusEnum, 
+  BOOKING_STATUSES, 
   BookingService,
   BookingFormData,
   BookingServiceDetails
@@ -197,7 +197,7 @@ const BookingFormPage: React.FC = () => {
     booking_date: new Date().toISOString().split('T')[0],
     start_time: new Date().toTimeString().substring(0, 5),
     end_time: calculateEndTime(new Date()),
-    status_id: BookingStatusEnum.PENDING,
+    status_id: BOOKING_STATUSES.PENDING,
     notes: '',
     services: [] as BookingService[],
     total_price: '0',

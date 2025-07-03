@@ -77,7 +77,7 @@ const ReviewFormPage: React.FC = () => {
   }
 
   // Фильтруем только завершенные записи
-  const completedBookings = bookingsData?.data.filter(booking => booking.status_id === 2) || [];
+  const completedBookings = bookingsData?.data.filter(booking => booking.status === 'completed') || [];
 
   return (
     <ClientLayout>

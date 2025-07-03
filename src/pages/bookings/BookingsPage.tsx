@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, Snackbar } from '@mui/material';
 import { format } from 'date-fns';
 import { Box, Typography, CircularProgress, Chip } from '../../components/ui';
 import {
@@ -14,7 +14,6 @@ import {
   Sort as SortIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
-
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
@@ -42,8 +41,12 @@ import type {
 
 // Импорт ActionsMenu компонента
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
+import { useTranslation } from 'react-i18next';
+import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingStatus';
+
 
 const BookingsPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
@@ -55,12 +58,10 @@ const BookingsPage: React.FC = () => {
     open: boolean;
     booking: Booking | null;
     newStatus: string;
-    newStatusLabel: string;
   }>({
     open: false,
     booking: null,
     newStatus: '',
-    newStatusLabel: '',
   });
   
   // Состояние для поиска, фильтров, сортировки и пагинации
@@ -79,6 +80,17 @@ const BookingsPage: React.FC = () => {
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<number | ''>('');
   const [dateFromFilter, setDateFromFilter] = useState('');
   const [dateToFilter, setDateToFilter] = useState('');
+  
+  // Состояния для уведомлений
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   
   // Формируем параметры запроса
   const queryParams = useMemo(() => {
@@ -243,7 +255,6 @@ const BookingsPage: React.FC = () => {
       open: true,
       booking: selectedBooking,
       newStatus: newStatusKey,
-      newStatusLabel,
     });
     handleStatusMenuClose();
   }, [selectedBooking, getStatusLabel, handleStatusMenuClose]);
@@ -259,23 +270,29 @@ const BookingsPage: React.FC = () => {
         }
       }).unwrap();
       
-      setConfirmDialog({
-        open: false,
-        booking: null,
-        newStatus: '',
-        newStatusLabel: '',
+      setNotification({
+        open: true,
+        message: t('Статус бронирования успешно обновлен'),
+        severity: 'success'
       });
+      
+      refetchBookings();
     } catch (error) {
-      console.error('Ошибка при изменении статуса:', error);
+      setNotification({
+        open: true,
+        message: t('Ошибка при обновлении статуса'),
+        severity: 'error'
+      });
     }
-  }, [confirmDialog, updateBooking]);
+    
+    setConfirmDialog({ open: false, booking: null, newStatus: '' });
+  }, [confirmDialog, updateBooking, refetchBookings, t]);
 
   const handleCancelStatusChange = useCallback(() => {
     setConfirmDialog({
       open: false,
       booking: null,
       newStatus: '',
-      newStatusLabel: '',
     });
   }, []);
 
@@ -314,10 +331,19 @@ const BookingsPage: React.FC = () => {
     try {
       await deleteBooking(booking.id.toString()).unwrap();
       await refetchBookings();
+      setNotification({
+        open: true,
+        message: t('Бронирование успешно удалено'),
+        severity: 'success'
+      });
     } catch (error) {
-      console.error('Ошибка при удалении бронирования:', error);
+      setNotification({
+        open: true,
+        message: t('Ошибка при удалении бронирования'),
+        severity: 'error'
+      });
     }
-  }, [deleteBooking, refetchBookings]);
+  }, [deleteBooking, refetchBookings, t]);
 
   const handleCreateBooking = useCallback(() => {
     navigate('/client/booking/new-with-availability');
@@ -592,7 +618,7 @@ const BookingsPage: React.FC = () => {
         />
       ),
     },
-     ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, getClientInitials, handleStatusChipClick, bookingActions]);
+  ], [tablePageStyles, formatTime, getStatusColor, getStatusLabel, getClientInitials, handleStatusChipClick, bookingActions]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -615,6 +641,16 @@ const BookingsPage: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
+      <Typography variant="h4" sx={tablePageStyles.pageTitle}>
+        {t('Управление бронированиями')}
+      </Typography>
+      
+      {bookingsError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {t('Ошибка при загрузке данных')}
+        </Alert>
+      )}
+      
       <PageTable<Booking>
         header={headerConfig}
         search={searchConfig}
@@ -628,6 +664,22 @@ const BookingsPage: React.FC = () => {
           totalItems,
           onPageChange: setPage,
         }}
+        actions={[
+          {
+            label: t('Редактировать'),
+            onClick: (booking) => navigate(`/admin/bookings/${booking.id}/edit`),
+            color: 'primary',
+            icon: <EditIcon />,
+          },
+          {
+            label: t('Удалить'),
+            onClick: handleDeleteBooking,
+            color: 'error',
+            confirmationText: t('Вы уверены, что хотите удалить это бронирование?'),
+            icon: <DeleteIcon />,
+          },
+        ]}
+
       />
       
       {/* Меню выбора статуса */}
@@ -659,13 +711,13 @@ const BookingsPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          Подтверждение изменения статуса
+          {t('Подтверждение изменения статуса')}
         </DialogTitle>
         <DialogContent>
           {confirmDialog.booking && (
             <Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Вы действительно хотите изменить статус бронирования на <strong>"{confirmDialog.newStatusLabel}"</strong>?
+                Вы действительно хотите изменить статус бронирования на <strong>"{getStatusLabel(confirmDialog.newStatus)}"</strong>?
               </Typography>
               
               <Box sx={{ 
@@ -710,7 +762,7 @@ const BookingsPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelStatusChange} color="inherit">
-            Отмена
+            {t('Отмена')}
           </Button>
           <Button 
             onClick={handleConfirmStatusChange} 
@@ -718,10 +770,18 @@ const BookingsPage: React.FC = () => {
             variant="contained"
             autoFocus
           >
-            Подтвердить
+            {t('Подтвердить')}
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Уведомления */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+        message={notification.message}
+      />
     </Box>
   );
 };

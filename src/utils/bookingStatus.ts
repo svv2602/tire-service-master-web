@@ -1,61 +1,73 @@
-import { BookingStatusEnum } from '../types/booking';
+import { BookingStatusKey, BookingStatus, BOOKING_STATUSES } from '../types/booking';
 
 /**
- * Преобразует данные статуса из API в строковый enum
+ * Преобразует данные статуса из API в строковый ключ
  */
-export const convertStatusToEnum = (statusData: any): BookingStatusEnum => {
-  if (!statusData || !statusData.name) {
-    return BookingStatusEnum.PENDING;
+export const convertStatusToKey = (statusData: any): BookingStatusKey => {
+  if (!statusData) {
+    return BOOKING_STATUSES.PENDING;
   }
   
-  const statusName = statusData.name.toLowerCase();
+  // Если это уже строка, проверяем что она валидна
+  if (typeof statusData === 'string') {
+    const statusKey = statusData.toLowerCase();
+    if (Object.values(BOOKING_STATUSES).includes(statusKey as BookingStatusKey)) {
+      return statusKey as BookingStatusKey;
+    }
+    return BOOKING_STATUSES.PENDING;
+  }
   
-  // Маппинг названий статусов из API в enum
+  // Если это объект с полем name или key
+  const statusName = String(statusData.key || statusData.name || '').toLowerCase();
+  
+  // Маппинг названий статусов из API в строковые ключи
   switch (statusName) {
     case 'в ожидании':
     case 'pending':
-      return BookingStatusEnum.PENDING;
+      return BOOKING_STATUSES.PENDING;
     case 'подтверждено':
     case 'confirmed':
-      return BookingStatusEnum.CONFIRMED;
+      return BOOKING_STATUSES.CONFIRMED;
     case 'в процессе':
     case 'in_progress':
-      return BookingStatusEnum.IN_PROGRESS;
+      return BOOKING_STATUSES.IN_PROGRESS;
     case 'завершено':
     case 'completed':
-      return BookingStatusEnum.COMPLETED;
+      return BOOKING_STATUSES.COMPLETED;
     case 'отменено клиентом':
     case 'cancelled_by_client':
-      return BookingStatusEnum.CANCELLED_BY_CLIENT;
+      return BOOKING_STATUSES.CANCELLED_BY_CLIENT;
     case 'отменено партнером':
     case 'cancelled_by_partner':
-      return BookingStatusEnum.CANCELLED_BY_PARTNER;
+      return BOOKING_STATUSES.CANCELLED_BY_PARTNER;
     case 'не явился':
     case 'no_show':
-      return BookingStatusEnum.NO_SHOW;
+      return BOOKING_STATUSES.NO_SHOW;
     default:
-      return BookingStatusEnum.PENDING;
+      return BOOKING_STATUSES.PENDING;
   }
 };
 
 /**
  * Получает читаемое название статуса на русском языке
  */
-export const getStatusDisplayName = (status: BookingStatusEnum): string => {
-  switch (status) {
-    case BookingStatusEnum.PENDING:
+export const getStatusDisplayName = (status: BookingStatus): string => {
+  const statusKey = convertStatusToKey(status);
+  
+  switch (statusKey) {
+    case BOOKING_STATUSES.PENDING:
       return 'В ожидании';
-    case BookingStatusEnum.CONFIRMED:
+    case BOOKING_STATUSES.CONFIRMED:
       return 'Подтверждено';
-    case BookingStatusEnum.IN_PROGRESS:
+    case BOOKING_STATUSES.IN_PROGRESS:
       return 'В процессе';
-    case BookingStatusEnum.COMPLETED:
+    case BOOKING_STATUSES.COMPLETED:
       return 'Завершено';
-    case BookingStatusEnum.CANCELLED_BY_CLIENT:
+    case BOOKING_STATUSES.CANCELLED_BY_CLIENT:
       return 'Отменено клиентом';
-    case BookingStatusEnum.CANCELLED_BY_PARTNER:
+    case BOOKING_STATUSES.CANCELLED_BY_PARTNER:
       return 'Отменено партнером';
-    case BookingStatusEnum.NO_SHOW:
+    case BOOKING_STATUSES.NO_SHOW:
       return 'Не явился';
     default:
       return 'Неизвестный статус';
@@ -65,20 +77,22 @@ export const getStatusDisplayName = (status: BookingStatusEnum): string => {
 /**
  * Получает цвет для статуса (для UI компонентов)
  */
-export const getStatusColor = (status: BookingStatusEnum): string => {
-  switch (status) {
-    case BookingStatusEnum.PENDING:
+export const getStatusColor = (status: BookingStatus): string => {
+  const statusKey = convertStatusToKey(status);
+  
+  switch (statusKey) {
+    case BOOKING_STATUSES.PENDING:
       return '#FFC107'; // Желтый
-    case BookingStatusEnum.CONFIRMED:
+    case BOOKING_STATUSES.CONFIRMED:
       return '#4CAF50'; // Зеленый
-    case BookingStatusEnum.IN_PROGRESS:
+    case BOOKING_STATUSES.IN_PROGRESS:
       return '#2196F3'; // Синий
-    case BookingStatusEnum.COMPLETED:
+    case BOOKING_STATUSES.COMPLETED:
       return '#8BC34A'; // Светло-зеленый
-    case BookingStatusEnum.CANCELLED_BY_CLIENT:
-    case BookingStatusEnum.CANCELLED_BY_PARTNER:
+    case BOOKING_STATUSES.CANCELLED_BY_CLIENT:
+    case BOOKING_STATUSES.CANCELLED_BY_PARTNER:
       return '#F44336'; // Красный
-    case BookingStatusEnum.NO_SHOW:
+    case BOOKING_STATUSES.NO_SHOW:
       return '#607D8B'; // Серый
     default:
       return '#9E9E9E'; // Серый по умолчанию
@@ -88,20 +102,48 @@ export const getStatusColor = (status: BookingStatusEnum): string => {
 /**
  * Проверяет, является ли статус отмененным
  */
-export const isCancelledStatus = (status: BookingStatusEnum): boolean => {
-  return [
-    BookingStatusEnum.CANCELLED_BY_CLIENT,
-    BookingStatusEnum.CANCELLED_BY_PARTNER,
-    BookingStatusEnum.NO_SHOW
-  ].includes(status);
+export const isCancelledStatus = (status: BookingStatus): boolean => {
+  const statusKey = convertStatusToKey(status);
+  const cancelledStatuses: BookingStatusKey[] = [
+    BOOKING_STATUSES.CANCELLED_BY_CLIENT,
+    BOOKING_STATUSES.CANCELLED_BY_PARTNER,
+    BOOKING_STATUSES.NO_SHOW
+  ];
+  return cancelledStatuses.includes(statusKey);
 };
 
 /**
  * Проверяет, можно ли отменить бронирование в данном статусе
  */
-export const canCancelBooking = (status: BookingStatusEnum): boolean => {
-  return [
-    BookingStatusEnum.PENDING,
-    BookingStatusEnum.CONFIRMED
-  ].includes(status);
+export const canCancelBooking = (status: BookingStatus): boolean => {
+  const statusKey = convertStatusToKey(status);
+  const cancellableStatuses: BookingStatusKey[] = [
+    BOOKING_STATUSES.PENDING,
+    BOOKING_STATUSES.CONFIRMED
+  ];
+  return cancellableStatuses.includes(statusKey);
+};
+
+/**
+ * Получает цвет для Chip компонента MUI
+ */
+export const getStatusChipColor = (status: BookingStatus): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+  const statusKey = convertStatusToKey(status);
+  
+  switch (statusKey) {
+    case BOOKING_STATUSES.PENDING:
+      return 'warning';
+    case BOOKING_STATUSES.CONFIRMED:
+      return 'success';
+    case BOOKING_STATUSES.IN_PROGRESS:
+      return 'info';
+    case BOOKING_STATUSES.COMPLETED:
+      return 'success';
+    case BOOKING_STATUSES.CANCELLED_BY_CLIENT:
+    case BOOKING_STATUSES.CANCELLED_BY_PARTNER:
+    case BOOKING_STATUSES.NO_SHOW:
+      return 'error';
+    default:
+      return 'default';
+  }
 }; 

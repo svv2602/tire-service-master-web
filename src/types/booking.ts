@@ -4,17 +4,37 @@ import { ServicePoint } from './servicePoint';
 import { CarBrand, CarModel } from './car';
 import { PaginationFilter } from './models';
 
-export enum BookingStatusEnum {
-  PENDING = 1,          // В ожидании
-  CONFIRMED = 2,        // Подтверждено  
-  IN_PROGRESS = 3,      // В процессе
-  COMPLETED = 4,        // Завершено
-  CANCELLED_BY_CLIENT = 5,   // Отменено клиентом
-  CANCELLED_BY_PARTNER = 6,  // Отменено партнером
-  NO_SHOW = 7          // Не явился
+// ✅ НОВАЯ СИСТЕМА СТАТУСОВ - строковые ключи вместо числовых enum
+export type BookingStatusKey = 
+  | 'pending'
+  | 'confirmed' 
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled_by_client'
+  | 'cancelled_by_partner'
+  | 'no_show';
+
+// ✅ Интерфейс статуса бронирования из API
+export interface BookingStatusInfo {
+  key: BookingStatusKey;
+  name: string;
+  description?: string;
+  color: string;
 }
 
-export type BookingStatus = BookingStatusEnum | string;
+// ✅ Обратная совместимость - теперь BookingStatus это строка
+export type BookingStatus = BookingStatusKey | string;
+
+// ✅ Константы статусов для удобства использования
+export const BOOKING_STATUSES = {
+  PENDING: 'pending' as const,
+  CONFIRMED: 'confirmed' as const,
+  IN_PROGRESS: 'in_progress' as const,
+  COMPLETED: 'completed' as const,
+  CANCELLED_BY_CLIENT: 'cancelled_by_client' as const,
+  CANCELLED_BY_PARTNER: 'cancelled_by_partner' as const,
+  NO_SHOW: 'no_show' as const,
+} as const;
 
 export interface ServiceRecipient {
   first_name: string;
@@ -22,7 +42,6 @@ export interface ServiceRecipient {
   full_name: string;
   phone: string;
   email?: string;
-  is_self_service: boolean;
 }
 
 export interface Booking {
@@ -36,7 +55,7 @@ export interface Booking {
   start_time: string;
   end_time: string;
   notes: string;
-  status_id: number;
+  status: BookingStatus; // ✅ Теперь это строка, а не числовой ID
   service_category_id?: number;
   service_category?: {
     id: number;
@@ -58,7 +77,6 @@ export interface Booking {
     quantity: number;
     price: number;
   }[];
-  status: BookingStatus;
   service_recipient?: ServiceRecipient;
   booking_services?: BookingServiceDetails[];
   scheduled_at: string;
@@ -89,7 +107,7 @@ export interface BookingFormData {
   booking_date: string;
   start_time: string;
   end_time: string;
-  status_id?: number;
+  status?: BookingStatus; // ✅ Строковый статус вместо status_id
   total_price?: string;
   payment_method?: string;
   notes?: string;
@@ -108,7 +126,7 @@ export interface BookingFormData {
 
 export interface BookingFilter extends PaginationFilter {
   query?: string;
-  status_id?: number;
+  status?: BookingStatus; // ✅ Строковый статус
   service_point_id?: number;
   client_id?: number;
   service_category_id?: number;

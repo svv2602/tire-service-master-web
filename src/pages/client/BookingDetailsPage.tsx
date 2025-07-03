@@ -518,7 +518,7 @@ const BookingDetailsPage: React.FC = () => {
           
           <Box sx={{ display: 'flex', gap: 1 }}>
             {/* Кнопка перенести запись (только для подтвержденных и ожидающих) */}
-            {(booking.status_id === 1 || booking.status_id === 2) && (
+                            {(booking.status.id === 1 || booking.status.id === 2) && (
               <Button 
                 variant="outlined" 
                 color="primary"

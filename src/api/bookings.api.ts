@@ -145,7 +145,7 @@ export const bookingsApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: 'Booking', id: 'LIST' }],
     }),
 
-    getBookingStatuses: builder.query<Array<{ id: number; name: string; color?: string }>, void>({
+    getBookingStatuses: builder.query<Array<{ key: string; name: string; color?: string }>, void>({
       query: () => ({
         url: 'booking_statuses',
         method: 'GET',

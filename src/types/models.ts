@@ -207,7 +207,7 @@ export interface Booking {
     quantity: number;
     price: number;
   }[];
-  status_id: number;
+  status: string;
   created_at: string;
   updated_at: string;
   

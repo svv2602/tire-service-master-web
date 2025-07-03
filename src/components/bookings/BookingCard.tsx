@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardActions, Typography, Button, Chip, Box, Grid } from '@mui/material';
-import { Booking, BookingStatusEnum } from '../../types/booking';
+import { Booking } from '../../types/booking';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -9,46 +9,26 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingStatus';
 
 interface BookingCardProps {
   booking: Booking;
+  onClick?: () => void;
 }
 
-const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
+// Функция для получения цвета статуса для Chip
+const getStatusColor = (status: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
+  return getStatusChipColor(status);
+};
+
+// Функция для получения названия статуса
+const getStatusName = (status: string): string => {
+  return getStatusDisplayName(status);
+};
+
+const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
-  // Получение цвета статуса
-  const getStatusColor = (status: BookingStatusEnum) => {
-    switch (status) {
-      case BookingStatusEnum.PENDING:
-        return 'warning';
-      case BookingStatusEnum.CONFIRMED:
-        return 'primary';
-      case BookingStatusEnum.COMPLETED:
-        return 'success';
-      case BookingStatusEnum.CANCELLED:
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  // Получение названия статуса
-  const getStatusName = (status: BookingStatusEnum) => {
-    switch (status) {
-      case BookingStatusEnum.PENDING:
-        return t('Ожидает');
-      case BookingStatusEnum.CONFIRMED:
-        return t('Подтверждено');
-      case BookingStatusEnum.COMPLETED:
-        return t('Завершено');
-      case BookingStatusEnum.CANCELLED:
-        return t('Отменено');
-      default:
-        return t('Неизвестно');
-    }
-  };
 
   // Форматирование даты в формате dd.mm.yyyy
   const formattedDate = booking.booking_date 
@@ -121,63 +101,45 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
   };
 
   return (
-    <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" component="div">
-            {t('Запись №')}{booking.id}
+    <Card 
+      onClick={onClick}
+      sx={{ 
+        cursor: onClick ? 'pointer' : 'default',
+        mb: 2,
+        '&:hover': onClick ? { boxShadow: 3 } : {}
+      }}
+    >
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Typography variant="h6" component="h3">
+            {t('Бронирование')} #{booking.id}
           </Typography>
           <Chip 
             label={getStatusName(booking.status)} 
-            color={getStatusColor(booking.status) as any}
+            color={getStatusColor(booking.status)}
             size="small"
           />
         </Box>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Box display="flex" alignItems="center" mb={1}>
-              <CalendarTodayIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body2">{formattedDate}</Typography>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box display="flex" alignItems="center" mb={1}>
-              <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-              <Typography variant="body2">
-                {formatTime(booking.start_time)}
-              </Typography>
-            </Box>
-          </Grid>
-          
-          <Grid item xs={12}>
-            <Box display="flex" alignItems="flex-start" mb={1}>
-              <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary', mt: 0.2 }} />
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" sx={{ fontWeight: 'medium', lineHeight: 1.2 }}>
-                  {servicePointInfo.name}
-                </Typography>
-                {servicePointInfo.address && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.2 }}>
-                    {servicePointInfo.address}
-                  </Typography>
-                )}
-              </Box>
-            </Box>
-          </Grid>
-          
-          {booking.car_id && (
-            <Grid item xs={12}>
-              <Box display="flex" alignItems="center">
-                <DirectionsCarIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-                <Typography variant="body2" noWrap>
-                  {t('Автомобиль')} #{booking.car_id}
-                </Typography>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
+        
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          {t('Дата')}: {formattedDate}
+        </Typography>
+        
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          {t('Время')}: {formatTime(booking.start_time)} - {booking.end_time}
+        </Typography>
+        
+        {booking.service_point && (
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            {t('Сервисная точка')}: {booking.service_point.name}
+          </Typography>
+        )}
+        
+        {booking.notes && (
+          <Typography variant="body2" color="text.secondary" mt={1}>
+            {t('Примечания')}: {booking.notes}
+          </Typography>
+        )}
       </CardContent>
       
       <CardActions>
@@ -185,13 +147,13 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking }) => {
           {t('Подробнее')}
         </Button>
         
-        {(booking.status === BookingStatusEnum.PENDING || booking.status === BookingStatusEnum.CONFIRMED) && (
+        {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
           <Button size="small" color="primary" onClick={handleReschedule}>
             {t('Перенести')}
           </Button>
         )}
         
-        {(booking.status === BookingStatusEnum.PENDING || booking.status === BookingStatusEnum.CONFIRMED) && (
+        {(booking.status === 'PENDING' || booking.status === 'CONFIRMED') && (
           <Button size="small" color="error" onClick={handleCancel}>
             {t('Отменить')}
           </Button>

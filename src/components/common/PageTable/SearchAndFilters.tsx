@@ -75,7 +75,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             getOptionLabel={(option: any) => option.label || ''}
             value={filter.options?.find((opt: any) => opt.value === filter.value) || null}
             onChange={(event, newValue) => {
-              filter.onChange(newValue ? newValue.value : filter.clearValue || '');
+              filter.onChange(newValue ? (typeof newValue === 'string' ? newValue : newValue.value) : filter.clearValue || '');
             }}
             freeSolo
             onInputChange={(event, newInputValue) => {
