@@ -978,9 +978,9 @@ const PartnerFormPage: React.FC = () => {
       {/* Таблица сотрудников */}
       <Table
         columns={[
-          { id: 'fio', label: 'ФИО', format: (_: any, row: Operator) => `${row.user.first_name} ${row.user.last_name}` },
-          { id: 'email', label: 'Email', format: (_: any, row: Operator) => row.user.email },
-          { id: 'phone', label: 'Телефон', format: (_: any, row: Operator) => row.user.phone },
+          { id: 'fio', label: 'ФИО', format: (_: any, row: Operator) => row.user ? `${row.user.first_name} ${row.user.last_name}` : 'Данные не загружены' },
+          { id: 'email', label: 'Email', format: (_: any, row: Operator) => row.user?.email || 'Не указан' },
+          { id: 'phone', label: 'Телефон', format: (_: any, row: Operator) => row.user?.phone || 'Не указан' },
           { id: 'position', label: 'Должность', format: (_: any, row: Operator) => row.position },
           { id: 'access_level', label: 'Доступ', format: (_: any, row: Operator) => row.access_level },
           { id: 'status', label: 'Статус', format: (_: any, row: Operator) => (
