@@ -86,6 +86,34 @@ const MyBookingsPage: React.FC = () => {
       // Убираем параметр из URL
       window.history.replaceState({}, '', window.location.pathname);
     }
+    
+    // Проверяем параметр tab для активации нужной вкладки
+    const tabParam = urlParams.get('tab');
+    if (tabParam) {
+      switch (tabParam) {
+        case 'pending':
+          setTabValue(0);
+          setFilters({ ...filters, status: BOOKING_STATUSES.PENDING });
+          break;
+        case 'confirmed':
+          setTabValue(1);
+          setFilters({ ...filters, status: BOOKING_STATUSES.CONFIRMED });
+          break;
+        case 'completed':
+          setTabValue(2);
+          setFilters({ ...filters, status: BOOKING_STATUSES.COMPLETED });
+          break;
+        case 'cancelled':
+          setTabValue(3);
+          setFilters({ ...filters, status: undefined }); // Для отмененных убираем фильтр статуса
+          break;
+        default:
+          // Оставляем значение по умолчанию
+          break;
+      }
+      // Убираем параметр tab из URL после обработки
+      window.history.replaceState({}, '', window.location.pathname);
+    }
   }, []);
 
   // Получаем актуальную информацию о пользователе из API

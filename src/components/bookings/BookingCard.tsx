@@ -152,6 +152,9 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
         onBookingUpdated();
       }
       
+      // Перенаправляем на страницу бронирований с активной вкладкой "Отмененные"
+      navigate('/client/bookings?tab=cancelled');
+      
     } catch (error: any) {
       console.error('Ошибка при отмене записи:', error);
       setCancelError(

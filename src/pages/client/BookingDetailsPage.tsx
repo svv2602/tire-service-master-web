@@ -177,8 +177,8 @@ const BookingDetailsPage: React.FC = () => {
         cancellation_comment: 'Отменено клиентом через веб-интерфейс'
       }).unwrap();
       setCancelDialogOpen(false);
-      // Обновляем страницу или перенаправляем пользователя
-      window.location.reload();
+      // Перенаправляем на страницу бронирований с активной вкладкой "Отмененные"
+      navigate('/client/bookings?tab=cancelled');
     } catch (error: any) {
       setCancelError(error.data?.error || 'Не удалось отменить бронирование');
     }
