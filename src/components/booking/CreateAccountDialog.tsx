@@ -105,7 +105,8 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
         user: {
           first_name: bookingData.service_recipient.first_name,
           last_name: bookingData.service_recipient.last_name,
-          email: bookingData.service_recipient.email || `${normalizedPhone}@temp.local`,
+          // Отправляем email только если он реально указан
+          ...(bookingData.service_recipient.email && { email: bookingData.service_recipient.email }),
           phone: normalizedPhone,
           password: generatedPassword,
           password_confirmation: generatedPassword,

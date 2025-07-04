@@ -4,7 +4,7 @@ interface RegisterRequest {
   user: {
     first_name: string;
     last_name: string;
-    email: string;
+    email?: string; // Email теперь опциональный для регистрации клиентов
     phone: string;
     password: string;
     password_confirmation: string;
