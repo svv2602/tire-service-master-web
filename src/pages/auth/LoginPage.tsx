@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
       isNavigatingRef.current = true;
       
       // Определяем путь по умолчанию в зависимости от роли пользователя
-      let defaultPath = '/client';
+      let defaultPath = '/client/profile';
       if (user) {
         // Если роль админ, партнер, менеджер или оператор - идем в админку
         const isAdminRole = user.role === UserRole.ADMIN || 
@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
           defaultPath = '/admin/dashboard';
           console.log('Admin/Partner/Manager/Operator user, redirecting to admin dashboard');
         } else {
-          console.log('Client user, redirecting to client area');
+          console.log('Client user, redirecting to client profile');
         }
       }
       

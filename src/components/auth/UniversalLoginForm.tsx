@@ -170,7 +170,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         // Перенаправляем в зависимости от роли
         switch (result.user.role) {
           case 'client':
-            navigate('/client/dashboard');
+            navigate('/client/profile');
             break;
           case 'admin':
             navigate('/admin/dashboard');
