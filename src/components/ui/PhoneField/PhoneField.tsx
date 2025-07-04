@@ -1,9 +1,7 @@
-import React, { useRef } from 'react';
-import { IMaskInput } from 'react-imask';
+import React from 'react';
 import { TextField, TextFieldProps } from '../TextField';
 import { InputAdornment } from '@mui/material';
 import { Phone as PhoneIcon } from '@mui/icons-material';
-import { formatPhoneNumber } from '../../../utils/validation';
 
 export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' | 'onChange'> {
   /**
@@ -23,32 +21,9 @@ export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' |
   showIcon?: boolean;
 }
 
-// Компонент маски для IMaskInput
-interface CustomMaskProps {
-  onChange: (event: { target: { name: string; value: string } }) => void;
-  name: string;
-}
-
-const PhoneMask = React.forwardRef<HTMLInputElement, CustomMaskProps>(
-  function PhoneMask(props, ref) {
-    const { onChange, ...other } = props;
-    return (
-      <IMaskInput
-        {...other}
-        mask="+38 (000) 000-00-00"
-        definitions={{
-          '0': /[0-9]/,
-        }}
-        inputRef={ref}
-        onAccept={(value: any) => onChange({ target: { name: props.name, value } })}
-        overwrite
-      />
-    );
-  },
-);
-
 /**
- * Поле ввода телефона с маской +38 (0ХХ) ХХХ-ХХ-ХХ
+ * Поле ввода телефона с автоформатированием +38 (0ХХ) ХХХ-ХХ-ХХ
+ * Использует ту же логику, что и в UniversalLoginForm
  */
 export const PhoneField: React.FC<PhoneFieldProps> = ({
   value = '',
@@ -58,13 +33,71 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   required = false,
   helperText = 'Формат: +38 (0ХХ)ХХХ-ХХ-ХХ',
   error = false,
+  placeholder = '+38 (067) 123-45-67',
   onBlur,
   ...props
 }) => {
-  // Обработчик изменения значения
+  // Обработчик изменения значения с автоформатированием (как в UniversalLoginForm)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formattedValue = formatPhoneNumber(e.target.value);
-    onChange(formattedValue);
+    // Автоформатирование с визуальной маской
+    let inputValue = e.target.value;
+    
+    // Убираем все кроме цифр и +
+    let digitsOnly = inputValue.replace(/[^\d+]/g, '');
+    
+    // Обработка различных форматов ввода
+    if (digitsOnly.startsWith('+')) {
+      digitsOnly = digitsOnly.substring(1); // убираем +
+    }
+    
+    // Автоматически добавляем 38 если начинается с 0
+    if (digitsOnly.match(/^0/)) {
+      digitsOnly = '38' + digitsOnly;
+    }
+    
+    // Форматируем с маской +38 (0XX) XXX-XX-XX
+    let formatted = '';
+    if (digitsOnly.length >= 2 && digitsOnly.startsWith('38')) {
+      formatted = '+38';
+      const remaining = digitsOnly.substring(2);
+      
+      if (remaining.length > 0) {
+        formatted += ' (';
+        if (remaining.length <= 3) {
+          formatted += remaining;
+        } else {
+          formatted += remaining.substring(0, 3) + ')';
+          const rest = remaining.substring(3);
+          
+          if (rest.length > 0) {
+            formatted += ' ';
+            if (rest.length <= 3) {
+              formatted += rest;
+            } else {
+              formatted += rest.substring(0, 3);
+              if (rest.length > 3) {
+                formatted += '-';
+                if (rest.length <= 5) {
+                  formatted += rest.substring(3);
+                } else {
+                  formatted += rest.substring(3, 5);
+                  if (rest.length > 5) {
+                    formatted += '-' + rest.substring(5, 7);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } else if (digitsOnly.length > 0) {
+      // Для других форматов оставляем как есть с +
+      formatted = '+' + digitsOnly;
+    } else {
+      formatted = inputValue; // Пустое значение
+    }
+    
+    onChange(formatted);
   };
 
   return (
@@ -75,12 +108,12 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
       required={required}
       error={error}
       helperText={helperText}
+      placeholder={placeholder}
       value={value || ''}
       onChange={handleChange}
       onBlur={onBlur}
       InputProps={{
         ...props.InputProps,
-        inputComponent: PhoneMask as any,
         startAdornment: showIcon ? (
           <InputAdornment position="start">
             <PhoneIcon color={error ? 'error' : 'action'} />
