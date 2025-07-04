@@ -129,8 +129,8 @@ export const clientsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    createClientCar: builder.mutation<ClientCar, { clientId: string; data: ClientCarFormData }>({
-      query: ({ clientId, data }: { clientId: string; data: ClientCarFormData }) => ({
+    createClientCar: builder.mutation<ClientCar, { clientId: string; data: { car: ClientCarFormData } }>({
+      query: ({ clientId, data }: { clientId: string; data: { car: ClientCarFormData } }) => ({
         url: `clients/${clientId}/cars`,
         method: 'POST',
         body: data,

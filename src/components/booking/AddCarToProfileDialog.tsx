@@ -19,10 +19,13 @@ import {
   Add as AddIcon,
   Close as CloseIcon,
 } from '@mui/icons-material';
-import { useCreateMyClientCarMutation } from '../../api/clients.api';
+import { useCreateMyClientCarMutation, useCreateClientCarMutation } from '../../api/clients.api';
 import { useGetCarBrandsQuery } from '../../api/carBrands.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../store/slices/authSlice';
 import { ClientCarFormData } from '../../types/client';
+import { UserRole } from '../../types/user-role';
 
 interface AddCarToProfileDialogProps {
   open: boolean;
@@ -48,8 +51,12 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
 
   // API хуки
   const [createMyClientCar] = useCreateMyClientCarMutation();
+  const [createClientCar] = useCreateClientCarMutation();
   const { data: carBrandsData } = useGetCarBrandsQuery({});
   const { data: carTypesData } = useGetCarTypesQuery();
+
+  // Получаем текущего пользователя из Redux
+  const currentUser = useSelector(selectCurrentUser);
 
   // Проверяем, что carData передан
   if (!carData) {
@@ -65,6 +72,10 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
     try {
       setIsAdding(true);
       setError(null);
+
+      console.log('🔍 Текущий пользователь:', currentUser);
+      console.log('🔍 Роль пользователя:', currentUser?.role);
+      console.log('🔍 Client ID пользователя:', currentUser?.client_id);
 
       // Ищем бренд по названию
       let brandId = 1; // Дефолтный бренд
@@ -88,7 +99,36 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       };
 
       console.log('🚗 Добавление автомобиля в профиль:', carFormData);
-      const result = await createMyClientCar(carFormData).unwrap();
+
+      // Определяем, какой API запрос использовать и подготавливаем данные
+      let result;
+      
+      if (currentUser?.role === UserRole.CLIENT) {
+        // Для клиентов используем auth/me/cars (данные уже обернуты в { car: data } в API)
+        console.log('🚗 Добавление автомобиля через auth/me/cars (клиент)');
+        result = await createMyClientCar(carFormData).unwrap();
+      } else {
+        // Для других ролей используем общий API
+        // Для администраторов и других ролей нужно определить ID клиента
+        let clientId = currentUser?.client_id;
+        
+        // Если у пользователя нет client_id, используем ID текущего авторизованного пользователя
+        if (!clientId && currentUser?.id) {
+          // Для администраторов, которые создают бронирование, используем их собственный ID как client_id
+          // Это работает, если администратор создает бронирование для себя
+          clientId = currentUser.id;
+        }
+        
+        if (!clientId) {
+          throw new Error('Не удалось определить ID клиента для добавления автомобиля');
+        }
+        
+        console.log('🚗 Добавление автомобиля через общий API (админ/партнер/менеджер), clientId:', clientId);
+        result = await createClientCar({
+          clientId: clientId.toString(),
+          data: { car: carFormData } // Оборачиваем данные в { car: data }
+        }).unwrap();
+      }
       
       console.log('✅ Автомобиль успешно добавлен:', result);
       setSuccess(true);
@@ -154,7 +194,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
         ) : (
           <>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              Вы использовали автомобиль для бронирования, которого нет в вашем профиле. 
+              Вы использовали автомобиль для бронирования, которого нет в профиле. 
               Хотите добавить его для удобства будущих бронирований?
             </Typography>
 
@@ -218,7 +258,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
             )}
 
             <Typography variant="body2" color="text.secondary">
-              После добавления вы сможете быстро выбирать этот автомобиль при создании новых бронирований.
+              После добавления можно будет быстро выбирать этот автомобиль при создании новых бронирований.
             </Typography>
           </>
         )}

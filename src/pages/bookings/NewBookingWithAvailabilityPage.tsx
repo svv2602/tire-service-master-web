@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import {
   Box,
@@ -136,8 +136,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   
-  // Получаем информацию об аутентификации
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  // Redux состояние
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch();
   
   // Состояние формы
   const [activeStep, setActiveStep] = useState(0);
@@ -171,24 +173,22 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     car_type_id: undefined,
   });
   
-  // API хуки
+  // API хуки для получения данных пользователя
+  const { data: authUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
+    undefined,
+    {
+      skip: !isAuthenticated, // Пропускаем запрос если пользователь не аутентифицирован
+    }
+  );
+
+  // API хуки для автомобилей клиента
   const { data: clientCars = [], refetch: refetchClientCars } = useGetMyClientCarsQuery(undefined, {
     skip: !isAuthenticated, // Пропускаем если пользователь не авторизован
   });
-  
-  const { data: currentUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
-    undefined, // Параметры не нужны
-    { 
-      skip: !isAuthenticated, // Пропускаем запрос если пользователь не авторизован
-      refetchOnMountOrArgChange: true // Перезагружаем при монтировании компонента
-    }
-  );
-  
-  // ✅ Предзаполнение данных для авторизованных пользователей
+
+  // Эффект для предзаполнения данных пользователя
   useEffect(() => {
-    const userData = currentUser || user;
-    
-    if (isAuthenticated && userData && !isLoadingCurrentUser) {
+    if (authUser && authUser.first_name && authUser.phone) {
       // Проверяем, не заполнены ли уже данные получателя услуги
       const shouldPrefill = !formData.service_recipient.first_name && !formData.service_recipient.phone;
       
@@ -196,15 +196,15 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         setFormData(prev => ({
           ...prev,
           service_recipient: {
-            first_name: userData.first_name || '',
-            last_name: userData.last_name || '',
-            phone: userData.phone || '',
-            email: userData.email || '',
+            first_name: authUser.first_name || '',
+            last_name: authUser.last_name || '',
+            phone: authUser.phone || '',
+            email: authUser.email || '',
           }
         }));
       }
     }
-  }, [isAuthenticated, user, currentUser, isLoadingCurrentUser, currentUserError]);
+  }, [isAuthenticated, authUser, formData]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
@@ -389,7 +389,9 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       const carData = prepareCarDataForDialog(formData);
       console.log('🔍 Подготовленные данные автомобиля:', carData);
       console.log('🔍 Список автомобилей клиента:', clientCars);
+      console.log('🔍 Роль текущего пользователя:', currentUser?.role);
       
+      // Показываем диалог добавления автомобиля для всех авторизованных пользователей
       if (shouldOfferToAddCar(carData, clientCars)) {
         console.log('🚗 Предлагаем добавить автомобиль в профиль:', carData);
         setCarDataForDialog(carData);
