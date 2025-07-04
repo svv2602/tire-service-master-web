@@ -50,6 +50,9 @@ import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material
 import { getCardStyles, getButtonStyles, getTextFieldStyles } from '../../styles/components';
 import { SIZES } from '../../styles';
 
+// Импорт UI компонентов
+import { PhoneField } from '../../components/ui/PhoneField';
+
 // Типы для формы бронирования
 interface ServiceSelection {
   service_id: number;
@@ -908,14 +911,13 @@ const BookingFormPage: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
+                <PhoneField
                   label="Телефон получателя услуги"
                   value={formik.values.service_recipient_phone}
-                  onChange={(e) => formik.setFieldValue('service_recipient_phone', e.target.value)}
+                  onChange={(value) => formik.setFieldValue('service_recipient_phone', value)}
                   error={formik.touched.service_recipient_phone && Boolean(formik.errors.service_recipient_phone)}
                   helperText={formik.touched.service_recipient_phone && formik.errors.service_recipient_phone}
-                  sx={textFieldStyles}
+                  required={!formik.values.client_id}
                 />
               </Grid>
               

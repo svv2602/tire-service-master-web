@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления валидации телефона</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .success { color: #4caf50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        .info { color: #2196f3; font-weight: bold; }
+        .test-case {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #2196f3;
+        }
+        .validation-result {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .validation-result.valid {
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
+        }
+        .validation-result.invalid {
+            background-color: #ffeaea;
+            border: 1px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления валидации телефона</h1>
+        
+        <div class="test-section">
+            <h2>📋 Описание проблемы</h2>
+            <p><strong>Проблема:</strong> В формах показывалась неправильная валидация телефона</p>
+            <ul>
+                <li><span class="error">❌ Было:</span> "Телефон должен быть в формате +38 (0ХХ)ХХХ-ХХ-ХХ" (без пробелов)</li>
+                <li><span class="success">✅ Стало:</span> "Телефон должен быть в формате +38 (0ХХ) ХХХ-ХХ-ХХ" (с правильными пробелами)</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Исправления</h2>
+            <div class="test-case">
+                <h3>1. validation.ts</h3>
+                <p><strong>Изменения:</strong></p>
+                <ul>
+                    <li>Заменен regex <code>/^\+38\d{10}$/</code> на кастомную валидацию</li>
+                    <li>Новая валидация принимает отформатированный номер с пробелами, скобками и дефисами</li>
+                    <li>Исправлено сообщение об ошибке: добавлен пробел после скобки</li>
+                </ul>
+            </div>
+            
+            <div class="test-case">
+                <h3>2. PhoneField.tsx</h3>
+                <p><strong>Изменения:</strong></p>
+                <ul>
+                    <li>Исправлен helperText: <code>'Формат: +38 (0ХХ) ХХХ-ХХ-ХХ'</code></li>
+                    <li>Добавлен пробел после скобки в комментарии</li>
+                </ul>
+            </div>
+            
+            <div class="test-case">
+                <h3>3. UniversalLoginForm.tsx</h3>
+                <p><strong>Изменения:</strong></p>
+                <ul>
+                    <li>Заменена валидация с regex на новую логику</li>
+                    <li>Теперь принимает отформатированные номера</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Тестовые случаи валидации</h2>
+            
+            <div class="test-case">
+                <h3>Валидные номера (должны проходить валидацию):</h3>
+                <div id="valid-numbers"></div>
+            </div>
+            
+            <div class="test-case">
+                <h3>Невалидные номера (должны НЕ проходить валидацию):</h3>
+                <div id="invalid-numbers"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Ожидаемый результат</h2>
+            <ul>
+                <li>Все формы с полями телефона показывают правильный формат в сообщениях об ошибках</li>
+                <li>Валидация принимает отформатированные номера: <code>+38 (067) 123-45-67</code></li>
+                <li>Валидация принимает неотформатированные номера: <code>+380671234567</code></li>
+                <li>Пользователи видят корректные подсказки о формате</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>📁 Затронутые страницы</h2>
+            <ul>
+                <li><code>/admin/users/{id}/edit</code> - редактирование пользователей</li>
+                <li><code>/admin/clients/{id}/edit</code> - редактирование клиентов</li>
+                <li><code>/admin/partners/{id}/edit</code> - редактирование партнеров</li>
+                <li><code>/admin/bookings/{id}/edit</code> - редактирование бронирований</li>
+                <li><code>/admin/service-points/{id}/edit</code> - редактирование сервисных точек</li>
+                <li><code>/client/booking</code> - создание бронирования</li>
+                <li><code>/login</code> - страница входа</li>
+                <li><code>/auth/register</code> - страница регистрации</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Симуляция новой валидации
+        function validatePhoneNumber(value) {
+            if (!value) return true; // Пустое значение допустимо для nullable
+            
+            // Убираем все символы кроме цифр и +
+            const digitsOnly = value.replace(/[^\d+]/g, '');
+            
+            // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
+            return digitsOnly.startsWith('+38') && digitsOnly.length === 13;
+        }
+
+        // Тестовые данные
+        const validNumbers = [
+            '+38 (067) 123-45-67',
+            '+380671234567',
+            '+38 (099) 888-77-66',
+            '+38(050)555-44-33',
+            '+38 050 555 44 33',
+            '+38-067-123-45-67'
+        ];
+
+        const invalidNumbers = [
+            '+38 (067) 123-45-6', // неполный
+            '+380671234567890',   // слишком длинный
+            '+37 (067) 123-45-67', // не украинский
+            '380671234567',       // без +
+            '+38067123456',       // слишком короткий
+            '+38 (067) 123-45',   // неполный
+            'abc123',             // не номер
+            ''                    // пустой (должен быть валидным для nullable)
+        ];
+
+        // Отображение результатов
+        function displayResults() {
+            const validContainer = document.getElementById('valid-numbers');
+            const invalidContainer = document.getElementById('invalid-numbers');
+
+            validNumbers.forEach(number => {
+                const isValid = validatePhoneNumber(number);
+                const div = document.createElement('div');
+                div.className = `validation-result ${isValid ? 'valid' : 'invalid'}`;
+                div.innerHTML = `
+                    <strong>${number}</strong> → 
+                    <span class="${isValid ? 'success' : 'error'}">
+                        ${isValid ? '✅ Валидный' : '❌ Невалидный'}
+                    </span>
+                `;
+                validContainer.appendChild(div);
+            });
+
+            invalidNumbers.forEach(number => {
+                const isValid = validatePhoneNumber(number);
+                const div = document.createElement('div');
+                div.className = `validation-result ${!isValid ? 'valid' : 'invalid'}`;
+                div.innerHTML = `
+                    <strong>"${number}"</strong> → 
+                    <span class="${!isValid ? 'success' : 'error'}">
+                        ${!isValid ? '✅ Корректно отклонен' : '❌ Ошибочно принят'}
+                    </span>
+                `;
+                invalidContainer.appendChild(div);
+            });
+        }
+
+        // Запускаем тесты при загрузке страницы
+        document.addEventListener('DOMContentLoaded', displayResults);
+    </script>
+</body>
+</html> 

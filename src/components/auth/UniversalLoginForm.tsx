@@ -80,11 +80,13 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         return false;
       }
     } else {
-      // Валидация украинского телефона
-      const phoneRegex = /^\+38\d{10}$/;
+      // Валидация украинского телефона - принимаем отформатированный номер
       const cleanPhone = login.replace(/[\s\-\(\)]/g, '');
-      if (!phoneRegex.test(cleanPhone)) {
-        setError('Некорректный формат телефона. Используйте формат: +38 (0ХХ)ХХХ-ХХ-ХХ');
+      const digitsOnly = cleanPhone.replace(/[^\d+]/g, '');
+      
+      // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
+      if (!digitsOnly.startsWith('+38') || digitsOnly.length !== 13) {
+        setError('Некорректный формат телефона. Используйте формат: +38 (0ХХ) ХХХ-ХХ-ХХ');
         return false;
       }
     }

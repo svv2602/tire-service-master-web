@@ -1,12 +1,21 @@
 import * as yup from 'yup';
 
 /**
- * Валидация номера телефона в формате +38XXXXXXXXXX
- * Примеры: +380671234567, +380991234567
+ * Валидация номера телефона в формате +38 (0ХХ) ХХХ-ХХ-ХХ
+ * Принимает как отформатированный, так и неотформатированный номер
+ * Примеры: +38 (067) 123-45-67, +380671234567
  */
 export const phoneValidation = yup
   .string()
-  .matches(/^\+38\d{10}$/, 'Телефон должен быть в формате +38 (0ХХ)ХХХ-ХХ-ХХ')
+  .test('phone-format', 'Телефон должен быть в формате +38 (0ХХ) ХХХ-ХХ-ХХ', (value) => {
+    if (!value) return true; // Пустое значение допустимо для nullable
+    
+    // Убираем все символы кроме цифр и +
+    const digitsOnly = value.replace(/[^\d+]/g, '');
+    
+    // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
+    return digitsOnly.startsWith('+38') && digitsOnly.length === 13;
+  })
   .nullable();
 
 /**
@@ -16,8 +25,12 @@ export const phoneValidation = yup
  */
 export const validatePhoneNumber = (value: string): boolean => {
   if (!value) return false;
-  const phoneRegex = /^\+38\d{10}$/;
-  return phoneRegex.test(value);
+  
+  // Убираем все символы кроме цифр и +
+  const digitsOnly = value.replace(/[^\d+]/g, '');
+  
+  // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
+  return digitsOnly.startsWith('+38') && digitsOnly.length === 13;
 };
 
 /**

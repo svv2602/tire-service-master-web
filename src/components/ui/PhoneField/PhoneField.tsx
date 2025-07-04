@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { TextField, TextFieldProps } from '../TextField';
 import { InputAdornment } from '@mui/material';
 import { Phone as PhoneIcon } from '@mui/icons-material';
@@ -23,7 +23,7 @@ export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' |
 
 /**
  * Поле ввода телефона с автоформатированием +38 (0ХХ) ХХХ-ХХ-ХХ
- * Использует ту же логику, что и в UniversalLoginForm
+ * Исправлена проблема с курсором - используется внутреннее состояние
  */
 export const PhoneField: React.FC<PhoneFieldProps> = ({
   value = '',
@@ -31,19 +31,24 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   showIcon = true,
   label = 'Телефон',
   required = false,
-  helperText = 'Формат: +38 (0ХХ)ХХХ-ХХ-ХХ',
+  helperText = 'Формат: +38 (0ХХ) ХХХ-ХХ-ХХ',
   error = false,
   placeholder = '+38 (067) 123-45-67',
   onBlur,
   ...props
 }) => {
-  // Обработчик изменения значения с автоформатированием (как в UniversalLoginForm)
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Автоформатирование с визуальной маской
-    let inputValue = e.target.value;
-    
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [internalValue, setInternalValue] = useState(value || '');
+  
+  // Синхронизируем внутреннее состояние с внешним value
+  useEffect(() => {
+    setInternalValue(value || '');
+  }, [value]);
+  
+  // Функция для форматирования номера телефона
+  const formatPhoneNumber = (input: string): string => {
     // Убираем все кроме цифр и +
-    let digitsOnly = inputValue.replace(/[^\d+]/g, '');
+    let digitsOnly = input.replace(/[^\d+]/g, '');
     
     // Обработка различных форматов ввода
     if (digitsOnly.startsWith('+')) {
@@ -94,9 +99,23 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
       // Для других форматов оставляем как есть с +
       formatted = '+' + digitsOnly;
     } else {
-      formatted = inputValue; // Пустое значение
+      formatted = input; // Пустое значение
     }
     
+    return formatted;
+  };
+
+  // Обработчик изменения значения
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    
+    // Форматируем значение
+    const formatted = formatPhoneNumber(inputValue);
+    
+    // Обновляем внутреннее состояние
+    setInternalValue(formatted);
+    
+    // Вызываем onChange с отформатированным значением
     onChange(formatted);
   };
 
@@ -109,11 +128,12 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
       error={error}
       helperText={helperText}
       placeholder={placeholder}
-      value={value || ''}
+      value={internalValue}
       onChange={handleChange}
       onBlur={onBlur}
       InputProps={{
         ...props.InputProps,
+        inputRef: inputRef,
         startAdornment: showIcon ? (
           <InputAdornment position="start">
             <PhoneIcon color={error ? 'error' : 'action'} />
