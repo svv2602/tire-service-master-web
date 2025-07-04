@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Полное удаление заливки текстовых полей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-results {
+            margin-top: 20px;
+        }
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        .test-item.pass {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .test-item.fail {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест: Полное удаление заливки текстовых полей</h1>
+    
+    <div class="test-section">
+        <h2>📋 Описание теста</h2>
+        <p>Этот тест проверяет, что заливка полностью удалена из всех текстовых полей во всех состояниях:</p>
+        <ul>
+            <li>Пустые поля</li>
+            <li>Заполненные поля</li>
+            <li>Поля в состоянии focus</li>
+            <li>Поля в состоянии hover</li>
+            <li>Поля с ошибками</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Тестирование</h2>
+        <div class="info">
+            <strong>Инструкция:</strong>
+            <ol>
+                <li>Откройте страницу входа: <a href="http://localhost:3008/login" target="_blank">http://localhost:3008/login</a></li>
+                <li>Проверьте поля ввода в разных состояниях</li>
+                <li>Заполните поля и проверьте, что заливка отсутствует</li>
+                <li>Нажмите кнопки ниже для отметки результатов</li>
+            </ol>
+        </div>
+
+        <h3>Тестируемые элементы:</h3>
+        <div id="test-results" class="test-results">
+            <div class="test-item" id="test-empty-fields">
+                <strong>Пустые поля:</strong> Нет заливки в пустых полях ввода
+                <button onclick="markTest('test-empty-fields', true)">✅ Пройден</button>
+                <button onclick="markTest('test-empty-fields', false)">❌ Провален</button>
+            </div>
+
+            <div class="test-item" id="test-filled-fields">
+                <strong>Заполненные поля:</strong> Нет заливки в заполненных полях
+                <button onclick="markTest('test-filled-fields', true)">✅ Пройден</button>
+                <button onclick="markTest('test-filled-fields', false)">❌ Провален</button>
+            </div>
+
+            <div class="test-item" id="test-focus-state">
+                <strong>Состояние focus:</strong> Нет заливки при фокусе на поле
+                <button onclick="markTest('test-focus-state', true)">✅ Пройден</button>
+                <button onclick="markTest('test-focus-state', false)">❌ Провален</button>
+            </div>
+
+            <div class="test-item" id="test-hover-state">
+                <strong>Состояние hover:</strong> Нет заливки при наведении на поле
+                <button onclick="markTest('test-hover-state', true)">✅ Пройден</button>
+                <button onclick="markTest('test-hover-state', false)">❌ Провален</button>
+            </div>
+
+            <div class="test-item" id="test-error-state">
+                <strong>Состояние ошибки:</strong> Нет заливки в полях с ошибками
+                <button onclick="markTest('test-error-state', true)">✅ Пройден</button>
+                <button onclick="markTest('test-error-state', false)">❌ Провален</button>
+            </div>
+        </div>
+
+        <div id="summary" class="status info" style="margin-top: 20px;">
+            <strong>Результат:</strong> Выберите результаты тестов выше
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Технические детали</h2>
+        <h3>Внесенные изменения:</h3>
+        <ul>
+            <li><strong>TextField.tsx:</strong> Добавлены стили для всех состояний с !important</li>
+            <li><strong>textfield-overrides.css:</strong> Глобальные CSS переопределения</li>
+            <li><strong>App.css:</strong> Дополнительные глобальные стили</li>
+            <li><strong>App.tsx:</strong> Подключен CSS файл переопределений</li>
+        </ul>
+
+        <h3>CSS селекторы:</h3>
+        <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto;">
+.MuiOutlinedInput-root,
+.MuiOutlinedInput-root:hover,
+.MuiOutlinedInput-root.Mui-focused,
+.MuiOutlinedInput-root.Mui-disabled,
+.MuiOutlinedInput-root.Mui-error,
+.MuiInputBase-root,
+.MuiInputBase-root:hover,
+.MuiInputBase-root.Mui-focused,
+.MuiInputBase-input,
+.MuiInputBase-input:hover,
+.MuiInputBase-input:focus {
+  background-color: transparent !important;
+}
+        </pre>
+    </div>
+
+    <script>
+        let testResults = {};
+
+        function markTest(testId, passed) {
+            const element = document.getElementById(testId);
+            testResults[testId] = passed;
+            
+            if (passed) {
+                element.className = 'test-item pass';
+            } else {
+                element.className = 'test-item fail';
+            }
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const totalTests = 5;
+            const completedTests = Object.keys(testResults).length;
+            const passedTests = Object.values(testResults).filter(result => result).length;
+            const failedTests = completedTests - passedTests;
+
+            if (completedTests === 0) {
+                summary.innerHTML = '<strong>Результат:</strong> Выберите результаты тестов выше';
+                summary.className = 'status info';
+            } else if (completedTests < totalTests) {
+                summary.innerHTML = `<strong>Прогресс:</strong> ${completedTests}/${totalTests} тестов завершено`;
+                summary.className = 'status info';
+            } else if (failedTests === 0) {
+                summary.innerHTML = `<strong>✅ Все тесты пройдены!</strong> (${passedTests}/${totalTests})`;
+                summary.className = 'status success';
+            } else {
+                summary.innerHTML = `<strong>❌ Есть проблемы:</strong> ${passedTests} пройдено, ${failedTests} провалено`;
+                summary.className = 'status error';
+            }
+        }
+
+        // Автоматическая проверка при загрузке страницы
+        window.addEventListener('load', function() {
+            console.log('🧪 Тест заливки текстовых полей загружен');
+            console.log('📝 Откройте http://localhost:3008/login для тестирования');
+        });
+    </script>
+</body>
+</html> 

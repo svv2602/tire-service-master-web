@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test - Tire Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 CORS Test для Tire Service</h1>
+    <p>Этот тест запущен с того же домена что и фронтенд (localhost:3008), поэтому CORS должен работать.</p>
+    
+    <div>
+        <h3>🌐 Тест доступности API</h3>
+        <button onclick="testHealth()">Проверить /api/v1/health</button>
+        <div id="healthResult" class="result">Нажмите кнопку для проверки</div>
+    </div>
+
+    <div>
+        <h3>🔐 Тест логина</h3>
+        <div>
+            <input type="text" id="loginField" value="admin@test.com" placeholder="Email или телефон">
+            <input type="password" id="passwordField" value="admin123" placeholder="Пароль">
+            <button onclick="testLogin()">Войти</button>
+        </div>
+        <div id="loginResult" class="result">Введите данные и нажмите кнопку</div>
+    </div>
+
+    <div>
+        <h3>📱 Тест с телефоном</h3>
+        <div>
+            <input type="text" id="phoneField" value="+380672220000" placeholder="Телефон">
+            <input type="password" id="phonePasswordField" value="admin123" placeholder="Пароль">
+            <button onclick="testPhoneLogin()">Войти с телефоном</button>
+        </div>
+        <div id="phoneResult" class="result">Введите данные и нажмите кнопку</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        function updateResult(elementId, content, isSuccess = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+        }
+
+        async function testHealth() {
+            try {
+                updateResult('healthResult', 'Проверяем API...');
+                
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                if (response.ok) {
+                    updateResult('healthResult', 
+                        `✅ API доступен!\nStatus: ${response.status}\nURL: ${response.url}`, 
+                        true
+                    );
+                } else {
+                    updateResult('healthResult', 
+                        `❌ API недоступен\nStatus: ${response.status} ${response.statusText}`
+                    );
+                }
+            } catch (error) {
+                updateResult('healthResult', 
+                    `❌ Ошибка: ${error.message}\nТип: ${error.name}`
+                );
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const login = document.getElementById('loginField').value;
+                const password = document.getElementById('passwordField').value;
+                
+                updateResult('loginResult', 'Отправляем запрос логина...');
+
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: login,
+                            password: password
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateResult('loginResult', 
+                        `✅ Логин успешен!\nUser: ${data.user?.email}\nRole: ${data.user?.role}\nToken: ${data.access_token ? 'получен' : 'отсутствует'}`, 
+                        true
+                    );
+                } else {
+                    updateResult('loginResult', 
+                        `❌ Ошибка логина\nStatus: ${response.status}\nError: ${data.error || 'Неизвестная ошибка'}`
+                    );
+                }
+            } catch (error) {
+                updateResult('loginResult', 
+                    `❌ Сетевая ошибка: ${error.message}`
+                );
+            }
+        }
+
+        async function testPhoneLogin() {
+            try {
+                const phone = document.getElementById('phoneField').value;
+                const password = document.getElementById('phonePasswordField').value;
+                
+                updateResult('phoneResult', 'Отправляем запрос с телефоном...');
+
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: phone,
+                            password: password
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateResult('phoneResult', 
+                        `✅ Логин с телефоном успешен!\nUser: ${data.user?.email}\nPhone: ${data.user?.phone}\nRole: ${data.user?.role}`, 
+                        true
+                    );
+                } else {
+                    updateResult('phoneResult', 
+                        `❌ Ошибка логина с телефоном\nStatus: ${response.status}\nError: ${data.error || 'Неизвестная ошибка'}`
+                    );
+                }
+            } catch (error) {
+                updateResult('phoneResult', 
+                    `❌ Сетевая ошибка: ${error.message}`
+                );
+            }
+        }
+
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', testHealth);
+    </script>
+</body>
+</html> 

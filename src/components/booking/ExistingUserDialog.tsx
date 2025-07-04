@@ -49,8 +49,8 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
     try {
       // Используем email или phone для входа
       const loginData = user.email 
-        ? { auth: { login: user.email, password } }
-        : { auth: { login: user.phone, password } };
+        ? { login: user.email, password }
+        : { login: user.phone, password };
 
       const result = await loginClient(loginData).unwrap();
       onLoginSuccess(result);

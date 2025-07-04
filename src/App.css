@@ -36,3 +36,18 @@
     transform: rotate(360deg);
   }
 }
+
+/* Глобальное удаление заливки текстовых полей MUI */
+.MuiOutlinedInput-root,
+.MuiOutlinedInput-root:hover,
+.MuiOutlinedInput-root.Mui-focused,
+.MuiOutlinedInput-root.Mui-disabled,
+.MuiOutlinedInput-root.Mui-error,
+.MuiInputBase-root,
+.MuiInputBase-root:hover,
+.MuiInputBase-root.Mui-focused,
+.MuiInputBase-input,
+.MuiInputBase-input:hover,
+.MuiInputBase-input:focus {
+  background-color: transparent !important;
+}

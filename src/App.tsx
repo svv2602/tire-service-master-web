@@ -16,6 +16,7 @@ import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
 // import { extendClients } from './utils/clientExtensions';
 import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
+import './styles/overrides/textfield-overrides.css';
 
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));

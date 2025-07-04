@@ -106,10 +106,8 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
       // Автоматически входим в систему после регистрации
       try {
         const loginData = {
-          auth: {
-            login: bookingData.service_recipient.phone,
-            password: password,
-          },
+          login: bookingData.service_recipient.phone,
+          password: password,
         };
 
         console.log('🔐 Автоматический вход в систему:', loginData);

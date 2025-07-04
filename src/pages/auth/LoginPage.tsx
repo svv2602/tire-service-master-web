@@ -4,14 +4,11 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { useTheme } from '@mui/material';
 import {
-  Container,
-  Button,
-  Box
+  Container
 } from '../../components/ui';
 import {
   getContainerStyles
 } from '../../styles';
-import CloseIcon from '@mui/icons-material/Close';
 import ClientLayout from '../../components/client/ClientLayout';
 import { UserRole } from '../../types';
 import UniversalLoginForm from '../../components/auth/UniversalLoginForm';
@@ -66,19 +63,12 @@ const LoginPage: React.FC = () => {
         maxWidth="sm" 
         sx={containerStyles.centerContent}
       >
-        <UniversalLoginForm />
-        
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Button
-            variant="text"
-            fullWidth
-            color="primary"
-            onClick={handleSkipLogin}
-            startIcon={<CloseIcon />}
-          >
-            Продолжить без входа
-          </Button>
-        </Box>
+        <UniversalLoginForm 
+          showRegisterLink={true}
+          onSwitchToRegister={() => navigate('/auth/register')}
+          showSkipButton={true}
+          onSkip={handleSkipLogin}
+        />
       </Container>
     </ClientLayout>
   );

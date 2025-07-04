@@ -2,14 +2,13 @@ import { baseApi } from './baseApi';
 
 // Типы
 interface LoginRequest {
-  auth: {
-    login: string;
-    password: string;
-  };
+  login: string;
+  password: string;
 }
 
 interface LoginResponse {
   message: string;
+  access_token: string;
   user: {
     id: number;
     email: string;
@@ -29,10 +28,6 @@ interface LoginResponse {
       position?: string;
       access_level: number;
     };
-  };
-  tokens: {
-    access: string;
-    // refresh токен теперь приходит только в куки
   };
   admin_info?: {
     role_permissions: string[];
@@ -70,7 +65,7 @@ export const authApi = baseApi.injectEndpoints({
       query: (credentials) => ({
         url: 'auth/login',
         method: 'POST',
-        body: credentials,
+        body: { auth: credentials },
         credentials: 'include', // Важно для получения куки
       }),
       // Логируем только успешный вход - данные пользователя управляются Redux

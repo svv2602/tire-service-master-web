@@ -35,7 +35,7 @@ const PhoneMask = React.forwardRef<HTMLInputElement, CustomMaskProps>(
     return (
       <IMaskInput
         {...other}
-        mask="+380 (00) 000-00-00"
+        mask="+38 (000) 000-00-00"
         definitions={{
           '0': /[0-9]/,
         }}
@@ -48,7 +48,7 @@ const PhoneMask = React.forwardRef<HTMLInputElement, CustomMaskProps>(
 );
 
 /**
- * Поле ввода телефона с маской +380 (___) ___-__-__
+ * Поле ввода телефона с маской +38 (0ХХ) ХХХ-ХХ-ХХ
  */
 export const PhoneField: React.FC<PhoneFieldProps> = ({
   value = '',
@@ -56,7 +56,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   showIcon = true,
   label = 'Телефон',
   required = false,
-  helperText = 'Формат: +380XXXXXXXXX',
+  helperText = 'Формат: +38 (0ХХ)ХХХ-ХХ-ХХ',
   error = false,
   onBlur,
   ...props

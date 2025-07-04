@@ -1,0 +1,66 @@
+/* Глобальные переопределения для TextField - полное удаление заливки */
+
+/* Убираем заливку во всех состояниях MUI TextField */
+.MuiOutlinedInput-root {
+  background-color: transparent !important;
+}
+
+.MuiOutlinedInput-root:hover {
+  background-color: transparent !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused {
+  background-color: transparent !important;
+}
+
+.MuiOutlinedInput-root.Mui-disabled {
+  background-color: transparent !important;
+}
+
+.MuiOutlinedInput-root.Mui-error {
+  background-color: transparent !important;
+}
+
+/* Убираем заливку для input элемента */
+.MuiInputBase-input {
+  background-color: transparent !important;
+}
+
+.MuiInputBase-input:hover {
+  background-color: transparent !important;
+}
+
+.MuiInputBase-input:focus {
+  background-color: transparent !important;
+}
+
+/* Убираем заливку для базового корня */
+.MuiInputBase-root {
+  background-color: transparent !important;
+}
+
+.MuiInputBase-root:hover {
+  background-color: transparent !important;
+}
+
+.MuiInputBase-root.Mui-focused {
+  background-color: transparent !important;
+}
+
+/* Убираем заливку для заполненных полей */
+.MuiOutlinedInput-root:not(.Mui-focused):hover {
+  background-color: transparent !important;
+}
+
+/* Дополнительные селекторы для всех возможных состояний */
+.MuiTextField-root .MuiOutlinedInput-root {
+  background-color: transparent !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover {
+  background-color: transparent !important;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  background-color: transparent !important;
+} 

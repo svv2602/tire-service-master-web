@@ -18,22 +18,38 @@ export type TextFieldProps = MuiTextFieldProps & {
 
 const StyledTextField = styled(MuiTextField)(({ theme }) => {
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  // Force update: transparent background for all text fields in ALL states
   
   return {
     '& .MuiOutlinedInput-root': {
       transition: tokens.transitions.duration.normal,
-      backgroundColor: themeColors.backgroundField,
+      backgroundColor: 'transparent !important',
       borderRadius: tokens.borderRadius.md,
       
+      // Убираем заливку во всех состояниях
+      '&': {
+        backgroundColor: 'transparent !important',
+      },
       '&:hover': {
-        backgroundColor: themeColors.backgroundHover,
+        backgroundColor: 'transparent !important',
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'transparent !important',
+      },
+      '&.Mui-disabled': {
+        backgroundColor: 'transparent !important',
+      },
+      '&.Mui-error': {
+        backgroundColor: 'transparent !important',
+      },
+      '&.Mui-filled': {
+        backgroundColor: 'transparent !important',
+      },
+      '&:not(.Mui-focused):hover': {
+        backgroundColor: 'transparent !important',
       },
       
-      '&.Mui-focused': {
-        backgroundColor: theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.1)'
-          : 'rgba(0, 0, 0, 0.05)',
-      },
+      // Стили для границ
       '&:hover fieldset': {
         borderColor: tokens.colors.primary.main,
       },
@@ -42,6 +58,17 @@ const StyledTextField = styled(MuiTextField)(({ theme }) => {
       },
       '&.Mui-error fieldset': {
         borderColor: tokens.colors.error.main,
+      }
+    },
+    
+    // Дополнительные стили для полного удаления заливки
+    '& .MuiInputBase-root': {
+      backgroundColor: 'transparent !important',
+      '&:hover': {
+        backgroundColor: 'transparent !important',
+      },
+      '&.Mui-focused': {
+        backgroundColor: 'transparent !important',
       }
     },
     
@@ -65,6 +92,7 @@ const StyledTextField = styled(MuiTextField)(({ theme }) => {
     },
     
     '& .MuiInputBase-input': {
+      backgroundColor: 'transparent !important',
       color: themeColors.textPrimary,
       fontSize: tokens.typography.fontSize.md,
       padding: `${tokens.spacing.sm} ${tokens.spacing.md}`,

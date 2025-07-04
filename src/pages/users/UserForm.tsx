@@ -19,6 +19,9 @@ import {
   FormControlLabel,
   Switch,
   useTheme,
+  RadioGroup,
+  Radio,
+  FormLabel,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
 import { 
@@ -44,8 +47,10 @@ import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePage
  * - Управление ролями пользователей
  * - Интеграция с RTK Query для API операций
  * - Централизованная система стилей для консистентного UI
+ * - Выбор типа входа: email или телефон
  * 
  * Разделы формы:
+ * - Тип входа (email или телефон)
  * - Основная информация (имя, фамилия, отчество, email, телефон)
  * - Роль и статус (роль пользователя, активность)
  * - Пароль (обязательный при создании, опциональный при редактировании)
@@ -59,6 +64,9 @@ const UserForm: React.FC = () => {
   const theme = useTheme();
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  
+  // Состояние для типа входа (email или телефон)
+  const [loginType, setLoginType] = React.useState<'email' | 'phone'>('email');
 
   // Централизованная система стилей
   const cardStyles = getCardStyles(theme, 'primary');
@@ -83,10 +91,46 @@ const UserForm: React.FC = () => {
   // Состояние для отображения ошибок валидации
   const [showValidationErrors, setShowValidationErrors] = React.useState(false);
 
+  // Динамическая схема валидации в зависимости от типа входа
+  const getValidationSchema = (loginType: 'email' | 'phone') => {
+    return yup.object({
+      email: loginType === 'email' 
+        ? yup.string().email('Введите корректный email').required('Email обязателен')
+        : yup.string().email('Введите корректный email').nullable(),
+      phone: loginType === 'phone' 
+        ? phoneValidation.required('Телефон обязателен')
+        : phoneValidation,
+      first_name: yup
+        .string()
+        .required('Имя обязательно')
+        .min(2, 'Имя должно быть не менее 2 символов'),
+      last_name: yup
+        .string()
+        .required('Фамилия обязательна')
+        .min(2, 'Фамилия должна быть не менее 2 символов'),
+      middle_name: yup
+        .string()
+        .nullable(),
+      role_id: yup
+        .number()
+        .required('Роль обязательна'),
+      is_active: yup
+        .boolean(),
+      password: isEdit
+        ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов').nullable()
+        : yup.string().min(6, 'Пароль должен содержать минимум 6 символов').required('Пароль обязателен'),
+      password_confirmation: yup
+        .string()
+        .oneOf([yup.ref('password')], 'Пароли не совпадают')
+        .nullable()
+    });
+  };
+
   // Функция для получения списка незаполненных обязательных полей
   const getRequiredFieldErrors = () => {
     const requiredFields = {
-      email: 'Email',
+      ...(loginType === 'email' && { email: 'Email' }),
+      ...(loginType === 'phone' && { phone: 'Телефон' }),
       first_name: 'Имя', 
       last_name: 'Фамилия',
       role_id: 'Роль',
@@ -131,38 +175,6 @@ const UserForm: React.FC = () => {
     return 'Произошла неизвестная ошибка';
   };
 
-  // Схема валидации с Yup
-  const validationSchema = yup.object({
-    email: yup
-      .string()
-      .email('Введите корректный email')
-      .required('Email обязателен'),
-    first_name: yup
-      .string()
-      .required('Имя обязательно')
-      .min(2, 'Имя должно быть не менее 2 символов'),
-    last_name: yup
-      .string()
-      .required('Фамилия обязательна')
-      .min(2, 'Фамилия должна быть не менее 2 символов'),
-    middle_name: yup
-      .string()
-      .nullable(),
-    phone: phoneValidation,
-    role_id: yup
-      .number()
-      .required('Роль обязательна'),
-    is_active: yup
-      .boolean(),
-    password: isEdit
-      ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов').nullable()
-      : yup.string().min(6, 'Пароль должен содержать минимум 6 символов').required('Пароль обязателен'),
-    password_confirmation: yup
-      .string()
-      .oneOf([yup.ref('password')], 'Пароли не совпадают')
-      .nullable()
-  });
-
   // Начальные значения формы
   const initialFormValues: UserFormData = {
     email: '',
@@ -179,7 +191,7 @@ const UserForm: React.FC = () => {
   // Formik хук для управления формой
   const formik = useFormik({
     initialValues: initialFormValues,
-    validationSchema,
+    validationSchema: React.useMemo(() => getValidationSchema(loginType), [loginType, isEdit]),
     validateOnChange: true,
     validateOnBlur: true,
     enableReinitialize: true,
@@ -214,6 +226,8 @@ const UserForm: React.FC = () => {
           password_confirmation: values.password_confirmation || ''
         };
 
+        console.log('Отправляемые данные пользователя:', userData);
+        
         if (isEdit) {
           await updateUser({ id: userId.toString(), data: userData }).unwrap();
           setSuccessMessage('Пользователь успешно обновлен');
@@ -228,15 +242,46 @@ const UserForm: React.FC = () => {
           }, 1500);
       } catch (error: any) {
         console.error('Ошибка при сохранении пользователя:', error);
+        console.error('Детали ошибки:', {
+          status: error.status,
+          data: error.data,
+          message: error.message
+        });
         setApiError(extractErrorMessage(error));
       }
     },
   });
+
+  // Функция для обработки смены типа входа
+  const handleLoginTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newLoginType = event.target.value as 'email' | 'phone';
+    setLoginType(newLoginType);
+    
+    // Очищаем ошибки валидации при смене типа
+    formik.setErrors({});
+    setShowValidationErrors(false);
+    
+    // Валидируем форму заново с новой схемой
+    setTimeout(() => {
+      formik.validateForm();
+    }, 0);
+  };
   
   // Обновление значений формы при получении данных пользователя
   useEffect(() => {
     if (isEdit && userData?.data) {
       const user = userData.data;
+      
+      // Определяем тип входа на основе заполненности полей
+      if (user.email && !user.phone) {
+        setLoginType('email');
+      } else if (user.phone && !user.email) {
+        setLoginType('phone');
+      } else if (user.email && user.phone) {
+        // Если оба поля заполнены, приоритет email
+        setLoginType('email');
+      }
+      
       formik.setValues({
         email: user.email || '',
         first_name: user.first_name || '',
@@ -251,6 +296,14 @@ const UserForm: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, userData]);
+
+  // Повторная валидация при изменении loginType
+  useEffect(() => {
+    if (formik.values) {
+      formik.validateForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loginType]);
 
   // Показываем индикатор загрузки при получении данных пользователя
   if (isLoadingUser) {
@@ -295,6 +348,45 @@ const UserForm: React.FC = () => {
       <form onSubmit={formik.handleSubmit} autoComplete="off">
         <Paper sx={cardStyles}>
           <Grid container spacing={SIZES.spacing.lg}>
+            {/* Тип входа - только для создания нового пользователя */}
+            {!isEdit && (
+              <>
+                <Grid item xs={12}>
+                  <Typography 
+                    variant="h6" 
+                    gutterBottom 
+                    sx={{ fontSize: SIZES.fontSize.lg }}
+                  >
+                    Тип входа
+                  </Typography>
+                  <Divider sx={{ mb: SIZES.spacing.md }} />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControl component="fieldset">
+                    <FormLabel component="legend">Выберите основной способ входа</FormLabel>
+                    <RadioGroup
+                      row
+                      value={loginType}
+                      onChange={handleLoginTypeChange}
+                      sx={{ mt: 1 }}
+                    >
+                      <FormControlLabel 
+                        value="email" 
+                        control={<Radio />} 
+                        label="Email" 
+                      />
+                      <FormControlLabel 
+                        value="phone" 
+                        control={<Radio />} 
+                        label="Телефон" 
+                      />
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+              </>
+            )}
+
             {/* Основная информация */}
             <Grid item xs={12}>
               <Typography 
@@ -310,9 +402,9 @@ const UserForm: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                required
+                required={loginType === 'email'}
                 name="email"
-                label="Email"
+                label={loginType === 'email' ? 'Email' : 'Email (необязательно)'}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -327,7 +419,9 @@ const UserForm: React.FC = () => {
             <Grid item xs={12} md={6}>
               <PhoneField
                 fullWidth
+                required={loginType === 'phone'}
                 name="phone"
+                label={loginType === 'phone' ? 'Телефон' : 'Телефон (необязательно)'}
                 value={formik.values.phone}
                 onChange={(value) => formik.setFieldValue('phone', value)}
                 onBlur={() => formik.setFieldTouched('phone', true)}
