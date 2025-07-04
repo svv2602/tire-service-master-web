@@ -40,6 +40,7 @@ import {
   Phone as PhoneIcon,
   Notifications as NotificationsIcon,
   Security as SecurityIcon,
+  Lock as LockIcon,
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -48,7 +49,7 @@ import {
 
 // Типы
 import { RootState } from '../../store';
-import { useUpdateProfileMutation } from '../../api/auth.api';
+import { useUpdateProfileMutation, useChangePasswordMutation } from '../../api/auth.api';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/slices/authSlice';
 import { User } from '../../types/user';
@@ -79,6 +80,13 @@ interface ProfileFormData {
   last_name: string;
   email: string;
   phone: string;
+}
+
+// Интерфейс для формы изменения пароля
+interface PasswordFormData {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 // Компонент TabPanel
@@ -126,12 +134,16 @@ const ClientProfilePage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [carToDelete, setCarToDelete] = useState<ClientCar | null>(null);
 
+  // Состояния для безопасности
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+
   // Redux стейт
   const { user, isAuthenticated, isInitialized } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
   // RTK Query мутации
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
 
   // API хуки для автомобилей
   const { data: cars = [], isLoading: carsLoading, refetch: refetchCars } = useGetMyClientCarsQuery();
@@ -177,6 +189,18 @@ const ClientProfilePage: React.FC = () => {
     car_type_id: Yup.number()
       .nullable(),
     is_primary: Yup.boolean(),
+  });
+
+  // Схема валидации для изменения пароля
+  const passwordValidationSchema = Yup.object({
+    current_password: Yup.string()
+      .required('Текущий пароль обязателен'),
+    new_password: Yup.string()
+      .min(6, 'Новый пароль должен содержать минимум 6 символов')
+      .required('Новый пароль обязателен'),
+    confirm_password: Yup.string()
+      .oneOf([Yup.ref('new_password')], 'Пароли не совпадают')
+      .required('Подтверждение пароля обязательно'),
   });
 
   // Formik для управления формой профиля
@@ -286,6 +310,44 @@ const ClientProfilePage: React.FC = () => {
     },
   });
 
+  // Formik для изменения пароля
+  const passwordFormik = useFormik<PasswordFormData>({
+    initialValues: {
+      current_password: '',
+      new_password: '',
+      confirm_password: '',
+    },
+    validationSchema: passwordValidationSchema,
+    onSubmit: async (values) => {
+      try {
+        if (!user?.id) {
+          throw new Error('ID пользователя не найден');
+        }
+        
+        await changePassword({
+          id: user.id,
+          password: values.new_password,
+          password_confirmation: values.confirm_password,
+        }).unwrap();
+
+        setNotification({
+          open: true,
+          message: 'Пароль успешно изменен',
+          severity: 'success',
+        });
+
+        setPasswordDialogOpen(false);
+        passwordFormik.resetForm();
+      } catch (error: any) {
+        setNotification({
+          open: true,
+          message: error?.data || 'Ошибка при изменении пароля',
+          severity: 'error',
+        });
+      }
+    },
+  });
+
   // Обработчики
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
@@ -366,6 +428,17 @@ const ClientProfilePage: React.FC = () => {
     setCarToDelete(null);
   };
 
+  // Обработчики для изменения пароля
+  const handleOpenPasswordDialog = () => {
+    setPasswordDialogOpen(true);
+    passwordFormik.resetForm();
+  };
+
+  const handleClosePasswordDialog = () => {
+    setPasswordDialogOpen(false);
+    passwordFormik.resetForm();
+  };
+
   // Проверка авторизации после всех хуков
   if (!isInitialized) {
     return (
@@ -444,10 +517,16 @@ const ClientProfilePage: React.FC = () => {
                 aria-controls="profile-tabpanel-2"
               />
               <Tab
-                icon={<SettingsIcon />}
-                label="Настройки"
+                icon={<LockIcon />}
+                label="Безопасность"
                 id="profile-tab-3"
                 aria-controls="profile-tabpanel-3"
+              />
+              <Tab
+                icon={<SettingsIcon />}
+                label="Настройки"
+                id="profile-tab-4"
+                aria-controls="profile-tabpanel-4"
               />
             </Tabs>
           </Box>
@@ -661,8 +740,68 @@ const ClientProfilePage: React.FC = () => {
             </Grid>
           </TabPanel>
 
-          {/* Вкладка "Настройки" */}
+          {/* Вкладка "Безопасность" */}
           <TabPanel value={activeTab} index={3}>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, color: 'text.primary' }}>
+              <LockIcon />
+              Безопасность аккаунта
+            </Typography>
+            
+            <List>
+              <ListItem>
+                <ListItemIcon>
+                  <LockIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Изменить пароль"
+                  secondary="Обновите пароль для защиты вашего аккаунта"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleOpenPasswordDialog}
+                >
+                  Изменить
+                </Button>
+              </ListItem>
+              
+              <Divider />
+              
+              <ListItem>
+                <ListItemIcon>
+                  <PersonIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Логин для отзывов"
+                  secondary="Установите уникальный логин для публичного отображения в отзывах"
+                />
+                <Button
+                  variant="outlined"
+                  disabled
+                >
+                  Скоро
+                </Button>
+              </ListItem>
+              
+              <Divider />
+              
+              <ListItem>
+                <ListItemIcon>
+                  <SecurityIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Двухфакторная аутентификация"
+                  secondary="Дополнительная защита аккаунта"
+                />
+                <FormControlLabel
+                  control={<Switch disabled />}
+                  label="Скоро"
+                />
+              </ListItem>
+            </List>
+          </TabPanel>
+
+          {/* Вкладка "Настройки" */}
+          <TabPanel value={activeTab} index={4}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
               Настройки уведомлений
             </Typography>
@@ -847,6 +986,73 @@ const ClientProfilePage: React.FC = () => {
               disabled={isCreating || isUpdatingCar}
             >
               {isCreating || isUpdatingCar ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Диалог изменения пароля */}
+      <Dialog open={passwordDialogOpen} onClose={handleClosePasswordDialog} maxWidth="sm" fullWidth>
+        <form onSubmit={passwordFormik.handleSubmit}>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LockIcon />
+              Изменить пароль
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="password"
+                  label="Текущий пароль"
+                  name="current_password"
+                  value={passwordFormik.values.current_password}
+                  onChange={passwordFormik.handleChange}
+                  onBlur={passwordFormik.handleBlur}
+                  error={passwordFormik.touched.current_password && Boolean(passwordFormik.errors.current_password)}
+                  helperText={passwordFormik.touched.current_password && passwordFormik.errors.current_password}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="password"
+                  label="Новый пароль"
+                  name="new_password"
+                  value={passwordFormik.values.new_password}
+                  onChange={passwordFormik.handleChange}
+                  onBlur={passwordFormik.handleBlur}
+                  error={passwordFormik.touched.new_password && Boolean(passwordFormik.errors.new_password)}
+                  helperText={passwordFormik.touched.new_password && passwordFormik.errors.new_password}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="password"
+                  label="Подтвердите новый пароль"
+                  name="confirm_password"
+                  value={passwordFormik.values.confirm_password}
+                  onChange={passwordFormik.handleChange}
+                  onBlur={passwordFormik.handleBlur}
+                  error={passwordFormik.touched.confirm_password && Boolean(passwordFormik.errors.confirm_password)}
+                  helperText={passwordFormik.touched.confirm_password && passwordFormik.errors.confirm_password}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePasswordDialog}>
+              Отмена
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isChangingPassword}
+            >
+              {isChangingPassword ? 'Изменение...' : 'Изменить пароль'}
             </Button>
           </DialogActions>
         </form>

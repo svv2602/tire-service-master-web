@@ -17,10 +17,14 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useRegisterClientMutation } from '../../api/clientAuth.api';
 import { useCreateClientBookingMutation, ClientBookingRequest } from '../../api/clientBookings.api';
 import { useCheckUserExistsQuery } from '../../api/users.api';
+import { useCreateMyClientCarMutation } from '../../api/clients.api';
+import { useGetCarBrandsQuery } from '../../api/carBrands.api';
+import { useGetCarModelsByBrandIdQuery } from '../../api/carModels.api';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/slices/authSlice';
 import { BookingFormData } from '../../types/booking';
 import { UserRole } from '../../types';
+import { ClientCarFormData } from '../../types/client';
 import { extractPhoneDigits, generatePasswordFromPhone } from '../../utils/phoneUtils';
 import { getButtonStyles } from '../../styles/components';
 import ExistingUserDialog from './ExistingUserDialog';
@@ -49,6 +53,10 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   
   const [registerClient] = useRegisterClientMutation();
   const [createClientBooking] = useCreateClientBookingMutation();
+  const [createMyClientCar] = useCreateMyClientCarMutation();
+  
+  // Получаем список брендов для поиска
+  const { data: carBrandsData } = useGetCarBrandsQuery({});
   
   // Проверяем существование пользователя при открытии диалога
   const { data: userExistsData, isLoading: isCheckingUser } = useCheckUserExistsQuery(
@@ -124,6 +132,9 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         },
       }));
       
+      // Создаем автомобиль клиента (если указан)
+      await handleCreateClientCar();
+      
       // Создаем бронирование
       await handleCreateBooking(registerResult.client.id);
       
@@ -131,6 +142,58 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
       console.error('❌ Ошибка создания аккаунта:', err);
       setError(err?.data?.error || err?.data?.details?.join(', ') || 'Произошла ошибка при создании аккаунта');
       setStep('creating');
+    }
+  };
+
+  const handleCreateClientCar = async () => {
+    try {
+      // Создаем автомобиль только если указаны данные
+      if (bookingData.car_brand && bookingData.car_model && bookingData.license_plate) {
+        console.log('🚗 Создание автомобиля клиента...');
+        
+        // Ищем бренд по названию
+        const foundBrand = carBrandsData?.data?.find(brand => 
+          brand.name.toLowerCase() === bookingData.car_brand.toLowerCase()
+        );
+        
+        if (foundBrand) {
+          console.log('🔍 Найден бренд:', foundBrand);
+          
+          // Для поиска модели нужен отдельный запрос, пока создаем с базовыми данными
+          const carData: ClientCarFormData = {
+            brand_id: foundBrand.id,
+            model_id: 1, // TODO: Найти реальный model_id по названию через отдельный запрос
+            year: new Date().getFullYear(), // По умолчанию текущий год
+            license_plate: bookingData.license_plate,
+            car_type_id: bookingData.car_type_id || undefined,
+            is_primary: true, // Первый автомобиль делаем основным
+          };
+          
+          console.log('🚗 Данные автомобиля:', carData);
+          const carResult = await createMyClientCar(carData).unwrap();
+          console.log('✅ Автомобиль создан:', carResult);
+        } else {
+          console.log('⚠️ Бренд не найден:', bookingData.car_brand);
+          // Создаем с базовыми данными
+          const carData: ClientCarFormData = {
+            brand_id: 1, // Дефолтный бренд
+            model_id: 1, // Дефолтная модель
+            year: new Date().getFullYear(),
+            license_plate: bookingData.license_plate,
+            car_type_id: bookingData.car_type_id || undefined,
+            is_primary: true,
+          };
+          
+          console.log('🚗 Создание с базовыми данными:', carData);
+          const carResult = await createMyClientCar(carData).unwrap();
+          console.log('✅ Автомобиль создан с базовыми данными:', carResult);
+        }
+      } else {
+        console.log('ℹ️ Данные автомобиля не указаны, пропускаем создание');
+      }
+    } catch (err: any) {
+      console.error('⚠️ Ошибка создания автомобиля (не критичная):', err);
+      // Не прерываем процесс, если автомобиль не создался
     }
   };
 
