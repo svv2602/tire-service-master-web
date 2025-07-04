@@ -28,6 +28,7 @@ import ExistingUserDialog from '../../components/booking/ExistingUserDialog';
 import { CreateAccountDialog } from '../../components/booking/CreateAccountDialog';
 import BookingTypeChoiceDialog from '../../components/booking/BookingTypeChoiceDialog';
 import CreateAccountAndBookingDialog from '../../components/booking/CreateAccountAndBookingDialog';
+import { AddCarToProfileDialog } from '../../components/booking/AddCarToProfileDialog';
 
 // Импорт шагов формы
 import {
@@ -46,6 +47,10 @@ import {
   useGetBookingByIdQuery,
 } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
+import { useGetMyClientCarsQuery } from '../../api/clients.api';
+
+// Импорт утилит
+import { shouldOfferToAddCar, prepareCarDataForDialog } from '../../utils/carUtils';
 
 // Импорт стилей
 import { getCardStyles } from '../../styles/components';
@@ -156,6 +161,20 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   
   // Состояние диалога создания аккаунта и бронирования
   const [createAccountAndBookingDialogOpen, setCreateAccountAndBookingDialogOpen] = useState(false);
+  
+  // Состояние диалога добавления автомобиля в профиль
+  const [addCarDialogOpen, setAddCarDialogOpen] = useState(false);
+  const [carDataForDialog, setCarDataForDialog] = useState<any>({
+    license_plate: '',
+    car_brand: '',
+    car_model: '',
+    car_type_id: undefined,
+  });
+  
+  // API хуки
+  const { data: clientCars = [], refetch: refetchClientCars } = useGetMyClientCarsQuery(undefined, {
+    skip: !isAuthenticated, // Пропускаем если пользователь не авторизован
+  });
   
   const { data: currentUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
     undefined, // Параметры не нужны
@@ -363,9 +382,22 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
       const response = await createClientBooking(bookingData).unwrap();
 
-      // Сохраняем данные созданного бронирования и показываем модальное окно
+      // Сохраняем данные созданного бронирования
       setCreatedBooking(response);
-      setSuccessDialogOpen(true);
+
+      // Проверяем, нужно ли предложить добавить автомобиль в профиль
+      const carData = prepareCarDataForDialog(formData);
+      console.log('🔍 Подготовленные данные автомобиля:', carData);
+      console.log('🔍 Список автомобилей клиента:', clientCars);
+      
+      if (shouldOfferToAddCar(carData, clientCars)) {
+        console.log('🚗 Предлагаем добавить автомобиль в профиль:', carData);
+        setCarDataForDialog(carData);
+        setAddCarDialogOpen(true);
+      } else {
+        console.log('ℹ️ Автомобиль уже есть в профиле или нет данных для добавления');
+        setSuccessDialogOpen(true);
+      }
 
     } catch (error: any) {
       console.error('❌ Ошибка создания бронирования:', error);
@@ -547,6 +579,32 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     setCreateAccountAndBookingDialogOpen(false);
   };
   
+  // Обработчики диалога добавления автомобиля в профиль
+  const handleAddCarDialogClose = () => {
+    setAddCarDialogOpen(false);
+    setCarDataForDialog({
+      license_plate: '',
+      car_brand: '',
+      car_model: '',
+      car_type_id: undefined,
+    });
+    // Показываем диалог успеха после закрытия диалога добавления автомобиля
+    setSuccessDialogOpen(true);
+  };
+
+  const handleCarAdded = (addedCar: any) => {
+    console.log('✅ Автомобиль добавлен в профиль:', addedCar);
+    setAddCarDialogOpen(false);
+    setCarDataForDialog({
+      license_plate: '',
+      car_brand: '',
+      car_model: '',
+      car_type_id: undefined,
+    });
+    refetchClientCars(); // Обновляем список автомобилей клиента
+    setSuccessDialogOpen(true); // Показываем модальное окно успеха
+  };
+  
   // Рендер текущего шага
   const renderCurrentStep = () => {
     const CurrentStepComponent = STEPS[activeStep].component;
@@ -723,6 +781,14 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         onClose={handleAccountAndBookingClose}
         bookingData={formData}
         onSuccess={handleAccountAndBookingSuccess}
+      />
+
+      {/* Диалог добавления автомобиля в профиль */}
+      <AddCarToProfileDialog
+        open={addCarDialogOpen}
+        onClose={handleAddCarDialogClose}
+        carData={carDataForDialog}
+        onCarAdded={handleCarAdded}
       />
     </ClientLayout>
   );

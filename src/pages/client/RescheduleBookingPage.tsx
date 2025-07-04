@@ -143,7 +143,8 @@ const RescheduleBookingPage: React.FC = () => {
         new_time: selectedTimeSlot
       }).unwrap();
       
-      navigate(`/client/bookings/${id}?reschedule_success=true`);
+      // Перенаправляем на список бронирований без дополнительных параметров
+      navigate('/client/bookings');
     } catch (error) {
       console.error('Ошибка при переносе записи:', error);
     }
