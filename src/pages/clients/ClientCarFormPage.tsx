@@ -137,7 +137,7 @@ const ClientCarFormPage: React.FC = () => {
           await updateCar({ clientId, carId, data: values }).unwrap();
           setSuccessMessage('Автомобиль успешно обновлен');
         } else if (clientId) {
-          await createCar({ clientId, data: values }).unwrap();
+          await createCar({ clientId, data: { car: values } }).unwrap();
           setSuccessMessage('Автомобиль успешно создан');
         }
         setTimeout(() => navigate(`/admin/clients/${clientId}/cars`), 1000);

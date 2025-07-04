@@ -22,10 +22,11 @@ import {
 import { useCreateMyClientCarMutation, useCreateClientCarMutation } from '../../api/clients.api';
 import { useGetCarBrandsQuery } from '../../api/carBrands.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
 import { ClientCarFormData } from '../../types/client';
 import { UserRole } from '../../types/user-role';
+import { useInvalidateCache } from '../../api/baseApi';
 
 interface AddCarToProfileDialogProps {
   open: boolean;
@@ -54,6 +55,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
   const [createClientCar] = useCreateClientCarMutation();
   const { data: carBrandsData } = useGetCarBrandsQuery({});
   const { data: carTypesData } = useGetCarTypesQuery();
+  const invalidateCache = useInvalidateCache();
 
   // Получаем текущего пользователя из Redux
   const currentUser = useSelector(selectCurrentUser);
@@ -132,6 +134,9 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       
       console.log('✅ Автомобиль успешно добавлен:', result);
       setSuccess(true);
+      
+      // Инвалидируем кэш автомобилей для обновления списка
+      invalidateCache(['ClientCars']);
       
       // Уведомляем родительский компонент
       if (onCarAdded) {
