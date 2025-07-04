@@ -1,189 +1,112 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { useDispatch } from 'react-redux';
-import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
-import { config } from '../config';
+import { RootState } from '../store';
+import config from '../config';
 
-// Создаем базовый query
+// Создаем базовый query с поддержкой куки
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${config.API_URL}${config.API_PREFIX}`,
-  credentials: 'include', // Включаем передачу cookies для cookie-based аутентификации
+  baseUrl: `${config.API_URL}${config.API_PREFIX}/`,
+  credentials: 'include', // Важно для HttpOnly куки
   prepareHeaders: (headers, { getState }) => {
-    // При cookie-based аутентификации:
-    // - Access токен может передаваться в заголовке Authorization (из Redux state) ИЛИ через cookies
-    // - Cookies автоматически отправляются благодаря credentials: 'include'
-    const state = getState() as any;
-    const token = state.auth?.accessToken;
-    const isAuthenticated = state.auth?.isAuthenticated;
-    const user = state.auth?.user;
+    const state = getState() as RootState;
+    const token = state.auth.accessToken;
+    const user = state.auth.user;
     
-    // Если токен есть в Redux состоянии, добавляем его в заголовок
+    // 🔍 ПОДРОБНОЕ ЛОГИРОВАНИЕ
+    console.log('🔍 BaseAPI prepareHeaders:', {
+      hasAccessToken: !!token,
+      isAuthenticated: state.auth.isAuthenticated,
+      hasUser: !!user,
+      userRole: user?.role,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует (используются cookies)',
+      baseUrl: `${config.API_URL}${config.API_PREFIX}/`,
+      headersCount: headers.entries ? Array.from(headers.entries()).length : 'unknown'
+    });
+    
+    // Добавляем токен в заголовки, если он есть
     if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    
-    // Отладочная информация только в режиме разработки
-    if (process.env.NODE_ENV === 'development') {
-      console.log('BaseAPI prepareHeaders:', {
-        hasAccessToken: !!token,
-        isAuthenticated: !!isAuthenticated,
-        hasUser: !!user,
-        userRole: user?.role,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует (используются cookies)',
-        url: 'unknown',
-        method: 'unknown'
-      });
+      headers.set('Authorization', `Bearer ${token}`);
+      console.log('✅ Добавлен Authorization header с токеном');
+    } else {
+      console.log('ℹ️ Токен отсутствует, полагаемся на cookies');
     }
     
     return headers;
   },
 });
 
-// Создаем baseQuery с автоматическим обновлением токенов
-const baseQueryWithReauth: BaseQueryFn<
-  string | FetchArgs,
-  unknown,
-  FetchBaseQueryError
-> = async (args, api, extraOptions) => {
+// Обертка для обработки ошибок авторизации
+const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
+  // 🔍 ЛОГИРОВАНИЕ ЗАПРОСА
+  console.log('🚀 BaseAPI запрос:', {
+    url: typeof args === 'string' ? args : args.url,
+    method: typeof args === 'string' ? 'GET' : args.method || 'GET',
+    body: typeof args === 'string' ? undefined : args.body,
+    fullUrl: `${config.API_URL}${config.API_PREFIX}/${typeof args === 'string' ? args : args.url}`,
+    timestamp: new Date().toISOString()
+  });
+  
   let result = await baseQuery(args, api, extraOptions);
   
-  // Если получили 401 ошибку, пытаемся обновить токен
+  // 🔍 ЛОГИРОВАНИЕ ОТВЕТА
+  console.log('📥 BaseAPI ответ:', {
+    status: result.error?.status || 'success',
+    hasError: !!result.error,
+    hasData: !!result.data,
+    errorData: result.error?.data,
+    timestamp: new Date().toISOString()
+  });
+  
   if (result.error && result.error.status === 401) {
-    console.log('BaseQuery: получена 401 ошибка, пытаемся обновить токен');
+    console.log('🔄 Получена 401 ошибка, пытаемся обновить токен...');
     
     // Пытаемся обновить токен
     const refreshResult = await baseQuery(
       {
-        url: '/auth/refresh',
+        url: 'auth/refresh',
         method: 'POST',
-        credentials: 'include',
       },
       api,
       extraOptions
     );
     
     if (refreshResult.data) {
-      console.log('BaseQuery: токен успешно обновлен');
-      
-      // Обновляем токен в состоянии
-      const refreshData = refreshResult.data as any;
-      if (refreshData.access_token || refreshData.tokens?.access) {
-        // Импортируем action из authSlice
-        const { updateAccessToken } = await import('../store/slices/authSlice');
-        const newToken = refreshData.access_token || refreshData.tokens.access;
-        
-        // Обновляем токен в Redux состоянии
-        api.dispatch(updateAccessToken(newToken));
-        
-        // localStorage больше не используем
-        console.log('BaseQuery: токен обновлен в Redux');
-      }
-      
-      // Повторяем оригинальный запрос
+      console.log('✅ Токен успешно обновлен');
+      // Повторяем исходный запрос
       result = await baseQuery(args, api, extraOptions);
     } else {
-      console.log('BaseQuery: не удалось обновить токен, выходим из системы');
-      // Если не удалось обновить токен, очищаем состояние
-      const { logout } = await import('../store/slices/authSlice');
-      api.dispatch(logout());
+      console.log('❌ Не удалось обновить токен');
+      // Можно добавить логику для перенаправления на страницу входа
     }
   }
   
   return result;
 };
 
-// Определяем типы тегов для типизации
-export type ApiTags = 
-  | 'Article' 
-  | 'User' 
-  | 'Partner' 
-  | 'Partners'
-  | 'ServicePoint' 
-  | 'Service' 
-  | 'Region' 
-  | 'City' 
-  | 'PageContent' 
-  | 'Client' 
-  | 'Clients'
-  | 'Booking' 
-  | 'Review'
-  | 'Availability'
-  | 'CarBrands'
-  | 'CarModels'
-  | 'ClientCars'
-  | 'CarType'
-  | 'Schedule'
-  | 'ServicePointPhoto'
-  | 'ServiceCategory'
-  | 'ServicePost'
-  | 'ServicePointService'
-  | 'SchedulePreview'
-  | 'Settings'
-  | 'CTAContent';
-
-// Базовый API
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: [
-    'Article', 
-    'User', 
-    'Partner', 
-    'Partners',
-    'ServicePoint', 
-    'Service', 
-    'Region', 
-    'City', 
-    'PageContent', 
-    'Client', 
-    'Clients',
-    'Booking', 
-    'Review',
-    'Availability',
-    'CarBrands',
-    'CarModels',
-    'ClientCars',
-    'CarType',
-    'Schedule',
-    'ServicePointPhoto',
-    'ServiceCategory',
-    'ServicePost',
-    'ServicePointService',
-    'SchedulePreview',
-    'Settings',
-    'CTAContent'
-  ] as const,
-  // Глобальные настройки кэширования
-  keepUnusedDataFor: 300, // 5 минут (в секундах)
-  refetchOnMountOrArgChange: true, // Обновлять данные при монтировании компонента
-  refetchOnFocus: false, // Не обновлять данные при фокусе окна
-  refetchOnReconnect: true, // Обновлять данные при восстановлении соединения
+  tagTypes: ['User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 'Settings', 'CarBrands', 'Availability', 'CarModels', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview'],
   endpoints: () => ({}),
 });
 
-// Хук для инвалидации кэша при изменениях
+// Хук для инвалидации кэша
 export const useInvalidateCache = () => {
-  const dispatch = useDispatch();
+  const dispatch = baseApi.util.resetApiState;
+  
+  const invalidateTag = (tag: string) => {
+    console.log('🔄 Инвалидация кэша для тега:', tag);
+    // Полный сброс кэша (упрощенный подход)
+    dispatch();
+  };
+  
+  const invalidateList = (tags?: string[]) => {
+    console.log('🔄 Инвалидация кэша для тегов:', tags);
+    // Полный сброс кэша (упрощенный подход)
+    dispatch();
+  };
   
   return {
-    // Инвалидация кэша для конкретного типа и ID
-    invalidateTag: (type: ApiTags, id: string | number) => {
-      dispatch(
-        baseApi.util.invalidateTags([{ type, id }])
-      );
-    },
-    
-    // Инвалидация всего кэша для типа
-    invalidateList: (type: ApiTags) => {
-      dispatch(
-        baseApi.util.invalidateTags([{ type, id: 'LIST' }])
-      );
-    },
-    
-    // Инвалидация всех тегов
-    invalidateAll: () => {
-      dispatch(
-        baseApi.util.resetApiState()
-      );
-    }
+    invalidateTag,
+    invalidateList
   };
 };

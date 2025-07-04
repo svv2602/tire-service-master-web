@@ -62,19 +62,41 @@ export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Вход в систему
     login: builder.mutation<LoginResponse, LoginRequest>({
-      query: (credentials) => ({
-        url: 'auth/login',
-        method: 'POST',
-        body: { auth: credentials },
-        credentials: 'include', // Важно для получения куки
-      }),
+      query: (credentials) => {
+        // 🔍 ПОДРОБНОЕ ЛОГИРОВАНИЕ ЗАПРОСА
+        const requestData = { auth: credentials };
+        console.log('🔐 Auth API login запрос:', {
+          originalCredentials: credentials,
+          requestBody: requestData,
+          url: 'auth/login',
+          method: 'POST',
+          timestamp: new Date().toISOString()
+        });
+        
+        return {
+          url: 'auth/login',
+          method: 'POST',
+          body: requestData,
+          credentials: 'include', // Важно для получения куки
+        };
+      },
       // Логируем только успешный вход - данные пользователя управляются Redux
       onQueryStarted: async (arg, { queryFulfilled }) => {
+        console.log('🚀 Auth API login: запрос отправлен с данными:', arg);
         try {
           const { data } = await queryFulfilled;
-          console.log('✅ Успешный вход пользователя:', data.user.email);
-        } catch (error) {
-          console.error('❌ Ошибка при входе:', error);
+          console.log('✅ Успешный вход пользователя:', {
+            userEmail: data.user.email,
+            userRole: data.user.role,
+            hasAccessToken: !!data.access_token,
+            accessTokenPreview: data.access_token ? `${data.access_token.substring(0, 20)}...` : 'отсутствует'
+          });
+        } catch (error: any) {
+          console.error('❌ Ошибка при входе:', {
+            status: error.error?.status,
+            data: error.error?.data,
+            originalError: error
+          });
         }
       },
     }),

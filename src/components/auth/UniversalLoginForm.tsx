@@ -103,11 +103,60 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       return;
     }
 
+    // 🔍 ПОДРОБНОЕ ЛОГИРОВАНИЕ
+    console.log('🔐 UniversalLoginForm handleLogin:', {
+      loginType,
+      login: login.trim(),
+      passwordLength: password.trim().length,
+      formValid: validateForm(),
+      timestamp: new Date().toISOString()
+    });
+
     try {
-      const result = await loginMutation({
-        login: login.trim(),
+      // 📱 НОРМАЛИЗАЦИЯ НОМЕРА ТЕЛЕФОНА
+      let normalizedLogin = login.trim();
+      
+      if (loginType === 'phone') {
+        // Убираем все символы кроме цифр
+        const digitsOnly = login.replace(/[^\d]/g, '');
+        
+        // Если номер начинается с 38, оставляем как есть
+        // Если начинается с 0, добавляем 38 в начало
+        if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+          normalizedLogin = '38' + digitsOnly; // 0501234567 -> 380501234567
+        } else if (digitsOnly.startsWith('38') && digitsOnly.length === 12) {
+          normalizedLogin = digitsOnly; // 380501234567 -> 380501234567
+        } else {
+          normalizedLogin = digitsOnly; // Любой другой формат оставляем как есть
+        }
+        
+        console.log('📱 Нормализация телефона:', {
+          original: login.trim(),
+          digitsOnly,
+          normalized: normalizedLogin
+        });
+      }
+      
+      const loginData = {
+        login: normalizedLogin,
         password: password.trim()
-      }).unwrap();
+      };
+      
+      console.log('🚀 Отправляем запрос на вход:', {
+        loginData,
+        mutationFunction: 'loginMutation',
+        timestamp: new Date().toISOString()
+      });
+
+      const result = await loginMutation(loginData).unwrap();
+
+      console.log('✅ Получен результат входа:', {
+        hasUser: !!result.user,
+        userEmail: result.user?.email,
+        userRole: result.user?.role,
+        hasAccessToken: !!result.access_token,
+        timestamp: new Date().toISOString()
+      });
 
       // Сохраняем данные пользователя в Redux
       dispatch(setCredentials({
@@ -147,7 +196,13 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         }
       }
     } catch (err: any) {
-      console.error('❌ Ошибка входа:', err);
+      console.error('❌ Ошибка входа:', {
+        error: err,
+        status: err.status,
+        data: err.data,
+        message: err.message,
+        timestamp: new Date().toISOString()
+      });
       setError(err.data?.error || 'Ошибка входа в систему');
     }
   };

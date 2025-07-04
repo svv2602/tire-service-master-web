@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест прямого вызова API авторизации</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .result {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Тест API авторизации</h1>
+            <p>Проверка работы API авторизации напрямую</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Конфигурация</h2>
+            <div class="result info" id="config-info">
+                Загрузка конфигурации...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔑 Тест авторизации</h2>
+            <div>
+                <label>Логин:</label>
+                <input type="text" id="login" value="0000001111" placeholder="Логин">
+                <label>Пароль:</label>
+                <input type="password" id="password" value="0000001111" placeholder="Пароль">
+                <button onclick="testLogin()">Войти</button>
+            </div>
+            <div class="result" id="login-result">
+                Результат появится здесь...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🌐 Тест доступности API</h2>
+            <button onclick="testApiHealth()">Проверить API</button>
+            <div class="result" id="health-result">
+                Результат появится здесь...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Тест маршрутов</h2>
+            <button onclick="testRoutes()">Проверить маршруты</button>
+            <div class="result" id="routes-result">
+                Результат появится здесь...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация API
+        const API_URL = 'http://localhost:8000';
+        const API_PREFIX = '/api/v1';
+        const FULL_API_URL = `${API_URL}${API_PREFIX}`;
+
+        // Показываем конфигурацию
+        document.getElementById('config-info').textContent = `
+API_URL: ${API_URL}
+API_PREFIX: ${API_PREFIX}
+FULL_API_URL: ${FULL_API_URL}
+Hostname: ${window.location.hostname}
+Port: ${window.location.port}
+        `;
+
+        // Функция для логирования
+        function logResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Тест авторизации
+        async function testLogin() {
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            
+            logResult('login-result', 'Отправка запроса на авторизацию...', 'info');
+            
+            try {
+                const response = await fetch(`${FULL_API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: login,
+                            password: password
+                        }
+                    })
+                });
+
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    const data = JSON.parse(responseText);
+                    logResult('login-result', `✅ Успешная авторизация!
+Статус: ${response.status}
+Пользователь: ${data.user.first_name} ${data.user.last_name}
+Email: ${data.user.email}
+Телефон: ${data.user.phone}
+Роль: ${data.user.role}
+Токен: ${data.access_token ? 'Получен' : 'Не получен'}`, 'success');
+                } else {
+                    logResult('login-result', `❌ Ошибка авторизации
+Статус: ${response.status}
+Ответ: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                logResult('login-result', `❌ Ошибка сети: ${error.message}`, 'error');
+            }
+        }
+
+        // Тест доступности API
+        async function testApiHealth() {
+            logResult('health-result', 'Проверка доступности API...', 'info');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/health`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+
+                const responseText = await response.text();
+                
+                if (response.ok) {
+                    logResult('health-result', `✅ API доступен!
+Статус: ${response.status}
+Ответ: ${responseText}`, 'success');
+                } else {
+                    logResult('health-result', `⚠️ API отвечает с ошибкой
+Статус: ${response.status}
+Ответ: ${responseText}`, 'error');
+                }
+            } catch (error) {
+                logResult('health-result', `❌ API недоступен: ${error.message}`, 'error');
+            }
+        }
+
+        // Тест маршрутов
+        async function testRoutes() {
+            logResult('routes-result', 'Проверка маршрутов...', 'info');
+            
+            const routes = [
+                '/api/v1/health',
+                '/api/v1/auth/login',
+                '/api/v1/auth/me',
+                '/api/v1/service_points',
+                '/api/v1/regions'
+            ];
+
+            let results = [];
+            
+            for (const route of routes) {
+                try {
+                    const response = await fetch(`${API_URL}${route}`, {
+                        method: route.includes('login') ? 'POST' : 'GET',
+                        credentials: 'include',
+                        headers: route.includes('login') ? {
+                            'Content-Type': 'application/json',
+                        } : {},
+                        body: route.includes('login') ? JSON.stringify({
+                            auth: { login: 'test', password: 'test' }
+                        }) : undefined
+                    });
+
+                    results.push(`${route}: ${response.status} ${response.statusText}`);
+                } catch (error) {
+                    results.push(`${route}: ❌ ${error.message}`);
+                }
+            }
+
+            logResult('routes-result', `Результаты проверки маршрутов:
+${results.join('\n')}`, 'info');
+        }
+
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', () => {
+            testApiHealth();
+        });
+    </script>
+</body>
+</html> 

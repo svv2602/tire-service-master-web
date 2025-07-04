@@ -1,28 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Typography,
-  TextField,
   Button,
   Box,
   Alert,
   CircularProgress,
-  InputAdornment,
-  IconButton,
+  useTheme,
 } from '@mui/material';
 import {
   AccountCircle as AccountCircleIcon,
   PersonAdd as PersonAddIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useRegisterClientMutation } from '../../api/clientAuth.api';
 import { useLoginMutation } from '../../api/auth.api';
 import { useAssignBookingToClientMutation } from '../../api/clientBookings.api';
 import { BookingFormData } from '../../types/booking';
+import { generatePasswordFromPhone } from '../../utils/phoneUtils';
 
 export interface CreateAccountDialogProps {
   /** Открыто ли диалоговое окно */
@@ -51,11 +48,9 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
   onAccountCreated,
   onContinueWithoutAccount,
 }) => {
+  const theme = useTheme();
+  
   // Состояния формы
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -64,19 +59,31 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
   const [loginClient] = useLoginMutation();
   const [assignBookingToClient] = useAssignBookingToClientMutation();
 
-  // Валидация формы
-  const isFormValid = () => {
-    return (
-      password.trim().length >= 6 &&
-      confirmPassword.trim().length >= 6 &&
-      password === confirmPassword
-    );
-  };
+  // Автоматическая генерация пароля из номера телефона
+  const generatedPassword = React.useMemo(() => {
+    if (!bookingData.service_recipient.phone) return '';
+    
+    // 📱 НОРМАЛИЗАЦИЯ НОМЕРА ТЕЛЕФОНА (такая же как в UniversalLoginForm)
+    const digitsOnly = bookingData.service_recipient.phone.replace(/[^\d]/g, '');
+    
+    // Если номер начинается с 38, убираем код страны для пароля
+    if (digitsOnly.startsWith('38') && digitsOnly.length === 12) {
+      return digitsOnly.substring(2); // 380501234567 -> 0501234567
+    }
+    
+    // Если номер начинается с 0 и содержит 10 цифр, используем как есть
+    if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+      return digitsOnly; // 0501234567 -> 0501234567
+    }
+    
+    // Для любого другого формата возвращаем все цифры
+    return digitsOnly;
+  }, [bookingData.service_recipient.phone]);
 
   // Обработчик создания аккаунта
   const handleCreateAccount = async () => {
-    if (!isFormValid()) {
-      setError('Пароли должны совпадать и содержать не менее 6 символов');
+    if (!generatedPassword) {
+      setError('Не удалось сгенерировать пароль из номера телефона');
       return;
     }
 
@@ -85,14 +92,23 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
 
     try {
       // Подготавливаем данные для регистрации
+      // 📱 НОРМАЛИЗАЦИЯ НОМЕРА ТЕЛЕФОНА ДЛЯ РЕГИСТРАЦИИ
+      const digitsOnly = bookingData.service_recipient.phone.replace(/[^\d]/g, '');
+      let normalizedPhone = digitsOnly;
+      
+      // Если номер начинается с 0, добавляем 38 в начало для полного формата
+      if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+        normalizedPhone = '38' + digitsOnly; // 0501234567 -> 380501234567
+      }
+      
       const registrationData = {
         user: {
           first_name: bookingData.service_recipient.first_name,
           last_name: bookingData.service_recipient.last_name,
-          email: bookingData.service_recipient.email || `${bookingData.service_recipient.phone}@temp.local`,
-          phone: bookingData.service_recipient.phone,
-          password: password,
-          password_confirmation: confirmPassword,
+          email: bookingData.service_recipient.email || `${normalizedPhone}@temp.local`,
+          phone: normalizedPhone,
+          password: generatedPassword,
+          password_confirmation: generatedPassword,
         },
       };
 
@@ -105,12 +121,25 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
 
       // Автоматически входим в систему после регистрации
       try {
+        // 📱 НОРМАЛИЗАЦИЯ НОМЕРА ТЕЛЕФОНА ДЛЯ ЛОГИНА (такая же как в UniversalLoginForm)
+        const digitsOnly = bookingData.service_recipient.phone.replace(/[^\d]/g, '');
+        let normalizedLogin = digitsOnly;
+        
+        // Если номер начинается с 0, добавляем 38 в начало
+        if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+          normalizedLogin = '38' + digitsOnly; // 0501234567 -> 380501234567
+        }
+        
         const loginData = {
-          login: bookingData.service_recipient.phone,
-          password: password,
+          login: normalizedLogin,
+          password: generatedPassword,
         };
 
-        console.log('🔐 Автоматический вход в систему:', loginData);
+        console.log('🔐 Автоматический вход в систему:', {
+          originalPhone: bookingData.service_recipient.phone,
+          normalizedLogin,
+          password: generatedPassword
+        });
         const loginResponse = await loginClient(loginData).unwrap();
         console.log('✅ Вход выполнен:', loginResponse);
       } catch (loginError: any) {
@@ -166,10 +195,6 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
 
   // Сброс формы при закрытии
   const handleClose = () => {
-    setPassword('');
-    setConfirmPassword('');
-    setShowPassword(false);
-    setShowConfirmPassword(false);
     setError('');
     setIsCreating(false);
     onClose();
@@ -222,88 +247,63 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
           </Box>
         </Box>
 
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-          <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+        {/* Данные для аккаунта с улучшенным фоном для темной темы */}
+        <Box sx={{ 
+          mb: 3, 
+          p: 2, 
+          bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
+          borderRadius: 1,
+          border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300]}`,
+        }}>
+          <Typography variant="body2" sx={{ 
+            mb: 1, 
+            fontWeight: 'medium',
+            color: theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'
+          }}>
             Данные для аккаунта:
           </Typography>
-          <Typography variant="body2" sx={{ mb: 0.5 }}>
+          <Typography variant="body2" sx={{ 
+            mb: 0.5,
+            color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
+          }}>
             <strong>Имя:</strong> {bookingData.service_recipient.first_name} {bookingData.service_recipient.last_name}
           </Typography>
-          <Typography variant="body2" sx={{ mb: 0.5 }}>
+          <Typography variant="body2" sx={{ 
+            mb: 0.5,
+            color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
+          }}>
             <strong>Телефон:</strong> {bookingData.service_recipient.phone}
           </Typography>
           {bookingData.service_recipient.email && (
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ 
+              mb: 0.5,
+              color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
+            }}>
               <strong>Email:</strong> {bookingData.service_recipient.email}
             </Typography>
           )}
+          <Typography variant="body2" sx={{ 
+            color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
+          }}>
+            <strong>Временный пароль:</strong> {generatedPassword}
+          </Typography>
         </Box>
+
+        {/* Информация о временном пароле */}
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>Ваш временный пароль: {generatedPassword}</strong>
+          </Typography>
+          <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+            Пароль создан на основе вашего номера телефона. Вы сможете изменить его позже в настройках личного кабинета.
+          </Typography>
+        </Alert>
 
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         )}
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Пароль"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError('');
-            }}
-            error={!!error && password.length < 6}
-            helperText={password.length > 0 && password.length < 6 ? 'Пароль должен содержать не менее 6 символов' : ''}
-            fullWidth
-            disabled={isCreating}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                    disabled={isCreating}
-                  >
-                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-          
-          <TextField
-            label="Подтверждение пароля"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setError('');
-            }}
-            error={!!error && confirmPassword.length > 0 && password !== confirmPassword}
-            helperText={
-              confirmPassword.length > 0 && password !== confirmPassword 
-                ? 'Пароли не совпадают' 
-                : ''
-            }
-            fullWidth
-            disabled={isCreating}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    edge="end"
-                    disabled={isCreating}
-                  >
-                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
       </DialogContent>
       
       <DialogActions sx={{ p: 3, gap: 1 }}>
@@ -317,7 +317,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
         <Button
           variant="contained"
           onClick={handleCreateAccount}
-          disabled={!isFormValid() || isCreating}
+          disabled={isCreating}
           startIcon={isCreating ? <CircularProgress size={20} /> : <AccountCircleIcon />}
         >
           {isCreating ? 'Создание аккаунта...' : 'Создать аккаунт'}

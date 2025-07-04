@@ -244,9 +244,9 @@ const ServicePointFormPage: React.FC = () => {
     
     // ИНВАЛИДАЦИЯ КЭША RTK Query после успешной загрузки
     console.log('Инвалидируем кэш RTK Query для фотографий и сервисной точки');
-    invalidateTag('ServicePointPhoto', servicePointId);
-    invalidateTag('ServicePoint', servicePointId);
-    invalidateList('ServicePointPhoto');
+    invalidateTag('ServicePointPhoto');
+    invalidateTag('ServicePoint');
+    invalidateList(['ServicePointPhoto']);
     
     return result;
   };
@@ -477,9 +477,9 @@ const ServicePointFormPage: React.FC = () => {
                 
                 // ИНВАЛИДАЦИЯ КЭША RTK Query после успешного удаления
                 console.log('Инвалидируем кэш RTK Query после удаления фотографии');
-                invalidateTag('ServicePointPhoto', String(id));
-                invalidateTag('ServicePoint', String(id));
-                invalidateList('ServicePointPhoto');
+                invalidateTag('ServicePointPhoto');
+                invalidateTag('ServicePoint');
+                invalidateList(['ServicePointPhoto']);
               } catch (deleteError) {
                 console.error('Ошибка удаления фотографии:', photo.id, deleteError);
               }
@@ -544,10 +544,10 @@ const ServicePointFormPage: React.FC = () => {
           
           // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного обновления
           console.log('Принудительно обновляем кэш всех списков сервисных точек');
-          invalidateTag('ServicePoint', String(id));
-          invalidateList('ServicePoint');
+          invalidateTag('ServicePoint');
+          invalidateList(['ServicePoint']);
           if (partnerId) {
-            invalidateTag('ServicePoint', `PARTNER_${partnerId}`);
+            invalidateTag('ServicePoint');
           }
         } else {
           // Проверяем, что partnerId корректно передан
@@ -615,12 +615,12 @@ const ServicePointFormPage: React.FC = () => {
           
           // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного создания
           console.log('Принудительно обновляем кэш всех списков сервисных точек после создания');
-          invalidateList('ServicePoint');
+          invalidateList(['ServicePoint']);
           if (partnerId) {
-            invalidateTag('ServicePoint', `PARTNER_${partnerId}`);
+            invalidateTag('ServicePoint');
           }
           if (result?.id) {
-            invalidateTag('ServicePoint', String(result.id));
+            invalidateTag('ServicePoint');
           }
         }
 
