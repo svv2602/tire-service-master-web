@@ -15,11 +15,13 @@ import {
   AccountCircle as AccountCircleIcon,
   PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
-import { useRegisterClientMutation } from '../../api/clientAuth.api';
-import { useLoginMutation } from '../../api/auth.api';
+import { useDispatch } from 'react-redux';
+import { useRegisterClientMutation, useLoginClientMutation } from '../../api/clientAuth.api';
 import { useAssignBookingToClientMutation } from '../../api/clientBookings.api';
+import { setCredentials } from '../../store/slices/authSlice';
 import { BookingFormData } from '../../types/booking';
 import { generatePasswordFromPhone } from '../../utils/phoneUtils';
+import { UserRole } from '../../types';
 
 export interface CreateAccountDialogProps {
   /** Открыто ли диалоговое окно */
@@ -49,6 +51,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
   onContinueWithoutAccount,
 }) => {
   const theme = useTheme();
+  const dispatch = useDispatch();
   
   // Состояния формы
   const [error, setError] = useState('');
@@ -56,7 +59,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
 
   // API мутации
   const [registerClient] = useRegisterClientMutation();
-  const [loginClient] = useLoginMutation();
+  const [loginClient] = useLoginClientMutation();
   const [assignBookingToClient] = useAssignBookingToClientMutation();
 
   // Автоматическая генерация пароля из номера телефона
@@ -143,6 +146,21 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
         });
         const loginResponse = await loginClient(loginData).unwrap();
         console.log('✅ Вход выполнен:', loginResponse);
+        
+        // Сохраняем данные пользователя в Redux store
+        dispatch(setCredentials({
+          accessToken: loginResponse.tokens?.access || null,
+          user: {
+            ...loginResponse.user,
+            role: UserRole.CLIENT,
+            role_id: 1,
+            email_verified: false,
+            phone_verified: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_active: true
+          }
+        }));
       } catch (loginError: any) {
         console.error('❌ Ошибка входа в систему:', loginError);
         // Продолжаем даже если вход не удался
@@ -213,7 +231,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
         <Box display="flex" alignItems="center" gap={2}>
           <PersonAddIcon color="primary" />
           <Typography variant="h6">
-            Создать личный кабинет
+            Создать ЛК и показать бронирование
           </Typography>
         </Box>
       </DialogTitle>
@@ -321,7 +339,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
           disabled={isCreating}
           startIcon={isCreating ? <CircularProgress size={20} /> : <AccountCircleIcon />}
         >
-          {isCreating ? 'Создание аккаунта...' : 'Создать аккаунт'}
+          {isCreating ? 'Создание ЛК...' : 'Создать ЛК и показать бронирование'}
         </Button>
       </DialogActions>
     </Dialog>

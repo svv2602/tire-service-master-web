@@ -29,6 +29,29 @@ interface RegisterResponse {
   };
 }
 
+interface LoginRequest {
+  login: string;
+  password: string;
+}
+
+interface LoginResponse {
+  message: string;
+  user: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+  };
+  client: {
+    id: number;
+    preferred_notification_method: string;
+  };
+  tokens: {
+    access: string;
+  };
+}
+
 export const clientAuthApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     registerClient: builder.mutation<RegisterResponse, RegisterRequest>({
@@ -38,7 +61,14 @@ export const clientAuthApi = baseApi.injectEndpoints({
         body: credentials,
       }),
     }),
+    loginClient: builder.mutation<LoginResponse, LoginRequest>({
+      query: (credentials) => ({
+        url: 'clients/login',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
   }),
 });
 
-export const { useRegisterClientMutation } = clientAuthApi;
+export const { useRegisterClientMutation, useLoginClientMutation } = clientAuthApi;

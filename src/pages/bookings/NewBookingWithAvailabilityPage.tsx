@@ -426,7 +426,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     setTimeout(() => {
       navigate('/client/bookings', {
         state: { 
-          message: 'Добро пожаловать! Ваш аккаунт создан и бронирование добавлено в личный кабинет.'
+          message: 'Добро пожаловать! Ваш личный кабинет создан и бронирование добавлено.'
         }
       });
     }, 1000);
@@ -570,7 +570,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         primaryButtonText={
           isAuthenticated 
             ? 'Мои бронирования' 
-            : 'Создать ЛК и записать в него бронирование'
+            : 'Создать ЛК и показать бронирование'
         }
         onPrimaryAction={
           isAuthenticated 
