@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест потока аутентификации</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background: #f8f9fa;
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        .warning {
+            border-left-color: #ff9800;
+            background: #fff3e0;
+        }
+        .button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #1976D2;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Тест потока аутентификации</h1>
+    
+    <div class="container">
+        <h2>Проверка создания аккаунта и автоматического входа</h2>
+        
+        <div class="step">
+            <h3>Шаг 1: Создание гостевого бронирования</h3>
+            <div class="form-group">
+                <label>Имя:</label>
+                <input type="text" id="firstName" value="Тест" />
+            </div>
+            <div class="form-group">
+                <label>Фамилия:</label>
+                <input type="text" id="lastName" value="Тестович" />
+            </div>
+            <div class="form-group">
+                <label>Телефон:</label>
+                <input type="text" id="phone" value="+38 (050) 123-45-67" />
+            </div>
+            <button class="button" onclick="createGuestBooking()">Создать гостевое бронирование</button>
+        </div>
+        
+        <div class="step">
+            <h3>Шаг 2: Создание аккаунта</h3>
+            <button class="button" onclick="createAccount()" disabled id="createAccountBtn">Создать аккаунт</button>
+        </div>
+        
+        <div class="step">
+            <h3>Шаг 3: Проверка состояния аутентификации</h3>
+            <button class="button" onclick="checkAuthState()">Проверить состояние</button>
+            <button class="button" onclick="checkUserData()">Проверить данные пользователя</button>
+        </div>
+        
+        <div class="step">
+            <h3>Шаг 4: Переход в личный кабинет</h3>
+            <button class="button" onclick="goToBookings()">Перейти в /client/bookings</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Лог операций</h2>
+        <div id="log" class="log"></div>
+        <button class="button" onclick="clearLog()">Очистить лог</button>
+    </div>
+    
+    <script>
+        let createdBooking = null;
+        let userData = null;
+        
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+        
+        async function createGuestBooking() {
+            log('Создание гостевого бронирования...');
+            
+            const bookingData = {
+                service_point_id: 1,
+                category_id: 1,
+                booking_date: '2025-01-15',
+                start_time: '10:00',
+                service_recipient: {
+                    first_name: document.getElementById('firstName').value,
+                    last_name: document.getElementById('lastName').value,
+                    phone: document.getElementById('phone').value,
+                    email: ''
+                },
+                car_info: {
+                    car_type_id: 1,
+                    license_plate: 'AA1234BB'
+                }
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/client/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                createdBooking = result.data;
+                
+                log(`Бронирование создано: ID=${createdBooking.id}`, 'success');
+                document.getElementById('createAccountBtn').disabled = false;
+                
+            } catch (error) {
+                log(`Ошибка создания бронирования: ${error.message}`, 'error');
+            }
+        }
+        
+        async function createAccount() {
+            if (!createdBooking) {
+                log('Сначала создайте бронирование', 'warning');
+                return;
+            }
+            
+            log('Создание аккаунта...');
+            
+            const phone = document.getElementById('phone').value;
+            const digitsOnly = phone.replace(/[^\d]/g, '');
+            let normalizedPhone = digitsOnly;
+            
+            if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+                normalizedPhone = '38' + digitsOnly;
+            }
+            
+            const password = normalizedPhone.slice(-10); // Последние 10 цифр как пароль
+            
+            const registrationData = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                phone: normalizedPhone,
+                email: '', // Пустой email
+                password: password,
+                password_confirmation: password
+            };
+            
+            try {
+                // Регистрация
+                log(`Регистрация с данными: ${JSON.stringify(registrationData)}`);
+                
+                const registerResponse = await fetch('http://localhost:8000/api/v1/clients/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registrationData)
+                });
+                
+                if (!registerResponse.ok) {
+                    const errorData = await registerResponse.json();
+                    throw new Error(`Регистрация: ${JSON.stringify(errorData)}`);
+                }
+                
+                const registerResult = await registerResponse.json();
+                log(`Регистрация успешна: ${JSON.stringify(registerResult)}`, 'success');
+                
+                // Автоматический вход
+                log('Выполняем автоматический вход...');
+                
+                const loginData = {
+                    login: normalizedPhone,
+                    password: password
+                };
+                
+                const loginResponse = await fetch('http://localhost:8000/api/v1/clients/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                if (!loginResponse.ok) {
+                    const errorData = await loginResponse.json();
+                    throw new Error(`Вход: ${JSON.stringify(errorData)}`);
+                }
+                
+                const loginResult = await loginResponse.json();
+                log(`Вход успешен: ${JSON.stringify(loginResult)}`, 'success');
+                userData = loginResult;
+                
+                // Привязка бронирования
+                log('Привязка бронирования к клиенту...');
+                
+                const assignResponse = await fetch(`http://localhost:8000/api/v1/client/bookings/${createdBooking.id}/assign_to_client`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${loginResult.tokens.access}`
+                    },
+                    body: JSON.stringify({
+                        client_id: registerResult.client.id
+                    })
+                });
+                
+                if (!assignResponse.ok) {
+                    const errorData = await assignResponse.json();
+                    log(`Ошибка привязки: ${JSON.stringify(errorData)}`, 'warning');
+                } else {
+                    const assignResult = await assignResponse.json();
+                    log(`Бронирование привязано: ${JSON.stringify(assignResult)}`, 'success');
+                }
+                
+            } catch (error) {
+                log(`Ошибка создания аккаунта: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkAuthState() {
+            log('Проверка состояния аутентификации...');
+            
+            if (!userData) {
+                log('Данные пользователя не найдены', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${userData.tokens.access}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                log(`Состояние аутентификации: ${JSON.stringify(result)}`, 'success');
+                
+            } catch (error) {
+                log(`Ошибка проверки состояния: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkUserData() {
+            log('Проверка данных пользователя...');
+            
+            if (!userData) {
+                log('Данные пользователя не найдены', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`http://localhost:8000/api/v1/bookings?client_id=${userData.client.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${userData.tokens.access}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                log(`Бронирования клиента: ${JSON.stringify(result)}`, 'success');
+                
+            } catch (error) {
+                log(`Ошибка получения бронирований: ${error.message}`, 'error');
+            }
+        }
+        
+        function goToBookings() {
+            log('Переход в личный кабинет...');
+            window.open('http://localhost:3008/client/bookings', '_blank');
+        }
+        
+        // Инициализация
+        log('Тест потока аутентификации готов к работе');
+    </script>
+</body>
+</html> 

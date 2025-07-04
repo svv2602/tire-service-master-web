@@ -161,34 +161,52 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
             is_active: true
           }
         }));
+
+        // Даем время для обновления состояния Redux
+        await new Promise(resolve => setTimeout(resolve, 300));
       } catch (loginError: any) {
         console.error('❌ Ошибка входа в систему:', loginError);
         // Продолжаем даже если вход не удался
       }
 
-      // Если есть созданное бронирование, привязываем его к новому клиенту
+      // Если есть созданное бронирование, проверяем, нужно ли его привязывать
       if (createdBooking && registerResponse.client) {
-        try {
-          console.log('📝 Привязка бронирования к клиенту:', {
+        // Если бронирование уже создано авторизованным пользователем, 
+        // то оно уже привязано к правильному клиенту
+        if (createdBooking.client_id) {
+          console.log('✅ Бронирование уже привязано к клиенту:', {
             bookingId: createdBooking.id,
-            clientId: registerResponse.client.id,
+            clientId: createdBooking.client_id,
           });
+        } else {
+          // Только если бронирование было создано как гостевое, привязываем его
+          try {
+            console.log('📝 Привязка гостевого бронирования к клиенту:', {
+              bookingId: createdBooking.id,
+              clientId: registerResponse.client.id,
+            });
 
-          const assignResult = await assignBookingToClient({
-            id: createdBooking.id.toString(),
-            client_id: registerResponse.client.id,
-          }).unwrap();
+            const assignResult = await assignBookingToClient({
+              id: createdBooking.id.toString(),
+              client_id: registerResponse.client.id,
+            }).unwrap();
 
-          console.log('✅ Бронирование успешно привязано:', assignResult);
-        } catch (assignError: any) {
-          console.error('❌ Ошибка привязки бронирования:', assignError);
-          // Не блокируем создание аккаунта из-за ошибки привязки
-          // Пользователь все равно получит доступ к аккаунту
+            console.log('✅ Бронирование успешно привязано:', assignResult);
+          } catch (assignError: any) {
+            console.log('ℹ️ Привязка бронирования не потребовалась или не удалась:', assignError);
+            // Не блокируем создание аккаунта из-за ошибки привязки
+          }
         }
       }
 
+      // Даем дополнительное время для полного обновления состояния
+      await new Promise(resolve => setTimeout(resolve, 200));
+
       // Передаем данные созданного пользователя родительскому компоненту
-      onAccountCreated(registerResponse);
+      onAccountCreated({
+        ...registerResponse,
+        isAuthenticated: true
+      });
       
       // Закрываем диалог
       onClose();

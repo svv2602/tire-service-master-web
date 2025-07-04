@@ -33,6 +33,7 @@ import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/slices/authSlice';
 import { useLoginMutation } from '../../api/auth.api';
 import { UserRole } from '../../types/user-role';
+import { extractPhoneDigits } from '../../utils/phoneUtils';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -117,22 +118,11 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       let normalizedLogin = login.trim();
       
       if (loginType === 'phone') {
-        // Убираем все символы кроме цифр
-        const digitsOnly = login.replace(/[^\d]/g, '');
-        
-        // Если номер начинается с 38, оставляем как есть
-        // Если начинается с 0, добавляем 38 в начало
-        if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
-          normalizedLogin = '38' + digitsOnly; // 0501234567 -> 380501234567
-        } else if (digitsOnly.startsWith('38') && digitsOnly.length === 12) {
-          normalizedLogin = digitsOnly; // 380501234567 -> 380501234567
-        } else {
-          normalizedLogin = digitsOnly; // Любой другой формат оставляем как есть
-        }
+        // Используем функцию extractPhoneDigits для надежной нормализации
+        normalizedLogin = extractPhoneDigits(login);
         
         console.log('📱 Нормализация телефона:', {
           original: login.trim(),
-          digitsOnly,
           normalized: normalizedLogin
         });
       }

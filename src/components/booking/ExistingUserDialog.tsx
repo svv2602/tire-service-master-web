@@ -24,7 +24,7 @@ interface ExistingUserDialogProps {
     phone: string;
     role: string;
     client_id?: number;
-  };
+  } | null;
   onLoginSuccess: (userData: any) => void;
   onContinueAsGuest: () => void;
 }
@@ -39,6 +39,11 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loginClient, { isLoading }] = useLoginMutation();
+
+  // Если user null, не показываем диалог
+  if (!user) {
+    return null;
+  }
 
   const handleLogin = async () => {
     if (!password.trim()) {
@@ -88,7 +93,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-            📧 {user.email} • 📱 {user.phone}
+            📧 {user.email || 'Не указан'} • 📱 {user.phone}
           </Typography>
         </Alert>
 

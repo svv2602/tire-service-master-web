@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme, Button } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
+import { useGetClientMeQuery } from '../../api/clientAuth.api';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
+import { RootState } from '../../store';
 import BookingsList from '../../components/bookings/BookingsList';
 import BookingFilters from '../../components/bookings/BookingFilters';
 import LoginPrompt from '../../components/auth/LoginPrompt';
@@ -13,7 +15,7 @@ import { Booking as ModelBooking } from '../../types/models';
 import { Booking } from '../../types/booking';
 import { getThemeColors, getButtonStyles } from '../../styles';
 import { Add as AddIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ClientLayout from '../../components/client/ClientLayout';
 import { convertStatusToKey, isCancelledStatus } from '../../utils/bookingStatus';
 
@@ -66,20 +68,39 @@ const MyBookingsPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const navigate = useNavigate();
+  const location = useLocation();
   
   const currentUser = useSelector(selectCurrentUser);
+  const { isAuthenticated, isInitialized, loading } = useSelector((state: RootState) => state.auth);
   const [tabValue, setTabValue] = useState<number>(0);
   const [filters, setFilters] = useState<BookingsFilter>({
     status: BOOKING_STATUSES.PENDING,
   });
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+
+  // Проверяем, был ли создан новый аккаунт (из URL параметров)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('newAccount') === 'true') {
+      setShowWelcomeMessage(true);
+      // Убираем параметр из URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Получаем актуальную информацию о пользователе из API
+  // Для клиентов используем специальный endpoint /clients/me
   const { data: userFromApi, isLoading: isLoadingUser, error: userError } = useGetCurrentUserQuery(undefined, {
-    skip: !currentUser // Пропускаем запрос если пользователь не авторизован
+    skip: !currentUser || currentUser.role === 'client' // Пропускаем для клиентов
+  });
+  
+  // Для клиентов используем /clients/me
+  const { data: clientFromApi, isLoading: isLoadingClient, error: clientError } = useGetClientMeQuery(undefined, {
+    skip: !currentUser || currentUser.role !== 'client' // Используем только для клиентов
   });
 
   // Определяем client_id из API данных или из Redux
-  const clientId = userFromApi?.client_id || currentUser?.client_id;
+  const clientId = clientFromApi?.client?.id || userFromApi?.client_id || currentUser?.client_id;
   
   // Запрос на получение записей клиента
   const { data: bookingsData, isLoading, isError, error, refetch } = useGetBookingsByClientQuery(
@@ -155,8 +176,20 @@ const MyBookingsPage: React.FC = () => {
         })
     : [];
 
+  // Показываем загрузку если состояние еще не инициализировано или загружаются данные
+  if (!isInitialized || loading || isLoadingUser || isLoadingClient) {
+    return (
+      <ClientLayout>
+        <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>Загрузка...</Typography>
+        </Box>
+      </ClientLayout>
+    );
+  }
+
   // Если пользователь не авторизован, показываем предложение войти
-  if (!currentUser) {
+  if (!isAuthenticated || !currentUser) {
     return <LoginPrompt />;
   }
 
@@ -171,7 +204,7 @@ const MyBookingsPage: React.FC = () => {
                 Не удалось определить профиль клиента
               </Typography>
               <Typography variant="body2" component="div">
-                Ошибка: {userError ? JSON.stringify(userError) : 'Неизвестная ошибка'}
+                Ошибка: {userError ? JSON.stringify(userError) : clientError ? JSON.stringify(clientError) : 'Неизвестная ошибка'}
               </Typography>
               <Button 
                 variant="outlined" 
@@ -191,10 +224,26 @@ const MyBookingsPage: React.FC = () => {
     <ClientLayout>
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
+          {/* Приветственное сообщение */}
+          {showWelcomeMessage && (
+            <Alert 
+              severity="success" 
+              sx={{ mb: 3 }}
+              onClose={() => setShowWelcomeMessage(false)}
+            >
+              <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                🎉 Добро пожаловать в личный кабинет!
+              </Typography>
+              <Typography variant="body2">
+                Ваш аккаунт успешно создан и бронирование добавлено. Теперь вы можете управлять своими записями.
+              </Typography>
+            </Alert>
+          )}
+
           {/* Заголовок с кнопкой создания записи */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h4" component="h1">
-              {t('Мои записи')} (Client ID: {clientId})
+              {t('Мои записи')} {clientFromApi?.user ? `(${clientFromApi.user.first_name} ${clientFromApi.user.last_name})` : `(Client ID: ${clientId})`}
             </Typography>
             
             <Button

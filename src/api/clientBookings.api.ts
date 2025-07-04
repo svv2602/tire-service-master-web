@@ -12,13 +12,25 @@ export interface ClientBookingRequest {
     license_plate: string;
     car_brand?: string;
     car_model?: string;
+    car_type_id?: number;
     year?: number;
   };
   booking: {
     service_point_id: number;
+    service_category_id?: number;
     booking_date: string;
     start_time: string;
     notes?: string;
+    // Поля автомобиля (как ожидает backend)
+    license_plate: string;
+    car_brand?: string;
+    car_model?: string;
+    car_type_id?: number;
+    // Поля получателя услуги
+    service_recipient_first_name: string;
+    service_recipient_last_name: string;
+    service_recipient_phone: string;
+    service_recipient_email?: string;
   };
   services?: Array<{
     service_id: number;

@@ -52,6 +52,27 @@ interface LoginResponse {
   };
 }
 
+interface ClientMeResponse {
+  user: {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    email_verified: boolean;
+    phone_verified: boolean;
+    role: string;
+    is_active: boolean;
+  };
+  client: {
+    id: number;
+    preferred_notification_method: string;
+    total_bookings: number;
+    completed_bookings: number;
+    average_rating_given: number;
+  };
+}
+
 export const clientAuthApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     registerClient: builder.mutation<RegisterResponse, RegisterRequest>({
@@ -68,7 +89,26 @@ export const clientAuthApi = baseApi.injectEndpoints({
         body: credentials,
       }),
     }),
+    getClientMe: builder.query<ClientMeResponse, void>({
+      query: () => ({
+        url: 'clients/me',
+        method: 'GET',
+        credentials: 'include',
+      }),
+      transformResponse: (response: ClientMeResponse) => {
+        console.log('🔄 Трансформация ответа getClientMe:', response);
+        return response;
+      },
+      transformErrorResponse: (response: { status: number, data: any }) => {
+        console.error('❌ Ошибка getClientMe:', response);
+        return {
+          status: response.status,
+          data: response.data?.error || 'Ошибка получения данных клиента'
+        };
+      },
+      providesTags: ['User'],
+    }),
   }),
 });
 
-export const { useRegisterClientMutation, useLoginClientMutation } = clientAuthApi;
+export const { useRegisterClientMutation, useLoginClientMutation, useGetClientMeQuery } = clientAuthApi;

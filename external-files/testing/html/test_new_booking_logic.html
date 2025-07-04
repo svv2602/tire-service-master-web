@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование новой логики бронирования</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .test-link {
+            display: inline-block;
+            background: #1976d2;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.3s;
+        }
+        .test-link:hover {
+            background: #1565c0;
+        }
+        .test-link.secondary {
+            background: #757575;
+        }
+        .test-link.secondary:hover {
+            background: #616161;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #1976d2;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+        }
+        .status.error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+        }
+        .status.warning {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #ef6c00;
+        }
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .timestamp {
+            color: #666;
+            font-size: 12px;
+            text-align: right;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование новой логики бронирования</h1>
+        
+        <div class="status success">
+            <strong>✅ Новая логика реализована:</strong> Dev-сервер перезапущен из правильной директории
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Цель тестирования</h2>
+            <p>Проверить работу новой логики бронирования с диалогом выбора типа для неавторизованных пользователей.</p>
+            
+            <div class="instructions">
+                <strong>Что должно произойти:</strong>
+                <ul class="checklist">
+                    <li>Для неавторизованных: показывается диалог выбора типа бронирования</li>
+                    <li>Два варианта: "Создать с личным кабинетом" и "Создать как гость"</li>
+                    <li>При выборе "с ЛК" - создается аккаунт и бронирование одновременно</li>
+                    <li>При выборе "как гость" - создается только бронирование</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔗 Ссылки для тестирования</h2>
+            
+            <h3>Основные страницы:</h3>
+            <a href="http://localhost:3008/client/booking" class="test-link" target="_blank">
+                Страница бронирования
+            </a>
+            <a href="http://localhost:3008/client/search" class="test-link" target="_blank">
+                Поиск сервисных точек
+            </a>
+            <a href="http://localhost:3008/client/bookings" class="test-link secondary" target="_blank">
+                Мои бронирования
+            </a>
+            
+            <h3>Тестовые переходы:</h3>
+            <a href="http://localhost:3008/client/booking?cityId=3&cityName=Бориспіль" class="test-link" target="_blank">
+                Бронирование с предвыбранным городом
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Чек-лист тестирования</h2>
+            
+            <h3>Сценарий 1: Неавторизованный пользователь</h3>
+            <ol>
+                <li>Открыть страницу бронирования без авторизации</li>
+                <li>Заполнить все шаги формы</li>
+                <li>Нажать "Создать бронирование"</li>
+                <li>Должен появиться диалог выбора типа</li>
+                <li>Проверить оба варианта выбора</li>
+            </ol>
+            
+            <h3>Сценарий 2: Авторизованный пользователь</h3>
+            <ol>
+                <li>Войти в систему</li>
+                <li>Открыть страницу бронирования</li>
+                <li>Заполнить форму</li>
+                <li>Нажать "Создать бронирование"</li>
+                <li>Должно создаться напрямую без диалогов</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 Диагностика</h2>
+            
+            <div class="code-block">
+// Ожидаемые консольные сообщения для новой логики:
+🚀 NewBookingWithAvailabilityPage загружен
+📍 location.pathname: /client/booking
+📍 location.state: {cityId: 3, cityName: 'Бориспіль', step1Completed: false}
+📍 location.search: 
+👤 Пользователь не авторизован, показываем диалог выбора типа бронирования
+            </div>
+            
+            <div class="status warning">
+                <strong>⚠️ Если все еще видите старую логику:</strong>
+                <ul>
+                    <li>Очистите кэш браузера (Ctrl+Shift+R)</li>
+                    <li>Откройте в режиме инкогнито</li>
+                    <li>Проверьте, что dev-сервер запущен из tire-service-master-web/</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎛️ Быстрые действия</h2>
+            
+            <button onclick="clearCache()" class="test-link">Очистить кэш</button>
+            <button onclick="openIncognito()" class="test-link secondary">Режим инкогнито</button>
+            <button onclick="checkConsole()" class="test-link">Проверить консоль</button>
+        </div>
+
+        <div class="timestamp">
+            Создано: 4 июля 2025, 16:50 (после перезапуска dev-сервера)
+        </div>
+    </div>
+
+    <script>
+        function clearCache() {
+            if (confirm('Очистить кэш браузера и перезагрузить страницу?')) {
+                // Очищаем различные типы кэша
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                // Перезагружаем с принудительным обновлением
+                window.location.reload(true);
+            }
+        }
+        
+        function openIncognito() {
+            alert('Откройте новое окно в режиме инкогнито и перейдите по ссылке:\nhttp://localhost:3008/client/booking');
+        }
+        
+        function checkConsole() {
+            alert('Откройте консоль разработчика (F12) и проверьте сообщения при загрузке страницы бронирования');
+        }
+        
+        // Автоматическая проверка доступности dev-сервера
+        fetch('http://localhost:3008')
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Dev-сервер доступен');
+                } else {
+                    console.error('❌ Dev-сервер недоступен');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка подключения к dev-серверу:', error);
+            });
+    </script>
+</body>
+</html> 
