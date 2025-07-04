@@ -56,6 +56,8 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
       console.log('🔍 Параметры запроса getDayDetails:', requestParams);
       console.log('🔍 Ошибка getDayDetails:', dayDetailsError);
       console.log('🔍 Состояние загрузки getDayDetails:', isLoadingDayDetails);
+      console.log('🔍 Результат getDayDetails:', dayDetailsData);
+      console.log('🔍 Skip условие:', !servicePointId || !selectedDate);
     }
   }, [selectedDate, servicePointId, categoryId, dayDetailsData, dayDetailsError, isLoadingDayDetails]);
 
@@ -72,20 +74,26 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
 
     // Отладочная информация (только в development)
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 dayDetailsData:', dayDetailsData);
-      console.log('🔍 dayDetailsData?.summary:', dayDetailsData?.summary);
-      console.log('🔍 categoryId:', categoryId);
+      console.log('🔍 AvailabilitySelector dayDetailsData:', dayDetailsData);
+      console.log('🔍 AvailabilitySelector dayDetailsData?.summary:', dayDetailsData?.summary);
+      console.log('🔍 AvailabilitySelector categoryId:', categoryId);
     }
 
-    // Если нет данных о дне или слотах, получаем из API данных
+    // Используем данные из API day_details для правильного подсчета
     if (dayDetailsData?.summary) {
       const totalSlots = dayDetailsData.summary.total_slots || 0;
-      const availableSlots = dayDetailsData.summary.available_slots || 0;
       const occupiedSlots = dayDetailsData.summary.occupied_slots || 0;
+      const availableSlots = totalSlots - occupiedSlots; // Правильная формула: всего - занято = свободно
       const occupancyPercentage = dayDetailsData.summary.occupancy_percentage || 0;
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Используем данные из API:', { totalSlots, availableSlots, occupiedSlots, occupancyPercentage });
+        console.log('✅ AvailabilitySelector используем данные из API:', { 
+          totalSlots, 
+          occupiedSlots, 
+          availableSlots, 
+          occupancyPercentage,
+          apiAvailableSlots: dayDetailsData.summary.available_slots // для сравнения
+        });
       }
 
       return {
@@ -96,18 +104,19 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
       };
     }
 
-    // Если нет данных из API, но есть данные из availableTimeSlots
+    // Fallback: если нет данных из API
     const availableSlots = availableTimeSlots.length;
-    
-    // ИСПРАВЛЕНИЕ: availabilityData.total_slots содержит только доступные слоты, а не общее количество
-    // Используем фиксированное значение 21 для категории 5 (основано на API тестах)
-    const totalSlots = 21; // Правильное общее количество слотов для категории 5
-    
-    const occupiedSlots = totalSlots - availableSlots;
+    const totalSlots = totalSlotsForDay || availableSlots;
+    const occupiedSlots = Math.max(0, totalSlots - availableSlots);
     const occupancyPercentage = totalSlots > 0 ? (occupiedSlots / totalSlots) * 100 : 0;
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('⚠️ Используем улучшенную fallback логику:', { availableSlots, totalSlots, occupiedSlots, occupancyPercentage, categoryId });
+      console.log('⚠️ AvailabilitySelector fallback логика:', { 
+        availableSlots, 
+        totalSlots, 
+        occupiedSlots, 
+        occupancyPercentage 
+      });
     }
 
     return {
@@ -116,7 +125,19 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
       occupiedSlots,
       occupancyPercentage
     };
-  }, [selectedDate, availableTimeSlots, dayDetailsData]);
+  }, [selectedDate, availableTimeSlots, dayDetailsData, totalSlotsForDay]);
+
+  // Отладочная информация для передачи данных в DayDetailsPanel
+  React.useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && selectedDate) {
+      console.log('🔍 Передача данных в DayDetailsPanel:', {
+        totalPosts: dayStats.totalSlots,
+        availablePosts: dayStats.totalSlots - dayStats.occupiedSlots,
+        occupiedSlots: dayStats.occupiedSlots,
+        dayStats: dayStats
+      });
+    }
+  }, [dayStats, selectedDate]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -153,7 +174,7 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             isLoading={isLoading || isLoadingDayDetails}
             occupancyPercentage={dayStats.occupancyPercentage}
             totalPosts={dayStats.totalSlots}
-            availablePosts={dayStats.availableSlots}
+            availablePosts={dayStats.totalSlots - dayStats.occupiedSlots}
             servicePointPhone={servicePointPhone}
             isWorking={dayDetailsData?.is_working}
             workingMessage={dayDetailsData?.message}

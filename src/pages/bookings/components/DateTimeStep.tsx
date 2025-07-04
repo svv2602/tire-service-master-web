@@ -29,7 +29,7 @@ import { DayDetailsPanel } from '../../../components/availability/DayDetailsPane
 import TimeSlotPicker from '../../../components/availability/TimeSlotPicker';
 
 // Импорт API хуков
-import { useGetSlotsForCategoryQuery } from '../../../api/availability.api';
+import { useGetSlotsForCategoryQuery, useGetDayDetailsQuery } from '../../../api/availability.api';
 import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
 
 // Импорт стилей
@@ -132,14 +132,24 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [formData.service_point_id, formData.service_category_id, selectedDate]);
 
-  // Загрузка доступных временных слотов с учетом категории
+  // Загрузка доступных слотов для выбранной даты
   const { data: availabilityData, isLoading: isLoadingAvailability, error: availabilityError } = useGetSlotsForCategoryQuery(
     {
-      servicePointId: Number(formData.service_point_id) || 0,
-      categoryId: Number(formData.service_category_id) || 0,
-      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
+      servicePointId: formData.service_point_id?.toString() || '0',
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+      categoryId: formData.service_category_id?.toString() || '1'
     },
-    { skip: !formData.service_point_id || !formData.service_category_id || !selectedDate }
+    { skip: !formData.service_point_id || !selectedDate || !formData.service_category_id }
+  );
+
+  // Загрузка статистики дня для правильного отображения загруженности
+  const { data: dayDetailsData, isLoading: isLoadingDayDetails, error: dayDetailsError } = useGetDayDetailsQuery(
+    {
+      servicePointId: formData.service_point_id?.toString() || '0',
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
+      categoryId: formData.service_category_id?.toString() || '1'
+    },
+    { skip: !formData.service_point_id || !selectedDate || !formData.service_category_id }
   );
 
   // Отладочная информация для API ответа
@@ -154,62 +164,53 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [availabilityData, isLoadingAvailability, availabilityError, selectedDate]);
   
-  // Получаем доступные временные слоты
+  // Группировка доступных слотов по времени с подсчетом доступности
   const availableTimeSlots = useMemo(() => {
     if (!availabilityData?.slots || availabilityData.slots.length === 0) {
       return [];
     }
 
-    // Группируем слоты по времени начала
-    const groupedByTime = availabilityData.slots.reduce((acc, slot) => {
-      const timeKey = slot.start_time;
-      
-      if (!acc[timeKey]) {
-        acc[timeKey] = {
-          time: timeKey,
-          posts: [],
-          available_posts: 0,
-          total_posts: 0,
-          duration_minutes: slot.duration_minutes
-        };
-      }
-      
-      acc[timeKey].posts.push(slot);
-      acc[timeKey].available_posts += 1; // Все слоты в ответе доступны
-      acc[timeKey].total_posts += 1;
-      
-      return acc;
-    }, {} as Record<string, {
-      time: string;
-      posts: any[];
-      available_posts: number;
-      total_posts: number;
-      duration_minutes: number;
-    }>);
-
-    // Преобразуем в массив и сортируем по времени
-    const processedSlots = Object.values(groupedByTime)
-      .map(group => ({
-        time: group.time,
-        available_posts: group.available_posts,
-        total_posts: group.total_posts,
-        can_book: group.available_posts > 0,
-        duration_minutes: group.duration_minutes
-      }))
-      .sort((a, b) => a.time.localeCompare(b.time));
+    // Теперь API уже возвращает правильную группировку по времени
+    // Каждый слот содержит available_posts, total_posts, bookings_count
+    const processedSlots = availabilityData.slots.map(slot => ({
+      time: slot.start_time,
+      available_posts: slot.available_posts || 1,
+      total_posts: slot.total_posts || 1,
+      can_book: (slot.available_posts || 0) > 0,
+      duration_minutes: slot.duration_minutes,
+      bookings_count: slot.bookings_count || 0
+    }));
 
     // Отладочная информация для обработанных слотов
     if (process.env.NODE_ENV === 'development') {
       console.log('⏰ Обработанные временные слоты:', {
         originalSlots: availabilityData?.slots?.length || 0,
-        groupedByTime: Object.keys(groupedByTime).length,
         processedSlots: processedSlots.length,
-        slots: processedSlots
+        sampleSlots: processedSlots.slice(0, 3),
+        hasNewFields: processedSlots.length > 0 && processedSlots[0].available_posts !== undefined
       });
     }
 
-    return processedSlots;
+    return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
+  
+  // Отладочная информация для диагностики данных
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 DateTimeStep - Отладочная информация:', {
+        servicePointId: formData.service_point_id,
+        selectedDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null,
+        categoryId: formData.service_category_id,
+        dayDetailsData,
+        dayDetailsError,
+        isLoadingDayDetails,
+        availabilityData,
+        availabilityError,
+        isLoadingAvailability,
+        availableTimeSlotsLength: availableTimeSlots.length
+      });
+    }
+  }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots]);
   
   // Обработчик выбора даты с переходом к выбору времени
   const handleDateChange = (date: Date | null) => {
@@ -315,7 +316,12 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
               <DayDetailsPanel
                 selectedDate={selectedDate}
                 selectedTimeSlot={null}
-                isLoading={isLoadingAvailability}
+                isLoading={isLoadingDayDetails || isLoadingAvailability}
+                totalPosts={dayDetailsData?.summary?.total_slots || 0}
+                availablePosts={(dayDetailsData?.summary?.total_slots || 0) - (dayDetailsData?.summary?.occupied_slots || 0)}
+                occupancyPercentage={dayDetailsData?.summary?.occupancy_percentage || 0}
+                servicePointPhone={servicePointData?.phone}
+                isWorking={dayDetailsData?.is_working || false}
               />
             </Box>
           </Box>

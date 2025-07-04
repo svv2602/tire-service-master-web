@@ -44,6 +44,10 @@ export interface TimeSlot {
   end_time: string;
   duration_minutes: number;
   datetime: string;
+  // Новые поля для правильного подсчета доступности
+  available_posts?: number;
+  total_posts?: number;
+  bookings_count?: number;
 }
 
 export interface CategorySlotsResponse {
@@ -52,6 +56,7 @@ export interface CategorySlotsResponse {
   date: string;
   slots: TimeSlot[];
   total_slots: number;
+  total_posts_count?: number; // Общее количество постов для категории
 }
 
 export const availabilityApi = baseApi.injectEndpoints({

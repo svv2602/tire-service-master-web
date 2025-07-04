@@ -438,27 +438,15 @@ const BookingFormPage: React.FC = () => {
       return [];
     }
 
-    // Группируем слоты по времени начала для подсчета доступных постов
-    const groupedByTime = availabilityData.slots.reduce((acc, slot) => {
-      const timeKey = slot.start_time;
-      
-      if (!acc[timeKey]) {
-        acc[timeKey] = {
-          time: timeKey,
-          available_posts: 0,
-          total_posts: 0,
-          duration_minutes: slot.duration_minutes,
-          can_book: true
-        };
-      }
-      
-      acc[timeKey].available_posts += 1;
-      acc[timeKey].total_posts += 1;
-      
-      return acc;
-    }, {} as Record<string, AvailableTimeSlot>);
-
-    return Object.values(groupedByTime).sort((a, b) => a.time.localeCompare(b.time));
+    // Преобразуем слоты используя новые поля API
+    return availabilityData.slots.map(slot => ({
+      time: slot.start_time,
+      available_posts: slot.available_posts || 0,
+      total_posts: slot.total_posts || 0,
+      bookings_count: slot.bookings_count || 0,
+      duration_minutes: slot.duration_minutes,
+      can_book: (slot.available_posts || 0) > 0
+    })).sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
 
   // Мемоизированные обработчики

@@ -6,6 +6,7 @@ export interface AvailableTimeSlot {
   total_posts: number;
   can_book: boolean;
   duration_minutes: number; // Длительность слота в минутах
+  bookings_count?: number; // Количество фактических бронирований на это время
 }
 
 export interface AvailabilityResponse {

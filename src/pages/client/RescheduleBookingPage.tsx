@@ -59,27 +59,18 @@ const RescheduleBookingPage: React.FC = () => {
       return [];
     }
 
-    // Группируем слоты по времени начала
-    const groupedByTime = availabilityData.slots.reduce((acc, slot) => {
-      const timeKey = slot.start_time;
-      
-      if (!acc[timeKey]) {
-        acc[timeKey] = {
-          time: timeKey,
-          available_posts: 0,
-          total_posts: 0,
-          duration_minutes: slot.duration_minutes,
-          can_book: true
-        };
-      }
-      
-      acc[timeKey].available_posts += 1;
-      acc[timeKey].total_posts += 1;
-      
-      return acc;
-    }, {} as Record<string, AvailableTimeSlot>);
+    // Теперь API уже возвращает правильную группировку по времени
+    // Каждый слот содержит available_posts, total_posts, bookings_count
+    const processedSlots = availabilityData.slots.map(slot => ({
+      time: slot.start_time,
+      available_posts: slot.available_posts || 1,
+      total_posts: slot.total_posts || 1,
+      can_book: (slot.available_posts || 0) > 0,
+      duration_minutes: slot.duration_minutes,
+      bookings_count: slot.bookings_count || 0
+    }));
 
-    return Object.values(groupedByTime).sort((a, b) => a.time.localeCompare(b.time));
+    return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
   }, [availabilityData]);
 
   // Инициализация даты при загрузке данных о записи
@@ -103,6 +94,7 @@ const RescheduleBookingPage: React.FC = () => {
       console.log('🔍 Данные записи для переноса:', {
         id: booking.id,
         service_point: booking.service_point,
+        service_point_id_from_object: booking.service_point?.id,
         booking_date: booking.booking_date,
         start_time: booking.start_time,
         end_time: booking.end_time
@@ -292,8 +284,7 @@ const RescheduleBookingPage: React.FC = () => {
 
           <Box sx={{ mt: 3 }}>
             <AvailabilitySelector
-              // @ts-ignore - временно игнорируем ошибку типов
-              servicePointId={booking.service_point_id ? Number(booking.service_point_id) : undefined}
+              servicePointId={booking.service_point?.id ? Number(booking.service_point.id) : undefined}
               selectedDate={selectedDate}
               onDateChange={handleDateChange}
               selectedTimeSlot={selectedTimeSlot}
