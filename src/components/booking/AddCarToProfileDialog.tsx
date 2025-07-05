@@ -136,7 +136,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       setSuccess(true);
       
       // Инвалидируем кэш автомобилей для обновления списка
-      invalidateCache(['ClientCars']);
+      invalidateCache.invalidateList(['ClientCars']);
       
       // Уведомляем родительский компонент
       if (onCarAdded) {
