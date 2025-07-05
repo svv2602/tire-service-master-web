@@ -244,7 +244,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
                     </Box>
                   )}
 
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                                    <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" color="text.secondary">
                       Тип:
                     </Typography>

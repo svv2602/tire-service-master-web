@@ -167,11 +167,15 @@ const ClientProfilePage: React.FC = () => {
       .required('Фамилия обязательна для заполнения'),
     email: Yup.string()
       .email('Неверный формат email')
-      .required('Email обязателен для заполнения'),
+      .test('email-or-phone', 'Необходимо указать email или номер телефона', function(value) {
+        return value || this.parent.phone;
+      }),
     phone: Yup.string()
       .min(10, 'Номер телефона должен содержать минимум 10 цифр')
       .matches(/^[\d\s\+\-\(\)]+$/, 'Номер телефона может содержать только цифры, пробелы и символы +, -, (, )')
-      .required('Номер телефона обязателен'),
+      .test('phone-or-email', 'Необходимо указать email или номер телефона', function(value) {
+        return value || this.parent.email;
+      }),
   });
 
   // Схема валидации для автомобиля
@@ -534,6 +538,10 @@ const ClientProfilePage: React.FC = () => {
           {/* Вкладка "Личные данные" */}
           <TabPanel value={activeTab} index={0}>
             <form onSubmit={formik.handleSubmit}>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Для связи с вами необходимо указать хотя бы одно из контактных данных: email или номер телефона. 
+                Рекомендуем заполнить оба поля для более удобного взаимодействия с сервисом.
+              </Alert>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
                   <TextField

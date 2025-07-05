@@ -15,7 +15,7 @@ import {
   Error
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import config from '../config';
+import { useVerifyResetTokenQuery, useResetPasswordMutation } from '../api/password.api';
 
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -24,49 +24,29 @@ const ResetPasswordPage: React.FC = () => {
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [verifying, setVerifying] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [tokenValid, setTokenValid] = useState(false);
-  const [userInfo, setUserInfo] = useState<{ email?: string; phone?: string } | null>(null);
-
-  const API_URL = `${config.API_URL}${config.API_PREFIX}`;
-
+  
+  // Получаем токен из URL
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');
     if (tokenFromUrl) {
       setToken(tokenFromUrl);
-      verifyToken(tokenFromUrl);
-    } else {
-      setError('Токен восстановления не найден в URL');
-      setVerifying(false);
     }
   }, [searchParams]);
-
-  const verifyToken = async (tokenToVerify: string) => {
-    try {
-      const response = await fetch(`${API_URL}/password/verify_token/${tokenToVerify}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const data = await response.json();
-      
-      if (data.valid) {
-        setTokenValid(true);
-        setUserInfo(data.user);
-      } else {
-        setError(data.error || 'Недействительный токен');
-      }
-    } catch (err: any) {
-      setError('Ошибка проверки токена');
-    } finally {
-      setVerifying(false);
-    }
-  };
+  
+  // Проверяем токен
+  const { 
+    data: tokenData, 
+    isLoading: isVerifying, 
+    isError: isTokenError,
+    error: tokenError 
+  } = useVerifyResetTokenQuery(token, {
+    skip: !token // Пропускаем запрос, если токен не задан
+  });
+  
+  // Мутация для сброса пароля
+  const [resetPassword, { isLoading: isResetting }] = useResetPasswordMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,43 +67,26 @@ const ResetPasswordPage: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-    
     try {
-      const response = await fetch(`${API_URL}/password/reset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          password,
-          password_confirmation: passwordConfirmation
-        }),
-      });
+      await resetPassword({
+        token,
+        password,
+        password_confirmation: passwordConfirmation
+      }).unwrap();
       
-      const data = await response.json();
+      setSuccess(true);
       
-      if (response.ok) {
-        setSuccess(true);
-        console.log('✅ Пароль успешно изменён');
-        
-        // Перенаправляем на страницу входа через 3 секунды
-        setTimeout(() => {
-          window.location.href = 'http://localhost:3008/login';
-        }, 3000);
-      } else {
-        setError(data.error || 'Ошибка сброса пароля');
-      }
+      // Перенаправляем на страницу входа через 3 секунды
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (err: any) {
       console.error('❌ Ошибка сброса пароля:', err);
-      setError('Ошибка сброса пароля');
-    } finally {
-      setLoading(false);
+      setError(err.data?.error || 'Ошибка сброса пароля');
     }
   };
 
-  if (verifying) {
+  if (isVerifying) {
     return (
       <Container maxWidth="sm" sx={{ mt: 8 }}>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
@@ -149,7 +112,7 @@ const ResetPasswordPage: React.FC = () => {
           </Typography>
           <Button
             variant="contained"
-            onClick={() => window.location.href = 'http://localhost:3008/login'}
+            onClick={() => navigate('/login')}
           >
             Перейти к входу
           </Button>
@@ -158,7 +121,7 @@ const ResetPasswordPage: React.FC = () => {
     );
   }
 
-  if (!tokenValid) {
+  if (!token || isTokenError || !tokenData?.valid) {
     return (
       <Container maxWidth="sm" sx={{ mt: 8 }}>
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
@@ -167,11 +130,13 @@ const ResetPasswordPage: React.FC = () => {
             Недействительный токен
           </Typography>
           <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            Токен восстановления недействителен или истёк. Попробуйте запросить восстановление пароля заново.
+            {!token ? 'Токен восстановления не найден в URL.' : 
+             tokenError ? (tokenError as any)?.data?.error || 'Ошибка проверки токена.' : 
+             'Токен восстановления недействителен или истёк. Попробуйте запросить восстановление пароля заново.'}
           </Typography>
           <Button
             variant="contained"
-            onClick={() => window.location.href = 'http://localhost:3008/forgot-password'}
+            onClick={() => navigate('/forgot-password')}
           >
             Запросить новый код
           </Button>
@@ -187,9 +152,9 @@ const ResetPasswordPage: React.FC = () => {
           Новый пароль
         </Typography>
         
-        {userInfo && (
+        {tokenData?.user && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            Восстановление пароля для: {userInfo.email || userInfo.phone}
+            Восстановление пароля для: {tokenData.user.email || tokenData.user.phone}
           </Alert>
         )}
 
@@ -200,7 +165,7 @@ const ResetPasswordPage: React.FC = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
+            disabled={isResetting}
             sx={{ mb: 2 }}
             helperText="Минимум 6 символов"
           />
@@ -211,7 +176,7 @@ const ResetPasswordPage: React.FC = () => {
             type="password"
             value={passwordConfirmation}
             onChange={(e) => setPasswordConfirmation(e.target.value)}
-            disabled={loading}
+            disabled={isResetting}
             sx={{ mb: 2 }}
           />
 
@@ -225,17 +190,17 @@ const ResetPasswordPage: React.FC = () => {
             type="submit"
             fullWidth
             variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : <Lock />}
+            disabled={isResetting}
+            startIcon={isResetting ? <CircularProgress size={20} /> : <Lock />}
             sx={{ mb: 2 }}
           >
-            {loading ? 'Изменение пароля...' : 'Изменить пароль'}
+            {isResetting ? 'Изменение пароля...' : 'Изменить пароль'}
           </Button>
 
           <Box textAlign="center">
             <Button
               variant="text"
-              onClick={() => window.location.href = 'http://localhost:3008/login'}
+              onClick={() => navigate('/login')}
             >
               Назад к входу
             </Button>

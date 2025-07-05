@@ -404,7 +404,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           <Link
             component="button"
             variant="body2"
-            onClick={() => navigate('/forgot-password')}
+            onClick={() => window.location.href = '/forgot-password'}
             sx={{ textDecoration: 'none' }}
           >
             Забыли пароль?

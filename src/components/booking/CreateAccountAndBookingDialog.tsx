@@ -102,6 +102,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
           first_name: bookingData.service_recipient.first_name,
           last_name: bookingData.service_recipient.last_name,
           phone: normalizedPhone,
+          email: bookingData.service_recipient.email, // Добавляем email из данных бронирования
           password: password,
           password_confirmation: password,
         },

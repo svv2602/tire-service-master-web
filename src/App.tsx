@@ -21,6 +21,8 @@ import './styles/overrides/textfield-overrides.css';
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 
 // Ленивая загрузка страниц панели управления
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -186,6 +188,8 @@ function App() {
                     {/* Публичные маршруты */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/auth/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     {/* Главная страница для клиентов (без авторизации) */}
                     <Route path="/client" element={
