@@ -458,6 +458,55 @@
         "rating": "Оценка",
         "reviewText": "Текст отзыва"
       }
+    },
+    "pageContent": {
+      "title": {
+        "create": "Создание контента",
+        "edit": "Редактирование контента"
+      },
+      "fields": {
+        "title": "Заголовок",
+        "content": "Контент",
+        "section": "Секция",
+        "contentType": "Тип контента",
+        "position": "Позиция",
+        "active": "Активный",
+        "imageUrl": "URL изображения",
+        "image": "Изображение",
+        "orImageUrl": "Или URL изображения"
+      },
+      "sections": {
+        "client": "Главная страница клиента",
+        "admin": "Панель администратора",
+        "service": "Страница услуг",
+        "about": "О нас"
+      },
+      "contentTypes": {
+        "hero": "Главный баннер",
+        "service": "Услуга",
+        "city": "Город",
+        "article": "Статья",
+        "cta": "Призыв к действию",
+        "footer": "Подвал"
+      },
+      "messages": {
+        "createSuccess": "Контент успешно создан",
+        "updateSuccess": "Контент успешно обновлен",
+        "loadError": "Ошибка при загрузке данных страницы",
+        "saveError": "Ошибка при сохранении",
+        "selectImage": "Пожалуйста, выберите изображение",
+        "fileSizeError": "Размер файла не должен превышать 5MB",
+        "imagePreview": "Превью изображения",
+        "clearUploadedImage": "Очистите загруженное изображение для использования URL",
+        "urlAlternative": "Альтернатива загрузке файла"
+      },
+      "buttons": {
+        "cancel": "Отмена",
+        "create": "Создать",
+        "update": "Обновить",
+        "uploadImage": "Загрузить изображение",
+        "deleteImage": "Удалить"
+      }
     }
   },
   "tables": {

@@ -41,6 +41,7 @@ import {
   CloudUpload as CloudUploadIcon,
   Image as ImageIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { 
   getCardStyles, 
   getButtonStyles, 
@@ -84,6 +85,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const PageContentFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -157,13 +159,13 @@ const PageContentFormPage: React.FC = () => {
 
     // Проверяем тип файла
     if (!file.type.startsWith('image/')) {
-      alert('Пожалуйста, выберите изображение');
+      alert(t('forms.pageContent.messages.selectImage'));
       return;
     }
 
     // Проверяем размер файла (максимум 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Размер файла не должен превышать 5MB');
+      alert(t('forms.pageContent.messages.fileSizeError'));
       return;
     }
 
@@ -206,10 +208,10 @@ const PageContentFormPage: React.FC = () => {
           id: parseInt(id!),
           ...saveData
         }).unwrap();
-        setSuccessMessage('Контент успешно обновлен');
+        setSuccessMessage(t('forms.pageContent.messages.updateSuccess'));
       } else {
         await createPage(saveData as CreatePageContentRequest).unwrap();
-        setSuccessMessage('Контент успешно создан');
+        setSuccessMessage(t('forms.pageContent.messages.createSuccess'));
       }
       
       setTimeout(() => navigate('/admin/page-content'), 1000);
@@ -231,7 +233,7 @@ const PageContentFormPage: React.FC = () => {
     return (
       <Box sx={tablePageStyles.pageContainer}>
         <Alert severity="error" sx={{ mb: 4 }}>
-          Ошибка при загрузке данных страницы
+          {t('forms.pageContent.messages.loadError')}
         </Alert>
       </Box>
     );
@@ -242,21 +244,21 @@ const PageContentFormPage: React.FC = () => {
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" sx={{ fontSize: SIZES.fontSize.xl, fontWeight: 600 }}>
-          {isEdit ? 'Редактирование контента' : 'Создание контента'}
+          {isEdit ? t('forms.pageContent.title.edit') : t('forms.pageContent.title.create')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
             variant="outlined"
             onClick={() => navigate('/admin/page-content')}
           >
-            Отмена
+            {t('forms.pageContent.buttons.cancel')}
           </Button>
           <Button
             variant="contained"
             onClick={handleSave}
             disabled={isCreating || isUpdating}
           >
-            {isEdit ? 'Обновить' : 'Создать'}
+            {isEdit ? t('forms.pageContent.buttons.update') : t('forms.pageContent.buttons.create')}
           </Button>
         </Box>
       </Box>
@@ -276,13 +278,13 @@ const PageContentFormPage: React.FC = () => {
               <InputLabel>Секция</InputLabel>
               <Select
                 value={formData.section || ''}
-                label="Секция"
+                label={t("forms.pageContent.fields.section")}
                 onChange={(e) => handleFieldChange('section', e.target.value)}
               >
-                <MenuItem value="client">Главная страница клиента</MenuItem>
-                <MenuItem value="admin">Панель администратора</MenuItem>
-                <MenuItem value="service">Страница услуг</MenuItem>
-                <MenuItem value="about">О нас</MenuItem>
+                <MenuItem value="client">{t('forms.pageContent.sections.client')}</MenuItem>
+                <MenuItem value="admin">{t('forms.pageContent.sections.admin')}</MenuItem>
+                <MenuItem value="service">{t('forms.pageContent.sections.service')}</MenuItem>
+                <MenuItem value="about">{t('forms.pageContent.sections.about')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -292,15 +294,15 @@ const PageContentFormPage: React.FC = () => {
               <InputLabel>Тип контента</InputLabel>
               <Select
                 value={formData.content_type || ''}
-                label="Тип контента"
+                label={t("forms.pageContent.fields.contentType")}
                 onChange={(e) => handleFieldChange('content_type', e.target.value)}
               >
-                <MenuItem value="hero">Главный баннер</MenuItem>
-                <MenuItem value="service">Услуга</MenuItem>
-                <MenuItem value="city">Город</MenuItem>
-                <MenuItem value="article">Статья</MenuItem>
-                <MenuItem value="cta">Призыв к действию</MenuItem>
-                <MenuItem value="footer">Подвал</MenuItem>
+                <MenuItem value="hero">{t('forms.pageContent.contentTypes.hero')}</MenuItem>
+                <MenuItem value="service">{t('forms.pageContent.contentTypes.service')}</MenuItem>
+                <MenuItem value="city">{t('forms.pageContent.contentTypes.city')}</MenuItem>
+                <MenuItem value="article">{t('forms.pageContent.contentTypes.article')}</MenuItem>
+                <MenuItem value="cta">{t('forms.pageContent.contentTypes.cta')}</MenuItem>
+                <MenuItem value="footer">{t('forms.pageContent.contentTypes.footer')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -308,7 +310,7 @@ const PageContentFormPage: React.FC = () => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Заголовок"
+              label={t("forms.pageContent.fields.title")}
               value={formData.title || ''}
               onChange={(e) => handleFieldChange('title', e.target.value)}
               required
@@ -318,7 +320,7 @@ const PageContentFormPage: React.FC = () => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Контент"
+              label={t("forms.pageContent.fields.content")}
               value={formData.content || ''}
               onChange={(e) => handleFieldChange('content', e.target.value)}
               multiline
@@ -329,7 +331,7 @@ const PageContentFormPage: React.FC = () => {
           
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Изображение
+              {t('forms.pageContent.fields.image')}
             </Typography>
             
             {/* Кнопка загрузки */}
@@ -348,7 +350,7 @@ const PageContentFormPage: React.FC = () => {
                   startIcon={<CloudUploadIcon />}
                   sx={{ mr: 2 }}
                 >
-                  Загрузить изображение
+                  {t('forms.pageContent.buttons.uploadImage')}
                 </Button>
               </label>
               
@@ -359,7 +361,7 @@ const PageContentFormPage: React.FC = () => {
                   onClick={handleImageRemove}
                   startIcon={<DeleteIcon />}
                 >
-                  Удалить
+                  {t('forms.pageContent.buttons.deleteImage')}
                 </Button>
               )}
             </Box>
@@ -370,7 +372,7 @@ const PageContentFormPage: React.FC = () => {
                 <Box
                   component="img"
                   src={imagePreview}
-                  alt="Превью изображения"
+                  alt={t('forms.pageContent.messages.imagePreview')}
                   sx={{
                     width: '100%',
                     height: 200,
@@ -383,19 +385,19 @@ const PageContentFormPage: React.FC = () => {
             {/* Поле URL как альтернатива */}
             <TextField
               fullWidth
-              label="Или URL изображения"
+              label={t("forms.pageContent.fields.orImageUrl")}
               value={formData.image_url || ''}
               onChange={(e) => handleFieldChange('image_url', e.target.value)}
               placeholder="https://example.com/image.jpg"
               disabled={!!imageFile}
-              helperText={imageFile ? "Очистите загруженное изображение для использования URL" : "Альтернатива загрузке файла"}
+              helperText={imageFile ? t('forms.pageContent.messages.clearUploadedImage') : t('forms.pageContent.messages.urlAlternative')}
             />
           </Grid>
           
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Позиция"
+              label={t("forms.pageContent.fields.position")}
               type="number"
               value={formData.position || 0}
               onChange={(e) => handleFieldChange('position', parseInt(e.target.value) || 0)}
@@ -411,7 +413,7 @@ const PageContentFormPage: React.FC = () => {
                   onChange={(e) => handleFieldChange('active', e.target.checked)}
                 />
               }
-              label="Активный"
+              label={t("forms.pageContent.fields.active")}
             />
           </Grid>
         </Grid>
