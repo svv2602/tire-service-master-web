@@ -294,7 +294,7 @@ const ArticlesPage: React.FC = () => {
               <ViewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title=t('tables.actions.edit')>
+          <Tooltip title={t('tables.actions.edit')}>
             <IconButton
               size="small"
               onClick={() => navigate(`/admin/articles/${row.id}/edit`)}
@@ -303,7 +303,7 @@ const ArticlesPage: React.FC = () => {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title=t('tables.actions.delete')>
+          <Tooltip title={t('tables.actions.delete')}>
             <IconButton
               size="small"
               onClick={() => handleDeleteArticle(row.id)}

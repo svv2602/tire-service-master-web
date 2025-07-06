@@ -39,6 +39,7 @@ interface RegionsPageProps {}
 
 const RegionsPage: React.FC<RegionsPageProps> = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
   

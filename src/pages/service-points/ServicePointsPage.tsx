@@ -98,6 +98,7 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
 
 const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { id: partnerId } = useParams<{ id: string }>();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);

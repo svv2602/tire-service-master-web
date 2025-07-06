@@ -235,7 +235,7 @@ const ServicesPage: React.FC = () => {
           <Select
             value={activeFilter}
             onChange={handleActiveFilterChange}
-            label=t('tables.columns.status')
+            label={t('tables.columns.status')}
           >
             <MenuItem value="">Все</MenuItem>
             <MenuItem value="true">Активные</MenuItem>
@@ -366,7 +366,7 @@ const ServicesPage: React.FC = () => {
                 pt: 0,
                 gap: SIZES.spacing.xs
               }}>
-                <Tooltip title=t('tables.actions.edit')>
+                <Tooltip title={t('tables.actions.edit')}>
                   <IconButton 
                     size="small"
                     onClick={() => navigate(`/admin/services/${category.id}/edit`)}
@@ -375,7 +375,7 @@ const ServicesPage: React.FC = () => {
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title=t('tables.actions.delete')>
+                <Tooltip title={t('tables.actions.delete')}>
                   <IconButton 
                     size="small"
                     onClick={() => handleDeleteClick(category)}
