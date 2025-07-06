@@ -21,6 +21,7 @@ import {
   Tooltip,
   useTheme,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -62,6 +63,7 @@ import { getTablePageStyles, SIZES } from '../../styles';
 
 const CarBrandsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Инициализация централизованных стилей
@@ -146,7 +148,7 @@ const CarBrandsPage: React.FC = () => {
     {
       id: 'status',
       type: 'select',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       value: activeFilter,
       onChange: (value: any) => {
         setActiveFilter(value as string);
@@ -164,15 +166,15 @@ const CarBrandsPage: React.FC = () => {
   const carBrandActions: ActionItem<CarBrand>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (brand: CarBrand) => navigate(`/admin/car-brands/${brand.id}/edit`),
       color: 'primary',
-      tooltip: 'Редактировать бренд'
+      tooltip: t('admin.carBrands.editBrand')
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
       onClick: (brand: CarBrand) => handleDeleteBrand(brand),
       color: 'error',
@@ -181,8 +183,8 @@ const CarBrandsPage: React.FC = () => {
       confirmationConfig: {
         title: 'Подтвердите удаление',
         message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
+        confirmLabel: t('tables.actions.delete'),
+        cancelLabel: t('common.cancel'),
       },
     }
   ], [navigate, handleDeleteBrand]);
@@ -214,7 +216,7 @@ const CarBrandsPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       hideOnMobile: false,
       render: (brand: CarBrand) => (
@@ -251,7 +253,7 @@ const CarBrandsPage: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: 'Дата создания',
+      label: t('tables.columns.createdAt'),
       align: 'center',
       hideOnMobile: true,
       render: (brand: CarBrand) => (
@@ -265,7 +267,7 @@ const CarBrandsPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       align: 'right',
       hideOnMobile: false,
       render: (brand: CarBrand) => (
@@ -289,7 +291,7 @@ const CarBrandsPage: React.FC = () => {
         title: 'Бренды автомобилей (PageTable)',
         actions: [
           {
-            label: 'Добавить бренд',
+            label: t('admin.carBrands.createBrand'),
             icon: <AddIcon />,
             color: 'primary',
             variant: 'contained',
@@ -298,7 +300,7 @@ const CarBrandsPage: React.FC = () => {
         ],
       }}
       search={{
-        placeholder: 'Поиск по названию бренда...',
+        placeholder: t('admin.carBrands.searchPlaceholder'),
         value: search,
         onChange: setSearch,
       }}
@@ -318,7 +320,7 @@ const CarBrandsPage: React.FC = () => {
           ? 'Попробуйте изменить критерии поиска'
           : 'Создайте первый бренд автомобиля для начала работы',
         action: (!search && activeFilter === '') ? {
-          label: 'Добавить бренд',
+          label: t('admin.carBrands.createBrand'),
           icon: <AddIcon />,
           onClick: () => navigate('/admin/car-brands/new')
         } : undefined

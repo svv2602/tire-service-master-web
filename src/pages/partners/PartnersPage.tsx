@@ -27,6 +27,7 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -83,6 +84,7 @@ const useDebounce = (value: string, delay: number) => {
 const PartnersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -276,24 +278,24 @@ const PartnersPage: React.FC = () => {
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Партнеры',
+    title: t('admin.partners.title'),
     actions: [
       {
         id: 'add-partner',
-        label: 'Добавить партнера',
+        label: t('admin.partners.createPartner'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/partners/new'),
         variant: 'contained',
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   // Конфигурация поиска
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по названию компании, контактному лицу или номеру телефона...',
+    placeholder: t('admin.partners.searchPlaceholder'),
     value: search,
     onChange: handleSearchChange,
-  }), [search, handleSearchChange]);
+  }), [search, handleSearchChange, t]);
 
   // Конфигурация фильтров
   const filtersConfig: FilterConfig[] = useMemo(() => [
@@ -305,7 +307,7 @@ const PartnersPage: React.FC = () => {
       onChange: handleStatusFilterChange,
       options: [
         { value: '', label: 'Все партнеры' },
-        { value: 'true', label: 'Только активные' },
+        { value: 'true', label: t('admin.users.onlyActive') },
         { value: 'false', label: 'Только неактивные' },
       ],
     },
@@ -315,7 +317,7 @@ const PartnersPage: React.FC = () => {
   const partnerActions: ActionItem<Partner>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (partner: Partner) => handleEditPartner(partner),
       color: 'primary',
@@ -331,7 +333,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
       onClick: (partner: Partner) => handleDeletePartner(partner),
       color: 'error',
@@ -380,7 +382,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'phone',
-      label: 'Телефон',
+      label: t('tables.columns.phone'),
       hideOnMobile: true,
       format: (_value: any, row: Partner) => (
         <Typography variant="body2">
@@ -390,7 +392,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'email',
-      label: 'Email',
+      label: t('tables.columns.email'),
       hideOnMobile: true,
       format: (_value: any, row: Partner) => (
         <Typography variant="body2">
@@ -400,7 +402,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       format: (_value: any, row: Partner) => (
         <FormControlLabel
@@ -419,7 +421,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       align: 'center',
       minWidth: 120,
       format: (_value: any, row: Partner) => (
@@ -488,7 +490,7 @@ const PartnersPage: React.FC = () => {
         empty={
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              {search || statusFilter ? 'Партнеры не найдены' : 'Нет партнеров'}
+              {search || statusFilter ? t('admin.partners.partnersNotFound') : t('admin.partners.noPartners')}
             </Typography>
           </Box>
         }
@@ -587,7 +589,7 @@ const PartnersPage: React.FC = () => {
             variant="contained"
             disabled={relatedDataLoading}
           >
-            {deactivateDialog.isFromDelete ? 'Удалить' : 'Деактивировать'}
+            {deactivateDialog.isFromDelete ? t('tables.actions.delete') : t('tables.actions.deactivate')}
           </Button>
         </DialogActions>
       </Dialog>

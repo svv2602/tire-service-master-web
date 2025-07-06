@@ -14,6 +14,7 @@ import {
   InputAdornment,
   Alert,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -54,6 +55,7 @@ const ARTICLE_STATUS_LABELS = {
 const ArticlesPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const cardStyles = getCardStyles(theme);
   
   // Redux state
@@ -236,7 +238,7 @@ const ArticlesPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       format: (value, row: ArticleSummary) => (
         <Chip
@@ -279,7 +281,7 @@ const ArticlesPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       align: 'right',
       format: (value, row: ArticleSummary) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
@@ -292,7 +294,7 @@ const ArticlesPage: React.FC = () => {
               <ViewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Редактировать">
+          <Tooltip title=t('tables.actions.edit')>
             <IconButton
               size="small"
               onClick={() => navigate(`/admin/articles/${row.id}/edit`)}
@@ -301,7 +303,7 @@ const ArticlesPage: React.FC = () => {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Удалить">
+          <Tooltip title=t('tables.actions.delete')>
             <IconButton
               size="small"
               onClick={() => handleDeleteArticle(row.id)}

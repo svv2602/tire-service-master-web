@@ -319,7 +319,7 @@ const BookingsPage: React.FC = () => {
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Бронирования',
+    title: t('admin.bookings.title'),
     actions: [
       {
         id: 'sort',
@@ -349,7 +349,7 @@ const BookingsPage: React.FC = () => {
   const filterConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       type: 'select',
       value: statusFilter,
       onChange: (value) => setStatusFilter(value as string),
@@ -364,7 +364,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'city',
-      label: 'Город',
+      label: t('tables.columns.city'),
       type: 'select',
       value: cityFilter,
       onChange: (value) => setCityFilter(value as number),
@@ -433,15 +433,15 @@ const BookingsPage: React.FC = () => {
   const bookingActions: ActionItem<Booking>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       color: 'primary',
-      tooltip: 'Редактировать бронирование',
+      tooltip: t('admin.bookings.editBooking'),
       onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
       color: 'error',
       tooltip: 'Удалить бронирование',
@@ -450,8 +450,8 @@ const BookingsPage: React.FC = () => {
       confirmationConfig: {
         title: 'Подтверждение удаления',
         message: 'Вы действительно хотите удалить бронирование? Это действие нельзя будет отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
+        confirmLabel: t('tables.actions.delete'),
+        cancelLabel: t('common.cancel'),
       },
     },
   ], [navigate, handleDeleteBooking]);
@@ -480,7 +480,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'recipient_phone',
-      label: 'Телефон',
+      label: t('tables.columns.phone'),
       minWidth: 140,
       hideOnMobile: true,
       sortable: false,
@@ -495,7 +495,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'city',
-      label: 'Город',
+      label: t('tables.columns.city'),
       minWidth: 120,
       hideOnMobile: true,
       sortable: false,
@@ -554,7 +554,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       minWidth: 120,
       align: 'center',
       sortable: false,
@@ -581,7 +581,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       minWidth: 120,
       align: 'center',
       sortable: false,
@@ -618,7 +618,7 @@ const BookingsPage: React.FC = () => {
     <Box sx={tablePageStyles.pageContainer}>
       {bookingsError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t('Ошибка при загрузке данных')}
+          {t(t('notifications.error.loadingFailed'))}
         </Alert>
       )}
       
@@ -717,7 +717,7 @@ const BookingsPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelStatusChange} color="inherit">
-            {t('Отмена')}
+            {t(t('common.cancel'))}
           </Button>
           <Button 
             onClick={handleConfirmStatusChange} 
@@ -725,7 +725,7 @@ const BookingsPage: React.FC = () => {
             variant="contained"
             autoFocus
           >
-            {t('Подтвердить')}
+            {t(t('common.confirm'))}
           </Button>
         </DialogActions>
       </Dialog>

@@ -26,6 +26,7 @@ import {
   DialogContentText,
   useTheme,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Search as SearchIcon,
@@ -63,6 +64,7 @@ import { getTablePageStyles, SIZES } from '../../styles';
  */
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Централизованная система стилей
@@ -233,7 +235,7 @@ const ServicesPage: React.FC = () => {
           <Select
             value={activeFilter}
             onChange={handleActiveFilterChange}
-            label="Статус"
+            label=t('tables.columns.status')
           >
             <MenuItem value="">Все</MenuItem>
             <MenuItem value="true">Активные</MenuItem>
@@ -364,7 +366,7 @@ const ServicesPage: React.FC = () => {
                 pt: 0,
                 gap: SIZES.spacing.xs
               }}>
-                <Tooltip title="Редактировать">
+                <Tooltip title=t('tables.actions.edit')>
                   <IconButton 
                     size="small"
                     onClick={() => navigate(`/admin/services/${category.id}/edit`)}
@@ -373,7 +375,7 @@ const ServicesPage: React.FC = () => {
                     <EditIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Удалить">
+                <Tooltip title=t('tables.actions.delete')>
                   <IconButton 
                     size="small"
                     onClick={() => handleDeleteClick(category)}
@@ -388,7 +390,7 @@ const ServicesPage: React.FC = () => {
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={category.is_active ? "Деактивировать" : "Активировать"}>
+                <Tooltip title={category.is_active ? t('tables.actions.deactivate') : t('tables.actions.activate')}>
                   <IconButton 
                     size="small"
                     onClick={() => handleToggleActive(category.id, category.is_active)}

@@ -77,5 +77,297 @@
     "uk": "Украинский",
     "ru": "Русский",
     "selectLanguage": "Выберите язык"
+  },
+  "admin": {
+    "users": {
+      "title": "Управление пользователями",
+      "createUser": "Создать пользователя",
+      "editUser": "Редактировать пользователя",
+      "userManagement": "Управление пользователями (PageTable)",
+      "searchPlaceholder": "Поиск по email, имени, фамилии или номеру телефона...",
+      "onlyActive": "Только активные",
+      "allUsers": "Все пользователи",
+      "userStatus": "Статус пользователей",
+      "deactivate": "Деактивировать",
+      "activate": "Активировать",
+      "view": "Просмотр",
+      "viewTooltip": "Просмотр детальной информации о пользователе",
+      "editTooltip": "Редактировать данные пользователя",
+      "deactivateTooltip": "Деактивировать пользователя",
+      "activateTooltip": "Активировать пользователя",
+      "confirmStatusChange": "Подтверждение изменения статуса",
+      "confirmStatusMessage": "Вы действительно хотите изменить статус этого пользователя?",
+      "user": "Пользователь",
+      "email": "Email",
+      "phone": "Телефон",
+      "notSpecified": "Не указан",
+      "role": "Роль",
+      "status": "Статус",
+      "active": "Активен",
+      "deactivated": "Деактивирован",
+      "verifications": "Подтверждения",
+      "emailVerified": "Email подтвержден",
+      "emailNotVerified": "Email не подтвержден",
+      "phoneVerified": "Телефон подтвержден",
+      "phoneNotVerified": "Телефон не подтвержден",
+      "actions": "Действия",
+      "usersNotFound": "Пользователи не найдены",
+      "noUsers": "Нет пользователей",
+      "changeSearchCriteria": "Попробуйте изменить критерии поиска",
+      "createFirstUser": "Создайте первого пользователя для начала работы"
+    },
+    "partners": {
+      "title": "Партнеры",
+      "createPartner": "Создать партнера",
+      "editPartner": "Редактировать партнера",
+      "searchPlaceholder": "Поиск по названию партнера...",
+      "partnersNotFound": "Партнеры не найдены",
+      "noPartners": "Нет партнеров",
+      "createFirstPartner": "Создайте первого партнера для начала работы"
+    },
+    "servicePoints": {
+      "title": "Точки обслуживания",
+      "createServicePoint": "Создать точку обслуживания",
+      "editServicePoint": "Редактировать точку обслуживания",
+      "searchPlaceholder": "Поиск по названию точки обслуживания...",
+      "servicePointsNotFound": "Точки обслуживания не найдены",
+      "noServicePoints": "Нет точек обслуживания",
+      "createFirstServicePoint": "Создайте первую точку обслуживания для начала работы"
+    },
+    "carBrands": {
+      "title": "Бренды автомобилей",
+      "createBrand": "Добавить бренд",
+      "editBrand": "Редактировать бренд",
+      "searchPlaceholder": "Поиск по названию бренда...",
+      "brandsNotFound": "Бренды не найдены",
+      "noBrands": "Нет брендов автомобилей",
+      "createFirstBrand": "Создайте первый бренд автомобиля для начала работы"
+    },
+    "regions": {
+      "title": "Регионы",
+      "createRegion": "Добавить регион",
+      "editRegion": "Редактировать регион",
+      "searchPlaceholder": "Поиск по названию региона...",
+      "regionsNotFound": "Регионы не найдены",
+      "noRegions": "Нет регионов",
+      "createFirstRegion": "Добавьте первый регион в систему"
+    },
+    "services": {
+      "title": "Категории услуг",
+      "createCategory": "Добавить категорию",
+      "editCategory": "Редактировать категорию",
+      "searchPlaceholder": "Поиск по названию категории...",
+      "categoriesNotFound": "Категории не найдены",
+      "noCategories": "Нет категорий услуг",
+      "createFirstCategory": "Создайте первую категорию для начала работы"
+    },
+    "pageContent": {
+      "title": "Управление контентом",
+      "createContent": "Создать контент",
+      "editContent": "Редактировать контент",
+      "searchPlaceholder": "Поиск по заголовку...",
+      "contentNotFound": "Контент не найден",
+      "noContent": "Нет контента",
+      "createFirstContent": "Создайте первый элемент контента для начала работы"
+    },
+    "reviews": {
+      "title": "Отзывы",
+      "createReview": "Создать отзыв",
+      "editReview": "Редактировать отзыв",
+      "searchPlaceholder": "Поиск по тексту отзыва...",
+      "reviewsNotFound": "Отзывы не найдены",
+      "noReviews": "Нет отзывов",
+      "createFirstReview": "Создайте первый отзыв для начала работы"
+    },
+    "bookings": {
+      "title": "Бронирования",
+      "createBooking": "Создать бронирование",
+      "editBooking": "Редактировать бронирование",
+      "searchPlaceholder": "Поиск по номеру бронирования...",
+      "bookingsNotFound": "Бронирования не найдены",
+      "noBookings": "Нет бронирований",
+      "createFirstBooking": "Создайте первое бронирование для начала работы"
+    },
+    "cities": {
+      "title": "Города",
+      "createCity": "Добавить город",
+      "editCity": "Редактировать город",
+      "searchPlaceholder": "Поиск по названию города...",
+      "citiesNotFound": "Города не найдены",
+      "noCities": "Нет городов",
+      "createFirstCity": "Добавьте первый город для начала работы"
+    },
+    "articles": {
+      "title": "Статьи",
+      "createArticle": "Создать статью",
+      "editArticle": "Редактировать статью",
+      "searchPlaceholder": "Поиск по заголовку статьи...",
+      "articlesNotFound": "Статьи не найдены",
+      "noArticles": "Нет статей",
+      "createFirstArticle": "Создайте первую статью для начала работы"
+    }
+  },
+  "forms": {
+    "user": {
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "email": "Email",
+      "phone": "Телефон",
+      "password": "Пароль",
+      "confirmPassword": "Подтвердите пароль",
+      "role": "Роль",
+      "isActive": "Активный",
+      "emailVerified": "Email подтвержден",
+      "phoneVerified": "Телефон подтвержден"
+    },
+    "partner": {
+      "name": "Название партнера",
+      "description": "Описание",
+      "contactPerson": "Контактное лицо",
+      "phone": "Телефон",
+      "email": "Email",
+      "address": "Адрес",
+      "city": "Город",
+      "region": "Регион",
+      "isActive": "Активный"
+    },
+    "servicePoint": {
+      "name": "Название точки обслуживания",
+      "description": "Описание",
+      "address": "Адрес",
+      "city": "Город",
+      "phone": "Телефон",
+      "workStatus": "Статус работы",
+      "isActive": "Активная"
+    },
+    "service": {
+      "name": "Название услуги",
+      "description": "Описание",
+      "isActive": "Активная",
+      "sortOrder": "Порядок сортировки"
+    },
+    "review": {
+      "client": "Клиент",
+      "booking": "Бронирование",
+      "servicePoint": "Точка обслуживания",
+      "rating": "Оценка",
+      "comment": "Комментарий",
+      "status": "Статус"
+    }
+  },
+  "tables": {
+    "columns": {
+      "id": "ID",
+      "name": "Название",
+      "title": "Заголовок",
+      "description": "Описание",
+      "email": "Email",
+      "phone": "Телефон",
+      "address": "Адрес",
+      "city": "Город",
+      "region": "Регион",
+      "status": "Статус",
+      "active": "Активный",
+      "inactive": "Неактивный",
+      "createdAt": "Дата создания",
+      "updatedAt": "Дата обновления",
+      "actions": "Действия",
+      "user": "Пользователь",
+      "role": "Роль",
+      "verifications": "Подтверждения",
+      "partner": "Партнер",
+      "servicePoint": "Точка обслуживания",
+      "rating": "Оценка",
+      "comment": "Комментарий",
+      "client": "Клиент",
+      "booking": "Бронирование",
+      "date": "Дата",
+      "time": "Время",
+      "position": "Позиция",
+      "content": "Контент",
+      "section": "Секция",
+      "type": "Тип"
+    },
+    "actions": {
+      "view": "Просмотреть",
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "activate": "Активировать",
+      "deactivate": "Деактивировать",
+      "approve": "Одобрить",
+      "reject": "Отклонить",
+      "publish": "Опубликовать",
+      "unpublish": "Снять с публикации"
+    }
+  },
+  "statuses": {
+    "active": "Активный",
+    "inactive": "Неактивный",
+    "pending": "Ожидает",
+    "approved": "Одобрено",
+    "rejected": "Отклонено",
+    "published": "Опубликовано",
+    "draft": "Черновик",
+    "archived": "Архивировано",
+    "working": "Работает",
+    "temporarilyClosed": "Временно закрыто",
+    "suspended": "Приостановлено",
+    "confirmed": "Подтверждено",
+    "cancelled": "Отменено",
+    "completed": "Завершено"
+  },
+  "filters": {
+    "all": "Все",
+    "active": "Активные",
+    "inactive": "Неактивные",
+    "status": "Статус",
+    "region": "Регион",
+    "city": "Город",
+    "partner": "Партнер",
+    "category": "Категория",
+    "type": "Тип",
+    "dateFrom": "Дата с",
+    "dateTo": "Дата до",
+    "reset": "Сбросить фильтры"
+  },
+  "notifications": {
+    "success": {
+      "created": "Успешно создано",
+      "updated": "Успешно обновлено",
+      "deleted": "Успешно удалено",
+      "activated": "Успешно активировано",
+      "deactivated": "Успешно деактивировано",
+      "approved": "Успешно одобрено",
+      "rejected": "Успешно отклонено",
+      "published": "Успешно опубликовано"
+    },
+    "error": {
+      "loadingFailed": "Ошибка загрузки данных",
+      "savingFailed": "Ошибка сохранения",
+      "deletingFailed": "Ошибка удаления",
+      "networkError": "Ошибка сети",
+      "serverError": "Ошибка сервера",
+      "validationError": "Ошибка валидации",
+      "accessDenied": "Доступ запрещен"
+    },
+    "info": {
+      "noData": "Нет данных",
+      "loading": "Загрузка...",
+      "saving": "Сохранение...",
+      "deleting": "Удаление...",
+      "processing": "Обработка..."
+    }
+  },
+  "errors": {
+    "required": "Это поле обязательно",
+    "invalidEmail": "Некорректный формат email",
+    "invalidPhone": "Некорректный формат телефона",
+    "passwordTooShort": "Пароль слишком короткий",
+    "passwordMismatch": "Пароли не совпадают",
+    "fieldTooLong": "Поле слишком длинное",
+    "fieldTooShort": "Поле слишком короткое",
+    "invalidFormat": "Некорректный формат",
+    "mustBeNumber": "Должно быть числом",
+    "mustBePositive": "Должно быть положительным числом"
   }
 } 

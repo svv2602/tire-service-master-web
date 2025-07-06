@@ -6,6 +6,7 @@ import {
   Avatar,
   Chip
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -145,11 +146,11 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
 
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
-    title: 'Регионы',
+    title: t('admin.regions.title'),
     subtitle: 'Управление регионами и их городами',
     actions: [
       {
-        label: 'Добавить регион',
+        label: t('admin.regions.createRegion'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/regions/new'),
         variant: 'contained' as const,
@@ -160,7 +161,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
-    placeholder: 'Поиск по названию региона...',
+    placeholder: t('admin.regions.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
   }), [searchQuery, handleSearchChange]);
@@ -171,7 +172,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       id: 'status',
       key: 'status',
       type: 'select' as const,
-      label: 'Статус',
+      label: t('tables.columns.status'),
       value: selectedStatus,
       onChange: handleStatusFilterChange,
       options: [
@@ -186,15 +187,15 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
   const regionActions: ActionItem<Region>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (region: Region) => navigate(`/admin/regions/${region.id}/edit`),
       color: 'primary',
-      tooltip: 'Редактировать регион'
+      tooltip: t('admin.regions.editRegion')
     },
     {
       id: 'cities',
-      label: 'Города',
+      label: t('admin.cities.title'),
       icon: <LocationCityIcon />,
       onClick: (region: Region) => navigate(`/admin/regions/${region.id}/cities`),
       color: 'info',
@@ -202,7 +203,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     },
     {
       id: 'toggle',
-      label: (region: Region) => region.is_active ? 'Деактивировать' : 'Активировать',
+      label: (region: Region) => region.is_active ? t('tables.actions.deactivate') : t('tables.actions.activate'),
       icon: (region: Region) => region.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
       onClick: handleToggleStatus,
       color: (region: Region) => region.is_active ? 'warning' : 'success',
@@ -215,7 +216,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
       onClick: handleDelete,
       color: 'error',
@@ -233,7 +234,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     {
       id: 'region',
       key: 'name' as keyof Region,
-      label: 'Регион',
+      label: t('tables.columns.region'),
       sortable: true,
       render: (region: Region) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -283,11 +284,11 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     {
       id: 'status',
       key: 'is_active' as keyof Region,
-      label: 'Статус',
+      label: t('tables.columns.status'),
       sortable: true,
       render: (region: Region) => (
         <Chip
-          label={region.is_active ? 'Активен' : 'Неактивен'}
+          label={region.is_active ? t('statuses.active') : 'Неактивен'}
           color={region.is_active ? 'success' : 'default'}
           variant="filled"
           size="small"
@@ -298,7 +299,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     {
       id: 'created_at',
       key: 'created_at' as keyof Region,
-      label: 'Дата создания',
+      label: t('tables.columns.createdAt'),
       sortable: true,
       hideOnMobile: true,
       render: (region: Region) => (
@@ -310,7 +311,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     {
       id: 'actions',
       key: 'actions' as keyof Region,
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       sortable: false,
       render: (region: Region) => (
         <ActionsMenu
@@ -343,7 +344,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
             ? 'Попробуйте изменить критерии поиска'
             : 'Добавьте первый регион в систему',
           action: (!searchQuery && selectedStatus === 'all') ? {
-            label: 'Добавить регион',
+            label: t('admin.regions.createRegion'),
             icon: <AddIcon />,
             onClick: () => navigate('/admin/regions/new')
           } : undefined

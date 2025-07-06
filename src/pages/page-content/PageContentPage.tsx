@@ -22,6 +22,7 @@ import {
   TextField,
   Alert
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -52,6 +53,7 @@ import {
 
 const PageContentPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -136,7 +138,7 @@ const PageContentPage: React.FC = () => {
     const contentTypes: Record<string, { name: string; icon: string; color: string }> = {
       'hero': { name: 'Главный баннер', icon: '🎯', color: 'primary' },
       'service': { name: 'Услуга', icon: '🔧', color: 'secondary' },
-      'city': { name: 'Город', icon: '🏙️', color: 'info' },
+      'city': { name: t('tables.columns.city'), icon: '🏙️', color: 'info' },
       'article': { name: 'Статья', icon: '📝', color: 'success' },
       'cta': { name: 'Призыв к действию', icon: '📢', color: 'warning' },
       'footer': { name: 'Подвал', icon: '📄', color: 'default' }
@@ -263,7 +265,7 @@ const PageContentPage: React.FC = () => {
                       />
                     </Box>
                     <Chip 
-                      label={page.active ? 'Активен' : 'Неактивен'} 
+                      label={page.active ? t('statuses.active') : 'Неактивен'} 
                       size="small"
                       color={page.active ? 'success' : 'default'}
                     />

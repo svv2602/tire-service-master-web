@@ -7,6 +7,7 @@ import {
   Avatar,
   Tooltip
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -250,7 +251,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const servicePointActions: ActionItem<ServicePoint>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (servicePoint: ServicePoint) => {
         // Всегда используем partner_id из сервисной точки для формирования корректного URL
@@ -264,7 +265,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     },
     {
       id: 'delete',
-      label: (servicePoint: ServicePoint) => servicePoint.is_active ? 'Деактивировать' : 'Удалить',
+      label: (servicePoint: ServicePoint) => servicePoint.is_active ? t('tables.actions.deactivate') : t('tables.actions.delete'),
       icon: (servicePoint: ServicePoint) => servicePoint.is_active ? <VisibilityOffIcon /> : <DeleteIcon />,
       onClick: handleSmartDelete,
       color: (servicePoint: ServicePoint) => servicePoint.is_active ? 'warning' : 'error',
@@ -275,8 +276,8 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       confirmationConfig: {
         title: 'Подтвердите действие',
         message: 'Вы уверены, что хотите выполнить это действие?',
-        confirmLabel: 'Подтвердить',
-        cancelLabel: 'Отмена',
+        confirmLabel: t('common.confirm'),
+        cancelLabel: t('common.cancel'),
       },
     }
   ], [navigate, partnerId, handleSmartDelete]);
@@ -326,7 +327,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       id: 'region',
       key: 'region',
       type: 'autocomplete' as const,
-      label: 'Регион',
+      label: t('tables.columns.region'),
       value: selectedRegion,
       onChange: handleRegionFilterChange,
       clearValue: 'all', // Значение для сброса
@@ -343,7 +344,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       id: 'city',
       key: 'city',
       type: 'autocomplete' as const,
-      label: 'Город',
+      label: t('tables.columns.city'),
       value: selectedCity,
       onChange: handleCityFilterChange,
       clearValue: 'all', // Значение для сброса
@@ -377,7 +378,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       id: 'status',
       key: 'status',
       type: 'select' as const,
-      label: 'Статус',
+      label: t('tables.columns.status'),
       value: selectedStatus,
       onChange: handleStatusFilterChange,
       clearValue: 'all', // Значение для сброса
@@ -477,7 +478,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'status',
       key: 'is_active' as keyof ServicePoint,
-      label: 'Статус',
+      label: t('tables.columns.status'),
       sortable: true,
       render: (servicePoint: ServicePoint) => (
         <Chip 
@@ -491,7 +492,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'actions',
       key: 'actions' as keyof ServicePoint,
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       sortable: false,
       render: (servicePoint: ServicePoint) => (
         <ActionsMenu 

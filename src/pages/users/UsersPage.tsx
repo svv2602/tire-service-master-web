@@ -23,6 +23,7 @@ import {
   Tooltip,
   useTheme
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -63,6 +64,7 @@ import Notification from '../../components/Notification';
 export const UsersPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   
   // Redux state
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -169,14 +171,14 @@ export const UsersPage: React.FC = () => {
       await deleteUser(user.id.toString()).unwrap();
       setNotification({
         open: true,
-        message: 'Пользователь успешно деактивирован',
+        message: t('notifications.success.deactivated'),
         severity: 'success'
       });
     } catch (error) {
       console.error('Ошибка при деактивации пользователя:', error);
       setNotification({
         open: true,
-        message: 'Ошибка при деактивации пользователя',
+        message: t('notifications.error.deletingFailed'),
         severity: 'error'
       });
     }
@@ -203,14 +205,14 @@ export const UsersPage: React.FC = () => {
 
       setNotification({
         open: true,
-        message: user.is_active ? 'Пользователь деактивирован' : 'Пользователь активирован',
+        message: user.is_active ? t('notifications.success.deactivated') : t('notifications.success.activated'),
         severity: 'success'
       });
     } catch (error) {
       console.error('Ошибка при изменении статуса пользователя:', error);
       setNotification({
         open: true,
-        message: 'Ошибка при изменении статуса пользователя',
+        message: t('notifications.error.savingFailed'),
         severity: 'error'
       });
     }
@@ -222,80 +224,80 @@ export const UsersPage: React.FC = () => {
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Управление пользователями (PageTable)',
+    title: t('admin.users.userManagement'),
     actions: [
       {
         id: 'create-user',
-        label: 'Создать пользователя',
+        label: t('admin.users.createUser'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/users/new'),
         variant: 'contained',
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   // Конфигурация поиска
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по email, имени, фамилии или номеру телефона...',
+    placeholder: t('admin.users.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange,
-  }), [searchQuery, handleSearchChange]);
+  }), [searchQuery, handleSearchChange, t]);
 
   // Конфигурация фильтров
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'show_inactive',
-      label: 'Статус пользователей',
+      label: t('admin.users.userStatus'),
       type: 'select',
       value: showInactive ? 'all' : 'active',
       options: [
-        { value: 'active', label: 'Только активные' },
-        { value: 'all', label: 'Все пользователи' }
+        { value: 'active', label: t('admin.users.onlyActive') },
+        { value: 'all', label: t('admin.users.allUsers') }
       ],
       onChange: (value: string) => setShowInactive(value === 'all'),
     }
-  ], [showInactive]);
+  ], [showInactive, t]);
 
   // Конфигурация действий для ActionsMenu
   const userActions: ActionItem<User>[] = useMemo(() => [
     {
       id: 'view',
-      label: 'Просмотр',
+      label: t('admin.users.view'),
       icon: <VisibilityIcon />,
       onClick: (user: User) => navigate(`/admin/users/${user.id}`),
       color: 'info',
-      tooltip: 'Просмотр детальной информации о пользователе'
+      tooltip: t('admin.users.viewTooltip')
     },
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (user: User) => handleEdit(user),
       color: 'primary',
-      tooltip: 'Редактировать данные пользователя'
+      tooltip: t('admin.users.editTooltip')
     },
     {
       id: 'toggle-status',
-      label: (user: User) => user.is_active ? 'Деактивировать' : 'Активировать',
+      label: (user: User) => user.is_active ? t('admin.users.deactivate') : t('admin.users.activate'),
       icon: (user: User) => user.is_active ? <DeleteIcon /> : <RestoreIcon />,
       onClick: (user: User) => user.is_active ? handleDeactivate(user) : handleToggleStatus(user),
       color: (user: User) => user.is_active ? 'error' : 'success',
-      tooltip: (user: User) => user.is_active ? 'Деактивировать пользователя' : 'Активировать пользователя',
+      tooltip: (user: User) => user.is_active ? t('admin.users.deactivateTooltip') : t('admin.users.activateTooltip'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение изменения статуса',
-        message: 'Вы действительно хотите изменить статус этого пользователя?',
-        confirmLabel: 'Подтвердить',
-        cancelLabel: 'Отмена'
+        title: t('admin.users.confirmStatusChange'),
+        message: t('admin.users.confirmStatusMessage'),
+        confirmLabel: t('common.confirm'),
+        cancelLabel: t('common.cancel')
       }
     }
-  ], [handleEdit, handleDeactivate, handleToggleStatus, navigate]);
+  ], [handleEdit, handleDeactivate, handleToggleStatus, navigate, t]);
 
   // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
     {
       id: 'user',
-      label: 'Пользователь',
+      label: t('tables.columns.user'),
       wrap: true,
       minWidth: 200,
       format: (_value: any, row: User) => (
@@ -319,7 +321,7 @@ export const UsersPage: React.FC = () => {
               ID: {row.id}
             </Typography>
             {!row.is_active && (
-              <Chip label="Деактивирован" size="small" color="error" sx={{ ml: 1 }} />
+              <Chip label={t('admin.users.deactivated')} size="small" color="error" sx={{ ml: 1 }} />
             )}
           </Box>
         </Box>
@@ -327,7 +329,7 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'email',
-      label: 'Email',
+      label: t('tables.columns.email'),
       wrap: true,
       hideOnMobile: true,
       format: (_value: any, row: User) => (
@@ -338,18 +340,18 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'phone',
-      label: 'Телефон',
+      label: t('tables.columns.phone'),
       wrap: true,
       hideOnMobile: true,
       format: (_value: any, row: User) => (
         <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-          {row.phone || 'Не указан'}
+          {row.phone || t('admin.users.notSpecified')}
         </Typography>
       )
     },
     {
       id: 'role',
-      label: 'Роль',
+      label: t('tables.columns.role'),
       align: 'center',
       format: (_value: any, row: User) => (
         <Chip
@@ -369,11 +371,11 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       format: (_value: any, row: User) => (
         <Chip
-          label={row.is_active ? 'Активен' : 'Деактивирован'}
+          label={row.is_active ? t('admin.users.active') : t('admin.users.deactivated')}
           color={row.is_active ? 'success' : 'error'}
           size="small"
         />
@@ -381,26 +383,26 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'verifications',
-      label: 'Подтверждения',
+      label: t('admin.users.verifications'),
       align: 'center',
       hideOnMobile: true,
       format: (_value: any, row: User) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           {row.email_verified ? (
-            <Tooltip title="Email подтвержден">
+            <Tooltip title={t('admin.users.emailVerified')}>
               <CheckIcon color="success" fontSize="small" />
             </Tooltip>
           ) : (
-            <Tooltip title="Email не подтвержден">
+            <Tooltip title={t('admin.users.emailNotVerified')}>
               <CloseIcon color="error" fontSize="small" />
             </Tooltip>
           )}
           {row.phone_verified ? (
-            <Tooltip title="Телефон подтвержден">
+            <Tooltip title={t('admin.users.phoneVerified')}>
               <CheckIcon color="success" fontSize="small" />
             </Tooltip>
           ) : (
-            <Tooltip title="Телефон не подтвержден">
+            <Tooltip title={t('admin.users.phoneNotVerified')}>
               <CloseIcon color="error" fontSize="small" />
             </Tooltip>
           )}
@@ -409,14 +411,14 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       align: 'center',
       minWidth: 120,
       format: (_value: any, row: User) => (
         <ActionsMenu actions={userActions} item={row} menuThreshold={1} />
       )
     }
-  ], [getRoleName, getRoleColor, getUserInitials, userActions]);
+  ], [getRoleName, getRoleColor, getUserInitials, userActions, t]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({
@@ -431,7 +433,7 @@ export const UsersPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке пользователей: {error.toString()}
+          {t('notifications.error.loadingFailed')}: {error.toString()}
         </Alert>
       </Box>
     );
@@ -473,7 +475,10 @@ export const UsersPage: React.FC = () => {
         empty={
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              {searchQuery ? 'Пользователи не найдены' : 'Нет пользователей'}
+              {searchQuery ? t('admin.users.usersNotFound') : t('admin.users.noUsers')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {searchQuery ? t('admin.users.changeSearchCriteria') : t('admin.users.createFirstUser')}
             </Typography>
           </Box>
         }

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, Typography as MuiTypography, useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Search as SearchIcon,
   Delete as DeleteIcon,
@@ -100,6 +101,7 @@ const REVIEW_STATUSES: Record<ReviewStatus, {
 
 const ReviewsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Состояние для поиска, фильтрации и пагинации
@@ -214,7 +216,7 @@ const ReviewsPage: React.FC = () => {
   const reviewActions: ActionItem<ReviewWithClient>[] = useMemo(() => [
     {
       id: 'approve',
-      label: 'Одобрить',
+      label: t('tables.actions.approve'),
       icon: <CheckIcon />,
       onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'published'),
       color: 'success',
@@ -223,7 +225,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'reject',
-      label: 'Отклонить',
+      label: t('tables.actions.reject'),
       icon: <CloseIcon />,
       onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'rejected'),
       color: 'error',
@@ -241,11 +243,11 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (review: ReviewWithClient) => navigate(`/admin/reviews/${review.id}/edit`),
       color: 'info',
-      tooltip: 'Редактировать отзыв'
+      tooltip: t('admin.reviews.editReview')
     },
     {
       id: 'reply',
@@ -257,7 +259,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
       onClick: handleDeleteReview,
       color: 'error',
@@ -311,7 +313,7 @@ const ReviewsPage: React.FC = () => {
   const filtersConfig: FilterConfig[] = [
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       type: 'select',
       value: statusFilter,
       onChange: (value: string | number) => setStatusFilter(value as ReviewStatus | ''),
@@ -449,7 +451,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       minWidth: 140,
       align: 'center',
       format: (value: any, review: ReviewWithClient) => (
@@ -473,7 +475,7 @@ const ReviewsPage: React.FC = () => {
          },
      {
        id: 'actions',
-       label: 'Действия',
+       label: t('tables.columns.actions'),
        minWidth: 140,
        align: 'center',
        format: (value: any, review: ReviewWithClient) => (
