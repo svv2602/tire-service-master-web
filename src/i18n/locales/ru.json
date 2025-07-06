@@ -277,15 +277,80 @@
       }
     },
     "partner": {
-      "name": "Название партнера",
-      "description": "Описание",
-      "contactPerson": "Контактное лицо",
-      "phone": "Телефон",
-      "email": "Email",
-      "address": "Адрес",
-      "city": "Город",
-      "region": "Регион",
-      "isActive": "Активный"
+      "title": {
+        "create": "Создать партнера",
+        "edit": "Редактировать партнера"
+      },
+      "sections": {
+        "companyInfo": "Информация о компании",
+        "legalInfo": "Юридическая информация",
+        "location": "Местоположение",
+        "userInfo": "Данные пользователя",
+        "servicePoints": "Точки обслуживания",
+        "operators": "Операторы"
+      },
+      "fields": {
+        "companyName": "Название компании",
+        "companyDescription": "Описание компании",
+        "contactPerson": "Контактное лицо",
+        "website": "Веб-сайт",
+        "logo": "Логотип партнера",
+        "taxNumber": "Налоговый номер (необязательно)",
+        "legalAddress": "Юридический адрес",
+        "region": "Регион",
+        "city": "Город",
+        "isActive": "Активный партнер",
+        "uploadLogo": "Загрузить лого",
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "email": "Email",
+        "phone": "Телефон",
+        "password": "Пароль",
+        "newPassword": "Новый пароль"
+      },
+      "placeholders": {
+        "website": "https://example.com",
+        "taxNumber": "12345678",
+        "selectRegion": "Выберите регион",
+        "selectCity": "Выберите город"
+      },
+      "validation": {
+        "companyNameRequired": "Название компании обязательно",
+        "companyNameMin": "Название должно быть не менее 2 символов",
+        "companyNameMax": "Название должно быть не более 100 символов",
+        "descriptionMax": "Описание должно быть не более 2000 символов",
+        "contactPersonMin": "ФИО должно быть не менее 2 символов",
+        "websiteInvalid": "Введите корректный URL (например, https://example.com)",
+        "taxNumberInvalid": "Налоговый номер должен содержать от 8 до 15 цифр и дефисов",
+        "legalAddressRequired": "Юридический адрес обязателен",
+        "legalAddressMax": "Адрес должен быть не более 500 символов",
+        "logoUrlInvalid": "Введите корректный URL логотипа",
+        "regionRequired": "Регион обязателен",
+        "cityRequired": "Город обязателен",
+        "firstNameRequired": "Имя обязательно",
+        "firstNameMin": "Имя должно быть не менее 2 символов",
+        "lastNameRequired": "Фамилия обязательна",
+        "lastNameMin": "Фамилия должна быть не менее 2 символов",
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Введите корректный email",
+        "phoneRequired": "Телефон обязателен",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMin": "Пароль должен содержать минимум 6 символов"
+      },
+      "messages": {
+        "logoFormats": "Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB",
+        "createSuccess": "Партнер успешно создан",
+        "updateSuccess": "Партнер успешно обновлен",
+        "toggleSuccess": "Статус партнера изменен",
+        "deleteConfirm": "Вы уверены, что хотите удалить этого партнера?",
+        "noServicePoints": "У этого партнера нет точек обслуживания",
+        "noOperators": "У этого партнера нет операторов"
+      },
+      "tabs": {
+        "general": "Общая информация",
+        "servicePoints": "Точки обслуживания",
+        "operators": "Операторы"
+      }
     },
     "servicePoint": {
       "name": "Название точки обслуживания",

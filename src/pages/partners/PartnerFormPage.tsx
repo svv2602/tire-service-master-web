@@ -43,6 +43,7 @@ import {
   Upload as UploadIcon,
   BrokenImage as BrokenImageIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetPartnerByIdQuery, 
   useCreatePartnerMutation, 
@@ -76,10 +77,10 @@ import { OperatorModal } from '../../components/partners/OperatorModal';
  * 
  * Разделы формы:
  * - Основная информация о компании (название, описание, контактное лицо, сайт, логотип)
- * - Юридическая информация (налоговый номер, юридический адрес)
- * - Местоположение (регион и город с каскадной загрузкой)
+ * - t('forms.partner.sections.legalInfo') (налоговый номер, юридический адрес)
+ * - t('forms.partner.sections.location') (регион и город с каскадной загрузкой)
  * - Статус (активность партнера)
- * - Данные пользователя (только при создании - имя, фамилия, email, телефон, пароль)
+ * - t('forms.partner.sections.userInfo') (только при создании - имя, фамилия, email, телефон, пароль)
  */
 
 // Определяем локальный интерфейс для формы пользователя
@@ -165,19 +166,19 @@ interface ExtendedPartnerFormData extends Omit<PartnerFormData, 'user_attributes
 }
 
 // Функция для создания схемы валидации в зависимости от режима
-const createValidationSchema = (isEdit: boolean) => yup.object({
+const createValidationSchema = (isEdit: boolean, t: any) => yup.object({
   company_name: yup.string()
-    .required('Название компании обязательно')
-    .min(2, 'Название должно быть не менее 2 символов')
-    .max(100, 'Название должно быть не более 100 символов'),
+    .required(t('forms.partner.validation.companyNameRequired'))
+    .min(2, t('forms.partner.validation.companyNameMin'))
+    .max(100, t('forms.partner.validation.companyNameMax')),
   
   company_description: yup.string()
-    .max(2000, 'Описание должно быть не более 2000 символов')
+    .max(2000, t('forms.partner.validation.descriptionMax'))
     .nullable(),
   
   contact_person: yup.string()
     .nullable()
-    .min(2, 'ФИО должно быть не менее 2 символов'),
+    .min(2, t('forms.partner.validation.contactPersonMin')),
   
   website: yup.string()
     .url('Введите корректный URL (например, https://example.com)')
@@ -186,28 +187,28 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
   tax_number: yup.string()
     .nullable()
     .transform((value) => (value === '' ? null : value))
-    .test('tax-number-format', 'Налоговый номер должен содержать от 8 до 15 цифр и дефисов', function(value) {
+    .test('tax-number-format', t('forms.partner.validation.taxNumberInvalid'), function(value) {
       if (!value) return true; // Если поле пустое или null, то валидация проходит
       return /^[0-9-]{8,15}$/.test(value);
     }),
   
   legal_address: yup.string()
-    .required('Юридический адрес обязателен')
-    .max(500, 'Адрес должен быть не более 500 символов'),
+    .required(t('forms.partner.validation.legalAddressRequired'))
+    .max(500, t('forms.partner.validation.legalAddressMax')),
   
   logo_url: yup.string()
-    .url('Введите корректный URL логотипа')
+    .url(t('forms.partner.validation.logoUrlInvalid'))
     .nullable(),
   
   region_id: yup.number()
-    .typeError('Выберите регион')
-    .required('Выберите регион')
-    .min(1, 'Выберите регион'),
+    .typeError(t('forms.partner.validation.regionRequired'))
+    .required(t('forms.partner.validation.regionRequired'))
+    .min(1, t('forms.partner.validation.regionRequired')),
   
   city_id: yup.number()
-    .typeError('Выберите город')
-    .required('Выберите город')
-    .min(1, 'Выберите город'),
+    .typeError(t('forms.partner.validation.cityRequired'))
+    .required(t('forms.partner.validation.cityRequired'))
+    .min(1, t('forms.partner.validation.cityRequired')),
   
   is_active: yup.boolean(),
   
@@ -231,10 +232,11 @@ const createValidationSchema = (isEdit: boolean) => yup.object({
         password: yup.string()
           .min(6, 'Пароль должен быть не менее 6 символов')
           .nullable(),
-      }).required('Данные пользователя обязательны'),
+      }).required(t('forms.partner.sections.userInfo') + ' обязательны'),
 });
 
 const PartnerFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
@@ -644,13 +646,13 @@ const PartnerFormPage: React.FC = () => {
           setLogoFile(null);
         }
         
-        setSuccessMessage('Партнер успешно обновлен');
+        setSuccessMessage(t('forms.partner.messages.updateSuccess'));
         setTimeout(() => navigate('/admin/partners'), 1500);
       } else {
         console.log('➕ Создаем нового партнера');
         const response = await createPartner({ partner: formattedData }).unwrap();
         console.log('✅ Ответ сервера при создании:', response);
-        setSuccessMessage('Партнер успешно создан');
+        setSuccessMessage(t('forms.partner.messages.createSuccess'));
         navigate('/admin/partners');
       }
     } catch (error: any) {
@@ -718,7 +720,7 @@ const PartnerFormPage: React.FC = () => {
   const formik = useFormik<FormValues>({
     initialValues,
     enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
-    validationSchema: createValidationSchema(isEdit),
+    validationSchema: useMemo(() => createValidationSchema(isEdit, t), [isEdit, t]),
     validateOnChange: true,
     validateOnBlur: true,
     onSubmit: handleSubmit,
@@ -1097,7 +1099,7 @@ const PartnerFormPage: React.FC = () => {
                   fullWidth
                   required
                   name="company_name"
-                  label="Название компании"
+                  label={t("forms.partner.fields.companyName")}
                   value={formik.values.company_name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -1115,7 +1117,7 @@ const PartnerFormPage: React.FC = () => {
                   multiline
                   rows={3}
                   name="company_description"
-                  label="Описание компании"
+                  label={t("forms.partner.fields.companyDescription")}
                   value={formik.values.company_description}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -1129,8 +1131,8 @@ const PartnerFormPage: React.FC = () => {
                 <TextField
                   fullWidth
                   name="website"
-                  label="Веб-сайт"
-                  placeholder="https://example.com"
+                  label={t("forms.partner.fields.website")}
+                  placeholder={t("forms.partner.placeholders.website")}
                   value={formik.values.website}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -1143,7 +1145,7 @@ const PartnerFormPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <Box sx={textFieldStyles}>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Логотип партнера
+                    t('forms.partner.fields.logo')
                   </Typography>
                   
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1175,7 +1177,7 @@ const PartnerFormPage: React.FC = () => {
                             <UploadIcon />
                           </IconButton>
                           <Typography variant="body2" color="primary">
-                            Загрузить лого
+                            t('forms.partner.fields.uploadLogo')
                           </Typography>
                         </Box>
                       </label>
@@ -1189,12 +1191,12 @@ const PartnerFormPage: React.FC = () => {
                   </Box>
 
                   <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
-                    Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB
+                    t('forms.partner.messages.logoFormats')
                   </Typography>
                 </Box>
               </Grid>
 
-              {/* Юридическая информация */}
+              {/* t('forms.partner.sections.legalInfo') */}
               <Grid item xs={12}>
                 <Typography 
                   variant="h6" 
@@ -1204,7 +1206,7 @@ const PartnerFormPage: React.FC = () => {
                     fontSize: SIZES.fontSize.lg 
                   }}
                 >
-                  Юридическая информация
+                  t('forms.partner.sections.legalInfo')
                 </Typography>
                 <Divider sx={{ mb: SIZES.spacing.md }} />
               </Grid>
@@ -1214,7 +1216,7 @@ const PartnerFormPage: React.FC = () => {
                   fullWidth
                   name="tax_number"
                   label="Налоговый номер (необязательно)"
-                  placeholder="12345678"
+                  placeholder={t("forms.partner.placeholders.taxNumber")}
                   value={formik.values.tax_number}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -1229,7 +1231,7 @@ const PartnerFormPage: React.FC = () => {
                   fullWidth
                   required
                   name="legal_address"
-                  label="Юридический адрес"
+                  label={t("forms.partner.fields.legalAddress")}
                   value={formik.values.legal_address}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
@@ -1239,7 +1241,7 @@ const PartnerFormPage: React.FC = () => {
                 />
               </Grid>
 
-              {/* Местоположение */}
+              {/* t('forms.partner.sections.location') */}
               <Grid item xs={12}>
                 <Typography 
                   variant="h6" 
@@ -1249,14 +1251,14 @@ const PartnerFormPage: React.FC = () => {
                     fontSize: SIZES.fontSize.lg 
                   }}
                 >
-                  Местоположение
+                  t('forms.partner.sections.location')
                 </Typography>
                 <Divider sx={{ mb: SIZES.spacing.md }} />
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth required error={formik.touched.region_id && Boolean(formik.errors.region_id)}>
-                  <InputLabel id="region-select-label">Регион</InputLabel>
+                  <InputLabel id="region-select-label">{t("forms.partner.fields.region")}</InputLabel>
                   <Select
                     id="region_id"
                     name="region_id"
@@ -1266,7 +1268,7 @@ const PartnerFormPage: React.FC = () => {
                     error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                     disabled={isLoading}
                   >
-                    <MenuItem value="">Выберите регион</MenuItem>
+                    <MenuItem value="">t('forms.partner.placeholders.selectRegion')</MenuItem>
                     {regionsData?.data.map((region) => (
                       <MenuItem key={region.id} value={region.id}>
                         {region.name}
@@ -1288,7 +1290,7 @@ const PartnerFormPage: React.FC = () => {
                   disabled={!formik.values.region_id}
                   error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                 >
-                  <InputLabel id="city-select-label">Город</InputLabel>
+                  <InputLabel id="city-select-label">{t("forms.partner.fields.city")}</InputLabel>
                   <Select
                     id="city_id"
                     name="city_id"
@@ -1298,7 +1300,7 @@ const PartnerFormPage: React.FC = () => {
                     error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                     disabled={isLoading || !formik.values.region_id}
                   >
-                    <MenuItem value="">Выберите город</MenuItem>
+                    <MenuItem value="">t('forms.partner.placeholders.selectCity')</MenuItem>
                     {citiesData?.data.map((city) => (
                       <MenuItem key={city.id} value={city.id}>
                         {city.name}
@@ -1432,7 +1434,7 @@ const PartnerFormPage: React.FC = () => {
                 </Grid>
               )}
 
-              {/* Данные пользователя (только при создании) */}
+              {/* t('forms.partner.sections.userInfo') (только при создании) */}
               {!isEdit && (
                 <>
                   <Grid item xs={12}>

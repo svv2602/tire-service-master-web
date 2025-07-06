@@ -277,15 +277,80 @@
       }
     },
     "partner": {
-      "name": "Назва партнера",
-      "description": "Опис",
-      "contactPerson": "Контактна особа",
-      "phone": "Телефон",
-      "email": "Email",
-      "address": "Адреса",
-      "city": "Місто",
-      "region": "Регіон",
-      "isActive": "Активний"
+      "title": {
+        "create": "Створити партнера",
+        "edit": "Редагувати партнера"
+      },
+      "sections": {
+        "companyInfo": "Інформація про компанію",
+        "legalInfo": "Юридична інформація",
+        "location": "Місцезнаходження",
+        "userInfo": "Дані користувача",
+        "servicePoints": "Точки обслуговування",
+        "operators": "Оператори"
+      },
+      "fields": {
+        "companyName": "Назва компанії",
+        "companyDescription": "Опис компанії",
+        "contactPerson": "Контактна особа",
+        "website": "Веб-сайт",
+        "logo": "Логотип партнера",
+        "taxNumber": "Податковий номер (необов'язково)",
+        "legalAddress": "Юридична адреса",
+        "region": "Регіон",
+        "city": "Місто",
+        "isActive": "Активний партнер",
+        "uploadLogo": "Завантажити лого",
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "email": "Email",
+        "phone": "Телефон",
+        "password": "Пароль",
+        "newPassword": "Новий пароль"
+      },
+      "placeholders": {
+        "website": "https://example.com",
+        "taxNumber": "12345678",
+        "selectRegion": "Виберіть регіон",
+        "selectCity": "Виберіть місто"
+      },
+      "validation": {
+        "companyNameRequired": "Назва компанії обов'язкова",
+        "companyNameMin": "Назва повинна бути не менше 2 символів",
+        "companyNameMax": "Назва повинна бути не більше 100 символів",
+        "descriptionMax": "Опис повинен бути не більше 2000 символів",
+        "contactPersonMin": "ПІБ повинно бути не менше 2 символів",
+        "websiteInvalid": "Введіть коректний URL (наприклад, https://example.com)",
+        "taxNumberInvalid": "Податковий номер повинен містити від 8 до 15 цифр та дефісів",
+        "legalAddressRequired": "Юридична адреса обов'язкова",
+        "legalAddressMax": "Адреса повинна бути не більше 500 символів",
+        "logoUrlInvalid": "Введіть коректний URL логотипа",
+        "regionRequired": "Регіон обов'язковий",
+        "cityRequired": "Місто обов'язкове",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "phoneRequired": "Телефон обов'язковий",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMin": "Пароль повинен містити мінімум 6 символів"
+      },
+      "messages": {
+        "logoFormats": "Підтримуються формати: JPEG, PNG, GIF, WebP. Максимальний розмір: 5MB",
+        "createSuccess": "Партнер успішно створений",
+        "updateSuccess": "Партнер успішно оновлений",
+        "toggleSuccess": "Статус партнера змінено",
+        "deleteConfirm": "Ви впевнені, що хочете видалити цього партнера?",
+        "noServicePoints": "У цього партнера немає точок обслуговування",
+        "noOperators": "У цього партнера немає операторів"
+      },
+      "tabs": {
+        "general": "Загальна інформація",
+        "servicePoints": "Точки обслуговування",
+        "operators": "Оператори"
+      }
     },
     "servicePoint": {
       "name": "Назва точки обслуговування",
