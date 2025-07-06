@@ -26,6 +26,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import {
   useGetServiceCategoryByIdQuery,
   useCreateServiceCategoryMutation,
@@ -40,17 +41,17 @@ import { getFormStyles, SIZES } from '../../styles';
  * Схема валидации формы категории услуг
  * Определяет правила валидации для всех полей формы
  */
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
-    .required('Название обязательно')
-    .min(2, 'Название должно содержать минимум 2 символа')
-    .max(100, 'Название не должно превышать 100 символов'),
+    .required(t('forms.service.validation.nameRequired'))
+    .min(2, t('forms.service.validation.nameMin'))
+    .max(100, t('forms.service.validation.nameMax')),
   description: Yup.string()
-    .max(500, 'Описание не должно превышать 500 символов'),
+    .max(500, t('forms.service.validation.descriptionMax')),
   is_active: Yup.boolean(),
   sort_order: Yup.number()
-    .min(0, 'Порядок сортировки должен быть неотрицательным')
-    .max(9999, 'Порядок сортировки не должен превышать 9999'),
+    .min(0, t('forms.service.validation.sortOrderMin'))
+    .max(9999, t('forms.service.validation.sortOrderMax')),
 });
 
 /**
@@ -58,6 +59,7 @@ const validationSchema = Yup.object({
  * Поддерживает создание новых категорий и редактирование существующих
  */
 export const ServiceFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -86,7 +88,7 @@ export const ServiceFormPage: React.FC = () => {
       is_active: category?.is_active ?? true,
       sort_order: category?.sort_order || 0,
     },
-    validationSchema,
+    validationSchema: React.useMemo(() => createValidationSchema(t), [t]),
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
@@ -94,14 +96,14 @@ export const ServiceFormPage: React.FC = () => {
         setSuccessMessage('');
         if (isEditing && id) {
           await updateCategory({ id, data: values }).unwrap();
-          setSuccessMessage('Категория услуг успешно обновлена');
+          setSuccessMessage(t('forms.service.messages.updateSuccess'));
         } else {
           await createCategory(values).unwrap();
-          setSuccessMessage('Категория услуг успешно создана');
+          setSuccessMessage(t('forms.service.messages.createSuccess'));
         }
         setTimeout(() => navigate('/admin/services'), 1000);
       } catch (error: any) {
-        setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
+        setSubmitError(error?.data?.message || t('forms.service.messages.saveError'));
       }
     },
   });
@@ -119,7 +121,7 @@ export const ServiceFormPage: React.FC = () => {
       <Box sx={formStyles.loadingContainer}>
         <CircularProgress />
         <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
-          Загрузка категории...
+          {t('forms.service.messages.loading')}
         </Typography>
       </Box>
     );
@@ -135,10 +137,10 @@ export const ServiceFormPage: React.FC = () => {
           onClick={handleBack}
           sx={{ mr: theme.spacing(SIZES.spacing.md) }}
         >
-          Назад
+          {t('forms.service.buttons.back')}
         </Button>
         <Typography variant="h4" component="h1" sx={formStyles.title}>
-          {isEditing ? 'Редактировать категорию услуг' : 'Новая категория услуг'}
+          {isEditing ? t('forms.service.title.edit') : t('forms.service.title.create')}
         </Typography>
       </Box>
 
@@ -159,7 +161,7 @@ export const ServiceFormPage: React.FC = () => {
         <Grid item xs={12} md={isEditing ? 6 : 12}>
           <Box sx={formStyles.formCard}>
             <Typography variant="h6" sx={formStyles.sectionTitle}>
-              Информация о категории
+              {t('forms.service.sections.categoryInfo')}
             </Typography>
 
             <Box component="form" onSubmit={formik.handleSubmit}>
@@ -167,7 +169,7 @@ export const ServiceFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="name"
-                label="Название"
+                label={t("forms.service.fields.name")}
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -180,7 +182,7 @@ export const ServiceFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="description"
-                label="Описание"
+                label={t("forms.service.fields.description")}
                 multiline
                 rows={3}
                 value={formik.values.description}
@@ -195,7 +197,7 @@ export const ServiceFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="sort_order"
-                label="Порядок сортировки"
+                label={t("forms.service.fields.sortOrder")}
                 type="number"
                 value={formik.values.sort_order}
                 onChange={formik.handleChange}
@@ -214,7 +216,7 @@ export const ServiceFormPage: React.FC = () => {
                     name="is_active"
                   />
                 }
-                label="Активна"
+                label={t("forms.service.fields.isActive")}
                 sx={formStyles.switchField}
               />
 
@@ -226,7 +228,7 @@ export const ServiceFormPage: React.FC = () => {
                   startIcon={<SaveIcon />}
                   disabled={formik.isSubmitting}
                 >
-                  {isEditing ? 'Сохранить' : 'Создать'}
+                  {isEditing ? t('forms.service.buttons.save') : t('forms.service.buttons.create')}
                 </Button>
               </Box>
             </Box>
