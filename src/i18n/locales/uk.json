@@ -208,17 +208,73 @@
     }
   },
   "forms": {
-    "user": {
-      "firstName": "Ім'я",
-      "lastName": "Прізвище",
-      "email": "Email",
-      "phone": "Телефон",
+    "common": {
+      "required": "Обов'язкове поле",
+      "optional": "Необов'язково",
+      "save": "Зберегти",
+      "cancel": "Скасувати",
+      "create": "Створити",
+      "update": "Оновити",
+      "back": "Назад",
+      "saving": "Збереження...",
+      "loading": "Завантаження...",
+      "fillAllRequiredFields": "Заповніть всі обов'язкові поля",
+      "fillRequiredFieldsToActivate": "Заповніть всі обов'язкові поля для активації кнопки збереження"
+    },
+    "sections": {
+      "loginType": "Тип входу",
+      "basicInfo": "Основна інформація",
+      "roleAndStatus": "Роль та статус",
       "password": "Пароль",
-      "confirmPassword": "Підтвердіть пароль",
-      "role": "Роль",
-      "isActive": "Активний",
-      "emailVerified": "Email підтверджено",
-      "phoneVerified": "Телефон підтверджено"
+      "changePassword": "Змінити пароль",
+      "contactInfo": "Контактна інформація",
+      "addressInfo": "Адресна інформація",
+      "workInfo": "Робоча інформація"
+    },
+    "loginType": {
+      "selectMethod": "Виберіть основний спосіб входу",
+      "email": "Email",
+      "phone": "Телефон"
+    },
+    "user": {
+      "title": {
+        "create": "Створити користувача",
+        "edit": "Редагувати користувача"
+      },
+      "fields": {
+        "firstName": "Ім'я",
+        "lastName": "Прізвище", 
+        "middleName": "По батькові",
+        "email": "Email",
+        "emailOptional": "Email (необов'язково)",
+        "phone": "Телефон",
+        "phoneOptional": "Телефон (необов'язково)",
+        "password": "Пароль",
+        "newPassword": "Новий пароль (залиште порожнім, якщо не хочете змінювати)",
+        "confirmPassword": "Підтвердження пароля",
+        "role": "Роль",
+        "isActive": "Активний користувач"
+      },
+      "roles": {
+        "admin": "Адміністратор",
+        "manager": "Менеджер", 
+        "partner": "Партнер",
+        "operator": "Оператор",
+        "client": "Клієнт"
+      },
+      "validation": {
+        "emailRequired": "Email обов'язковий",
+        "phoneRequired": "Телефон обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+        "roleRequired": "Роль обов'язкова",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMin": "Пароль повинен містити мінімум 6 символів",
+        "passwordsNotMatch": "Паролі не співпадають"
+      }
     },
     "partner": {
       "name": "Назва партнера",

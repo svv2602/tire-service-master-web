@@ -24,6 +24,7 @@ import {
   FormLabel,
 } from '@mui/material';
 import { ArrowBack as ArrowBackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetUserByIdQuery,
   useCreateUserMutation,
@@ -50,12 +51,13 @@ import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePage
  * - Выбор типа входа: email или телефон
  * 
  * Разделы формы:
- * - Тип входа (email или телефон)
- * - Основная информация (имя, фамилия, отчество, email, телефон)
- * - Роль и статус (роль пользователя, активность)
+ * - t('forms.sections.loginType') (email или телефон)
+ * - t('forms.sections.basicInfo') (имя, фамилия, отчество, email, телефон)
+ * - t('forms.sections.roleAndStatus') (роль пользователя, активность)
  * - Пароль (обязательный при создании, опциональный при редактировании)
  */
 const UserForm: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const userId = isEdit ? parseInt(id!, 10) : 0;
@@ -92,36 +94,36 @@ const UserForm: React.FC = () => {
   const [showValidationErrors, setShowValidationErrors] = React.useState(false);
 
   // Динамическая схема валидации в зависимости от типа входа
-  const getValidationSchema = (loginType: 'email' | 'phone') => {
+  const getValidationSchema = (loginType: 'email' | 'phone', t: any) => {
     return yup.object({
       email: loginType === 'email' 
-        ? yup.string().email('Введите корректный email').required('Email обязателен')
-        : yup.string().email('Введите корректный email').nullable(),
+        ? yup.string().email(t('forms.user.validation.emailInvalid')).required(t('forms.user.validation.emailRequired'))
+        : yup.string().email(t('forms.user.validation.emailInvalid')).nullable(),
       phone: loginType === 'phone' 
-        ? phoneValidation.required('Телефон обязателен')
+        ? phoneValidation.required(t('forms.user.validation.phoneRequired'))
         : phoneValidation,
       first_name: yup
         .string()
-        .required('Имя обязательно')
-        .min(2, 'Имя должно быть не менее 2 символов'),
+        .required(t('forms.user.validation.firstNameRequired'))
+        .min(2, t('forms.user.validation.firstNameMin')),
       last_name: yup
         .string()
-        .required('Фамилия обязательна')
-        .min(2, 'Фамилия должна быть не менее 2 символов'),
+        .required(t('forms.user.validation.lastNameRequired'))
+        .min(2, t('forms.user.validation.lastNameMin')),
       middle_name: yup
         .string()
         .nullable(),
       role_id: yup
         .number()
-        .required('Роль обязательна'),
+        .required(t('forms.user.validation.roleRequired')),
       is_active: yup
         .boolean(),
       password: isEdit
-        ? yup.string().min(6, 'Пароль должен содержать минимум 6 символов').nullable()
-        : yup.string().min(6, 'Пароль должен содержать минимум 6 символов').required('Пароль обязателен'),
+        ? yup.string().min(6, t('forms.user.validation.passwordMin')).nullable()
+        : yup.string().min(6, t('forms.user.validation.passwordMin')).required(t('forms.user.validation.passwordRequired')),
       password_confirmation: yup
         .string()
-        .oneOf([yup.ref('password')], 'Пароли не совпадают')
+        .oneOf([yup.ref('password')], t('forms.user.validation.passwordsNotMatch'))
         .nullable()
     });
   };
@@ -129,12 +131,12 @@ const UserForm: React.FC = () => {
   // Функция для получения списка незаполненных обязательных полей
   const getRequiredFieldErrors = () => {
     const requiredFields = {
-      ...(loginType === 'email' && { email: 'Email' }),
-      ...(loginType === 'phone' && { phone: 'Телефон' }),
-      first_name: 'Имя', 
-      last_name: 'Фамилия',
-      role_id: 'Роль',
-      ...((!isEdit) && { password: 'Пароль' })
+      ...(loginType === 'email' && { email: t('forms.user.fields.email') }),
+      ...(loginType === 'phone' && { phone: t('forms.user.fields.phone') }),
+      first_name: t('forms.user.fields.firstName'), 
+      last_name: t('forms.user.fields.lastName'),
+      role_id: t('forms.user.fields.role'),
+      ...((!isEdit) && { password: t('forms.user.fields.password') })
     };
 
     const errors: string[] = [];
@@ -191,7 +193,7 @@ const UserForm: React.FC = () => {
   // Formik хук для управления формой
   const formik = useFormik({
     initialValues: initialFormValues,
-    validationSchema: React.useMemo(() => getValidationSchema(loginType), [loginType, isEdit]),
+    validationSchema: React.useMemo(() => getValidationSchema(loginType, t), [loginType, isEdit, t]),
     validateOnChange: true,
     validateOnBlur: true,
     enableReinitialize: true,
@@ -321,7 +323,7 @@ const UserForm: React.FC = () => {
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
-      {/* Заголовок с кнопкой "Назад" */}
+      {/* Заголовок с кнопкой "t('forms.common.back')" */}
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -335,7 +337,7 @@ const UserForm: React.FC = () => {
             mr: SIZES.spacing.md 
           }}
         >
-          Назад
+          t('forms.common.back')
         </Button>
         <Typography 
           variant="h4" 
@@ -348,7 +350,7 @@ const UserForm: React.FC = () => {
       <form onSubmit={formik.handleSubmit} autoComplete="off">
         <Paper sx={cardStyles}>
           <Grid container spacing={SIZES.spacing.lg}>
-            {/* Тип входа - только для создания нового пользователя */}
+            {/* t('forms.sections.loginType') - только для создания нового пользователя */}
             {!isEdit && (
               <>
                 <Grid item xs={12}>
@@ -357,14 +359,14 @@ const UserForm: React.FC = () => {
                     gutterBottom 
                     sx={{ fontSize: SIZES.fontSize.lg }}
                   >
-                    Тип входа
+                    t('forms.sections.loginType')
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Grid>
 
                 <Grid item xs={12}>
                   <FormControl component="fieldset">
-                    <FormLabel component="legend">Выберите основной способ входа</FormLabel>
+                    <FormLabel component="legend">t('forms.loginType.selectMethod')</FormLabel>
                     <RadioGroup
                       row
                       value={loginType}
@@ -374,12 +376,12 @@ const UserForm: React.FC = () => {
                       <FormControlLabel 
                         value="email" 
                         control={<Radio />} 
-                        label="Email" 
+                        label={t("forms.loginType.email")} 
                       />
                       <FormControlLabel 
                         value="phone" 
                         control={<Radio />} 
-                        label="Телефон" 
+                        label={t("forms.loginType.phone")} 
                       />
                     </RadioGroup>
                   </FormControl>
@@ -387,14 +389,14 @@ const UserForm: React.FC = () => {
               </>
             )}
 
-            {/* Основная информация */}
+            {/* t('forms.sections.basicInfo') */}
             <Grid item xs={12}>
               <Typography 
                 variant="h6" 
                 gutterBottom 
                 sx={{ fontSize: SIZES.fontSize.lg }}
               >
-                Основная информация
+                t('forms.sections.basicInfo')
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -436,7 +438,7 @@ const UserForm: React.FC = () => {
                 fullWidth
                 required
                 name="first_name"
-                label="Имя"
+                label={t("forms.user.fields.firstName")}
                 value={formik.values.first_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -451,7 +453,7 @@ const UserForm: React.FC = () => {
                 fullWidth
                 required
                 name="last_name"
-                label="Фамилия"
+                label={t("forms.user.fields.lastName")}
                 value={formik.values.last_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -465,7 +467,7 @@ const UserForm: React.FC = () => {
               <TextField
                 fullWidth
                 name="middle_name"
-                label="Отчество"
+                label={t("forms.user.fields.middleName")}
                 value={formik.values.middle_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -475,7 +477,7 @@ const UserForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Роль и статус */}
+            {/* t('forms.sections.roleAndStatus') */}
             <Grid item xs={12}>
               <Typography 
                 variant="h6" 
@@ -485,7 +487,7 @@ const UserForm: React.FC = () => {
                   fontSize: SIZES.fontSize.lg 
                 }}
               >
-                Роль и статус
+                t('forms.sections.roleAndStatus')
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -524,7 +526,7 @@ const UserForm: React.FC = () => {
                       name="is_active"
                     />
                   }
-                  label="Активный пользователь"
+                  label={t("forms.user.fields.isActive")}
                 />
               </Box>
             </Grid>
@@ -567,7 +569,7 @@ const UserForm: React.FC = () => {
                 required={!isEdit && Boolean(formik.values.password)}
                 type="password"
                 name="password_confirmation"
-                label="Подтверждение пароля"
+                label={t("forms.user.fields.confirmPassword")}
                 value={formik.values.password_confirmation}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -592,7 +594,7 @@ const UserForm: React.FC = () => {
               {(!formik.isValid && showValidationErrors) && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                   <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Заполните все обязательные поля:
+                    {t('forms.common.fillAllRequiredFields')}:
                   </Typography>
                   <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
                     {getRequiredFieldErrors().map((field, index) => (
@@ -607,7 +609,7 @@ const UserForm: React.FC = () => {
               {/* Информационное сообщение о блокировке кнопки */}
               {!formik.isValid && !showValidationErrors && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  Заполните все обязательные поля для активации кнопки сохранения
+                  t('forms.common.fillRequiredFieldsToActivate')
                 </Alert>
               )}
               
@@ -623,7 +625,7 @@ const UserForm: React.FC = () => {
                   disabled={isLoading}
                   sx={secondaryButtonStyles}
                 >
-                  Отмена
+                  t('forms.common.cancel')
                 </Button>
                 <Button
                   type={formik.isValid ? "submit" : "button"}
