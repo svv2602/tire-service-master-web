@@ -19,6 +19,7 @@ import {
   ArrowBack as ArrowBackIcon,
   Star as StarIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useGetBookingsByClientQuery,
@@ -57,6 +58,7 @@ import { RootState } from '../../store';
  */
 
 const ReviewFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const [createReview, { isLoading: isSubmitting }] = useCreateReviewMutation();
@@ -138,19 +140,19 @@ const ReviewFormPage: React.FC = () => {
     const errors: string[] = [];
     
     if (!selectedClientId) {
-      errors.push('Клиент');
+      errors.push(t('forms.review.requiredFields.client'));
     }
     
     if (!selectedBookingId && !selectedServicePointId) {
-      errors.push('Бронирование или сервисная точка');
+      errors.push(t('forms.review.requiredFields.bookingOrServicePoint'));
     }
     
     if (!rating || rating === 0) {
-      errors.push('Оценка');
+      errors.push(t('forms.review.requiredFields.rating'));
     }
     
     if (!comment || comment.trim() === '') {
-      errors.push('Текст отзыва');
+      errors.push(t('forms.review.requiredFields.reviewText'));
     }
     
     return errors;
@@ -169,7 +171,7 @@ const ReviewFormPage: React.FC = () => {
         }
       }
       if (!isFormValid()) {
-        setFormError('Заполните все обязательные поля');
+        setFormError(t('forms.review.validation.fillAllFields'));
         return;
       }
       if (isEditMode && id) {
@@ -221,7 +223,7 @@ const ReviewFormPage: React.FC = () => {
         setStatus('published');
       }
     } catch (error: any) {
-      setFormError(error?.data?.message || 'Ошибка при сохранении отзыва');
+      setFormError(error?.data?.message || t('forms.review.messages.saveError'));
     }
   };
 
@@ -232,7 +234,7 @@ const ReviewFormPage: React.FC = () => {
       setDeleteDialogOpen(false);
       navigate('/admin/reviews');
     } catch (error: any) {
-      setFormError(error?.data?.message || 'Ошибка при удалении отзыва');
+      setFormError(error?.data?.message || t('forms.review.messages.deleteError'));
     }
   };
 
@@ -244,11 +246,11 @@ const ReviewFormPage: React.FC = () => {
     return (
       <Box sx={{ padding: SIZES.spacing.xl }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
-          {isEditMode ? 'Редактирование отзыва (режим администратора)' : 'Создание/редактирование отзыва (режим администратора)'}
+          {isEditMode ? t('forms.review.title.editAdmin') : t('forms.review.title.createAdmin')}
         </Typography>
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            {isEditMode ? 'Отзыв успешно обновлён!' : 'Отзыв успешно создан!'} Перенаправление на список отзывов...
+            {isEditMode ? t('forms.review.messages.updateSuccess') : t('forms.review.messages.createSuccess')} {t('forms.review.messages.redirecting')}
           </Alert>
         )}
         {formError && (
@@ -261,14 +263,14 @@ const ReviewFormPage: React.FC = () => {
                 <InputLabel>Клиент</InputLabel>
                 <Select
                   value={selectedClientId}
-                  label="Клиент"
+                  label={t("forms.review.fields.client")}
                   onChange={e => {
                     setSelectedClientId(e.target.value);
                     setSelectedBookingId('');
                   }}
                   disabled={isEditMode}
                 >
-                  <MenuItem value="">Выберите клиента</MenuItem>
+                  <MenuItem value="">{t('forms.review.placeholders.selectClient')}</MenuItem>
                   {clientsData?.data.map((client: any) => (
                     <MenuItem key={client.id} value={client.id}>
                       {client.user?.last_name || 'Фамилия'} {client.user?.first_name || 'Имя'} ({client.user?.email || 'email'})
@@ -280,11 +282,11 @@ const ReviewFormPage: React.FC = () => {
                 <InputLabel>Бронирование</InputLabel>
                 <Select
                   value={selectedBookingId}
-                  label="Бронирование"
+                  label={t("forms.review.fields.booking")}
                   onChange={e => setSelectedBookingId(e.target.value)}
                   disabled={!selectedClientId || !clientBookingsData?.data?.length || isEditMode}
                 >
-                  <MenuItem value="">Без бронирования</MenuItem>
+                  <MenuItem value="">{t('forms.review.placeholders.withoutBooking')}</MenuItem>
                   {clientBookingsData?.data?.map(booking => (
                     <MenuItem key={booking.id} value={booking.id}>
                       {booking.service_point?.name} - {new Date(booking.booking_date).toLocaleDateString()}
@@ -296,11 +298,11 @@ const ReviewFormPage: React.FC = () => {
                 <InputLabel>Сервисная точка</InputLabel>
                 <Select
                   value={selectedServicePointId}
-                  label="Сервисная точка"
+                  label={t("forms.review.fields.servicePoint")}
                   onChange={e => setSelectedServicePointId(e.target.value)}
                   disabled={!!selectedBookingId || isEditMode}
                 >
-                  <MenuItem value="">Выберите точку</MenuItem>
+                  <MenuItem value="">{t('forms.review.placeholders.selectServicePoint')}</MenuItem>
                   {servicePointsData?.data?.map((point: ServicePoint) => (
                     <MenuItem key={point.id} value={point.id}>{point.name}</MenuItem>
                   ))}
@@ -308,7 +310,7 @@ const ReviewFormPage: React.FC = () => {
               </FormControl>
               <Box>
                 <Typography component="legend" sx={{ fontSize: SIZES.fontSize.md, fontWeight: 500, marginBottom: SIZES.spacing.sm }}>
-                  Оценка
+                  {t('forms.review.fields.rating')}
                 </Typography>
                 <Rating
                   name="rating"
@@ -323,7 +325,7 @@ const ReviewFormPage: React.FC = () => {
                 multiline
                 rows={4}
                 name="comment"
-                label="Текст отзыва"
+                label={t("forms.review.fields.reviewText")}
                 value={comment}
                 onChange={e => setComment(e.target.value)}
                 sx={textFieldStyles}
@@ -332,12 +334,12 @@ const ReviewFormPage: React.FC = () => {
                 <InputLabel>Статус</InputLabel>
                 <Select
                   value={status}
-                  label="Статус"
+                  label={t("forms.review.fields.status")}
                   onChange={e => setStatus(e.target.value as ReviewStatus)}
                 >
-                  <MenuItem value="published">Опубликован</MenuItem>
-                  <MenuItem value="pending">На модерации</MenuItem>
-                  <MenuItem value="rejected">Отклонён</MenuItem>
+                  <MenuItem value="published">{t('forms.review.statuses.published')}</MenuItem>
+                  <MenuItem value="pending">{t('forms.review.statuses.pending')}</MenuItem>
+                  <MenuItem value="rejected">{t('forms.review.statuses.rejected')}</MenuItem>
                 </Select>
               </FormControl>
 
@@ -345,7 +347,7 @@ const ReviewFormPage: React.FC = () => {
               {(!isFormValid()) && (
                 <Alert severity="warning" sx={{ mt: 3 }}>
                   <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Заполните все обязательные поля:
+                    {t('forms.review.validation.fillAllFields')}:
                   </Typography>
                   <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
                     {getRequiredFieldErrors().map((field, index) => (
@@ -360,20 +362,20 @@ const ReviewFormPage: React.FC = () => {
               {/* Информационное сообщение при заполненной форме */}
               {isFormValid() && !success && (
                 <Alert severity="info" sx={{ mt: 3 }}>
-                  Все обязательные поля заполнены. Можете сохранить отзыв.
+                  {t('forms.review.validation.allFieldsFilled')}
                 </Alert>
               )}
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: SIZES.spacing.md, marginTop: SIZES.spacing.lg }}>
-                <Button onClick={() => navigate('/admin/reviews')} sx={secondaryButtonStyles}>Отмена</Button>
+                <Button onClick={() => navigate('/admin/reviews')} sx={secondaryButtonStyles}>{t('forms.review.buttons.cancel')}</Button>
                 <Box>
                   {isEditMode && (
                     <Button color="error" sx={{ mr: 2 }} onClick={() => setDeleteDialogOpen(true)} disabled={isDeleting}>
-                      {isDeleting ? 'Удаление...' : 'Удалить'}
+                      {isDeleting ? t('forms.review.messages.deleting') : t('forms.review.buttons.delete')}
                     </Button>
                   )}
                   <Button type="submit" variant="contained" disabled={isSubmitting || isUpdating || !isFormValid()} startIcon={<StarIcon />} sx={primaryButtonStyles}>
-                    {isEditMode ? (isUpdating ? 'Сохранение...' : 'Сохранить изменения') : (isSubmitting ? 'Сохранение...' : 'Сохранить отзыв')}
+                    {isEditMode ? (isUpdating ? t('forms.review.messages.saving') : t('forms.review.buttons.saveChanges')) : (isSubmitting ? 'Сохранение...' : t('forms.review.buttons.save'))}
                   </Button>
                 </Box>
               </Box>
@@ -381,9 +383,9 @@ const ReviewFormPage: React.FC = () => {
           </form>
         </Paper>
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Подтверждение удаления</DialogTitle>
+          <DialogTitle>{t('common.confirmDelete')}</DialogTitle>
           <DialogContent>
-            <Typography>Вы действительно хотите удалить этот отзыв?</Typography>
+            <Typography>{t('forms.review.messages.deleteConfirm')}</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
@@ -430,7 +432,7 @@ const ReviewFormPage: React.FC = () => {
           </Typography>
         </Box>
         <Alert severity="info">
-          У вас пока нет завершенных бронирований. После завершения обслуживания вы сможете оставить отзыв.
+          {t('forms.review.messages.noBookings')}
         </Alert>
       </Box>
     );
@@ -509,7 +511,7 @@ const ReviewFormPage: React.FC = () => {
                 name="booking_id"
                 value={selectedBookingId}
                 onChange={e => setSelectedBookingId(e.target.value)}
-                label="Выберите бронирование"
+                label={t("forms.review.placeholders.selectBooking")}
                 sx={{
                   ...textFieldStyles,
                   '& .MuiSelect-select': {
@@ -534,7 +536,7 @@ const ReviewFormPage: React.FC = () => {
                   marginBottom: SIZES.spacing.sm,
                 }}
               >
-                Ваша оценка
+                {t('forms.review.fields.yourRating')}
               </Typography>
               <Rating
                 name="rating"
@@ -582,7 +584,7 @@ const ReviewFormPage: React.FC = () => {
                 startIcon={<StarIcon />}
                 sx={primaryButtonStyles}
               >
-                {isSubmitting ? 'Сохранение...' : 'Опубликовать отзыв'}
+                {isSubmitting ? 'Сохранение...' : t('forms.review.buttons.publish')}
               </Button>
             </Box>
           </Box>
