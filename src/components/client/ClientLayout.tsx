@@ -5,6 +5,8 @@ import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getButtonStyles } from '../../styles';
 import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
 import ThemeToggle from '../ui/ThemeToggle';
+import { LanguageSelector } from '../LanguageSelector';
+import { useTranslation } from '../../hooks/useTranslation';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
@@ -35,7 +37,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
-
+  const { t } = useTranslation();
 
   const profileActions = getProfileActions({
     user,
@@ -57,7 +59,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         sx={{ color: colors.textSecondary }}
         startIcon={<ArticleIcon />}
       >
-        База знань
+        {t('navigation.knowledgeBase')}
       </Button>
       <Button
         color="inherit"
@@ -66,7 +68,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         sx={{ color: colors.textSecondary }}
         startIcon={<BuildIcon />}
       >
-        Послуги
+        {t('navigation.services')}
       </Button>
       <Button
         color="inherit"
@@ -75,7 +77,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         sx={{ color: colors.textSecondary }}
         startIcon={<BookOnlineIcon />}
       >
-        Записатися
+        {t('navigation.booking')}
       </Button>
       <Button
         color="inherit"
@@ -84,7 +86,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         sx={{ color: colors.textSecondary }}
         startIcon={<CalculateIcon />}
       >
-        Калькулятор шин
+        {t('navigation.tireCalculator')}
       </Button>
     </Box>
   );
@@ -95,10 +97,11 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         title="🚗 Твоя Шина"
         onTitleClick={() => navigate('/client')}
         rightContent={
-          <>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {publicLinks}
             <ThemeToggle />
-          </>
+            <LanguageSelector />
+          </Box>
         }
         profileActions={profileActions}
         username={user ? `${user.first_name} ${user.last_name}` : ''}

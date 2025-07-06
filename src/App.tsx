@@ -18,6 +18,9 @@ import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
 import './styles/overrides/textfield-overrides.css';
 
+// Инициализация i18n
+import './i18n';
+
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));

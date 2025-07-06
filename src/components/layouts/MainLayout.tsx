@@ -72,6 +72,7 @@ import { User } from '../../types/user';
 import ThemeToggle from '../ui/ThemeToggle';
 import { getProfileActions } from '../ui/AppBar/profileActions';
 import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
+import { LanguageSelector } from '../LanguageSelector';
 
 // Константы для управления панелью
 const MIN_DRAWER_WIDTH = 72;
@@ -746,7 +747,12 @@ const MainLayout: React.FC = () => {
             onLogout: handleLogout,
           })}
           username={user ? `${user.first_name} ${user.last_name}` : ''}
-          rightContent={<ThemeToggle />}
+          rightContent={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <ThemeToggle />
+              <LanguageSelector />
+            </Box>
+          }
         />
 
         <Toolbar />

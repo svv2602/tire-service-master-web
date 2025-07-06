@@ -34,6 +34,7 @@ import { setCredentials } from '../../store/slices/authSlice';
 import { useLoginMutation } from '../../api/auth.api';
 import { UserRole } from '../../types/user-role';
 import { extractPhoneDigits } from '../../utils/phoneUtils';
+import { useTranslation } from '../../hooks/useTranslation';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -48,10 +49,11 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   onSuccess,
   onSwitchToRegister,
   showRegisterLink = true,
-  title = 'Вход в систему',
+  title,
   showSkipButton = false,
   onSkip
 }) => {
+  const { t } = useTranslation();
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
@@ -65,19 +67,19 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   // Валидация формы
   const validateForm = () => {
     if (!login.trim()) {
-      setError('Необходимо указать логин');
+      setError(t('auth.errors.login_required') || 'Необходимо указать логин');
       return false;
     }
     
     if (!password.trim()) {
-      setError('Необходимо указать пароль');
+      setError(t('auth.errors.password_required') || 'Необходимо указать пароль');
       return false;
     }
     
     if (loginType === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(login)) {
-        setError('Некорректный формат email');
+        setError(t('auth.errors.invalid_email') || 'Некорректный формат email');
         return false;
       }
     } else {
@@ -87,12 +89,52 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       
       // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
       if (!digitsOnly.startsWith('+38') || digitsOnly.length !== 13) {
-        setError('Некорректный формат телефона. Используйте формат: +38 (0ХХ) ХХХ-ХХ-ХХ');
+        setError(t('auth.errors.invalid_phone') || 'Некорректный формат телефона. Используйте формат: +38 (0ХХ) ХХХ-ХХ-ХХ');
         return false;
       }
     }
     
     return true;
+  };
+
+  // Получение переведенного сообщения об ошибке
+  const getErrorMessage = (err: any): string => {
+    // Сначала пытаемся получить конкретную ошибку из API
+    if (err.data?.error) {
+      // Проверяем, есть ли перевод для этой ошибки
+      const errorKey = err.data.error.toLowerCase().replace(/\s+/g, '_');
+      const translatedError = t(`auth.errors.${errorKey}`);
+      if (translatedError && translatedError !== `auth.errors.${errorKey}`) {
+        return translatedError;
+      }
+      return err.data.error;
+    }
+    
+    // Если есть сообщение об ошибке
+    if (err.data?.message) {
+      return err.data.message;
+    }
+    
+    // Стандартные ошибки HTTP
+    if (err.status === 401) {
+      return t('auth.errors.invalid_credentials') || 'Неверные данные для входа';
+    }
+    
+    if (err.status === 404) {
+      return t('auth.errors.user_not_found') || 'Пользователь не найден';
+    }
+    
+    if (err.status >= 500) {
+      return t('auth.errors.server_error') || 'Ошибка сервера';
+    }
+    
+    // Ошибки сети
+    if (!err.status) {
+      return t('auth.errors.network_error') || 'Ошибка сети';
+    }
+    
+    // Общая ошибка входа
+    return t('auth.loginError') || 'Ошибка входа в систему';
   };
 
   // Обработка входа
@@ -193,7 +235,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         message: err.message,
         timestamp: new Date().toISOString()
       });
-      setError(err.data?.error || 'Ошибка входа в систему');
+      setError(getErrorMessage(err));
     }
   };
 
@@ -221,7 +263,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       <Box component="form" onSubmit={handleLogin} noValidate>
         {/* Заголовок */}
         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-          {title}
+          {title || t('auth.login')}
         </Typography>
         
         {/* Выбор типа логина */}
@@ -243,7 +285,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               label={
                 <Box display="flex" alignItems="center" gap={1}>
                   <Email fontSize="small" />
-                  <span>Email</span>
+                  <span>{t('auth.email')}</span>
                 </Box>
               }
             />
@@ -253,7 +295,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               label={
                 <Box display="flex" alignItems="center" gap={1}>
                   <Phone fontSize="small" />
-                  <span>Телефон</span>
+                  <span>{t('auth.phone')}</span>
                 </Box>
               }
             />
@@ -264,7 +306,8 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         {loginType === 'email' ? (
           <TextField
             fullWidth
-            label="Email"
+            label={t('auth.email')}
+            type="email"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
             placeholder={getLoginPlaceholder()}
@@ -281,69 +324,10 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         ) : (
           <TextField
             fullWidth
-            label="Номер телефона"
+            label={t('auth.phone')}
+            type="tel"
             value={login}
-            onChange={(e) => {
-              // Автоформатирование с визуальной маской
-              let value = e.target.value;
-              
-              // Убираем все кроме цифр и +
-              let digitsOnly = value.replace(/[^\d+]/g, '');
-              
-              // Обработка различных форматов ввода
-              if (digitsOnly.startsWith('+')) {
-                digitsOnly = digitsOnly.substring(1); // убираем +
-              }
-              
-              // Автоматически добавляем 38 если начинается с 0
-              if (digitsOnly.match(/^0/)) {
-                digitsOnly = '38' + digitsOnly;
-              }
-              
-              // Форматируем с маской +38 (0XX) XXX-XX-XX
-              let formatted = '';
-              if (digitsOnly.length >= 2 && digitsOnly.startsWith('38')) {
-                formatted = '+38';
-                const remaining = digitsOnly.substring(2);
-                
-                if (remaining.length > 0) {
-                  formatted += ' (';
-                  if (remaining.length <= 3) {
-                    formatted += remaining;
-                  } else {
-                    formatted += remaining.substring(0, 3) + ')';
-                    const rest = remaining.substring(3);
-                    
-                    if (rest.length > 0) {
-                      formatted += ' ';
-                      if (rest.length <= 3) {
-                        formatted += rest;
-                      } else {
-                        formatted += rest.substring(0, 3);
-                        if (rest.length > 3) {
-                          formatted += '-';
-                          if (rest.length <= 5) {
-                            formatted += rest.substring(3);
-                          } else {
-                            formatted += rest.substring(3, 5);
-                            if (rest.length > 5) {
-                              formatted += '-' + rest.substring(5, 7);
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              } else if (digitsOnly.length > 0) {
-                // Для других форматов оставляем как есть с +
-                formatted = '+' + digitsOnly;
-              } else {
-                formatted = value; // Пустое значение
-              }
-              
-              setLogin(formatted);
-            }}
+            onChange={(e) => setLogin(e.target.value)}
             placeholder={getLoginPlaceholder()}
             disabled={isLoading}
             InputProps={{
@@ -360,7 +344,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         {/* Поле пароля */}
         <TextField
           fullWidth
-          label="Пароль"
+          label={t('auth.password')}
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -396,7 +380,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           startIcon={isLoading ? <CircularProgress size={20} /> : <LoginIcon />}
           sx={{ mb: 2 }}
         >
-          {isLoading ? 'Вход...' : 'Войти'}
+          {isLoading ? t('auth.loggingIn') || 'Вход...' : t('auth.loginButton')}
         </Button>
 
         {/* Забыли пароль */}
@@ -407,46 +391,42 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
             onClick={() => window.location.href = '/forgot-password'}
             sx={{ textDecoration: 'none' }}
           >
-            Забыли пароль?
+            {t('auth.forgotPassword')}
           </Link>
         </Box>
 
         {/* Разделитель */}
-        {showRegisterLink && (
-          <>
-            <Divider sx={{ my: 2 }}>
-              <Chip label="или" size="small" />
-            </Divider>
+        <Divider sx={{ my: 2 }}>или</Divider>
 
-            {/* Ссылка на регистрацию */}
-            <Box textAlign="center" sx={{ mb: showSkipButton ? 2 : 0 }}>
-              <Typography variant="body2" color="textSecondary">
-                Нет аккаунта?{' '}
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={onSwitchToRegister || (() => navigate('/auth/register'))}
-                  sx={{ textDecoration: 'none' }}
-                >
-                  Зарегистрироваться
-                </Link>
-              </Typography>
-            </Box>
-          </>
+        {/* Ссылка на регистрацию */}
+        {showRegisterLink && (
+          <Box textAlign="center" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              {t('auth.dontHaveAccount')}
+            </Typography>
+            <Button
+              variant="outlined"
+              fullWidth
+              startIcon={<PersonAdd />}
+              onClick={onSwitchToRegister}
+            >
+              {t('auth.registerButton')}
+            </Button>
+          </Box>
         )}
 
-        {/* Кнопка "Продолжить без входа" */}
+        {/* Кнопка пропуска */}
         {showSkipButton && (
-          <Button
-            variant="text"
-            fullWidth
-            color="primary"
-            onClick={onSkip}
-            startIcon={<CloseIcon />}
-            sx={{ mt: showRegisterLink ? 0 : 2 }}
-          >
-            Продолжить без входа
-          </Button>
+          <Box textAlign="center">
+            <Button
+              variant="text"
+              onClick={onSkip}
+              startIcon={<CloseIcon />}
+              sx={{ color: 'text.secondary' }}
+            >
+              Продолжить без входа
+            </Button>
+          </Box>
         )}
       </Box>
     </Paper>
