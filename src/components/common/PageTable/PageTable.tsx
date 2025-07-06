@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 import { Table } from '../../ui/Table/Table';
 import { Pagination } from '../../ui/Pagination/Pagination';
@@ -27,6 +28,7 @@ export const PageTable = <T,>({
   pagination,
   tableProps = {},
 }: PageTableProps<T>) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
@@ -56,7 +58,7 @@ export const PageTable = <T,>({
     if (actions.length > 0) {
       const actionsColumn = {
         id: 'actions',
-        label: 'Действия',
+        label: t('components.pageTable.actions'),
         minWidth: 120,
         maxWidth: 150,
         align: 'center' as const,
@@ -75,7 +77,7 @@ export const PageTable = <T,>({
     }
 
     return tableColumns;
-  }, [columns, actions]);
+  }, [columns, actions, t]);
 
 
 

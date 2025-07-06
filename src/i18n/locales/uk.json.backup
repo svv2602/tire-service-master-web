@@ -1,0 +1,839 @@
+{
+  "common": {
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "add": "Додати",
+    "close": "Закрити",
+    "submit": "Надіслати",
+    "search": "Пошук",
+    "loading": "Завантаження...",
+    "error": "Помилка",
+    "success": "Успішно",
+    "confirm": "Підтвердити",
+    "yes": "Так",
+    "no": "Ні",
+    "back": "Назад",
+    "next": "Далі",
+    "previous": "Попередній",
+    "filter": "Фільтр",
+    "clear": "Очистити",
+    "select": "Вибрати",
+    "required": "Обов'язкове поле",
+    "confirmDelete": "Підтвердження видалення",
+    "actions": "Дії",
+    "view": "Переглянути",
+    "activate": "Активувати",
+    "deactivate": "Деактивувати",
+    "moreActions": "Більше дій"
+  },
+  "navigation": {
+    "dashboard": "Панель управління",
+    "bookings": "Записи",
+    "clients": "Клієнти",
+    "services": "Послуги",
+    "servicePoints": "Точки обслуговування",
+    "partners": "Партнери",
+    "reports": "Звіти",
+    "settings": "Налаштування",
+    "profile": "Профіль",
+    "logout": "Вийти",
+    "login": "Увійти",
+    "register": "Реєстрація",
+    "knowledgeBase": "База знань",
+    "booking": "Записатися",
+    "tireCalculator": "Калькулятор шин"
+  },
+  "auth": {
+    "login": "Вхід",
+    "register": "Реєстрація",
+    "email": "Email",
+    "password": "Пароль",
+    "confirmPassword": "Підтвердіть пароль",
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "phone": "Телефон",
+    "forgotPassword": "Забули пароль?",
+    "rememberMe": "Запам'ятати мене",
+    "loginButton": "Увійти",
+    "registerButton": "Зареєструватися",
+    "alreadyHaveAccount": "Вже є акаунт?",
+    "dontHaveAccount": "Немає акаунту?",
+    "loginError": "Помилка входу",
+    "registerError": "Помилка реєстрації",
+    "invalidCredentials": "Невірні дані для входу",
+    "passwordMismatch": "Паролі не співпадають",
+    "loggingIn": "Вхід...",
+    "errors": {
+      "user_not_found": "Користувача не знайдено",
+      "invalid_credentials": "Невірні дані для входу",
+      "email_already_exists": "Email вже використовується",
+      "weak_password": "Пароль занадто слабкий",
+      "network_error": "Помилка мережі",
+      "server_error": "Помилка сервера",
+      "validation_error": "Помилка валідації",
+      "login_required": "Необхідно вказати логін",
+      "password_required": "Необхідно вказати пароль",
+      "invalid_email": "Некоректний формат email",
+      "invalid_phone": "Некоректний формат телефону. Використовуйте формат: +38 (0ХХ) ХХХ-ХХ-ХХ"
+    }
+  },
+  "language": {
+    "uk": "Українська",
+    "ru": "Російська",
+    "selectLanguage": "Оберіть мову"
+  },
+  "admin": {
+    "users": {
+      "title": "Управління користувачами",
+      "createUser": "Створити користувача",
+      "editUser": "Редагувати користувача",
+      "userManagement": "Управління користувачами (PageTable)",
+      "searchPlaceholder": "Пошук за email, ім'ям, прізвищем або номером телефону...",
+      "onlyActive": "Тільки активні",
+      "allUsers": "Всі користувачі",
+      "userStatus": "Статус користувачів",
+      "deactivate": "Деактивувати",
+      "activate": "Активувати",
+      "view": "Перегляд",
+      "viewTooltip": "Перегляд детальної інформації про користувача",
+      "editTooltip": "Редагувати дані користувача",
+      "deactivateTooltip": "Деактивувати користувача",
+      "activateTooltip": "Активувати користувача",
+      "confirmStatusChange": "Підтвердження зміни статусу",
+      "confirmStatusMessage": "Ви дійсно хочете змінити статус цього користувача?",
+      "user": "Користувач",
+      "email": "Email",
+      "phone": "Телефон",
+      "notSpecified": "Не вказано",
+      "role": "Роль",
+      "status": "Статус",
+      "active": "Активний",
+      "deactivated": "Деактивований",
+      "verifications": "Підтвердження",
+      "emailVerified": "Email підтверджено",
+      "emailNotVerified": "Email не підтверджено",
+      "phoneVerified": "Телефон підтверджено",
+      "phoneNotVerified": "Телефон не підтверджено",
+      "actions": "Дії",
+      "usersNotFound": "Користувачі не знайдені",
+      "noUsers": "Немає користувачів",
+      "changeSearchCriteria": "Спробуйте змінити критерії пошуку",
+      "createFirstUser": "Створіть першого користувача для початку роботи"
+    },
+    "partners": {
+      "title": "Партнери",
+      "createPartner": "Створити партнера",
+      "editPartner": "Редагувати партнера",
+      "searchPlaceholder": "Пошук за назвою партнера...",
+      "partnersNotFound": "Партнери не знайдені",
+      "noPartners": "Немає партнерів",
+      "createFirstPartner": "Створіть першого партнера для початку роботи"
+    },
+    "servicePoints": {
+      "title": "Точки обслуговування",
+      "createServicePoint": "Створити точку обслуговування",
+      "editServicePoint": "Редагувати точку обслуговування",
+      "searchPlaceholder": "Пошук за назвою точки обслуговування...",
+      "servicePointsNotFound": "Точки обслуговування не знайдені",
+      "noServicePoints": "Немає точок обслуговування",
+      "createFirstServicePoint": "Створіть першу точку обслуговування для початку роботи"
+    },
+    "carBrands": {
+      "title": "Бренди автомобілів",
+      "createBrand": "Додати бренд",
+      "editBrand": "Редагувати бренд",
+      "searchPlaceholder": "Пошук за назвою бренда...",
+      "brandsNotFound": "Бренди не знайдені",
+      "noBrands": "Немає брендів автомобілів",
+      "createFirstBrand": "Створіть перший бренд автомобіля для початку роботи"
+    },
+    "regions": {
+      "title": "Регіони",
+      "createRegion": "Додати регіон",
+      "editRegion": "Редагувати регіон",
+      "searchPlaceholder": "Пошук за назвою регіону...",
+      "regionsNotFound": "Регіони не знайдені",
+      "noRegions": "Немає регіонів",
+      "createFirstRegion": "Додайте перший регіон в систему"
+    },
+    "services": {
+      "title": "Категорії послуг",
+      "createCategory": "Додати категорію",
+      "editCategory": "Редагувати категорію",
+      "searchPlaceholder": "Пошук за назвою категорії...",
+      "categoriesNotFound": "Категорії не знайдені",
+      "noCategories": "Немає категорій послуг",
+      "createFirstCategory": "Створіть першу категорію для початку роботи"
+    },
+    "pageContent": {
+      "title": "Управління контентом",
+      "createContent": "Створити контент",
+      "editContent": "Редагувати контент",
+      "searchPlaceholder": "Пошук за заголовком...",
+      "contentNotFound": "Контент не знайдено",
+      "noContent": "Немає контенту",
+      "createFirstContent": "Створіть перший елемент контенту для початку роботи"
+    },
+    "reviews": {
+      "title": "Відгуки",
+      "createReview": "Створити відгук",
+      "editReview": "Редагувати відгук",
+      "searchPlaceholder": "Пошук за текстом відгуку...",
+      "reviewsNotFound": "Відгуки не знайдені",
+      "noReviews": "Немає відгуків",
+      "createFirstReview": "Створіть перший відгук для початку роботи"
+    },
+    "bookings": {
+      "title": "Бронювання",
+      "createBooking": "Створити бронювання",
+      "editBooking": "Редагувати бронювання",
+      "searchPlaceholder": "Пошук за номером бронювання...",
+      "bookingsNotFound": "Бронювання не знайдені",
+      "noBookings": "Немає бронювань",
+      "createFirstBooking": "Створіть перше бронювання для початку роботи"
+    },
+    "cities": {
+      "title": "Міста",
+      "createCity": "Додати місто",
+      "editCity": "Редагувати місто",
+      "searchPlaceholder": "Пошук за назвою міста...",
+      "citiesNotFound": "Міста не знайдені",
+      "noCities": "Немає міст",
+      "createFirstCity": "Додайте перше місто для початку роботи"
+    },
+    "articles": {
+      "title": "Статті",
+      "createArticle": "Створити статтю",
+      "editArticle": "Редагувати статтю",
+      "searchPlaceholder": "Пошук за заголовком статті...",
+      "articlesNotFound": "Статті не знайдені",
+      "noArticles": "Немає статей",
+      "createFirstArticle": "Створіть першу статтю для початку роботи"
+    }
+  },
+  "forms": {
+    "common": {
+      "required": "Обов'язкове поле",
+      "optional": "Необов'язково",
+      "save": "Зберегти",
+      "cancel": "Скасувати",
+      "create": "Створити",
+      "update": "Оновити",
+      "back": "Назад",
+      "saving": "Збереження...",
+      "loading": "Завантаження...",
+      "fillAllRequiredFields": "Заповніть всі обов'язкові поля",
+      "fillRequiredFieldsToActivate": "Заповніть всі обов'язкові поля для активації кнопки збереження"
+    },
+    "sections": {
+      "loginType": "Тип входу",
+      "basicInfo": "Основна інформація",
+      "roleAndStatus": "Роль та статус",
+      "password": "Пароль",
+      "changePassword": "Змінити пароль",
+      "contactInfo": "Контактна інформація",
+      "addressInfo": "Адресна інформація",
+      "workInfo": "Робоча інформація"
+    },
+    "loginType": {
+      "selectMethod": "Виберіть основний спосіб входу",
+      "email": "Email",
+      "phone": "Телефон"
+    },
+    "user": {
+      "title": {
+        "create": "Створити користувача",
+        "edit": "Редагувати користувача"
+      },
+      "fields": {
+        "firstName": "Ім'я",
+        "lastName": "Прізвище", 
+        "middleName": "По батькові",
+        "email": "Email",
+        "emailOptional": "Email (необов'язково)",
+        "phone": "Телефон",
+        "phoneOptional": "Телефон (необов'язково)",
+        "password": "Пароль",
+        "newPassword": "Новий пароль (залиште порожнім, якщо не хочете змінювати)",
+        "confirmPassword": "Підтвердження пароля",
+        "role": "Роль",
+        "isActive": "Активний користувач"
+      },
+      "roles": {
+        "admin": "Адміністратор",
+        "manager": "Менеджер", 
+        "partner": "Партнер",
+        "operator": "Оператор",
+        "client": "Клієнт"
+      },
+      "validation": {
+        "emailRequired": "Email обов'язковий",
+        "phoneRequired": "Телефон обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+        "roleRequired": "Роль обов'язкова",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMin": "Пароль повинен містити мінімум 6 символів",
+        "passwordsNotMatch": "Паролі не співпадають"
+      }
+    },
+    "partner": {
+      "title": {
+        "create": "Створити партнера",
+        "edit": "Редагувати партнера"
+      },
+      "sections": {
+        "companyInfo": "Інформація про компанію",
+        "legalInfo": "Юридична інформація",
+        "location": "Місцезнаходження",
+        "userInfo": "Дані користувача",
+        "servicePoints": "Точки обслуговування",
+        "operators": "Оператори"
+      },
+      "fields": {
+        "companyName": "Назва компанії",
+        "companyDescription": "Опис компанії",
+        "contactPerson": "Контактна особа",
+        "website": "Веб-сайт",
+        "logo": "Логотип партнера",
+        "taxNumber": "Податковий номер (необов'язково)",
+        "legalAddress": "Юридична адреса",
+        "region": "Регіон",
+        "city": "Місто",
+        "isActive": "Активний партнер",
+        "uploadLogo": "Завантажити лого",
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "email": "Email",
+        "phone": "Телефон",
+        "password": "Пароль",
+        "newPassword": "Новий пароль"
+      },
+      "placeholders": {
+        "website": "https://example.com",
+        "taxNumber": "12345678",
+        "selectRegion": "Виберіть регіон",
+        "selectCity": "Виберіть місто"
+      },
+      "validation": {
+        "companyNameRequired": "Назва компанії обов'язкова",
+        "companyNameMin": "Назва повинна бути не менше 2 символів",
+        "companyNameMax": "Назва повинна бути не більше 100 символів",
+        "descriptionMax": "Опис повинен бути не більше 2000 символів",
+        "contactPersonMin": "ПІБ повинно бути не менше 2 символів",
+        "websiteInvalid": "Введіть коректний URL (наприклад, https://example.com)",
+        "taxNumberInvalid": "Податковий номер повинен містити від 8 до 15 цифр та дефісів",
+        "legalAddressRequired": "Юридична адреса обов'язкова",
+        "legalAddressMax": "Адреса повинна бути не більше 500 символів",
+        "logoUrlInvalid": "Введіть коректний URL логотипа",
+        "regionRequired": "Регіон обов'язковий",
+        "cityRequired": "Місто обов'язкове",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "phoneRequired": "Телефон обов'язковий",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMin": "Пароль повинен містити мінімум 6 символів"
+      },
+      "messages": {
+        "logoFormats": "Підтримуються формати: JPEG, PNG, GIF, WebP. Максимальний розмір: 5MB",
+        "createSuccess": "Партнер успішно створений",
+        "updateSuccess": "Партнер успішно оновлений",
+        "toggleSuccess": "Статус партнера змінено",
+        "deleteConfirm": "Ви впевнені, що хочете видалити цього партнера?",
+        "noServicePoints": "У цього партнера немає точок обслуговування",
+        "noOperators": "У цього партнера немає операторів"
+      },
+      "tabs": {
+        "general": "Загальна інформація",
+        "servicePoints": "Точки обслуговування",
+        "operators": "Оператори"
+      }
+    },
+    "servicePoint": {
+      "name": "Назва точки обслуговування",
+      "description": "Опис",
+      "address": "Адреса",
+      "city": "Місто",
+      "phone": "Телефон",
+      "workStatus": "Статус роботи",
+      "isActive": "Активна"
+    },
+    "service": {
+      "title": {
+        "create": "Нова категорія послуг",
+        "edit": "Редагувати категорію послуг"
+      },
+      "sections": {
+        "categoryInfo": "Інформація про категорію",
+        "servicesList": "Список послуг у категорії"
+      },
+      "fields": {
+        "name": "Назва",
+        "description": "Опис",
+        "sortOrder": "Порядок сортування",
+        "isActive": "Активна",
+        "price": "Ціна",
+        "duration": "Тривалість",
+        "category": "Категорія"
+      },
+      "validation": {
+        "nameRequired": "Назва обов'язкова",
+        "nameMin": "Назва повинна містити мінімум 2 символи",
+        "nameMax": "Назва не повинна перевищувати 100 символів",
+        "descriptionMax": "Опис не повинен перевищувати 500 символів",
+        "sortOrderMin": "Порядок сортування повинен бути невід'ємним",
+        "sortOrderMax": "Порядок сортування не повинен перевищувати 9999"
+      },
+      "messages": {
+        "loading": "Завантаження категорії...",
+        "createSuccess": "Категорія послуг успішно створена",
+        "updateSuccess": "Категорія послуг успішно оновлена",
+        "deleteSuccess": "Категорія послуг успішно видалена"
+      }
+    },
+    "booking": {
+      "title": {
+        "create": "Нове бронювання",
+        "edit": "Редагувати бронювання"
+      },
+      "sections": {
+        "bookingInfo": "Інформація про бронювання",
+        "clientInfo": "Дані клієнта",
+        "carInfo": "Дані автомобіля",
+        "serviceInfo": "Послуги"
+      },
+      "fields": {
+        "client": "Клієнт",
+        "servicePoint": "Точка обслуговування",
+        "category": "Категорія послуг",
+        "startTime": "Час початку",
+        "endTime": "Час закінчення",
+        "date": "Дата",
+        "notes": "Примітки",
+        "status": "Статус",
+        "carBrand": "Марка автомобіля",
+        "carModel": "Модель автомобіля",
+        "licensePlate": "Номер автомобіля",
+        "serviceRecipientFirstName": "Ім'я отримувача послуги",
+        "serviceRecipientLastName": "Прізвище отримувача послуги",
+        "serviceRecipientPhone": "Телефон отримувача послуги"
+      },
+      "validation": {
+        "clientRequired": "Клієнт обов'язковий",
+        "servicePointRequired": "Точка обслуговування обов'язкова",
+        "categoryRequired": "Категорія послуг обов'язкова",
+        "startTimeRequired": "Час початку обов'язковий",
+        "dateRequired": "Дата обов'язкова",
+        "carBrandRequired": "Марка автомобіля обов'язкова",
+        "carModelRequired": "Модель автомобіля обов'язкова",
+        "licensePlateRequired": "Номер автомобіля обов'язковий",
+        "serviceRecipientFirstNameRequired": "Ім'я отримувача послуги обов'язкове",
+        "serviceRecipientLastNameRequired": "Прізвище отримувача послуги обов'язкове",
+        "serviceRecipientPhoneRequired": "Телефон отримувача послуги обов'язковий"
+      }
+    },
+    "region": {
+      "title": {
+        "create": "Новий регіон",
+        "edit": "Редагувати регіон"
+      },
+      "fields": {
+        "name": "Назва регіону",
+        "code": "Код регіону",
+        "isActive": "Активний"
+      },
+      "validation": {
+        "nameRequired": "Назва регіону обов'язкова",
+        "nameMin": "Назва повинна містити мінімум 2 символи",
+        "codeRequired": "Код регіону обов'язковий",
+        "codeMin": "Код повинен містити мінімум 2 символи"
+      }
+    },
+    "client": {
+      "title": {
+        "create": "Новий клієнт",
+        "edit": "Редагувати клієнта"
+      },
+      "fields": {
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "email": "Email",
+        "phone": "Телефон",
+        "isActive": "Активний клієнт"
+      },
+      "validation": {
+        "firstNameRequired": "Ім'я обов'язкове",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "emailRequired": "Email обов'язковий",
+        "phoneRequired": "Телефон обов'язковий"
+      }
+    },
+    "clientCar": {
+      "title": {
+        "create": "Новий автомобіль",
+        "edit": "Редагувати автомобіль"
+      },
+      "fields": {
+        "brand": "Марка",
+        "model": "Модель", 
+        "year": "Рік випуску",
+        "licensePlate": "Номер автомобіля",
+        "color": "Колір",
+        "isActive": "Активний"
+      },
+      "validation": {
+        "brandRequired": "Марка обов'язкова",
+        "modelRequired": "Модель обов'язкова",
+        "yearRequired": "Рік випуску обов'язковий",
+        "licensePlateRequired": "Номер автомобіля обов'язковий"
+      }
+    },
+    "carBrand": {
+      "title": {
+        "create": "Нова марка автомобіля",
+        "edit": "Редагувати марку автомобіля"
+      },
+      "fields": {
+        "name": "Назва марки",
+        "logoUrl": "URL логотипа",
+        "isActive": "Активна"
+      },
+      "validation": {
+        "nameRequired": "Назва марки обов'язкова",
+        "nameMin": "Назва повинна містити мінімум 2 символи"
+      }
+    },
+    "tireCalculator": {
+      "title": "Калькулятор шин",
+      "fields": {
+        "currentWidth": "Поточна ширина",
+        "currentProfile": "Поточний профіль",
+        "currentDiameter": "Поточний діаметр",
+        "newWidth": "Нова ширина",
+        "newProfile": "Новий профіль",
+        "newDiameter": "Новий діаметр"
+      },
+             "buttons": {
+         "calculate": "Розрахувати",
+         "reset": "Скинути"
+       }
+     }
+    },
+    "review": {
+      "title": {
+        "create": "Новий відгук",
+        "edit": "Редагування відгука",
+        "createAdmin": "Створення/редагування відгука (режим адміністратора)",
+        "editAdmin": "Редагування відгука (режим адміністратора)"
+      },
+      "fields": {
+        "client": "Клієнт",
+        "booking": "Бронювання",
+        "servicePoint": "Точка обслуговування",
+        "rating": "Оцінка",
+        "yourRating": "Ваша оцінка",
+        "comment": "Коментар",
+        "reviewText": "Текст відгука",
+        "status": "Статус"
+      },
+      "placeholders": {
+        "selectClient": "Виберіть клієнта",
+        "selectBooking": "Виберіть бронювання",
+        "withoutBooking": "Без бронювання",
+        "selectServicePoint": "Виберіть точку"
+      },
+      "statuses": {
+        "published": "Опублікований",
+        "pending": "На модерації",
+        "rejected": "Відхилений"
+      },
+      "validation": {
+        "fillAllFields": "Заповніть всі обов'язкові поля",
+        "allFieldsFilled": "Всі обов'язкові поля заповнені. Можете зберегти відгук."
+      },
+      "messages": {
+        "createSuccess": "Відгук успішно створений!",
+        "updateSuccess": "Відгук успішно оновлений!",
+        "deleteSuccess": "Відгук успішно видалений",
+        "saveError": "Помилка при збереженні відгука",
+        "deleteError": "Помилка при видаленні відгука",
+        "noBookings": "У вас поки немає завершених бронювань. Після завершення обслуговування ви зможете залишити відгук.",
+        "redirecting": "Перенаправлення на список відгуків...",
+        "saving": "Збереження...",
+        "deleting": "Видалення...",
+        "deleteConfirm": "Ви дійсно хочете видалити цей відгук?"
+      },
+      "buttons": {
+        "back": "Назад",
+        "cancel": "Скасувати",
+        "save": "Зберегти відгук",
+        "saveChanges": "Зберегти зміни",
+        "publish": "Опублікувати відгук",
+        "delete": "Видалити"
+      },
+      "requiredFields": {
+        "client": "Клієнт",
+        "bookingOrServicePoint": "Бронювання або сервісна точка",
+        "rating": "Оцінка",
+        "reviewText": "Текст відгука"
+      }
+    },
+    "pageContent": {
+      "title": {
+        "create": "Створення контенту",
+        "edit": "Редагування контенту"
+      },
+      "fields": {
+        "title": "Заголовок",
+        "content": "Контент",
+        "section": "Секція",
+        "contentType": "Тип контенту",
+        "position": "Позиція",
+        "active": "Активний",
+        "imageUrl": "URL зображення",
+        "image": "Зображення",
+        "orImageUrl": "Або URL зображення"
+      },
+      "sections": {
+        "client": "Головна сторінка клієнта",
+        "admin": "Панель адміністратора",
+        "service": "Сторінка послуг",
+        "about": "Про нас"
+      },
+      "contentTypes": {
+        "hero": "Головний банер",
+        "service": "Послуга",
+        "city": "Місто",
+        "article": "Стаття",
+        "cta": "Заклик до дії",
+        "footer": "Підвал"
+      },
+      "messages": {
+        "createSuccess": "Контент успішно створений",
+        "updateSuccess": "Контент успішно оновлений",
+        "loadError": "Помилка при завантаженні даних сторінки",
+        "saveError": "Помилка при збереженні",
+        "selectImage": "Будь ласка, виберіть зображення",
+        "fileSizeError": "Розмір файлу не повинен перевищувати 5MB",
+        "imagePreview": "Попередній перегляд зображення",
+        "clearUploadedImage": "Очистіть завантажене зображення для використання URL",
+        "urlAlternative": "Альтернатива завантаженню файлу"
+      },
+      "buttons": {
+        "cancel": "Скасувати",
+        "create": "Створити",
+        "update": "Оновити",
+        "uploadImage": "Завантажити зображення",
+        "deleteImage": "Видалити"
+      }
+    }
+  },
+  "tables": {
+    "columns": {
+      "id": "ID",
+      "name": "Назва",
+      "title": "Заголовок",
+      "description": "Опис",
+      "email": "Email",
+      "phone": "Телефон",
+      "address": "Адреса",
+      "city": "Місто",
+      "region": "Регіон",
+      "status": "Статус",
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "createdAt": "Дата створення",
+      "updatedAt": "Дата оновлення",
+      "actions": "Дії",
+      "user": "Користувач",
+      "role": "Роль",
+      "verifications": "Підтвердження",
+      "partner": "Партнер",
+      "servicePoint": "Точка обслуговування",
+      "rating": "Оцінка",
+      "comment": "Коментар",
+      "client": "Клієнт",
+      "booking": "Бронювання",
+      "date": "Дата",
+      "time": "Час",
+      "position": "Позиція",
+      "content": "Контент",
+      "section": "Секція",
+      "type": "Тип"
+    },
+    "actions": {
+      "view": "Переглянути",
+      "edit": "Редагувати",
+      "delete": "Видалити",
+      "activate": "Активувати",
+      "deactivate": "Деактивувати",
+      "approve": "Схвалити",
+      "reject": "Відхилити",
+      "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації"
+    }
+  },
+  "statuses": {
+    "active": "Активний",
+    "inactive": "Неактивний",
+    "pending": "Очікує",
+    "approved": "Схвалено",
+    "rejected": "Відхилено",
+    "published": "Опубліковано",
+    "draft": "Чернетка",
+    "archived": "Архівовано",
+    "working": "Працює",
+    "temporarilyClosed": "Тимчасово закрито",
+    "suspended": "Призупинено",
+    "confirmed": "Підтверджено",
+    "cancelled": "Скасовано",
+    "completed": "Завершено"
+  },
+  "filters": {
+    "all": "Всі",
+    "active": "Активні",
+    "inactive": "Неактивні",
+    "status": "Статус",
+    "region": "Регіон",
+    "city": "Місто",
+    "partner": "Партнер",
+    "category": "Категорія",
+    "type": "Тип",
+    "dateFrom": "Дата з",
+    "dateTo": "Дата до",
+    "reset": "Скинути фільтри"
+  },
+  "notifications": {
+    "success": {
+      "created": "Успішно створено",
+      "updated": "Успішно оновлено",
+      "deleted": "Успішно видалено",
+      "activated": "Успішно активовано",
+      "deactivated": "Успішно деактивовано",
+      "approved": "Успішно схвалено",
+      "rejected": "Успішно відхилено",
+      "published": "Успішно опубліковано"
+    },
+    "error": {
+      "loadingFailed": "Помилка завантаження даних",
+      "savingFailed": "Помилка збереження",
+      "deletingFailed": "Помилка видалення",
+      "networkError": "Помилка мережі",
+      "serverError": "Помилка сервера",
+      "validationError": "Помилка валідації",
+      "accessDenied": "Доступ заборонено"
+    },
+    "info": {
+      "noData": "Немає даних",
+      "loading": "Завантаження...",
+      "saving": "Збереження...",
+      "deleting": "Видалення...",
+      "processing": "Обробка..."
+    }
+  },
+  "errors": {
+    "required": "Це поле обов'язкове",
+    "invalidEmail": "Некоректний формат email",
+    "invalidPhone": "Некоректний формат телефону",
+    "passwordTooShort": "Пароль занадто короткий",
+    "passwordMismatch": "Паролі не співпадають",
+    "fieldTooLong": "Поле занадто довге",
+    "fieldTooShort": "Поле занадто коротке",
+    "invalidFormat": "Некоректний формат",
+    "mustBeNumber": "Має бути числом",
+    "mustBePositive": "Має бути позитивним числом"
+  },
+  "components": {
+    "pageTable": {
+      "actions": "Дії",
+      "noData": "Дані відсутні",
+      "loading": "Завантаження...",
+      "searchPlaceholder": "Пошук...",
+      "clearSearch": "Очистити пошук",
+      "filterBy": "Фільтрувати за",
+      "clearFilters": "Очистити фільтри",
+      "showFilters": "Показати фільтри",
+      "hideFilters": "Сховати фільтри",
+      "itemsPerPage": "Елементів на сторінці",
+      "page": "Сторінка",
+      "of": "з",
+      "firstPage": "Перша сторінка",
+      "lastPage": "Остання сторінка",
+      "nextPage": "Наступна сторінка",
+      "previousPage": "Попередня сторінка"
+    },
+    "actionsMenu": {
+      "moreActions": "Більше дій",
+      "confirmAction": "Підтвердження дії",
+      "areYouSure": "Ви впевнені, що хочете виконати цю дію?",
+      "confirm": "Підтвердити",
+      "cancel": "Скасувати",
+      "edit": "Редагувати",
+      "delete": "Видалити",
+      "view": "Переглянути",
+      "activate": "Активувати",
+      "deactivate": "Деактивувати",
+      "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації"
+    },
+    "notification": {
+      "success": "Операція виконана успішно",
+      "error": "Сталася помилка",
+      "warning": "Попередження",
+      "info": "Інформація",
+      "close": "Закрити"
+    },
+    "confirmDialog": {
+      "title": "Підтвердження",
+      "message": "Ви впевнені, що хочете виконати цю дію?",
+      "confirm": "Підтвердити",
+      "cancel": "Скасувати",
+      "deleteTitle": "Підтвердження видалення",
+      "deleteMessage": "Ви дійсно хочете видалити цей елемент? Цю дію неможливо скасувати.",
+      "deleteConfirm": "Видалити",
+      "statusChangeTitle": "Підтвердження зміни статусу",
+      "statusChangeMessage": "Ви дійсно хочете змінити статус цього елемента?"
+    },
+    "searchAndFilters": {
+      "search": "Пошук",
+      "searchPlaceholder": "Введіть текст для пошуку...",
+      "clearSearch": "Очистити пошук",
+      "filters": "Фільтри",
+      "showFilters": "Показати фільтри",
+      "hideFilters": "Сховати фільтри",
+      "clearFilters": "Очистити всі фільтри",
+      "applyFilters": "Застосувати фільтри",
+      "activeFilters": "Активні фільтри",
+      "noFiltersActive": "Фільтри не застосовані",
+      "filterBy": "Фільтрувати за",
+      "selectValue": "Оберіть значення",
+      "enterValue": "Введіть значення",
+      "selectDate": "Оберіть дату",
+      "fromDate": "З дати",
+      "toDate": "До дати"
+    },
+    "pagination": {
+      "itemsPerPage": "Елементів на сторінці",
+      "page": "Сторінка",
+      "of": "з",
+      "showing": "Показано",
+      "to": "до",
+      "from": "з",
+      "total": "всього",
+      "firstPage": "Перша сторінка",
+      "lastPage": "Остання сторінка",
+      "nextPage": "Наступна сторінка",
+      "previousPage": "Попередня сторінка",
+      "goToPage": "Перейти на сторінку"
+    }
+  }
+} 

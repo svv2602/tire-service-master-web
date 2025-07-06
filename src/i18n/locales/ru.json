@@ -21,7 +21,12 @@
     "clear": "Очистить",
     "select": "Выбрать",
     "required": "Обязательное поле",
-    "confirmDelete": "Подтверждение удаления"
+    "confirmDelete": "Подтверждение удаления",
+    "actions": "Действия",
+    "view": "Просмотреть",
+    "activate": "Активировать",
+    "deactivate": "Деактивировать",
+    "moreActions": "Больше действий"
   },
   "navigation": {
     "dashboard": "Панель управления",
@@ -392,12 +397,140 @@
         "loading": "Загрузка категории...",
         "createSuccess": "Категория услуг успешно создана",
         "updateSuccess": "Категория услуг успешно обновлена",
+        "deleteSuccess": "Категория услуг успешно удалена",
         "saveError": "Произошла ошибка при сохранении"
       },
       "buttons": {
         "back": "Назад",
         "save": "Сохранить",
         "create": "Создать"
+      }
+    },
+    "booking": {
+      "title": {
+        "create": "Новое бронирование",
+        "edit": "Редактировать бронирование"
+      },
+      "sections": {
+        "bookingInfo": "Информация о бронировании",
+        "clientInfo": "Данные клиента",
+        "carInfo": "Данные автомобиля",
+        "serviceInfo": "Услуги"
+      },
+      "fields": {
+        "client": "Клиент",
+        "servicePoint": "Точка обслуживания",
+        "category": "Категория услуг",
+        "startTime": "Время начала",
+        "endTime": "Время окончания",
+        "date": "Дата",
+        "notes": "Примечания",
+        "status": "Статус",
+        "carBrand": "Марка автомобиля",
+        "carModel": "Модель автомобиля",
+        "licensePlate": "Номер автомобиля",
+        "serviceRecipientFirstName": "Имя получателя услуги",
+        "serviceRecipientLastName": "Фамилия получателя услуги",
+        "serviceRecipientPhone": "Телефон получателя услуги"
+      },
+      "validation": {
+        "clientRequired": "Клиент обязателен",
+        "servicePointRequired": "Точка обслуживания обязательна",
+        "categoryRequired": "Категория услуг обязательна",
+        "startTimeRequired": "Время начала обязательно",
+        "dateRequired": "Дата обязательна",
+        "carBrandRequired": "Марка автомобиля обязательна",
+        "carModelRequired": "Модель автомобиля обязательна",
+        "licensePlateRequired": "Номер автомобиля обязателен",
+        "serviceRecipientFirstNameRequired": "Имя получателя услуги обязательно",
+        "serviceRecipientLastNameRequired": "Фамилия получателя услуги обязательна",
+        "serviceRecipientPhoneRequired": "Телефон получателя услуги обязателен"
+      }
+    },
+    "region": {
+      "title": {
+        "create": "Новый регион",
+        "edit": "Редактировать регион"
+      },
+      "fields": {
+        "name": "Название региона",
+        "code": "Код региона",
+        "isActive": "Активный"
+      },
+      "validation": {
+        "nameRequired": "Название региона обязательно",
+        "nameMin": "Название должно содержать минимум 2 символа",
+        "codeRequired": "Код региона обязателен",
+        "codeMin": "Код должен содержать минимум 2 символа"
+      }
+    },
+    "client": {
+      "title": {
+        "create": "Новый клиент",
+        "edit": "Редактировать клиента"
+      },
+      "fields": {
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "email": "Email",
+        "phone": "Телефон",
+        "isActive": "Активный клиент"
+      },
+      "validation": {
+        "firstNameRequired": "Имя обязательно",
+        "lastNameRequired": "Фамилия обязательна",
+        "emailRequired": "Email обязателен",
+        "phoneRequired": "Телефон обязателен"
+      }
+    },
+    "clientCar": {
+      "title": {
+        "create": "Новый автомобиль",
+        "edit": "Редактировать автомобиль"
+      },
+      "fields": {
+        "brand": "Марка",
+        "model": "Модель", 
+        "year": "Год выпуска",
+        "licensePlate": "Номер автомобиля",
+        "color": "Цвет",
+        "isActive": "Активный"
+      },
+      "validation": {
+        "brandRequired": "Марка обязательна",
+        "modelRequired": "Модель обязательна",
+        "yearRequired": "Год выпуска обязателен",
+        "licensePlateRequired": "Номер автомобиля обязателен"
+      }
+    },
+    "carBrand": {
+      "title": {
+        "create": "Новая марка автомобиля",
+        "edit": "Редактировать марку автомобиля"
+      },
+      "fields": {
+        "name": "Название марки",
+        "logoUrl": "URL логотипа",
+        "isActive": "Активная"
+      },
+      "validation": {
+        "nameRequired": "Название марки обязательно",
+        "nameMin": "Название должно содержать минимум 2 символа"
+      }
+    },
+    "tireCalculator": {
+      "title": "Калькулятор шин",
+      "fields": {
+        "currentWidth": "Текущая ширина",
+        "currentProfile": "Текущий профиль",
+        "currentDiameter": "Текущий диаметр",
+        "newWidth": "Новая ширина",
+        "newProfile": "Новый профиль",
+        "newDiameter": "Новый диаметр"
+      },
+      "buttons": {
+        "calculate": "Рассчитать",
+        "reset": "Сбросить"
       }
     },
     "review": {
@@ -623,5 +756,89 @@
     "invalidFormat": "Некорректный формат",
     "mustBeNumber": "Должно быть числом",
     "mustBePositive": "Должно быть положительным числом"
+  },
+  "components": {
+    "pageTable": {
+      "actions": "Действия",
+      "noData": "Данные отсутствуют",
+      "loading": "Загрузка...",
+      "searchPlaceholder": "Поиск...",
+      "clearSearch": "Очистить поиск",
+      "filterBy": "Фильтровать по",
+      "clearFilters": "Очистить фильтры",
+      "showFilters": "Показать фильтры",
+      "hideFilters": "Скрыть фильтры",
+      "itemsPerPage": "Элементов на странице",
+      "page": "Страница",
+      "of": "из",
+      "firstPage": "Первая страница",
+      "lastPage": "Последняя страница",
+      "nextPage": "Следующая страница",
+      "previousPage": "Предыдущая страница"
+    },
+    "actionsMenu": {
+      "moreActions": "Больше действий",
+      "confirmAction": "Подтверждение действия",
+      "areYouSure": "Вы уверены, что хотите выполнить это действие?",
+      "confirm": "Подтвердить",
+      "cancel": "Отменить",
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "view": "Просмотреть",
+      "activate": "Активировать",
+      "deactivate": "Деактивировать",
+      "publish": "Опубликовать",
+      "unpublish": "Снять с публикации"
+    },
+    "notification": {
+      "success": "Операция выполнена успешно",
+      "error": "Произошла ошибка",
+      "warning": "Предупреждение",
+      "info": "Информация",
+      "close": "Закрыть"
+    },
+    "confirmDialog": {
+      "title": "Подтверждение",
+      "message": "Вы уверены, что хотите выполнить это действие?",
+      "confirm": "Подтвердить",
+      "cancel": "Отменить",
+      "deleteTitle": "Подтверждение удаления",
+      "deleteMessage": "Вы действительно хотите удалить этот элемент? Это действие нельзя отменить.",
+      "deleteConfirm": "Удалить",
+      "statusChangeTitle": "Подтверждение изменения статуса",
+      "statusChangeMessage": "Вы действительно хотите изменить статус этого элемента?"
+    },
+    "searchAndFilters": {
+      "search": "Поиск",
+      "searchPlaceholder": "Введите текст для поиска...",
+      "clearSearch": "Очистить поиск",
+      "filters": "Фильтры",
+      "showFilters": "Показать фильтры",
+      "hideFilters": "Скрыть фильтры",
+      "clearFilters": "Очистить все фильтры",
+      "applyFilters": "Применить фильтры",
+      "activeFilters": "Активные фильтры",
+      "noFiltersActive": "Фильтры не применены",
+      "filterBy": "Фильтровать по",
+      "selectValue": "Выберите значение",
+      "enterValue": "Введите значение",
+      "selectDate": "Выберите дату",
+      "fromDate": "С даты",
+      "toDate": "До даты"
+    },
+    "pagination": {
+      "itemsPerPage": "Элементов на странице",
+      "page": "Страница",
+      "of": "из",
+      "showing": "Показано",
+      "to": "до",
+      "from": "с",
+      "total": "всего",
+      "firstPage": "Первая страница",
+      "lastPage": "Последняя страница",
+      "nextPage": "Следующая страница",
+      "previousPage": "Предыдущая страница",
+      "goToPage": "Перейти на страницу"
+    }
   }
 } 

@@ -37,6 +37,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   IconButton,
   Menu,
@@ -124,6 +125,7 @@ export const ActionsMenu = <T,>({
   menuThreshold = 3,
   sx = {}
 }: ActionsMenuProps<T>) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -291,7 +293,7 @@ export const ActionsMenu = <T,>({
         aria-describedby="actions-confirm-dialog-description"
       >
         <DialogTitle id="actions-confirm-dialog-title">
-          {confirmDialog.action?.confirmationConfig?.title || 'Подтверждение'}
+          {confirmDialog.action?.confirmationConfig?.title || t('components.confirmDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="actions-confirm-dialog-description">
@@ -308,7 +310,7 @@ export const ActionsMenu = <T,>({
             variant="contained"
             autoFocus
           >
-            {confirmDialog.action?.confirmationConfig?.confirmLabel || 'Подтвердить'}
+            {confirmDialog.action?.confirmationConfig?.confirmLabel || t('components.confirmDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
