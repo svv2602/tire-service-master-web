@@ -8,6 +8,7 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { PageHeaderConfig } from './index';
+import { useTranslation } from 'react-i18next';
 
 interface PageHeaderProps {
   config: PageHeaderConfig;
@@ -19,7 +20,7 @@ interface PageHeaderProps {
 export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-
+  const { t } = useTranslation();
   const { title, subtitle, actions = [] } = config;
 
   return (
@@ -44,7 +45,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
             mb: subtitle ? 0.5 : 0
           }}
         >
-          {title}
+          {t(title)}
         </Typography>
         {subtitle && (
           <Typography 
@@ -52,7 +53,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
             color="text.secondary"
             sx={{ mt: 0.5 }}
           >
-            {subtitle}
+            {t(subtitle)}
           </Typography>
         )}
       </Box>
@@ -79,7 +80,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
                 whiteSpace: 'nowrap'
               }}
             >
-              {action.label}
+              {t(action.label)}
             </Button>
           ))}
         </Stack>

@@ -23,6 +23,7 @@
     "required": "Обязательное поле",
     "confirmDelete": "Подтверждение удаления",
     "actions": "Действия",
+    "empty": "Нет данных для отображения",
     "view": "Просмотреть",
     "activate": "Активировать",
     "deactivate": "Деактивировать",
@@ -568,7 +569,11 @@
       },
       "loading": "Загрузка региона..."
     },
-    "searchAndFilters": {
+    "datePicker": {
+    "label": "Выберите дату",
+    "helperText": "Формат: дд.мм.гггг"
+  },
+  "searchAndFilters": {
     "searchPlaceholder": "Поиск...",
     "filters": "Фильтры",
     "clear": "Очистить"
@@ -593,6 +598,11 @@
     "cancel": "Отмена"
   },
   "pagination": {
+    "firstPage": "Первая страница",
+    "lastPage": "Последняя страница",
+    "nextPage": "Следующая страница",
+    "previousPage": "Предыдущая страница"
+  ,
     "firstPage": "Первая страница",
     "lastPage": "Последняя страница",
     "nextPage": "Следующая страница",
@@ -924,7 +934,17 @@
     "photoUploadError": "Ошибка загрузки фотографии"
   },
   "components": {
+    "pageHeader": {
+      "defaultTitle": "Заголовок страницы",
+      "defaultSubtitle": "Описание страницы"
+    },
     "pageTable": {
+      "empty": "Нет данных для отображения"
+    },
+    "table": {
+      "empty": "Нет данных для отображения",
+      "refresh": "Обновить"
+    },
       "actions": "Действия",
       "noData": "Данные отсутствуют",
       "loading": "Загрузка...",
@@ -964,33 +984,15 @@
       "close": "Закрыть"
     },
     "confirmDialog": {
-      "title": "Подтверждение",
+      "title": "Подтверждение действия",
       "message": "Вы уверены, что хотите выполнить это действие?",
       "confirm": "Подтвердить",
-      "cancel": "Отменить",
-      "deleteTitle": "Подтверждение удаления",
-      "deleteMessage": "Вы действительно хотите удалить этот элемент? Это действие нельзя отменить.",
-      "deleteConfirm": "Удалить",
-      "statusChangeTitle": "Подтверждение изменения статуса",
-      "statusChangeMessage": "Вы действительно хотите изменить статус этого элемента?"
+      "cancel": "Отмена"
     },
     "searchAndFilters": {
-      "search": "Поиск",
-      "searchPlaceholder": "Введите текст для поиска...",
-      "clearSearch": "Очистить поиск",
+      "searchPlaceholder": "Поиск...",
       "filters": "Фильтры",
-      "showFilters": "Показать фильтры",
-      "hideFilters": "Скрыть фильтры",
-      "clearFilters": "Очистить все фильтры",
-      "applyFilters": "Применить фильтры",
-      "activeFilters": "Активные фильтры",
-      "noFiltersActive": "Фильтры не применены",
-      "filterBy": "Фильтровать по",
-      "selectValue": "Выберите значение",
-      "enterValue": "Введите значение",
-      "selectDate": "Выберите дату",
-      "fromDate": "С даты",
-      "toDate": "До даты"
+      "clear": "Очистить"
     },
     "pagination": {
       "itemsPerPage": "Элементов на странице",
