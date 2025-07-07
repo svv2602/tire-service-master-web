@@ -840,7 +840,8 @@
       "unsupportedType": "Неподдерживаемый тип файла. Пожалуйста, выберите другой файл."
     }
   },
-  "client": {
+  "forms": {
+    "client": {
       "title": {
         "create": "Новый клиент",
         "edit": "Редактировать клиента"
@@ -1021,6 +1022,40 @@
         "update": "Обновить",
         "uploadImage": "Загрузить изображение",
         "deleteImage": "Удалить"
+      }
+    },
+    "servicePoint": {
+      "posts": {
+        "timeLabel": "Время",
+        "availablePostsLabel": "Доступные посты",
+        "postDetailsLabel": "Детали постов",
+        "statusLabel": "Статус",
+        "noAvailablePosts": "Нет доступных постов",
+        "available": "Доступно",
+        "notAvailable": "Недоступно",
+        "schedulePreviewTitle": "Предварительный просмотр расписания",
+        "livePreview": "Живой предпросмотр",
+        "apiPreview": "API предпросмотр",
+        "localPreview": "Локальный предпросмотр",
+        "schedulePreviewDescription": "Здесь вы можете увидеть, как будет выглядеть расписание постов обслуживания для клиентов",
+        "previewModeInfo": "Режим предварительного просмотра",
+        "previewModeDescription": "Данные формируются на основе текущих настроек формы без сохранения в базу данных",
+        "dayOfWeekLabel": "День недели",
+        "categoryLabel": "Категория услуг",
+        "allCategories": "Все категории",
+        "noActivePostsWarning": "Нет активных постов для категории '{{categoryName}}'",
+        "unknownCategory": "Неизвестная категория",
+        "postAvailability": "Доступность постов",
+        "activePosts": "активных постов",
+        "filtered": "отфильтровано",
+        "category": "Категория",
+        "slotGenerationInfo": "Генерация слотов: {{previewMode}}",
+        "postDetailsHint": "Детали постов показывают название и длительность слота для каждого поста",
+        "livePreviewAutoUpdate": "Данные автоматически обновляются при изменении настроек",
+        "previewModeHint": "Для новых точек данные генерируются локально на основе настроек формы",
+        "noActivePostsForCategory": "Нет активных постов для категории '{{categoryName}}'",
+        "weekend": "Выходной день",
+        "selectWorkingDay": "Выберите рабочий день для просмотра расписания"
       }
     }
   },

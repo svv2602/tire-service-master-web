@@ -193,7 +193,7 @@ export const ActionsMenu = <T,>({
           const label = t(getValue(action.label, ''));
           const icon = getValue(action.icon, null);
           const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
-          const tooltip = t(getValue(action.tooltip, label));
+          const tooltip = t(getValue(action.tooltip, label) || label);
           
           return (
             <Tooltip key={action.id || actionIndex} title={tooltip}>

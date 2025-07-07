@@ -327,7 +327,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'region',
       label: t('admin.servicePoints.filters.region'),
-      type: 'select',
+      type: 'select' as const,
       value: selectedRegion,
       onChange: handleRegionFilterChange,
       options: [
@@ -338,7 +338,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'city',
       label: t('admin.servicePoints.filters.city'),
-      type: 'select',
+      type: 'select' as const,
       value: selectedCity,
       onChange: handleCityFilterChange,
       options: [
@@ -349,7 +349,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'partner',
       label: t('admin.servicePoints.filters.partner'),
-      type: 'select',
+      type: 'select' as const,
       value: selectedPartner,
       onChange: handlePartnerFilterChange,
       options: [
@@ -360,7 +360,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'status',
       label: t('admin.servicePoints.filters.status'),
-      type: 'select',
+      type: 'select' as const,
       value: selectedStatus,
       onChange: handleStatusFilterChange,
       options: [

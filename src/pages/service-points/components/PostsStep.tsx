@@ -661,6 +661,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
   servicePointId,
   formData 
 }) => {
+  const { t } = useTranslation();
   const [selectedDay, setSelectedDay] = useState<string>('monday');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -1196,7 +1197,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 {t('forms.servicePoint.posts.slotGenerationInfo', {
-                  isUsingLivePreview: isUsingLivePreview ? t('forms.servicePoint.posts.livePreview') : isUsingApiData ? t('forms.servicePoint.posts.apiPreview') : t('forms.servicePoint.posts.localPreview'),
+                  previewMode: isUsingLivePreview ? t('forms.servicePoint.posts.livePreview') : isUsingApiData ? t('forms.servicePoint.posts.apiPreview') : t('forms.servicePoint.posts.localPreview'),
                   isUsingApiData: isUsingApiData,
                   isUsingLivePreview: isUsingLivePreview
                 })}
