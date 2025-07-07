@@ -298,17 +298,7 @@
       "empty": "Ні сервисных точек",
       "tryChangeFilters": "Спробуйте змінити критерії пошуку",
       "createFirst": "Создайте первую сервисную точку для начала работы",
-      "selectPartnerFirst": "Сначала выберите партнера",
-      "filters": {
-        "region": "Регіон",
-        "city": "Місто",
-        "partner": "Партнер",
-        "status": "Статус",
-        "allRegions": "Всі регіони",
-        "allCities": "Всі міста",
-        "allPartners": "Всі партнери",
-        "allStatuses": "Всі статуси"
-      }
+      "selectPartnerFirst": "Сначала выберите партнера"
     },
     "carBrands": {
       "title": "Бренды автомобилей",
