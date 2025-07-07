@@ -215,8 +215,14 @@ const PageContentFormPage: React.FC = () => {
       }
       
       setTimeout(() => navigate('/admin/page-content'), 1000);
-    } catch (error) {
-      console.error('Ошибка при сохранении:', error);
+    } catch (error: any) {
+      console.error('Save error:', error);
+      
+      // Показываем ошибку пользователю
+      const errorMessage = error?.data?.message || t('forms.pageContent.messages.saveError');
+      setSuccessMessage(''); // Очищаем сообщение об успехе
+      // В реальном приложении здесь должно быть состояние для ошибок
+      alert(errorMessage);
     }
   };
 
