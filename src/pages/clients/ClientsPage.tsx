@@ -22,6 +22,7 @@ import {
   ToggleOff as ToggleOffIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetClientsQuery, 
   useDeleteClientMutation,
@@ -50,6 +51,7 @@ import { getTablePageStyles } from '../../styles';
 const ClientsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
 
   // Состояние для поиска, фильтрации и пагинации
@@ -120,11 +122,11 @@ const ClientsPage: React.FC = () => {
       
       setNotification({
         open: true,
-        message: `Статус клиента ${client.first_name} ${client.last_name} изменен`,
+        message: t('admin.clients.messages.statusChanged', { name: `${client.first_name} ${client.last_name}` }),
         severity: 'success'
       });
     } catch (error: any) {
-      let errorMessage = 'Ошибка при изменении статуса клиента';
+      let errorMessage = t('admin.clients.messages.statusError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -145,11 +147,11 @@ const ClientsPage: React.FC = () => {
       await deleteClient(client.id.toString()).unwrap();
       setNotification({
         open: true,
-        message: `Клиент ${client.first_name} ${client.last_name} успешно удален`,
+        message: t('admin.clients.messages.deleted', { name: `${client.first_name} ${client.last_name}` }),
         severity: 'success'
       });
     } catch (error: any) {
-      let errorMessage = 'Ошибка при удалении клиента';
+      let errorMessage = t('admin.clients.messages.deleteError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -180,59 +182,59 @@ const ClientsPage: React.FC = () => {
     if (client.last_name) {
       return client.last_name.charAt(0).toUpperCase();
     }
-    return 'К'; // К = Клиент
-  }, []);
+    return t('admin.clients.initials.default'); // К = Клиент
+  }, [t]);
 
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Клиенты',
+    title: t('admin.clients.title'),
     actions: [
       {
         id: 'add',
-        label: 'Добавить клиента',
+        label: t('admin.clients.createClient'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/clients/new'),
         variant: 'contained'
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по имени, email или телефону...',
+    placeholder: t('admin.clients.searchPlaceholder'),
     value: search,
     onChange: handleSearchChange
-  }), [search, handleSearchChange]);
+  }), [search, handleSearchChange, t]);
 
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'status',
-      label: 'Статус',
+      label: t('admin.clients.clientStatus'),
       type: 'select',
       value: showInactive ? 'all' : 'active',
       options: [
-        { value: 'active', label: 'Только активные' },
-        { value: 'all', label: 'Все клиенты' }
+        { value: 'active', label: t('admin.clients.onlyActive') },
+        { value: 'all', label: t('admin.clients.allClients') }
       ],
       onChange: (value: any) => {
         setShowInactive(value === 'all');
         setPage(0);
       }
     }
-  ], [showInactive]);
+  ], [showInactive, t]);
 
   // Конфигурация действий для ActionsMenu
   const clientActions: ActionItem<Client>[] = useMemo(() => [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('admin.clients.editClient'),
       icon: <EditIcon />,
       onClick: (client: Client) => navigate(`/admin/clients/${client.id}/edit`),
       color: 'primary',
-      tooltip: 'Редактировать данные клиента'
+      tooltip: t('admin.clients.editTooltip')
     },
     {
       id: 'cars',
-      label: 'Автомобили',
+      label: t('admin.clients.cars'),
       icon: <CarIcon />,
       onClick: (client: Client) => navigate(`/admin/clients/${client.id}/cars`),
       color: 'info',
@@ -240,15 +242,15 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'toggle-status',
-      label: (client: Client) => client.is_active ? 'Деактивировать' : 'Активировать',
+      label: (client: Client) => client.is_active ? t('admin.clients.deactivate') : t('admin.clients.activate'),
       icon: (client: Client) => client.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
       onClick: (client: Client) => handleToggleStatus(client),
       color: (client: Client) => client.is_active ? 'warning' : 'success',
-      tooltip: (client: Client) => client.is_active ? 'Деактивировать клиента' : 'Активировать клиента',
+      tooltip: (client: Client) => client.is_active ? t('admin.clients.deactivateTooltip') : t('admin.clients.activateTooltip'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение изменения статуса',
-        message: 'Вы действительно хотите изменить статус клиента?',
+        title: t('admin.clients.confirmStatusChange'),
+        message: t('admin.clients.confirmStatusMessage'),
         confirmLabel: 'Изменить',
         cancelLabel: 'Отмена',
       }
@@ -259,21 +261,21 @@ const ClientsPage: React.FC = () => {
       icon: <DeleteIcon />,
       onClick: (client: Client) => handleDelete(client),
       color: 'error',
-      tooltip: 'Удалить клиента',
+      tooltip: t('admin.clients.deleteTooltip'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить этого клиента? Это действие нельзя будет отменить.',
+        title: t('admin.clients.confirmDelete'),
+        message: t('admin.clients.confirmDeleteMessage'),
         confirmLabel: 'Удалить',
         cancelLabel: 'Отмена',
       }
     }
-  ], [navigate, handleToggleStatus, handleDelete]);
+  ], [navigate, handleToggleStatus, handleDelete, t]);
 
   const columns: Column<Client>[] = useMemo(() => [
     {
       id: 'client',
-      label: 'Клиент',
+      label: t('admin.clients.client'),
       sortable: true,
       render: (client: Client) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -311,7 +313,7 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'phone',
-      label: 'Телефон',
+      label: t('admin.clients.phone'),
       align: 'center',
       hideOnMobile: true,
       render: (client: Client) => (
@@ -331,7 +333,7 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'cars',
-      label: 'Автомобили',
+      label: t('admin.clients.cars'),
       align: 'center',
       hideOnMobile: true,
       render: (client: Client) => (
@@ -348,11 +350,11 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('admin.clients.status'),
       align: 'center',
       render: (client: Client) => (
         <Chip
-          label={client.is_active ? 'Активен' : 'Неактивен'}
+          label={client.is_active ? t('admin.clients.active') : t('admin.clients.inactive')}
           color={client.is_active ? 'success' : 'default'}
           size="small"
         />
@@ -360,7 +362,7 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: 'Дата регистрации',
+      label: t('admin.clients.registrationDate'),
       align: 'center',
       hideOnMobile: true,
       render: (client: Client) => (
@@ -378,14 +380,14 @@ const ClientsPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('admin.clients.actions'),
       align: 'center',
       minWidth: 120,
       render: (client: Client) => (
         <ActionsMenu actions={clientActions} item={client} />
       )
     }
-  ], [theme.palette, getClientInitials, clientActions, navigate]);
+  ], [theme.palette, getClientInitials, clientActions, navigate, t]);
 
   return (
     <Box sx={tablePageStyles.container}>
@@ -404,12 +406,12 @@ const ClientsPage: React.FC = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: search || showInactive ? 'Клиенты не найдены' : 'Нет клиентов',
+          title: search || showInactive ? t('admin.clients.clientsNotFound') : t('admin.clients.noClients'),
           description: search || showInactive 
-            ? 'Попробуйте изменить критерии поиска'
-            : 'Создайте первого клиента для начала работы',
+            ? t('admin.clients.changeSearchCriteria')
+            : t('admin.clients.createFirstClient'),
           action: (!search && !showInactive) ? {
-            label: 'Добавить клиента',
+            label: t('admin.clients.createClient'),
             icon: <AddIcon />,
             onClick: () => navigate('/admin/clients/new')
           } : undefined

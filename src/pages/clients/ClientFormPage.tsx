@@ -40,14 +40,14 @@ import { getFormStyles, getTablePageStyles } from '../../styles/components';
 const createValidationSchema = (t: any) => Yup.object({
   user_attributes: Yup.object({
     first_name: Yup.string()
-      .required('Имя обязательно')
-      .min(2, 'Имя должно быть не менее 2 символов'),
+      .required(t('admin.clients.form.validation.firstNameRequired'))
+      .min(2, t('admin.clients.form.validation.firstNameMin')),
     last_name: Yup.string()
-      .required('Фамилия обязательна')
-      .min(2, 'Фамилия должна быть не менее 2 символов'),
+      .required(t('admin.clients.form.validation.lastNameRequired'))
+      .min(2, t('admin.clients.form.validation.lastNameMin')),
     phone: phoneValidation,
          email: Yup.string()
-       .email('Введите корректный email'),
+       .email(t('admin.clients.form.validation.emailInvalid')),
     is_active: Yup.boolean()
   }),
   preferred_notification_method: Yup.string(),
@@ -139,7 +139,7 @@ const ClientFormPage: React.FC = () => {
             client: updateData
           }).unwrap();
           
-          setSnackbarMessage('Клиент успешно обновлен');
+          setSnackbarMessage(t('admin.clients.form.messages.clientUpdated'));
           setSnackbarOpen(true);
           navigate('/admin/clients');
         } else {
@@ -171,7 +171,7 @@ const ClientFormPage: React.FC = () => {
           
           await createClient(createData).unwrap();
           
-          setSnackbarMessage('Клиент успешно создан');
+          setSnackbarMessage(t('admin.clients.form.messages.clientCreated'));
           setSnackbarOpen(true);
           navigate('/admin/clients');
         }
@@ -213,12 +213,12 @@ const ClientFormPage: React.FC = () => {
     const errors: string[] = [];
     const { user_attributes } = formik.values;
     
-    if (!user_attributes.first_name.trim()) errors.push('Имя');
-    if (!user_attributes.last_name.trim()) errors.push('Фамилия');
-    if (!(user_attributes.phone || '').trim()) errors.push('Номер телефона');
+    if (!user_attributes.first_name.trim()) errors.push(t('admin.clients.form.requiredFields.firstName'));
+    if (!user_attributes.last_name.trim()) errors.push(t('admin.clients.form.requiredFields.lastName'));
+    if (!(user_attributes.phone || '').trim()) errors.push(t('admin.clients.form.requiredFields.phone'));
     
     return errors;
-  }, [formik.values]);
+  }, [formik.values, t]);
 
   // Обработчик закрытия уведомлений
   const handleCloseNotification = useCallback(() => {
@@ -240,8 +240,8 @@ const ClientFormPage: React.FC = () => {
     if (error?.message) {
       return error.message;
     }
-    return 'Произошла неизвестная ошибка';
-  }, []);
+    return t('admin.clients.form.alerts.unknownError');
+  }, [t]);
 
   if (isLoading) {
     return (
@@ -262,7 +262,7 @@ const ClientFormPage: React.FC = () => {
           variant="h5" 
           sx={formStyles.sectionTitle}
         >
-          {isEditMode ? 'Редактирование клиента' : 'Новый клиент'}
+          {isEditMode ? t('admin.clients.form.title.edit') : t('admin.clients.form.title.create')}
         </Typography>
 
         <form onSubmit={formik.handleSubmit}>
@@ -272,7 +272,7 @@ const ClientFormPage: React.FC = () => {
                 fullWidth
                 id="first_name"
                 name="user_attributes.first_name"
-                label="Имя *"
+                label={t('admin.clients.form.fields.firstNameRequired')}
                 value={formik.values.user_attributes.first_name}
                 onChange={formik.handleChange}
                 error={formik.touched.user_attributes?.first_name && Boolean(formik.errors.user_attributes?.first_name)}
@@ -287,7 +287,7 @@ const ClientFormPage: React.FC = () => {
                 fullWidth
                 id="last_name"
                 name="user_attributes.last_name"
-                label="Фамилия *"
+                label={t('admin.clients.form.fields.lastNameRequired')}
                 value={formik.values.user_attributes.last_name}
                 onChange={formik.handleChange}
                 error={formik.touched.user_attributes?.last_name && Boolean(formik.errors.user_attributes?.last_name)}
@@ -302,7 +302,7 @@ const ClientFormPage: React.FC = () => {
                 fullWidth
                 id="middle_name"
                 name="user_attributes.middle_name"
-                label="Отчество"
+                label={t('admin.clients.form.fields.middleName')}
                 value={formik.values.user_attributes.middle_name}
                 onChange={formik.handleChange}
                 error={formik.touched.user_attributes?.middle_name && Boolean(formik.errors.user_attributes?.middle_name)}
@@ -329,8 +329,8 @@ const ClientFormPage: React.FC = () => {
                 fullWidth
                 id="email"
                 name="user_attributes.email"
-                label="Email"
-                placeholder="example@email.com (необязательно)"
+                label={t('admin.clients.form.fields.email')}
+                placeholder={t('admin.clients.form.fields.emailPlaceholder')}
                 value={formik.values.user_attributes.email}
                 onChange={formik.handleChange}
                 error={formik.touched.user_attributes?.email && Boolean(formik.errors.user_attributes?.email)}
@@ -358,7 +358,7 @@ const ClientFormPage: React.FC = () => {
                       color="primary"
                     />
                   }
-                  label="Активный клиент"
+                  label={t('admin.clients.form.fields.activeClient')}
                 />
               </Box>
             </Grid>
@@ -381,7 +381,7 @@ const ClientFormPage: React.FC = () => {
               {(!isFormValid()) && (
                 <Alert severity="warning" sx={{ mb: 2 }}>
                   <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                    Заполните все обязательные поля:
+                    {t('admin.clients.form.alerts.fillRequiredFields')}
                   </Typography>
                   <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
                     {getRequiredFieldErrors().map((field, index) => (
@@ -396,7 +396,7 @@ const ClientFormPage: React.FC = () => {
               {/* Информационное сообщение при заполненной форме */}
               {isFormValid() && !apiError && !successMessage && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  Все обязательные поля заполнены. Можете создать клиента.
+                  {t('admin.clients.form.alerts.allFieldsFilled')}
                 </Alert>
               )}
               
@@ -411,14 +411,14 @@ const ClientFormPage: React.FC = () => {
                   onClick={handleCancel}
                   disabled={isLoading}
                 >
-                  Отмена
+                  {t('admin.clients.form.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
                   disabled={isLoading || !isFormValid()}
                 >
-                  {isLoading ? t('common.saving') : (isEditMode ? t('common.save') : t('common.create'))}
+                  {isLoading ? t('common.saving') : (isEditMode ? t('admin.clients.form.buttons.save') : t('admin.clients.form.buttons.create'))}
                 </Button>
               </Box>
             </Grid>
