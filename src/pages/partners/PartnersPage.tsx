@@ -273,8 +273,8 @@ const PartnersPage: React.FC = () => {
 
   // Функция для получения инициалов партнера
   const getPartnerInitials = useCallback((partner: Partner) => {
-    return partner.company_name.charAt(0).toUpperCase() || 'П';
-  }, []);
+    return partner.company_name.charAt(0).toUpperCase() || t('admin.partners.initials.default');
+  }, [t]);
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({

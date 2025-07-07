@@ -119,14 +119,14 @@ export const UsersPage: React.FC = () => {
   // Мемоизированные вспомогательные функции
   const getRoleName = useCallback((role: string): string => {    
     switch(role) {
-      case 'admin': return 'Администратор';
-      case 'manager': return 'Менеджер';
-      case 'partner': return 'Партнер';
-      case 'operator': return 'Оператор';
-      case 'client': return 'Клиент';
-      default: return 'Неизвестно';
+      case 'admin': return t('forms.user.roles.admin');
+      case 'manager': return t('forms.user.roles.manager');
+      case 'partner': return t('forms.user.roles.partner');
+      case 'operator': return t('forms.user.roles.operator');
+      case 'client': return t('forms.user.roles.client');
+      default: return t('common.unknown');
     }
-  }, []);
+  }, [t]);
   
   const getRoleColor = useCallback((role: string): 'error' | 'warning' | 'primary' | 'success' | 'info' => {
     switch(role) {

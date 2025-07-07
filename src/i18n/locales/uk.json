@@ -37,6 +37,7 @@
     "confirmMessage": "Ви впевнені, що хочете виконати цю дію?",
     "confirmDelete": "Підтвердження видалення",
     "confirmDeleteMessage": "Ви впевнені, що хочете видалити цей елемент? Цю дію неможливо скасувати.",
+    "unknown": "Невідомо",
     "days": {
       "short": {
         "monday": "Пн",
@@ -214,7 +215,10 @@
       "searchPlaceholder": "Пошук за назвою партнера...",
       "partnersNotFound": "Партнерів не знайдено",
       "noPartners": "Немає партнерів",
-      "createFirstPartner": "Створіть першого партнера для початку роботи"
+      "createFirstPartner": "Створіть першого партнера для початку роботи",
+      "initials": {
+        "default": "П"
+      }
     },
     "servicePoints": {
       "title": "Точки обслуговування",
