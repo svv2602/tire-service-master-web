@@ -147,7 +147,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   // Валидация номера автомобиля
   const validateLicensePlate = (value: string) => {
     if (!value.trim()) {
-      return 'Номер автомобиля обязателен для заполнения';
+      return t('bookingSteps.carType.licensePlateRequired');
     }
     return '';
   };
@@ -257,7 +257,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   const getSelectedCarTypeName = () => {
     if (formData.car_type_id) {
       const selectedType = carTypes.find(type => type.id === formData.car_type_id);
-      return selectedType?.name || `Тип #${formData.car_type_id}`;
+      return selectedType?.name || `${t('bookingSteps.carType.carType')} #${formData.car_type_id}`;
     }
     return null;
   };
@@ -290,7 +290,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
               </Typography>
               {isSelected && (
                 <Chip
-                  label="Выбрано"
+                  label={t('bookingSteps.carType.selectedVehicle')}
                   color="primary"
                   size="small"
                   variant="filled"
@@ -397,11 +397,11 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Мои автомобили
+                  {t('bookingSteps.carType.myVehicles')}
                 </Typography>
                 {clientCars && clientCars.length > 0 && (
                   <Chip
-                    label={`${clientCars.length} авто`}
+                    label={`${clientCars.length} ${t('bookingSteps.carType.myVehicles').toLowerCase()}`}
                     color="info"
                     size="small"
                     variant="filled"
@@ -413,7 +413,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
               <AccordionDetails>
                 {clientCarsError && (
                   <Alert severity="error" sx={{ mb: 2 }}>
-                    Ошибка загрузки автомобилей. Попробуйте обновить страницу.
+                    {t('bookingSteps.carType.errorLoadingClientCars')}
                   </Alert>
                 )}
                 
@@ -423,7 +423,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                   </Box>
                 ) : !clientCars || clientCars.length === 0 ? (
                   <Alert severity="info">
-                    У вас пока нет сохраненных автомобилей. Вы можете добавить их в профиле или заполнить данные ниже.
+                    {t('bookingSteps.carType.noVehicles')}
                   </Alert>
                 ) : (
                   <Grid container spacing={2}>
@@ -444,7 +444,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           <Grid item xs={12}>
             <Divider>
               <Typography variant="body2" color="text.secondary">
-                или выберите тип автомобиля вручную
+                {t('bookingSteps.carType.vehicleTypesDescription')}
               </Typography>
             </Divider>
           </Grid>
@@ -455,7 +455,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           <Accordion expanded={typeAccordionOpen} onChange={(_, expanded) => setTypeAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                1. Тип автомобиля *
+                1. {t('bookingSteps.carType.carType')} *
               </Typography>
               {formData.car_type_id && (
                 <Chip label={getSelectedCarTypeName()} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -464,7 +464,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
             <AccordionDetails>
               {carTypesError && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                  Ошибка загрузки типов автомобилей. Попробуйте обновить страницу.
+                  {t('bookingSteps.carType.errorLoadingCarTypes')}
                 </Alert>
               )}
               {isLoadingCarTypes ? (
@@ -473,7 +473,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 </Box>
               ) : carTypes.length === 0 ? (
                 <Alert severity="warning">
-                  Типы автомобилей не найдены.
+                  {t('bookingSteps.carType.errorLoadingCarTypes')}
                 </Alert>
               ) : (
                 <Grid container spacing={2}>
@@ -486,7 +486,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
               )}
               {!formData.car_type_id && carTypes.length > 0 && (
                 <FormHelperText error sx={{ mt: 1 }}>
-                  {t('bookingSteps.carType.selectCarType')} для продолжения
+                  {t('bookingSteps.carType.selectCarType')}
                 </FormHelperText>
               )}
             </AccordionDetails>

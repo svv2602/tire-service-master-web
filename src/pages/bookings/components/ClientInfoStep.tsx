@@ -53,13 +53,13 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   const validateField = (field: string, value: string | undefined): string => {
     if (!value) {
       if (field === 'first_name') {
-        return `${t('bookingSteps.clientInfo.firstName')} обязательно для заполнения`;
+        return t('bookingSteps.clientInfo.validation.firstNameRequired');
       }
       if (field === 'last_name') {
-        return `${t('bookingSteps.clientInfo.lastName')} обязательна для заполнения`;
+        return t('bookingSteps.clientInfo.validation.lastNameRequired');
       }
       if (field === 'phone') {
-        return 'Телефон обязателен для заполнения';
+        return t('bookingSteps.clientInfo.validation.phoneRequired');
       }
       return '';
     }
@@ -68,7 +68,9 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       case 'first_name':
       case 'last_name':
         if (value.trim().length < 2) {
-          return `${field === 'first_name' ? `${t('bookingSteps.clientInfo.firstName')}` : `${t('bookingSteps.clientInfo.lastName')}`} должно быть не менее 2 символов`;
+          return field === 'first_name' 
+            ? t('bookingSteps.clientInfo.validation.firstNameMinLength')
+            : t('bookingSteps.clientInfo.validation.lastNameMinLength');
         }
         return '';
         
@@ -76,16 +78,16 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         // Проверяем, что все символы маски заполнены и номер начинается с +380
         const phoneDigits = value.replace(/[^\d+]/g, '');
         if (!phoneDigits.startsWith('+380')) {
-          return 'Телефон должен начинаться с +380';
+          return t('bookingSteps.clientInfo.validation.phoneStartsWith');
         }
         if (phoneDigits.length !== 13) { // +380 + 9 цифр
-          return 'Телефон должен содержать 12 цифр после +';
+          return t('bookingSteps.clientInfo.validation.phoneLength');
         }
         return '';
         
       case 'email':
         if (value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Введите корректный email адрес';
+          return t('bookingSteps.clientInfo.validation.emailFormat');
         }
         return '';
         
@@ -123,7 +125,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       requiredFields.push(`${t('bookingSteps.clientInfo.lastName')}`);
     }
     if (!formData.service_recipient.phone?.trim()) {
-      requiredFields.push('Телефон');
+      requiredFields.push(t('bookingSteps.clientInfo.phone'));
     }
     
     return requiredFields;
@@ -146,15 +148,15 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       {isAuthenticated ? (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            Вы авторизованы как <strong>{user?.first_name} {user?.last_name}</strong>. 
-            Данные предзаполнены из вашего профиля.
+            {t('bookingSteps.clientInfo.status.authenticated')} <strong>{user?.first_name} {user?.last_name}</strong>. 
+            {t('bookingSteps.clientInfo.status.dataPrefilledFromProfile')}
           </Typography>
         </Alert>
       ) : (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            Вы создаете <strong>гостевое бронирование</strong>. 
-            Информация о бронировании будет отправлена на указанный номер телефона.
+Вы создаете <strong>{t('bookingSteps.clientInfo.status.guestBooking')}</strong>. 
+            {t('bookingSteps.clientInfo.status.guestBookingInfo')}
           </Typography>
         </Alert>
       )}

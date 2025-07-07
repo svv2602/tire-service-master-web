@@ -104,7 +104,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
           {t('bookingSteps.categorySelection.title')}
         </Typography>
         <Alert severity="error">
-          {t('bookingSteps.categorySelection.error')} услуг для выбранного города. Попробуйте выбрать другой город или обновить страницу.
+          {t('bookingSteps.categorySelection.error')}
         </Alert>
       </Box>
     );
@@ -144,8 +144,8 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Выберите город"
-              placeholder="Начните вводить название города"
+              label={t('bookingSteps.categorySelection.citySelect')}
+              placeholder={t('bookingSteps.categorySelection.cityPlaceholder')}
               InputProps={{
                 ...params.InputProps,
                 startAdornment: (
@@ -157,16 +157,16 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
               }}
             />
           )}
-          noOptionsText="Города не найдены"
-          loadingText="Загрузка городов..."
+          noOptionsText={t('bookingSteps.categorySelection.noCitiesFound')}
+          loadingText={t('bookingSteps.categorySelection.loadingCities')}
           sx={{ minWidth: 300 }}
         />
       </Box>
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {selectedCity 
-          ? `Доступные категории услуг в городе ${selectedCity.name} (${categories.length})`
-          : 'Сначала выберите город, чтобы увидеть доступные категории услуг'
+          ? `${t('bookingSteps.categorySelection.availableCategories')} ${selectedCity.name} (${categories.length})`
+          : t('bookingSteps.categorySelection.selectCityFirst')
         }
       </Typography>
 
@@ -175,7 +175,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         <>
           {categories.length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
-              В выбранном городе пока нет доступных категорий услуг. Попробуйте выбрать другой город.
+              {t('bookingSteps.categorySelection.noCategories')}
             </Alert>
           ) : (
             <Grid container spacing={2}>
@@ -212,7 +212,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
                         {category.service_points_count && (
                           <Chip 
                             size="small" 
-                            label={`${category.service_points_count} точек`}
+                            label={`${category.service_points_count} ${t('bookingSteps.categorySelection.pointsCount')}`}
                             color="primary"
                             variant="outlined"
                           />
@@ -220,7 +220,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
                         {category.services_count && (
                           <Chip 
                             size="small" 
-                            label={`${category.services_count} услуг`}
+                            label={`${category.services_count} ${t('bookingSteps.categorySelection.servicesCount')}`}
                             color="secondary"
                             variant="outlined"
                           />
@@ -238,7 +238,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
       {/* Сообщение о выборе категории */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.categorySelection.allRequiredFieldsFilled')}
         </Alert>
       )}
     </Box>
