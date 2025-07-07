@@ -95,7 +95,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         const date = parseISO(formData.booking_date);
         setSelectedDate(date);
       } catch (error) {
-        console.error('Ошибка парсинга даты:', error);
+        console.error('Error parsing date:', error);
       }
     } else {
       // Если дата не выбрана, устанавливаем завтра по умолчанию
@@ -253,7 +253,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           {t('bookingSteps.dateTime.title')}
         </Typography>
         <Alert severity="warning">
-          Сначала необходимо выбрать точку обслуживания на предыдущем шаге.
+          {t('bookingSteps.dateTime.selectServicePointFirst')}
         </Alert>
       </Box>
     );
@@ -271,11 +271,11 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <LocationIcon sx={{ color: 'primary.main', mt: 0.5 }} />
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {isLoadingServicePoint ? 'Загрузка...' : (servicePointData?.name || `Точка обслуживания #${formData.service_point_id}`)}
+              {isLoadingServicePoint ? t('bookingSteps.dateTime.loadingServicePoint') : (servicePointData?.name || `${t('bookingSteps.dateTime.servicePoint')} #${formData.service_point_id}`)}
             </Typography>
             {servicePointData && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {servicePointData.city?.name && `г. ${servicePointData.city.name}`}
+                {servicePointData.city?.name && `${t('bookingSteps.dateTime.city')} ${servicePointData.city.name}`}
                 {servicePointData.address && `, ${servicePointData.address}`}
               </Typography>
             )}
@@ -286,7 +286,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Ошибка загрузки доступности */}
       {availabilityError && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка загрузки доступного времени. Попробуйте обновить страницу.
+          {t('bookingSteps.dateTime.errorLoadingSlots')}
         </Alert>
       )}
 
@@ -357,13 +357,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Валидация */}
       {selectedDate && !selectedTimeSlot && (
         <FormHelperText error>
-          {t('bookingSteps.dateTime.selectTime')} для продолжения
+                      {t('bookingSteps.dateTime.selectTime')}
         </FormHelperText>
       )}
       
       {!selectedDate && (
         <FormHelperText error>
-          {t('bookingSteps.dateTime.selectDate')} для продолжения
+                      {t('bookingSteps.dateTime.selectDate')}
         </FormHelperText>
       )}
       
@@ -371,17 +371,17 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {(!isValid) && (
         <Alert severity="warning" sx={{ mt: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Заполните все обязательные поля:
+            {t('bookingSteps.dateTime.requiredFieldsWarning')}:
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
             {!formData.booking_date && (
               <Typography variant="body2" component="li">
-                Дата бронирования
+                {t('bookingSteps.dateTime.dateRequired')}
               </Typography>
             )}
             {!formData.start_time && (
               <Typography variant="body2" component="li">
-                Время бронирования
+                {t('bookingSteps.dateTime.timeRequired')}
               </Typography>
             )}
           </Box>
@@ -391,7 +391,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Информационное сообщение */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.dateTime.allRequiredFieldsFilled')}
         </Alert>
       )}
     </Box>

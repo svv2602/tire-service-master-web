@@ -2014,7 +2014,11 @@
       "availableFrom": "Доступно с",
       "availableTo": "до",
       "duration": "Продолжительность",
-      "minutes": "мин"
+      "minutes": "мин",
+      "selectServicePointFirst": "Сначала необходимо выбрать точку обслуживания на предыдущем шаге",
+      "loadingServicePoint": "Загрузка...",
+      "servicePoint": "Точка обслуживания",
+      "city": "г."
     },
     "services": {
       "title": "Выбор услуг",

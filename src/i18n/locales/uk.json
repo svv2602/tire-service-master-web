@@ -2005,7 +2005,11 @@
       "availableFrom": "Доступно з",
       "availableTo": "до",
       "duration": "Тривалість",
-      "minutes": "хв"
+      "minutes": "хв",
+      "selectServicePointFirst": "Спочатку необхідно вибрати точку обслуговування на попередньому кроці",
+      "loadingServicePoint": "Завантаження...",
+      "servicePoint": "Точка обслуговування",
+      "city": "м."
     },
     "services": {
       "title": "Вибір послуг",
