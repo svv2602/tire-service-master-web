@@ -326,12 +326,37 @@
     },
     "regions": {
       "title": "Регионы",
+      "subtitle": "Управление регионами и их городами",
       "createRegion": "Добавить регион",
       "editRegion": "Редактировать регион",
+      "deleteRegion": "Удалить регион",
       "searchPlaceholder": "Поиск по названию региона...",
       "regionsNotFound": "Регионы не найдены",
       "noRegions": "Нет регионов",
-      "createFirstRegion": "Добавьте первый регион в систему"
+      "createFirstRegion": "Добавьте первый регион в систему",
+      "changeCriteria": "Попробуйте изменить критерии поиска",
+      "citiesCount": "Количество городов",
+      "manageCities": "Управление городами региона",
+      "toggleStatus": {
+        "activate": "Активировать регион",
+        "deactivate": "Деактивировать регион"
+      },
+      "confirmToggle": {
+        "title": "Подтверждение изменения статуса",
+        "message": "Вы действительно хотите изменить статус этого региона?"
+      },
+      "confirmDelete": {
+        "title": "Подтверждение удаления",
+        "message": "Вы уверены, что хотите удалить этот регион? Это действие нельзя отменить."
+      },
+      "messages": {
+        "deleteSuccess": "Регион успешно удален",
+        "deleteError": "Ошибка при удалении региона",
+        "statusSuccess": "Регион {{action}}",
+        "statusError": "Ошибка при изменении статуса",
+        "activated": "активирован",
+        "deactivated": "деактивирован"
+      }
     },
     "services": {
       "title": "Категории услуг",
@@ -1765,7 +1790,12 @@
     "allPartners": "Все партнеры",
     "selectRegion": "Выберите или введите регион...",
     "selectCity": "Выберите или введите город...",
-    "selectPartner": "Выберите или введите партнера..."
+    "selectPartner": "Выберите или введите партнера...",
+    "statusOptions": {
+      "all": "Все",
+      "active": "Активные",
+      "inactive": "Неактивные"
+    }
   },
   "notifications": {
     "success": {

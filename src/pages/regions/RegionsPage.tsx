@@ -105,9 +105,9 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
   const handleDelete = useCallback(async (region: Region) => {
     try {
       await deleteRegion(region.id).unwrap();
-      showNotification('Регион успешно удален', 'success');
+      showNotification(t('admin.regions.messages.deleteSuccess'), 'success');
     } catch (error: any) {
-      let errorMessage = 'Ошибка при удалении региона';
+      let errorMessage = t('admin.regions.messages.deleteError');
       if (error.data?.message) {
         errorMessage = error.data.message;
       } else if (error.data?.errors) {
@@ -115,7 +115,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       }
       showNotification(errorMessage, 'error');
     }
-  }, [deleteRegion, showNotification]);
+  }, [deleteRegion, showNotification, t]);
 
   // Обработка переключения статуса
   const handleToggleStatus = useCallback(async (region: Region) => {
@@ -124,9 +124,10 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
         id: region.id,
         region: { ...region, is_active: !region.is_active }
       }).unwrap();
-      showNotification(`Регион ${!region.is_active ? 'активирован' : 'деактивирован'}`, 'success');
+      const action = !region.is_active ? t('admin.regions.messages.activated') : t('admin.regions.messages.deactivated');
+      showNotification(t('admin.regions.messages.statusSuccess', { action }), 'success');
     } catch (error: any) {
-      let errorMessage = 'Ошибка при изменении статуса';
+      let errorMessage = t('admin.regions.messages.statusError');
       if (error.data?.message) {
         errorMessage = error.data.message;
       } else if (error.data?.errors) {
@@ -134,7 +135,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       }
       showNotification(errorMessage, 'error');
     }
-  }, [updateRegion, showNotification]);
+  }, [updateRegion, showNotification, t]);
 
   // Форматирование даты
   const formatDate = useCallback((dateString: string) => {
@@ -148,7 +149,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
     title: t('admin.regions.title'),
-    subtitle: 'Управление регионами и их городами',
+    subtitle: t('admin.regions.subtitle'),
     actions: [
       {
         label: t('admin.regions.createRegion'),
@@ -158,14 +159,14 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
         color: 'primary' as const
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
     placeholder: t('admin.regions.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
-  }), [searchQuery, handleSearchChange]);
+  }), [searchQuery, handleSearchChange, t]);
 
   // Конфигурация фильтров
   const filtersConfig = useMemo(() => [
@@ -177,12 +178,12 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       value: selectedStatus,
       onChange: handleStatusFilterChange,
       options: [
-        { value: 'all', label: 'Все' },
-        { value: 'active', label: 'Активные' },
-        { value: 'inactive', label: 'Неактивные' }
+        { value: 'all', label: t('filters.statusOptions.all') },
+        { value: 'active', label: t('filters.statusOptions.active') },
+        { value: 'inactive', label: t('filters.statusOptions.inactive') }
       ]
     }
-  ], [selectedStatus, handleStatusFilterChange]);
+  ], [selectedStatus, handleStatusFilterChange, t]);
 
   // Конфигурация действий для ActionsMenu
   const regionActions: ActionItem<Region>[] = useMemo(() => [
@@ -200,7 +201,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       icon: <LocationCityIcon />,
       onClick: (region: Region) => navigate(`/admin/regions/${region.id}/cities`),
       color: 'info',
-      tooltip: 'Управление городами региона'
+      tooltip: t('admin.regions.manageCities')
     },
     {
       id: 'toggle',
@@ -208,11 +209,11 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       icon: (region: Region) => region.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
       onClick: handleToggleStatus,
       color: (region: Region) => region.is_active ? 'warning' : 'success',
-      tooltip: (region: Region) => region.is_active ? 'Деактивировать регион' : 'Активировать регион',
+      tooltip: (region: Region) => region.is_active ? t('admin.regions.toggleStatus.deactivate') : t('admin.regions.toggleStatus.activate'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение изменения статуса',
-        message: 'Вы действительно хотите изменить статус этого региона?',
+        title: t('admin.regions.confirmToggle.title'),
+        message: t('admin.regions.confirmToggle.message'),
       }
     },
     {
@@ -221,14 +222,14 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       icon: <DeleteIcon />,
       onClick: handleDelete,
       color: 'error',
-      tooltip: 'Удалить регион',
+      tooltip: t('admin.regions.deleteRegion'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы уверены, что хотите удалить этот регион? Это действие нельзя отменить.',
+        title: t('admin.regions.confirmDelete.title'),
+        message: t('admin.regions.confirmDelete.message'),
       }
     }
-  ], [navigate, handleToggleStatus, handleDelete]);
+  ], [navigate, handleToggleStatus, handleDelete, t]);
 
   // Конфигурация колонок
   const columns = useMemo(() => [
@@ -267,7 +268,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
     {
       id: 'cities_count',
       key: 'cities_count' as keyof Region,
-      label: 'Количество городов',
+      label: t('admin.regions.citiesCount'),
       sortable: true,
       hideOnMobile: true,
       render: (region: Region) => (
@@ -289,7 +290,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       sortable: true,
       render: (region: Region) => (
         <Chip
-          label={region.is_active ? t('statuses.active') : 'Неактивен'}
+          label={region.is_active ? t('statuses.active') : t('statuses.inactive')}
           color={region.is_active ? 'success' : 'default'}
           variant="filled"
           size="small"
@@ -322,7 +323,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
         />
       )
     }
-  ], [formatDate, regionActions]);
+  ], [formatDate, regionActions, t]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -340,10 +341,10 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: searchQuery || selectedStatus !== 'all' ? 'Регионы не найдены' : 'Нет регионов',
+          title: searchQuery || selectedStatus !== 'all' ? t('admin.regions.regionsNotFound') : t('admin.regions.noRegions'),
           description: searchQuery || selectedStatus !== 'all'
-            ? 'Попробуйте изменить критерии поиска'
-            : 'Добавьте первый регион в систему',
+            ? t('admin.regions.changeCriteria')
+            : t('admin.regions.createFirstRegion'),
           action: (!searchQuery && selectedStatus === 'all') ? {
             label: t('admin.regions.createRegion'),
             icon: <AddIcon />,
