@@ -222,7 +222,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PriceIcon color="action" fontSize="small" />
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {service.current_price || service.price ? `${service.current_price || service.price} ₴` : `${t('bookingSteps.services.price')} по запросу`}
+                  {service.current_price || service.price ? `${service.current_price || service.price} ₴` : `${t('bookingSteps.services.price')} ${t('bookingSteps.services.priceOnRequest')}`}
                 </Typography>
               </Box>
               
@@ -264,10 +264,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     return (
       <Box>
         <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-          Выбор услуг
+          {t('bookingSteps.services.title')}
         </Typography>
         <Alert severity="warning">
-          Сначала необходимо выбрать точку обслуживания.
+          {t('bookingSteps.services.selectServicePointFirst')}
         </Alert>
       </Box>
     );
@@ -276,14 +276,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Выбор услуг и комментарии
+        {t('bookingSteps.services.servicesAndComments')}
       </Typography>
       
       <Grid container spacing={3}>
         {/* Информационное сообщение */}
         <Grid item xs={12}>
           <Alert severity="info" sx={{ mb: 2 }}>
-            💡 Выбор услуг необязателен. Вы можете обсудить необходимые услуги с мастером на месте.
+            {t('bookingSteps.services.optionalInfo')}
           </Alert>
         </Grid>
         
@@ -293,14 +293,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             {t('bookingSteps.services.availableServices')}
             {formData.service_category_id && (
               <Typography variant="body2" color="text.secondary" sx={{ ml: 1, display: 'inline' }}>
-                (для выбранной категории)
+                {t('bookingSteps.services.forSelectedCategory')}
               </Typography>
             )}
           </Typography>
           
           {servicesError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Ошибка загрузки услуг. Попробуйте обновить страницу.
+              {t('bookingSteps.services.loadingError')}
             </Alert>
           )}
           
@@ -310,7 +310,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             </Box>
           ) : services.length === 0 ? (
             <Alert severity="info">
-              Для выбранной сервисной точки не указан список услуг.
+              {t('bookingSteps.services.noServicesAvailable')}
             </Alert>
           ) : (
             <Grid container spacing={2}>
@@ -333,7 +333,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             
             {formData.services.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                Услуги не выбраны
+                {t('bookingSteps.services.noServicesSelected')}
               </Typography>
             ) : (
               <Box>
@@ -344,7 +344,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {serviceInfo?.name || service.name || `Услуга #${service.service_id}`}
+                            {serviceInfo?.name || service.name || t('bookingSteps.services.serviceNumber', { id: service.service_id })}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {service.price} ₴ × {service.quantity}
@@ -376,7 +376,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
                   onClick={() => setFormData((prev: any) => ({ ...prev, services: [] }))}
                   sx={{ mt: 2, width: '100%' }}
                 >
-                  Очистить все
+                  {t('bookingSteps.services.clearAll')}
                 </Button>
               </Box>
             )}
@@ -386,7 +386,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         {/* Комментарии */}
         <Grid item xs={12}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Комментарий к записи (необязательно)
+            {t('bookingSteps.services.commentLabel')}
           </Typography>
           
           <MuiTextField
@@ -394,7 +394,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
             rows={4}
             value={formData.notes}
             onChange={(e) => handleNotesChange(e.target.value)}
-            placeholder="Укажите дополнительные пожелания, особенности автомобиля или другую важную информацию..."
+            placeholder={t('bookingSteps.services.commentPlaceholder')}
             variant="outlined"
             fullWidth
             InputProps={{
@@ -410,7 +410,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       
       {/* Информационное сообщение */}
       <Alert severity="success" sx={{ mt: 3 }}>
-        Все обязательные поля заполнены. Можете перейти к следующему шагу.
+        {t('bookingSteps.services.allFieldsCompleted')}
       </Alert>
     </Box>
   );

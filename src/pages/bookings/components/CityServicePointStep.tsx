@@ -169,11 +169,11 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
     const errors: string[] = [];
     
     if (!formData.city_id) {
-      errors.push('Город');
+      errors.push(t('bookingSteps.cityServicePoint.requiredFields.city'));
     }
     
     if (!formData.service_point_id) {
-      errors.push('Точка обслуживания');
+      errors.push(t('bookingSteps.cityServicePoint.requiredFields.servicePoint'));
     }
     
     return errors;
@@ -234,7 +234,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Выберите точку обслуживания
+        {t('bookingSteps.cityServicePoint.title')}
       </Typography>
       
       {/* Информация о выбранной категории */}
@@ -245,7 +245,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
           sx={{ mb: 3 }}
         >
           <Typography variant="body2">
-            <strong>Выбранная категория:</strong> {selectedCategory.name}
+            <strong>{t('bookingSteps.cityServicePoint.selectedCategory')}</strong> {selectedCategory.name}
           </Typography>
           {selectedCategory.description && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -262,14 +262,14 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
           icon={<InfoIcon />}
           sx={{ mb: 3 }}
         >
-          Город и сервисная точка уже выбраны на основе вашего предыдущего выбора. Вы можете изменить их или перейти к следующему шагу.
+          {t('bookingSteps.cityServicePoint.prefilledDataNotice')}
         </Alert>
       )}
       
       {/* Уведомление о автоматическом переходе */}
       {isValid && !autoFilledData && (
         <Alert severity="success">
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.cityServicePoint.allFieldsCompleted')}
         </Alert>
       )}
       
@@ -286,8 +286,8 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Город *"
-                placeholder="t('bookingSteps.cityServicePoint.selectCity') для продолжения"
+                label={t('bookingSteps.cityServicePoint.cityLabel')}
+                placeholder={`${t('bookingSteps.cityServicePoint.selectCity')} ${t('bookingSteps.cityServicePoint.selectCityPlaceholder')}`}
                 required
                 InputProps={{
                   ...params.InputProps,
@@ -313,7 +313,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
           
           {citiesError && (
             <FormHelperText error>
-              Ошибка загрузки городов. Попробуйте обновить страницу.
+              {t('bookingSteps.cityServicePoint.citiesLoadingError')}
             </FormHelperText>
           )}
         </Grid>
@@ -322,23 +322,23 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         {selectedCity && (
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Доступные точки обслуживания в г. {selectedCity.name} *
+              {t('bookingSteps.cityServicePoint.availableServicePoints', { cityName: selectedCity.name })}
             </Typography>
             
             {isLoadingServicePoints ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                 <CircularProgress />
                 <Typography variant="body1" sx={{ ml: 2 }}>
-                  Загрузка точек обслуживания...
+                  {t('bookingSteps.cityServicePoint.loadingServicePoints')}
                 </Typography>
               </Box>
             ) : servicePointsError ? (
               <Alert severity="error">
-                Ошибка загрузки точек обслуживания. Попробуйте выбрать другой город.
+                {t('bookingSteps.cityServicePoint.servicePointsLoadingError')}
               </Alert>
             ) : servicePoints.length === 0 ? (
               <Alert severity="info">
-                В выбранном городе нет доступных точек обслуживания.
+                {t('bookingSteps.cityServicePoint.noServicePointsAvailable')}
               </Alert>
             ) : (
               <Grid container spacing={3}>
@@ -361,7 +361,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       {(!isValid) && (
         <Alert severity="warning" sx={{ mt: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Заполните все обязательные поля:
+            {t('bookingSteps.cityServicePoint.fillRequiredFields')}
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
             {getRequiredFieldErrors().map((field, index) => (
@@ -376,7 +376,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
       {/* Информационное сообщение */}
       {(isValid) && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.cityServicePoint.allFieldsCompleted')}
         </Alert>
       )}
     </Box>
