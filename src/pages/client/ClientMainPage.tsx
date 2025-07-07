@@ -103,7 +103,7 @@ const ClientMainPage: React.FC = () => {
 
   // Используем данные из API или fallback
   const currentHero = heroContent || {
-    title: 'Знайдіть найкращий автосервис поруч з вами',
+    title: t('client.mainPage.title'),
     content: t('client.mainPage.subtitle'),
     settings: {
       subtitle: t('client.mainPage.subtitle'),
@@ -117,26 +117,26 @@ const ClientMainPage: React.FC = () => {
   const currentArticles = mainPageArticles.length > 0 ? mainPageArticles : [
     {
       id: 1,
-      title: 'Як вибрати зимові шини',
-      excerpt: 'Детальний посібник з вибору зимових шин для безпечної їзди',
+      title: 'Как выбрать зимние шины',
+      excerpt: 'Подробное руководство по выбору зимних шин для безопасной езды',
       reading_time: 5,
-      author: { name: 'Експерт з шин' },
+      author: { name: 'Эксперт по шинам' },
       created_at: new Date().toISOString()
     },
     {
       id: 2,
-      title: 'Правильний тиск у шинах',
-      excerpt: 'Вплив тиску на безпеку та витрату палива',
+      title: 'Правильное давление в шинах',
+      excerpt: 'Влияние давления на безопасность и расход топлива',
       reading_time: 3,
-      author: { name: 'Технічний спеціаліст' },
+      author: { name: 'Технический специалист' },
       created_at: new Date().toISOString()
     },
     {
       id: 3,
-      title: 'Сезонне зберігання шин',
-      excerpt: 'Як правильно зберігати шини в міжсезоння',
+      title: 'Сезонное хранение шин',
+      excerpt: 'Как правильно хранить шины в межсезонье',
       reading_time: 4,
-      author: { name: 'Майстер сервісу' },
+      author: { name: 'Мастер сервиса' },
       created_at: new Date().toISOString()
     }
   ];
@@ -174,7 +174,7 @@ const ClientMainPage: React.FC = () => {
                     <Box
                       component="img"
                       src="/image_app/serviceman.png" 
-                      alt="Професійний сервісмен" 
+                      alt="Профессиональный сервисмен" 
                       sx={{
                         width: '100%',
                         height: '100%',
@@ -275,7 +275,7 @@ const ClientMainPage: React.FC = () => {
               fontWeight: 700,
               color: colors.textPrimary 
             }}>
-              📚 Корисні статті
+              {t('client.mainPage.articlesTitle')}
             </Typography>
             
             <Grid container spacing={3}>
@@ -311,9 +311,9 @@ const ClientMainPage: React.FC = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                            {typeof article.author === 'string' ? article.author : article.author?.name || 'Неизвестный автор'}
+                            {typeof article.author === 'string' ? article.author : article.author?.name || t('client.mainPage.unknownAuthor')}
                           </Typography>
-                          <Chip label={`${article.reading_time || 5} мин`} size="small" variant="outlined" />
+                          <Chip label={`${article.reading_time || 5} ${t('client.mainPage.minutes')}`} size="small" variant="outlined" />
                         </Box>
                       </CardContent>
                       <CardActions>
@@ -322,7 +322,7 @@ const ClientMainPage: React.FC = () => {
                           sx={{ color: theme.palette.primary.main }}
                           onClick={() => navigate(`/knowledge-base/${article.id}`)}
                         >
-                          Читати далі
+                          {t('client.mainPage.readMore')}
                         </Button>
                       </CardActions>
                     </Card>
@@ -339,7 +339,7 @@ const ClientMainPage: React.FC = () => {
                 sx={secondaryButtonStyles}
                 onClick={() => navigate('/knowledge-base')}
               >
-                Всі статті
+                {t('client.mainPage.allArticles')}
               </Button>
             </Box>
           </Container>
@@ -403,7 +403,7 @@ const ClientMainPage: React.FC = () => {
                   {footerContent?.title || t('client.mainPage.footerTitle')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  {footerContent?.content || 'Знайдіть найкращий автосервис поруч з вами. Швидке бронювання, перевірені майстри.'}
+                  {footerContent?.content || t('client.mainPage.footerDescription')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <IconButton size="small">
@@ -419,7 +419,11 @@ const ClientMainPage: React.FC = () => {
                   {t('client.mainPage.servicesTitle')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(footerContent?.settings?.services_links || ['Заміна шин', 'Балансування', 'Ремонт проколів']).map((link: string) => (
+                  {(footerContent?.settings?.services_links || [
+                    t('client.mainPage.services.tireChange'),
+                    t('client.mainPage.services.balancing'),
+                    t('client.mainPage.services.repair')
+                  ]).map((link: string) => (
                     <Link key={link} to="/client/services" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
                       {link}
                     </Link>
@@ -428,10 +432,14 @@ const ClientMainPage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  Інформація
+                  {t('client.mainPage.information')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(footerContent?.settings?.info_links || ['База знань', t('client.mainPage.personalCabinetButton'), 'Для бізнесу']).map((link: string, index: number) => {
+                  {(footerContent?.settings?.info_links || [
+                    t('client.mainPage.knowledgeBase'), 
+                    t('client.mainPage.personalCabinetButton'), 
+                    t('client.mainPage.forBusiness')
+                  ]).map((link: string, index: number) => {
                     const routes = ['/knowledge-base', '/client/profile', '/login'];
                     return (
                       <Link key={link} to={routes[index]} style={{ color: colors.textSecondary, textDecoration: 'none' }}>
@@ -450,7 +458,7 @@ const ClientMainPage: React.FC = () => {
               borderTop: `1px solid ${colors.borderPrimary}` 
             }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                {footerContent?.settings?.copyright || '© 2024 Твоя Шина. Всі права захищені.'}
+                {footerContent?.settings?.copyright || t('client.mainPage.copyright')}
               </Typography>
             </Box>
           </Container>
