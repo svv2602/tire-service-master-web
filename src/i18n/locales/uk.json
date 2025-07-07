@@ -934,6 +934,12 @@
     "photoUploadError": "Помилка завантаження фотографії"
   },
   "components": {
+    "actionsMenu": {
+      "edit": "Редагувати",
+      "delete": "Видалити",
+      "confirm": "Підтвердити",
+      "cancel": "Скасувати"
+    },
     "pageHeader": {
       "defaultTitle": "Заголовок сторінки",
       "defaultSubtitle": "Опис сторінки"

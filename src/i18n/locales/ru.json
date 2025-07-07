@@ -934,6 +934,12 @@
     "photoUploadError": "Ошибка загрузки фотографии"
   },
   "components": {
+    "actionsMenu": {
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "confirm": "Подтвердить",
+      "cancel": "Отмена"
+    },
     "pageHeader": {
       "defaultTitle": "Заголовок страницы",
       "defaultSubtitle": "Описание страницы"

@@ -190,10 +190,10 @@ export const ActionsMenu = <T,>({
       <Box sx={{ display: 'flex', gap: 0.5, ...sx }}>
         {visibleActions.map((action, actionIndex) => {
           const isDisabled = action.isDisabled ? action.isDisabled(item) : false;
-          const label = getValue(action.label, '');
+          const label = t(getValue(action.label, ''));
           const icon = getValue(action.icon, null);
           const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
-          const tooltip = getValue(action.tooltip, label);
+          const tooltip = t(getValue(action.tooltip, label));
           
           return (
             <Tooltip key={action.id || actionIndex} title={tooltip}>
@@ -258,7 +258,7 @@ export const ActionsMenu = <T,>({
       >
         {visibleActions.map((action, actionIndex) => {
           const isDisabled = action.isDisabled ? action.isDisabled(item) : false;
-          const label = getValue(action.label, '');
+          const label = t(getValue(action.label, ''));
           const icon = getValue(action.icon, null);
           const color = getValue(action.color, 'primary' as PaletteColor) as PaletteColor;
           
@@ -293,16 +293,16 @@ export const ActionsMenu = <T,>({
         aria-describedby="actions-confirm-dialog-description"
       >
         <DialogTitle id="actions-confirm-dialog-title">
-          {confirmDialog.action?.confirmationConfig?.title || t('components.confirmDialog.title')}
+          {t(confirmDialog.action?.confirmationConfig?.title || 'confirmDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="actions-confirm-dialog-description">
-            {confirmDialog.action?.confirmationConfig?.message || 'Вы уверены, что хотите выполнить это действие?'}
+            {t(confirmDialog.action?.confirmationConfig?.message || 'confirmDialog.message')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelAction} color="inherit">
-            {confirmDialog.action?.confirmationConfig?.cancelLabel || 'Отмена'}
+            {t(confirmDialog.action?.confirmationConfig?.cancelLabel || 'confirmDialog.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmAction} 
@@ -310,7 +310,7 @@ export const ActionsMenu = <T,>({
             variant="contained"
             autoFocus
           >
-            {confirmDialog.action?.confirmationConfig?.confirmLabel || t('components.confirmDialog.confirm')}
+            {t(confirmDialog.action?.confirmationConfig?.confirmLabel || 'confirmDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
