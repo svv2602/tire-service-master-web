@@ -1,0 +1,99 @@
+{
+  "common": {
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "add": "Додати",
+    "close": "Закрити",
+    "submit": "Надіслати",
+    "search": "Пошук",
+    "loading": "Завантаження...",
+    "error": "Помилка",
+    "success": "Успішно",
+    "confirm": "Підтвердити",
+    "yes": "Так",
+    "no": "Ні",
+    "actions": "Дії"
+  },
+  "navigation": {
+    "admin": "Адміністрування",
+    "users": "Користувачі",
+    "partners": "Партнери",
+    "servicePoints": "Точки обслуковування",
+    "bookings": "Бронювання",
+    "reviews": "Відгуки",
+    "settings": "Налаштування"
+  },
+  "auth": {
+    "login": "Вхід",
+    "logout": "Вихід",
+    "email": "Email",
+    "password": "Пароль",
+    "rememberMe": "Запам'ятати мене",
+    "forgotPassword": "Забули пароль?",
+    "loginButton": "Увійти"
+  },
+  "admin": {
+    "servicePoints": {
+      "title": "Точки обслуковування",
+      "subtitle": "Управління сервісними точками та їх налаштуваннями",
+      "createServicePoint": "Створити точку обслуковування",
+      "editServicePoint": "Редагувати точку обслуковування",
+      "searchPlaceholder": "Пошук за назвою або адресою...",
+      "notSpecified": "Не вказано"
+    }
+  },
+  "tables": {
+    "columns": {
+      "id": "ID",
+      "name": "Назва",
+      "title": "Заголовок",
+      "description": "Опис",
+      "email": "Email",
+      "phone": "Телефон",
+      "address": "Адреса",
+      "city": "Місто",
+      "region": "Регіон",
+      "status": "Статус",
+      "active": "Активний",
+      "inactive": "Неактивний",
+      "createdAt": "Дата створення",
+      "updatedAt": "Дата оновлення",
+      "actions": "Дії",
+      "user": "Користувач",
+      "role": "Роль",
+      "partner": "Партнер",
+      "servicePoint": "Сервісна точка",
+      "rating": "Оцінка",
+      "comment": "Коментар",
+      "client": "Клієнт",
+      "booking": "Бронювання",
+      "date": "Дата",
+      "time": "Час"
+    },
+    "actions": {
+      "view": "Переглянути",
+      "edit": "Редагувати",
+      "delete": "Видалити",
+      "activate": "Активувати",
+      "deactivate": "Деактивувати",
+      "approve": "Схвалити",
+      "reject": "Відхилити",
+      "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації"
+    }
+  },
+  "statuses": {
+    "active": "Активний",
+    "inactive": "Неактивний",
+    "pending": "Очікує",
+    "approved": "Схвалено",
+    "rejected": "Відхилено",
+    "published": "Опубліковано",
+    "working": "Працює",
+    "confirmed": "Підтверджено",
+    "cancelled": "Скасовано",
+    "completed": "Завершено"
+  }
+} 

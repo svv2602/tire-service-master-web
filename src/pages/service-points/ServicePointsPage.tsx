@@ -4,11 +4,9 @@ import {
   Box,
   Chip,
   Typography,
-  Avatar,
-  Tooltip
+  Avatar
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import i18n from '../../i18n';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -16,8 +14,6 @@ import {
   Business as BusinessIcon,
   LocationOn as LocationIcon,
   Phone as PhoneIcon,
-  Schedule as ScheduleIcon,
-  Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -43,63 +39,11 @@ import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hou
 
 interface ServicePointsPageNewProps {}
 
-// Функция для форматирования рабочих часов
-const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined, t: any): string => {
-  if (!workingHours) return t('admin.servicePoints.scheduleNotSpecified');
 
-  const days = {
-    monday: t('common.days.short.monday'),
-    tuesday: t('common.days.short.tuesday'),
-    wednesday: t('common.days.short.wednesday'),
-    thursday: t('common.days.short.thursday'),
-    friday: t('common.days.short.friday'),
-    saturday: t('common.days.short.saturday'),
-    sunday: t('common.days.short.sunday')
-  } as const;
-
-  const schedule: Record<string, string> = {};
-  let currentSchedule = '';
-  let daysWithSameSchedule: string[] = [];
-
-  for (const [day, hours] of Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][]) {
-    if (!hours.is_working_day) continue;
-
-    const timeString = `${hours.start}-${hours.end}`;
-    if (timeString !== currentSchedule) {
-      if (daysWithSameSchedule.length > 0) {
-        schedule[currentSchedule] = daysWithSameSchedule.join(', ');
-      }
-      currentSchedule = timeString;
-      daysWithSameSchedule = [days[day as keyof typeof days]];
-    } else {
-      daysWithSameSchedule.push(days[day as keyof typeof days]);
-    }
-  }
-
-  // Добавляем последнюю группу дней
-  if (daysWithSameSchedule.length > 0) {
-    schedule[currentSchedule] = daysWithSameSchedule.join(', ');
-  }
-
-  // Добавляем выходные дни
-  const weekends = (Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][])
-    .filter(([_, hours]) => !hours.is_working_day)
-    .map(([day]) => days[day as keyof typeof days]);
-
-  let result = Object.entries(schedule)
-    .map(([time, days]) => `${days} ${time}`)
-    .join('; ');
-
-  if (weekends.length > 0) {
-    result += `; Выходные: ${weekends.join(', ')}`;
-  }
-
-  return result || t('admin.servicePoints.scheduleNotSpecified');
-};
 
 const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const navigate = useNavigate();
-  const { t, ready } = useTranslation();
+  const { t } = useTranslation();
   const { id: partnerId } = useParams<{ id: string }>();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
@@ -136,17 +80,17 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   }), [searchQuery, selectedCity, selectedRegion, selectedPartner, selectedStatus, page]);
 
   // API запросы
-  const { data: regionsData, isLoading: regionsLoading } = useGetRegionsQuery({});
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery({
+  const { data: regionsData } = useGetRegionsQuery({});
+  const { data: citiesData } = useGetCitiesQuery({
     region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
     page: 1,
     per_page: 100
   });
-  const { data: partnersData, isLoading: partnersLoading } = useGetPartnersQuery({
+  const { data: partnersData } = useGetPartnersQuery({
     page: 1,
     per_page: 100
   });
-  const { data: servicePointsData, isLoading, error } = useGetServicePointsQuery(queryParams);
+  const { data: servicePointsData, isLoading } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint] = useDeleteServicePointMutation();
 
   // Эффект для автоматической установки фильтра партнера при наличии partnerId в URL
@@ -194,16 +138,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     setPage(0);
   }, []);
 
-  // Обработчик сброса всех фильтров
-  const handleClearAllFilters = useCallback(() => {
-    setSearchQuery('');
-    setSelectedRegion('all');
-    setSelectedCity('all');
-    // Если есть partnerId в URL, оставляем его, иначе сбрасываем
-    setSelectedPartner(partnerId || 'all');
-    setSelectedStatus('all');
-    setPage(0);
-  }, [partnerId]);
+
 
   const showNotification = useCallback((message: string, severity: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setNotification({ open: true, message, severity });
@@ -282,7 +217,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         cancelLabel: t('common.cancel'),
       },
     }
-  ], [navigate, partnerId, handleSmartDelete]);
+  ], [navigate, partnerId, handleSmartDelete, t]);
 
   // Получаем информацию о выбранном партнере для заголовка
   const selectedPartnerInfo = useMemo(() => {
@@ -381,11 +316,10 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     partnerTranslation: t('tables.columns.partner'),
     cityTranslation: t('tables.columns.city'),
     statusTranslation: t('tables.columns.status'),
-    actionsTranslation: t('tables.columns.actions'),
-    language: i18n.language
+    actionsTranslation: t('tables.columns.actions')
   });
 
-  // Колонки таблицы
+  // Колонки таблицы  
   const columns = useMemo(() => [
     {
       id: 'name',
