@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -628,6 +629,7 @@ interface WorkingSchedule {
 
 // Компонент карточки сервисной точки
 const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ servicePoint }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
@@ -724,7 +726,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
                 precision={0.1}
               />
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                ({servicePoint.reviews_count} відгуків)
+                ({servicePoint.reviews_count} {t('client.search.reviews')})
               </Typography>
             </Box>
             
@@ -894,7 +896,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
           onClick={() => setShowDetails(!showDetails)}
           sx={{ color: colors.textSecondary }}
         >
-          {showDetails ? 'Згорнути' : 'Детальніше'}
+          {showDetails ? 'Згорнути' : t('client.search.viewDetails')}
         </Button>
         
         <Button
@@ -927,7 +929,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
             '&:hover': { bgcolor: theme.palette.primary.dark }
           }}
         >
-          Записатися
+          {t('client.search.bookNow')}
         </Button>
       </CardActions>
     </Card>
@@ -935,6 +937,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
 };
 
 const ClientSearchPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');

@@ -43,17 +43,17 @@ import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hou
 interface ServicePointsPageNewProps {}
 
 // Функция для форматирования рабочих часов
-const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
-  if (!workingHours) return 'График не указан';
+const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined, t: any): string => {
+  if (!workingHours) return t('admin.servicePoints.scheduleNotSpecified');
 
   const days = {
-    monday: 'Пн',
-    tuesday: 'Вт',
-    wednesday: 'Ср',
-    thursday: 'Чт',
-    friday: 'Пт',
-    saturday: 'Сб',
-    sunday: 'Вс'
+    monday: t('common.days.short.monday'),
+    tuesday: t('common.days.short.tuesday'),
+    wednesday: t('common.days.short.wednesday'),
+    thursday: t('common.days.short.thursday'),
+    friday: t('common.days.short.friday'),
+    saturday: t('common.days.short.saturday'),
+    sunday: t('common.days.short.sunday')
   } as const;
 
   const schedule: Record<string, string> = {};
@@ -93,7 +93,7 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
     result += `; Выходные: ${weekends.join(', ')}`;
   }
 
-  return result || 'График не указан';
+  return result || t('admin.servicePoints.scheduleNotSpecified');
 };
 
 const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
@@ -224,11 +224,11 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       switch (result.action) {
         case 'deactivated':
           severity = 'warning';
-          message = `Сервисная точка "${servicePoint.name}" деактивирована. ${result.message}`;
+          message = t('admin.servicePoints.deactivatedMessage', { name: servicePoint.name, message: result.message });
           break;
         case 'deleted':
           severity = 'success';
-          message = `Сервисная точка "${servicePoint.name}" полностью удалена из системы.`;
+          message = t('admin.servicePoints.deletedMessage', { name: servicePoint.name });
           break;
         default:
           severity = 'info';
@@ -240,10 +240,10 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       
       // Обработка различных типов ошибок
       if (error.data?.action === 'blocked') {
-        const message = error.data.message || 'Невозможно удалить сервисную точку из-за связанных записей';
+        const message = error.data.message || t('admin.servicePoints.deleteBlocked');
         showNotification(message, 'error');
       } else {
-        showNotification('Произошла ошибка при удалении сервисной точки', 'error');
+        showNotification(t('admin.servicePoints.deleteError'), 'error');
       }
     }
   }, [deleteServicePoint, showNotification]);
@@ -262,7 +262,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         });
       },
       color: 'primary',
-      tooltip: 'Редактировать сервисную точку'
+      tooltip: t('admin.servicePoints.editTooltip')
     },
     {
       id: 'delete',
@@ -271,12 +271,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       onClick: handleSmartDelete,
       color: (servicePoint: ServicePoint) => servicePoint.is_active ? 'warning' : 'error',
       tooltip: (servicePoint: ServicePoint) => servicePoint.is_active 
-        ? 'Деактивировать сервисную точку' 
-        : 'Полностью удалить сервисную точку (если нет связанных записей)',
+        ? t('admin.servicePoints.deactivateTooltip') 
+        : t('admin.servicePoints.deleteTooltip'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтвердите действие',
-        message: 'Вы уверены, что хотите выполнить это действие?',
+        title: t('common.confirmAction'),
+        message: t('common.confirmMessage'),
         confirmLabel: t('common.confirm'),
         cancelLabel: t('common.cancel'),
       },
@@ -291,13 +291,13 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
 
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
-    title: selectedPartnerInfo ? `Сервисные точки - ${selectedPartnerInfo.company_name}` : 'Сервисные точки',
+    title: selectedPartnerInfo ? t('admin.servicePoints.titleWithPartner', { partnerName: selectedPartnerInfo.company_name }) : t('admin.servicePoints.title'),
     subtitle: selectedPartnerInfo 
       ? `Управление сервисными точками партнера "${selectedPartnerInfo.company_name}"`
-      : 'Управление сервисными точками и их настройками',
+      : t('admin.servicePoints.subtitle'),
     actions: [
       {
-        label: 'Добавить сервисную точку',
+        label: t('admin.servicePoints.createServicePoint'),
         icon: <AddIcon />,
         onClick: () => {
           if (partnerId) {
@@ -305,7 +305,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
               state: { from: `/admin/partners/${partnerId}/service-points` }
             });
           } else {
-            showNotification('Для создания сервисной точки необходимо выбрать партнера', 'warning');
+            showNotification(t('admin.servicePoints.selectPartnerFirst'), 'warning');
             navigate('/admin/partners');
           }
         },
@@ -317,7 +317,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
-    placeholder: 'Поиск по названию или адресу...',
+    placeholder: t('admin.servicePoints.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
   }), [searchQuery, handleSearchChange]);
@@ -332,9 +332,9 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       value: selectedRegion,
       onChange: handleRegionFilterChange,
       clearValue: 'all', // Значение для сброса
-      placeholder: 'Выберите или введите регион...',
+      placeholder: t('filters.selectRegion'),
       options: [
-        { value: 'all', label: 'Все регионы' },
+        { value: 'all', label: t('filters.allRegions') },
         ...(regionsData?.data?.map((region) => ({
           value: region.id.toString(),
           label: region.name
@@ -349,9 +349,9 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       value: selectedCity,
       onChange: handleCityFilterChange,
       clearValue: 'all', // Значение для сброса
-      placeholder: 'Выберите или введите город...',
+      placeholder: t('filters.selectCity'),
       options: [
-        { value: 'all', label: 'Все города' },
+        { value: 'all', label: t('filters.allCities') },
         ...(citiesData?.data?.map((city) => ({
           value: city.id.toString(),
           label: city.name
@@ -362,13 +362,13 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       id: 'partner',
       key: 'partner',
       type: 'autocomplete' as const,
-      label: 'Партнер',
+      label: t('tables.columns.partner'),
       value: selectedPartner,
       onChange: handlePartnerFilterChange,
       clearValue: 'all', // Значение для сброса
-      placeholder: 'Выберите или введите партнера...',
+      placeholder: t('filters.selectPartner'),
       options: [
-        { value: 'all', label: 'Все партнеры' },
+        { value: 'all', label: t('filters.allPartners') },
         ...(partnersData?.data?.map((partner) => ({
           value: partner.id.toString(),
           label: partner.company_name
@@ -384,9 +384,9 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       onChange: handleStatusFilterChange,
       clearValue: 'all', // Значение для сброса
       options: [
-        { value: 'all', label: 'Все' },
-        { value: 'active', label: 'Активные' },
-        { value: 'inactive', label: 'Неактивные' }
+        { value: 'all', label: t('common.all') },
+        { value: 'active', label: t('statuses.active') },
+        { value: 'inactive', label: t('statuses.inactive') }
       ]
     }
   ], [selectedRegion, selectedCity, selectedPartner, selectedStatus, regionsData, citiesData, partnersData, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange]);
@@ -396,7 +396,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'service_point',
       key: 'name' as keyof ServicePoint,
-      label: 'Сервисная точка',
+      label: t('tables.columns.servicePoint'),
       sortable: false,
       render: (servicePoint: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -428,7 +428,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'partner',
       key: 'partner' as keyof ServicePoint,
-      label: 'Партнер',
+      label: t('tables.columns.partner'),
       sortable: true,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
@@ -440,7 +440,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'location',
       key: 'city' as keyof ServicePoint,
-      label: 'Область / Город',
+      label: t('tables.columns.regionCity'),
       sortable: true,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
@@ -457,20 +457,20 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'schedule',
       key: 'working_hours' as keyof ServicePoint,
-      label: 'График работы',
+      label: t('tables.columns.workingHours'),
       sortable: false,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-          <Tooltip title={formatWorkingHours(servicePoint.working_hours)} arrow>
+          <Tooltip title={formatWorkingHours(servicePoint.working_hours, t)} arrow>
             <Typography variant="body2" sx={{ 
               maxWidth: 200,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap'
             }}>
-              {formatWorkingHours(servicePoint.working_hours)}
+              {formatWorkingHours(servicePoint.working_hours, t)}
             </Typography>
           </Tooltip>
         </Box>
@@ -483,7 +483,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       sortable: true,
       render: (servicePoint: ServicePoint) => (
         <Chip 
-          label={servicePoint.is_active ? 'Активна' : 'Неактивна'} 
+          label={servicePoint.is_active ? t('statuses.active') : t('statuses.inactive')} 
           size="small"
           color={servicePoint.is_active ? 'success' : 'default'}
           icon={servicePoint.is_active ? <VisibilityIcon /> : <VisibilityOffIcon />}
@@ -527,7 +527,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
             ? 'Попробуйте изменить критерии поиска'
             : 'Создайте первую сервисную точку для начала работы',
           action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedPartner === 'all' && selectedStatus === 'all') ? {
-            label: 'Добавить сервисную точку',
+            label: t('admin.servicePoints.createServicePoint'),
             icon: <AddIcon />,
             onClick: () => {
               if (partnerId) {

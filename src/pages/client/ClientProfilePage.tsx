@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -113,6 +114,7 @@ function TabPanel(props: TabPanelProps) {
 
 // Основной компонент
 const ClientProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   
@@ -448,7 +450,7 @@ const ClientProfilePage: React.FC = () => {
     return (
       <ClientLayout>
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Typography>Загрузка...</Typography>
+          <Typography>{t('client.profile.loading')}</Typography>
         </Container>
       </ClientLayout>
     );
@@ -464,7 +466,7 @@ const ClientProfilePage: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Заголовок страницы */}
         <Typography variant="h4" sx={{ mb: 4, color: 'text.primary' }}>
-          Мой профиль
+          {t('client.profile.title')}
         </Typography>
 
         {/* Основная информация пользователя */}
@@ -490,7 +492,7 @@ const ClientProfilePage: React.FC = () => {
                 {user.email}
               </Typography>
               <Chip
-                label={user.role === 'client' ? 'Клиент' : 'Администратор'}
+                label={user.role === 'client' ? t('client.profile.client') : t('client.profile.administrator')}
                 color="primary"
                 size="small"
               />
@@ -504,38 +506,38 @@ const ClientProfilePage: React.FC = () => {
             <Tabs value={activeTab} onChange={handleTabChange} aria-label="profile tabs">
               <Tab
                 icon={<PersonIcon />}
-                label="Личные данные"
+                label={t('client.profile.personalData')}
                 id="profile-tab-0"
                 aria-controls="profile-tabpanel-0"
               />
               <Tab
                 icon={<CarIcon />}
-                label="Мои автомобили"
+                label={t('client.profile.myCars')}
                 id="profile-tab-1"
                 aria-controls="profile-tabpanel-1"
               />
               <Tab
                 icon={<StatsIcon />}
-                label="Статистика"
+                label={t('client.profile.statistics')}
                 id="profile-tab-2"
                 aria-controls="profile-tabpanel-2"
               />
               <Tab
                 icon={<LockIcon />}
-                label="Безопасность"
+                label={t('client.profile.security')}
                 id="profile-tab-3"
                 aria-controls="profile-tabpanel-3"
               />
               <Tab
                 icon={<SettingsIcon />}
-                label="Настройки"
+                label={t('client.profile.settings')}
                 id="profile-tab-4"
                 aria-controls="profile-tabpanel-4"
               />
             </Tabs>
           </Box>
 
-          {/* Вкладка "Личные данные" */}
+          {/* Вкладка t('client.profile.personalData') */}
           <TabPanel value={activeTab} index={0}>
             <form onSubmit={formik.handleSubmit}>
               <Alert severity="info" sx={{ mb: 3 }}>
@@ -618,18 +620,18 @@ const ClientProfilePage: React.FC = () => {
             </form>
           </TabPanel>
 
-          {/* Вкладка "Мои автомобили" */}
+          {/* Вкладка t('client.profile.myCars') */}
           <TabPanel value={activeTab} index={1}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6" sx={{ color: 'text.primary' }}>
-                Мои автомобили
+                {t('client.profile.myCars')}
               </Typography>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenCarDialog()}
               >
-                Добавить автомобиль
+                {t('client.profile.addCar')}
               </Button>
             </Box>
 
@@ -639,7 +641,7 @@ const ClientProfilePage: React.FC = () => {
               </Box>
             ) : cars.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
-                У вас пока нет добавленных автомобилей. Добавьте первый автомобиль для удобного бронирования услуг.
+                {t('client.profile.noCars')}. Добавьте первый автомобиль для удобного бронирования услуг.
               </Alert>
             ) : (
               <Grid container spacing={2}>
@@ -709,10 +711,10 @@ const ClientProfilePage: React.FC = () => {
             )}
           </TabPanel>
 
-          {/* Вкладка "Статистика" */}
+          {/* Вкладка t('client.profile.statistics') */}
           <TabPanel value={activeTab} index={2}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-              Статистика использования
+              {t('client.profile.statistics')} использования
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
@@ -721,7 +723,7 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Всего бронирований
+                    {t('client.profile.totalBookings')}
                   </Typography>
                 </Card>
               </Grid>
@@ -731,7 +733,7 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Выполненных услуг
+                    {t('client.profile.completedServices')}
                   </Typography>
                 </Card>
               </Grid>
@@ -741,18 +743,18 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Активных бронирований
+                    {t('client.profile.activeBookings')}
                   </Typography>
                 </Card>
               </Grid>
             </Grid>
           </TabPanel>
 
-          {/* Вкладка "Безопасность" */}
+          {/* Вкладка t('client.profile.security') */}
           <TabPanel value={activeTab} index={3}>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, color: 'text.primary' }}>
               <LockIcon />
-              Безопасность аккаунта
+              {t('client.profile.security')} аккаунта
             </Typography>
             
             <List>
@@ -808,10 +810,10 @@ const ClientProfilePage: React.FC = () => {
             </List>
           </TabPanel>
 
-          {/* Вкладка "Настройки" */}
+          {/* Вкладка t('client.profile.settings') */}
           <TabPanel value={activeTab} index={4}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-              Настройки уведомлений
+              {t('client.profile.settings')} уведомлений
             </Typography>
             <List>
               <ListItem>
@@ -864,7 +866,7 @@ const ClientProfilePage: React.FC = () => {
       <Dialog open={carDialogOpen} onClose={handleCloseCarDialog} maxWidth="md" fullWidth>
         <form onSubmit={carFormik.handleSubmit}>
           <DialogTitle>
-            {editingCar ? 'Редактировать автомобиль' : 'Добавить автомобиль'}
+            {editingCar ? 'Редактировать автомобиль' : t('client.profile.addCar')}
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>

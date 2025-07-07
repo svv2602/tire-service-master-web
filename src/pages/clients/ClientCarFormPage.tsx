@@ -3,6 +3,7 @@
  * Обеспечивает создание и редактирование автомобилей клиента с валидацией
  */
 import React, { useMemo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -36,7 +37,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
  * Схема валидации полей формы автомобиля
  * Проверяет обязательность полей и форматы данных
  */
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   brand_id: Yup.number().required('Обязательное поле'),
   model_id: Yup.number().required('Обязательное поле'),
   year: Yup.number()
@@ -55,6 +56,7 @@ const validationSchema = Yup.object({
  */
 
 const ClientCarFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { clientId, carId } = useParams<{ clientId: string; carId: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -129,7 +131,7 @@ const ClientCarFormPage: React.FC = () => {
   const formik = useFormik<ClientCarFormData>({
     initialValues,
     enableReinitialize: true, // Позволяет переинициализировать форму при изменении initialValues
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     onSubmit: async (values) => {
       try {
         setSuccessMessage('');
@@ -395,7 +397,7 @@ const ClientCarFormPage: React.FC = () => {
                   disabled={isLoading}
                   sx={primaryButtonStyles}
                 >
-                  {isEditMode ? 'Сохранить' : 'Создать'}
+                  {isEditMode ? t('common.save') : t('common.create')}
                 </Button>
               </Box>
             </Grid>

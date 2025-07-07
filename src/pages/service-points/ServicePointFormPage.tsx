@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -54,15 +55,15 @@ import { DAYS_OF_WEEK } from '../../types/working-hours';
 import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hours';
 
 // Шаги формы
-const FORM_STEPS = [
-  { id: 'basic', label: 'Основная информация', component: BasicInfoStep },
-  { id: 'location', label: 'Местоположение', component: LocationStep },
-  { id: 'contact', label: 'Контакты', component: ContactStep },
-  { id: 'schedule', label: 'Расписание', component: ScheduleStep },
-  { id: 'posts', label: 'Посты обслуживания', component: PostsStep },
-  { id: 'services', label: 'Услуги', component: ServicesStep },
-  { id: 'photos', label: 'Фотографии', component: PhotosStep },
-  { id: 'settings', label: 'Настройки', component: SettingsStep },
+const getFormSteps = (t: any) => [
+  { id: 'basic', label: t('forms.servicePoint.steps.basic'), component: BasicInfoStep },
+  { id: 'location', label: t('forms.servicePoint.steps.location'), component: LocationStep },
+  { id: 'contact', label: t('forms.servicePoint.steps.contact'), component: ContactStep },
+  { id: 'schedule', label: t('forms.servicePoint.steps.schedule'), component: ScheduleStep },
+  { id: 'posts', label: t('forms.servicePoint.steps.posts'), component: PostsStep },
+  { id: 'services', label: t('forms.servicePoint.steps.services'), component: ServicesStep },
+  { id: 'photos', label: t('forms.servicePoint.steps.photos'), component: PhotosStep },
+  { id: 'settings', label: t('forms.servicePoint.steps.settings'), component: SettingsStep },
 ];
 
 // Начальное расписание для быстрого заполнения
@@ -70,7 +71,7 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
   const workingHours: WorkingHours = {
     start: '09:00',
     end: '18:00',
-    is_working_day: day.id >= 1 && day.id <= 5 // Пн-Пт рабочие дни (id: 1-5)
+    is_working_day: day.id >= 1 && day.id <= 5 // Mon-Fri working days (id: 1-5)
   };
   acc[day.key] = workingHours;
   return acc;
@@ -81,83 +82,85 @@ const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHours
   const workingHours: WorkingHours = {
     start: '09:00',
     end: '18:00',
-    is_working_day: false // Все дни изначально выключены
+    is_working_day: false // All days initially disabled
   };
   acc[day.key] = workingHours;
   return acc;
 }, {} as WorkingHoursSchedule);
 
 // Схема валидации
-const validationSchema = yup.object({
-  name: yup.string().required('Название точки обязательно'),
-  partner_id: yup.number().required('Партнер обязателен').min(1, 'Выберите партнера'),
-  region_id: yup.number().required('Регион обязателен').min(1, 'Выберите регион'),
-  city_id: yup.number().required('Город обязателен').min(1, 'Выберите город'),
-  address: yup.string().required('Адрес обязателен'),
-  contact_phone: yup.string().required('Контактный телефон обязателен'),
+const createValidationSchema = (t: any) => yup.object({
+  name: yup.string().required(t('forms.servicePoint.validation.nameRequired')),
+  partner_id: yup.number().required(t('forms.servicePoint.validation.partnerRequired')).min(1, t('forms.servicePoint.selectPartner')),
+  region_id: yup.number().required(t('forms.servicePoint.validation.regionRequired')).min(1, t('forms.servicePoint.selectRegion')),
+  city_id: yup.number().required(t('forms.servicePoint.validation.cityRequired')).min(1, t('forms.servicePoint.selectCity')),
+  address: yup.string().required(t('forms.servicePoint.validation.addressRequired')),
+  contact_phone: yup.string().required(t('forms.servicePoint.validation.phoneRequired')),
   is_active: yup.boolean().required(),
-  work_status: yup.string().required('Статус работы обязателен'),
+  work_status: yup.string().required(t('forms.servicePoint.validation.workStatusRequired')),
 });
 
 const ServicePointFormPage: React.FC = () => {
+  const { t } = useTranslation();
+  const FORM_STEPS = getFormSteps(t);
   const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Получаем токен и информацию о пользователе из Redux state
+  // Get token and user info from Redux state
   const authToken = useSelector((state: any) => state.auth?.accessToken);
   const currentUser = useSelector((state: any) => state.auth?.user);
   
   // Определяем откуда пришел пользователь для правильного возврата
   const getReturnPath = () => {
-    // Проверяем referrer или state из location
+    // Check referrer or state from location
     const referrer = location.state?.from || document.referrer;
     const userRole = currentUser?.role;
     
-    console.log('=== Определение пути возврата ===');
+    console.log('=== Return path determination ===');
     console.log('location.state?.from:', location.state?.from);
     console.log('document.referrer:', document.referrer);
     console.log('partnerId:', partnerId);
     console.log('userRole:', userRole);
     
-    // Если пришли из страницы редактирования партнера
+    // If came from partner edit page
     if (referrer && referrer.includes(`/admin/partners/${partnerId}/edit`)) {
       return `/admin/partners/${partnerId}/edit`;
     }
     
-    // Если пришли из списка сервисных точек партнера
+    // If came from partner service points list
     if (referrer && referrer.includes(`/admin/partners/${partnerId}/service-points`)) {
       return `/admin/partners/${partnerId}/service-points`;
     }
     
-    // Если пришли из общего списка сервисных точек (только для админов)
+    // If came from general service points list (admins only)
     if (referrer && referrer.includes('/admin/service-points') && userRole === 'admin') {
       return '/admin/service-points';
     }
     
-    // Логика возврата в зависимости от роли пользователя
+    // Return logic based on user role
     if (userRole === 'partner' && currentUser.partner_id) {
-      // Партнеры возвращаются на свою страницу редактирования
+      // Partners return to their edit page
       return `/admin/partners/${currentUser.partner_id}/edit`;
     }
     
     if (userRole === 'operator' && currentUser.operator?.partner_id) {
-      // Операторы возвращаются к списку сервисных точек своего партнера
+      // Operators return to their partner's service points list
       return `/admin/partners/${currentUser.operator.partner_id}/service-points`;
     }
     
-    // Если есть partnerId, по умолчанию возвращаемся к списку сервисных точек партнера
+    // If partnerId exists, return to partner's service points list by default
     if (partnerId) {
       return `/admin/partners/${partnerId}/service-points`;
     }
     
-    // По умолчанию возвращаемся к общему списку (только для админов)
+    // Return to general list by default (admins only)
     return userRole === 'admin' ? '/admin/service-points' : '/admin';
   };
   
-  // Отладочная информация для проверки параметров URL
-  console.log('=== URL параметры ===');
+  // Debug info for URL parameters
+  console.log('=== URL parameters ===');
   console.log('partnerId:', partnerId, 'type:', typeof partnerId);
   console.log('id:', id, 'type:', typeof id);
   console.log('isEditMode:', isEditMode);
@@ -165,12 +168,12 @@ const ServicePointFormPage: React.FC = () => {
   
   // Хуки для темы и адаптивности
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px - Мобильные устройства
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px - Планшеты  
-  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px - Маленькие мобильные
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px - Mobile devices
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg')); // < 1200px - Tablets  
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px - Small mobile
   const isVerySmallMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
   const isMediumMobile = useMediaQuery(theme.breakpoints.down('md')); // < 900px
-  const isLargeTablet = useMediaQuery(theme.breakpoints.down('xl')); // < 1536px - Большие планшеты
+  const isLargeTablet = useMediaQuery(theme.breakpoints.down('xl')); // < 1536px - Large tablets
   
   // Состояние
   const [activeStep, setActiveStep] = useState(0);
@@ -198,7 +201,7 @@ const ServicePointFormPage: React.FC = () => {
   // Функция для прямой загрузки фотографий через fetch API
   const uploadPhotoDirectly = async (servicePointId: string, file: File, isMain: boolean = false, description?: string) => {
     const formData = new FormData();
-    // ИСПРАВЛЕНО: бэкенд ожидает поле 'file', а не 'photo'
+    // FIXED: backend expects 'file' field, not 'photo'
     formData.append('file', file);
     formData.append('is_main', isMain.toString());
     if (description) {
@@ -206,11 +209,11 @@ const ServicePointFormPage: React.FC = () => {
     }
     
     if (!authToken) {
-      throw new Error('Токен авторизации не найден');
+      throw new Error(t('errors.authTokenNotFound'));
     }
     
     const url = `http://localhost:8000/api/v1/service_points/${servicePointId}/photos`;
-    console.log('=== Прямая загрузка фотографии ===');
+    console.log('=== Direct photo upload ===');
     console.log('URL:', url);
     console.log('servicePointId:', servicePointId);
     console.log('file:', file);
@@ -219,7 +222,7 @@ const ServicePointFormPage: React.FC = () => {
     console.log('file.type:', file.type);
     console.log('isMain:', isMain);
     console.log('FormData содержимое:');
-    // Исправляем итерацию для совместимости с TypeScript
+    // Fix iteration for TypeScript compatibility
     Array.from(formData.entries()).forEach(([key, value]) => {
       console.log('  ', key, ':', value);
     });
@@ -235,15 +238,15 @@ const ServicePointFormPage: React.FC = () => {
     
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Ошибка загрузки фотографии:', response.status, errorData);
+      console.error(t('errors.photoUploadError'), response.status, errorData);
       throw new Error(`Ошибка загрузки фотографии: ${response.status}`);
     }
     
     const result = await response.json();
-    console.log('Фотография загружена успешно:', result);
+    console.log(t('forms.servicePoint.photoUploadSuccess'), result);
     
-    // ИНВАЛИДАЦИЯ КЭША RTK Query после успешной загрузки
-    console.log('Инвалидируем кэш RTK Query для фотографий и сервисной точки');
+    // RTK Query cache invalidation after successful upload
+    console.log(t('forms.servicePoint.cacheInvalidation'));
     invalidateTag('ServicePointPhoto');
     invalidateTag('ServicePoint');
     invalidateList(['ServicePointPhoto']);
@@ -380,7 +383,7 @@ const ServicePointFormPage: React.FC = () => {
   // Formik
   const formik = useFormik({
     initialValues,
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     onSubmit: async (values: ServicePointFormDataNew) => {
       try {
         // Подготавливаем данные для отправки
@@ -533,7 +536,7 @@ const ServicePointFormPage: React.FC = () => {
                 await uploadPhotoDirectly(String(id), (photo as any).file, photo.is_main, photo.description);
                 console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
               } catch (photoError) {
-                console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
+                console.error(t('errors.photoUploadError'), (photo as any).file.name, photoError);
               }
             }
           } else {
@@ -606,7 +609,7 @@ const ServicePointFormPage: React.FC = () => {
                 await uploadPhotoDirectly(String(result.id), (photo as any).file, photo.is_main, photo.description);
                 console.log('Фотография загружена успешно через fetch API:', (photo as any).file.name);
               } catch (photoError) {
-                console.error('Ошибка загрузки фотографии:', (photo as any).file.name, photoError);
+                console.error(t('errors.photoUploadError'), (photo as any).file.name, photoError);
               }
             }
           }
@@ -828,10 +831,10 @@ const ServicePointFormPage: React.FC = () => {
   const getIncompleteSteps = () => {
     const incompleteSteps: string[] = [];
     
-    if (!isBasicInfoComplete()) incompleteSteps.push('Основная информация');
+    if (!isBasicInfoComplete()) incompleteSteps.push(t('forms.servicePoint.steps.basic'));
     if (!isLocationComplete()) incompleteSteps.push('Адрес и местоположение');
     if (!isContactComplete()) incompleteSteps.push('Контактная информация');
-    if (!isSettingsComplete()) incompleteSteps.push('Настройки');
+    if (!isSettingsComplete()) incompleteSteps.push(t('forms.servicePoint.steps.settings'));
     if (!isScheduleComplete()) incompleteSteps.push('Расписание работы');
     if (!isPostsComplete()) incompleteSteps.push('Рабочие посты');
     // Услуги показываем как незаполненные только если они добавлены, но заполнены некорректно
@@ -1120,7 +1123,7 @@ const ServicePointFormPage: React.FC = () => {
           }}
         >
           {isEditMode 
-            ? `Редактирование точки: ${servicePoint?.name || 'Загрузка...'}` 
+            ? `Редактирование точки: ${servicePoint?.name || t('common.loading')}` 
             : 'Создание точки обслуживания'
           }
         </Typography>
@@ -1221,7 +1224,7 @@ const ServicePointFormPage: React.FC = () => {
                       px: isMobile ? 2 : 2, // Уменьшаем горизонтальный padding
                     }}
                   >
-                    {formik.isSubmitting ? 'Сохранение...' : 'Сохранить'}
+                    {formik.isSubmitting ? t('common.saving') : t('common.save')}
                   </Button>
                   
                   {/* Индикатор незаполненных шагов */}

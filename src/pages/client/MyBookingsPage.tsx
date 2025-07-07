@@ -181,11 +181,11 @@ const MyBookingsPage: React.FC = () => {
           }
           if (!dateOk) return false;
 
-          // Для вкладки "Отмененные" (tabValue === 3) показываем все отмененные статусы
+          // Для вкладки t('client.myBookings.cancelled') (tabValue === 3) показываем все отмененные статусы
           if (tabValue === 3) {
             return isCancelledStatus(String(booking.status));
           }
-          // Для вкладки "Подтвержденные" (tabValue === 1) показываем подтвержденные и в процессе
+          // Для вкладки t('client.myBookings.confirmed') (tabValue === 1) показываем подтвержденные и в процессе
           if (tabValue === 1) {
             return booking.status === BOOKING_STATUSES.CONFIRMED || 
                    booking.status === BOOKING_STATUSES.IN_PROGRESS;
@@ -210,7 +210,7 @@ const MyBookingsPage: React.FC = () => {
       <ClientLayout>
         <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <CircularProgress />
-          <Typography sx={{ ml: 2 }}>Загрузка...</Typography>
+          <Typography sx={{ ml: 2 }}>{t('client.myBookings.loading')}</Typography>
         </Box>
       </ClientLayout>
     );
@@ -260,7 +260,7 @@ const MyBookingsPage: React.FC = () => {
               onClose={() => setShowWelcomeMessage(false)}
             >
               <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                🎉 Добро пожаловать в личный кабинет!
+                {t('client.myBookings.welcome')}
               </Typography>
               <Typography variant="body2">
                 Ваш аккаунт успешно создан и бронирование добавлено. Теперь вы можете управлять своими записями.
@@ -271,7 +271,7 @@ const MyBookingsPage: React.FC = () => {
           {/* Заголовок с кнопкой создания записи */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h4" component="h1">
-              {t('Мои записи')} {clientFromApi?.user ? `(${clientFromApi.user.first_name} ${clientFromApi.user.last_name})` : `(Client ID: ${clientId})`}
+              {t('client.myBookings.title')} {clientFromApi?.user ? `(${clientFromApi.user.first_name} ${clientFromApi.user.last_name})` : `(Client ID: ${clientId})`}
             </Typography>
             
             <Button
@@ -280,7 +280,7 @@ const MyBookingsPage: React.FC = () => {
               onClick={handleNewBooking}
               sx={primaryButtonStyles}
             >
-              Новая запись
+              {t('client.myBookings.newBooking')}
             </Button>
           </Box>
           
@@ -293,10 +293,10 @@ const MyBookingsPage: React.FC = () => {
               textColor="primary"
               variant="fullWidth"
             >
-              <Tab label={t('Предстоящие')} />
-              <Tab label={t('Подтвержденные')} />
-              <Tab label={t('Завершенные')} />
-              <Tab label={t('Отмененные')} />
+              <Tab label={t('client.myBookings.upcoming')} />
+              <Tab label={t('client.myBookings.confirmed')} />
+              <Tab label={t('client.myBookings.completed')} />
+              <Tab label={t('client.myBookings.cancelled')} />
             </Tabs>
           </Paper>
           

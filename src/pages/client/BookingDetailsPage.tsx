@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -112,6 +113,7 @@ interface DetailedBooking {
 }
 
 const BookingDetailsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -230,7 +232,7 @@ const BookingDetailsPage: React.FC = () => {
       parts.push(`г. ${servicePoint.city.name}`);
     }
     
-    return parts.join(', ') || 'Сервисная точка';
+    return parts.join(', ') || t('client.bookingDetails.servicePoint');
   };
   
   // Если данные загружаются
@@ -302,12 +304,12 @@ const BookingDetailsPage: React.FC = () => {
         
         {/* Основная информация о бронировании - компактная сетка */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          {/* Дата и время в одной строке */}
+          {/* {t('client.bookingDetails.date')} и время в одной строке */}
           <Grid item xs={12} sm={6}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <CalendarIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                Дата:
+                {t('client.bookingDetails.date')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatBookingDate(booking.booking_date)}
@@ -319,7 +321,7 @@ const BookingDetailsPage: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <TimeIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                Время:
+                {t('client.bookingDetails.time')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatTime(booking.start_time)}
@@ -349,7 +351,7 @@ const BookingDetailsPage: React.FC = () => {
             <LocationIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem', mt: 0.1 }} />
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                Сервисная точка:
+                {t('client.bookingDetails.servicePoint')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500, lineHeight: 1.3 }}>
                 {formatServicePointInfo(booking.service_point)}

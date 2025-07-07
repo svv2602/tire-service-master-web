@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест украинских переводов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .translation-test {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 4px 0;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .key {
+            font-family: monospace;
+            color: #6c757d;
+        }
+        .value {
+            font-weight: bold;
+        }
+        .ukrainian {
+            color: #28a745;
+        }
+        .russian {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>🇺🇦 Тест украинских переводов</h1>
+    
+    <div class="test-section">
+        <h2>Проверка файла переводов</h2>
+        <div id="fileTest" class="test-result loading">Загрузка...</div>
+        <button onclick="testTranslationFile()">Проверить файл переводов</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Тест API переводов</h2>
+        <div id="apiTest" class="test-result loading">Загрузка...</div>
+        <button onclick="testApiTranslations()">Проверить API переводы</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Тест ключевых переводов</h2>
+        <div id="keyTranslations"></div>
+        <button onclick="testKeyTranslations()">Проверить ключевые переводы</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Проверка браузера</h2>
+        <div>
+            <p><strong>Язык браузера:</strong> <span id="browserLang"></span></p>
+            <p><strong>Текущий URL:</strong> <span id="currentUrl"></span></p>
+            <p><strong>localStorage язык:</strong> <span id="localStorageLang"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Тестовые ключи переводов
+        const testKeys = [
+            { key: 'admin.servicePoints.title', expected: 'Точки обслуговування' },
+            { key: 'common.save', expected: 'Зберегти' },
+            { key: 'common.cancel', expected: 'Скасувати' },
+            { key: 'filters.region', expected: 'Регіон' },
+            { key: 'filters.city', expected: 'Місто' },
+            { key: 'admin.servicePoints.searchPlaceholder', expected: 'Пошук за назвою або адресою...' },
+            { key: 'tables.columns.servicePoint', expected: 'Сервісна точка' },
+            { key: 'tables.columns.partner', expected: 'Партнер' },
+            { key: 'tables.columns.workingHours', expected: 'Робочі години' }
+        ];
+
+        // Проверка информации браузера
+        document.getElementById('browserLang').textContent = navigator.language || 'не определен';
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('localStorageLang').textContent = localStorage.getItem('language') || 'не установлен';
+
+        async function testTranslationFile() {
+            const testDiv = document.getElementById('fileTest');
+            testDiv.className = 'test-result loading';
+            testDiv.textContent = 'Проверяю файл переводов...';
+
+            try {
+                const response = await fetch('/src/i18n/locales/uk.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const translations = await response.json();
+                
+                // Проверяем наличие ключевых секций
+                const sections = ['common', 'admin', 'filters', 'tables'];
+                const missingSections = sections.filter(section => !translations[section]);
+                
+                if (missingSections.length > 0) {
+                    testDiv.className = 'test-result error';
+                    testDiv.textContent = `❌ Отсутствуют секции: ${missingSections.join(', ')}`;
+                    return;
+                }
+
+                // Проверяем наличие русских текстов
+                const jsonString = JSON.stringify(translations);
+                const russianPatterns = [
+                    'Управление сервисными',
+                    'Поиск по названию',
+                    'не найдены',
+                    'Создать точку',
+                    'Редактировать точку'
+                ];
+                
+                const foundRussian = russianPatterns.filter(pattern => jsonString.includes(pattern));
+                
+                if (foundRussian.length > 0) {
+                    testDiv.className = 'test-result error';
+                    testDiv.innerHTML = `⚠️ Найдены русские тексты:<br>${foundRussian.map(text => `• ${text}`).join('<br>')}`;
+                    return;
+                }
+
+                testDiv.className = 'test-result success';
+                testDiv.textContent = '✅ Файл переводов загружен успешно, русские тексты не найдены';
+                
+            } catch (error) {
+                testDiv.className = 'test-result error';
+                testDiv.textContent = `❌ Ошибка загрузки: ${error.message}`;
+            }
+        }
+
+        async function testApiTranslations() {
+            const testDiv = document.getElementById('apiTest');
+            testDiv.className = 'test-result loading';
+            testDiv.textContent = 'Проверяю API переводы...';
+
+            try {
+                // Симулируем запрос к странице с украинским языком
+                const response = await fetch('http://localhost:3008/admin/service-points', {
+                    headers: {
+                        'Accept-Language': 'uk',
+                        'Content-Type': 'text/html'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const html = await response.text();
+                
+                // Проверяем наличие украинских текстов в HTML
+                const ukrainianTexts = [
+                    'Точки обслуговування',
+                    'Регіон',
+                    'Місто',
+                    'Партнер'
+                ];
+                
+                const foundTexts = ukrainianTexts.filter(text => html.includes(text));
+                
+                if (foundTexts.length === ukrainianTexts.length) {
+                    testDiv.className = 'test-result success';
+                    testDiv.textContent = '✅ API возвращает украинские тексты';
+                } else {
+                    testDiv.className = 'test-result error';
+                    testDiv.textContent = `⚠️ Найдено только ${foundTexts.length} из ${ukrainianTexts.length} украинских текстов`;
+                }
+                
+            } catch (error) {
+                testDiv.className = 'test-result error';
+                testDiv.textContent = `❌ Ошибка API: ${error.message}`;
+            }
+        }
+
+        async function testKeyTranslations() {
+            const container = document.getElementById('keyTranslations');
+            container.innerHTML = '<div class="test-result loading">Проверяю ключевые переводы...</div>';
+
+            try {
+                const response = await fetch('/src/i18n/locales/uk.json');
+                const translations = await response.json();
+                
+                let html = '';
+                let successCount = 0;
+                
+                testKeys.forEach(({ key, expected }) => {
+                    const keys = key.split('.');
+                    let value = translations;
+                    
+                    try {
+                        for (const k of keys) {
+                            value = value[k];
+                        }
+                        
+                        const isCorrect = value === expected;
+                        const className = isCorrect ? 'ukrainian' : 'russian';
+                        if (isCorrect) successCount++;
+                        
+                        html += `
+                            <div class="translation-test">
+                                <span class="key">${key}</span>
+                                <span class="value ${className}">${value || 'НЕ НАЙДЕНО'}</span>
+                                <span>${isCorrect ? '✅' : '❌'}</span>
+                            </div>
+                        `;
+                    } catch (e) {
+                        html += `
+                            <div class="translation-test">
+                                <span class="key">${key}</span>
+                                <span class="value russian">НЕ НАЙДЕНО</span>
+                                <span>❌</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                const resultClass = successCount === testKeys.length ? 'success' : 'error';
+                const resultText = `${successCount}/${testKeys.length} переводов корректны`;
+                
+                container.innerHTML = `
+                    <div class="test-result ${resultClass}">${resultText}</div>
+                    ${html}
+                `;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="test-result error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+
+        // Автоматический запуск тестов при загрузке
+        window.addEventListener('load', () => {
+            testTranslationFile();
+            testKeyTranslations();
+        });
+    </script>
+</body>
+</html> 

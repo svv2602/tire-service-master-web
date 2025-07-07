@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -29,6 +30,7 @@ import { ru } from 'date-fns/locale';
 import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const BookingSuccessPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
@@ -190,7 +192,7 @@ const BookingSuccessPage: React.FC = () => {
                   to="/client" 
                   sx={secondaryButtonStyles}
                 >
-                  На главную
+                  {t('client.bookingSuccess.backToMain')}
                 </Button>
                 <Button 
                   variant="contained" 

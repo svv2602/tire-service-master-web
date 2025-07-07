@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -50,7 +51,7 @@ import { getFormStyles, SIZES } from '../../styles';
  * Схема валидации формы бренда автомобиля
  * Определяет правила валидации для всех полей формы
  */
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
     .required('Название бренда обязательно')
     .min(2, 'Название должно содержать минимум 2 символа')
@@ -67,6 +68,7 @@ const ACCEPTED_FILE_TYPES = ['image/jpeg', 'image/png']; // Только JPEG и
  * Поддерживает создание новых брендов и редактирование существующих
  */
 export const CarBrandFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -95,7 +97,7 @@ export const CarBrandFormPage: React.FC = () => {
       logo: null,
       is_active: brand?.is_active ?? true,
     },
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     enableReinitialize: true, // Автоматически перезагружает значения при изменении initialValues
     onSubmit: async (values) => {
       try {
@@ -244,7 +246,7 @@ export const CarBrandFormPage: React.FC = () => {
           Назад
         </Button>
         <Typography variant="h4" component="h1" sx={formStyles.title}>
-          {isEditing ? 'Редактировать бренд автомобиля' : 'Новый бренд автомобиля'}
+          {isEditing ? t('forms.carBrand.title.edit') : t('forms.carBrand.title.create')}
         </Typography>
       </Box>
 
@@ -356,7 +358,7 @@ export const CarBrandFormPage: React.FC = () => {
                   startIcon={<SaveIcon />}
                   disabled={formik.isSubmitting}
                 >
-                  {isEditing ? 'Сохранить' : 'Создать'}
+                  {isEditing ? t('common.save') : t('common.create')}
                 </Button>
               </Box>
             </Box>

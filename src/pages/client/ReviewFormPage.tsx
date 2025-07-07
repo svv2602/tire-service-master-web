@@ -121,7 +121,7 @@ const ReviewFormPage: React.FC = () => {
             <>
               <Paper sx={{ p: 3, mb: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('Выберите запись для отзыва')}
+                  {t('client.reviewForm.selectBooking')} для отзыва
                 </Typography>
                 
                 <FormControl fullWidth sx={{ mb: 2 }}>
@@ -133,7 +133,7 @@ const ReviewFormPage: React.FC = () => {
                     onChange={handleBookingChange}
                     label={t('Запись на обслуживание')}
                   >
-                    <MenuItem value="">{t('Выберите запись')}</MenuItem>
+                    <MenuItem value="">{t('client.reviewForm.selectBooking')}</MenuItem>
                     {completedBookings.map((booking) => (
                       <MenuItem key={booking.id} value={String(booking.id)}>
                         {t('Запись №')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})

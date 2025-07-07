@@ -2,6 +2,7 @@
 // Форма бронирования с интеграцией динамической системы доступности
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -54,6 +55,7 @@ interface BookingFormState {
 }
 
 const BookingFormPageWithAvailability: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -226,7 +228,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
   // Обработчик сохранения
   const handleSave = async () => {
     if (!isFormValid()) {
-      setError('Заполните все обязательные поля');
+      setError(t('forms.common.fillAllRequiredFields'));
       return;
     }
 
@@ -543,7 +545,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
                 onClick={handleSave}
                 disabled={!isFormValid() || saving}
               >
-                {saving ? 'Сохранение...' : (isEditMode ? 'Обновить' : 'Создать бронирование')}
+                {saving ? t('common.saving') : (isEditMode ? 'Обновить' : 'Создать бронирование')}
               </Button>
             </Box>
           </Paper>

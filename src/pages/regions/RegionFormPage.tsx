@@ -12,6 +12,7 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
@@ -44,7 +45,7 @@ import { getFormStyles, SIZES } from '../../styles';
  * Схема валидации формы региона
  * Определяет правила валидации для всех полей формы
  */
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
     .required('Название региона обязательно')
     .min(2, 'Название должно содержать минимум 2 символа')
@@ -61,6 +62,7 @@ const validationSchema = Yup.object({
  * Поддерживает создание новых регионов и редактирование существующих
  */
 export const RegionFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -87,7 +89,7 @@ export const RegionFormPage: React.FC = () => {
       code: regionData?.code || '',
       is_active: regionData?.is_active ?? true,
     },
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
@@ -140,7 +142,7 @@ export const RegionFormPage: React.FC = () => {
           Назад
         </Button>
         <Typography variant="h4" component="h1" sx={formStyles.title}>
-          {isEditing ? 'Редактировать регион' : 'Новый регион'}
+          {isEditing ? t('forms.region.title.edit') : t('forms.region.title.create')}
         </Typography>
       </Box>
 
@@ -212,7 +214,7 @@ export const RegionFormPage: React.FC = () => {
                   startIcon={<SaveIcon />}
                   disabled={formik.isSubmitting}
                 >
-                  {isEditing ? 'Сохранить' : 'Создать'}
+                  {isEditing ? t('common.save') : t('common.create')}
                 </Button>
               </Box>
             </Box>

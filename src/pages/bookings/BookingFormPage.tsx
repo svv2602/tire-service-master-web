@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -77,7 +78,7 @@ interface BookingDetails {
 }
 
 // Схема валидации для формы бронирования
-const validationSchema = yup.object({
+const createValidationSchema = (t: any) => yup.object({
   service_point_id: yup.number().required('Выберите точку обслуживания'),
   client_id: yup.number().nullable(), // ✅ Клиент опционален для гостевых бронирований
   car_type_id: yup.number().required('Выберите тип автомобиля'),
@@ -109,6 +110,7 @@ const validationSchema = yup.object({
  */
 
 const BookingFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme(); // Инициализация темы для централизованных стилей
@@ -218,7 +220,7 @@ const BookingFormPage: React.FC = () => {
   const formik = useFormik({
     initialValues,
     enableReinitialize: true,
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     onSubmit: async (values) => {
       try {
         setLoading(true);
@@ -1000,7 +1002,7 @@ const BookingFormPage: React.FC = () => {
             disabled={formik.isSubmitting || loading}
             sx={buttonStyles}
           >
-            {formik.isSubmitting || loading ? 'Сохранение...' : 'Сохранить'}
+            {formik.isSubmitting || loading ? t('common.saving') : t('common.save')}
           </Button>
         </Box>
       </form>

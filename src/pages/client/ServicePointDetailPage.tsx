@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -188,6 +189,7 @@ const PhotoGallery: React.FC<{
 };
 
 const ServicePointDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -473,13 +475,13 @@ const ServicePointDetailPage: React.FC = () => {
               '&:hover': { bgcolor: theme.palette.primary.dark }
             }}
           >
-            Записаться
+            {t('client.servicePointDetail.bookNow')}
           </Button>
         </Box>
       </Box>
 
       <Grid container spacing={3}>
-        {/* Левая колонка - Фотографии и описание */}
+        {/* Левая колонка - {t('client.servicePointDetail.photos')} и описание */}
         <Grid item xs={12} lg={8}>
           {/* Фотогалерея */}
           <PhotoGallery 
@@ -627,11 +629,11 @@ const ServicePointDetailPage: React.FC = () => {
                               <PhoneIcon sx={{ color: 'warning.dark', fontSize: '1rem' }} />
                               <Box>
                                 <Typography variant="body2" sx={{ fontWeight: 500, color: 'warning.dark' }}>
-                                  Услуги в данной категории уточняйте по контактному телефону
+                                  {t('client.servicePointDetail.services')} в данной категории уточняйте по контактному телефону
                                 </Typography>
                                 {servicePointData.contact_phone && (
                                   <Typography variant="caption" color="warning.dark">
-                                    Телефон: {servicePointData.contact_phone}
+                                    {t('client.servicePointDetail.phone')}: {servicePointData.contact_phone}
                                   </Typography>
                                 )}
                               </Box>
@@ -645,7 +647,7 @@ const ServicePointDetailPage: React.FC = () => {
                 </List>
               ) : (
                 <Typography variant="body2" color="text.secondary">
-                  Услуги не найдены
+                  {t('client.servicePointDetail.services')} не найдены
                 </Typography>
               )}
             </Collapse>
@@ -665,7 +667,7 @@ const ServicePointDetailPage: React.FC = () => {
                 <LocationIcon sx={{ mr: 2, color: 'text.secondary' }} />
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Адрес
+                    {t('client.servicePointDetail.address')}
                   </Typography>
                   <Typography variant="body2">
                     {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
@@ -678,7 +680,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
                   <Box>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Телефон
+                      {t('client.servicePointDetail.phone')}
                     </Typography>
                     <Typography variant="body2">
                       <Link href={`tel:${servicePointData.contact_phone}`} color="primary">
@@ -766,7 +768,7 @@ const ServicePointDetailPage: React.FC = () => {
               '&:hover': { bgcolor: theme.palette.primary.dark }
             }}
           >
-            Записаться на обслуживание
+            {t('client.servicePointDetail.bookNow')} на обслуживание
           </Button>
         </Grid>
       </Grid>

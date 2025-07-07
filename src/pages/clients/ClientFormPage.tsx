@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useFormik } from 'formik';
@@ -36,7 +37,7 @@ import { getFormStyles, getTablePageStyles } from '../../styles/components';
  * - Телефон: обязательное поле, проверка формата (10-15 цифр с возможным +)
  * - Email: необязательное поле, проверка формата email если заполнено
  */
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   user_attributes: Yup.object({
     first_name: Yup.string()
       .required('Имя обязательно')
@@ -63,6 +64,7 @@ const validationSchema = Yup.object({
  */
 
 const ClientFormPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -114,7 +116,7 @@ const ClientFormPage: React.FC = () => {
   // Инициализация формы
   const formik = useFormik<ClientFormData>({
     initialValues: initialValues,
-    validationSchema: validationSchema,
+    validationSchema: createValidationSchema(t),
     enableReinitialize: true,
     onSubmit: async (values) => {
       setIsSubmitting(true);
@@ -416,7 +418,7 @@ const ClientFormPage: React.FC = () => {
                   variant="contained"
                   disabled={isLoading || !isFormValid()}
                 >
-                  {isLoading ? 'Сохранение...' : (isEditMode ? 'Сохранить' : 'Создать')}
+                  {isLoading ? t('common.saving') : (isEditMode ? t('common.save') : t('common.create'))}
                 </Button>
               </Box>
             </Grid>

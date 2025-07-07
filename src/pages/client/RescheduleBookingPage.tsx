@@ -230,7 +230,7 @@ const RescheduleBookingPage: React.FC = () => {
                 {t('Назад')}
               </Button>
               <Typography variant="h4" component="h1">
-                {t('Перенос записи')} №{booking.id}
+                {t('client.reschedule.title')} №{booking.id}
               </Typography>
             </Box>
 
@@ -241,7 +241,7 @@ const RescheduleBookingPage: React.FC = () => {
               disabled={!canSave}
               sx={primaryButtonStyles}
             >
-              {isUpdating ? t('Сохранение...') : t('Подтвердить перенос')}
+              {isUpdating ? t('Сохранение...') : t('client.reschedule.confirmReschedule')}
             </Button>
           </Box>
 
@@ -255,7 +255,7 @@ const RescheduleBookingPage: React.FC = () => {
           {/* Информация о текущей записи */}
           <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>
-              {t('Текущая запись')}
+              {t('client.reschedule.currentBooking')}
             </Typography>
             
             <Box mt={2} mb={2}>
@@ -316,7 +316,7 @@ const RescheduleBookingPage: React.FC = () => {
                   sx={primaryButtonStyles}
                   size="large"
                 >
-                  {isUpdating ? t('Сохранение...') : t('Подтвердить перенос')}
+                  {isUpdating ? t('Сохранение...') : t('client.reschedule.confirmReschedule')}
                 </Button>
               </Box>
               
@@ -343,13 +343,13 @@ const RescheduleBookingPage: React.FC = () => {
           {/* Предупреждения */}
           {!selectedDate && (
             <Alert severity="warning" sx={{ mt: 3 }}>
-              {t('Выберите дату для продолжения')}
+              {t('client.reschedule.selectDate')} для продолжения
             </Alert>
           )}
 
           {selectedDate && !selectedTimeSlot && (
             <Alert severity="warning" sx={{ mt: 3 }}>
-              {t('Выберите время для продолжения')}
+              {t('client.reschedule.selectTime')} для продолжения
             </Alert>
           )}
         </Container>

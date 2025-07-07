@@ -89,7 +89,7 @@ const MyReviewsPage: React.FC = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h4" component="h1">
-              {t('Мои отзывы')}
+              {t('client.reviews.title')}
             </Typography>
             
             <Button 
@@ -130,7 +130,7 @@ const MyReviewsPage: React.FC = () => {
             ) : (
               <Paper sx={{ p: 4, textAlign: 'center' }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('У вас пока нет отзывов')}
+                  {t('client.reviews.noReviews')}
                 </Typography>
                 <Typography variant="body1" color="textSecondary" paragraph>
                   {t('Оставьте отзыв о сервисе, которым вы воспользовались')}

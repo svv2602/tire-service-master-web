@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
@@ -50,6 +51,7 @@ interface CityWithServicePoints {
 }
 
 const ClientMainPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -102,12 +104,12 @@ const ClientMainPage: React.FC = () => {
   // Используем данные из API или fallback
   const currentHero = heroContent || {
     title: 'Знайдіть найкращий автосервис поруч з вами',
-    content: 'Швидке бронювання, перевірені майстри, гарантія якості',
+    content: t('client.mainPage.subtitle'),
     settings: {
-      subtitle: 'Швидке бронювання, перевірені майстри, гарантія якості',
-      button_text: 'Знайти',
-      search_placeholder: 'Знайти сервіс або послугу',
-      city_placeholder: 'Місто'
+      subtitle: t('client.mainPage.subtitle'),
+      button_text: t('client.mainPage.searchButton'),
+      search_placeholder: t('client.mainPage.searchPlaceholder'),
+      city_placeholder: t('client.mainPage.cityPlaceholder')
     }
   };
   
@@ -142,7 +144,7 @@ const ClientMainPage: React.FC = () => {
   if (contentLoading || citiesLoading || articlesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <Typography>Завантаження...</Typography>
+        <Typography>{t('client.mainPage.loading')}</Typography>
       </Box>
     );
   }
@@ -235,7 +237,7 @@ const ClientMainPage: React.FC = () => {
                               />
                             )}
                             noOptionsText="Городи не знайдені"
-                            loadingText="Завантаження..."
+                            loadingText={t('client.mainPage.loading')}
                             loading={citiesLoading}
                           />
                         </Grid>
@@ -252,7 +254,7 @@ const ClientMainPage: React.FC = () => {
                               '&:hover': { bgcolor: theme.palette.primary.dark }
                             }}
                           >
-                            {currentHero.settings?.button_text || 'Знайти'}
+                            {currentHero.settings?.button_text || t('client.mainPage.searchButton')}
                           </Button>
                         </Grid>
                       </Grid>
@@ -352,10 +354,10 @@ const ClientMainPage: React.FC = () => {
           <Container maxWidth="md">
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-                {ctaContent?.title || 'Готові записатися на обслуговування?'}
+                {ctaContent?.title || t('client.mainPage.readyToBook')}
               </Typography>
               <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                {ctaContent?.content || 'Оберіть зручний час та найближчий сервіс'}
+                {ctaContent?.content || t('client.mainPage.chooseTimeAndService')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Button 
@@ -369,7 +371,7 @@ const ClientMainPage: React.FC = () => {
                   }}
                   onClick={() => navigate('/client/booking')}
                 >
-                  {ctaContent?.settings?.primary_button_text || 'Записатися онлайн'}
+                  {ctaContent?.settings?.primary_button_text || t('client.mainPage.bookOnlineButton')}
                 </Button>
                 <Button 
                   variant="outlined" 
@@ -385,7 +387,7 @@ const ClientMainPage: React.FC = () => {
                   }}
                   onClick={() => navigate('/client/profile')}
                 >
-                  {ctaContent?.settings?.secondary_button_text || 'Особистий кабінет'}
+                  {ctaContent?.settings?.secondary_button_text || t('client.mainPage.personalCabinetButton')}
                 </Button>
               </Box>
             </Box>
@@ -398,7 +400,7 @@ const ClientMainPage: React.FC = () => {
             <Grid container spacing={4}>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                  {footerContent?.title || '🚗 Твоя Шина'}
+                  {footerContent?.title || t('client.mainPage.footerTitle')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
                   {footerContent?.content || 'Знайдіть найкращий автосервис поруч з вами. Швидке бронювання, перевірені майстри.'}
@@ -414,7 +416,7 @@ const ClientMainPage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  Послуги
+                  {t('client.mainPage.servicesTitle')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   {(footerContent?.settings?.services_links || ['Заміна шин', 'Балансування', 'Ремонт проколів']).map((link: string) => (
@@ -429,7 +431,7 @@ const ClientMainPage: React.FC = () => {
                   Інформація
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(footerContent?.settings?.info_links || ['База знань', 'Особистий кабінет', 'Для бізнесу']).map((link: string, index: number) => {
+                  {(footerContent?.settings?.info_links || ['База знань', t('client.mainPage.personalCabinetButton'), 'Для бізнесу']).map((link: string, index: number) => {
                     const routes = ['/knowledge-base', '/client/profile', '/login'];
                     return (
                       <Link key={link} to={routes[index]} style={{ color: colors.textSecondary, textDecoration: 'none' }}>

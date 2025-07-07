@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -64,6 +65,7 @@ import { useSearchServicePointsQuery } from '../../api/servicePoints.api';
 import type { ServicePoint, ServiceCategory, City, ServicePointService } from '../../types/models';
 
 const ClientServicesPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -118,7 +120,7 @@ const ClientServicesPage: React.FC = () => {
 
     let allServices: (ServicePointService & { servicePoint: ServicePoint })[] = [];
     
-    // Собираем все услуги из всех сервисных точек
+    // Собираем все услуги из всех сервисных {t('client.services.servicePoints')}
     servicePoints.forEach(servicePoint => {
       if (servicePoint.services) {
         servicePoint.services.forEach(service => {
@@ -248,10 +250,10 @@ const ClientServicesPage: React.FC = () => {
           <Fade in timeout={300}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
               <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                🔧 Поиск услуг
+                {t('client.services.title')}
               </Typography>
               <Typography variant="h6" sx={{ color: colors.textSecondary, maxWidth: 600, mx: 'auto' }}>
-                Найдите нужную услугу в вашем городе и запишитесь на удобное время
+                {t('client.services.subtitle')}
               </Typography>
             </Box>
           </Fade>
@@ -296,7 +298,7 @@ const ClientServicesPage: React.FC = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Выберите город"
+                        label={t('client.services.selectCity')}
                         placeholder="Начните вводить название города..."
                         sx={textFieldStyles}
                         InputProps={{
@@ -343,7 +345,7 @@ const ClientServicesPage: React.FC = () => {
                           onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : null)}
                           label="Категория услуг"
                         >
-                          <MenuItem value="">Все категории</MenuItem>
+                          <MenuItem value="">{t('client.services.allCategories')}</MenuItem>
                           {categories.map((category) => (
                             <MenuItem key={category.id} value={category.id}>
                               {getServiceIcon(category.name)} {category.name}
@@ -403,7 +405,7 @@ const ClientServicesPage: React.FC = () => {
                 }}
               >
                 <LocationIcon />
-                Выберите город для поиска доступных услуг
+                {t('client.services.selectCity')} для поиска доступных услуг
               </Alert>
             </Fade>
           ) : servicePointsLoading ? (
@@ -438,7 +440,7 @@ const ClientServicesPage: React.FC = () => {
                   </Typography>
                 </Box>
 
-                {/* Список сервисных точек с услугами */}
+                {/* Список сервисных {t('client.services.servicePoints')} с услугами */}
                 <Grid container spacing={3}>
                   {servicesByServicePoint.map(({ servicePoint, services }, index) => (
                     <Grid item xs={12} key={servicePoint.id}>
@@ -576,7 +578,7 @@ const ClientServicesPage: React.FC = () => {
                                               minWidth: 140
                                             }}
                                           >
-                                            Записаться
+                                            {t('client.services.bookService')}
                                           </Button>
                                         </Box>
                                       }
