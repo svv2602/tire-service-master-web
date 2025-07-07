@@ -77,9 +77,9 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   // Функции для получения названий
   const getServicePointName = () => {
     if (servicePointData) {
-      return servicePointData.name || `Точка обслуживания #${formData.service_point_id}`;
+      return servicePointData.name || `${t('bookingSteps.review.servicePoint')} #${formData.service_point_id}`;
     }
-    return `Точка обслуживания #${formData.service_point_id}`;
+    return `${t('bookingSteps.review.servicePoint')} #${formData.service_point_id}`;
   };
   
   const getServicePointAddress = () => {
@@ -97,23 +97,23 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   
   const getCityName = () => {
     if (cityLoading) {
-      return 'Загрузка...';
+      return t('bookingSteps.review.loadingCity');
     }
     if (cityError) {
-      return `Город #${formData.city_id} (ошибка загрузки)`;
+      return `${t('bookingSteps.review.city')} #${formData.city_id} (${t('bookingSteps.review.cityLoadError')})`;
     }
     if (cityData) {
       // API возвращает данные в формате { data: City }
-      return cityData.data?.name || (cityData as any).name || `Город #${formData.city_id}`;
+      return cityData.data?.name || (cityData as any).name || `${t('bookingSteps.review.city')} #${formData.city_id}`;
     }
-    return `Город #${formData.city_id}`;
+    return `${t('bookingSteps.review.city')} #${formData.city_id}`;
   };
   
   const getCarTypeName = () => {
     if (carTypeData) {
-      return carTypeData.name || `Тип автомобиля #${formData.car_type_id}`;
+      return carTypeData.name || `${t('bookingSteps.review.carType')} #${formData.car_type_id}`;
     }
-    return `Тип автомобиля #${formData.car_type_id}`;
+    return `${t('bookingSteps.review.carType')} #${formData.car_type_id}`;
   };
   
   // Подсчет общей стоимости услуг
@@ -140,7 +140,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       skip: !service.service_id
     });
 
-    const serviceName = serviceData?.name || `Услуга #${service.service_id}`;
+    const serviceName = serviceData?.name || `${t('bookingSteps.review.services')} #${service.service_id}`;
     
     return (
       <ListItem key={service.service_id}>
@@ -148,8 +148,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           <ServiceIcon color="action" />
         </ListItemIcon>
         <ListItemText
-          primary={isLoading ? 'Загрузка...' : serviceName}
-          secondary={`${service.price} ₴ × ${service.quantity} = ${service.price * service.quantity} ₴`}
+          primary={isLoading ? t('bookingSteps.review.loadingService') : serviceName}
+          secondary={`${service.price} ${t('bookingSteps.review.currency')} × ${service.quantity} = ${service.price * service.quantity} ${t('bookingSteps.review.currency')}`}
         />
       </ListItem>
     );
@@ -158,12 +158,11 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Подтверждение записи
+        {t('bookingSteps.review.title')}
       </Typography>
       
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Проверьте все данные перед подтверждением записи. Вы сможете изменить информацию, 
-        вернувшись к предыдущим шагам.
+        {t('bookingSteps.review.description')}
       </Typography>
       
       <Grid container spacing={3}>
@@ -172,7 +171,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <ScheduleIcon color="primary" />
-              Детали записи
+              {t('bookingSteps.review.bookingDetails')}
             </Typography>
             
             <List dense>
@@ -181,7 +180,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   <LocationIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Город"
+                  primary={t('bookingSteps.review.city')}
                   secondary={getCityName()}
                 />
               </ListItem>
@@ -191,7 +190,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   <LocationIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Точка обслуживания"
+                  primary={t('bookingSteps.review.servicePoint')}
                   secondary={getServicePointName()}
                 />
               </ListItem>
@@ -202,7 +201,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     <LocationIcon color="action" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Адрес"
+                    primary={t('bookingSteps.review.address')}
                     secondary={getServicePointAddress()}
                   />
                 </ListItem>
@@ -214,7 +213,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     <PhoneIcon color="action" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Телефон"
+                    primary={t('bookingSteps.review.phone')}
                     secondary={getServicePointPhone()}
                   />
                 </ListItem>
@@ -233,12 +232,12 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* {t('bookingSteps.review.contactInfo')} */}
+        {/* Контактная информация */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <PersonIcon color="primary" />
-              {t('bookingSteps.review.contactInfo')}
+              {t('bookingSteps.review.clientInfo')}
             </Typography>
             
             <List dense>
@@ -252,7 +251,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <PersonIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Имя"
+                        primary={t('bookingSteps.review.name')}
                         secondary={`${formData.service_recipient.first_name || ''}${formData.service_recipient.last_name ? ' ' + formData.service_recipient.last_name : ''}`.trim()}
                       />
                     </ListItem>
@@ -265,7 +264,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <PhoneIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Телефон"
+                        primary={t('bookingSteps.review.phone')}
                         secondary={formData.service_recipient.phone}
                       />
                     </ListItem>
@@ -278,7 +277,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <EmailIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Email"
+                        primary={t('bookingSteps.review.email')}
                         secondary={formData.service_recipient.email}
                       />
                     </ListItem>
@@ -296,7 +295,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <PersonIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Имя"
+                        primary={t('bookingSteps.review.name')}
                         secondary={`${formData.client.first_name}${formData.client.last_name ? ' ' + formData.client.last_name : ''}`}
                       />
                     </ListItem>
@@ -309,7 +308,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <PhoneIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Телефон"
+                        primary={t('bookingSteps.review.phone')}
                         secondary={formData.client.phone}
                       />
                     </ListItem>
@@ -322,7 +321,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         <EmailIcon color="action" />
                       </ListItemIcon>
                       <ListItemText
-                        primary="Email"
+                        primary={t('bookingSteps.review.email')}
                         secondary={formData.client.email}
                       />
                     </ListItem>
@@ -334,8 +333,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
               {!formData.service_recipient && !formData.client && (
                 <ListItem>
                   <ListItemText
-                    primary="t('bookingSteps.review.contactInfo') не указана"
-                    secondary="Вернитесь к шагу `${t('bookingSteps.review.contactInfo')}` для заполнения данных"
+                    primary={`${t('bookingSteps.review.clientInfo')} ${t('bookingSteps.review.noContactInfo')}`}
+                    secondary={t('bookingSteps.review.noContactInfoDescription')}
                   />
                 </ListItem>
               )}
@@ -343,12 +342,12 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* {t('bookingSteps.review.carInfo')} */}
+        {/* Автомобиль */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <CarIcon color="primary" />
-              Автомобиль
+              {t('bookingSteps.review.carInfo')}
             </Typography>
             
             <List dense>
@@ -357,7 +356,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   <CarIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Тип автомобиля"
+                  primary={t('bookingSteps.review.carType')}
                   secondary={getCarTypeName()}
                 />
               </ListItem>
@@ -367,7 +366,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   <CarIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Номер"
+                  primary={t('bookingSteps.review.licensePlate')}
                   secondary={formData.license_plate}
                 />
               </ListItem>
@@ -378,7 +377,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     <CarIcon color="action" />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Марка и модель"
+                    primary={t('bookingSteps.review.carBrandModel')}
                     secondary={`${formData.car_brand} ${formData.car_model}`.trim()}
                   />
                 </ListItem>
@@ -387,7 +386,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* {t('bookingSteps.review.services')} */}
+        {/* Услуги */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -397,7 +396,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             
             {formData.services.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                {t('bookingSteps.review.services')} не выбраны. Вы сможете обсудить их с мастером на месте.
+                {t('bookingSteps.review.services')} {t('bookingSteps.review.noServicesSelected')}
               </Typography>
             ) : (
               <Box>
@@ -414,7 +413,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     {t('bookingSteps.review.total')}:
                   </Typography>
                   <Chip
-                    label={`${calculateTotalPrice()} ₴`}
+                    label={`${calculateTotalPrice()} ${t('bookingSteps.review.currency')}`}
                     color="primary"
                     variant="filled"
                     sx={{ fontWeight: 600 }}
@@ -431,7 +430,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CommentIcon color="primary" />
-                Комментарий
+                {t('bookingSteps.review.comments')}
               </Typography>
               
               <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
@@ -444,7 +443,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       
       {/* Настройки уведомлений */}
       <Alert severity="info" sx={{ mt: 4 }}>
-        📧 Настройки уведомлений
+        📧 {t('bookingSteps.review.notifications')}
         <FormControlLabel
           control={
             <Checkbox
@@ -452,14 +451,14 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
               color="primary"
             />
           }
-          label="Получать SMS и email уведомления о статусе записи"
+          label={t('bookingSteps.review.notificationsText')}
           sx={{ mt: 1, display: 'block' }}
         />
       </Alert>
       
       {/* Согласие с условиями */}
       <Alert severity="info" sx={{ mt: 3 }}>
-        🔒 Нажимая "t('bookingSteps.review.confirm')", вы соглашаетесь с условиями предоставления услуг
+        🔒 {t('bookingSteps.review.agreement')}
       </Alert>
     </Box>
   );
