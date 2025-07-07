@@ -1,6 +1,5 @@
 /**
  * RegionFormPage - Страница формы создания/редактирования региона
- * ТЕСТ: Проверка применения изменений - границы удалены
  * 
  * Функциональность:
  * - Создание нового региона
@@ -47,13 +46,13 @@ import { getFormStyles, SIZES } from '../../styles';
  */
 const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
-    .required('Название региона обязательно')
-    .min(2, 'Название должно содержать минимум 2 символа')
-    .max(100, 'Название не должно превышать 100 символов'),
+    .required(t('forms.region.validation.nameRequired'))
+    .min(2, t('forms.region.validation.nameMin'))
+    .max(100, t('forms.region.validation.nameMax')),
   code: Yup.string()
-    .required('Код региона обязателен')
-    .min(2, 'Код должен содержать минимум 2 символа')
-    .max(10, 'Код не должен превышать 10 символов'),
+    .required(t('forms.region.validation.codeRequired'))
+    .min(2, t('forms.region.validation.codeMin'))
+    .max(10, t('forms.region.validation.codeMax')),
   is_active: Yup.boolean(),
 });
 
@@ -97,15 +96,28 @@ export const RegionFormPage: React.FC = () => {
         setSuccessMessage('');
         if (isEditing && id) {
           await updateRegion({ id: parseInt(id), region: values }).unwrap();
-          setSuccessMessage('Регион успешно обновлен');
+          setSuccessMessage(t('forms.region.messages.updateSuccess'));
         } else {
           await createRegion(values).unwrap();
-          setSuccessMessage('Регион успешно создан');
+          setSuccessMessage(t('forms.region.messages.createSuccess'));
         }
         setTimeout(() => navigate('/admin/regions'), 1000);
       } catch (error: any) {
         console.error('Submit error:', error);
-        setSubmitError(error?.data?.message || 'Произошла ошибка при сохранении');
+        
+        // Обработка ошибок валидации от API
+        if (error?.data?.errors) {
+          const errorMessages = Array.isArray(error.data.errors) 
+            ? error.data.errors.join(', ')
+            : Object.values(error.data.errors).flat().join(', ');
+          setSubmitError(errorMessages);
+        } else if (error?.data?.message) {
+          setSubmitError(error.data.message);
+        } else if (error?.status === 422) {
+          setSubmitError(t('forms.region.messages.validationError'));
+        } else {
+          setSubmitError(t('forms.region.messages.saveError'));
+        }
       }
     },
   });
@@ -123,7 +135,7 @@ export const RegionFormPage: React.FC = () => {
       <Box sx={formStyles.loadingContainer}>
         <CircularProgress />
         <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
-          Загрузка региона...
+          {t('forms.region.loading')}
         </Typography>
       </Box>
     );
@@ -139,7 +151,7 @@ export const RegionFormPage: React.FC = () => {
           onClick={handleBack}
           sx={{ mr: theme.spacing(SIZES.spacing.md) }}
         >
-          Назад
+          {t('forms.common.back')}
         </Button>
         <Typography variant="h4" component="h1" sx={formStyles.title}>
           {isEditing ? t('forms.region.title.edit') : t('forms.region.title.create')}
@@ -163,7 +175,7 @@ export const RegionFormPage: React.FC = () => {
         <Grid item xs={12} md={isEditing ? 6 : 12}>
           <Box sx={formStyles.formCard}>
             <Typography variant="h6" sx={formStyles.sectionTitle}>
-              Информация о регионе
+              {t('forms.region.sections.regionInfo')}
             </Typography>
 
             <Box component="form" onSubmit={formik.handleSubmit}>
@@ -171,7 +183,7 @@ export const RegionFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="name"
-                label="Название региона"
+                label={t('forms.region.fields.name')}
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -184,7 +196,7 @@ export const RegionFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="code"
-                label="Код региона"
+                label={t('forms.region.fields.code')}
                 value={formik.values.code}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -202,7 +214,7 @@ export const RegionFormPage: React.FC = () => {
                     name="is_active"
                   />
                 }
-                label="Активен"
+                label={t('forms.region.fields.isActive')}
                 sx={formStyles.switchField}
               />
 
@@ -214,7 +226,7 @@ export const RegionFormPage: React.FC = () => {
                   startIcon={<SaveIcon />}
                   disabled={formik.isSubmitting}
                 >
-                  {isEditing ? t('common.save') : t('common.create')}
+                  {isEditing ? t('forms.common.update') : t('forms.common.create')}
                 </Button>
               </Box>
             </Box>
