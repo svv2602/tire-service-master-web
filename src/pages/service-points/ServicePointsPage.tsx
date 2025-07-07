@@ -377,11 +377,11 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   // Отладочная информация для диагностики переводов
   console.log('🔧 ServicePointsPage переводы:', {
     t: typeof t,
-    nameTranslation: t('tables.columns.name', 'Название'),
-    partnerTranslation: t('tables.columns.partner', 'Партнер'),
-    cityTranslation: t('tables.columns.city', 'Город'),
-    statusTranslation: t('tables.columns.status', 'Статус'),
-    actionsTranslation: t('tables.columns.actions', 'Действия'),
+    nameTranslation: t('tables.columns.name'),
+    partnerTranslation: t('tables.columns.partner'),
+    cityTranslation: t('tables.columns.city'),
+    statusTranslation: t('tables.columns.status'),
+    actionsTranslation: t('tables.columns.actions'),
     language: i18n.language
   });
 
@@ -389,7 +389,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const columns = useMemo(() => [
     {
       id: 'name',
-      label: t('tables.columns.name', 'Название'),
+      label: t('tables.columns.name'),
       render: (servicePoint: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
           <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
@@ -420,7 +420,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'partner',
       key: 'partner' as keyof ServicePoint,
-      label: t('tables.columns.partner', 'Партнер'),
+      label: t('tables.columns.partner'),
       sortable: true,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
@@ -432,7 +432,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'city',
       key: 'city' as keyof ServicePoint,
-      label: t('tables.columns.city', 'Город'),
+      label: t('tables.columns.city'),
       sortable: true,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
@@ -444,7 +444,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'is_active',
       key: 'is_active' as keyof ServicePoint,
-      label: t('tables.columns.status', 'Статус'),
+      label: t('tables.columns.status'),
       sortable: true,
       render: (servicePoint: ServicePoint) => (
         <Chip
@@ -457,7 +457,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     {
       id: 'actions',
       key: 'actions' as keyof ServicePoint,
-      label: t('tables.columns.actions', 'Действия'),
+      label: t('tables.columns.actions'),
       sortable: false,
       render: (servicePoint: ServicePoint) => (
         <ActionsMenu 
