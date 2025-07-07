@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,
   Edit as EditIcon,
@@ -36,6 +37,7 @@ import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/Actions
 import { getTablePageStyles } from '../../styles/components';
 
 const CitiesPage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Инициализация централизованных стилей
@@ -208,7 +210,7 @@ const CitiesPage: React.FC = () => {
   const columns: Column[] = useMemo(() => [
     {
       id: 'name',
-      label: 'Название',
+      label: t('tables.columns.name'),
       wrap: true,
       format: (value: any, row: any) => {
         const city = row as City;
@@ -222,7 +224,7 @@ const CitiesPage: React.FC = () => {
     },
     {
       id: 'region',
-      label: 'Регион',
+      label: t('tables.columns.region'),
       wrap: true,
       format: (value: any, row: any) => {
         const city = row as City;
@@ -238,7 +240,7 @@ const CitiesPage: React.FC = () => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       format: (value: any, row: any) => {
         const city = row as City;
@@ -264,7 +266,7 @@ const CitiesPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       align: 'right',
       format: (_value: any, city: City) => (
         <ActionsMenu 
@@ -275,7 +277,7 @@ const CitiesPage: React.FC = () => {
         />
       )
     },
-  ], [regions, tablePageStyles, handleToggleStatus, cityActions]);
+  ], [regions, tablePageStyles, handleToggleStatus, cityActions, t]);
 
 
 

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест переводов колонок таблицы сервисных точек</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .test-case {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #1976d2;
+            margin: 10px 0;
+        }
+        .error {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .success {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ed6c02;
+            font-weight: bold;
+        }
+        code {
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .translation-key {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .expected-value {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .screenshot {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Тест переводов колонок таблицы сервисных точек</h1>
+        
+        <h2>🎯 Цель тестирования</h2>
+        <p>Проверить, что в заголовках колонок таблицы сервисных точек отображаются переводы, а не ключи переводов.</p>
+        
+        <h2>🐛 Обнаруженная проблема</h2>
+        <div class="test-case">
+            <strong class="error">ПРОБЛЕМА:</strong> В заголовках колонок отображаются ключи переводов вместо самих переводов:<br>
+            • <span class="translation-key">tables.columns.name</span> вместо <span class="expected-value">Назва</span><br>
+            • <span class="translation-key">tables.columns.partner</span> вместо <span class="expected-value">Партнер</span><br>
+            • <span class="translation-key">tables.columns.city</span> вместо <span class="expected-value">Місто</span><br>
+            • <span class="translation-key">tables.columns.status</span> вместо <span class="expected-value">Статус</span><br>
+            • <span class="translation-key">tables.columns.actions</span> вместо <span class="expected-value">Дії</span>
+        </div>
+        
+        <h2>🔧 Диагностика</h2>
+        
+        <div class="test-case">
+            <h3>✅ Проверено: Переводы в файлах</h3>
+            <p><strong>ru.json:</strong></p>
+            <code>
+            "tables": {<br>
+            &nbsp;&nbsp;"columns": {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"name": "Название",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"partner": "Партнер",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"city": "Город",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"status": "Статус",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"actions": "Действия"<br>
+            &nbsp;&nbsp;}<br>
+            }
+            </code>
+            
+            <p><strong>uk.json:</strong></p>
+            <code>
+            "tables": {<br>
+            &nbsp;&nbsp;"columns": {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"name": "Назва",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"partner": "Партнер",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"city": "Місто",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"status": "Статус",<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;"actions": "Дії"<br>
+            &nbsp;&nbsp;}<br>
+            }
+            </code>
+        </div>
+        
+        <div class="test-case">
+            <h3>✅ Проверено: Зависимости в useMemo</h3>
+            <p>В файле <code>ServicePointsPage.tsx</code> строка 456:</p>
+            <code>], [servicePointActions, t]);</code>
+            <p class="success">Зависимость 't' присутствует в массиве зависимостей.</p>
+        </div>
+        
+        <div class="test-case">
+            <h3>✅ Проверено: Фильтры работают</h3>
+            <p class="success">Фильтры отображают переводы корректно:</p>
+            • Регіон, Місто, Партнер, Статус - отображаются правильно<br>
+            • Опции фильтров: "Всі регіони", "Всі міста" и т.д. - работают
+        </div>
+        
+        <h2>🔍 Возможные причины</h2>
+        
+        <div class="test-case">
+            <h3>🤔 Гипотеза 1: Проблема инициализации i18n</h3>
+            <p>Возможно, хук <code>useTranslation</code> не полностью инициализирован при первом рендере колонок.</p>
+            <p><strong>Решение:</strong> Добавить проверку готовности i18n</p>
+        </div>
+        
+        <div class="test-case">
+            <h3>🤔 Гипотеза 2: Кэширование колонок</h3>
+            <p>Колонки могут кэшироваться до загрузки переводов.</p>
+            <p><strong>Решение:</strong> Добавить дополнительную зависимость в useMemo</p>
+        </div>
+        
+        <div class="test-case">
+            <h3>🤔 Гипотеза 3: Проблема с namespaces</h3>
+            <p>Возможно, namespace 'tables' не загружается корректно.</p>
+            <p><strong>Решение:</strong> Проверить конфигурацию i18n</p>
+        </div>
+        
+        <h2>🛠️ План исправления</h2>
+        
+        <div class="test-case">
+            <h3>Шаг 1: Добавить проверку готовности i18n</h3>
+            <code>
+            const { t, ready } = useTranslation();<br>
+            if (!ready) return &lt;LoadingComponent /&gt;;
+            </code>
+        </div>
+        
+        <div class="test-case">
+            <h3>Шаг 2: Добавить в зависимости ready</h3>
+            <code>
+            const columns = useMemo(() => [...], [servicePointActions, t, ready]);
+            </code>
+        </div>
+        
+        <div class="test-case">
+            <h3>Шаг 3: Отладочный вывод</h3>
+            <code>
+            console.log('Translation test:', {<br>
+            &nbsp;&nbsp;ready,<br>
+            &nbsp;&nbsp;nameTranslation: t('tables.columns.name'),<br>
+            &nbsp;&nbsp;isString: typeof t('tables.columns.name') === 'string'<br>
+            });
+            </code>
+        </div>
+        
+        <h2>✅ Ожидаемый результат</h2>
+        <div class="test-case">
+            <p class="success">После исправления заголовки колонок должны отображать:</p>
+            • <strong>Русский:</strong> Название | Партнер | Город | Статус | Действия<br>
+            • <strong>Украинский:</strong> Назва | Партнер | Місто | Статус | Дії
+        </div>
+        
+        <h2>🧪 Тестовые случаи</h2>
+        
+        <div class="test-case">
+            <h3>Тест 1: Переключение языка</h3>
+            <p>1. Открыть страницу /admin/service-points</p>
+            <p>2. Переключить язык с украинского на русский</p>
+            <p>3. Проверить, что заголовки колонок обновились</p>
+        </div>
+        
+        <div class="test-case">
+            <h3>Тест 2: Перезагрузка страницы</h3>
+            <p>1. Перезагрузить страницу F5</p>
+            <p>2. Проверить, что заголовки корректны с первого рендера</p>
+        </div>
+        
+        <div class="test-case">
+            <h3>Тест 3: Навигация</h3>
+            <p>1. Уйти со страницы и вернуться</p>
+            <p>2. Проверить корректность заголовков</p>
+        </div>
+        
+        <p><strong>Дата тестирования:</strong> <span id="testDate"></span></p>
+        <p><strong>Версия:</strong> tire-service-master-web</p>
+        <p><strong>Файл:</strong> ServicePointsPage.tsx</p>
+    </div>
+    
+    <script>
+        document.getElementById('testDate').textContent = new Date().toLocaleString('ru-RU');
+        
+        // Можно добавить интерактивные тесты, если нужно
+        console.log('🔍 Тест переводов колонок таблицы сервисных точек загружен');
+        console.log('Проверьте страницу /admin/service-points в браузере');
+    </script>
+</body>
+</html> 
