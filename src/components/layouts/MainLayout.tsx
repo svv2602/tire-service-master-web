@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router-dom';
 import {
   AppBar,
@@ -93,6 +94,7 @@ interface MenuItemType {
 }
 
 const MainLayout: React.FC = () => {
+  const { t } = useTranslation();
   // Хуки для централизованной системы стилей - обеспечивают консистентность дизайна
   const theme = useTheme();
   const navigationStyles = getNavigationStyles(theme); // Стили для навигационных элементов
@@ -146,7 +148,7 @@ const MainLayout: React.FC = () => {
   // Инициализация состояния открытия секций меню - ВСЕ СЕКЦИИ СВЕРНУТЫ ПО УМОЛЧАНИЮ
   useEffect(() => {
     // Получаем все секции меню
-    const sections = getMenuSections();
+    const sections = getMenuSections(t);
     // Создаем объект с состоянием "закрыто" для всех секций
     const initialOpenSections = sections.reduce((acc, section) => {
       acc[section.title] = false; // устанавливаем false для сворачивания всех секций
@@ -155,7 +157,7 @@ const MainLayout: React.FC = () => {
     
     // Устанавливаем состояние
     setOpenSections(initialOpenSections);
-  }, []);
+  }, [t]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -225,7 +227,7 @@ const MainLayout: React.FC = () => {
   }, [isResizing, startX, startWidth, drawerWidth]);
 
   const collapseAllSections = () => {
-    const sections = getMenuSections();
+    const sections = getMenuSections(t);
     const collapsedSections = sections.reduce((acc, section) => {
       acc[section.title] = false;
       return acc;
@@ -234,7 +236,7 @@ const MainLayout: React.FC = () => {
   };
 
   const expandAllSections = () => {
-    const sections = getMenuSections();
+    const sections = getMenuSections(t);
     const expandedSections = sections.reduce((acc, section) => {
       acc[section.title] = true;
       return acc;
@@ -243,199 +245,199 @@ const MainLayout: React.FC = () => {
   };
 
   // Определяем структуру меню по разделам
-  const getMenuSections = (): MenuSection[] => {
+  const getMenuSections = (t: any): MenuSection[] => {
     return [
       {
-        title: 'Обзор',
+        title: t('navigation.sections.overview'),
         items: [
           {
-            text: 'Дашборд',
+            text: t('navigation.dashboard'),
             icon: <DashboardIcon />,
             path: '/admin/dashboard',
             roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Общая статистика и показатели',
+            description: t('navigation.descriptions.dashboard'),
           },
           {
-            text: 'Главная страница',
+            text: t('navigation.homepage'),
             icon: <DashboardIcon />,
             path: '/admin/dashboard',
             roles: [UserRole.CLIENT],
-            description: 'Ваша персональная панель',
+            description: t('navigation.descriptions.homepage'),
           },
         ],
       },
       {
-        title: 'Управление',
+        title: t('navigation.sections.management'),
         items: [
           {
-            text: 'Пользователи',
+            text: t('navigation.users'),
             icon: <PeopleIcon />,
             path: '/admin/users',
             roles: [UserRole.ADMIN],
-            description: 'Управление пользователями системы',
+            description: t('navigation.descriptions.users'),
           },
           {
-            text: 'Партнеры',
+            text: t('navigation.partners'),
             icon: <CompanyIcon />,
             path: '/admin/partners',
             roles: [UserRole.ADMIN],
-            description: 'Управление партнерами',
+            description: t('navigation.descriptions.partners'),
           },
           {
-            text: 'Клиенты',
+            text: t('navigation.clients'),
             icon: <PeopleIcon />,
             path: '/admin/clients',
             roles: [UserRole.ADMIN, UserRole.MANAGER],
-            description: 'Управление клиентами',
+            description: t('navigation.descriptions.clients'),
           },
         ],
       },
       {
-        title: 'Сервис',
+        title: t('navigation.sections.service'),
         items: [
           {
-            text: 'Сервисные точки',
+            text: t('navigation.servicePoints'),
             icon: <LocationOnIcon />,
             path: '/admin/service-points',
             roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Управление точками обслуживания',
+            description: t('navigation.descriptions.servicePoints'),
           },
           {
-            text: 'Мои точки',
+            text: t('navigation.myServicePoints'),
             icon: <LocationOnIcon />,
             path: '/admin/my-service-points',
             roles: [UserRole.PARTNER, UserRole.MANAGER],
-            description: 'Управление собственными точками',
+            description: t('navigation.descriptions.myServicePoints'),
           },
         ],
       },
       {
-        title: 'Контент',
+        title: t('navigation.sections.content'),
         items: [
           {
-            text: 'Статьи',
+            text: t('navigation.articles'),
             icon: <ArticleIcon />,
             path: '/admin/articles',
             roles: [UserRole.ADMIN],
-            description: 'Управление статьями базы знаний',
+            description: t('navigation.descriptions.articles'),
           },
           {
-            text: 'Весь контент',
+            text: t('navigation.allContent'),
             icon: <WebIcon />,
             path: '/admin/page-content',
             roles: [UserRole.ADMIN],
-            description: 'Просмотр всего контента страниц',
+            description: t('navigation.descriptions.allContent'),
           },
           {
-            text: 'Создать контент',
+            text: t('navigation.createContent'),
             icon: <AddIcon />,
             path: '/admin/page-content/new',
             roles: [UserRole.ADMIN],
-            description: 'Создание нового контента',
+            description: t('navigation.descriptions.createContent'),
           },
           {
-            text: 'Расширенное управление',
+            text: t('navigation.advancedManagement'),
             icon: <ManageIcon />,
             path: '/admin/page-content/management',
             roles: [UserRole.ADMIN],
-            description: 'Продвинутые инструменты управления контентом',
+            description: t('navigation.descriptions.advancedManagement'),
           },
           {
-            text: 'SEO настройки',
+            text: t('navigation.seoSettings'),
             icon: <WebIcon />,
             path: '/admin/seo',
             roles: [UserRole.ADMIN],
-            description: 'Управление SEO-параметрами',
+            description: t('navigation.descriptions.seoSettings'),
           },
           {
-            text: 'StyleGuide',
+            text: t('navigation.styleGuide'),
             icon: <StyleGuideIcon />,
             path: '/admin/styleguide',
             roles: [UserRole.ADMIN],
-            description: 'Руководство по стилям и компонентам UI',
+            description: t('navigation.descriptions.styleGuide'),
           },
         ],
       },
       {
-        title: 'Бронирования',
+        title: t('navigation.sections.bookings'),
         items: [
           {
-            text: 'Все бронирования',
+            text: t('navigation.allBookings'),
             icon: <EventNoteIcon />,
             path: '/admin/bookings',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
-            description: 'Управление бронированиями',
+            description: t('navigation.descriptions.allBookings'),
           },
           {
-            text: '📅 Календарь записей',
+            text: t('navigation.bookingCalendar'),
             icon: <EventNoteIcon />,
             path: '/admin/calendar',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
-            description: 'Календарное представление бронирований',
+            description: t('navigation.descriptions.bookingCalendar'),
           },
           {
-            text: '📊 Аналитика и отчеты',
+            text: t('navigation.analyticsReports'),
             icon: <ReportIcon />,
             path: '/admin/analytics',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
-            description: 'Аналитика и статистика бронирований',
+            description: t('navigation.descriptions.analyticsReports'),
           },
           {
-            text: 'Мои бронирования',
+            text: t('navigation.myBookings'),
             icon: <EventNoteIcon />,
             path: '/admin/my-bookings',
             roles: [UserRole.CLIENT],
-            description: 'Ваши бронирования',
+            description: t('navigation.descriptions.myBookings'),
           },
         ],
       },
       {
-        title: 'Отзывы',
+        title: t('navigation.sections.reviews'),
         items: [
           {
-            text: 'Все отзывы',
+            text: t('navigation.allReviews'),
             icon: <StarIcon />,
             path: '/admin/reviews',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
-            description: 'Управление отзывами клиентов',
+            description: t('navigation.descriptions.allReviews'),
           },
         ],
       },
       {
-        title: 'Справочники',
+        title: t('navigation.sections.references'),
         items: [
           {
-            text: 'Регионы и города',
+            text: t('navigation.regionsAndCities'),
             icon: <MapIcon />,
             path: '/admin/regions',
             roles: [UserRole.ADMIN],
-            description: 'Управление регионами и городами',
+            description: t('navigation.descriptions.regionsAndCities'),
           },
           {
-            text: 'Автомобили',
+            text: t('navigation.vehicles'),
             icon: <CarIcon />,
             path: '/admin/car-brands',
             roles: [UserRole.ADMIN],
-            description: 'Управление марками и моделями автомобилей',
+            description: t('navigation.descriptions.vehicles'),
           },
         ],
       },
       {
-        title: 'Настройки',
+        title: t('navigation.sections.settings'),
         items: [
           {
-            text: 'Профиль',
+            text: t('navigation.profile'),
             icon: <SettingsIcon />,
             path: '/admin/profile',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER, UserRole.CLIENT],
-            description: 'Настройки профиля',
+            description: t('navigation.descriptions.profile'),
           },
           {
-            text: 'Системные настройки',
+            text: t('navigation.systemSettings'),
             icon: <SettingsIcon />,
             path: '/admin/settings',
             roles: [UserRole.ADMIN],
-            description: 'Общие настройки системы',
+            description: t('navigation.descriptions.systemSettings'),
           },
         ],
       },
@@ -443,7 +445,7 @@ const MainLayout: React.FC = () => {
   };
 
   // Фильтрация пунктов меню в зависимости от роли пользователя
-  const getFilteredMenuSections = () => {
+  const getFilteredMenuSections = (t: any) => {
     if (!user) {
       console.log('Пользователь не аутентифицирован, не отображаем пункты меню');
       return [];
@@ -454,7 +456,7 @@ const MainLayout: React.FC = () => {
     console.log('Роль пользователя:', userRole);
     
     // Получаем все секции меню
-    const allSections = getMenuSections();
+    const allSections = getMenuSections(t);
     
     // Фильтруем секции и пункты меню в зависимости от роли пользователя
     const filteredSections = allSections.map(section => {
@@ -582,7 +584,7 @@ const MainLayout: React.FC = () => {
             width: '100%',
           }
         }}>
-          {getFilteredMenuSections().map((section) => (
+          {getFilteredMenuSections(t).map((section) => (
             <React.Fragment key={section.title}>
               <ListSubheader 
                 onClick={() => !isDrawerCollapsed && toggleSection(section.title)} 
@@ -736,15 +738,16 @@ const MainLayout: React.FC = () => {
         {/* Импортируем функцию генерации меню в начале файла */}
         {/* Унифицированное меню пользователя для AppBar */}
         <CustomAppBar
-          title="Твоя шина - Администратор"
+          title={t("navigation.appTitle")}
           onDrawerToggle={handleDrawerToggle}
           onTitleClick={() => navigate('/admin')}
           profileActions={getProfileActions({
             user,
-            isAuthenticated,
+            isAuthenticated: !!user,
             navigate,
             isAdminPanel: true,
             onLogout: handleLogout,
+            t: t as any, // Временный workaround для типов
           })}
           username={user ? `${user.first_name} ${user.last_name}` : ''}
           rightContent={

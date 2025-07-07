@@ -1,4 +1,5 @@
 import { UserRole, User } from '../../../types';
+import { TFunction } from 'i18next';
 import { AppBarAction } from './AppBar';
 import {
   Person as PersonIcon,
@@ -17,19 +18,21 @@ export function getProfileActions({
   navigate,
   isAdminPanel,
   onLogout,
+  t,
 }: {
   user: User | null;
   isAuthenticated: boolean;
   navigate: NavigateFunction;
   isAdminPanel: boolean;
   onLogout: () => void;
+  t: TFunction;
 }): AppBarAction[] {
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
 
   if (!isAuthenticated) {
     return [
       {
-        label: 'Увійти',
+        label: t('userMenu.login'),
         icon: LoginIcon,
         onClick: () => navigate('/login'),
       },
@@ -38,17 +41,17 @@ export function getProfileActions({
 
   const actions: AppBarAction[] = [
     {
-      label: 'Профіль',
+      label: t('userMenu.profile'),
       icon: PersonIcon,
       onClick: () => navigate('/client/profile'),
     },
     {
-      label: 'Мої записи',
+      label: t('userMenu.myBookings'),
       icon: BookOnlineIcon,
       onClick: () => navigate('/client/bookings'),
     },
     {
-      label: 'Мої відгуки',
+      label: t('userMenu.myReviews'),
       icon: ReviewIcon,
       onClick: () => navigate('/client/reviews'),
     },
@@ -57,13 +60,13 @@ export function getProfileActions({
   if (isAdmin) {
     if (isAdminPanel) {
       actions.push({
-        label: 'На сайт',
+        label: t('userMenu.toWebsite'),
         icon: WebIcon,
         onClick: () => navigate('/client'),
       });
     } else {
       actions.push({
-        label: 'Адмін-панель',
+        label: t('userMenu.adminPanel'),
         icon: AdminIcon,
         onClick: () => navigate('/admin'),
       });
@@ -71,7 +74,7 @@ export function getProfileActions({
   }
 
   actions.push({
-    label: 'Вийти',
+    label: t('userMenu.logout'),
     icon: LogoutIcon,
     onClick: onLogout,
   });

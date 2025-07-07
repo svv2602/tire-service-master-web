@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { getProfileActions } from '../ui/AppBar/profileActions';
 import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -6,7 +6,7 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
 import ThemeToggle from '../ui/ThemeToggle';
 import { LanguageSelector } from '../LanguageSelector';
-import { useTranslation } from '../../hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
@@ -41,12 +41,13 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
   const profileActions = getProfileActions({
     user,
-    isAuthenticated,
+    isAuthenticated: !!user,
     navigate,
     isAdminPanel: false,
     onLogout: async () => {
       await dispatch(logoutUser());
     },
+    t: t as any, // Временный workaround для типов
   });
 
   // Публичные ссылки для AppBar
