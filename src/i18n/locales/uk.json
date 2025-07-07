@@ -2114,7 +2114,9 @@
       "requiredFields": {
         "city": "Місто",
         "servicePoint": "Сервісна точка"
-      }
+      },
+      "prefilledDataNotice": "Дані попередньо заповнені на основі вибраної категорії послуг",
+      "allFieldsCompleted": "Всі поля заповнені коректно"
     }
   },
   "servicePointCard": {
