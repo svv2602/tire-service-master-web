@@ -8,6 +8,7 @@ import {
   Tooltip,
   Alert,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { SIZES } from '../styles/theme';
 import { 
   getTablePageStyles
@@ -38,13 +39,13 @@ import { Pagination } from '../components/ui/Pagination';
 import { Table, Column } from '../components/ui/Table';
 import { ActionsMenu, ActionItem } from '../components/ui/ActionsMenu/ActionsMenu';
 
-const validationSchema = Yup.object({
+const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
-    .required('Название города обязательно')
-    .min(2, 'Название должно содержать минимум 2 символа')
-    .max(100, 'Название не должно превышать 100 символов'),
+    .required(t('forms.city.validation.nameRequired'))
+    .min(2, t('forms.city.validation.nameMin'))
+    .max(100, t('forms.city.validation.nameMax')),
   is_active: Yup.boolean(),
-  region_id: Yup.number().required('ID региона обязателен'),
+  region_id: Yup.number().required(t('forms.city.validation.regionRequired')),
 });
 
 interface CitiesListProps {
@@ -52,6 +53,7 @@ interface CitiesListProps {
 }
 
 const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
@@ -84,7 +86,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       is_active: true,
       region_id: typeof regionId === 'string' ? parseInt(regionId) : regionId,
     },
-    validationSchema,
+    validationSchema: createValidationSchema(t),
     onSubmit: async (values) => {
       try {
         if (selectedCity) {
@@ -98,8 +100,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         handleCloseDialog();
         setError(null);
       } catch (err: any) {
-        console.error('Ошибка при сохранении города:', err);
-        setError(err?.data?.message || 'Произошла ошибка при сохранении города');
+        console.error('City save error:', err);
+        setError(err?.data?.message || t('forms.city.messages.saveError'));
       }
     },
   });
@@ -148,8 +150,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         handleCloseDeleteDialog();
         setError(null);
       } catch (err: any) {
-        console.error('Ошибка при удалении города:', err);
-        let errorMessage = 'Произошла ошибка при удалении города';
+        console.error('City delete error:', err);
+        let errorMessage = t('forms.city.messages.deleteError');
         
         // Обрабатываем различные форматы ошибок от API
         if (err?.data?.error) {
@@ -185,23 +187,23 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const cityActions: ActionItem<City>[] = [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('forms.city.actions.edit'),
       icon: <EditIcon />,
       onClick: (city: City) => handleOpenDialog(city),
       color: 'primary',
-      tooltip: 'Редактировать город'
+      tooltip: t('forms.city.actions.editTooltip')
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('forms.city.actions.delete'),
       icon: <DeleteIcon />,
       onClick: (city: City) => handleOpenDeleteDialog(city),
       color: 'error',
-      tooltip: 'Удалить город',
+      tooltip: t('forms.city.actions.deleteTooltip'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы уверены, что хотите удалить этот город? Это действие нельзя отменить.',
+        title: t('forms.city.dialogs.deleteConfirmation.title'),
+        message: t('forms.city.dialogs.deleteConfirmation.message'),
       }
     }
   ];
@@ -212,7 +214,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const columns: Column[] = [
     {
       id: 'name',
-      label: 'Название',
+      label: t('forms.city.table.columns.name'),
       minWidth: 200,
       wrap: true,
       format: (value: string) => (
@@ -229,11 +231,11 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('forms.city.table.columns.status'),
       align: 'center',
       format: (value: boolean) => (
         <Chip 
-          label={value ? 'Активен' : 'Неактивен'}
+          label={value ? t('forms.city.status.active') : t('forms.city.status.inactive')}
           color={value ? 'success' : 'default'}
           size="small"
           sx={tablePageStyles.statusChip}
@@ -242,7 +244,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('forms.city.table.columns.actions'),
       align: 'right',
       minWidth: 120,
       format: (value: any, row: City) => (
@@ -278,13 +280,13 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         }}
       >
         <LocationCityIcon />
-        Города в регионе
+        {t('forms.city.title')}
       </Typography>
 
       {/* Поиск и кнопка добавления */}
       <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          placeholder="Поиск городов"
+          placeholder={t('forms.city.search.placeholder')}
           variant="outlined"
           size="small"
           value={searchQuery}
@@ -297,7 +299,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
           onClick={() => handleOpenDialog()}
           sx={tablePageStyles.primaryButton}
         >
-          Добавить город
+          {t('forms.city.buttons.add')}
         </Button>
       </Box>
 
@@ -323,12 +325,12 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       {cities.length === 0 && !isLoading && (
         <Box sx={tablePageStyles.emptyStateContainer}>
           <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
-            {searchQuery ? 'Города не найдены' : 'В данном регионе пока нет городов'}
+            {searchQuery ? t('forms.city.emptyState.notFound') : t('forms.city.emptyState.noCities')}
           </Typography>
           <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
             {searchQuery 
-              ? 'Попробуйте изменить критерии поиска'
-              : 'Добавьте первый город в этот регион'
+              ? t('forms.city.emptyState.changeSearch')
+              : t('forms.city.emptyState.addFirst')
             }
           </Typography>
           {!searchQuery && (
@@ -338,7 +340,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
               onClick={() => handleOpenDialog()}
               sx={tablePageStyles.primaryButton}
             >
-              Добавить город
+              {t('forms.city.buttons.add')}
             </Button>
           )}
         </Box>
@@ -360,16 +362,16 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       <Modal 
         open={isDialogOpen} 
         onClose={handleCloseDialog}
-        title={selectedCity ? 'Редактировать город' : 'Добавить город'}
+        title={selectedCity ? t('forms.city.dialogs.edit.title') : t('forms.city.dialogs.create.title')}
         maxWidth={600}
         actions={
           <>
-            <Button onClick={handleCloseDialog}>Отмена</Button>
+            <Button onClick={handleCloseDialog}>{t('forms.city.buttons.cancel')}</Button>
             <Button 
               onClick={() => formik.handleSubmit()} 
               variant="contained"
             >
-              {selectedCity ? 'Сохранить' : 'Создать'}
+              {selectedCity ? t('forms.city.buttons.save') : t('forms.city.buttons.create')}
             </Button>
           </>
         }
@@ -379,7 +381,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
             fullWidth
             id="name"
             name="name"
-            label="Название города"
+            label={t('forms.city.fields.name')}
             value={formik.values.name}
             onChange={formik.handleChange}
             error={formik.touched.name && Boolean(formik.errors.name)}
@@ -387,7 +389,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
             sx={{ mb: SIZES.spacing.md }}
           />
           <Switch
-            label="Активен"
+            label={t('forms.city.fields.isActive')}
             checked={formik.values.is_active}
             onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
           />
@@ -398,24 +400,23 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       <Modal 
         open={isDeleteDialogOpen} 
         onClose={handleCloseDeleteDialog}
-        title="Подтверждение удаления"
+        title={t('forms.city.dialogs.delete.title')}
         maxWidth={400}
         actions={
           <>
-            <Button onClick={handleCloseDeleteDialog}>Отмена</Button>
+            <Button onClick={handleCloseDeleteDialog}>{t('forms.city.buttons.cancel')}</Button>
             <Button 
               onClick={handleConfirmDelete} 
               color="error" 
               variant="contained"
             >
-              Удалить
+              {t('forms.city.buttons.delete')}
             </Button>
           </>
         }
       >
         <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-          Вы действительно хотите удалить город "{cityToDelete?.name}"?
-          Это действие нельзя будет отменить.
+          {t('forms.city.dialogs.delete.message', { name: cityToDelete?.name })}
         </Typography>
       </Modal>
     </Box>
