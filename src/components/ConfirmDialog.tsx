@@ -11,6 +11,7 @@ import { styled } from '@mui/material/styles';
 import { SIZES } from '../styles/theme';
 import { FlexBox } from './styled/CommonComponents';
 import { Button } from './ui/Button';
+import { useTranslation } from 'react-i18next';
 
 interface ConfirmDialogProps {
   /** Открыто ли диалоговое окно */
@@ -49,11 +50,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   open,
   title,
   message,
-  confirmText = 'Подтвердить',
-  cancelText = 'Отмена',
+  confirmText = 'dialog.confirm',
+  cancelText = 'dialog.cancel',
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -63,12 +65,12 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     >
       <DialogTitle>
         <Typography variant="h6">
-          {title}
+          {t(title)} {/* Локализация заголовка */}
         </Typography>
       </DialogTitle>
       <DialogContent>
         <Typography>
-          {message}
+          {t(message)} {/* Локализация сообщения */}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ padding: SIZES.spacing.md }}>
@@ -78,14 +80,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             color="primary"
             onClick={onCancel}
           >
-            {cancelText}
+            {t(cancelText)} {/* Локализация кнопки отмены */}
           </StyledButton>
           <StyledButton
             variant="contained"
             color="primary"
             onClick={onConfirm}
           >
-            {confirmText}
+            {t(confirmText)} {/* Локализация кнопки подтверждения */}
           </StyledButton>
         </FlexBox>
       </DialogActions>

@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 export interface DialogProps extends Omit<MuiDialogProps, 'title'> {
   /** Заголовок диалога */
@@ -109,6 +110,7 @@ export const Dialog: React.FC<DialogProps> = ({
   sx,
   ...props
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   
@@ -139,14 +141,14 @@ export const Dialog: React.FC<DialogProps> = ({
                 fontFamily: tokens.typography.fontFamily,
               }}
             >
-              {title}
+              {t(title)} {/* Локализация заголовка */}
             </Typography>
           ) : (
             title
           )}
           {showCloseButton && (
             <IconButton
-              aria-label="close"
+              aria-label={t('dialog.close')}
               onClick={handleClose}
               sx={{
                 position: 'absolute',
@@ -167,7 +169,8 @@ export const Dialog: React.FC<DialogProps> = ({
       <DialogContent dividers={!!title}>
         {description && (
           <DialogContentText sx={{ color: themeColors.textSecondary }}>
-            {description}
+            {/* Локализация описания только если это строка */}
+            {typeof description === 'string' ? t(description) : description}
           </DialogContentText>
         )}
         {children}
