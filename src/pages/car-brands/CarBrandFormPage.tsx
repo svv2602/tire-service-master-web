@@ -53,9 +53,9 @@ import { getFormStyles, SIZES } from '../../styles';
  */
 const createValidationSchema = (t: any) => Yup.object({
   name: Yup.string()
-    .required('Название бренда обязательно')
-    .min(2, 'Название должно содержать минимум 2 символа')
-    .max(100, 'Название не должно превышать 100 символов'),
+    .required(t('forms.carBrand.validation.nameRequired'))
+    .min(2, t('forms.carBrand.validation.nameMin'))
+    .max(100, t('forms.carBrand.validation.nameMax')),
   is_active: Yup.boolean(),
 });
 
@@ -132,7 +132,7 @@ export const CarBrandFormPage: React.FC = () => {
           console.log('Logo type:', typeof values.logo, values.logo?.constructor?.name);
           
           await updateBrand({ id, data: updateData }).unwrap();
-          setSuccessMessage('Бренд успешно обновлен');
+          setSuccessMessage(t('forms.carBrand.messages.updateSuccess'));
         } else {
           // Для создания используем полный объект
           const createData: CarBrandFormData = {
@@ -143,7 +143,7 @@ export const CarBrandFormPage: React.FC = () => {
           
           console.log('Sending create data:', createData);
           await createBrand(createData).unwrap();
-          setSuccessMessage('Бренд успешно создан');
+          setSuccessMessage(t('forms.carBrand.messages.createSuccess'));
         }
         setTimeout(() => navigate('/admin/car-brands'), 1000);
       } catch (error: any) {
@@ -159,9 +159,9 @@ export const CarBrandFormPage: React.FC = () => {
         } else if (error?.data?.message) {
           setSubmitError(error.data.message);
         } else if (error?.status === 422) {
-          setSubmitError('Ошибка валидации данных. Проверьте правильность заполнения всех полей.');
+          setSubmitError(t('forms.carBrand.messages.validationError'));
         } else {
-          setSubmitError('Произошла ошибка при сохранении');
+          setSubmitError(t('forms.carBrand.messages.saveError'));
         }
       }
     },
@@ -182,13 +182,13 @@ export const CarBrandFormPage: React.FC = () => {
     if (file) {
       // Валидация размера файла
       if (file.size > MAX_FILE_SIZE) {
-        setSubmitError('Размер файла не должен превышать 1MB');
+        setSubmitError(t('forms.carBrand.messages.fileSizeError'));
         return;
       }
 
       // Валидация типа файла
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-        setSubmitError('Поддерживаются только изображения в форматах JPEG, PNG');
+        setSubmitError(t('forms.carBrand.messages.fileTypeError'));
         return;
       }
 
@@ -227,7 +227,7 @@ export const CarBrandFormPage: React.FC = () => {
       <Box sx={formStyles.loadingContainer}>
         <CircularProgress />
         <Typography variant="body1" sx={{ mt: theme.spacing(SIZES.spacing.md) }}>
-          Загрузка бренда...
+          {t('forms.carBrand.loading')}
         </Typography>
       </Box>
     );
@@ -243,7 +243,7 @@ export const CarBrandFormPage: React.FC = () => {
           onClick={handleBack}
           sx={{ mr: theme.spacing(SIZES.spacing.md) }}
         >
-          Назад
+          {t('common.back')}
         </Button>
         <Typography variant="h4" component="h1" sx={formStyles.title}>
           {isEditing ? t('forms.carBrand.title.edit') : t('forms.carBrand.title.create')}
@@ -267,7 +267,7 @@ export const CarBrandFormPage: React.FC = () => {
         <Grid item xs={12} md={isEditing ? 6 : 12}>
           <Box sx={formStyles.formCard}>
             <Typography variant="h6" sx={formStyles.sectionTitle}>
-              Информация о бренде
+              {t('forms.carBrand.sections.brandInfo')}
             </Typography>
 
             <Box component="form" onSubmit={formik.handleSubmit}>
@@ -275,7 +275,7 @@ export const CarBrandFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="name"
-                label="Название бренда"
+                label={t('forms.carBrand.fields.name')}
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -287,10 +287,10 @@ export const CarBrandFormPage: React.FC = () => {
               {/* Секция управления логотипом */}
               <Box sx={formStyles.field}>
                 <Typography variant="subtitle2" sx={{ mb: theme.spacing(SIZES.spacing.sm) }}>
-                  Логотип бренда
+                  {t('forms.carBrand.fields.logo')}
                 </Typography>
                 
-                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: theme.spacing(SIZES.spacing.md) }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: theme.spacing(SIZES.spacing.md) }}>
                    {/* Предпросмотр логотипа */}
                    <Avatar
                      src={logoPreview || undefined}
@@ -319,7 +319,7 @@ export const CarBrandFormPage: React.FC = () => {
                            <UploadIcon />
                          </IconButton>
                          <Typography variant="body2" color="primary">
-                           Загрузить лого
+                           {t('forms.carBrand.buttons.uploadLogo')}
                          </Typography>
                        </Box>
                      </label>
@@ -333,7 +333,7 @@ export const CarBrandFormPage: React.FC = () => {
                  </Box>
 
                 <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
-                  Поддерживаются форматы: JPEG, PNG. Максимальный размер: 1MB
+                  {t('forms.carBrand.messages.logoRequirements')}
                 </Typography>
               </Box>
 
@@ -346,7 +346,7 @@ export const CarBrandFormPage: React.FC = () => {
                     name="is_active"
                   />
                 }
-                label="Активен"
+                label={t('forms.carBrand.fields.isActive')}
                 sx={formStyles.switchField}
               />
 
