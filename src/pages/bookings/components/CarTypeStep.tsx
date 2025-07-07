@@ -498,7 +498,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           <Accordion expanded={numberAccordionOpen} disabled={!formData.car_type_id} onChange={(_, expanded) => setNumberAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                2. Номер автомобиля *
+                2. {t('bookingSteps.carType.vehicleNumber')} *
               </Typography>
               {formData.license_plate && !errors.license_plate && (
                 <Chip label={formData.license_plate} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -507,14 +507,14 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
             <AccordionDetails>
               <TextField
                 ref={licensePlateRef}
-                label="Номер автомобиля"
+                label={t('bookingSteps.carType.vehicleNumber')}
                 value={formData.license_plate}
                 onChange={handleLicensePlateChange}
                 onBlur={handleLicensePlateBlur}
                 placeholder="АА1234ВВ"
                 required
                 error={!!errors.license_plate}
-                helperText={errors.license_plate || 'Государственный номер автомобиля'}
+                helperText={errors.license_plate || t('bookingSteps.carType.vehicleNumberDescription')}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -533,7 +533,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           <Accordion expanded={brandAccordionOpen} disabled={!formData.license_plate || !!errors.license_plate} onChange={(_, expanded) => setBrandAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                3. {t('bookingSteps.carType.carBrand')} (необязательно)
+                3. {t('bookingSteps.carType.carBrand')} ({t('bookingSteps.carType.optional')})
               </Typography>
               {formData.car_brand && (
                 <Chip label={formData.car_brand} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -557,7 +557,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           <Accordion expanded={modelAccordionOpen} disabled={!selectedBrandId} onChange={(_, expanded) => setModelAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                4. {t('bookingSteps.carType.carModel')} (необязательно)
+                4. {t('bookingSteps.carType.carModel')} ({t('bookingSteps.carType.optional')})
               </Typography>
               {formData.car_model && (
                 <Chip label={formData.car_model} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -581,8 +581,8 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       {/* Информация */}
       <Alert severity="info" sx={{ mt: 3 }}>
         💡 {isAuthenticated 
-          ? 'Выберите один из своих автомобилей или укажите данные вручную. Указание марки и модели поможет мастеру лучше подготовиться к обслуживанию'
-          : 'Указание марки и модели автомобиля поможет мастеру лучше подготовиться к обслуживанию'
+          ? t('bookingSteps.carType.infoMessageAuthenticated')
+          : t('bookingSteps.carType.infoMessageGuest')
         }
       </Alert>
       
@@ -590,17 +590,17 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       {(!isValid) && (
         <Alert severity="warning" sx={{ mt: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Заполните все обязательные поля:
+            {t('bookingSteps.carType.fillRequiredFields')}
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
             {!formData.car_type_id && (
               <Typography variant="body2" component="li">
-                Тип автомобиля
+                {t('bookingSteps.carType.carType')}
               </Typography>
             )}
             {formData.car_type_id && !formData.license_plate && (
               <Typography variant="body2" component="li">
-                Номер автомобиля
+                {t('bookingSteps.carType.vehicleNumber')}
               </Typography>
             )}
           </Box>
@@ -610,7 +610,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       {/* Информационное сообщение */}
       {isValid && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.carType.allFieldsCompleted')}
         </Alert>
       )}
     </Box>
