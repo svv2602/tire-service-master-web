@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Box,
+  Container,
+  Paper,
+  Typography,
   TextField,
   Button,
-  Typography,
-  Paper,
+  Box,
   Alert,
-  CircularProgress,
-  Container
+  CircularProgress
 } from '@mui/material';
 import {
   Lock,
@@ -20,6 +21,7 @@ import { useVerifyResetTokenQuery, useResetPasswordMutation } from '../api/passw
 const ResetPasswordPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
@@ -53,17 +55,17 @@ const ResetPasswordPage: React.FC = () => {
     setError('');
     
     if (!password.trim()) {
-      setError('Необходимо указать пароль');
+      setError(t('auth.errors.password_required'));
       return;
     }
     
     if (password.length < 6) {
-      setError('Пароль должен содержать минимум 6 символов');
+      setError(t('auth.errors.password_min_length'));
       return;
     }
     
     if (password !== passwordConfirmation) {
-      setError('Пароли не совпадают');
+      setError(t('auth.errors.passwords_not_match'));
       return;
     }
 
@@ -82,7 +84,7 @@ const ResetPasswordPage: React.FC = () => {
       }, 3000);
     } catch (err: any) {
       console.error('❌ Ошибка сброса пароля:', err);
-      setError(err.data?.error || 'Ошибка сброса пароля');
+      setError(err.data?.error || t('auth.errors.reset_password_error'));
     }
   };
 
@@ -92,7 +94,7 @@ const ResetPasswordPage: React.FC = () => {
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
           <CircularProgress size={60} sx={{ mb: 2 }} />
           <Typography variant="h6">
-            Проверка токена восстановления...
+            {t('auth.verifyingToken')}
           </Typography>
         </Paper>
       </Container>
@@ -105,16 +107,16 @@ const ResetPasswordPage: React.FC = () => {
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
           <Check color="success" sx={{ fontSize: 80, mb: 2 }} />
           <Typography variant="h4" gutterBottom>
-            Пароль изменён!
+            {t('auth.passwordChanged')}
           </Typography>
           <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            Ваш пароль успешно изменён. Вы будете перенаправлены на страницу входа.
+            {t('auth.passwordChangedMessage')}
           </Typography>
           <Button
             variant="contained"
             onClick={() => navigate('/login')}
           >
-            Перейти к входу
+            {t('auth.goToLogin')}
           </Button>
         </Paper>
       </Container>
@@ -127,18 +129,18 @@ const ResetPasswordPage: React.FC = () => {
         <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
           <Error color="error" sx={{ fontSize: 80, mb: 2 }} />
           <Typography variant="h4" gutterBottom>
-            Недействительный токен
+            {t('auth.invalidToken')}
           </Typography>
           <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            {!token ? 'Токен восстановления не найден в URL.' : 
-             tokenError ? (tokenError as any)?.data?.error || 'Ошибка проверки токена.' : 
-             'Токен восстановления недействителен или истёк. Попробуйте запросить восстановление пароля заново.'}
+            {!token ? t('auth.tokenNotFoundInUrl') : 
+             tokenError ? (tokenError as any)?.data?.error || t('auth.tokenVerificationError') : 
+             t('auth.tokenInvalidOrExpired')}
           </Typography>
           <Button
             variant="contained"
             onClick={() => navigate('/forgot-password')}
           >
-            Запросить новый код
+            {t('auth.requestNewCode')}
           </Button>
         </Paper>
       </Container>
@@ -149,30 +151,30 @@ const ResetPasswordPage: React.FC = () => {
     <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-          Новый пароль
+          {t('auth.newPassword')}
         </Typography>
         
         {tokenData?.user && (
           <Alert severity="info" sx={{ mb: 3 }}>
-            Восстановление пароля для: {tokenData.user.email || tokenData.user.phone}
+            {t('auth.resetPasswordFor')}: {tokenData.user.email || tokenData.user.phone}
           </Alert>
         )}
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField
             fullWidth
-            label="Новый пароль"
+            label={t('auth.newPassword')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={isResetting}
             sx={{ mb: 2 }}
-            helperText="Минимум 6 символов"
+            helperText={t('auth.passwordMinLength')}
           />
 
           <TextField
             fullWidth
-            label="Подтверждение пароля"
+            label={t('auth.confirmPassword')}
             type="password"
             value={passwordConfirmation}
             onChange={(e) => setPasswordConfirmation(e.target.value)}
@@ -194,7 +196,7 @@ const ResetPasswordPage: React.FC = () => {
             startIcon={isResetting ? <CircularProgress size={20} /> : <Lock />}
             sx={{ mb: 2 }}
           >
-            {isResetting ? 'Изменение пароля...' : 'Изменить пароль'}
+            {isResetting ? t('auth.changingPassword') : t('auth.changePassword')}
           </Button>
 
           <Box textAlign="center">
@@ -202,7 +204,7 @@ const ResetPasswordPage: React.FC = () => {
               variant="text"
               onClick={() => navigate('/login')}
             >
-              Назад к входу
+              {t('auth.backToLogin')}
             </Button>
           </Box>
         </Box>

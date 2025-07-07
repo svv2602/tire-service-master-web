@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   Box,
   Chip,
@@ -51,6 +52,7 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const { t } = useTranslation();
   
   // Состояние для фильтров и поиска
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,12 +86,12 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
   // Типы контента с их описаниями
   const getContentTypeInfo = useCallback((contentType: string) => {
     const contentTypes: Record<string, { name: string; icon: string; color: string }> = {
-      'hero': { name: 'Главный баннер', icon: '🎯', color: 'primary' },
-      'service': { name: 'Услуга', icon: '🔧', color: 'secondary' },
-      'city': { name: 'Город', icon: '🏙️', color: 'info' },
-      'article': { name: 'Статья', icon: '📝', color: 'success' },
-      'cta': { name: 'Призыв к действию', icon: '📢', color: 'warning' },
-      'footer': { name: 'Подвал', icon: '📄', color: 'default' }
+      'hero': { name: t('admin.pageContent.contentTypes.hero'), icon: '🎯', color: 'primary' },
+      'service': { name: t('admin.pageContent.contentTypes.service'), icon: '🔧', color: 'secondary' },
+      'city': { name: t('admin.pageContent.contentTypes.city'), icon: '🏙️', color: 'info' },
+      'article': { name: t('admin.pageContent.contentTypes.article'), icon: '📝', color: 'success' },
+      'cta': { name: t('admin.pageContent.contentTypes.cta'), icon: '📢', color: 'warning' },
+      'footer': { name: t('admin.pageContent.contentTypes.footer'), icon: '📄', color: 'default' }
     };
     
     return contentTypes[contentType] || { 
@@ -97,7 +99,7 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
       icon: '📄', 
       color: 'default' 
     };
-  }, []);
+  }, [t]);
 
   // Получение уникальных типов контента для фильтра
   const contentTypes = useMemo(() => {
@@ -183,47 +185,50 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
       }).unwrap();
       
       showNotification(
-        `Контент "${pageContent.title}" ${!pageContent.active ? 'активирован' : 'деактивирован'}`,
+        t('admin.pageContent.messages.statusToggled', { 
+          title: pageContent.title, 
+          action: !pageContent.active ? t('common.activated') : t('common.deactivated') 
+        }),
         'success'
       );
     } catch (error) {
       console.error('Ошибка при изменении активности страницы:', error);
-      showNotification('Ошибка при изменении активности контента', 'error');
+      showNotification(t('admin.pageContent.messages.statusToggleError'), 'error');
     }
-  }, [updatePage, showNotification]);
+  }, [updatePage, showNotification, t]);
 
   // Обработка удаления
   const handleDelete = useCallback(async (pageContent: PageContent) => {
     try {
       await deletePage(pageContent.id).unwrap();
-      showNotification(`Контент "${pageContent.title}" успешно удален`, 'success');
+      showNotification(t('admin.pageContent.messages.deleted', { title: pageContent.title }), 'success');
     } catch (error) {
       console.error('Ошибка при удалении страницы:', error);
-      showNotification('Ошибка при удалении контента', 'error');
+      showNotification(t('admin.pageContent.messages.deleteError'), 'error');
     }
-  }, [deletePage, showNotification]);
+  }, [deletePage, showNotification, t]);
 
   // Конфигурация заголовка
   const headerConfig = useMemo(() => ({
-    title: 'Управление контентом страниц',
-    subtitle: 'Редактирование текстов, настройка услуг и CTA блоков без изменения кода',
+    title: t('admin.pageContent.title'),
+    subtitle: t('admin.pageContent.subtitle'),
     actions: [
       {
-        label: 'Создать контент',
+        label: t('admin.pageContent.createContent'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/page-content/new'),
         variant: 'contained' as const,
         color: 'primary' as const
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
-    placeholder: 'Поиск по заголовку, секции или содержимому...',
+    placeholder: t('admin.pageContent.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
-  }), [searchQuery, handleSearchChange]);
+  }), [searchQuery, handleSearchChange, t]);
 
   // Конфигурация фильтров
   const filtersConfig = useMemo(() => [
@@ -231,35 +236,35 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
       id: 'status',
       key: 'status',
       type: 'select' as const,
-      label: 'Статус',
+      label: t('tables.columns.status'),
       value: selectedStatus,
       onChange: handleStatusFilterChange,
       options: [
-        { value: 'all', label: 'Все' },
-        { value: 'active', label: 'Активные' },
-        { value: 'inactive', label: 'Неактивные' }
+        { value: 'all', label: t('common.all') },
+        { value: 'active', label: t('statuses.active') },
+        { value: 'inactive', label: t('statuses.inactive') }
       ]
     },
     {
       id: 'type',
       key: 'type',
       type: 'select' as const,
-      label: 'Тип контента',
+      label: t('admin.pageContent.contentTypeFilter'),
       value: selectedType,
       onChange: handleTypeFilterChange,
       options: [
-        { value: 'all', label: 'Все типы' },
+        { value: 'all', label: t('admin.pageContent.allTypes') },
         ...contentTypes
       ]
     }
-  ], [selectedStatus, selectedType, contentTypes, handleStatusFilterChange, handleTypeFilterChange]);
+  ], [selectedStatus, selectedType, contentTypes, handleStatusFilterChange, handleTypeFilterChange, t]);
 
   // Конфигурация колонок
   const columns = useMemo(() => [
     {
       id: 'content',
       key: 'content' as keyof PageContent,
-      label: 'Контент',
+      label: t('admin.pageContent.content'),
       sortable: false,
       render: (pageContent: PageContent) => {
         const contentInfo = getContentTypeInfo(pageContent.content_type);
@@ -304,7 +309,7 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
     {
       id: 'position',
       key: 'position' as keyof PageContent,
-      label: 'Позиция',
+      label: t('admin.pageContent.position'),
       sortable: true,
       hideOnMobile: true,
       render: (pageContent: PageContent) => (
@@ -319,11 +324,11 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
     {
       id: 'active',
       key: 'active' as keyof PageContent,
-      label: 'Статус',
+      label: t('admin.pageContent.status'),
       sortable: true,
       render: (pageContent: PageContent) => (
         <Chip 
-          label={pageContent.active ? 'Активен' : 'Неактивен'} 
+          label={pageContent.active ? t('statuses.active') : t('statuses.inactive')} 
           size="small"
           color={pageContent.active ? 'success' : 'default'}
           icon={pageContent.active ? <VisibilityIcon /> : <VisibilityOffIcon />}
@@ -333,7 +338,7 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
     {
       id: 'created_at',
       key: 'created_at' as keyof PageContent,
-      label: 'Дата создания',
+      label: t('admin.pageContent.createdAt'),
       sortable: true,
       hideOnMobile: true,
       render: (pageContent: PageContent) => (
@@ -342,33 +347,33 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
         </Typography>
       )
     }
-  ], [getContentTypeInfo]);
+  ], [getContentTypeInfo, t]);
 
   // Конфигурация действий
   const actionsConfig = useMemo(() => [
     {
       key: 'edit',
-      label: 'Редактировать',
+      label: t('admin.pageContent.edit'),
       icon: <EditIcon />,
       onClick: (pageContent: PageContent) => navigate(`/admin/page-content/${pageContent.id}/edit`),
       color: 'primary' as const
     },
     {
       key: 'toggle-active',
-      label: (pageContent: PageContent) => pageContent.active ? 'Деактивировать' : 'Активировать',
+      label: (pageContent: PageContent) => pageContent.active ? t('admin.pageContent.deactivate') : t('admin.pageContent.activate'),
       icon: (pageContent: PageContent) => pageContent.active ? <VisibilityOffIcon /> : <VisibilityIcon />,
       onClick: handleToggleActive,
       color: (pageContent: PageContent) => pageContent.active ? 'warning' as const : 'success' as const
     },
     {
       key: 'delete',
-      label: 'Удалить',
+      label: t('admin.pageContent.delete'),
       icon: <DeleteIcon />,
       onClick: handleDelete,
       color: 'error' as const,
-      confirmationText: 'Вы уверены, что хотите удалить этот контент?'
+      confirmationText: t('admin.pageContent.deleteConfirmation')
     }
-  ], [navigate, handleToggleActive, handleDelete]);
+  ], [navigate, handleToggleActive, handleDelete, t]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -387,12 +392,12 @@ const PageContentPageNew: React.FC<PageContentPageProps> = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: searchQuery || selectedStatus !== 'all' || selectedType !== 'all' ? 'Контент не найден' : 'Нет контента',
+          title: searchQuery || selectedStatus !== 'all' || selectedType !== 'all' ? t('admin.pageContent.notFound') : t('admin.pageContent.noContent'),
           description: searchQuery || selectedStatus !== 'all' || selectedType !== 'all'
-            ? 'Попробуйте изменить критерии поиска'
-            : 'Создайте первый элемент контента для начала работы',
+            ? t('admin.pageContent.tryChangeFilters')
+            : t('admin.pageContent.createFirstElement'),
           action: (!searchQuery && selectedStatus === 'all' && selectedType === 'all') ? {
-            label: 'Создать контент',
+            label: t('admin.pageContent.createContent'),
             icon: <AddIcon />,
             onClick: () => navigate('/admin/page-content/new')
           } : undefined

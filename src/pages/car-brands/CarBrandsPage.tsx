@@ -155,9 +155,9 @@ const CarBrandsPage: React.FC = () => {
         setPage(0);
       },
       options: [
-        { value: 'all', label: 'Все' },
-        { value: 'active', label: 'Активные' },
-        { value: 'inactive', label: 'Неактивные' },
+        { value: 'all', label: t('common.all') },
+        { value: 'active', label: t('statuses.active') },
+        { value: 'inactive', label: t('statuses.inactive') },
       ],
     },
   ], [activeFilter]);
@@ -178,11 +178,11 @@ const CarBrandsPage: React.FC = () => {
       icon: <DeleteIcon />,
       onClick: (brand: CarBrand) => handleDeleteBrand(brand),
       color: 'error',
-      tooltip: 'Удалить бренд',
+      tooltip: t('admin.carBrands.deleteBrand'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтвердите удаление',
-        message: 'Вы уверены, что хотите удалить этот бренд? Это действие нельзя отменить.',
+        title: t('common.confirmDelete'),
+        message: t('common.confirmDeleteMessage'),
         confirmLabel: t('tables.actions.delete'),
         cancelLabel: t('common.cancel'),
       },
@@ -193,7 +193,7 @@ const CarBrandsPage: React.FC = () => {
   const columns: Column<CarBrand>[] = useMemo(() => [
     {
       id: 'name',
-      label: 'Бренд',
+      label: t('admin.carBrands.brand'),
       sortable: true,
       render: (brand: CarBrand) => (
         <Box sx={tablePageStyles.avatarContainer}>
@@ -220,7 +220,7 @@ const CarBrandsPage: React.FC = () => {
       align: 'center',
       hideOnMobile: false,
       render: (brand: CarBrand) => (
-        <Tooltip title={`Нажмите чтобы ${brand.is_active ? 'деактивировать' : 'активировать'}`}>
+        <Tooltip title={t('admin.carBrands.toggleStatusTooltip', { action: brand.is_active ? t('common.deactivate') : t('common.activate') })}>
           <IconButton
             onClick={() => handleToggleActive(brand)}
             size="small"
@@ -239,7 +239,7 @@ const CarBrandsPage: React.FC = () => {
     },
     {
       id: 'models_count',
-      label: 'Моделей',
+      label: t('admin.carBrands.modelsCount'),
       align: 'center',
       hideOnMobile: true,
       render: (brand: CarBrand) => (
@@ -288,7 +288,7 @@ const CarBrandsPage: React.FC = () => {
   return (
     <PageTable<CarBrand>
       header={{
-        title: 'Бренды автомобилей (PageTable)',
+        title: t('admin.carBrands.title'),
         actions: [
           {
             label: t('admin.carBrands.createBrand'),
@@ -315,10 +315,10 @@ const CarBrandsPage: React.FC = () => {
         onPageChange: setPage,
       }}
       emptyState={{
-        title: search || activeFilter !== '' ? 'Бренды не найдены' : 'Нет брендов автомобилей',
+        title: search || activeFilter !== '' ? t('admin.carBrands.brandsNotFound') : t('admin.carBrands.noBrands'),
         description: search || activeFilter !== '' 
-          ? 'Попробуйте изменить критерии поиска'
-          : 'Создайте первый бренд автомобиля для начала работы',
+          ? t('admin.carBrands.changeSearchCriteria')
+          : t('admin.carBrands.createFirstBrand'),
         action: (!search && activeFilter === '') ? {
           label: t('admin.carBrands.createBrand'),
           icon: <AddIcon />,
