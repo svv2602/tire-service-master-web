@@ -5,13 +5,30 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Import translation files
 import ukTranslations from './locales/uk.json';
 import ruTranslations from './locales/ru.json';
+import settingsRuTranslations from './locales/settings-ru.json';
+import settingsUkTranslations from './locales/settings-uk.json';
+
+// Функция для глубокого объединения объектов
+const deepMerge = (target: any, source: any): any => {
+  const result = { ...target };
+  
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      result[key] = deepMerge(result[key] || {}, source[key]);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  
+  return result;
+};
 
 const resources = {
   uk: {
-    translation: ukTranslations,
+    translation: deepMerge(ukTranslations, settingsUkTranslations),
   },
   ru: {
-    translation: ruTranslations,
+    translation: deepMerge(ruTranslations, settingsRuTranslations),
   },
 };
 
