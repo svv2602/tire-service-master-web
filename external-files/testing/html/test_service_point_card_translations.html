@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест переводов ServicePointCard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .translation-test {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .lang-column {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .lang-column h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .translation-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 3px;
+            border-left: 3px solid #007bff;
+        }
+        .key {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .value {
+            color: #212529;
+        }
+        .test-url {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Тест переводов ServicePointCard</h1>
+        
+        <div class="instructions">
+            <h3>📋 Инструкции по тестированию:</h3>
+            <ol>
+                <li>Откройте страницу бронирования: <code>http://localhost:3008/client/booking</code></li>
+                <li>Пройдите до шага "Выбор точки обслуживания"</li>
+                <li>Переключите язык на украинский в правом верхнем углу</li>
+                <li>Проверьте, что все тексты в карточках сервисных точек переведены корректно</li>
+                <li>Откройте фотогалерею любой сервисной точки</li>
+                <li>Проверьте переводы в модальном окне фотогалереи</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Основные переводы ServicePointCard</h3>
+            
+            <div class="translation-test">
+                <div class="lang-column">
+                    <h4>🇷🇺 Русский (ru.json)</h4>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.photos</div>
+                        <div class="value">фото</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.photoGallery</div>
+                        <div class="value">Фотогалерея</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.servicePointPhoto</div>
+                        <div class="value">Фото сервисной точки</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.reviews</div>
+                        <div class="value">отзывов</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.working</div>
+                        <div class="value">Работает</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.notWorking</div>
+                        <div class="value">Не работает</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.availableCategories</div>
+                        <div class="value">Доступные категории услуг</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.categoryDescription</div>
+                        <div class="value">Описание категории</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.services</div>
+                        <div class="value">услуг</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.categoriesNotLoaded</div>
+                        <div class="value">Категории услуг не загружены</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.workingHours</div>
+                        <div class="value">График работы</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.details</div>
+                        <div class="value">Подробнее</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.select</div>
+                        <div class="value">Выбрать</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.selected</div>
+                        <div class="value">Выбрано</div>
+                    </div>
+                </div>
+                
+                <div class="lang-column">
+                    <h4>🇺🇦 Українська (uk.json)</h4>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.photos</div>
+                        <div class="value">фото</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.photoGallery</div>
+                        <div class="value">Фотогалерея</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.servicePointPhoto</div>
+                        <div class="value">Фото сервісної точки</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.reviews</div>
+                        <div class="value">відгуків</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.working</div>
+                        <div class="value">Працює</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.notWorking</div>
+                        <div class="value">Не працює</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.availableCategories</div>
+                        <div class="value">Доступні категорії послуг</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.categoryDescription</div>
+                        <div class="value">Опис категорії</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.services</div>
+                        <div class="value">послуг</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.categoriesNotLoaded</div>
+                        <div class="value">Категорії послуг не завантажені</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.workingHours</div>
+                        <div class="value">Графік роботи</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.details</div>
+                        <div class="value">Детальніше</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.select</div>
+                        <div class="value">Вибрати</div>
+                    </div>
+                    <div class="translation-item">
+                        <div class="key">servicePointCard.selected</div>
+                        <div class="value">Вибрано</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Что нужно проверить на странице</h3>
+            <div class="test-url">
+                <strong>URL для тестирования:</strong> http://localhost:3008/client/booking
+            </div>
+            
+            <h4>✅ Элементы карточки сервисной точки:</h4>
+            <ul>
+                <li><strong>Счетчик фотографий:</strong> "4 фото" → "4 фото" (одинаково)</li>
+                <li><strong>Количество отзывов:</strong> "(5 отзывов)" → "(5 відгуків)"</li>
+                <li><strong>Статус работы:</strong> "Работает" → "Працює" / "Не работает" → "Не працює"</li>
+                <li><strong>Доступные категории:</strong> "Доступные категории услуг" → "Доступні категорії послуг"</li>
+                <li><strong>Описание категории:</strong> "Описание категории" → "Опис категорії"</li>
+                <li><strong>Количество услуг:</strong> "5 услуг" → "5 послуг"</li>
+                <li><strong>График работы:</strong> "График работы" → "Графік роботи"</li>
+                <li><strong>Кнопка выбора:</strong> "Выбрать" → "Вибрати"</li>
+                <li><strong>Выбранное состояние:</strong> "Выбрано" → "Вибрано"</li>
+            </ul>
+            
+            <h4>🖼️ Фотогалерея (при клике на фото):</h4>
+            <ul>
+                <li><strong>Заголовок модального окна:</strong> "Фотогалерея - [Название точки]" → "Фотогалерея - [Назва точки]"</li>
+                <li><strong>Alt текст фотографий:</strong> "Фото сервисной точки" → "Фото сервісної точки"</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Результаты тестирования</h3>
+            <div class="status info">
+                <strong>Статус:</strong> Ожидает тестирования
+            </div>
+            <div class="status success">
+                <strong>Добавлено переводов:</strong> 14 ключей для ServicePointCard
+            </div>
+            <div class="status success">
+                <strong>Обновлен компонент:</strong> ServicePointCard.tsx с поддержкой useTranslation
+            </div>
+            <div class="status info">
+                <strong>Коммит:</strong> b5abc3d - "Добавлены переводы для ServicePointCard"
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Следующие шаги</h3>
+            <ol>
+                <li>Протестировать переводы в браузере</li>
+                <li>Проверить другие компоненты на наличие захардкоженных текстов</li>
+                <li>Добавить переводы для других UI компонентов при необходимости</li>
+                <li>Создать итоговый отчет по локализации</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html> 

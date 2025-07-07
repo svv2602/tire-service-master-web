@@ -743,7 +743,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                 </List>
               ) : (
                 <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  {t('servicePointCard.noCategories')}
+                  {t('servicePointCard.categoriesNotLoaded')}
                 </Typography>
               )}
             </Collapse>
@@ -766,7 +766,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {t('servicePointCard.workSchedule')}
+                  {t('servicePointCard.workingHours')}
                 </Typography>
               </Box>
               {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -823,7 +823,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               }
             }}
           >
-            {t('servicePointCard.viewDetails')}
+            {t('servicePointCard.details')}
           </Button>
         )}
         <Box sx={{ flexGrow: 1 }} />

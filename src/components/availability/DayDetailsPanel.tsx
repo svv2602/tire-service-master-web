@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Box, 
   Typography, 
@@ -46,6 +47,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const { t } = useTranslation();
   
   // Форматирование даты
   const formatDate = (date: Date | null) => {
@@ -62,9 +64,9 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
   
   // Определение текста для индикатора загруженности
   const getOccupancyText = (percentage: number) => {
-    if (percentage < 40) return 'Свободно';
-    if (percentage < 80) return 'Средняя загрузка';
-    return 'Высокая загрузка';
+    if (percentage < 40) return t('dayDetailsPanel.free');
+    if (percentage < 80) return t('dayDetailsPanel.mediumLoad');
+    return t('dayDetailsPanel.highLoad');
   };
 
   return (
@@ -72,7 +74,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <InfoIcon sx={{ mr: 1, color: colors.primary }} />
         <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary }}>
-          Информация
+          {t('dayDetailsPanel.information')}
         </Typography>
       </Box>
 
@@ -90,14 +92,14 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
           borderRadius: 2
         }}>
           <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            Выберите дату для просмотра информации
+            {t('dayDetailsPanel.selectDateToView')}
           </Typography>
         </Box>
       ) : (
         <>
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-              Выбранная дата:
+              {t('dayDetailsPanel.selectedDate')}
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {formatDate(selectedDate)}
@@ -107,7 +109,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
           {selectedTimeSlot && (
             <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                Выбранное время:
+                {t('dayDetailsPanel.selectedTime')}
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {selectedTimeSlot}
@@ -124,7 +126,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
             >
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                  {workingMessage || 'В выбранную дату сервисная точка не работает с услугами данной категории. Пожалуйста, выберите другую дату.'}
+                  {workingMessage || t('dayDetailsPanel.notWorkingMessage')}
                 </Typography>
               </Box>
             </Alert>
@@ -135,7 +137,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Typography variant="subtitle2" sx={{ color: colors.textSecondary }}>
-                    Загруженность:
+                    {t('dayDetailsPanel.workload')}
                   </Typography>
                   <Typography 
                     variant="body2" 
@@ -148,7 +150,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
                   </Typography>
                 </Box>
                 
-                <Tooltip title={`${occupancyPercentage}% занято`} arrow>
+                <Tooltip title={`${occupancyPercentage}${t('dayDetailsPanel.percentOccupied')}`} arrow>
                   <LinearProgress
                     variant="determinate"
                     value={occupancyPercentage}
@@ -168,7 +170,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
                 <Box sx={{ textAlign: 'center', flex: 1 }}>
                   <EventAvailableIcon sx={{ color: colors.success, mb: 0.5 }} />
                   <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                    Свободно слотов
+                    {t('dayDetailsPanel.freeSlots')}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     {availablePosts}
@@ -180,7 +182,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
                 <Box sx={{ textAlign: 'center', flex: 1 }}>
                   <EventBusyIcon sx={{ color: colors.error, mb: 0.5 }} />
                   <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                    Занято слотов
+                    {t('dayDetailsPanel.occupiedSlots')}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     {totalPosts - availablePosts}
@@ -197,7 +199,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
                 >
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 500, mb: 0.5 }}>
-                      Бронирование на сегодня только по телефону
+                      {t('dayDetailsPanel.todayBookingByPhone')}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <PhoneIcon sx={{ fontSize: 16 }} />
