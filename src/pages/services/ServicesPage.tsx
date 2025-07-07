@@ -133,13 +133,13 @@ const ServicesPage: React.FC = () => {
         await deleteCategory(selectedCategory.id.toString()).unwrap();
         setNotification({
           open: true,
-          message: `Категория "${selectedCategory.name}" успешно удалена`,
+          message: t('admin.services.messages.deleteSuccess', { name: selectedCategory.name }),
           severity: 'success'
         });
         setDeleteDialogOpen(false);
         setSelectedCategory(null);
       } catch (error: any) {
-        let errorMessage = 'Ошибка при удалении категории';
+        let errorMessage = t('admin.services.messages.deleteError');
         if (error.data?.message) {
           errorMessage = error.data.message;
         } else if (error.data?.errors) {
@@ -164,11 +164,11 @@ const ServicesPage: React.FC = () => {
       await toggleActive({ id: id.toString(), is_active: !currentActive }).unwrap();
       setNotification({
         open: true,
-        message: `Статус категории успешно изменен`,
+        message: t('admin.services.messages.statusSuccess'),
         severity: 'success'
       });
     } catch (error: any) {
-      let errorMessage = 'Ошибка при изменении статуса';
+      let errorMessage = t('admin.services.messages.statusError');
       if (error.data?.message) {
         errorMessage = error.data.message;
       } else if (error.data?.errors) {
@@ -200,7 +200,7 @@ const ServicesPage: React.FC = () => {
       {/* Заголовок с кнопкой добавления */}
       <Box sx={tablePageStyles.headerContainer}>
         <Typography variant="h4" sx={tablePageStyles.title}>
-          Категории услуг
+          {t('admin.services.title')}
         </Typography>
         <Button
           variant="contained"
@@ -208,14 +208,14 @@ const ServicesPage: React.FC = () => {
           onClick={() => navigate('/admin/services/new')}
           sx={tablePageStyles.primaryButton}
         >
-          Добавить категорию
+          {t('admin.services.createCategory')}
         </Button>
       </Box>
 
       {/* Фильтры и поиск */}
       <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          placeholder="Поиск по названию категории"
+          placeholder={t('admin.services.searchPlaceholder')}
           variant="outlined"
           size="small"
           value={search}
@@ -231,15 +231,15 @@ const ServicesPage: React.FC = () => {
         />
         
         <FormControl size="small" sx={tablePageStyles.filterSelect}>
-          <InputLabel>Статус</InputLabel>
+          <InputLabel>{t('tables.columns.status')}</InputLabel>
           <Select
             value={activeFilter}
             onChange={handleActiveFilterChange}
             label={t('tables.columns.status')}
           >
-            <MenuItem value="">Все</MenuItem>
-            <MenuItem value="true">Активные</MenuItem>
-            <MenuItem value="false">Неактивные</MenuItem>
+            <MenuItem value="">{t('filters.statusOptions.all')}</MenuItem>
+            <MenuItem value="true">{t('filters.statusOptions.active')}</MenuItem>
+            <MenuItem value="false">{t('filters.statusOptions.inactive')}</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -247,7 +247,7 @@ const ServicesPage: React.FC = () => {
       {/* Сообщения об ошибках */}
       {error && (
         <Alert severity="error" sx={tablePageStyles.errorAlert}>
-          Произошла ошибка при загрузке категорий
+          {t('admin.services.loadingError')}
         </Alert>
       )}
 
@@ -315,13 +315,13 @@ const ServicesPage: React.FC = () => {
                   flexWrap: 'wrap'
                 }}>
                   <Chip 
-                    label={category.is_active ? 'Активна' : 'Неактивна'}
+                    label={category.is_active ? t('statuses.activeCategory') : t('statuses.inactiveCategory')}
                     color={category.is_active ? 'success' : 'default'}
                     size="small"
                     sx={tablePageStyles.statusChip}
                   />
                   {category.services_count !== undefined && (
-                    <Tooltip title="Количество услуг">
+                    <Tooltip title={t('admin.services.servicesCount')}>
                       <Chip
                         icon={<FormatListNumberedIcon sx={{ fontSize: '16px !important' }} />}
                         label={category.services_count}
@@ -418,12 +418,12 @@ const ServicesPage: React.FC = () => {
         <Box sx={tablePageStyles.emptyStateContainer}>
           <CategoryIcon sx={tablePageStyles.emptyStateIcon} />
           <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
-            {search || activeFilter !== '' ? 'Категории не найдены' : 'Нет категорий услуг'}
+            {search || activeFilter !== '' ? t('admin.services.categoriesNotFound') : t('admin.services.noCategories')}
           </Typography>
           <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
             {search || activeFilter !== '' 
-              ? 'Попробуйте изменить критерии поиска'
-              : 'Создайте первую категорию услуг для начала работы'
+              ? t('admin.services.changeCriteria')
+              : t('admin.services.createFirstCategory')
             }
           </Typography>
           {!search && activeFilter === '' && (
@@ -433,7 +433,7 @@ const ServicesPage: React.FC = () => {
               onClick={() => navigate('/admin/services/new')}
               sx={tablePageStyles.primaryButton}
             >
-              Добавить категорию
+              {t('admin.services.createCategory')}
             </Button>
           )}
         </Box>
@@ -463,13 +463,11 @@ const ServicesPage: React.FC = () => {
         }}
       >
         <DialogTitle sx={tablePageStyles.dialogTitle}>
-          Подтверждение удаления
+          {t('admin.services.confirmDelete.title')}
         </DialogTitle>
         <DialogContent sx={{ pt: SIZES.spacing.sm }}>
           <DialogContentText sx={tablePageStyles.dialogText}>
-            Вы действительно хотите удалить категорию "{selectedCategory?.name}"?
-            Все услуги в этой категории также будут удалены.
-            Это действие нельзя будет отменить.
+            {t('admin.services.confirmDelete.message', { name: selectedCategory?.name })}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={tablePageStyles.dialogActions}>
@@ -477,14 +475,14 @@ const ServicesPage: React.FC = () => {
             onClick={handleCloseDialog}
             sx={tablePageStyles.secondaryButton}
           >
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
             variant="contained"
             sx={tablePageStyles.dangerButton}
           >
-            Удалить
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>
