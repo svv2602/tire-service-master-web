@@ -20,6 +20,7 @@ import {
   Security as SecurityIcon,
   Devices as DevicesIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import {
@@ -53,6 +54,8 @@ interface SystemSettings {
 }
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   // Получение темы и централизованных стилей
   const theme = useTheme();
   const cardStyles = getCardStyles(theme);
@@ -136,7 +139,7 @@ const SettingsPage: React.FC = () => {
       await updateSettings(settings).unwrap();
       setSaveSuccess(true);
     } catch (err) {
-      setError('Произошла ошибка при сохранении настроек');
+      setError(t('admin.settings.messages.saveError'));
     }
   };
 
@@ -153,22 +156,22 @@ const SettingsPage: React.FC = () => {
   // Подготовка данных для вкладок
   const tabs = [
     {
-      label: 'Общие',
+      label: t('admin.settings.tabs.general'),
       value: 0,
       icon: <SettingsIcon />
     },
     {
-      label: 'Уведомления',
+      label: t('admin.settings.tabs.notifications'),
       value: 1,
       icon: <NotificationsIcon />
     },
     {
-      label: 'Безопасность',
+      label: t('admin.settings.tabs.security'),
       value: 2,
       icon: <SecurityIcon />
     },
     {
-      label: 'Интеграции',
+      label: t('admin.settings.tabs.integrations'),
       value: 3,
       icon: <DevicesIcon />
     }
@@ -225,7 +228,7 @@ const SettingsPage: React.FC = () => {
                     fontWeight: 600,
                     mb: SIZES.spacing.sm
                   }}>
-                    Основные настройки
+                    {t('admin.settings.sections.basic')}
                   </Typography>
                   <Divider />
                 </Box>
@@ -237,7 +240,7 @@ const SettingsPage: React.FC = () => {
                 }}>
                   <TextField
                     fullWidth
-                    label="Название системы"
+                    label={t('admin.settings.fields.systemName')}
                     name="systemName"
                     value={settings.systemName}
                     onChange={handleTextChange}
@@ -245,7 +248,7 @@ const SettingsPage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Контактный Email"
+                    label={t('admin.settings.fields.contactEmail')}
                     name="contactEmail"
                     value={settings.contactEmail}
                     onChange={handleTextChange}
@@ -253,7 +256,7 @@ const SettingsPage: React.FC = () => {
 
                   <TextField
                     fullWidth
-                    label="Телефон поддержки"
+                    label={t('admin.settings.fields.supportPhone')}
                     name="supportPhone"
                     value={settings.supportPhone}
                     onChange={handleTextChange}
@@ -263,7 +266,7 @@ const SettingsPage: React.FC = () => {
                     <Select
                       name="defaultCityId"
                       value={settings.defaultCityId}
-                      label="Город по умолчанию"
+                      label={t('admin.settings.fields.defaultCity')}
                       onChange={handleCityChange}
                       displayEmpty
                     >
@@ -281,7 +284,7 @@ const SettingsPage: React.FC = () => {
                     mb: SIZES.spacing.sm,
                     mt: SIZES.spacing.lg
                   }}>
-                    Настройки отображения
+                    {t('admin.settings.sections.display')}
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Box>
@@ -295,7 +298,7 @@ const SettingsPage: React.FC = () => {
                     <Select
                       name="dateFormat"
                       value={settings.dateFormat}
-                      label="Формат даты"
+                      label={t('admin.settings.fields.dateFormat')}
                       onChange={handleDateFormatChange}
                     >
                       <MenuItem value="DD.MM.YYYY">DD.MM.YYYY</MenuItem>
@@ -308,11 +311,11 @@ const SettingsPage: React.FC = () => {
                     <Select
                       name="timeFormat"
                       value={settings.timeFormat}
-                      label="Формат времени"
+                      label={t('admin.settings.fields.timeFormat')}
                       onChange={handleTimeFormatChange}
                     >
-                      <MenuItem value="24h">24-часовой (14:30)</MenuItem>
-                      <MenuItem value="12h">12-часовой (2:30 PM)</MenuItem>
+                      <MenuItem value="24h">{t('admin.settings.timeFormats.24h')}</MenuItem>
+                      <MenuItem value="12h">{t('admin.settings.timeFormats.12h')}</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -324,7 +327,7 @@ const SettingsPage: React.FC = () => {
                     onClick={handleSave}
                     disabled={loading || updating}
                   >
-                    Сохранить изменения
+                    {t('admin.settings.buttons.saveChanges')}
                   </Button>
                 </Box>
               </Box>
@@ -344,18 +347,18 @@ const SettingsPage: React.FC = () => {
                   fontWeight: 600,
                   mb: SIZES.spacing.sm
                 }}>
-                  Настройки уведомлений
+                  {t('admin.settings.sections.notifications')}
                 </Typography>
                 <Divider />
 
                 <Switch
-                  label="Получать уведомления по email"
+                  label={t('admin.settings.fields.emailNotifications')}
                   checked={settings.emailNotifications}
                   onChange={(e) => handleToggleChange(e, 'emailNotifications')}
                 />
 
                 <Switch
-                  label="Получать SMS уведомления"
+                  label={t('admin.settings.fields.smsNotifications')}
                   checked={settings.smsNotifications}
                   onChange={(e) => handleToggleChange(e, 'smsNotifications')}
                 />
@@ -367,7 +370,7 @@ const SettingsPage: React.FC = () => {
                     onClick={handleSave}
                     disabled={loading || updating}
                   >
-                    Сохранить изменения
+                    {t('admin.settings.buttons.saveChanges')}
                   </Button>
                 </Box>
               </Box>
@@ -387,12 +390,12 @@ const SettingsPage: React.FC = () => {
                   fontWeight: 600,
                   mb: SIZES.spacing.sm
                 }}>
-                  Настройки безопасности
+                  {t('admin.settings.sections.security')}
                 </Typography>
                 <Divider />
 
                 <Typography variant="body2" color="textSecondary">
-                  Функции безопасности будут доступны в следующем обновлении.
+                  {t('admin.settings.messages.securityComingSoon')}
                 </Typography>
 
                 <Box sx={{ mt: SIZES.spacing.lg }}>
@@ -402,7 +405,7 @@ const SettingsPage: React.FC = () => {
                     onClick={handleSave}
                     disabled={loading || updating}
                   >
-                    Сохранить изменения
+                    {t('admin.settings.buttons.saveChanges')}
                   </Button>
                 </Box>
               </Box>
@@ -415,15 +418,14 @@ const SettingsPage: React.FC = () => {
                 px: { xs: SIZES.spacing.md, md: SIZES.spacing.lg }
               }}>
                 <Alert severity="info">
-                  💡 Модуль интеграций находится в разработке и будет доступен в ближайшем обновлении.
+                  {t('admin.settings.messages.integrationsTitle')}
                 </Alert>
                 
                 <Typography variant="body1" sx={{ 
                   color: theme.palette.text.secondary,
                   fontSize: SIZES.fontSize.md
                 }}>
-                  В разделе интеграций вы сможете настроить взаимодействие с внешними системами, такими как CRM, 
-                  платежные сервисы и мессенджеры.
+                  {t('admin.settings.messages.integrationsDescription')}
                 </Typography>
               </Box>
             </TabPanel>
@@ -434,7 +436,7 @@ const SettingsPage: React.FC = () => {
       {/* Уведомление об успешном сохранении */}
       <Snackbar
         open={saveSuccess}
-        message="Настройки успешно сохранены"
+        message={t('admin.settings.messages.saveSuccess')}
         severity="success"
         onClose={handleCloseSnackbar}
         autoHideDuration={6000}

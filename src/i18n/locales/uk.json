@@ -921,20 +921,20 @@
       }
     },
     "datePicker": {
-      "label": "Выберите дату",
-      "helperText": "Формат: дд.мм.гггг"
+      "label": "Виберіть дату",
+      "helperText": "Формат: дд.мм.рррр"
     },
     "searchAndFilters": {
       "searchPlaceholder": "Пошук...",
       "clear": "Очистити"
     },
     "select": {
-      "placeholder": "Выберите..."
+      "placeholder": "Виберіть..."
     },
     "autoComplete": {
-      "label": "Выберите значение",
-      "placeholder": "Начните вводить...",
-      "noOptionsText": "Ні доступных вариантов",
+      "label": "Виберіть значення",
+      "placeholder": "Почніть вводити...",
+      "noOptionsText": "Немає доступних варіантів",
       "loadingText": "Завантаження..."
     },
     "phoneField": {
@@ -956,7 +956,7 @@
     "stepper": {
       "optional": "Опціонально",
       "finish": "Завершити",
-      "next": "Продолжить",
+      "next": "Далі",
       "back": "Назад"
     },
     "carBrand": {
@@ -998,14 +998,14 @@
       "supportedFormats": "Підтримувані формати: {{formats}}",
       "delete": "Видалити файл",
       "error": {
-        "tooLarge": "Файл занадто великий. Пожалуйста, выберите файл меньшего размера.",
-        "unsupportedType": "Непідтримуваний тип файлу. Пожалуйста, выберите другой файл."
+        "tooLarge": "Файл занадто великий. Будь ласка, виберіть файл меншого розміру.",
+        "unsupportedType": "Непідтримуваний тип файлу. Будь ласка, виберіть інший файл."
       }
     },
     "forms": {
       "client": {
         "title": {
-          "create": "Новый клиент",
+          "create": "Новий клієнт",
           "edit": "Редагувати клиента"
         },
         "fields": {
@@ -1013,7 +1013,7 @@
           "lastName": "Прізвище",
           "email": "Email",
           "phone": "Телефон",
-          "isActive": "Активний клиент"
+          "isActive": "Активний клієнт"
         },
         "validation": {
           "firstNameRequired": "Ім'я обов'язкове",
@@ -1021,31 +1021,31 @@
           "emailRequired": "Email обов'язковий",
           "phoneRequired": "Телефон обов'язковий"
         },
-        "emailPlaceholder": "example@email.com (необязательно)",
-        "canCreate": "Можете создать клиента"
+        "emailPlaceholder": "example@email.com (необов'язково)",
+        "canCreate": "Можете створити клієнта"
       },
       "clientCar": {
         "title": {
-          "create": "Новый автомобиль",
+          "create": "Новий автомобіль",
           "edit": "Редагувати автомобиль"
         },
         "fields": {
           "brand": "Марка",
           "model": "Модель",
-          "year": "Год выпуска",
-          "licensePlate": "Номер автомобиля",
-          "color": "Цвет",
+          "year": "Рік випуску",
+          "licensePlate": "Номер автомобіля",
+          "color": "Колір",
           "isActive": "Активний"
         },
         "validation": {
-          "brandRequired": "Марка обязательна",
-          "modelRequired": "Модель обязательна",
-          "yearRequired": "Год выпуска обязателен",
-          "licensePlateRequired": "Номер автомобиля обязателен"
+          "brandRequired": "Марка обов'язкова",
+          "modelRequired": "Модель обов'язкова",
+          "yearRequired": "Рік випуску обов'язковий",
+          "licensePlateRequired": "Номер автомобіля обов'язковий"
         },
-        "selectBrand": "Выберите марку",
-        "selectModel": "Выберите модель",
-        "selectTypeOptional": "Выберите тип (необязательно)"
+        "selectBrand": "Виберіть марку",
+        "selectModel": "Виберіть модель",
+        "selectTypeOptional": "Виберіть тип (необов'язково)"
       },
       "carBrand": {
         "title": {
@@ -1083,44 +1083,44 @@
       "tireCalculator": {
         "title": "Калькулятор шин",
         "fields": {
-          "currentWidth": "Текущая ширина",
-          "currentProfile": "Текущий профиль",
-          "currentDiameter": "Текущий диаметр",
-          "newWidth": "Новая ширина",
-          "newProfile": "Новый профиль",
-          "newDiameter": "Новый диаметр"
+          "currentWidth": "Поточна ширина",
+          "currentProfile": "Поточний профіль",
+          "currentDiameter": "Поточний діаметр",
+          "newWidth": "Нова ширина",
+          "newProfile": "Новий профіль",
+          "newDiameter": "Новий діаметр"
         },
         "buttons": {
-          "calculate": "Рассчитать",
-          "reset": "Сбросить"
+          "calculate": "Розрахувати",
+          "reset": "Скинути"
         }
       },
       "review": {
         "title": {
-          "create": "Новый отзыв",
-          "edit": "Редактирование отзыва",
-          "createAdmin": "Создание/редактирование отзыва (режим администратора)",
-          "editAdmin": "Редактирование отзыва (режим администратора)"
+          "create": "Новий відгук",
+          "edit": "Редагування відгуку",
+          "createAdmin": "Створення/редагування відгуку (режим адміністратора)",
+          "editAdmin": "Редагування відгуку (режим адміністратора)"
         },
         "fields": {
           "client": "Клієнт",
           "booking": "Бронювання",
-          "servicePoint": "Точка обслуживания",
+          "servicePoint": "Точка обслуговування",
           "rating": "Оцінка",
-          "yourRating": "Ваша оценка",
+          "yourRating": "Ваша оцінка",
           "comment": "Коментар",
-          "reviewText": "Текст отзыва",
+          "reviewText": "Текст відгуку",
           "status": "Статус"
         },
         "placeholders": {
-          "selectClient": "Выберите клиента",
-          "selectBooking": "Выберите бронирование",
-          "withoutBooking": "Без бронирования",
-          "selectServicePoint": "Выберите точку"
+          "selectClient": "Виберіть клієнта",
+          "selectBooking": "Виберіть бронювання",
+          "withoutBooking": "Без бронювання",
+          "selectServicePoint": "Виберіть точку"
         },
         "validation": {
           "fillAllFields": "Заповніть всі обов'язкові поля",
-          "allFieldsFilled": "Всі обязательные поля заполнены. Можете сохранить отзыв."
+          "allFieldsFilled": "Всі обов'язкові поля заповнені. Можете зберегти відгук."
         },
         "messages": {
           "createSuccess": "Отзыв успешно создан!",

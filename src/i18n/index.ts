@@ -7,6 +7,8 @@ import ukTranslations from './locales/uk.json';
 import ruTranslations from './locales/ru.json';
 import settingsRuTranslations from './locales/settings-ru.json';
 import settingsUkTranslations from './locales/settings-uk.json';
+import clientRuTranslations from './locales/client-ru.json';
+import clientUkTranslations from './locales/client-uk.json';
 
 // Функция для глубокого объединения объектов
 const deepMerge = (target: any, source: any): any => {
@@ -25,10 +27,16 @@ const deepMerge = (target: any, source: any): any => {
 
 const resources = {
   uk: {
-    translation: deepMerge(ukTranslations, settingsUkTranslations),
+    translation: deepMerge(
+      deepMerge(ukTranslations, settingsUkTranslations),
+      clientUkTranslations
+    ),
   },
   ru: {
-    translation: deepMerge(ruTranslations, settingsRuTranslations),
+    translation: deepMerge(
+      deepMerge(ruTranslations, settingsRuTranslations),
+      clientRuTranslations
+    ),
   },
 };
 
