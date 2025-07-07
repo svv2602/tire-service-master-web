@@ -1215,7 +1215,7 @@ const PartnerFormPage: React.FC = () => {
                 <TextField
                   fullWidth
                   name="tax_number"
-                  label="Налоговый номер (необязательно)"
+                  label={t('forms.partner.fields.taxNumberOptional')}
                   placeholder={t("forms.partner.placeholders.taxNumber")}
                   value={formik.values.tax_number}
                   onChange={formik.handleChange}
@@ -1268,7 +1268,7 @@ const PartnerFormPage: React.FC = () => {
                     error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                     disabled={isLoading}
                   >
-                    <MenuItem value="">t('forms.partner.placeholders.selectRegion')</MenuItem>
+                    <MenuItem value="">{t('forms.partner.placeholders.selectRegion')}</MenuItem>
                     {regionsData?.data.map((region) => (
                       <MenuItem key={region.id} value={region.id}>
                         {region.name}
@@ -1300,7 +1300,7 @@ const PartnerFormPage: React.FC = () => {
                     error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                     disabled={isLoading || !formik.values.region_id}
                   >
-                    <MenuItem value="">t('forms.partner.placeholders.selectCity')</MenuItem>
+                    <MenuItem value="">{t('forms.partner.placeholders.selectCity')}</MenuItem>
                     {citiesData?.data.map((city) => (
                       <MenuItem key={city.id} value={city.id}>
                         {city.name}
@@ -1551,7 +1551,7 @@ const PartnerFormPage: React.FC = () => {
                     )}
                     {showValidationErrors && !formik.isValid && (
                       <Alert severity="error" sx={{ mb: 2 }}>
-                        Пожалуйста, исправьте ошибки в форме.
+                        {t('forms.partner.validation.fixErrors')}
                       </Alert>
                     )}
                   </Box>

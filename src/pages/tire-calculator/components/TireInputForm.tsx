@@ -53,6 +53,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [tireInputMode, setTireInputMode] = useState<'manual' | 'autocomplete'>('manual');
+  const { t } = useTranslation();
   
   // Популярные размеры для автозаполнения
   const popularSizes = getPopularTireSizes();
@@ -111,20 +112,20 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
     <Box>
       <Typography variant="h6" gutterBottom>
         <CalculateIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-        Параметры расчета
+        {t('tireCalculator.title')}
       </Typography>
 
       {/* Переключатель режима ввода */}
       <Box sx={{ mb: 3 }}>
         <Chip
-          label="Ручной ввод"
+          label={t('tireCalculator.inputMode.manual')}
           clickable
           color={tireInputMode === 'manual' ? 'primary' : 'default'}
           onClick={() => setTireInputMode('manual')}
           sx={{ mr: 1 }}
         />
         <Chip
-          label="Популярные размеры"
+          label={t('tireCalculator.inputMode.popular')}
           clickable
           color={tireInputMode === 'autocomplete' ? 'primary' : 'default'}
           onClick={() => setTireInputMode('autocomplete')}
@@ -136,10 +137,10 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth>
-              <InputLabel>Ширина (мм)</InputLabel>
+              <InputLabel>{t('tireCalculator.fields.width')}</InputLabel>
               <Select
                 value={originalTire.width}
-                label="Ширина (мм)"
+                label={t('tireCalculator.fields.width')}
                 onChange={(e) => handleTireFieldChange('width', Number(e.target.value))}
               >
                 {generateWidthOptions().map(width => (
@@ -151,10 +152,10 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth>
-              <InputLabel>Профиль (%)</InputLabel>
+              <InputLabel>{t('tireCalculator.fields.profile')}</InputLabel>
               <Select
                 value={originalTire.profile}
-                label="Профиль (%)"
+                label={t('tireCalculator.fields.profile')}
                 onChange={(e) => handleTireFieldChange('profile', Number(e.target.value))}
               >
                 {generateProfileOptions().map(profile => (
@@ -166,10 +167,10 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 
           <Grid item xs={12} sm={6} md={3}>
             <FormControl fullWidth>
-              <InputLabel>Диаметр (дюймы)</InputLabel>
+              <InputLabel>{t('tireCalculator.fields.diameter')}</InputLabel>
               <Select
                 value={originalTire.diameter}
-                label="Диаметр (дюймы)"
+                label={t('tireCalculator.fields.diameter')}
                 onChange={(e) => handleTireFieldChange('diameter', Number(e.target.value))}
               >
                 {generateDiameterOptions().map(diameter => (
@@ -181,7 +182,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Итоговый размер:
+              {t('tireCalculator.result.finalSize')}
             </Typography>
             <Typography variant="h6" color="primary">
               {formatTireSize(originalTire)}
@@ -206,8 +207,8 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Выберите размер шины"
-                placeholder="Например: 205/55 R16"
+                label={t('tireCalculator.fields.selectSize')}
+                placeholder={t('tireCalculator.fields.selectSizePlaceholder')}
                 fullWidth
               />
             )}
@@ -226,14 +227,14 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Typography>
             <SettingsIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-            Расширенные настройки
+            {t('tireCalculator.advancedSettings.title')}
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Typography gutterBottom>
-                Максимальное отклонение диаметра: {searchParams.maxDeviationPercent}%
+                {t('tireCalculator.advancedSettings.maxDeviation')} {searchParams.maxDeviationPercent}%
               </Typography>
               <Slider
                 value={searchParams.maxDeviationPercent}
@@ -242,9 +243,9 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
                 max={5}
                 step={0.5}
                 marks={[
-                  { value: 1, label: '1%' },
-                  { value: 3, label: '3%' },
-                  { value: 5, label: '5%' }
+                  { value: 1, label: t('tireCalculator.advancedSettings.deviation1') },
+                  { value: 3, label: t('tireCalculator.advancedSettings.deviation3') },
+                  { value: 5, label: t('tireCalculator.advancedSettings.deviation5') }
                 ]}
                 valueLabelDisplay="auto"
               />
@@ -252,7 +253,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 
             <Grid item xs={12} md={6}>
               <Typography gutterBottom>
-                Изменение ширины: ±{searchParams.allowedWidthRange} мм
+                {t('tireCalculator.advancedSettings.allowedWidthRange')} ±{searchParams.allowedWidthRange} {t('tireCalculator.advancedSettings.mm')}
               </Typography>
               <Slider
                 value={searchParams.allowedWidthRange}
@@ -261,9 +262,9 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
                 max={50}
                 step={5}
                 marks={[
-                  { value: 10, label: '±10мм' },
-                  { value: 20, label: '±20мм' },
-                  { value: 50, label: '±50мм' }
+                  { value: 10, label: t('tireCalculator.advancedSettings.widthRange10') },
+                  { value: 20, label: t('tireCalculator.advancedSettings.widthRange20') },
+                  { value: 50, label: t('tireCalculator.advancedSettings.widthRange50') }
                 ]}
                 valueLabelDisplay="auto"
               />
@@ -271,7 +272,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
 
             <Grid item xs={12} md={6}>
               <Typography gutterBottom>
-                Изменение диаметра диска: ±{searchParams.allowedDiameterRange}"
+                {t('tireCalculator.advancedSettings.allowedDiameterRange')} ±{searchParams.allowedDiameterRange} {t('tireCalculator.advancedSettings.inch')}
               </Typography>
               <Slider
                 value={searchParams.allowedDiameterRange}
@@ -280,10 +281,10 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
                 max={3}
                 step={1}
                 marks={[
-                  { value: 0, label: '0"' },
-                  { value: 1, label: '±1"' },
-                  { value: 2, label: '±2"' },
-                  { value: 3, label: '±3"' }
+                  { value: 0, label: t('tireCalculator.advancedSettings.diameterRange0') },
+                  { value: 1, label: t('tireCalculator.advancedSettings.diameterRange1') },
+                  { value: 2, label: t('tireCalculator.advancedSettings.diameterRange2') },
+                  { value: 3, label: t('tireCalculator.advancedSettings.diameterRange3') }
                 ]}
                 valueLabelDisplay="auto"
               />
@@ -300,7 +301,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
           startIcon={<RefreshIcon />}
           disabled={isCalculating}
         >
-          Сбросить
+          {t('tireCalculator.buttons.reset')}
         </Button>
         <Button
           variant="contained"
@@ -309,7 +310,7 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
           disabled={isCalculating || hasValidationErrors}
           size="large"
         >
-          {isCalculating ? 'Расчет...' : 'Рассчитать альтернативы'}
+          {isCalculating ? t('tireCalculator.buttons.calculating') : t('tireCalculator.buttons.calculate')}
         </Button>
       </Box>
     </Box>

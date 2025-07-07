@@ -275,7 +275,7 @@ const PageContentFormPage: React.FC = () => {
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
-              <InputLabel>Секция</InputLabel>
+              <InputLabel>{t('forms.pageContent.fields.section')}</InputLabel>
               <Select
                 value={formData.section || ''}
                 label={t("forms.pageContent.fields.section")}
@@ -291,7 +291,7 @@ const PageContentFormPage: React.FC = () => {
           
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
-              <InputLabel>Тип контента</InputLabel>
+              <InputLabel>{t('forms.pageContent.fields.contentType')}</InputLabel>
               <Select
                 value={formData.content_type || ''}
                 label={t("forms.pageContent.fields.contentType")}

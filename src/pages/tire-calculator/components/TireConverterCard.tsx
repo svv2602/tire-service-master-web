@@ -18,6 +18,7 @@ import {
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 
 interface TireSize {
   width: number;
@@ -32,6 +33,7 @@ interface InchSize {
 }
 
 const TireConverterCard: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   const [metricSize, setMetricSize] = useState<TireSize>({ width: 0, profile: 0, diameter: 0 });
@@ -51,10 +53,10 @@ const TireConverterCard: React.FC = () => {
       // Рассчитываем общий диаметр в мм для рекомендации
       const overallDiameterMm = Math.round(overallDiameter * 25.4);
       
-      setResult(`Дюймовый размер: ${overallDiameter.toFixed(1)}/${sectionWidth.toFixed(1)}R${metricSize.diameter}. Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
+      setResult(`${t('inch_size_result')}: ${overallDiameter.toFixed(1)}/${sectionWidth.toFixed(1)}R${metricSize.diameter}. ${t('recommendation_metric_by_diameter')}: ${overallDiameterMm} ${t('mm')}`);
       setConversionDirection('metric-to-inch');
     }
-  }, [metricSize]);
+  }, [metricSize, t]);
 
   const convertInchToMetric = useCallback(() => {
     if (inchSize.overallDiameter && inchSize.sectionWidth && inchSize.rimDiameter) {
@@ -65,10 +67,10 @@ const TireConverterCard: React.FC = () => {
       // Рассчитываем общий диаметр в мм для рекомендации
       const overallDiameterMm = Math.round(inchSize.overallDiameter * 25.4);
       
-      setResult(`Метрический размер: ${width}/${profile}R${inchSize.rimDiameter}. Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
+      setResult(`${t('metric_size_result')}: ${width}/${profile}R${inchSize.rimDiameter}. ${t('recommendation_metric_by_diameter')}: ${overallDiameterMm} ${t('mm')}`);
       setConversionDirection('inch-to-metric');
     }
-  }, [inchSize]);
+  }, [inchSize, t]);
 
   const handleCalculate = () => {
     if (conversionDirection === 'metric-to-inch') {
@@ -108,7 +110,7 @@ const TireConverterCard: React.FC = () => {
         rimDiameter: currentMetric.diameter
       });
       
-      setRecommendationMessage(`Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
+      setRecommendationMessage(`${t('recommendation_metric_by_diameter')}: ${overallDiameterMm} ${t('mm')}`);
     }
     // Если есть данные в дюймовой системе, конвертируем в метрическую
     else if (currentInch.overallDiameter && currentInch.sectionWidth && currentInch.rimDiameter) {
@@ -125,9 +127,9 @@ const TireConverterCard: React.FC = () => {
         diameter: currentInch.rimDiameter
       });
       
-      setRecommendationMessage(`Для подбора метрического размера по диаметру колеса используйте целевой диаметр равный ${overallDiameterMm} мм`);
+      setRecommendationMessage(`${t('recommendation_metric_by_diameter')}: ${overallDiameterMm} ${t('mm')}`);
     }
-  }, [metricSize, inchSize]);
+  }, [metricSize, inchSize, t]);
 
   return (
     <Card sx={{ height: '100%' }}>
@@ -135,12 +137,12 @@ const TireConverterCard: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <CalculateIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
           <Typography variant="h6" component="h3">
-            Конвертер размеров шин
+            {t('tire_size_converter')}
           </Typography>
         </Box>
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Конвертация между метрической и дюймовой системами измерений
+          {t('conversion_between_metric_and_inch_systems')}
         </Typography>
 
         <Grid container spacing={2}>
@@ -150,10 +152,10 @@ const TireConverterCard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                   <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                    Метрическая система
+                    {t('metric_system')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Пример: 235/75R16
+                    {t('metric_example')}
                   </Typography>
                 </Box>
                 
@@ -170,11 +172,11 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">мм</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('mm')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
-                  <Typography>/</Typography>
+                  <Typography>{t('slash')}</Typography>
                   <TextField
                     size="small"
                     type="number"
@@ -187,11 +189,11 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">%</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('percent')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
-                  <Typography>R</Typography>
+                  <Typography>{t('r_symbol')}</Typography>
                   <TextField
                     size="small"
                     type="number"
@@ -204,7 +206,7 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">"</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('inch_symbol')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
@@ -234,13 +236,13 @@ const TireConverterCard: React.FC = () => {
                   }
                 }}
               >
-                Обменять
+                {t('swap_direction')}
               </Button>
               
               {recommendationMessage && (
                 <Alert severity="info" sx={{ flex: 1, mb: 0 }}>
                   <Typography variant="body2">
-                    <strong>Рекомендация:</strong> {recommendationMessage}
+                    <strong>{t('recommendation')}:</strong> {recommendationMessage}
                   </Typography>
                 </Alert>
               )}
@@ -253,10 +255,10 @@ const TireConverterCard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                   <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
-                    Дюймовая система
+                    {t('inch_system')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Пример: 30/9.5R16
+                    {t('inch_example')}
                   </Typography>
                 </Box>
                 
@@ -273,11 +275,11 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">"</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('inch_symbol')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
-                  <Typography>/</Typography>
+                  <Typography>{t('slash')}</Typography>
                   <TextField
                     size="small"
                     type="number"
@@ -290,11 +292,11 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">"</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('inch_symbol')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
-                  <Typography>R</Typography>
+                  <Typography>{t('r_symbol')}</Typography>
                   <TextField
                     size="small"
                     type="number"
@@ -307,7 +309,7 @@ const TireConverterCard: React.FC = () => {
                       setRecommendationMessage('');
                     }}
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">"</InputAdornment>
+                      endAdornment: <InputAdornment position="end">{t('inch_symbol')}</InputAdornment>
                     }}
                     sx={{ width: 120 }}
                   />
@@ -326,31 +328,31 @@ const TireConverterCard: React.FC = () => {
             startIcon={<CalculateIcon />}
             sx={{ flex: 1 }}
           >
-            Рассчитать
+            {t('calculate')}
           </Button>
           <Button
             variant="outlined"
             onClick={handleReset}
             startIcon={<RefreshIcon />}
           >
-            Сброс
+            {t('reset')}
           </Button>
         </Box>
 
         {result && (
           <Alert severity="info" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              <strong>Результат конвертации:</strong> {result}
+              <strong>{t('conversion_result')}:</strong> {result}
             </Typography>
           </Alert>
         )}
 
         <Box sx={{ mt: 3, p: 2, bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50', borderRadius: 1 }}>
           <Typography variant="caption" color="text.secondary">
-            <strong>Направление конвертации:</strong> {' '}
+            <strong>{t('conversion_direction')}:</strong> {' '}
             {conversionDirection === 'metric-to-inch' 
-              ? 'Метрическая → Дюймовая' 
-              : 'Дюймовая → Метрическая'
+              ? `${t('metric_to_inch')}` 
+              : `${t('inch_to_metric')}`
             }
           </Typography>
         </Box>

@@ -494,7 +494,7 @@ const UserForm: React.FC = () => {
 
             <Grid item xs={12} md={6}>
               <FormControl fullWidth required error={(formik.touched.role_id || showValidationErrors) && Boolean(formik.errors.role_id)}>
-                <InputLabel>Роль *</InputLabel>
+                <InputLabel>{t('forms.user.fields.role')}</InputLabel>
                 <Select
                   name="role_id"
                   value={formik.values.role_id}
@@ -502,11 +502,11 @@ const UserForm: React.FC = () => {
                   onBlur={formik.handleBlur}
                   error={(formik.touched.role_id || showValidationErrors) && Boolean(formik.errors.role_id)}
                 >
-                  <MenuItem value={1}>Администратор</MenuItem>
-                  <MenuItem value={2}>Менеджер</MenuItem>
-                  <MenuItem value={3}>Партнер</MenuItem>
-                  <MenuItem value={4}>Оператор</MenuItem>
-                  <MenuItem value={5}>Клиент</MenuItem>
+                  <MenuItem value={1}>{t('forms.user.roles.admin')}</MenuItem>
+                  <MenuItem value={2}>{t('forms.user.roles.manager')}</MenuItem>
+                  <MenuItem value={3}>{t('forms.user.roles.partner')}</MenuItem>
+                  <MenuItem value={4}>{t('forms.user.roles.operator')}</MenuItem>
+                  <MenuItem value={5}>{t('forms.user.roles.client')}</MenuItem>
                 </Select>
                 {(formik.touched.role_id || showValidationErrors) && formik.errors.role_id && (
                   <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
@@ -609,7 +609,7 @@ const UserForm: React.FC = () => {
               {/* Информационное сообщение о блокировке кнопки */}
               {!formik.isValid && !showValidationErrors && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  t('forms.common.fillRequiredFieldsToActivate')
+                  {t('forms.common.fillRequiredFieldsToActivate')}
                 </Alert>
               )}
               

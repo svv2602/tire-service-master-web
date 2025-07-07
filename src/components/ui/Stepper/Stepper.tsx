@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 // Стилизованные компоненты
 const StyledStepper = styled(MuiStepper)(({ theme }) => {
@@ -147,6 +148,7 @@ export const Stepper: React.FC<StepperProps> = ({
   className,
   ...props
 }) => {
+  const { t } = useTranslation();
   const handleNext = () => {
     onStepChange(activeStep + 1);
   };
@@ -178,7 +180,7 @@ export const Stepper: React.FC<StepperProps> = ({
                     fontSize: tokens.typography.fontSize.xs,
                   }}
                 >
-                  Опционально
+                  {t('stepper.optional')}
                 </Typography>
               ) : null
             }
@@ -215,7 +217,7 @@ export const Stepper: React.FC<StepperProps> = ({
                   }}
                   disabled={disabled}
                 >
-                  {index === steps.length - 1 ? 'Завершить' : 'Продолжить'}
+                  {index === steps.length - 1 ? t('stepper.finish') : t('stepper.next')}
                 </Button>
                 <Button
                   disabled={index === 0 || disabled}
@@ -229,7 +231,7 @@ export const Stepper: React.FC<StepperProps> = ({
                     transition: tokens.transitions.duration.normal,
                   }}
                 >
-                  Назад
+                  {t('stepper.back')}
                 </Button>
               </Box>
             </StyledStepContent>

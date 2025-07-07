@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 import type { FileUploadProps } from './types';
+import { useTranslation } from 'react-i18next';
 
 const UploadBox = styled(Box)(({ theme }) => ({
   border: `2px dashed ${theme.palette.primary.main}`,
@@ -16,14 +17,17 @@ const UploadBox = styled(Box)(({ theme }) => ({
 }));
 
 const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>((props, ref) => {
+  const { t } = useTranslation();
   const {
     onFilesSelected,
     accept,
     maxFiles = 1,
     multiple = false,
-    label = 'Перетащите файлы сюда или нажмите для выбора',
+    label,
     maxSize,
   } = props;
+
+  const effectiveLabel = label || t('fileUpload.dropzoneText');
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -93,10 +97,10 @@ const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>((props, r
         style={{ display: 'none' }}
       />
       <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-      <Typography>{label}</Typography>
+      <Typography>{effectiveLabel}</Typography>
       {maxSize && (
         <Typography variant="caption" color="text.secondary">
-          Максимальный размер файла: {(maxSize / (1024 * 1024)).toFixed(1)} МБ
+          {t('fileUpload.maxSize', { size: (maxSize / (1024 * 1024)).toFixed(1) })}
         </Typography>
       )}
     </UploadBox>

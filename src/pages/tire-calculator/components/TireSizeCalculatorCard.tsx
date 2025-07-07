@@ -21,6 +21,7 @@ import {
   Straighten as RulerIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 
 interface TireCalculationResult {
   width: number;
@@ -30,7 +31,8 @@ interface TireCalculationResult {
   deviation: number;
 }
 
-const TireSizeCalculatorCard: React.FC = () => {
+const TireSizeCalculatorCard: React.FC = (props) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   const [targetDiameter, setTargetDiameter] = useState<number>(650);
@@ -91,9 +93,9 @@ const TireSizeCalculatorCard: React.FC = () => {
   };
 
   const getDeviationText = (deviation: number) => {
-    if (deviation <= 1) return 'Рекомендуется';
-    if (deviation <= 2) return 'Требует внимания';
-    return 'Проверьте совместимость';
+    if (deviation <= 1) return t('recommendation');
+    if (deviation <= 2) return t('attention_required');
+    return t('check_compatibility');
   };
 
   return (
@@ -102,12 +104,12 @@ const TireSizeCalculatorCard: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <RulerIcon sx={{ mr: 1, color: theme.palette.primary.main }} />
           <Typography variant="h6" component="h3">
-            Подбор размера по диаметру
+            {t('tire_size_calculator_title')}
           </Typography>
         </Box>
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Найдите размеры шин с нужным диаметром колеса
+          {t('find_tire_sizes_description')}
         </Typography>
 
         <Grid container spacing={3}>
@@ -115,31 +117,31 @@ const TireSizeCalculatorCard: React.FC = () => {
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 2, bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50' }}>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Параметры поиска
+                {t('search_parameters')}
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField
-                  label="Целевой диаметр колеса"
+                  label={t('target_diameter_label')}
                   type="number"
                   value={targetDiameter}
                   onChange={(e) => setTargetDiameter(parseFloat(e.target.value) || 0)}
                   InputProps={{
-                    endAdornment: <Typography variant="body2" sx={{ ml: 1 }}>мм</Typography>
+                    endAdornment: <Typography variant="body2" sx={{ ml: 1 }}>{t('mm_unit')}</Typography>
                   }}
-                  helperText="Общий диаметр колеса с шиной"
+                  helperText={t('target_diameter_helper_text')}
                   fullWidth
                 />
                 
                 <TextField
-                  label="Диаметр диска"
+                  label={t('rim_diameter_label')}
                   type="number"
                   value={rimDiameter}
                   onChange={(e) => setRimDiameter(parseInt(e.target.value) || 0)}
                   InputProps={{
-                    endAdornment: <Typography variant="body2" sx={{ ml: 1 }}>дюймов</Typography>
+                    endAdornment: <Typography variant="body2" sx={{ ml: 1 }}>{t('inches_unit')}</Typography>
                   }}
-                  helperText="Диаметр диска в дюймах"
+                  helperText={t('rim_diameter_helper_text')}
                   fullWidth
                 />
               </Box>
@@ -150,20 +152,20 @@ const TireSizeCalculatorCard: React.FC = () => {
           <Grid item xs={12} md={6}>
             <Paper sx={{ p: 2, bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50' }}>
               <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
-                Информация
+                {t('information')}
               </Typography>
               
               <Typography variant="body2" color="text.secondary" paragraph>
-                • Поиск ведется среди популярных размеров шин
+                • {t('search_based_on_popular_sizes')}
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                • Показываются размеры с отклонением до 3%
+                • {t('show_sizes_with_up_to_3_deviation')}
               </Typography>
               <Typography variant="body2" color="text.secondary" paragraph>
-                • Результаты отсортированы по точности
+                • {t('results_sorted_by_accuracy')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                • Рекомендуется выбирать размеры с отклонением до 1%
+                • {t('recommend_selecting_sizes_with_up_to_1_deviation')}
               </Typography>
             </Paper>
           </Grid>
@@ -179,14 +181,14 @@ const TireSizeCalculatorCard: React.FC = () => {
             startIcon={<CalculateIcon />}
             sx={{ flex: 1 }}
           >
-            Найти размеры
+            {t('find_sizes_button')}
           </Button>
           <Button
             variant="outlined"
             onClick={handleReset}
             startIcon={<RefreshIcon />}
           >
-            Сброс
+            {t('reset_button')}
           </Button>
         </Box>
 
@@ -194,7 +196,7 @@ const TireSizeCalculatorCard: React.FC = () => {
         {results.length > 0 && (
           <Box>
             <Typography variant="h6" sx={{ mb: 2 }}>
-              Найденные размеры ({results.length})
+              {t('found_sizes', { count: results.length })}
             </Typography>
             
             <List sx={{ bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50', borderRadius: 1 }}>
@@ -216,10 +218,10 @@ const TireSizeCalculatorCard: React.FC = () => {
                     secondary={
                       <Box sx={{ mt: 1 }}>
                         <Typography variant="body2" color="text.secondary">
-                          Диаметр: {result.calculatedDiameter.toFixed(1)} мм
+                          {t('diameter')}: {result.calculatedDiameter.toFixed(1)} {t('mm_unit')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Отклонение: {result.deviation.toFixed(2)}% от целевого
+                          {t('deviation')}: {result.deviation.toFixed(2)}% {t('from_target')}
                         </Typography>
                       </Box>
                     }
@@ -233,7 +235,7 @@ const TireSizeCalculatorCard: React.FC = () => {
         {results.length === 0 && targetDiameter > 0 && rimDiameter > 0 && (
           <Alert severity="info">
             <Typography variant="body2">
-              Нажмите "Найти размеры", чтобы увидеть подходящие варианты
+              {t('no_sizes_found_message')}
             </Typography>
           </Alert>
         )}

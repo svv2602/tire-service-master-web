@@ -6,6 +6,7 @@ import {
   useTheme
 } from '@mui/material';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 /** Пропсы пагинации */
 export interface PaginationProps extends Omit<MuiPaginationProps, 'onChange'> {
@@ -126,6 +127,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   disabled = false,
   ...props
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
   const handleChange = (_: ChangeEvent<unknown>, value: number) => {
@@ -146,6 +148,21 @@ export const Pagination: React.FC<PaginationProps> = ({
       disabled={disabled}
       sx={{
         ...props.sx
+      }}
+      // Локализация кнопок пагинации
+      getItemAriaLabel={(type) => {
+        switch (type) {
+          case 'first':
+            return t('pagination.firstPage');
+          case 'last':
+            return t('pagination.lastPage');
+          case 'next':
+            return t('pagination.nextPage');
+          case 'previous':
+            return t('pagination.previousPage');
+          default:
+            return '';
+        }
       }}
       {...props}
     />

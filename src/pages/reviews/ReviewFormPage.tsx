@@ -260,7 +260,7 @@ const ReviewFormPage: React.FC = () => {
           <form onSubmit={handleAdminSubmit}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: SIZES.spacing.xl }}>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Клиент</InputLabel>
+                <InputLabel>{t('forms.review.fields.client')}</InputLabel>
                 <Select
                   value={selectedClientId}
                   label={t("forms.review.fields.client")}
@@ -279,7 +279,7 @@ const ReviewFormPage: React.FC = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Бронирование</InputLabel>
+                <InputLabel>{t('forms.review.fields.booking')}</InputLabel>
                 <Select
                   value={selectedBookingId}
                   label={t("forms.review.fields.booking")}
@@ -295,7 +295,7 @@ const ReviewFormPage: React.FC = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Сервисная точка</InputLabel>
+                <InputLabel>{t('forms.review.fields.servicePoint')}</InputLabel>
                 <Select
                   value={selectedServicePointId}
                   label={t("forms.review.fields.servicePoint")}
@@ -331,7 +331,7 @@ const ReviewFormPage: React.FC = () => {
                 sx={textFieldStyles}
               />
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Статус</InputLabel>
+                <InputLabel>{t('forms.review.fields.status')}</InputLabel>
                 <Select
                   value={status}
                   label={t("forms.review.fields.status")}
@@ -500,13 +500,13 @@ const ReviewFormPage: React.FC = () => {
             gap: SIZES.spacing.xl 
           }}>
             {success && (
-              <Alert severity="success">Отзыв успешно создан!</Alert>
+              <Alert severity="success">{t('forms.review.messages.createSuccess')}</Alert>
             )}
             {formError && (
               <Alert severity="error">{formError}</Alert>
             )}
             <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel>Выберите бронирование</InputLabel>
+              <InputLabel>{t('forms.review.placeholders.selectBooking')}</InputLabel>
               <Select
                 name="booking_id"
                 value={selectedBookingId}

@@ -568,7 +568,26 @@
       },
       "loading": "Загрузка региона..."
     },
-    "dialog": {
+    "searchAndFilters": {
+    "searchPlaceholder": "Поиск...",
+    "filters": "Фильтры",
+    "clear": "Очистить"
+  },
+  "select": {
+    "placeholder": "Выберите..."
+  },
+  "autoComplete": {
+    "label": "Выберите значение",
+    "placeholder": "Начните вводить...",
+    "noOptionsText": "Нет доступных вариантов",
+    "loadingText": "Загрузка..."
+  },
+  "phoneField": {
+    "label": "Телефон",
+    "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
+    "placeholder": "+38 (067) 123-45-67"
+  },
+  "dialog": {
     "close": "Закрыть",
     "confirm": "Подтвердить",
     "cancel": "Отмена"

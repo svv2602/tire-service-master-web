@@ -10,6 +10,7 @@ import {
   useTheme
 } from '@mui/material';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 /** Опция для селекта */
 export interface SelectOption {
@@ -164,6 +165,7 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   const theme = useTheme();
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
+  const { t } = useTranslation();
   
   const handleChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     onChange?.(event.target.value as string | number);
@@ -180,13 +182,13 @@ export const Select: React.FC<SelectProps> = ({
       size={size}
     >
       {label && (
-        <InputLabel id={labelId}>{label}</InputLabel>
+        <InputLabel id={labelId}>{t(label)}</InputLabel>
       )}
       <MuiSelect
         labelId={labelId}
         value={value}
         onChange={handleChange as any}
-        label={label}
+        label={label ? t(label) : undefined}
         MenuProps={{
           PaperProps: {
             sx: {
@@ -200,19 +202,25 @@ export const Select: React.FC<SelectProps> = ({
         }}
         {...props}
       >
+        {/* Опция по умолчанию */}
+        {(!props.multiple && (value === undefined || value === '' || value === null) && !children) && (
+          <MenuItem value="" disabled>
+            {t('select.placeholder')}
+          </MenuItem>
+        )}
         {children || options?.map((option) => (
           <MenuItem
             key={option.value}
             value={option.value}
             disabled={option.disabled}
           >
-            {option.label}
+            {t(option.label)}
           </MenuItem>
         ))}
       </MuiSelect>
       {(helperText || errorText) && (
         <FormHelperText id={helperId}>
-          {error ? errorText : helperText}
+          {error ? t(errorText || '') : t(helperText || '')}
         </FormHelperText>
       )}
     </StyledFormControl>

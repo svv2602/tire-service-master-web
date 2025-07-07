@@ -205,7 +205,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             <TextField
               fullWidth
               size="small"
-              placeholder={search.placeholder || 'Поиск...'}
+              placeholder={search.placeholder || t('searchAndFilters.searchPlaceholder')}
               value={search.value}
               onChange={(e) => search.onChange(e.target.value)}
               onFocus={(e) => {
@@ -224,6 +224,7 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
                       size="small"
                       onClick={() => search.onChange('')}
                       edge="end"
+                      aria-label={t('searchAndFilters.clear')}
                     >
                       <ClearIcon />
                     </IconButton>
@@ -245,7 +246,10 @@ export const SearchAndFilters: React.FC<SearchAndFiltersProps> = ({
             >
               {/* Иконка фильтров */}
               {!isMobile && (
-                <FilterListIcon color="action" sx={{ mr: 1 }} />
+                <>
+                  <FilterListIcon color="action" sx={{ mr: 1 }} titleAccess={t('searchAndFilters.filters')} />
+                  <span style={{ fontWeight: 500 }}>{t('searchAndFilters.filters')}</span>
+                </>
               )}
 
               {/* Контролы фильтров */}

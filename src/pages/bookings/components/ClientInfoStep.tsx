@@ -177,7 +177,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
                 </InputAdornment>
               ),
             }}
-            placeholder="Введите имя"
+            placeholder={t('bookingSteps.clientInfo.placeholders.firstName')}
           />
         </Grid>
 
@@ -197,18 +197,18 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
                 </InputAdornment>
               ),
             }}
-            placeholder="Введите фамилию"
+            placeholder={t('bookingSteps.clientInfo.placeholders.lastName')}
           />
         </Grid>
 
         {/* Телефон */}
         <Grid item xs={12} md={6}>
           <PhoneField
-            label="Телефон"
+            label={t('bookingSteps.clientInfo.phone')}
             value={formData.service_recipient.phone}
             onChange={handleFieldChange('phone')}
             error={!!errors.phone}
-            helperText={errors.phone || "Формат: +380 XX XXX XX XX"}
+            helperText={errors.phone || t('bookingSteps.clientInfo.helperText.phoneFormat')}
             required
             InputProps={{
               startAdornment: (
@@ -228,7 +228,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             value={formData.service_recipient.email || ''}
             onChange={(e) => handleFieldChange('email')(e.target.value)}
             error={!!errors.email}
-            helperText={errors.email || "Для получения уведомлений на email"}
+            helperText={errors.email || t('bookingSteps.clientInfo.helperText.email')}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -236,7 +236,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
                 </InputAdornment>
               ),
             }}
-            placeholder="example@mail.com"
+            placeholder={t('bookingSteps.clientInfo.placeholders.email')}
           />
         </Grid>
       </Grid>
@@ -246,8 +246,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       
       <Alert severity="info" sx={{ mt: 3 }}>
         <Typography variant="body2">
-          <strong>Конфиденциальность:</strong> Ваши персональные данные используются только для обработки бронирования 
-          и связи с вами. Мы не передаем ваши данные третьим лицам.
+          <strong>{t('bookingSteps.clientInfo.privacy')}:</strong> {t('bookingSteps.clientInfo.privacyText')}
         </Typography>
       </Alert>
 
@@ -255,7 +254,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       {(!isFormValid()) && (
         <Alert severity="warning" sx={{ mt: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            Заполните все обязательные поля:
+            {t('bookingSteps.clientInfo.requiredFieldsWarning')}:
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
             {requiredFieldErrors.map((field, index) => (
@@ -267,7 +266,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
 
       {isFormValid() && (
         <Alert severity="success" sx={{ mt: 3 }}>
-          Все обязательные поля заполнены. Можете перейти к следующему шагу.
+          {t('bookingSteps.clientInfo.allRequiredFieldsFilled')}
         </Alert>
       )}
     </Box>

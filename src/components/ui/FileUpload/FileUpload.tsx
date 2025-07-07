@@ -5,6 +5,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { FileUploadProps, FileInfo, FileUploadStatus } from './types';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 // Стилизованные компоненты
 const UploadBox = styled(Box)(({ theme }) => {
@@ -78,12 +79,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
   accept,
   maxSize,
   multiple = false,
-  dropzoneText = 'Перетащите файлы сюда или нажмите для выбора',
+  dropzoneText,
   onUploadSuccess,
   onUploadError,
   onProgress,
   sx,
 }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<FileUploadStatus>('idle');
   const [files, setFiles] = useState<FileInfo[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -91,12 +93,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const theme = useTheme();
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
 
+  const effectiveDropzoneText = dropzoneText || t('fileUpload.dropzoneText');
+
   /**
    * Проверка файла на соответствие ограничениям
    */
   const validateFile = (file: File): boolean => {
     if (maxSize && file.size > maxSize) {
-      onUploadError?.(new Error(`Файл слишком большой. Максимальный размер: ${maxSize} байт`));
+      onUploadError?.(new Error(t('fileUpload.error.tooLarge')));
       return false;
     }
 
@@ -104,7 +108,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       const acceptedTypes = accept.split(',').map(type => type.trim());
       const fileExtension = `.${file.name.split('.').pop()}`;
       if (!acceptedTypes.includes(fileExtension) && !acceptedTypes.includes(file.type)) {
-        onUploadError?.(new Error('Неподдерживаемый тип файла'));
+        onUploadError?.(new Error(t('fileUpload.error.unsupportedType')));
         return false;
       }
     }
@@ -216,7 +220,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             mb: tokens.spacing.xs,
           }}
         >
-          {dropzoneText}
+          {effectiveDropzoneText}
         </Typography>
         {accept && (
           <Typography 
@@ -227,7 +231,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               color: themeColors.textSecondary,
             }}
           >
-            Поддерживаемые форматы: {accept}
+            {t('fileUpload.supportedFormats', { formats: accept })}
           </Typography>
         )}
       </UploadBox>
@@ -280,7 +284,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               },
             }}
           >
-            <DeleteIcon />
+            {t('fileUpload.delete')}
           </IconButton>
         </FileItem>
       ))}

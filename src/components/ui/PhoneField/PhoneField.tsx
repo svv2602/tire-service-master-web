@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { TextField, TextFieldProps } from '../TextField';
 import { InputAdornment } from '@mui/material';
 import { Phone as PhoneIcon } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 export interface PhoneFieldProps extends Omit<TextFieldProps, 'type' | 'value' | 'onChange'> {
   /**
@@ -29,14 +30,15 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   value = '',
   onChange,
   showIcon = true,
-  label = 'Телефон',
+  label,
   required = false,
-  helperText = 'Формат: +38 (0ХХ) ХХХ-ХХ-ХХ',
+  helperText,
   error = false,
-  placeholder = '+38 (067) 123-45-67',
+  placeholder,
   onBlur,
   ...props
 }) => {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [internalValue, setInternalValue] = useState(value || '');
   
@@ -123,11 +125,11 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
     <TextField
       {...props}
       type="tel"
-      label={label}
+      label={label || t('phoneField.label')}
       required={required}
       error={error}
-      helperText={helperText}
-      placeholder={placeholder}
+      helperText={helperText || t('phoneField.helperText')}
+      placeholder={placeholder || t('phoneField.placeholder')}
       value={internalValue}
       onChange={handleChange}
       onBlur={onBlur}

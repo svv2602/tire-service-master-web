@@ -9,6 +9,7 @@ import {
 import { debounce } from '@mui/material/utils';
 import { AutoCompleteProps, AutoCompleteOption } from './types';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 // Стилизованный Autocomplete с any для обхода проблем типизации
 const StyledAutocomplete = styled(Autocomplete)(({ theme }) => {
@@ -118,13 +119,14 @@ export const AutoComplete: React.FC<AutoCompleteProps> = ({
   onSearch,
   debounceMs = 300,
   minSearchLength = 2,
-  noOptionsText = 'Нет доступных вариантов',
-  loadingText = 'Загрузка...',
+  noOptionsText,
+  loadingText,
   TextFieldProps = {},
   AutocompleteProps = {},
   sx,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [options, setOptions] = useState<AutoCompleteOption[]>(initialOptions);
   const [inputValue, setInputValue] = useState('');
   const [loading, setLoading] = useState(false);
@@ -182,8 +184,8 @@ export const AutoComplete: React.FC<AutoCompleteProps> = ({
       onInputChange={handleInputChange}
       inputValue={inputValue}
       loading={loading}
-      loadingText={loadingText}
-      noOptionsText={noOptionsText}
+      loadingText={loadingText || t('autoComplete.loadingText')}
+      noOptionsText={noOptionsText || t('autoComplete.noOptionsText')}
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => setOpen(false)}
@@ -193,8 +195,8 @@ export const AutoComplete: React.FC<AutoCompleteProps> = ({
         <TextField
           {...params}
           {...TextFieldProps}
-          label={label}
-          placeholder={placeholder}
+          label={label || t('autoComplete.label')}
+          placeholder={placeholder || t('autoComplete.placeholder')}
           InputProps={{
             ...params.InputProps,
             endAdornment: (
