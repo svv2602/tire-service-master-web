@@ -1,6 +1,7 @@
 // Шаг 6: Подтверждение и обзор данных
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -51,6 +52,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   formData,
   isValid,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // API запросы для получения названий
@@ -223,7 +225,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                   <ScheduleIcon color="action" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Дата и время"
+                  primary={t('bookingSteps.review.dateTime')}
                   secondary={`${formatBookingDate()} в ${formData.start_time}`}
                 />
               </ListItem>
@@ -231,12 +233,12 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* Контактная информация */}
+        {/* {t('bookingSteps.review.contactInfo')} */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <PersonIcon color="primary" />
-              Контактная информация
+              {t('bookingSteps.review.contactInfo')}
             </Typography>
             
             <List dense>
@@ -332,8 +334,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
               {!formData.service_recipient && !formData.client && (
                 <ListItem>
                   <ListItemText
-                    primary="Контактная информация не указана"
-                    secondary="Вернитесь к шагу 'Контактная информация' для заполнения данных"
+                    primary="t('bookingSteps.review.contactInfo') не указана"
+                    secondary="Вернитесь к шагу `${t('bookingSteps.review.contactInfo')}` для заполнения данных"
                   />
                 </ListItem>
               )}
@@ -341,7 +343,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* Информация об автомобиле */}
+        {/* {t('bookingSteps.review.carInfo')} */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -385,17 +387,17 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* Услуги */}
+        {/* {t('bookingSteps.review.services')} */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <ServiceIcon color="primary" />
-              Услуги
+              {t('bookingSteps.review.services')}
             </Typography>
             
             {formData.services.length === 0 ? (
               <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                Услуги не выбраны. Вы сможете обсудить их с мастером на месте.
+                {t('bookingSteps.review.services')} не выбраны. Вы сможете обсудить их с мастером на месте.
               </Typography>
             ) : (
               <Box>
@@ -409,7 +411,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    Общая стоимость:
+                    {t('bookingSteps.review.total')}:
                   </Typography>
                   <Chip
                     label={`${calculateTotalPrice()} ₴`}
@@ -457,7 +459,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
       
       {/* Согласие с условиями */}
       <Alert severity="info" sx={{ mt: 3 }}>
-        🔒 Нажимая "Подтвердить бронирование", вы соглашаетесь с условиями предоставления услуг
+        🔒 Нажимая "t('bookingSteps.review.confirm')", вы соглашаетесь с условиями предоставления услуг
       </Alert>
     </Box>
   );

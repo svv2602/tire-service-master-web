@@ -1,6 +1,7 @@
-// Шаг 4: Информация об автомобиле
+// Шаг 4: {t('bookingSteps.carType.title')}
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store/store';
 import {
@@ -62,6 +63,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   onNext,
   onStepChange,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Получаем информацию о текущем пользователе
@@ -364,7 +366,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     <Box>
       {/* Заголовок секции */}
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Информация об автомобиле
+        {t('bookingSteps.carType.title')}
       </Typography>
       
       <Grid container spacing={3}>
@@ -484,7 +486,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
               )}
               {!formData.car_type_id && carTypes.length > 0 && (
                 <FormHelperText error sx={{ mt: 1 }}>
-                  Выберите тип автомобиля для продолжения
+                  {t('bookingSteps.carType.selectCarType')} для продолжения
                 </FormHelperText>
               )}
             </AccordionDetails>
@@ -526,12 +528,12 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
           </Accordion>
         </Grid>
         
-        {/* 3. Марка автомобиля */}
+        {/* 3. {t('bookingSteps.carType.carBrand')} */}
         <Grid item xs={12}>
           <Accordion expanded={brandAccordionOpen} disabled={!formData.license_plate || !!errors.license_plate} onChange={(_, expanded) => setBrandAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                3. Марка автомобиля (необязательно)
+                3. {t('bookingSteps.carType.carBrand')} (необязательно)
               </Typography>
               {formData.car_brand && (
                 <Chip label={formData.car_brand} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -543,19 +545,19 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 value={selectedBrandId || ''}
                 onChange={(value) => handleBrandChange(Number(value))}
                 options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
-                placeholder="Выберите марку"
+                placeholder={t('bookingSteps.carType.selectBrand')}
                 fullWidth
               />
             </AccordionDetails>
           </Accordion>
         </Grid>
         
-        {/* 4. Модель автомобиля */}
+        {/* 4. {t('bookingSteps.carType.carModel')} */}
         <Grid item xs={12}>
           <Accordion expanded={modelAccordionOpen} disabled={!selectedBrandId} onChange={(_, expanded) => setModelAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                4. Модель автомобиля (необязательно)
+                4. {t('bookingSteps.carType.carModel')} (необязательно)
               </Typography>
               {formData.car_model && (
                 <Chip label={formData.car_model} color="success" size="small" variant="filled" sx={{ ml: 2 }} />
@@ -567,7 +569,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 value={models.find(m => m.name === formData.car_model)?.id || ''}
                 onChange={(value) => handleModelChange(Number(value))}
                 options={models.map(model => ({ value: model.id, label: model.name }))}
-                placeholder="Выберите модель"
+                placeholder={t('bookingSteps.carType.selectModel')}
                 disabled={!selectedBrandId}
                 fullWidth
               />

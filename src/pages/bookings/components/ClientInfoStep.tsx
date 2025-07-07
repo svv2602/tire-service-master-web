@@ -1,6 +1,7 @@
-// ✅ Шаг 3: Контактная информация (упрощенный для гостевых бронирований)
+// ✅ Шаг 3: {t('bookingSteps.clientInfo.title')} (упрощенный для гостевых бронирований)
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -38,6 +39,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   setFormData,
   isValid,
 }) => {
+  const { t } = useTranslation();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   
   const [errors, setErrors] = useState({
@@ -51,10 +53,10 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   const validateField = (field: string, value: string | undefined): string => {
     if (!value) {
       if (field === 'first_name') {
-        return 'Имя обязательно для заполнения';
+        return `${t('bookingSteps.clientInfo.firstName')} обязательно для заполнения`;
       }
       if (field === 'last_name') {
-        return 'Фамилия обязательна для заполнения';
+        return `${t('bookingSteps.clientInfo.lastName')} обязательна для заполнения`;
       }
       if (field === 'phone') {
         return 'Телефон обязателен для заполнения';
@@ -66,7 +68,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       case 'first_name':
       case 'last_name':
         if (value.trim().length < 2) {
-          return `${field === 'first_name' ? 'Имя' : 'Фамилия'} должно быть не менее 2 символов`;
+          return `${field === 'first_name' ? `${t('bookingSteps.clientInfo.firstName')}` : `${t('bookingSteps.clientInfo.lastName')}`} должно быть не менее 2 символов`;
         }
         return '';
         
@@ -115,10 +117,10 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     const requiredFields = [];
     
     if (!formData.service_recipient.first_name?.trim()) {
-      requiredFields.push('Имя');
+      requiredFields.push(`${t('bookingSteps.clientInfo.firstName')}`);
     }
     if (!formData.service_recipient.last_name?.trim()) {
-      requiredFields.push('Фамилия');
+      requiredFields.push(`${t('bookingSteps.clientInfo.lastName')}`);
     }
     if (!formData.service_recipient.phone?.trim()) {
       requiredFields.push('Телефон');
@@ -137,7 +139,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     <Box>
       {/* Заголовок */}
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Контактная информация
+        {t('bookingSteps.clientInfo.title')}
       </Typography>
 
       {/* Статус пользователя */}
@@ -159,10 +161,10 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
 
       {/* Форма контактной информации */}
       <Grid container spacing={3}>
-        {/* Имя */}
+        {/* {t('bookingSteps.clientInfo.firstName')} */}
         <Grid item xs={12} md={6}>
           <TextField
-            label="Имя"
+            label={t('bookingSteps.clientInfo.firstName')}
             value={formData.service_recipient.first_name}
             onChange={(e) => handleFieldChange('first_name')(e.target.value)}
             error={!!errors.first_name}
@@ -179,10 +181,10 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
           />
         </Grid>
 
-        {/* Фамилия */}
+        {/* {t('bookingSteps.clientInfo.lastName')} */}
         <Grid item xs={12} md={6}>
           <TextField
-            label="Фамилия"
+            label={t('bookingSteps.clientInfo.lastName')}
             value={formData.service_recipient.last_name}
             onChange={(e) => handleFieldChange('last_name')(e.target.value)}
             error={!!errors.last_name}
@@ -221,7 +223,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {/* Email */}
         <Grid item xs={12} md={6}>
           <TextField
-            label="Email (необязательно)"
+            label={t('bookingSteps.clientInfo.email')}
             type="email"
             value={formData.service_recipient.email || ''}
             onChange={(e) => handleFieldChange('email')(e.target.value)}

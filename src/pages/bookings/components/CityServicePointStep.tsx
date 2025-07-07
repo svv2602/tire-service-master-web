@@ -1,6 +1,7 @@
 // Шаг 2: Выбор города и точки обслуживания (с учетом категории)
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -135,6 +136,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   onNext,
   isValid,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
@@ -285,7 +287,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
               <TextField
                 {...params}
                 label="Город *"
-                placeholder="Выберите город для продолжения"
+                placeholder="t('bookingSteps.cityServicePoint.selectCity') для продолжения"
                 required
                 InputProps={{
                   ...params.InputProps,

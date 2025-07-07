@@ -1,6 +1,7 @@
 // Шаг 2: Выбор даты и времени
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -49,6 +50,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   setFormData,
   isValid,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -248,7 +250,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     return (
       <Box>
         <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-          Выберите дату и время
+          {t('bookingSteps.dateTime.title')}
         </Typography>
         <Alert severity="warning">
           Сначала необходимо выбрать точку обслуживания на предыдущем шаге.
@@ -260,7 +262,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   return (
     <Box>
       <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        Выберите дату и время
+        {t('bookingSteps.dateTime.title')}
       </Typography>
       
       {/* Информация о выбранной точке обслуживания */}
@@ -294,7 +296,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <Stack direction="row" alignItems="center" spacing={2}>
             <CalendarMonthIcon sx={{ color: 'primary.main' }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              Выберите дату
+              {t('bookingSteps.dateTime.selectDate')}
             </Typography>
             {selectedDate && (
               <Chip label={format(selectedDate, 'd MMMM yyyy', { locale: ru })} color="success" size="small" />
@@ -333,7 +335,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <Stack direction="row" alignItems="center" spacing={2}>
             <AccessTimeIcon sx={{ color: 'primary.main' }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              Выберите время
+              {t('bookingSteps.dateTime.selectTime')}
             </Typography>
             {selectedTimeSlot && (
               <Chip label={selectedTimeSlot} color="success" size="small" />
@@ -355,13 +357,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Валидация */}
       {selectedDate && !selectedTimeSlot && (
         <FormHelperText error>
-          Выберите время для продолжения
+          {t('bookingSteps.dateTime.selectTime')} для продолжения
         </FormHelperText>
       )}
       
       {!selectedDate && (
         <FormHelperText error>
-          Выберите дату для продолжения
+          {t('bookingSteps.dateTime.selectDate')} для продолжения
         </FormHelperText>
       )}
       

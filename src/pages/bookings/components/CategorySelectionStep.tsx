@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -30,6 +31,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   onNext,
   isValid
 }) => {
+  const { t } = useTranslation();
   // Загружаем категории услуг по выбранному городу
   const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesByCityIdQuery(
     formData.city_id!,
@@ -82,7 +84,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
     return (
       <Box>
         <Typography variant="h6" gutterBottom>
-          Выберите тип услуг
+          {t('bookingSteps.categorySelection.title')}
         </Typography>
         <Grid container spacing={2}>
           {[1, 2, 3].map((item) => (
@@ -99,10 +101,10 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
     return (
       <Box>
         <Typography variant="h6" gutterBottom>
-          Выберите тип услуг
+          {t('bookingSteps.categorySelection.title')}
         </Typography>
         <Alert severity="error">
-          Ошибка загрузки категорий услуг для выбранного города. Попробуйте выбрать другой город или обновить страницу.
+          {t('bookingSteps.categorySelection.error')} услуг для выбранного города. Попробуйте выбрать другой город или обновить страницу.
         </Alert>
       </Box>
     );
@@ -111,7 +113,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        Выберите тип услуг
+        {t('bookingSteps.categorySelection.title')}
       </Typography>
       
       {/* Селект для выбора города */}

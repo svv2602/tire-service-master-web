@@ -1,6 +1,7 @@
 // Многошаговая форма бронирования с интеграцией системы доступности
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
@@ -122,6 +123,7 @@ const initialFormData: BookingFormData = {
 };
 
 const NewBookingWithAvailabilityPage: React.FC = () => {
+  const { t } = useTranslation();
   console.log('🚀 NewBookingWithAvailabilityPage загружен');
   
   const navigate = useNavigate();
@@ -635,7 +637,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           {/* Заголовок */}
           <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-              Новое бронирование {!isAuthenticated && <Typography component="span" variant="body2" color="text.secondary">(гостевое)</Typography>}
+              {t('booking.title')} {!isAuthenticated && <Typography component="span" variant="body2" color="text.secondary">{t('booking.guestTitle').replace(t('booking.title'), '').trim()}</Typography>}
             </Typography>
             <Button
               startIcon={<ArrowBackIcon />}
@@ -644,7 +646,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
               size="small"
               color="error"
             >
-              Отмена
+              {t('booking.cancel')}
             </Button>
           </Box>
           
@@ -690,7 +692,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
                 size="large"
                 sx={{ ...secondaryButtonStyles, minWidth: isMobile ? '100%' : 120 }}
               >
-                Назад
+                {t('booking.back')}
               </Button>
               
               {/* Кнопка "Далее" или "Создать бронирование" */}
@@ -704,7 +706,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
                   color="primary"
                   sx={{ minWidth: isMobile ? '100%' : 200 }}
                 >
-                  {isSubmitting ? 'Создание...' : 'Создать бронирование'}
+                  {isSubmitting ? t('booking.creating') : t('booking.createBooking')}
                 </Button>
               ) : (
                 <Button
@@ -716,7 +718,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
                   color="primary"
                   sx={{ minWidth: isMobile ? '100%' : 120 }}
                 >
-                  Далее
+                  {t('booking.next')}
                 </Button>
               )}
             </Box>
@@ -728,23 +730,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       <SuccessDialog
         open={successDialogOpen}
         onClose={handleSuccessDialogClose}
-        title="Бронирование создано!"
+        title={t('booking.success.title')}
         message={
           isAuthenticated 
-            ? "Ваше бронирование успешно создано. Вы можете просмотреть его в личном кабинете или вернуться на главную."
-            : "Ваше гостевое бронирование успешно создано! Информация о бронировании отправлена на указанный номер телефона."
+            ? t('booking.success.messageAuth')
+            : t('booking.success.messageGuest')
         }
         primaryButtonText={
           isAuthenticated 
-            ? 'Мои бронирования' 
-            : 'На главную'
+            ? t('booking.success.myBookings') 
+            : t('booking.success.goHome')
         }
         onPrimaryAction={
           isAuthenticated 
             ? handleGoToProfile 
             : handleGoHome
         }
-        secondaryButtonText={isAuthenticated ? 'Возврат на главную' : undefined}
+        secondaryButtonText={isAuthenticated ? t('booking.success.returnHome') : undefined}
         onSecondaryAction={isAuthenticated ? handleGoHome : undefined}
       />
       

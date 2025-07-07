@@ -1,6 +1,7 @@
 // Шаг 5: Выбор услуг (опционально)
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -71,6 +72,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   setFormData,
   isValid,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // API хук для получения услуг сервисной точки с фильтрацией по категории
@@ -220,7 +222,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <PriceIcon color="action" fontSize="small" />
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {service.current_price || service.price ? `${service.current_price || service.price} ₴` : 'Цена по запросу'}
+                  {service.current_price || service.price ? `${service.current_price || service.price} ₴` : `${t('bookingSteps.services.price')} по запросу`}
                 </Typography>
               </Box>
               
@@ -288,7 +290,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         {/* Список услуг */}
         <Grid item xs={12} md={8}>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Доступные услуги
+            {t('bookingSteps.services.availableServices')}
             {formData.service_category_id && (
               <Typography variant="body2" color="text.secondary" sx={{ ml: 1, display: 'inline' }}>
                 (для выбранной категории)
@@ -326,7 +328,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
           <Paper sx={{ ...getCardStyles(theme), p: 2, position: 'sticky', top: 20 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <ServiceIcon color="primary" />
-              Выбранные услуги
+              {t('bookingSteps.services.selectedServices')}
             </Typography>
             
             {formData.services.length === 0 ? (
@@ -361,7 +363,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    Итого:
+                    {t('bookingSteps.services.total')}:
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                     {calculateTotalPrice()} ₴
