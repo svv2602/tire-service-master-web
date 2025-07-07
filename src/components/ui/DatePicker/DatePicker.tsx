@@ -4,6 +4,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { styled, useTheme } from '@mui/material/styles';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
+import { ru, uk } from 'date-fns/locale';
 
 // Стилизованный компонент DatePicker
 const StyledDatePicker = styled(MuiDatePicker)(({ theme }) => {
@@ -236,20 +238,24 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const theme = useTheme();
   const themeColors = theme.palette.mode === 'dark' ? tokens.colors.dark : tokens.colors.light;
-  
+  const { t, i18n } = useTranslation();
+  // Определяем формат даты по языку
+  const localeFormat = i18n.language === 'uk' ? 'dd.MM.yyyy' : format;
+  // Выбираем локаль для календаря
+  const calendarLocale = i18n.language === 'uk' ? uk : ru;
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={calendarLocale}>
       <StyledDatePicker
-        label={label}
+        label={label || t('datePicker.label')}
         value={value}
         onChange={onChange}
         disabled={disabled}
         minDate={minDate}
         maxDate={maxDate}
-        format={format}
+        format={localeFormat}
         slotProps={{
           textField: {
-            helperText,
+            helperText: helperText || t('datePicker.helperText'),
             error,
             sx: {
               '& .MuiInputBase-root': {

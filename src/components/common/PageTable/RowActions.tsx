@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { ActionConfig } from './index';
+import { useTranslation } from 'react-i18next';
 
 interface RowActionsProps {
   actions: ActionConfig[];
@@ -40,6 +41,7 @@ const getColorFromPalette = (theme: Theme, color: PaletteColor): string => {
  */
 export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -203,16 +205,16 @@ export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 
         aria-describedby="confirm-dialog-description"
       >
         <DialogTitle id="confirm-dialog-title">
-          {confirmDialog.action?.confirmationConfig?.title || 'Подтверждение'}
+          {confirmDialog.action?.confirmationConfig?.title || t('components.confirmDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="confirm-dialog-description">
-            {confirmDialog.action?.confirmationConfig?.message || 'Вы уверены, что хотите выполнить это действие?'}
+            {confirmDialog.action?.confirmationConfig?.message || t('components.confirmDialog.message')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelAction} color="inherit">
-            {confirmDialog.action?.confirmationConfig?.cancelLabel || 'Отмена'}
+            {confirmDialog.action?.confirmationConfig?.cancelLabel || t('components.confirmDialog.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmAction} 
@@ -220,7 +222,7 @@ export const RowActions: React.FC<RowActionsProps> = ({ actions, row, index = 0 
             variant="contained"
             autoFocus
           >
-            {confirmDialog.action?.confirmationConfig?.confirmLabel || 'Подтвердить'}
+            {confirmDialog.action?.confirmationConfig?.confirmLabel || t('components.confirmDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

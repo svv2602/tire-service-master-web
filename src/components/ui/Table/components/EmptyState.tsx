@@ -10,6 +10,7 @@ import {
 import InboxIcon from '@mui/icons-material/MoveToInbox';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { Column } from '../Table';
+import { useTranslation } from 'react-i18next';
 
 interface EmptyStateProps {
   columns: Column[];
@@ -24,11 +25,12 @@ interface EmptyStateProps {
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({ 
   columns,
-  message = 'Нет данных для отображения',
+  message,
   icon = <InboxIcon sx={{ fontSize: 48, color: 'text.secondary' }} />,
   showRefresh = false,
   onRefresh
 }) => {
+  const { t } = useTranslation();
   return (
     <TableBody>
       <TableRow>
@@ -54,7 +56,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               color="text.secondary"
               sx={{ mb: showRefresh ? 1 : 0 }}
             >
-              {message}
+              {message || t('components.table.empty')}
             </Typography>
             {showRefresh && onRefresh && (
               <Button
@@ -63,7 +65,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 onClick={onRefresh}
                 size="small"
               >
-                Обновить
+                {t('components.table.refresh')}
               </Button>
             )}
           </Box>

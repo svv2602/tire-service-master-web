@@ -79,6 +79,12 @@ export const PageTable = <T,>({
     return tableColumns;
   }, [columns, actions, t]);
 
+  // Текст для пустого состояния
+  const emptyContent = empty || (
+    <Box sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
+      {t('components.pageTable.empty', 'Нет данных для отображения')}
+    </Box>
+  );
 
 
   return (
@@ -106,7 +112,7 @@ export const PageTable = <T,>({
         columns={enhancedColumns}
         rows={rows}
         loading={loading}
-        empty={empty}
+        empty={emptyContent}
         responsive={responsive}
         onRowClick={onRowClick}
         stickyHeader
