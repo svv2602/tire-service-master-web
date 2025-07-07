@@ -62,45 +62,6 @@ import ClientLayout from '../../components/client/ClientLayout';
 // Импорт типов
 import { BookingFormData } from '../../types/booking';
 
-// Конфигурация шагов
-const STEPS = [
-  {
-    id: 'category-selection',
-    label: 'Выбор типа услуг',
-    component: CategorySelectionStep,
-  },
-  {
-    id: 'city-service-point',
-    label: 'Выбор точки обслуживания',
-    component: CityServicePointStep,
-  },
-  {
-    id: 'date-time',
-    label: 'Дата и время',
-    component: DateTimeStep,
-  },
-  {
-    id: 'client-info',
-    label: 'Контактная информация',
-    component: ClientInfoStep,
-  },
-  {
-    id: 'car-type',
-    label: 'Информация об автомобиле',
-    component: CarTypeStep,
-  },
-  {
-    id: 'services',
-    label: 'Услуги',
-    component: ServicesStep,
-  },
-  {
-    id: 'review',
-    label: 'Подтверждение',
-    component: ReviewStep,
-  },
-];
-
 // ✅ Обновленные начальные данные формы
 const initialFormData: BookingFormData = {
   service_category_id: 0,
@@ -187,6 +148,45 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const { data: clientCars = [], refetch: refetchClientCars } = useGetMyClientCarsQuery(undefined, {
     skip: !isAuthenticated, // Пропускаем если пользователь не авторизован
   });
+
+  // Мемоизированная конфигурация шагов с переводами
+  const STEPS = useMemo(() => [
+    {
+      id: 'category-selection',
+      label: t('booking.steps.categorySelection'),
+      component: CategorySelectionStep,
+    },
+    {
+      id: 'city-service-point',
+      label: t('booking.steps.cityServicePoint'),
+      component: CityServicePointStep,
+    },
+    {
+      id: 'date-time',
+      label: t('booking.steps.dateTime'),
+      component: DateTimeStep,
+    },
+    {
+      id: 'client-info',
+      label: t('booking.steps.clientInfo'),
+      component: ClientInfoStep,
+    },
+    {
+      id: 'car-type',
+      label: t('booking.steps.carType'),
+      component: CarTypeStep,
+    },
+    {
+      id: 'services',
+      label: t('booking.steps.services'),
+      component: ServicesStep,
+    },
+    {
+      id: 'review',
+      label: t('booking.steps.review'),
+      component: ReviewStep,
+    },
+  ], [t]);
 
   // Эффект для предзаполнения данных пользователя
   useEffect(() => {
