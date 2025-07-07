@@ -32,6 +32,7 @@ import {
 import { FormikProps } from 'formik';
 import type { ServicePointFormDataNew, ServicePointPhoto, ServicePoint } from '../../../types/models';
 import { HiddenElement, StyledList } from '../../../components/styled/CommonComponents';
+import { useTranslation } from 'react-i18next';
 
 interface PhotosStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -50,6 +51,7 @@ interface NewPhotoData {
 }
 
 const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   // Состояние для новых загружаемых фотографий
   const [newPhotos, setNewPhotos] = useState<NewPhotoData[]>([]);
   
@@ -306,16 +308,17 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
 
   return (
     <Box>
+      {/* Заголовок шага */}
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <PhotoIcon sx={{ mr: 1, color: 'primary.main' }} />
-        <Typography variant="h6">
-          Фотографии сервисной точки
+        <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+          {t('forms.servicePoint.photos.title')}
         </Typography>
       </Box>
 
+      {/* Кнопка добавления фото */}
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Добавьте качественные фотографии сервисной точки. Хорошие фотографии помогают привлечь больше клиентов.
-        Первая фотография или фотография с флагом "Главная" будет отображаться как основная.
+        {t('forms.servicePoint.photos.description')}
       </Typography>
 
       {/* Блок загрузки фотографий */}
@@ -332,7 +335,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
           <Box>
             <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h6" gutterBottom>
-              Перетащите фотографии сюда или нажмите для выбора
+              {t('forms.servicePoint.photos.dragOrClick')}
             </Typography>
             <Button
               variant="contained"
@@ -341,12 +344,12 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
               disabled={totalPhotosCount >= MAX_PHOTOS}
               sx={{ mt: 2 }}
             >
-              Выбрать фотографии
+              {t('forms.servicePoint.photos.selectPhotos')}
             </Button>
           </Box>
         </label>
         <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 2 }}>
-          Поддерживаемые форматы: JPEG, PNG, WebP. Максимум {MAX_PHOTOS} фотографий. Максимальный размер файла: 5MB.
+          {t('forms.servicePoint.photos.supportedFormats')}
         </Typography>
       </Paper>
 
@@ -354,11 +357,11 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2">
-            Загружено фотографий: {totalPhotosCount} из {MAX_PHOTOS}
+            {t('forms.servicePoint.photos.loadedPhotos')} {totalPhotosCount} {t('forms.servicePoint.photos.of')} {MAX_PHOTOS}
           </Typography>
           {!hasMainPhoto && totalPhotosCount > 0 && (
             <Chip 
-              label="Нет главной фотографии" 
+              label={t('forms.servicePoint.photos.noMainPhoto')} 
               color="warning" 
               size="small"
               icon={<StarBorderIcon />}
@@ -376,14 +379,14 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       {/* Предупреждения */}
       {totalPhotosCount >= MAX_PHOTOS && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Достигнуто максимальное количество фотографий ({MAX_PHOTOS}). 
-          Удалите некоторые фотографии, чтобы добавить новые.
+          {t('forms.servicePoint.photos.maxPhotosWarning')} 
+          {t('forms.servicePoint.photos.removeSomePhotos')}
         </Alert>
       )}
 
       {!hasMainPhoto && totalPhotosCount > 0 && (
         <Alert severity="info" sx={{ mb: 3 }}>
-          Рекомендуется установить одну из фотографий как главную. Главная фотография будет отображаться в списке сервисных точек.
+          {t('forms.servicePoint.photos.recommendMainPhoto')}
         </Alert>
       )}
 
@@ -391,7 +394,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       {totalPhotosCount > 0 ? (
         <Box>
           <Typography variant="h6" gutterBottom>
-            Фотографии ({totalPhotosCount})
+            {t('forms.servicePoint.photos.photos')} ({totalPhotosCount})
           </Typography>
           <Grid container spacing={3}>
             {/* Существующие фотографии */}
@@ -411,7 +414,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                         component="img"
                         height="200"
                         image={photo.url}
-                        alt={photo.description || 'Фотография сервисной точки'}
+                        alt={photo.description || t('forms.servicePoint.photos.servicePointPhotoAlt')}
                         sx={{ 
                           objectFit: 'cover',
                           filter: isMarkedForDeletion ? 'grayscale(100%)' : 'none'
@@ -422,7 +425,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                       {photo.is_main && !isMarkedForDeletion && (
                         <Chip
                           icon={<StarIcon />}
-                          label="Главная"
+                          label={t('forms.servicePoint.photos.mainPhoto')}
                           color="primary"
                           size="small"
                           sx={{
@@ -435,7 +438,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                       
                       {/* Индикатор статуса фотографии */}
                       <Chip
-                        label={isMarkedForDeletion ? "Будет удалена" : "Загружена"}
+                        label={isMarkedForDeletion ? t('forms.servicePoint.photos.markedForDeletion') : t('forms.servicePoint.photos.loaded')}
                         color={isMarkedForDeletion ? "error" : "success"}
                         size="small"
                         sx={{
@@ -446,7 +449,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                       />
                       
                       {/* Кнопка удаления или восстановления */}
-                      <Tooltip title={isMarkedForDeletion ? "Отменить удаление" : "Удалить фотографию"}>
+                      <Tooltip title={isMarkedForDeletion ? t('forms.servicePoint.photos.cancelDelete') : t('forms.servicePoint.photos.deletePhoto')}>
                         <IconButton
                           color={isMarkedForDeletion ? "primary" : "error"}
                           onClick={() => isMarkedForDeletion ? handleCancelDeletePhoto(index) : handleDeleteExistingPhoto(index)}
@@ -469,13 +472,13 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                     <CardContent sx={{ flexGrow: 1 }}>
                       <TextField
                         fullWidth
-                        label="Описание фотографии"
+                        label={t('forms.servicePoint.photos.photoDescriptionLabel')}
                         value={photo.description || ''}
                         onChange={(e) => handleUpdateExistingPhotoDescription(index, e.target.value)}
                         multiline
                         rows={2}
                         size="small"
-                        placeholder="Краткое описание фотографии"
+                        placeholder={t('forms.servicePoint.photos.photoDescriptionPlaceholder')}
                         disabled={isMarkedForDeletion}
                       />
                     </CardContent>
@@ -488,7 +491,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                         size="small"
                         disabled={photo.is_main || isMarkedForDeletion}
                       >
-                        {photo.is_main ? 'Главная' : 'Сделать главной'}
+                        {photo.is_main ? t('forms.servicePoint.photos.mainPhoto') : t('forms.servicePoint.photos.makeMain')}
                       </Button>
                       
                       <Typography variant="caption" color="text.secondary">
@@ -509,7 +512,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                       component="img"
                       height="200"
                       image={photo.preview}
-                      alt={photo.description || 'Новая фотография'}
+                      alt={photo.description || t('forms.servicePoint.photos.newPhotoAlt')}
                       sx={{ objectFit: 'cover' }}
                     />
                     
@@ -517,7 +520,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                     {photo.is_main && (
                       <Chip
                         icon={<StarIcon />}
-                        label="Главная"
+                        label={t('forms.servicePoint.photos.mainPhoto')}
                         color="primary"
                         size="small"
                         sx={{
@@ -530,7 +533,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                     
                     {/* Индикатор новой фотографии */}
                     <Chip
-                      label="Новая"
+                      label={t('forms.servicePoint.photos.newPhoto')}
                       color="info"
                       size="small"
                       sx={{
@@ -541,7 +544,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                     />
                     
                     {/* Кнопка удаления */}
-                    <Tooltip title="Удалить фотографию">
+                    <Tooltip title={t('forms.servicePoint.photos.deletePhoto')}>
                       <IconButton
                         color="error"
                         onClick={() => handleDeleteNewPhoto(photo.tempId)}
@@ -564,13 +567,13 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                   <CardContent sx={{ flexGrow: 1 }}>
                     <TextField
                       fullWidth
-                      label="Описание фотографии"
+                      label={t('forms.servicePoint.photos.photoDescriptionLabel')}
                       value={photo.description}
                       onChange={(e) => handleUpdateNewPhotoDescription(photo.tempId, e.target.value)}
                       multiline
                       rows={2}
                       size="small"
-                      placeholder="Краткое описание фотографии"
+                      placeholder={t('forms.servicePoint.photos.photoDescriptionPlaceholder')}
                     />
                   </CardContent>
                   
@@ -582,7 +585,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
                       size="small"
                       disabled={photo.is_main}
                     >
-                      {photo.is_main ? 'Главная' : 'Сделать главной'}
+                      {photo.is_main ? t('forms.servicePoint.photos.mainPhoto') : t('forms.servicePoint.photos.makeMain')}
                     </Button>
                     
                     <Typography variant="caption" color="text.secondary">
@@ -597,11 +600,11 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       ) : (
         <Alert severity="info" sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Пока не добавлено ни одной фотографии
+            {t('forms.servicePoint.photos.noPhotos')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Фотографии помогают клиентам лучше понять, что их ждет в сервисной точке. 
-            Рекомендуется добавить фотографии рабочих мест, оборудования и общего вида помещения.
+            {t('forms.servicePoint.photos.photoHelp')} 
+            {t('forms.servicePoint.photos.addPhotos')}
           </Typography>
         </Alert>
       )}
@@ -610,7 +613,7 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       {newPhotos.length > 0 && (
         <Alert severity="info" sx={{ mt: 3 }}>
           <Typography variant="body2">
-            📸 Новые фотографии ({newPhotos.length}) будут загружены при сохранении сервисной точки.
+            {t('forms.servicePoint.photos.newPhotosInfo')} {newPhotos.length}
           </Typography>
         </Alert>
       )}
@@ -619,43 +622,43 @@ const PhotosStep: React.FC<PhotosStepProps> = ({ formik, isEditMode, servicePoin
       <Box sx={{ mt: 4 }}>
         <Divider sx={{ mb: 3 }} />
         <Typography variant="h6" gutterBottom>
-          💡 Советы для лучших фотографий
+          {t('forms.servicePoint.photos.tipsTitle')}
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
-              <strong>Что фотографировать:</strong>
+              <strong>{t('forms.servicePoint.photos.whatToTake')}:</strong>
               <StyledList gap={2} sx={{ mt: 1, pl: 2.5 }}>
                 <ListItem disablePadding>
-                  <ListItemText primary="Общий вид сервисного центра" />
+                  <ListItemText primary={t('forms.servicePoint.photos.generalView')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Рабочие места и оборудование" />
+                  <ListItemText primary={t('forms.servicePoint.photos.workPlaces')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Зону ожидания клиентов" />
+                  <ListItemText primary={t('forms.servicePoint.photos.waitingZone')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Парковку и въезд" />
+                  <ListItemText primary={t('forms.servicePoint.photos.parking')} />
                 </ListItem>
               </StyledList>
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="body2" component="div">
-              <strong>Качество фотографий:</strong>
+              <strong>{t('forms.servicePoint.photos.photoQuality')}:</strong>
               <StyledList gap={2} sx={{ mt: 1, pl: 2.5 }}>
                 <ListItem disablePadding>
-                  <ListItemText primary="Хорошее освещение" />
+                  <ListItemText primary={t('forms.servicePoint.photos.goodLighting')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Высокое разрешение" />
+                  <ListItemText primary={t('forms.servicePoint.photos.highResolution')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Четкие, не размытые снимки" />
+                  <ListItemText primary={t('forms.servicePoint.photos.clearImages')} />
                 </ListItem>
                 <ListItem disablePadding>
-                  <ListItemText primary="Привлекательные ракурсы" />
+                  <ListItemText primary={t('forms.servicePoint.photos.attractiveAngles')} />
                 </ListItem>
               </StyledList>
             </Typography>

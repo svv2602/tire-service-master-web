@@ -301,17 +301,17 @@ const PartnersPage: React.FC = () => {
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'status',
-      label: 'Статус активности',
+      label: t('admin.partners.statusFilter'),
       type: 'select',
       value: statusFilter,
       onChange: handleStatusFilterChange,
       options: [
-        { value: '', label: 'Все партнеры' },
-        { value: 'true', label: t('admin.users.onlyActive') },
-        { value: 'false', label: 'Только неактивные' },
+        { value: '', label: t('admin.partners.allPartners') },
+        { value: 'true', label: t('admin.partners.onlyActive') },
+        { value: 'false', label: t('admin.partners.onlyInactive') },
       ],
     },
-  ], [statusFilter, handleStatusFilterChange]);
+  ], [statusFilter, handleStatusFilterChange, t]);
 
   // Конфигурация действий для ActionsMenu
   const partnerActions: ActionItem<Partner>[] = useMemo(() => [
@@ -325,7 +325,7 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'service-points',
-      label: 'Сервисные точки',
+      label: t('admin.partners.servicePoints'),
       icon: <StoreIcon />,
       onClick: (partner: Partner) => navigate(`/admin/partners/${partner.id}/service-points`),
       color: 'info',
@@ -339,13 +339,13 @@ const PartnersPage: React.FC = () => {
       color: 'error',
       tooltip: 'Удалить партнера'
     }
-  ], [handleEditPartner, handleDeletePartner, navigate]);
+  ], [handleEditPartner, handleDeletePartner, navigate, t]);
 
   // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
     {
       id: 'company',
-      label: 'Партнер',
+      label: t('admin.partners.columns.company'),
       wrap: true,
       minWidth: 250,
       format: (_value: any, row: Partner) => (
@@ -368,14 +368,14 @@ const PartnersPage: React.FC = () => {
     },
     {
       id: 'contact_person',
-      label: 'Контактное лицо',
+      label: t('admin.partners.columns.contactPerson'),
       wrap: true,
       hideOnMobile: true,
       format: (_value: any, row: Partner) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <BusinessIcon color="action" />
           <Typography variant="body2">
-            {row.contact_person || 'Не указано'}
+            {row.contact_person || t('admin.partners.notSpecified')}
           </Typography>
         </Box>
       )
@@ -386,7 +386,7 @@ const PartnersPage: React.FC = () => {
       hideOnMobile: true,
       format: (_value: any, row: Partner) => (
         <Typography variant="body2">
-          {row.user?.phone || 'Не указан'}
+          {row.user?.phone || t('admin.partners.notSpecified')}
         </Typography>
       )
     },
@@ -396,7 +396,7 @@ const PartnersPage: React.FC = () => {
       hideOnMobile: true,
       format: (_value: any, row: Partner) => (
         <Typography variant="body2">
-          {row.user?.email || 'Не указан'}
+          {row.user?.email || t('admin.partners.notSpecified')}
         </Typography>
       )
     },
@@ -428,7 +428,7 @@ const PartnersPage: React.FC = () => {
         <ActionsMenu actions={partnerActions} item={row} menuThreshold={1} />
       )
     }
-  ], [getPartnerInitials, handleToggleStatus, partnerActions]);
+  ], [getPartnerInitials, handleToggleStatus, partnerActions, t]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({
@@ -443,7 +443,7 @@ const PartnersPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке партнеров: {(error as any)?.data?.message || 'Неизвестная ошибка'}
+          {t('errors.partnersLoading', { message: (error as any)?.data?.message || t('errors.unknown') })}
         </Alert>
       </Box>
     );
@@ -464,14 +464,14 @@ const PartnersPage: React.FC = () => {
       {partners.length > 0 && (
         <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
           <Typography variant="body2" color="text.secondary">
-            Найдено партнеров: <strong>{totalItems}</strong>
+            {t('admin.partners.stats.foundPartners', { count: totalItems })}
           </Typography>
           <Typography variant="body2" color="success.main">
-            Активных: <strong>{partners.filter(p => p.is_active).length}</strong>
+            {t('admin.partners.stats.activePartners', { count: partners.filter(p => p.is_active).length })}
           </Typography>
           {partners.filter(p => !p.is_active).length > 0 && (
             <Typography variant="body2" color="error.main">
-              Неактивных: <strong>{partners.filter(p => !p.is_active).length}</strong>
+              {t('admin.partners.stats.inactivePartners', { count: partners.filter(p => !p.is_active).length })}
             </Typography>
           )}
         </Box>
@@ -504,7 +504,9 @@ const PartnersPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          {deactivateDialog.isFromDelete ? 'Подтверждение удаления партнера' : 'Подтверждение деактивации партнера'}
+          {deactivateDialog.isFromDelete
+            ? t('admin.partners.deactivateDialog.titleDelete')
+            : t('admin.partners.deactivateDialog.titleDeactivate')}
         </DialogTitle>
         <DialogContent>
           {deactivateDialog.partner && (
@@ -512,15 +514,15 @@ const PartnersPage: React.FC = () => {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 {deactivateDialog.isFromDelete ? (
                   <>
-                    Вы действительно хотите удалить партнера <strong>{deactivateDialog.partner.company_name}</strong>?
+                    {t('admin.partners.deactivateDialog.confirmDeleteMessage', { companyName: deactivateDialog.partner.company_name })}
                     <br />
                     <Typography variant="body2" color="warning.main" sx={{ mt: 1 }}>
-                      Поскольку партнер активен, сначала он будет деактивирован.
+                      {t('admin.partners.deactivateDialog.activeDeactivationWarning')}
                     </Typography>
                   </>
                 ) : (
                   <>
-                    Вы действительно хотите деактивировать партнера <strong>{deactivateDialog.partner.company_name}</strong>?
+                    {t('admin.partners.deactivateDialog.confirmDeactivateMessage', { companyName: deactivateDialog.partner.company_name })}
                   </>
                 )}
               </Typography>
@@ -528,26 +530,24 @@ const PartnersPage: React.FC = () => {
               {relatedDataLoading ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 2 }}>
                   <CircularProgress size={20} />
-                  <Typography>Загрузка связанных данных...</Typography>
+                  <Typography>{t('admin.partners.deactivateDialog.loadingRelated')}</Typography>
                 </Box>
               ) : relatedData ? (
                 <Box>
                   <Typography variant="body1" sx={{ mb: 2, color: 'warning.main' }}>
-                    При деактивации партнера будут также деактивированы:
+                    {t('admin.partners.deactivateDialog.warning')}
                   </Typography>
                   
                   {relatedData.service_points_count > 0 && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        🏢 Сервисные точки ({relatedData.service_points_count}):
+                        {t('admin.partners.deactivateDialog.servicePoints', { count: relatedData.service_points_count })}
                       </Typography>
                       <Box sx={{ pl: 2 }}>
                         {relatedData.service_points.map(sp => (
                           <Typography key={sp.id} variant="body2" color={sp.is_active ? 'text.primary' : 'text.secondary'}>
-                            • {sp.name} - {sp.is_active ? '✅ Активна' : '❌ Неактивна'} 
-                            {sp.work_status && ` (${sp.work_status === 'working' ? 'Работает' : 
-                                                    sp.work_status === 'temporarily_closed' ? 'Временно закрыта' : 
-                                                    'Закрыта'})`}
+                            • {sp.name} - {sp.is_active ? t('statuses.active') : t('statuses.inactive')} 
+                            {sp.work_status && ` (${t('statuses.' + sp.work_status)})`}
                           </Typography>
                         ))}
                       </Box>
@@ -557,12 +557,12 @@ const PartnersPage: React.FC = () => {
                   {relatedData.operators_count > 0 && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                        👥 Сотрудники ({relatedData.operators_count}):
+                        {t('admin.partners.deactivateDialog.operators', { count: relatedData.operators_count })}
                       </Typography>
                       <Box sx={{ pl: 2 }}>
                         {relatedData.operators.map(op => (
                           <Typography key={op.id} variant="body2" color={op.is_active ? 'text.primary' : 'text.secondary'}>
-                            • {op.user.first_name} {op.user.last_name} ({op.position}) - {op.is_active ? '✅ Активен' : '❌ Неактивен'}
+                            • {op.user.first_name} {op.user.last_name} ({op.position}) - {op.is_active ? t('statuses.active') : t('statuses.inactive')}
                           </Typography>
                         ))}
                       </Box>
@@ -571,7 +571,7 @@ const PartnersPage: React.FC = () => {
                   
                   {relatedData.service_points_count === 0 && relatedData.operators_count === 0 && (
                     <Typography variant="body2" color="success.main">
-                      У этого партнера нет активных сервисных точек и сотрудников.
+                      {t('admin.partners.deactivateDialog.noActiveItems')}
                     </Typography>
                   )}
                 </Box>
@@ -580,16 +580,16 @@ const PartnersPage: React.FC = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDeactivation} color="inherit">
-            Отмена
-          </Button>
+          <Button onClick={handleCancelDeactivation}>{t('forms.common.cancel')}</Button>
           <Button 
             onClick={handleConfirmDeactivation} 
             color="error" 
             variant="contained"
             disabled={relatedDataLoading}
           >
-            {deactivateDialog.isFromDelete ? t('tables.actions.delete') : t('tables.actions.deactivate')}
+            {deactivateDialog.isFromDelete
+              ? t('tables.actions.delete')
+              : t('tables.actions.deactivate')}
           </Button>
         </DialogActions>
       </Dialog>

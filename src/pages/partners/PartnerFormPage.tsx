@@ -742,7 +742,7 @@ const PartnerFormPage: React.FC = () => {
   const servicePointColumns: Column[] = useMemo(() => [
     {
       id: 'name',
-      label: 'Название',
+      label: t('tables.columns.name'),
       format: (value, row: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <BusinessIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -753,7 +753,7 @@ const PartnerFormPage: React.FC = () => {
     },
     {
       id: 'address',
-      label: 'Адрес',
+      label: t('tables.columns.address'),
       format: (value, row: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <LocationOnIcon sx={{ mr: 1, color: 'primary.main' }} />
@@ -764,7 +764,7 @@ const PartnerFormPage: React.FC = () => {
     },
     {
       id: 'city',
-      label: 'Город',
+      label: t('tables.columns.city'),
       format: (value, row: ServicePoint) => {
         // Проверяем, что city существует и имеет свойство name
         return typeof row.city === 'object' && row.city ? row.city.name : '-';
@@ -773,7 +773,7 @@ const PartnerFormPage: React.FC = () => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       format: (value, row: ServicePoint) => (
         <FormControlLabel
           control={
@@ -792,10 +792,10 @@ const PartnerFormPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('tables.columns.actions'),
       format: (value, row: ServicePoint) => (
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-          <Tooltip title="Редактировать">
+          <Tooltip title={t('tables.actions.edit')}>
             <Button
               size="small"
               onClick={() => handleEditServicePoint(row.id)}
@@ -804,7 +804,7 @@ const PartnerFormPage: React.FC = () => {
               <EditIcon fontSize="small" />
             </Button>
           </Tooltip>
-          <Tooltip title="Удалить">
+          <Tooltip title={t('tables.actions.delete')}>
             <Button
               size="small"
               color="error"
@@ -819,7 +819,7 @@ const PartnerFormPage: React.FC = () => {
       align: 'center',
       minWidth: 120,
     },
-  ], []);
+  ], [t]);
 
   // Обработчики для сервисных точек
   const handleEditServicePoint = (servicePointId: number) => {
@@ -1593,14 +1593,14 @@ const PartnerFormPage: React.FC = () => {
               {/* Заголовок и кнопка добавления */}
               <Box sx={tablePageStyles.pageHeader}>
                 <Typography variant="h5">
-                  Сервисные точки партнера
+                  {t('admin.partnerServicePoints.title')}
                 </Typography>
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
                   onClick={handleAddServicePoint}
                 >
-                  Добавить сервисную точку
+                  {t('admin.partnerServicePoints.addButton')}
                 </Button>
               </Box>
 
@@ -1612,7 +1612,7 @@ const PartnerFormPage: React.FC = () => {
               ) : servicePointsData?.data?.length === 0 ? (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
                   <Typography variant="body1" color="text.secondary">
-                    У этого партнера пока нет сервисных точек
+                    {t('admin.partnerServicePoints.empty')}
                   </Typography>
                 </Box>
               ) : (
@@ -1620,22 +1620,21 @@ const PartnerFormPage: React.FC = () => {
                   {/* Статистика */}
                   <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Typography variant="body2" color="text.secondary">
-                      Всего сервисных точек: <strong>{servicePointsData?.pagination?.total_count || 0}</strong>
+                      {t('admin.partnerServicePoints.stats.total', { count: servicePointsData?.pagination?.total_count || 0 })}
                     </Typography>
                     {servicePointsData?.data && servicePointsData.data.length > 0 && (
                       <>
                         <Typography variant="body2" color="success.main">
-                          Активных: <strong>{servicePointsData.data.filter(sp => sp.is_active).length}</strong>
+                          {t('admin.partnerServicePoints.stats.active', { count: servicePointsData.data.filter(sp => sp.is_active).length })}
                         </Typography>
                         {servicePointsData.data.filter(sp => !sp.is_active).length > 0 && (
                           <Typography variant="body2" color="error.main">
-                            Неактивных: <strong>{servicePointsData.data.filter(sp => !sp.is_active).length}</strong>
+                            {t('admin.partnerServicePoints.stats.inactive', { count: servicePointsData.data.filter(sp => !sp.is_active).length })}
                           </Typography>
                         )}
                       </>
                     )}
                   </Box>
-
                   {/* Таблица сервисных точек */}
                   <Box sx={tablePageStyles.tableContainer}>
                     <Table 
@@ -1643,7 +1642,6 @@ const PartnerFormPage: React.FC = () => {
                       rows={servicePointsData?.data || []}
                     />
                   </Box>
-
                   {/* Пагинация */}
                   {servicePointsData?.pagination && Math.ceil(servicePointsData.pagination.total_count / 25) > 1 && (
                     <Box sx={{ 

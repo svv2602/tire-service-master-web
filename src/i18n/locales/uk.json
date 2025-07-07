@@ -940,6 +940,27 @@
       "confirm": "Підтвердити",
       "cancel": "Скасувати"
     },
+    "stepper": {
+      "optional": "Опційно",
+      "next": "Далі",
+      "back": "Назад",
+      "finish": "Завершити"
+    },
+    "fileUpload": {
+      "dropzoneText": "Перетягніть файли сюди або натисніть для вибору",
+      "maxSize": "Максимальний розмір: {{size}} МБ",
+      "supportedFormats": "Підтримувані формати: {{formats}}",
+      "delete": "Видалити",
+      "error": {
+        "tooLarge": "Файл занадто великий",
+        "unsupportedType": "Непідтримуваний тип файлу"
+      }
+    },
+    "timePicker": {
+      "label": "Оберіть час",
+      "helperText": "Формат: гг:хв",
+      "placeholder": "--:--"
+    },
     "pageHeader": {
       "defaultTitle": "Заголовок сторінки",
       "defaultSubtitle": "Опис сторінки"

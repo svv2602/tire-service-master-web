@@ -293,12 +293,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const headerConfig = useMemo(() => ({
     title: selectedPartnerInfo ? t('admin.servicePoints.titleWithPartner', { partnerName: selectedPartnerInfo.company_name }) : t('admin.servicePoints.title'),
     subtitle: selectedPartnerInfo 
-      ? `Управление сервисными точками партнера "${selectedPartnerInfo.company_name}"`
+      ? t('admin.servicePoints.subtitleWithPartner', { partnerName: selectedPartnerInfo.company_name })
       : t('admin.servicePoints.subtitle'),
     actions: [
       {
         label: t('admin.servicePoints.createServicePoint'),
-        icon: <AddIcon />,
+        icon: <AddIcon />, 
         onClick: () => {
           if (partnerId) {
             navigate(`/admin/partners/${partnerId}/service-points/new`, {
@@ -313,91 +313,69 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         color: 'primary' as const
       }
     ]
-  }), [navigate, partnerId, showNotification, selectedPartnerInfo]);
+  }), [navigate, partnerId, showNotification, selectedPartnerInfo, t]);
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
     placeholder: t('admin.servicePoints.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
-  }), [searchQuery, handleSearchChange]);
+  }), [searchQuery, handleSearchChange, t]);
 
   // Конфигурация фильтров
   const filtersConfig = useMemo(() => [
     {
       id: 'region',
-      key: 'region',
-      type: 'autocomplete' as const,
-      label: t('tables.columns.region'),
+      label: t('admin.servicePoints.filters.region'),
+      type: 'select',
       value: selectedRegion,
       onChange: handleRegionFilterChange,
-      clearValue: 'all', // Значение для сброса
-      placeholder: t('filters.selectRegion'),
       options: [
-        { value: 'all', label: t('filters.allRegions') },
-        ...(regionsData?.data?.map((region) => ({
-          value: region.id.toString(),
-          label: region.name
-        })) || [])
+        { value: 'all', label: t('admin.servicePoints.filters.allRegions') },
+        ...(regionsData?.data || []).map(region => ({ value: region.id.toString(), label: region.name }))
       ]
     },
     {
       id: 'city',
-      key: 'city',
-      type: 'autocomplete' as const,
-      label: t('tables.columns.city'),
+      label: t('admin.servicePoints.filters.city'),
+      type: 'select',
       value: selectedCity,
       onChange: handleCityFilterChange,
-      clearValue: 'all', // Значение для сброса
-      placeholder: t('filters.selectCity'),
       options: [
-        { value: 'all', label: t('filters.allCities') },
-        ...(citiesData?.data?.map((city) => ({
-          value: city.id.toString(),
-          label: city.name
-        })) || [])
+        { value: 'all', label: t('admin.servicePoints.filters.allCities') },
+        ...(citiesData?.data || []).map(city => ({ value: city.id.toString(), label: city.name }))
       ]
     },
     {
       id: 'partner',
-      key: 'partner',
-      type: 'autocomplete' as const,
-      label: t('tables.columns.partner'),
+      label: t('admin.servicePoints.filters.partner'),
+      type: 'select',
       value: selectedPartner,
       onChange: handlePartnerFilterChange,
-      clearValue: 'all', // Значение для сброса
-      placeholder: t('filters.selectPartner'),
       options: [
-        { value: 'all', label: t('filters.allPartners') },
-        ...(partnersData?.data?.map((partner) => ({
-          value: partner.id.toString(),
-          label: partner.company_name
-        })) || [])
+        { value: 'all', label: t('admin.servicePoints.filters.allPartners') },
+        ...(partnersData?.data || []).map(partner => ({ value: partner.id.toString(), label: partner.company_name }))
       ]
     },
     {
       id: 'status',
-      key: 'status',
-      type: 'select' as const,
-      label: t('tables.columns.status'),
+      label: t('admin.servicePoints.filters.status'),
+      type: 'select',
       value: selectedStatus,
       onChange: handleStatusFilterChange,
-      clearValue: 'all', // Значение для сброса
       options: [
-        { value: 'all', label: t('common.all') },
+        { value: 'all', label: t('admin.servicePoints.filters.allStatuses') },
         { value: 'active', label: t('statuses.active') },
         { value: 'inactive', label: t('statuses.inactive') }
       ]
     }
-  ], [selectedRegion, selectedCity, selectedPartner, selectedStatus, regionsData, citiesData, partnersData, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange]);
+  ], [selectedRegion, selectedCity, selectedPartner, selectedStatus, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange, regionsData, citiesData, partnersData, t]);
 
-  // Конфигурация колонок
+  // Колонки таблицы
   const columns = useMemo(() => [
     {
-      id: 'service_point',
-      key: 'name' as keyof ServicePoint,
-      label: t('tables.columns.servicePoint'),
-      sortable: false,
+      id: 'name',
+      label: t('tables.columns.name'),
       render: (servicePoint: ServicePoint) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
           <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
@@ -433,60 +411,32 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
         <Typography variant="body2">
-          {servicePoint.partner?.company_name || 'Не указан'}
+          {servicePoint.partner?.company_name || t('admin.servicePoints.notSpecified')}
         </Typography>
       )
     },
     {
-      id: 'location',
+      id: 'city',
       key: 'city' as keyof ServicePoint,
-      label: t('tables.columns.regionCity'),
+      label: t('tables.columns.city'),
       sortable: true,
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
-        <Box>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            {servicePoint.city?.region?.name || 'Не указана'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {servicePoint.city?.name || 'Не указан'}
-          </Typography>
-        </Box>
+        <Typography variant="body2">
+          {servicePoint.city?.name || t('admin.servicePoints.notSpecified')}
+        </Typography>
       )
     },
     {
-      id: 'schedule',
-      key: 'working_hours' as keyof ServicePoint,
-      label: t('tables.columns.workingHours'),
-      sortable: false,
-      hideOnMobile: true,
-      render: (servicePoint: ServicePoint) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <ScheduleIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-          <Tooltip title={formatWorkingHours(servicePoint.working_hours, t)} arrow>
-            <Typography variant="body2" sx={{ 
-              maxWidth: 200,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
-              {formatWorkingHours(servicePoint.working_hours, t)}
-            </Typography>
-          </Tooltip>
-        </Box>
-      )
-    },
-    {
-      id: 'status',
+      id: 'is_active',
       key: 'is_active' as keyof ServicePoint,
       label: t('tables.columns.status'),
       sortable: true,
       render: (servicePoint: ServicePoint) => (
-        <Chip 
-          label={servicePoint.is_active ? t('statuses.active') : t('statuses.inactive')} 
-          size="small"
+        <Chip
+          label={servicePoint.is_active ? t('statuses.active') : t('statuses.inactive')}
           color={servicePoint.is_active ? 'success' : 'default'}
-          icon={servicePoint.is_active ? <VisibilityIcon /> : <VisibilityOffIcon />}
+          size="small"
         />
       )
     },
@@ -504,7 +454,26 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         />
       )
     }
-  ], [servicePointActions]);
+  ], [servicePointActions, t]);
+
+  // Пустое состояние
+  const emptyState = useMemo(() => ({
+    title: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all' ? t('admin.servicePoints.notFound') : t('admin.servicePoints.empty'),
+    description: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all'
+      ? t('admin.servicePoints.tryChangeFilters')
+      : t('admin.servicePoints.createFirst'),
+    action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedPartner === 'all' && selectedStatus === 'all') ? {
+      label: t('admin.servicePoints.createServicePoint'),
+      icon: <AddIcon />, 
+      onClick: () => {
+        if (partnerId) {
+          navigate(`/admin/partners/${partnerId}/service-points/new`);
+        } else {
+          navigate('/admin/partners');
+        }
+      }
+    } : undefined
+  }), [searchQuery, selectedRegion, selectedCity, selectedPartner, selectedStatus, partnerId, navigate, t]);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -521,23 +490,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
           rowsPerPage: PER_PAGE,
           onPageChange: handlePageChange
         }}
-        emptyState={{
-          title: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all' ? 'Сервисные точки не найдены' : 'Нет сервисных точек',
-          description: searchQuery || selectedRegion !== 'all' || selectedCity !== 'all' || selectedPartner !== 'all' || selectedStatus !== 'all'
-            ? 'Попробуйте изменить критерии поиска'
-            : 'Создайте первую сервисную точку для начала работы',
-          action: (!searchQuery && selectedRegion === 'all' && selectedCity === 'all' && selectedPartner === 'all' && selectedStatus === 'all') ? {
-            label: t('admin.servicePoints.createServicePoint'),
-            icon: <AddIcon />,
-            onClick: () => {
-              if (partnerId) {
-                navigate(`/admin/partners/${partnerId}/service-points/new`);
-              } else {
-                navigate('/admin/partners');
-              }
-            }
-          } : undefined
-        }}
+        emptyState={emptyState}
       />
 
       <Notification

@@ -150,8 +150,9 @@ export const UsersPage: React.FC = () => {
     if (user.last_name) {
       return user.last_name.charAt(0).toUpperCase();
     }
-    return 'П'; // П = Пользователь
-  }, []);
+    // Локализованный инициал для пользователя без имени/фамилии
+    return t('admin.users.initials.default');
+  }, [t]);
 
   // Обработчики событий
   const handleSearchChange = useCallback((value: string) => {
@@ -444,20 +445,20 @@ export const UsersPage: React.FC = () => {
       {/* Статистика */}
       {users.length > 0 && (
         <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Локализованная строка с количеством пользователей */}
           <Typography variant="body2" color="text.secondary">
-            Найдено пользователей: <strong>{totalItems}</strong>
+            {t('admin.users.stats.foundUsers', { count: totalItems })}
           </Typography>
           <Typography variant="body2" color="success.main">
-            Активных: <strong>{activeUsersCount}</strong>
+            {t('admin.users.stats.activeUsers', { count: activeUsersCount })}
           </Typography>
           {inactiveUsersCount > 0 && (
             <Typography variant="body2" color="error.main">
-              Деактивированных: <strong>{inactiveUsersCount}</strong>
+              {t('admin.users.stats.deactivatedUsers', { count: inactiveUsersCount })}
             </Typography>
           )}
           <Typography variant="caption" color="text.secondary">
-            {!showInactive && '(только активные)'}
-            {showInactive && '(включая деактивированных)'}
+            {!showInactive ? t('admin.users.stats.onlyActive') : t('admin.users.stats.withDeactivated')}
           </Typography>
         </Box>
       )}

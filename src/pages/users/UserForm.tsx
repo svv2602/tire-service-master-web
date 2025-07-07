@@ -337,13 +337,13 @@ const UserForm: React.FC = () => {
             mr: SIZES.spacing.md 
           }}
         >
-          t('forms.common.back')
+          {t('forms.common.back')}
         </Button>
         <Typography 
           variant="h4" 
           sx={{ fontSize: SIZES.fontSize.xl }}
         >
-          {isEdit ? 'Редактировать пользователя' : 'Создать пользователя'}
+          {isEdit ? t('forms.user.title.edit') : t('forms.user.title.create')}
         </Typography>
       </Box>
           
@@ -359,14 +359,14 @@ const UserForm: React.FC = () => {
                     gutterBottom 
                     sx={{ fontSize: SIZES.fontSize.lg }}
                   >
-                    t('forms.sections.loginType')
+                    {t('forms.sections.loginType')}
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Grid>
 
                 <Grid item xs={12}>
                   <FormControl component="fieldset">
-                    <FormLabel component="legend">t('forms.loginType.selectMethod')</FormLabel>
+                    <FormLabel component="legend">{t('forms.loginType.selectMethod')}</FormLabel>
                     <RadioGroup
                       row
                       value={loginType}
@@ -396,7 +396,7 @@ const UserForm: React.FC = () => {
                 gutterBottom 
                 sx={{ fontSize: SIZES.fontSize.lg }}
               >
-                t('forms.sections.basicInfo')
+                {t('forms.sections.basicInfo')}
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -406,7 +406,7 @@ const UserForm: React.FC = () => {
                 fullWidth
                 required={loginType === 'email'}
                 name="email"
-                label={loginType === 'email' ? 'Email' : 'Email (необязательно)'}
+                label={loginType === 'email' ? t('forms.user.fields.email') : t('forms.user.fields.emailOptional')}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -423,7 +423,7 @@ const UserForm: React.FC = () => {
                 fullWidth
                 required={loginType === 'phone'}
                 name="phone"
-                label={loginType === 'phone' ? 'Телефон' : 'Телефон (необязательно)'}
+                label={loginType === 'phone' ? t('forms.user.fields.phone') : t('forms.user.fields.phoneOptional')}
                 value={formik.values.phone}
                 onChange={(value) => formik.setFieldValue('phone', value)}
                 onBlur={() => formik.setFieldTouched('phone', true)}
@@ -487,7 +487,7 @@ const UserForm: React.FC = () => {
                   fontSize: SIZES.fontSize.lg 
                 }}
               >
-                t('forms.sections.roleAndStatus')
+                {t('forms.sections.roleAndStatus')}
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -541,7 +541,7 @@ const UserForm: React.FC = () => {
                   fontSize: SIZES.fontSize.lg 
                 }}
               >
-                {isEdit ? 'Изменить пароль' : 'Пароль'}
+                {isEdit ? t('forms.user.fields.changePassword') : t('forms.user.fields.password')}
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -552,7 +552,7 @@ const UserForm: React.FC = () => {
                 required={!isEdit}
                 type="password"
                 name="password"
-                label={isEdit ? "Новый пароль (оставьте пустым, если не хотите менять)" : "Пароль"}
+                label={isEdit ? t('forms.user.fields.newPassword') : t('forms.user.fields.password')}
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -587,7 +587,7 @@ const UserForm: React.FC = () => {
               )}
               
               {successMessage && (
-                <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
+                <Alert severity="success" sx={{ mb: 2 }}>{t('forms.user.messages.success.' + (isEdit ? 'updated' : 'created'))}</Alert>
               )}
 
               {/* Уведомление о незаполненных обязательных полях */}
@@ -625,7 +625,7 @@ const UserForm: React.FC = () => {
                   disabled={isLoading}
                   sx={secondaryButtonStyles}
                 >
-                  t('forms.common.cancel')
+                  {t('forms.common.cancel')}
                 </Button>
                 <Button
                   type={formik.isValid ? "submit" : "button"}
@@ -643,7 +643,7 @@ const UserForm: React.FC = () => {
                     })
                   }}
                 >
-                  {isLoading ? 'Сохранение...' : (isEdit ? 'Обновить' : 'Создать')}
+                  {isLoading ? t('forms.common.saving') : (isEdit ? t('forms.common.update') : t('forms.common.create'))}
                 </Button>
               </Box>
             </Grid>

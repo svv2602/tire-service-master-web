@@ -59,6 +59,7 @@ import {
   getChipStyles, 
   getFormStyles,
 } from '../../../styles';
+import { useTranslation } from 'react-i18next';
 
 interface ServicesStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -101,6 +102,7 @@ function a11yProps(index: number) {
 }
 
 const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   // Хук темы для использования централизованных стилей
   const theme = useTheme();
   
@@ -263,11 +265,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       <Box sx={formStyles.container}>
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Сначала настройте посты обслуживания
+            {t('forms.servicePoint.services.noPostsWarningTitle')}
           </Typography>
           <Typography variant="body2">
-            Для добавления услуг необходимо сначала создать посты обслуживания с указанием категорий услуг. 
-            Перейдите на шаг "Посты" и добавьте хотя бы один пост с выбранной категорией.
+            {t('forms.servicePoint.services.noPostsWarningDescription')}
+            {t('forms.servicePoint.services.noPostsWarningDescriptionLink')}
           </Typography>
         </Alert>
       </Box>
@@ -280,15 +282,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CategoryIcon color="primary" />
-          Услуги сервисной точки
+          {t('forms.servicePoint.services.title')}
           <Chip 
-            label={`${activeServices.length} услуг`}
+            label={`${activeServices.length} ${t('forms.servicePoint.services.totalServices')}`}
             color="primary" 
             size="small"
           />
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Настройте услуги для каждой категории, указанной в постах обслуживания
+          {t('forms.servicePoint.services.description')}
         </Typography>
       </Box>
 
@@ -296,7 +298,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       <Box sx={{ mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Поиск услуг..."
+          placeholder={t('forms.servicePoint.services.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -343,7 +345,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                         {category.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {selectedCount} из {availableCount} услуг
+                        {selectedCount} {t('forms.servicePoint.services.selectedFromAvailable', { count: availableCount })}
                       </Typography>
                     </Box>
                     {selectedCount > 0 && (
@@ -382,7 +384,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
               {selectedServicesByCategory[category.id]?.length > 0 && (
                 <Box sx={{ mb: 4 }}>
                   <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                    Выбранные услуги ({selectedServicesByCategory[category.id].length})
+                    {t('forms.servicePoint.services.selectedServicesTitle', { count: selectedServicesByCategory[category.id].length })}
                   </Typography>
                   <Grid container spacing={2}>
                     {selectedServicesByCategory[category.id].map((service, localIndex) => {
@@ -395,7 +397,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                             <CardContent>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                 <Typography variant="h6" sx={{ color: 'primary.main' }}>
-                                  {serviceInfo?.name || `Услуга #${service.service_id}`}
+                                  {serviceInfo?.name || `${t('forms.servicePoint.services.service')} #${service.service_id}`}
                                 </Typography>
                                 <IconButton
                                   onClick={() => removeService(globalIndex)}
@@ -410,7 +412,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                               <Stack spacing={2}>
                                 {/* Цена */}
                                 <TextField
-                                  label="Цена (грн)"
+                                  label={t('forms.servicePoint.services.priceLabel')}
                                   type="number"
                                   value={service.price || ''}
                                   onChange={(e) => updateService(globalIndex, 'price', Number(e.target.value))}
@@ -426,7 +428,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
                                 {/* Длительность */}
                                 <TextField
-                                  label="Длительность (мин)"
+                                  label={t('forms.servicePoint.services.durationLabel')}
                                   type="number"
                                   value={service.duration || ''}
                                   onChange={(e) => updateService(globalIndex, 'duration', Number(e.target.value))}
@@ -449,7 +451,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                                       color="primary"
                                     />
                                   }
-                                  label="Услуга доступна"
+                                  label={t('forms.servicePoint.services.availabilityLabel')}
                                 />
                               </Stack>
                             </CardContent>
@@ -464,7 +466,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
               {/* Доступные услуги для добавления */}
               <Box>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                  Доступные услуги для добавления
+                  {t('forms.servicePoint.services.availableServicesTitle')}
                 </Typography>
                 
                 {servicesByCategory[category.id]?.length > 0 ? (
@@ -499,7 +501,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                                 {service.price && (
                                   <Chip
                                     icon={<PriceIcon />}
-                                    label={`${service.price} грн`}
+                                    label={`${service.price} ${t('forms.servicePoint.services.currency')}`}
                                     size="small"
                                     variant="outlined"
                                   />
@@ -507,7 +509,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                                 {service.duration && (
                                   <Chip
                                     icon={<TimerIcon />}
-                                    label={`${service.duration} мин`}
+                                    label={`${service.duration} ${t('forms.servicePoint.services.minutes')}`}
                                     size="small"
                                     variant="outlined"
                                   />
@@ -521,8 +523,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                 ) : (
                   <Alert severity="info">
                     {searchQuery 
-                      ? `Не найдено услуг в категории "${category.name}" по запросу "${searchQuery}"`
-                      : `В категории "${category.name}" пока нет доступных услуг`
+                      ? t('forms.servicePoint.services.noServicesFound', { category: category.name, query: searchQuery })
+                      : t('forms.servicePoint.services.noServicesAvailable', { category: category.name })
                     }
                   </Alert>
                 )}
@@ -536,7 +538,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       <Box sx={{ mt: 3 }}>
         <Paper sx={{ ...cardStylesSecondary, p: 2 }}>
           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-            Итоговая статистика
+            {t('forms.servicePoint.services.totalStatsTitle')}
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
@@ -545,7 +547,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                   {activeServices.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Всего услуг
+                  {t('forms.servicePoint.services.totalServicesLabel')}
                 </Typography>
               </Box>
             </Grid>
@@ -555,7 +557,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                   {activeServices.filter(s => s.is_available).length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Доступных услуг
+                  {t('forms.servicePoint.services.availableServicesLabel')}
                 </Typography>
               </Box>
             </Grid>
@@ -565,7 +567,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                   {categoriesFromPosts.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Категорий
+                  {t('forms.servicePoint.services.categoriesLabel')}
                 </Typography>
               </Box>
             </Grid>

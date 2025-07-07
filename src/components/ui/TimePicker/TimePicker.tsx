@@ -3,8 +3,9 @@ import { TimePicker as MuiTimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import TextField from '@mui/material/TextField';
-import { ru } from 'date-fns/locale';
+import { ru, uk } from 'date-fns/locale';
 import { TimePickerProps } from './types';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Компонент TimePicker - поле для выбора времени
@@ -31,9 +32,11 @@ export const TimePicker: React.FC<TimePickerProps> = ({
 }) => {
   // Формат времени с учетом секунд
   const timeFormat = showSeconds ? `${format}:ss` : format;
-
+  const { t, i18n } = useTranslation();
+  // Выбираем локаль для времени
+  const timeLocale = i18n.language === 'uk' ? uk : ru;
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={timeLocale}>
       <MuiTimePicker
         value={value}
         onChange={onChange}
@@ -51,10 +54,10 @@ export const TimePicker: React.FC<TimePickerProps> = ({
           textField: {
             ...textFieldProps,
             size,
-            placeholder,
+            placeholder: placeholder || t('timePicker.placeholder'),
             error,
-            helperText,
-            label,
+            helperText: helperText || t('timePicker.helperText'),
+            label: label || t('timePicker.label'),
             sx,
           },
         }}

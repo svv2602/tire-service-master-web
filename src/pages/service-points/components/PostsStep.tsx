@@ -53,6 +53,7 @@ import {
 } from '../../../styles';
 import { Table } from '../../../components/ui';
 import type { Column } from '../../../components/ui';
+import { useTranslation } from 'react-i18next';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -61,6 +62,7 @@ interface PostsStepProps {
 }
 
 const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   // Хук темы для использования централизованных стилей
   const theme = useTheme();
   
@@ -307,7 +309,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
             color: theme.palette.text.primary
           }}
         >
-          Посты обслуживания
+          {t('forms.servicePoint.posts.title')}
         </Typography>
       </Box>
 
@@ -320,8 +322,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
           fontSize: SIZES.fontSize.sm
         }}
       >
-        Посты обслуживания определяют количество одновременных рабочих мест в сервисной точке. 
-        Каждый пост может обслуживать одного клиента в заданное время.
+        {t('forms.servicePoint.posts.description')}
       </Typography>
 
       {/* Кнопка добавления нового поста */}
@@ -336,7 +337,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         }}
         disabled={activePosts.length >= 10} // Ограничиваем максимальное количество активных постов
       >
-        Добавить пост ({activePosts.length}/10)
+        {t('forms.servicePoint.posts.addPost')}
       </Button>
 
       {/* Предупреждение о максимальном количестве постов */}
@@ -349,7 +350,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
             fontSize: SIZES.fontSize.sm
           }}
         >
-          Достигнуто максимальное количество постов (10)
+          {t('forms.servicePoint.posts.maxPostsWarning')}
         </Alert>
       )}
 
@@ -385,9 +386,9 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                           fontWeight: 'bold'
                         }}
                       >
-                        Пост №{post.post_number}
+                        {t('forms.servicePoint.posts.postNumber', { postNumber: post.post_number })}
                       </Typography>
-                      <Tooltip title="Удалить пост">
+                      <Tooltip title={t('forms.servicePoint.posts.deletePost')}>
                         <IconButton
                           color="error"
                           onClick={() => removePost(index)}
@@ -405,7 +406,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                     {/* Название поста */}
                     <TextField
                       fullWidth
-                      label="Название поста"
+                      label={t('forms.servicePoint.posts.postNameLabel')}
                       value={post.name}
                       onChange={(e) => updatePost(index, 'name', e.target.value)}
                       onBlur={() => formik.setFieldTouched(`service_posts.${index}.name`, true)}
@@ -419,20 +420,20 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                     {/* Описание поста */}
                     <TextField
                       fullWidth
-                      label="Описание"
+                      label={t('forms.servicePoint.posts.descriptionLabel')}
                       value={post.description || ''}
                       onChange={(e) => updatePost(index, 'description', e.target.value)}
                       multiline
                       rows={2}
                       margin="normal"
-                      placeholder="Краткое описание поста обслуживания"
+                      placeholder={t('forms.servicePoint.posts.descriptionPlaceholder')}
                       sx={textFieldStyles}
                     />
                     
                     {/* Категория услуг */}
                     <FormControl fullWidth margin="normal" required>
                       <InputLabel id={`category-label-${index}`}>
-                        Категория услуг
+                        {t('forms.servicePoint.posts.categoryLabel')}
                       </InputLabel>
                       <Select
                         labelId={`category-label-${index}`}
@@ -440,7 +441,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                         onChange={(e) => updatePost(index, 'service_category_id', Number(e.target.value))}
                         onBlur={() => formik.setFieldTouched(`service_posts.${index}.service_category_id`, true)}
                         error={isPostTouched(index, 'service_category_id') && Boolean(getPostError(index, 'service_category_id'))}
-                        label="Категория услуг"
+                        label={t('forms.servicePoint.posts.categoryLabel')}
                         disabled={categoriesLoading}
                         startAdornment={
                           <InputAdornment position="start">
@@ -451,11 +452,11 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                         {categoriesLoading ? (
                           <MenuItem disabled>
                             <CircularProgress size={20} sx={{ mr: 1 }} />
-                            Загрузка категорий...
+                            {t('forms.servicePoint.posts.loadingCategories')}
                           </MenuItem>
                         ) : categories.length === 0 ? (
                           <MenuItem disabled>
-                            Категории не найдены
+                            {t('forms.servicePoint.posts.noCategoriesFound')}
                           </MenuItem>
                         ) : (
                           categories.map((category) => (
@@ -481,18 +482,18 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                     <TextField
                       fullWidth
                       type="number"
-                      label="Длительность слота"
+                      label={t('forms.servicePoint.posts.slotDurationLabel')}
                       value={post.slot_duration}
                       onChange={(e) => updatePost(index, 'slot_duration', Number(e.target.value))}
                       onBlur={() => formik.setFieldTouched(`service_posts.${index}.slot_duration`, true)}
                       error={isPostTouched(index, 'slot_duration') && Boolean(getPostError(index, 'slot_duration'))}
                       helperText={
                         (isPostTouched(index, 'slot_duration') && getPostError(index, 'slot_duration')) ||
-                        'Стандартная продолжительность одного слота записи'
+                        t('forms.servicePoint.posts.defaultSlotDuration')
                       }
                       InputProps={{
                         inputProps: { min: 5, max: 480 },
-                        endAdornment: <InputAdornment position="end">мин</InputAdornment>
+                        endAdornment: <InputAdornment position="end">{t('forms.servicePoint.posts.slotDurationUnit')}</InputAdornment>
                       }}
                       margin="normal"
                       required
@@ -510,7 +511,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                       }
                       label={
                         <Typography sx={{ fontSize: SIZES.fontSize.sm }}>
-                          Пост активен
+                          {t('forms.servicePoint.posts.postActive')}
                         </Typography>
                       }
                       sx={{ mt: SIZES.spacing.sm }}
@@ -544,10 +545,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                               fontWeight: 'bold'
                             }}
                           >
-                            Индивидуальное расписание
+                            {t('forms.servicePoint.posts.customSchedule')}
                           </Typography>
                           <Chip 
-                            label={post.has_custom_schedule ? 'Включено' : 'Выключено'}
+                            label={post.has_custom_schedule ? t('forms.servicePoint.posts.customScheduleEnabled') : t('forms.servicePoint.posts.customScheduleDisabled')}
                             color={post.has_custom_schedule ? 'primary' : 'default'}
                             size="small"
                             variant="outlined"
@@ -560,33 +561,33 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                           startIcon={<SettingsIcon />}
                           onClick={() => openScheduleDialog(index)}
                         >
-                          Настроить
+                          {t('forms.servicePoint.posts.configureSchedule')}
                         </Button>
                       </Box>
                       
                       {post.has_custom_schedule && (
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="caption" color="text.secondary" display="block">
-                            <strong>Рабочие дни:</strong> {
+                            <strong>{t('forms.servicePoint.posts.workingDays')}:</strong> {
                               post.working_days 
                                 ? Object.entries(post.working_days)
                                     .filter(([_, isWorking]) => isWorking)
                                     .map(([day]) => {
                                       const dayNames: { [key: string]: string } = {
-                                        monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср',
-                                        thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс'
+                                        monday: t('forms.servicePoint.posts.monday'), tuesday: t('forms.servicePoint.posts.tuesday'), wednesday: t('forms.servicePoint.posts.wednesday'),
+                                        thursday: t('forms.servicePoint.posts.thursday'), friday: t('forms.servicePoint.posts.friday'), saturday: t('forms.servicePoint.posts.saturday'), sunday: t('forms.servicePoint.posts.sunday')
                                       };
                                       return dayNames[day];
                                     })
                                     .join(', ')
-                                : 'Не настроены'
+                                : t('forms.servicePoint.posts.noSchedule')
                             }
                           </Typography>
                           <Typography variant="caption" color="text.secondary" display="block">
-                            <strong>Время работы:</strong> {
+                            <strong>{t('forms.servicePoint.posts.workingHours')}:</strong> {
                               post.custom_hours 
                                 ? `${post.custom_hours.start} - ${post.custom_hours.end}`
-                                : 'Не настроено'
+                                : t('forms.servicePoint.posts.noSchedule')
                             }
                           </Typography>
                         </Box>
@@ -601,11 +602,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       ) : (
         <Alert severity="info" sx={{ mt: 2 }}>
           <Typography variant="body1" gutterBottom>
-            Пока не добавлено ни одного поста обслуживания
+            {t('forms.servicePoint.posts.noPostsMessage')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Добавьте хотя бы один пост для определения рабочих мест в сервисной точке. 
-            Каждый пост может одновременно обслуживать одного клиента.
+            {t('forms.servicePoint.posts.addPostHint')}
           </Typography>
         </Alert>
       )}
@@ -620,8 +620,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
       {/* Информационная подсказка */}
       <Alert severity="info" sx={{ mt: 3 }}>
         <Typography variant="body2">
-          💡 <strong>Совет:</strong> Количество постов определяет пропускную способность сервисной точки. 
-          Рекомендуется создавать посты с разной специализацией (например, "Легковые автомобили", "Грузовые автомобили").
+          💡 <strong>{t('forms.servicePoint.posts.tip')}:</strong> {t('forms.servicePoint.posts.tipDescription')}
         </Typography>
       </Alert>
 
@@ -976,7 +975,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
   const scheduleTableColumns: Column[] = [
     {
       id: 'time',
-      label: 'Время',
+      label: t('forms.servicePoint.posts.timeLabel'),
       minWidth: 100,
       align: 'left',
       format: (value: string) => (
@@ -987,7 +986,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     },
     {
       id: 'availablePosts',
-      label: 'Доступные посты',
+      label: t('forms.servicePoint.posts.availablePostsLabel'),
       minWidth: 150,
       align: 'center',
       format: (value: string) => (
@@ -998,7 +997,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     },
     {
       id: 'postDetails',
-      label: 'Детали постов',
+      label: t('forms.servicePoint.posts.postDetailsLabel'),
       minWidth: 250,
       align: 'left',
       wrap: true,
@@ -1016,7 +1015,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
             ))
           ) : (
             <Typography variant="caption" color="text.secondary">
-              Нет доступных постов
+              {t('forms.servicePoint.posts.noAvailablePosts')}
             </Typography>
           )}
         </Box>
@@ -1024,7 +1023,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('forms.servicePoint.posts.statusLabel'),
       minWidth: 120,
       align: 'center',
       format: (value: { isAvailable: boolean; label: string }) => (
@@ -1064,7 +1063,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
       })) || [],
       status: {
         isAvailable,
-        label: isAvailable ? 'Доступно' : 'Недоступно'
+        label: isAvailable ? t('forms.servicePoint.posts.available') : t('forms.servicePoint.posts.notAvailable')
       }
     };
   });
@@ -1083,11 +1082,11 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
           <Typography variant="h6">
-            Предварительный просмотр расписания слотов
+            {t('forms.servicePoint.posts.schedulePreviewTitle')}
           </Typography>
           {isUsingLivePreview && (
             <Chip 
-              label="Live Preview" 
+              label={t('forms.servicePoint.posts.livePreview')} 
               color="success" 
               size="small" 
               variant="outlined" 
@@ -1100,17 +1099,14 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
       </AccordionSummary>
       <AccordionDetails>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Здесь показано как будет выглядеть расписание доступности постов обслуживания на основе 
-          настроенного графика работы и количества активных постов.
+          {t('forms.servicePoint.posts.schedulePreviewDescription')}
         </Typography>
 
         {/* Информационное сообщение для новых точек */}
         {!servicePointId && (
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">
-              <strong>Режим предварительного просмотра:</strong> Поскольку сервисная точка еще не сохранена, 
-              расписание генерируется на основе введенных данных формы. 
-              Для получения точного расписания с учетом всех настроек сохраните сервисную точку.
+              <strong>{t('forms.servicePoint.posts.previewModeInfo')}:</strong> {t('forms.servicePoint.posts.previewModeDescription')}
             </Typography>
           </Alert>
         )}
@@ -1118,11 +1114,11 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
         {/* Выбор дня недели и категории */}
         <Box sx={{ mb: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>День недели</InputLabel>
+            <InputLabel>{t('forms.servicePoint.posts.dayOfWeekLabel')}</InputLabel>
             <Select
               value={selectedDay}
               onChange={(e) => setSelectedDay(e.target.value)}
-              label="День недели"
+              label={t('forms.servicePoint.posts.dayOfWeekLabel')}
             >
               {workingDays.map((day) => (
                 <MenuItem key={day.key} value={day.key}>
@@ -1133,11 +1129,11 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           </FormControl>
 
           <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Категория услуг</InputLabel>
+            <InputLabel>{t('forms.servicePoint.posts.categoryLabel')}</InputLabel>
             <Select
               value={selectedCategoryId || ''}
               onChange={(e) => setSelectedCategoryId(e.target.value ? Number(e.target.value) : null)}
-              label="Категория услуг"
+              label={t('forms.servicePoint.posts.categoryLabel')}
               startAdornment={
                 <InputAdornment position="start">
                   <CategoryIcon fontSize="small" />
@@ -1145,7 +1141,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
               }
             >
               <MenuItem value="">
-                <em>Все категории</em>
+                <em>{t('forms.servicePoint.posts.allCategories')}</em>
               </MenuItem>
               {categories.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
@@ -1165,8 +1161,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
         {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0 ? (
           <Alert severity="warning">
             <Typography variant="body2">
-              Для выбранной категории "{categories.find(c => c.id === selectedCategoryId)?.name || 'Неизвестная категория'}" 
-              нет активных постов обслуживания. Выберите другую категорию или добавьте посты для данной категории.
+              {t('forms.servicePoint.posts.noActivePostsWarning', { categoryName: categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })}
             </Typography>
           </Alert>
         ) : timeSlots.length > 0 ? (
@@ -1174,16 +1169,16 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
             <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
               <AccessTimeIcon color="primary" />
               <Typography variant="h6">
-                {selectedDayInfo?.name} - Доступность постов
+                {selectedDayInfo?.name} - {t('forms.servicePoint.posts.postAvailability')}
               </Typography>
               <Chip 
-                label={`${filteredPosts.filter(p => p.is_active).length} активных постов${selectedCategoryId ? ' (отфильтровано)' : ''}`} 
+                label={`${filteredPosts.filter(p => p.is_active).length} ${t('forms.servicePoint.posts.activePosts')}${selectedCategoryId ? ` (${t('forms.servicePoint.posts.filtered')})` : ''}`} 
                 color="primary" 
                 variant="outlined" 
               />
               {selectedCategoryId && (
                 <Chip 
-                  label={categories.find(c => c.id === selectedCategoryId)?.name || 'Категория'}
+                  label={categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.category')}
                   color="secondary" 
                   variant="outlined" 
                   size="small"
@@ -1200,25 +1195,23 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
 
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                📅 Слоты генерируются {isUsingLivePreview
-                  ? 'в режиме live preview с текущими данными формы'
-                  : isUsingApiData
-                    ? 'с помощью API с учетом индивидуальной длительности слота каждого поста'
-                    : 'локально на основе данных формы (предварительный режим)'
-                } в рамках рабочего времени. 
-                Количество доступных постов зависит от активных постов обслуживания и их индивидуальных расписаний.
+                {t('forms.servicePoint.posts.slotGenerationInfo', {
+                  isUsingLivePreview: isUsingLivePreview ? t('forms.servicePoint.posts.livePreview') : isUsingApiData ? t('forms.servicePoint.posts.apiPreview') : t('forms.servicePoint.posts.localPreview'),
+                  isUsingApiData: isUsingApiData,
+                  isUsingLivePreview: isUsingLivePreview
+                })}
                 <br />
-                💡 Посты с пометкой "(инд.)" работают по индивидуальному расписанию, которое может отличаться от графика точки обслуживания.
+                💡 {t('forms.servicePoint.posts.postDetailsHint')}
                 {isUsingLivePreview && (
                   <>
                     <br />
-                    🔄 <strong>Live Preview:</strong> Изменения в форме автоматически отражаются в расписании без сохранения данных.
+                    🔄 {t('forms.servicePoint.posts.livePreviewAutoUpdate')}
                   </>
                 )}
                 {!servicePointId && (
                   <>
                     <br />
-                    ⚠️ <strong>Предварительный режим:</strong> Для получения точного расписания с учетом всех настроек сохраните сервисную точку.
+                    ⚠️ {t('forms.servicePoint.posts.previewModeHint')}
                   </>
                 )}
               </Typography>
@@ -1228,8 +1221,8 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           <Alert severity="warning">
             <Typography variant="body2">
               {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0
-                ? `Для выбранной категории "${categories.find(c => c.id === selectedCategoryId)?.name || 'Неизвестная категория'}" нет активных постов обслуживания.`
-                : `${selectedDayInfo?.name} - выходной день. Выберите рабочий день для просмотра расписания.`
+                ? t('forms.servicePoint.posts.noActivePostsForCategory', { categoryName: categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })
+                : `${selectedDayInfo?.name} - ${t('forms.servicePoint.posts.weekend')}. ${t('forms.servicePoint.posts.selectWorkingDay')}`
               }
             </Typography>
           </Alert>

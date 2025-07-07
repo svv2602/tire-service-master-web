@@ -20,6 +20,7 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import type { ServicePost } from '../../../types/models';
+import { useTranslation } from 'react-i18next';
 
 interface PostScheduleDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
   post, 
   onSave 
 }) => {
+  const { t } = useTranslation();
   // Локальное состояние для редактирования
   const [localSchedule, setLocalSchedule] = useState({
     has_custom_schedule: post.has_custom_schedule || false,
@@ -95,13 +97,13 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
       if (isDifferentFromMainSchedule) {
         // Показываем диалог подтверждения
         const confirmed = window.confirm(
-          `Внимание! Вы устанавливаете индивидуальное расписание для поста "${post.name}", которое отличается от основного расписания сервисной точки.\n\n` +
-          `Основное расписание сервисной точки может не совпадать с рабочими днями этого поста.\n\n` +
-          `Это означает, что:\n` +
-          `• Пост может работать в дни, когда сервисная точка официально закрыта\n` +
-          `• Пост может не работать в дни, когда сервисная точка открыта\n` +
-          `• Время работы поста может отличаться от времени работы сервисной точки\n\n` +
-          `Вы уверены, что хотите применить эти настройки?`
+          `${t('forms.servicePoint.scheduleDialog.confirmation.warning')}\n\n` +
+          `${t('forms.servicePoint.scheduleDialog.confirmation.mainScheduleWarning')}\n\n` +
+          `${t('forms.servicePoint.scheduleDialog.confirmation.explanation.point')}\n` +
+          `• ${t('forms.servicePoint.scheduleDialog.confirmation.explanation.point1')}\n` +
+          `• ${t('forms.servicePoint.scheduleDialog.confirmation.explanation.point2')}\n` +
+          `• ${t('forms.servicePoint.scheduleDialog.confirmation.explanation.point3')}\n\n` +
+          `${t('forms.servicePoint.scheduleDialog.confirmation.confirmQuestion')}`
         );
         
         if (!confirmed) {
@@ -199,22 +201,10 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
         sx: { minHeight: 500 }
       }}
     >
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ScheduleIcon color="primary" />
-          <Typography variant="h6">
-            Индивидуальное расписание: {post.name}
-          </Typography>
-        </Box>
-      </DialogTitle>
+      <DialogTitle>{t('forms.servicePoint.scheduleDialog.title')}</DialogTitle>
 
       <DialogContent dividers>
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            Настройте индивидуальное расписание работы для данного поста. 
-            Если выключено, пост будет работать по общему расписанию сервисной точки.
-          </Typography>
-        </Alert>
+        <Alert severity="info" sx={{ mb: 3 }}>{t('forms.servicePoint.scheduleDialog.info')}</Alert>
 
         {/* Включение/выключение индивидуального расписания */}
         <Box sx={{ mb: 3 }}>
@@ -231,13 +221,10 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
             }
             label={
               <Box>
-                <Typography variant="body1" fontWeight="medium">
-                  Использовать индивидуальное расписание
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {localSchedule.has_custom_schedule 
-                    ? 'Пост работает по индивидуальному графику' 
-                    : 'Пост работает по общему расписанию сервисной точки'
+                <Typography variant="body1" fontWeight="medium">{t('forms.servicePoint.scheduleDialog.useCustomSchedule')}</Typography>
+                <Typography variant="body2" color="text.secondary">{localSchedule.has_custom_schedule 
+                    ? t('forms.servicePoint.scheduleDialog.customScheduleActive') 
+                    : t('forms.servicePoint.scheduleDialog.mainScheduleActive')
                   }
                 </Typography>
               </Box>
@@ -253,21 +240,21 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ScheduleIcon fontSize="small" />
-                Рабочие дни
+                {t('forms.servicePoint.scheduleDialog.workingDaysTitle')}
                 <Typography component="span" variant="body2" color="text.secondary">
-                  ({selectedWorkingDaysCount} из 7 дней)
+                  ({selectedWorkingDaysCount} {t('forms.servicePoint.scheduleDialog.workingDaysCount')})
                 </Typography>
               </Typography>
               
               <Grid container spacing={2}>
                 {Object.entries({
-                  monday: 'Понедельник',
-                  tuesday: 'Вторник', 
-                  wednesday: 'Среда',
-                  thursday: 'Четверг',
-                  friday: 'Пятница',
-                  saturday: 'Суббота',
-                  sunday: 'Воскресенье'
+                  monday: t('forms.servicePoint.scheduleDialog.monday'),
+                  tuesday: t('forms.servicePoint.scheduleDialog.tuesday'), 
+                  wednesday: t('forms.servicePoint.scheduleDialog.wednesday'),
+                  thursday: t('forms.servicePoint.scheduleDialog.thursday'),
+                  friday: t('forms.servicePoint.scheduleDialog.friday'),
+                  saturday: t('forms.servicePoint.scheduleDialog.saturday'),
+                  sunday: t('forms.servicePoint.scheduleDialog.sunday')
                 }).map(([day, label]) => (
                   <Grid item xs={12} sm={6} md={4} key={day}>
                     <FormControlLabel
@@ -285,9 +272,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
               </Grid>
 
               {selectedWorkingDaysCount === 0 && (
-                <Alert severity="warning" sx={{ mt: 2 }}>
-                  Выберите хотя бы один рабочий день
-                </Alert>
+                <Alert severity="warning" sx={{ mt: 2 }}>{t('forms.servicePoint.scheduleDialog.selectWorkingDayWarning')}</Alert>
               )}
             </Box>
 
@@ -297,7 +282,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AccessTimeIcon fontSize="small" />
-                Рабочие часы
+                {t('forms.servicePoint.scheduleDialog.workingHoursTitle')}
               </Typography>
               
               <Grid container spacing={3}>
@@ -305,7 +290,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
                   <TextField
                     fullWidth
                     type="time"
-                    label="Начало работы"
+                    label={t('forms.servicePoint.scheduleDialog.startTimeLabel')}
                     value={localSchedule.custom_hours.start}
                     onChange={(e) => updateCustomHours('start', e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -318,7 +303,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
                   <TextField
                     fullWidth
                     type="time"
-                    label="Конец работы"
+                    label={t('forms.servicePoint.scheduleDialog.endTimeLabel')}
                     value={localSchedule.custom_hours.end}
                     onChange={(e) => updateCustomHours('end', e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -331,33 +316,29 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
 
               {/* Валидация времени */}
               {localSchedule.custom_hours.start >= localSchedule.custom_hours.end && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                  Время начала работы должно быть раньше времени окончания
-                </Alert>
+                <Alert severity="error" sx={{ mt: 2 }}>{t('forms.servicePoint.scheduleDialog.startTimeAfterEndError')}</Alert>
               )}
             </Box>
 
             {/* Предварительный просмотр */}
             <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2" fontWeight="medium" gutterBottom>
-                Предварительный просмотр расписания:
-              </Typography>
+              <Typography variant="body2" fontWeight="medium" gutterBottom>{t('forms.servicePoint.scheduleDialog.previewTitle')}</Typography>
               <Typography variant="body2">
-                <strong>Рабочие дни:</strong> {
+                <strong>{t('forms.servicePoint.scheduleDialog.workingDays')}:</strong> {
                   Object.entries(localSchedule.working_days)
                     .filter(([_, isWorking]) => isWorking)
                     .map(([day]) => {
                       const dayNames: { [key: string]: string } = {
-                        monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср',
-                        thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс'
+                        monday: t('forms.servicePoint.scheduleDialog.mondayShort'), tuesday: t('forms.servicePoint.scheduleDialog.tuesdayShort'), wednesday: t('forms.servicePoint.scheduleDialog.wednesdayShort'),
+                        thursday: t('forms.servicePoint.scheduleDialog.thursdayShort'), friday: t('forms.servicePoint.scheduleDialog.fridayShort'), saturday: t('forms.servicePoint.scheduleDialog.saturdayShort'), sunday: t('forms.servicePoint.scheduleDialog.sundayShort')
                       };
                       return dayNames[day];
                     })
-                    .join(', ') || 'Не выбраны'
+                    .join(', ') || t('forms.servicePoint.scheduleDialog.noDaysSelected')
                 }
               </Typography>
               <Typography variant="body2">
-                <strong>Часы работы:</strong> {localSchedule.custom_hours.start} - {localSchedule.custom_hours.end}
+                <strong>{t('forms.servicePoint.scheduleDialog.workingHours')}:</strong> {localSchedule.custom_hours.start} - {localSchedule.custom_hours.end}
               </Typography>
             </Alert>
           </>
@@ -365,9 +346,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleCancel} color="inherit">
-          Отмена
-        </Button>
+        <Button onClick={handleCancel} color="inherit">{t('forms.servicePoint.scheduleDialog.cancelButton')}</Button>
         <Button 
           onClick={handleSave} 
           variant="contained"
@@ -378,7 +357,7 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
             )
           }
         >
-          Сохранить
+          {t('forms.servicePoint.scheduleDialog.saveButton')}
         </Button>
       </DialogActions>
     </Dialog>
