@@ -420,6 +420,13 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.vehicles'),
           },
+          {
+            text: t('navigation.services'),
+            icon: <ServiceIcon />,
+            path: '/admin/services',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.services'),
+          },
         ],
       },
       {
