@@ -9,8 +9,10 @@ import ruTranslations from './locales/ru.json';
 // Import form translation files
 import settingsRuTranslations from './locales/forms/settings/settings-ru.json';
 import settingsUkTranslations from './locales/forms/settings/settings-uk.json';
-import clientRuTranslations from './locales/forms/client/client-ru.json';
-import clientUkTranslations from './locales/forms/client/client-uk.json';
+import clientAdminRuTranslations from './locales/forms/client-admin/client-ru.json';
+import clientAdminUkTranslations from './locales/forms/client-admin/client-uk.json';
+import clientClientRuTranslations from './locales/forms/client-client/client-ru.json';
+import clientClientUkTranslations from './locales/forms/client-client/client-uk.json';
 import modalsRuTranslations from './locales/forms/modals/modals-ru.json';
 import modalsUkTranslations from './locales/forms/modals/modals-uk.json';
 import partnerRuTranslations from './locales/forms/partners/partner-ru.json';
@@ -61,8 +63,11 @@ const resources = {
                   deepMerge(
                     deepMerge(
                       deepMerge(
-                        deepMerge(ukTranslations, settingsUkTranslations),
-                        clientUkTranslations
+                        deepMerge(
+                          deepMerge(ukTranslations, settingsUkTranslations),
+                          clientAdminUkTranslations
+                        ),
+                        clientClientUkTranslations
                       ),
                       modalsUkTranslations
                     ),
@@ -94,8 +99,11 @@ const resources = {
                   deepMerge(
                     deepMerge(
                       deepMerge(
-                        deepMerge(ruTranslations, settingsRuTranslations),
-                        clientRuTranslations
+                        deepMerge(
+                          deepMerge(ruTranslations, settingsRuTranslations),
+                          clientAdminRuTranslations
+                        ),
+                        clientClientRuTranslations
                       ),
                       modalsRuTranslations
                     ),
