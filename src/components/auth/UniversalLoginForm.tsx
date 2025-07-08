@@ -67,19 +67,19 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   // Валидация формы
   const validateForm = () => {
     if (!login.trim()) {
-      setError(t('auth.errors.login_required') || 'Необходимо указать логин');
+      setError(t('forms.auth.errors.login_required'));
       return false;
     }
     
     if (!password.trim()) {
-      setError(t('auth.errors.password_required') || 'Необходимо указать пароль');
+      setError(t('forms.auth.errors.password_required'));
       return false;
     }
     
     if (loginType === 'email') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(login)) {
-        setError(t('auth.errors.invalid_email') || 'Некорректный формат email');
+        setError(t('forms.auth.errors.invalid_email'));
         return false;
       }
     } else {
@@ -89,7 +89,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       
       // Проверяем что начинается с +38 и содержит 12 цифр всего (+38 + 10 цифр)
       if (!digitsOnly.startsWith('+38') || digitsOnly.length !== 13) {
-        setError(t('auth.errors.invalid_phone') || 'Некорректный формат телефона. Используйте формат: +38 (0ХХ) ХХХ-ХХ-ХХ');
+        setError(t('forms.auth.errors.invalid_phone'));
         return false;
       }
     }
@@ -103,8 +103,8 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
     if (err.data?.error) {
       // Проверяем, есть ли перевод для этой ошибки
       const errorKey = err.data.error.toLowerCase().replace(/\s+/g, '_');
-      const translatedError = t(`auth.errors.${errorKey}`);
-      if (translatedError && translatedError !== `auth.errors.${errorKey}`) {
+      const translatedError = t(`forms.auth.errors.${errorKey}`);
+      if (translatedError && translatedError !== `forms.auth.errors.${errorKey}`) {
         return translatedError;
       }
       return err.data.error;
@@ -117,24 +117,24 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
     
     // Стандартные ошибки HTTP
     if (err.status === 401) {
-      return t('auth.errors.invalid_credentials') || 'Неверные данные для входа';
+      return t('forms.auth.errors.invalid_credentials');
     }
     
     if (err.status === 404) {
-      return t('auth.errors.user_not_found') || 'Пользователь не найден';
+      return t('forms.auth.errors.user_not_found');
     }
     
     if (err.status >= 500) {
-      return t('auth.errors.server_error') || 'Ошибка сервера';
+      return t('forms.auth.errors.server_error');
     }
     
     // Ошибки сети
     if (!err.status) {
-      return t('auth.errors.network_error') || 'Ошибка сети';
+      return t('forms.auth.errors.network_error');
     }
     
     // Общая ошибка входа
-    return t('auth.loginError') || 'Ошибка входа в систему';
+    return t('forms.auth.loginError');
   };
 
   // Обработка входа
@@ -263,14 +263,14 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
       <Box component="form" onSubmit={handleLogin} noValidate>
         {/* Заголовок */}
         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-          {title || t('auth.login')}
+          {title || t('forms.auth.login')}
         </Typography>
         
         {/* Выбор типа логина */}
         <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
           <FormLabel component="legend">
             <Typography variant="subtitle2" color="textSecondary">
-              Способ входа
+              {t('forms.auth.loginWith')}
             </Typography>
           </FormLabel>
           <RadioGroup
@@ -285,7 +285,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               label={
                 <Box display="flex" alignItems="center" gap={1}>
                   <Email fontSize="small" />
-                  <span>{t('auth.email')}</span>
+                  <span>{t('forms.auth.email')}</span>
                 </Box>
               }
             />
@@ -295,7 +295,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               label={
                 <Box display="flex" alignItems="center" gap={1}>
                   <Phone fontSize="small" />
-                  <span>{t('auth.phone')}</span>
+                  <span>{t('forms.auth.phone')}</span>
                 </Box>
               }
             />
@@ -306,7 +306,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         {loginType === 'email' ? (
           <TextField
             fullWidth
-            label={t('auth.email')}
+            label={t('forms.auth.email')}
             type="email"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
@@ -324,7 +324,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         ) : (
           <TextField
             fullWidth
-            label={t('auth.phone')}
+            label={t('forms.auth.phone')}
             type="tel"
             value={login}
             onChange={(e) => setLogin(e.target.value)}
@@ -344,7 +344,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         {/* Поле пароля */}
         <TextField
           fullWidth
-          label={t('auth.password')}
+          label={t('forms.auth.password')}
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -380,7 +380,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           startIcon={isLoading ? <CircularProgress size={20} /> : <LoginIcon />}
           sx={{ mb: 2 }}
         >
-          {isLoading ? t('auth.loggingIn') || 'Вход...' : t('auth.loginButton')}
+          {isLoading ? t('forms.auth.loggingIn') : t('forms.auth.loginButton')}
         </Button>
 
         {/* Забыли пароль */}
@@ -391,18 +391,18 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
             onClick={() => window.location.href = '/forgot-password'}
             sx={{ textDecoration: 'none' }}
           >
-            {t('auth.forgotPassword')}
+            {t('forms.auth.forgotPassword')}
           </Link>
         </Box>
 
         {/* Разделитель */}
-        <Divider sx={{ my: 2 }}>или</Divider>
+        <Divider sx={{ my: 2 }}>{t('forms.auth.orContinueWith')}</Divider>
 
         {/* Ссылка на регистрацию */}
         {showRegisterLink && (
           <Box textAlign="center" sx={{ mb: 2 }}>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              {t('auth.dontHaveAccount')}
+              {t('forms.auth.dontHaveAccount')}
             </Typography>
             <Button
               variant="outlined"
@@ -410,7 +410,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               startIcon={<PersonAdd />}
               onClick={onSwitchToRegister}
             >
-              {t('auth.registerButton')}
+              {t('forms.auth.registerButton')}
             </Button>
           </Box>
         )}
@@ -424,7 +424,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               startIcon={<CloseIcon />}
               sx={{ color: 'text.secondary' }}
             >
-              Продолжить без входа
+              {t('forms.auth.skipLogin')}
             </Button>
           </Box>
         )}

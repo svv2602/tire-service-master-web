@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { 
@@ -27,42 +28,43 @@ import {
   Phone
 } from '@mui/icons-material';
 
-const getValidationSchema = (registrationType: 'email' | 'phone') => {
+const getValidationSchema = (registrationType: 'email' | 'phone', t: any) => {
   const baseSchema = {
     first_name: Yup.string()
-      .min(2, 'Имя должно быть не менее 2 символов')
-      .required('Имя обязательно'),
+      .min(2, t('forms.auth.validation.first_name_min_length'))
+      .required(t('forms.auth.validation.first_name_required')),
     last_name: Yup.string()
-      .min(2, 'Фамилия должна быть не менее 2 символов')
-      .required('Фамилия обязательна'),
+      .min(2, t('forms.auth.validation.last_name_min_length'))
+      .required(t('forms.auth.validation.last_name_required')),
     password: Yup.string()
-      .min(6, 'Пароль должен быть не менее 6 символов')
-      .required('Пароль обязателен'),
+      .min(6, t('forms.auth.validation.password_too_short'))
+      .required(t('forms.auth.validation.password_required')),
     password_confirmation: Yup.string()
-      .oneOf([Yup.ref('password')], 'Пароли должны совпадать')
-      .required('Подтверждение пароля обязательно'),
+      .oneOf([Yup.ref('password')], t('forms.auth.validation.passwords_must_match'))
+      .required(t('forms.auth.validation.confirm_password_required')),
   };
 
   if (registrationType === 'email') {
     return Yup.object({
       ...baseSchema,
       email: Yup.string()
-        .email('Неверный формат email')
-        .required('Email обязателен'),
+        .email(t('forms.auth.validation.invalid_email_format'))
+        .required(t('forms.auth.validation.email_required')),
       phone: Yup.string(), // Необязательно при регистрации по email
     });
   } else {
     return Yup.object({
       ...baseSchema,
-      phone: phoneValidation.required('Телефон обязателен'),
+      phone: phoneValidation.required(t('forms.auth.validation.phone_required')),
       email: Yup.string()
-        .email('Неверный формат email'), // Необязательно при регистрации по телефону
+        .email(t('forms.auth.validation.invalid_email_format')), // Необязательно при регистрации по телефону
     });
   }
 };
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const theme = useTheme();
   const [registerClient, { isLoading, error }] = useRegisterClientMutation();
   const authStyles = getAuthStyles(theme);
@@ -77,7 +79,7 @@ const RegisterPage: React.FC = () => {
       password: '',
       password_confirmation: '',
     },
-    validationSchema: getValidationSchema(registrationType),
+    validationSchema: getValidationSchema(registrationType, t),
     enableReinitialize: true, // Пересоздавать валидацию при изменении типа
     onSubmit: async (values) => {
       try {
@@ -106,7 +108,7 @@ const RegisterPage: React.FC = () => {
         }).unwrap();
         navigate('/client');
       } catch (err) {
-        console.error('Ошибка при регистрации:', err);
+        console.error(t('forms.auth.registerError'), err);
       }
     },
   });
@@ -138,7 +140,7 @@ const RegisterPage: React.FC = () => {
             variant="text"
             color="inherit"
           >
-            Назад
+            {t('forms.auth.back')}
           </Button>
         </Toolbar>
       </AppBar>
@@ -170,12 +172,12 @@ const RegisterPage: React.FC = () => {
               fontSize: typography.fontSize['2xl'],
             }}
           >
-            Регистрация
+            {t('forms.auth.register')}
           </Typography>
 
           {error && (
             <Alert severity="error" sx={{ marginBottom: spacing.md }}>
-              {(error as any)?.data?.error || 'Ошибка при регистрации'}
+              {(error as any)?.data?.error || t('forms.auth.registerError')}
             </Alert>
           )}
 
@@ -184,7 +186,7 @@ const RegisterPage: React.FC = () => {
             <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
               <FormLabel component="legend">
                 <Typography variant="subtitle2" color="textSecondary">
-                  Способ регистрации
+                  {t('forms.auth.registrationMethod')}
                 </Typography>
               </FormLabel>
               <RadioGroup
@@ -199,7 +201,7 @@ const RegisterPage: React.FC = () => {
                   label={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Email fontSize="small" />
-                      <span>Email</span>
+                      <span>{t('forms.auth.email')}</span>
                     </Box>
                   }
                 />
@@ -209,7 +211,7 @@ const RegisterPage: React.FC = () => {
                   label={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Phone fontSize="small" />
-                      <span>Телефон</span>
+                      <span>{t('forms.auth.phone')}</span>
                     </Box>
                   }
                 />
@@ -220,7 +222,7 @@ const RegisterPage: React.FC = () => {
               fullWidth
               id="first_name"
               name="first_name"
-              label="Имя"
+              label={t('forms.auth.firstName')}
               value={formik.values.first_name}
               onChange={formik.handleChange}
               error={formik.touched.first_name && Boolean(formik.errors.first_name)}
@@ -232,7 +234,7 @@ const RegisterPage: React.FC = () => {
               fullWidth
               id="last_name"
               name="last_name"
-              label="Фамилия"
+              label={t('forms.auth.lastName')}
               value={formik.values.last_name}
               onChange={formik.handleChange}
               error={formik.touched.last_name && Boolean(formik.errors.last_name)}
@@ -246,7 +248,7 @@ const RegisterPage: React.FC = () => {
                 fullWidth
                 id="email"
                 name="email"
-                label="Email"
+                label={t('forms.auth.email')}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -277,7 +279,7 @@ const RegisterPage: React.FC = () => {
             {registrationType === 'email' ? (
               <PhoneField
                 fullWidth
-                label="Телефон (необязательно)"
+                label={t('forms.auth.phoneOptional')}
                 value={formik.values.phone}
                 onChange={(value) => formik.setFieldValue('phone', value)}
                 error={formik.touched.phone && Boolean(formik.errors.phone)}
@@ -289,7 +291,7 @@ const RegisterPage: React.FC = () => {
                 fullWidth
                 id="email"
                 name="email"
-                label="Email (необязательно)"
+                label={t('forms.auth.emailOptional')}
                 type="email"
                 value={formik.values.email}
                 onChange={formik.handleChange}
@@ -311,7 +313,7 @@ const RegisterPage: React.FC = () => {
               fullWidth
               id="password"
               name="password"
-              label="Пароль"
+              label={t('forms.auth.password')}
               type="password"
               value={formik.values.password}
               onChange={formik.handleChange}
@@ -324,7 +326,7 @@ const RegisterPage: React.FC = () => {
               fullWidth
               id="password_confirmation"
               name="password_confirmation"
-              label="Подтверждение пароля"
+              label={t('forms.auth.confirmPassword')}
               type="password"
               value={formik.values.password_confirmation}
               onChange={formik.handleChange}
@@ -341,7 +343,7 @@ const RegisterPage: React.FC = () => {
                 disabled={isLoading}
                 sx={authStyles.authSubmit}
               >
-                {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+                {isLoading ? t('forms.auth.registering') : t('forms.auth.registerButton')}
               </Button>
 
               <Button
@@ -350,7 +352,7 @@ const RegisterPage: React.FC = () => {
                 onClick={handleSkipRegistration}
                 sx={authStyles.skipButton}
               >
-                Продолжить без регистрации
+                {t('forms.auth.skipRegistration')}
               </Button>
             </Box>
           </form>

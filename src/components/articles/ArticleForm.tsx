@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Container,
@@ -79,6 +80,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
   const colors = getThemeColors(theme);
   const { categories } = useArticleCategories();
   const { createArticle, updateArticle, loading } = useArticleActions();
+  const { t } = useTranslation();
 
   // Получаем централизованные стили
   const cardStyles = getCardStyles(theme, 'primary');
@@ -216,7 +218,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
     }
 
     if (result?.success) {
-      setSuccess(publishStatus === 'published' ? 'Статья опубликована!' : 'Статья сохранена!');
+      setSuccess(publishStatus === 'published' ? t('forms.articles.form.messages.publishSuccess') : t('forms.articles.form.messages.saveSuccess'));
       setTimeout(() => navigate('/admin/articles'), 1500);
     } else if (result?.error) {
       setError(result.error);
@@ -227,10 +229,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
   const renderPreview = () => (
     <Box sx={{ ...cardStyles, mb: 3 }}>
       <Typography variant="h4" component="h1" sx={{ mb: 2, color: colors.textPrimary }}>
-        {formData.title || 'Заголовок статьи'}
+        {formData.title || t('forms.articles.form.preview.titleFallback')}
       </Typography>
       <Typography variant="body1" sx={{ mb: 3, color: colors.textSecondary }}>
-        {formData.excerpt || 'Краткое описание статьи'}
+        {formData.excerpt || t('forms.articles.form.preview.excerptFallback')}
       </Typography>
       <Divider sx={{ mb: 3 }} />
       <Box
@@ -276,7 +278,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
           }
         }}
         dangerouslySetInnerHTML={{ 
-          __html: formData.content || '<p style="color: #999; font-style: italic;">Содержимое появится здесь...</p>' 
+          __html: formData.content || t('forms.articles.form.preview.contentFallback')
         }}
       />
     </Box>
@@ -294,7 +296,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
               onClick={() => navigate('/admin/articles')}
               sx={{ mr: 2, ...secondaryButtonStyles }}
             >
-              Назад к списку
+              {t('common.back')}
             </Button>
             <Box sx={{ flex: 1 }}>
               <Typography variant="h4" component="h1" sx={{ 
@@ -302,13 +304,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 color: colors.textPrimary,
                 mb: 1
               }}>
-                {mode === 'create' ? '✏️ Создание статьи' : '📝 Редактирование статьи'}
+                {mode === 'create' ? t('forms.articles.form.createTitle') : t('forms.articles.form.editTitle')}
               </Typography>
               <Typography variant="body1" sx={{ 
                 color: colors.textSecondary,
                 fontSize: '1.1rem'
               }}>
-                {mode === 'create' ? 'Создайте новую полезную статью для клиентов' : 'Внесите изменения в статью'}
+                {mode === 'create' ? t('forms.articles.form.createSubtitle') : t('forms.articles.form.editSubtitle')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -318,7 +320,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 onClick={() => setPreviewMode(!previewMode)}
                 sx={secondaryButtonStyles}
               >
-                {previewMode ? 'Редактировать' : 'Предпросмотр'}
+                {previewMode ? t('forms.articles.form.editButton') : t('forms.articles.form.previewButton')}
               </Button>
               <Button
                 variant="contained"
@@ -327,7 +329,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 disabled={loading || !formData.title || !formData.content}
                 sx={buttonStyles}
               >
-                {loading ? <CircularProgress size={20} /> : 'Сохранить'}
+                {loading ? <CircularProgress size={20} /> : t('forms.articles.form.saveButton')}
               </Button>
               <Button
                 variant="contained"
@@ -336,7 +338,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 disabled={loading || !formData.title || !formData.content || !formData.excerpt}
                 sx={getButtonStyles(theme, 'success')}
               >
-                Опубликовать
+                {t('forms.articles.form.publishButton')}
               </Button>
             </Box>
           </Box>
@@ -369,9 +371,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 value={activeTab} 
                 onChange={(value) => setActiveTab(typeof value === 'string' ? parseInt(value) : value)}
                 tabs={[
-                  { label: 'Основное', value: 0, icon: <EditIcon /> },
-                  { label: 'SEO и медиа', value: 1, icon: <SearchIcon /> },
-                  { label: 'Настройки', value: 2, icon: <SettingsIcon /> }
+                  { label: t('forms.articles.form.tabs.basic'), value: 0, icon: <EditIcon /> },
+                  { label: t('forms.articles.form.tabs.seoMedia'), value: 1, icon: <SearchIcon /> },
+                  { label: t('forms.articles.form.tabs.settings'), value: 2, icon: <SettingsIcon /> }
                 ]}
               />
             </Box>
@@ -383,10 +385,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Заголовок статьи *"
+                      label={t('forms.articles.form.fields.title')}
                       value={formData.title}
                       onChange={handleInputChange('title')}
-                      placeholder="Введите заголовок статьи"
+                      placeholder={t('forms.articles.form.fields.titlePlaceholder')}
                       sx={textFieldStyles}
                       required
                     />
@@ -395,7 +397,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12} md={6}>
                     <Select
                       fullWidth
-                      label="Категория"
+                      label={t('forms.articles.form.fields.category')}
                       value={formData.category}
                       onChange={(value) => handleInputChange('category')(value)}
                       options={categories.map((category: { key: string; name: string; icon: string }) => ({
@@ -409,12 +411,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12} md={6}>
                     <Select
                       fullWidth
-                      label="Статус"
+                      label={t('forms.articles.form.fields.status')}
                       value={formData.status}
                       onChange={(value) => handleInputChange('status')(value)}
                       options={[
-                        { value: 'draft', label: 'Черновик' },
-                        { value: 'published', label: 'Опубликовано' }
+                        { value: 'draft', label: t('forms.articles.form.statusOptions.draft') },
+                        { value: 'published', label: t('forms.articles.form.statusOptions.published') }
                       ]}
                     />
                   </Grid>
@@ -422,26 +424,26 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Краткое описание *"
+                      label={t('forms.articles.form.fields.excerpt')}
                       value={formData.excerpt}
                       onChange={handleInputChange('excerpt')}
-                      placeholder="Напишите краткое описание статьи"
+                      placeholder={t('forms.articles.form.fields.excerptPlaceholder')}
                       multiline
                       rows={3}
                       sx={textFieldStyles}
                       required
-                      helperText={`${formData.excerpt.length}/160 символов`}
+                      helperText={`${formData.excerpt.length}/160 ${t('forms.articles.form.fields.excerptMaxLength')}`}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
                     <Typography variant="h6" sx={{ mb: 2, color: colors.textPrimary }}>
-                      Содержимое статьи *
+                      {t('forms.articles.form.fields.content')}
                     </Typography>
                     <RichTextEditor
                       value={formData.content}
                       onChange={handleInputChange('content')}
-                      placeholder="Напишите полный текст статьи..."
+                      placeholder={t('forms.articles.form.fields.contentPlaceholder')}
                       height={500}
                     />
                   </Grid>
@@ -449,25 +451,26 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="h6" sx={{ mb: 1, color: colors.textPrimary }}>
-                        Теги
+                        {t('forms.articles.form.fields.tags')}
                       </Typography>
                       <TextField
                         fullWidth
-                        label="Добавить тег"
+                        label={t('forms.articles.form.fields.addTag')}
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value)}
                         onKeyDown={handleAddTag}
-                        placeholder="Введите тег и нажмите Enter"
+                        placeholder={t('forms.articles.form.fields.tagsPlaceholder')}
                         sx={textFieldStyles}
-                        helperText="Нажмите Enter или запятую для добавления тега"
+                        helperText={t('forms.articles.form.fields.tagsHelper')}
                       />
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
-                        {formData.tags.map((tag) => (
+                        {formData.tags.map((tag, index) => (
                           <Chip
-                            key={tag}
+                            key={index}
                             label={tag}
                             onDelete={() => removeTag(tag)}
-                            sx={getChipStyles(theme, 'primary')}
+                            color="primary"
+                            size="small"
                           />
                         ))}
                       </Box>
@@ -482,10 +485,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="URL изображения"
+                      label={t('forms.articles.form.fields.featuredImage')}
                       value={formData.featured_image_url}
                       onChange={handleInputChange('featured_image_url')}
-                      placeholder="https://example.com/image.jpg"
+                      placeholder={t('forms.articles.form.fields.featuredImagePlaceholder')}
                       sx={textFieldStyles}
                       InputProps={{
                         startAdornment: <ImageIcon sx={{ mr: 1, color: colors.textSecondary }} />
@@ -496,26 +499,26 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="SEO заголовок"
+                      label={t('forms.articles.form.fields.metaTitle')}
                       value={formData.meta_title}
                       onChange={handleInputChange('meta_title')}
-                      placeholder="SEO заголовок для поисковых систем"
+                      placeholder={t('forms.articles.form.fields.metaTitlePlaceholder')}
                       sx={textFieldStyles}
-                      helperText={`${formData.meta_title.length}/60 символов`}
+                      helperText={`${formData.meta_title.length}/60 ${t('forms.articles.form.fields.metaTitleMaxLength')}`}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="SEO описание"
+                      label={t('forms.articles.form.fields.metaDescription')}
                       value={formData.meta_description}
                       onChange={handleInputChange('meta_description')}
-                      placeholder="SEO описание для поисковых систем"
+                      placeholder={t('forms.articles.form.fields.metaDescriptionPlaceholder')}
                       multiline
                       rows={3}
                       sx={textFieldStyles}
-                      helperText={`${formData.meta_description.length}/160 символов`}
+                      helperText={`${formData.meta_description.length}/160 ${t('forms.articles.form.fields.metaDescriptionMaxLength')}`}
                     />
                   </Grid>
                 </Grid>
@@ -528,7 +531,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                     <Switch
                       checked={formData.featured}
                       onChange={(checked) => handleInputChange('featured')({ target: { checked } })}
-                      label="Рекомендуемая статья"
+                      label={t('forms.articles.form.fields.featured')}
                     />
                   </Grid>
 
@@ -536,7 +539,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                     <Switch
                       checked={formData.allow_comments}
                       onChange={(checked) => handleInputChange('allow_comments')({ target: { checked } })}
-                      label="Разрешить комментарии"
+                      label={t('forms.articles.form.fields.allowComments')}
                     />
                   </Grid>
                 </Grid>

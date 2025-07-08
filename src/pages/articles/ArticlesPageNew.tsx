@@ -71,9 +71,9 @@ const ArticlesPageNew: React.FC = () => {
   // Функция для получения переводов статусов
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
-      published: t('admin.articles.status.published'),
-      draft: t('admin.articles.status.draft'),
-      archived: t('admin.articles.status.archived')
+      published: t('forms.articles.status.published'),
+      draft: t('forms.articles.status.draft'),
+      archived: t('forms.articles.status.archived')
     };
     return statusMap[status] || status;
   };
@@ -114,21 +114,21 @@ const ArticlesPageNew: React.FC = () => {
       if (result.success) {
         setNotification({
           open: true,
-          message: t('admin.articles.messages.deleteSuccess', { title: article.title }),
+          message: t('forms.articles.messages.deleteSuccess', { title: article.title }),
           severity: 'success'
         });
         refetch();
       } else {
         setNotification({
           open: true,
-          message: t('admin.articles.messages.deleteError', { error: result.error }),
+          message: t('forms.articles.messages.deleteError', { error: result.error }),
           severity: 'error'
         });
       }
     } catch (error: any) {
       setNotification({
         open: true,
-        message: t('admin.articles.messages.deleteErrorGeneral'),
+        message: t('forms.articles.messages.deleteErrorGeneral'),
         severity: 'error'
       });
     }
@@ -157,12 +157,12 @@ const ArticlesPageNew: React.FC = () => {
 
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: t('admin.articles.title'),
-    subtitle: t('admin.articles.subtitle'),
+    title: t('forms.articles.title'),
+    subtitle: t('forms.articles.subtitle'),
     actions: [
       {
         id: 'add',
-        label: t('admin.articles.createArticle'),
+        label: t('forms.articles.createArticle'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/articles/new'),
         variant: 'contained'
@@ -171,7 +171,7 @@ const ArticlesPageNew: React.FC = () => {
   }), [navigate, t]);
 
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: t('admin.articles.searchPlaceholder'),
+    placeholder: t('forms.articles.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
   }), [searchQuery, handleSearchChange, t]);
@@ -179,11 +179,11 @@ const ArticlesPageNew: React.FC = () => {
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'category',
-      label: t('admin.articles.filters.category'),
+      label: t('forms.articles.filters.category'),
       type: 'select',
       value: selectedCategory,
       options: [
-        { value: '', label: t('admin.articles.filters.allCategories') },
+        { value: '', label: t('forms.articles.filters.allCategories') },
         ...categories.map((category: any) => ({
           value: category.key || category.name,
           label: category.name
@@ -196,14 +196,14 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'status',
-      label: t('admin.articles.filters.status'),
+      label: t('forms.articles.filters.status'),
       type: 'select',
       value: selectedStatus,
       options: [
-        { value: '', label: t('admin.articles.filters.allStatuses') },
-        { value: 'published', label: t('admin.articles.status.published') },
-        { value: 'draft', label: t('admin.articles.status.draft') },
-        { value: 'archived', label: t('admin.articles.status.archived') }
+        { value: '', label: t('forms.articles.filters.allStatuses') },
+        { value: 'published', label: t('forms.articles.status.published') },
+        { value: 'draft', label: t('forms.articles.status.draft') },
+        { value: 'archived', label: t('forms.articles.status.archived') }
       ],
       onChange: (value: any) => {
         setSelectedStatus(value);
@@ -212,52 +212,54 @@ const ArticlesPageNew: React.FC = () => {
     }
   ], [selectedCategory, selectedStatus, categories, t]);
 
-  const columns: Column<ArticleSummary>[] = useMemo(() => [
+  // Конфигурация колонок таблицы
+  const columns: Column[] = useMemo(() => [
     {
       id: 'title',
-      label: t('admin.articles.columns.article'),
+      label: t('forms.articles.columns.article'),
       sortable: true,
-      render: (article: ArticleSummary) => (
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+      wrap: true,
+      format: (value, article: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  '&:hover': { color: theme.palette.primary.main }
-                }}
-                onClick={() => navigate(`/admin/articles/${article.id}`)}
-              >
-                {article.title}
-              </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                color: theme.palette.text.primary,
+                cursor: 'pointer',
+                '&:hover': { color: theme.palette.primary.main }
+              }}
+              onClick={() => navigate(`/admin/articles/${article.id}`)}
+            >
+              {article.title}
               {article.featured && (
                 <Chip
-                  icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
-                  label={t('admin.articles.meta.featured')}
+                  icon={<StarIcon />}
+                  label={t('forms.articles.meta.featured')}
                   size="small"
                   color="warning"
+                  sx={{ ml: 1 }}
                 />
               )}
-            </Box>
+            </Typography>
             <Typography
               variant="body2"
               sx={{
                 color: theme.palette.text.secondary,
+                mt: 0.5,
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                mb: 0.5
+                overflow: 'hidden'
               }}
             >
-              {article.excerpt}
+              {article.excerpt || 'Без описания'}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
               <PersonIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
               <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
-                {article.author?.name || t('admin.articles.meta.unknownAuthor')}
+                {article.author?.name || t('forms.articles.meta.unknownAuthor')}
               </Typography>
             </Box>
           </Box>
@@ -266,39 +268,39 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'category',
-      label: t('admin.articles.columns.category'),
-      align: 'center',
-      hideOnMobile: true,
-      render: (article: ArticleSummary) => (
-        <Typography variant="body2">
-          {article.category_name || '—'}
+      label: t('forms.articles.columns.category'),
+      format: (value, article: ArticleSummary) => (
+        <Typography variant="body2" sx={{ 
+          color: theme.palette.text.secondary,
+          fontWeight: 500
+        }}>
+          {article.category_name || 'Без категории'}
         </Typography>
       )
     },
     {
       id: 'status',
-      label: t('admin.articles.columns.status'),
+      label: t('forms.articles.columns.status'),
       align: 'center',
-      render: (article: ArticleSummary) => (
+      format: (value, article: ArticleSummary) => (
         <Chip
           label={getStatusLabel(article.status)}
+          size="small"
           color={
             article.status === 'published' ? 'success' :
             article.status === 'draft' ? 'warning' : 'default'
           }
-          size="small"
         />
       )
     },
     {
       id: 'views_count',
-      label: t('admin.articles.columns.views'),
+      label: t('forms.articles.columns.views'),
       align: 'center',
-      hideOnMobile: true,
-      render: (article: ArticleSummary) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-          <VisibilityIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-          <Typography variant="body2">
+      format: (value, article: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+          <VisibilityIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
             {article.views_count || 0}
           </Typography>
         </Box>
@@ -306,47 +308,86 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: t('admin.articles.columns.createdAt'),
-      align: 'center',
-      hideOnMobile: true,
-      render: (article: ArticleSummary) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-          <CalendarIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
+      label: t('forms.articles.columns.createdAt'),
+      sortable: true,
+      format: (value, article: ArticleSummary) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <CalendarIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
           <Typography variant="body2">
             {formatDate(article.created_at)}
           </Typography>
         </Box>
       )
     }
-  ], [theme.palette, navigate, t, getStatusLabel]);
+  ], [theme, navigate, t]);
 
-  const actionsConfig: ActionConfig<ArticleSummary>[] = useMemo(() => [
+  // Конфигурация действий
+  const actionsConfig: ActionConfig[] = useMemo(() => [
     {
-      label: t('admin.articles.actions.view'),
+      id: 'view',
+      label: t('forms.articles.actions.view'),
       icon: <ViewIcon />,
-      onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}`),
-      color: 'primary'
+      onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}`)
     },
     {
-      label: t('admin.articles.actions.edit'),
+      id: 'edit',
+      label: t('forms.articles.actions.edit'),
       icon: <EditIcon />,
-      onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}/edit`),
-      color: 'success'
+      onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}/edit`)
     },
     {
-      label: t('admin.articles.actions.delete'),
+      id: 'delete',
+      label: t('forms.articles.actions.delete'),
       icon: <DeleteIcon />,
-      onClick: (article: ArticleSummary) => handleDeleteArticle(article),
       color: 'error',
-      requireConfirmation: true,
-      confirmationConfig: {
-        title: t('admin.articles.deleteConfirmTitle'),
-        message: t('admin.articles.deleteConfirmMessage'),
-        confirmLabel: t('common.delete'),
-        cancelLabel: t('common.cancel'),
-      }
+      confirmationDialog: {
+        title: t('forms.articles.deleteConfirmTitle'),
+        message: t('forms.articles.deleteConfirmMessage'),
+      },
+      onClick: handleDeleteArticle
     }
   ], [navigate, handleDeleteArticle, t]);
+
+  // Статистические карточки
+  const statsCards = useMemo(() => [
+    {
+      title: totalItems.toString(),
+      subtitle: t('forms.articles.stats.total'),
+      icon: <ArticleIcon />,
+      color: theme.palette.primary.main,
+    },
+    {
+      title: stats.published.toString(),
+      subtitle: t('forms.articles.stats.published'),
+      icon: <VisibilityIcon />,
+      color: theme.palette.success.main,
+    },
+    {
+      title: stats.totalViews.toString(),
+      subtitle: t('forms.articles.stats.views'),
+      icon: <VisibilityIcon />,
+      color: theme.palette.info.main,
+    },
+    {
+      title: stats.drafts.toString(),
+      subtitle: t('forms.articles.stats.drafts'),
+      icon: <EditIcon />,
+      color: theme.palette.warning.main,
+    }
+  ], [totalItems, stats, theme, t]);
+
+  // Конфигурация пустого состояния
+  const emptyStateConfig = useMemo(() => ({
+    icon: <ArticleIcon sx={{ fontSize: 64, color: theme.palette.text.secondary }} />,
+    title: searchQuery || selectedCategory || selectedStatus ? t('forms.articles.noResultsFound') : t('forms.articles.noArticles'),
+    description: searchQuery || selectedCategory || selectedStatus 
+      ? t('forms.articles.noResultsDescription')
+      : t('forms.articles.noArticlesDescription'),
+    action: {
+      label: t('forms.articles.createArticle'),
+      onClick: () => navigate('/admin/articles/new')
+    }
+  }), [searchQuery, selectedCategory, selectedStatus, navigate, theme, t]);
 
   return (
     <Box sx={tablePageStyles.container}>
@@ -359,7 +400,7 @@ const ArticlesPageNew: React.FC = () => {
               {totalItems}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.total')}
+              {t('forms.articles.stats.total')}
             </Typography>
           </Box>
         </Grid>
@@ -370,7 +411,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.published}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.published')}
+              {t('forms.articles.stats.published')}
             </Typography>
           </Box>
         </Grid>
@@ -381,7 +422,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.totalViews}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.views')}
+              {t('forms.articles.stats.views')}
             </Typography>
           </Box>
         </Grid>
@@ -392,7 +433,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.drafts}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.drafts')}
+              {t('forms.articles.stats.drafts')}
             </Typography>
           </Box>
         </Grid>
@@ -413,12 +454,12 @@ const ArticlesPageNew: React.FC = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: searchQuery || selectedCategory || selectedStatus ? t('admin.articles.noResultsFound') : t('admin.articles.noArticles'),
+          title: searchQuery || selectedCategory || selectedStatus ? t('forms.articles.noResultsFound') : t('forms.articles.noArticles'),
           description: searchQuery || selectedCategory || selectedStatus
-            ? t('admin.articles.noResultsDescription')
-            : t('admin.articles.noArticlesDescription'),
+            ? t('forms.articles.noResultsDescription')
+            : t('forms.articles.noArticlesDescription'),
           action: (!searchQuery && !selectedCategory && !selectedStatus) ? {
-            label: t('admin.articles.createArticle'),
+            label: t('forms.articles.createArticle'),
             icon: <AddIcon />,
             onClick: () => navigate('/admin/articles/new')
           } : undefined

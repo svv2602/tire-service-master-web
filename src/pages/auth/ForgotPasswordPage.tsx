@@ -16,11 +16,11 @@ const ForgotPasswordPage: React.FC = () => {
     <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-          {t('auth.forgotPasswordTitle')}
+          {t('forms.auth.forgotPasswordTitle')}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-          {t('auth.forgotPasswordDescription')}
+          {t('forms.auth.forgotPasswordDescription')}
         </Typography>
         
         <ForgotPasswordForm onBack={handleBackToLogin} />
@@ -32,7 +32,7 @@ const ForgotPasswordPage: React.FC = () => {
             onClick={handleBackToLogin}
             sx={{ textDecoration: 'none' }}
           >
-            {t('auth.backToLoginPage')}
+            {t('forms.auth.backToLoginPage')}
           </Link>
         </Box>
       </Paper>

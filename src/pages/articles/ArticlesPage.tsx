@@ -58,9 +58,9 @@ const ArticlesPage: React.FC = () => {
   // Function to get status translations
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
-      published: t('admin.articles.status.published'),
-      draft: t('admin.articles.status.draft'),
-      archived: t('admin.articles.status.archived')
+      published: t('forms.articles.status.published'),
+      draft: t('forms.articles.status.draft'),
+      archived: t('forms.articles.status.archived')
     };
     return statusMap[status] || status;
   };
@@ -138,7 +138,7 @@ const ArticlesPage: React.FC = () => {
   };
 
   const handleDeleteArticle = useCallback(async (articleId: number) => {
-    if (window.confirm(t('admin.articles.deleteConfirm'))) {
+    if (window.confirm(t('forms.articles.deleteConfirm'))) {
       try {
         console.log('Deleting article:', articleId);
         const result = await deleteArticle(articleId);
@@ -148,11 +148,11 @@ const ArticlesPage: React.FC = () => {
           refetch(); // Refresh articles list
         } else {
           console.error('Error deleting article:', result.error);
-          alert(`${t('admin.articles.messages.deleteError')} ${result.error}`);
+          alert(`${t('forms.articles.messages.deleteError')} ${result.error}`);
         }
       } catch (error) {
         console.error('Error deleting article:', error);
-        alert(t('admin.articles.messages.deleteErrorGeneral'));
+        alert(t('forms.articles.messages.deleteErrorGeneral'));
       }
     }
   }, [deleteArticle, refetch, t]);
@@ -163,7 +163,7 @@ const ArticlesPage: React.FC = () => {
   const columns: Column[] = useMemo(() => [
     {
       id: 'title',
-      label: t('admin.articles.columns.article'),
+      label: t('forms.articles.columns.article'),
       wrap: true,
       format: (value, row: ArticleSummary) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
@@ -183,7 +183,7 @@ const ArticlesPage: React.FC = () => {
               {row.featured && (
                 <Chip
                   icon={<StarIcon />}
-                  label={t('admin.articles.meta.featured')}
+                  label={t('forms.articles.meta.featured')}
                   size="small"
                   color="warning"
                   sx={{ ml: 1 }}
@@ -211,7 +211,7 @@ const ArticlesPage: React.FC = () => {
                   color: theme.palette.text.secondary,
                   fontSize: SIZES.fontSize.xs 
                 }}>
-                  {row.reading_time || 5} {t('admin.articles.meta.readingTime')}
+                  {row.reading_time || 5} {t('forms.articles.meta.readingTime')}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -220,7 +220,7 @@ const ArticlesPage: React.FC = () => {
                   color: theme.palette.text.secondary,
                   fontSize: SIZES.fontSize.xs 
                 }}>
-                  {row.author?.name || t('admin.articles.meta.author')}
+                  {row.author?.name || t('forms.articles.meta.author')}
                 </Typography>
               </Box>
             </Box>
@@ -230,7 +230,7 @@ const ArticlesPage: React.FC = () => {
     },
     {
       id: 'category',
-      label: t('admin.articles.columns.category'),
+      label: t('forms.articles.columns.category'),
       format: (value, row: ArticleSummary) => (
         <Typography variant="body2" sx={{ 
           color: theme.palette.text.primary,
@@ -254,7 +254,7 @@ const ArticlesPage: React.FC = () => {
     },
     {
       id: 'views_count',
-      label: t('admin.articles.columns.views'),
+      label: t('forms.articles.columns.views'),
       align: 'center',
       format: (value, row: ArticleSummary) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -270,7 +270,7 @@ const ArticlesPage: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: t('admin.articles.columns.date'),
+      label: t('forms.articles.columns.date'),
       format: (value, row: ArticleSummary) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <CalendarIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
@@ -289,7 +289,7 @@ const ArticlesPage: React.FC = () => {
       align: 'right',
       format: (value, row: ArticleSummary) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
-          <Tooltip title={t('admin.articles.meta.viewTooltip')}>
+          <Tooltip title={t('forms.articles.meta.viewTooltip')}>
             <IconButton
               size="small"
               onClick={() => navigate(`/admin/articles/${row.id}`)}
@@ -333,13 +333,13 @@ const ArticlesPage: React.FC = () => {
               color: theme.palette.text.primary,
               mb: SIZES.spacing.xs
             }}>
-              {t('admin.articles.title')}
+              {t('forms.articles.title')}
             </Typography>
             <Typography variant="body1" sx={{
               color: theme.palette.text.secondary,
               fontSize: SIZES.fontSize.md
             }}>
-              {t('admin.articles.subtitle')}
+              {t('forms.articles.subtitle')}
             </Typography>
           </Box>
           <Button
@@ -347,7 +347,7 @@ const ArticlesPage: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={() => navigate('/admin/articles/new')}
           >
-            {t('admin.articles.createArticle')}
+            {t('forms.articles.createArticle')}
           </Button>
         </Box>
       </Box>
@@ -361,7 +361,7 @@ const ArticlesPage: React.FC = () => {
               {displayPagination.total_count}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.totalArticles')}
+              {t('forms.articles.stats.total')}
             </Typography>
           </Box>
         </Grid>
@@ -372,7 +372,7 @@ const ArticlesPage: React.FC = () => {
               {displayArticles.filter((a: ArticleSummary) => a.status === 'published').length}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.published')}
+              {t('forms.articles.stats.published')}
             </Typography>
           </Box>
         </Grid>
@@ -383,7 +383,7 @@ const ArticlesPage: React.FC = () => {
               {displayArticles.reduce((sum: number, a: ArticleSummary) => sum + (a.views_count || 0), 0)}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.views')}
+              {t('forms.articles.stats.views')}
             </Typography>
           </Box>
         </Grid>
@@ -394,7 +394,7 @@ const ArticlesPage: React.FC = () => {
               {displayArticles.filter((a: ArticleSummary) => a.status === 'draft').length}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.stats.drafts')}
+              {t('forms.articles.stats.drafts')}
             </Typography>
           </Box>
         </Grid>
@@ -412,14 +412,14 @@ const ArticlesPage: React.FC = () => {
           fontWeight: 600
         }}>
           <SearchIcon />
-          {t('admin.articles.searchAndFilters')}
+                      {t('forms.articles.searchAndFilters')}
         </Typography>
         
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              placeholder={t('admin.articles.searchPlaceholder')}
+              placeholder={t('forms.articles.searchPlaceholder')}
               value={searchQuery}
               onChange={handleSearchChange}
               InputProps={{
@@ -436,9 +436,9 @@ const ArticlesPage: React.FC = () => {
             <Select
               value={selectedCategory}
               onChange={handleCategoryChange}
-              label={t('admin.articles.filters.category')}
+              label={t('forms.articles.filters.category')}
               options={[
-                { value: '', label: t('admin.articles.filters.allCategories') },
+                                  { value: '', label: t('forms.articles.filters.allCategories') },
                 ...categories.map((category: any) => ({
                   value: category.key || category.name,
                   label: category.name
@@ -451,11 +451,11 @@ const ArticlesPage: React.FC = () => {
             <Select
               value={selectedSort}
               onChange={handleSortChange}
-              label={t('admin.articles.filters.sorting')}
+              label={t('forms.articles.filters.sorting')}
               options={[
-                { value: 'recent', label: t('admin.articles.sorting.recent') },
-                { value: 'oldest', label: t('admin.articles.sorting.oldest') },
-                { value: 'popular', label: t('admin.articles.sorting.popular') }
+                                  { value: 'recent', label: t('forms.articles.sorting.recent') },
+                  { value: 'oldest', label: t('forms.articles.sorting.oldest') },
+                  { value: 'popular', label: t('forms.articles.sorting.popular') }
               ]}
             />
           </Grid>
@@ -473,13 +473,13 @@ const ArticlesPage: React.FC = () => {
           }}>
             <CircularProgress size={48} sx={{ mb: 2 }} />
             <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
-              {t('admin.articles.loadingArticles')}
+              {t('forms.articles.loadingArticles')}
             </Typography>
           </Box>
         ) : error ? (
           <Box sx={{ p: SIZES.spacing.lg }}>
             <Alert severity="error">
-              {t('admin.articles.loadingError')}
+              {t('forms.articles.loadingError')}
             </Alert>
           </Box>
         ) : displayArticles.length === 0 ? (
@@ -489,14 +489,14 @@ const ArticlesPage: React.FC = () => {
             px: 4
           }}>
             <Typography variant="h6" sx={{ color: theme.palette.text.secondary, mb: 2 }}>
-              {t('admin.articles.articlesNotFound')}
+              {t('forms.articles.articlesNotFound')}
             </Typography>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => navigate('/admin/articles/new')}
             >
-              {t('admin.articles.createFirstArticle')}
+                              {t('forms.articles.createFirstArticle')}
             </Button>
           </Box>
         ) : (

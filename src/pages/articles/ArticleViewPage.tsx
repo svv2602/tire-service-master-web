@@ -90,7 +90,7 @@ const ArticleViewPage: React.FC = () => {
         }}>
           <CircularProgress size={48} sx={{ mb: 2 }} />
           <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            {t('admin.articles.loadingArticles')}
+            {t('forms.articles.loadingArticles')}
           </Typography>
         </Box>
       </Container>
@@ -102,7 +102,7 @@ const ArticleViewPage: React.FC = () => {
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Alert severity="error" sx={{ mb: 3, display: 'inline-block' }}>
-            {error || t('admin.articles.articlesNotFound')}
+            {error || t('forms.articles.articlesNotFound')}
           </Alert>
           <Box>
             <Button
@@ -167,16 +167,16 @@ const ArticleViewPage: React.FC = () => {
                 {/* Статусы и метки */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <Chip
-                    label={article.status === 'published' ? t('admin.articles.status.published') : 
-                          article.status === 'draft' ? t('admin.articles.status.draft') : 
-                          t('admin.articles.status.archived')}
+                    label={article.status === 'published' ? t('forms.articles.status.published') : 
+                          article.status === 'draft' ? t('forms.articles.status.draft') : 
+                          t('forms.articles.status.archived')}
                     color={getStatusColor(article.status)}
                     size="small"
                   />
                   {article.featured && (
                     <Chip
                       icon={<StarIcon />}
-                      label={t('admin.articles.meta.featured')}
+                      label={t('forms.articles.meta.featured')}
                       color="warning"
                       size="small"
                     />
@@ -210,7 +210,7 @@ const ArticleViewPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PersonIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
-                    <Typography variant="body2">{article.author?.name || t('admin.articles.meta.unknownAuthor')}</Typography>
+                    <Typography variant="body2">{article.author?.name || t('forms.articles.meta.unknownAuthor')}</Typography>
                   </Box>
                   
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -220,7 +220,7 @@ const ArticleViewPage: React.FC = () => {
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <ScheduleIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
-                    <Typography variant="body2">{article.reading_time || 5} {t('admin.articles.meta.readingTime')}</Typography>
+                    <Typography variant="body2">{article.reading_time || 5} {t('forms.articles.meta.readingTime')}</Typography>
                   </Box>
 
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -313,7 +313,7 @@ const ArticleViewPage: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                     <TagIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
                     <Typography variant="h6" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
-                      {t('common.tags', 'Теги')}
+                      {t('common.tags')}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -339,12 +339,12 @@ const ArticleViewPage: React.FC = () => {
               {/* Информация о статье */}
               <Paper sx={{ ...cardStyles, mb: 3 }}>
                 <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
-                  {t('admin.articles.meta.about', 'О статье')}
+                  {t('forms.articles.meta.about')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      {t('admin.articles.columns.category')}:
+                      {t('forms.articles.columns.category')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
                       {article.category_name}
@@ -352,15 +352,15 @@ const ArticleViewPage: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      {t('admin.articles.meta.author')}:
+                      {t('forms.articles.meta.author')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.author?.name || t('admin.articles.meta.unknownAuthor')}
+                      {article.author?.name || t('forms.articles.meta.unknownAuthor')}
                     </Typography>
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      Опубликовано:
+                      {t('forms.articles.meta.publishedAt')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
                       {formatDate(article.published_at || null)}
@@ -368,15 +368,15 @@ const ArticleViewPage: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      Время чтения:
+                      {t('forms.articles.meta.readingTimeLabel')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.reading_time || 5} минут
+                      {article.reading_time || 5} {t('forms.articles.meta.readingTimeMinutes')}
                     </Typography>
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      {t('admin.articles.columns.views')}:
+                      {t('forms.articles.columns.views')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
                       {article.views_count?.toLocaleString() || '0'}
@@ -389,7 +389,7 @@ const ArticleViewPage: React.FC = () => {
               {relatedArticles && relatedArticles.length > 0 && (
                 <Paper sx={cardStyles}>
                   <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
-                    Похожие статьи
+                    {t('forms.articles.relatedArticles.title')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {relatedArticles.slice(0, 3).map((relatedArticle: any) => (
