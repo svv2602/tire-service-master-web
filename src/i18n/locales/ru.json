@@ -415,19 +415,7 @@
         "deleteError": "Ошибка при удалении контента"
       }
     },
-    "bookings": {
-      "title": "Бронирования",
-      "createBooking": "Создать бронирование",
-      "editBooking": "Редактировать бронирование",
-      "searchPlaceholder": "Поиск по номеру бронирования...",
-      "bookingsNotFound": "Бронирования не найдены",
-      "noBookings": "Нет бронирований",
-      "createFirstBooking": "Создайте первое бронирование для начала работы",
-      "fields": {
-        "client": "Клиент",
-        "notes": "Примечания"
-      }
-    },
+
     "cities": {
       "title": "Города",
       "createCity": "Добавить город",

@@ -29,6 +29,8 @@ import articlesRuTranslations from './locales/forms/articles/articles-ru.json';
 import articlesUkTranslations from './locales/forms/articles/articles-uk.json';
 import authRuTranslations from './locales/forms/auth/auth-ru.json';
 import authUkTranslations from './locales/forms/auth/auth-uk.json';
+import bookingsRuTranslations from './locales/forms/bookings/bookings-ru.json';
+import bookingsUkTranslations from './locales/forms/bookings/bookings-uk.json';
 
 // Deep merge utility function
 function deepMerge(target: any, source: any): any {
@@ -58,24 +60,27 @@ const resources = {
                 deepMerge(
                   deepMerge(
                     deepMerge(
-                      deepMerge(ukTranslations, settingsUkTranslations),
-                      clientUkTranslations
+                      deepMerge(
+                        deepMerge(ukTranslations, settingsUkTranslations),
+                        clientUkTranslations
+                      ),
+                      modalsUkTranslations
                     ),
-                    modalsUkTranslations
+                    partnerUkTranslations
                   ),
-                  partnerUkTranslations
+                  tireCalculatorUkTranslations
                 ),
-                tireCalculatorUkTranslations
+                commonUkTranslations
               ),
-              commonUkTranslations
+              userUkTranslations
             ),
-            userUkTranslations
+            bookingUkTranslations
           ),
-          bookingUkTranslations
+          articlesUkTranslations
         ),
-        articlesUkTranslations
+        authUkTranslations
       ),
-      authUkTranslations
+      bookingsUkTranslations
     ),
   },
   ru: {
@@ -88,24 +93,27 @@ const resources = {
                 deepMerge(
                   deepMerge(
                     deepMerge(
-                      deepMerge(ruTranslations, settingsRuTranslations),
-                      clientRuTranslations
+                      deepMerge(
+                        deepMerge(ruTranslations, settingsRuTranslations),
+                        clientRuTranslations
+                      ),
+                      modalsRuTranslations
                     ),
-                    modalsRuTranslations
+                    partnerRuTranslations
                   ),
-                  partnerRuTranslations
+                  tireCalculatorRuTranslations
                 ),
-                tireCalculatorRuTranslations
+                commonRuTranslations
               ),
-              commonRuTranslations
+              userRuTranslations
             ),
-            userRuTranslations
+            bookingRuTranslations
           ),
-          bookingRuTranslations
+          articlesRuTranslations
         ),
-        articlesRuTranslations
+        authRuTranslations
       ),
-      authRuTranslations
+      bookingsRuTranslations
     ),
   },
 };

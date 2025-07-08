@@ -136,63 +136,32 @@ const BookingsPage: React.FC = () => {
   const cities = citiesData?.data || [];
   const servicePoints = servicePointsData?.data || [];
   const serviceCategories = serviceCategoriesData?.data || [];
-  const bookingStatuses = bookingStatusesData || [];
+  const bookingStatuses = bookingStatusesData?.data || [];
 
-  // Вспомогательные функции
-  const formatTime = useCallback((timeString: string): string => {
+  // Функция форматирования времени
+  const formatTime = useCallback((timeString: string) => {
     if (!timeString) return '-';
-    
-    // Если время уже в формате HH:mm
-    if (/^\d{2}:\d{2}$/.test(timeString)) {
+    try {
+      // Если это полная ISO дата
+      if (timeString.includes('T')) {
+        return format(new Date(timeString), 'HH:mm');
+      }
+      // Если это просто время
+      return timeString;
+    } catch (error) {
       return timeString;
     }
-    
-    // Если время в формате ISO (полная дата-время)
-    if (timeString.includes('T')) {
-      try {
-        const time = timeString.split('T')[1];
-        return time.split(':').slice(0, 2).join(':');
-      } catch {
-        return timeString;
-      }
-    }
-    
-    // Если время содержит секунды HH:mm:ss
-    if (/^\d{2}:\d{2}:\d{2}/.test(timeString)) {
-      return timeString.split(':').slice(0, 2).join(':');
-    }
-    
-    // Попытка парсинга через Date
-    try {
-      const date = new Date(`2000-01-01T${timeString}`);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString('ru-RU', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
-      }
-    } catch {
-      // Игнорируем ошибки парсинга
-    }
-    
-    return timeString;
   }, []);
 
-
-
-  // Функция для получения инициалов клиента
-  const getClientInitials = useCallback((booking: Booking): string => {
-    if (booking.service_recipient?.first_name && booking.service_recipient?.last_name) {
-      return `${booking.service_recipient.first_name.charAt(0)}${booking.service_recipient.last_name.charAt(0)}`.toUpperCase();
-    }
+  // Функция получения инициалов клиента
+  const getClientInitials = useCallback((booking: Booking) => {
     if (booking.service_recipient?.first_name) {
-      return booking.service_recipient.first_name.charAt(0).toUpperCase();
+      const firstName = booking.service_recipient.first_name.charAt(0).toUpperCase();
+      const lastName = booking.service_recipient.last_name?.charAt(0)?.toUpperCase() || '';
+      return firstName + lastName;
     }
-    if (booking.service_recipient?.last_name) {
-      return booking.service_recipient.last_name.charAt(0).toUpperCase();
-    }
-    return 'К'; // К = Клиент
-  }, []);
+    return t('forms.bookings.clientInitials'); // К = Клиент
+  }, [t]);
 
   // Обработчики для интерактивного статуса
   const handleStatusChipClick = useCallback((event: React.MouseEvent<HTMLElement>, booking: Booking) => {
@@ -230,7 +199,7 @@ const BookingsPage: React.FC = () => {
       
       setNotification({
         open: true,
-        message: t('Статус бронирования успешно обновлен'),
+        message: t('forms.bookings.notifications.statusUpdated'),
         severity: 'success'
       });
       
@@ -238,7 +207,7 @@ const BookingsPage: React.FC = () => {
     } catch (error) {
       setNotification({
         open: true,
-        message: t('Ошибка при обновлении статуса'),
+        message: t('forms.bookings.notifications.statusUpdateError'),
         severity: 'error'
       });
     }
@@ -264,9 +233,9 @@ const BookingsPage: React.FC = () => {
         }
       }).unwrap();
     } catch (error) {
-      console.error('Ошибка при изменении статуса:', error);
+      console.error(t('forms.bookings.errors.statusChange'), error);
     }
-  }, [updateBooking]);
+  }, [updateBooking, t]);
 
   // Устаревший обработчик для совместимости с ActionsMenu
   const handleToggleStatus = useCallback(async (booking: Booking) => {
@@ -281,9 +250,9 @@ const BookingsPage: React.FC = () => {
         }
       }).unwrap();
     } catch (error) {
-      console.error('Ошибка при изменении статуса:', error);
+      console.error(t('forms.bookings.errors.statusChange'), error);
     }
-  }, [updateBooking]);
+  }, [updateBooking, t]);
 
   const handleDeleteBooking = useCallback(async (booking: Booking) => {
     try {
@@ -291,13 +260,13 @@ const BookingsPage: React.FC = () => {
       await refetchBookings();
       setNotification({
         open: true,
-        message: t('Бронирование успешно удалено'),
+        message: t('forms.bookings.notifications.bookingDeleted'),
         severity: 'success'
       });
     } catch (error) {
       setNotification({
         open: true,
-        message: t('Ошибка при удалении бронирования'),
+        message: t('forms.bookings.notifications.bookingDeleteError'),
         severity: 'error'
       });
     }
@@ -319,42 +288,46 @@ const BookingsPage: React.FC = () => {
 
   // Конфигурация заголовка
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: t('admin.bookings.title'),
+    title: t('forms.bookings.title'),
     actions: [
       {
         id: 'sort',
-        label: `Сортировка: ${sortOrder === 'asc' ? 'по возрастанию' : 'по убыванию'}`,
+        label: t('forms.bookings.sorting.sortBy', { 
+          order: sortOrder === 'asc' ? 
+            t('forms.bookings.sorting.ascending') : 
+            t('forms.bookings.sorting.descending') 
+        }),
         icon: sortOrder === 'asc' ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />,
         onClick: handleSort,
       },
       {
         id: 'create',
-        label: 'Новое бронирование',
+        label: t('forms.bookings.createBooking'),
         icon: <AddIcon />,
         variant: 'contained',
         onClick: handleCreateBooking,
       },
     ],
-  }), [sortOrder, handleSort, handleCreateBooking]);
+  }), [sortOrder, handleSort, handleCreateBooking, t]);
 
   // Конфигурация поиска
   const searchConfig: SearchConfig = useMemo(() => ({
     value: search,
     onChange: setSearch,
-    placeholder: 'Поиск по клиенту, телефону, номеру авто...',
+    placeholder: t('forms.bookings.searchPlaceholder'),
     debounceMs: 300,
-  }), [search]);
+  }), [search, t]);
 
   // Конфигурация фильтров
   const filterConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'status',
-      label: t('tables.columns.status'),
+      label: t('forms.bookings.columns.status'),
       type: 'select',
       value: statusFilter,
       onChange: (value) => setStatusFilter(value as string),
       options: [
-        { value: '', label: 'Все статусы' },
+        { value: '', label: t('forms.bookings.filters.allStatuses') },
         ...bookingStatuses.map(status => ({
           value: status.key || status.id?.toString() || '',
           label: status.name
@@ -364,12 +337,12 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'city',
-      label: t('tables.columns.city'),
+      label: t('forms.bookings.columns.city'),
       type: 'select',
       value: cityFilter,
       onChange: (value) => setCityFilter(value as number),
       options: [
-        { value: '', label: 'Все города' },
+        { value: '', label: t('forms.bookings.filters.allCities') },
         ...cities.map(city => ({
           value: city.id,
           label: city.name
@@ -379,12 +352,12 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'service_point',
-      label: 'Точка обслуживания',
+      label: t('forms.bookings.filters.servicePoint'),
       type: 'select',
       value: servicePointFilter,
       onChange: (value) => setServicePointFilter(value as number),
       options: [
-        { value: '', label: 'Все точки обслуживания' },
+        { value: '', label: t('forms.bookings.filters.allServicePoints') },
         ...servicePoints.map(sp => ({
           value: sp.id,
           label: sp.name
@@ -394,12 +367,12 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'service_category',
-      label: 'Тип услуг',
+      label: t('forms.bookings.filters.serviceType'),
       type: 'select',
       value: serviceCategoryFilter,
       onChange: (value) => setServiceCategoryFilter(value as number),
       options: [
-        { value: '', label: 'Все типы услуг' },
+        { value: '', label: t('forms.bookings.filters.allServiceTypes') },
         ...serviceCategories.map(sc => ({
           value: sc.id,
           label: sc.name
@@ -409,14 +382,14 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'date_from',
-      label: 'Дата с',
+      label: t('forms.bookings.filters.dateFrom'),
       type: 'date',
       value: dateFromFilter,
       onChange: (value) => setDateFromFilter(value as string),
     },
     {
       id: 'date_to',
-      label: 'Дата по',
+      label: t('forms.bookings.filters.dateTo'),
       type: 'date',
       value: dateToFilter,
       onChange: (value) => setDateToFilter(value as string),
@@ -424,7 +397,7 @@ const BookingsPage: React.FC = () => {
   ], [
     statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter,
     cities, servicePoints, serviceCategories, bookingStatuses,
-    citiesLoading, servicePointsLoading, serviceCategoriesLoading, bookingStatusesLoading
+    citiesLoading, servicePointsLoading, serviceCategoriesLoading, bookingStatusesLoading, t
   ]);
 
   // Примечание: сортировка управляется автоматически через PageTable
@@ -433,34 +406,34 @@ const BookingsPage: React.FC = () => {
   const bookingActions: ActionItem<Booking>[] = useMemo(() => [
     {
       id: 'edit',
-      label: t('tables.actions.edit'),
+      label: t('forms.bookings.actions.edit'),
       icon: <EditIcon />,
       color: 'primary',
-      tooltip: t('admin.bookings.editBooking'),
+      tooltip: t('forms.bookings.actions.editTooltip'),
       onClick: (booking: Booking) => navigate(`/admin/bookings/${booking.id}/edit`),
     },
     {
       id: 'delete',
-      label: t('tables.actions.delete'),
+      label: t('forms.bookings.actions.delete'),
       icon: <DeleteIcon />,
       color: 'error',
-      tooltip: 'Удалить бронирование',
+      tooltip: t('forms.bookings.actions.deleteTooltip'),
       onClick: handleDeleteBooking,
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить бронирование? Это действие нельзя будет отменить.',
-        confirmLabel: t('tables.actions.delete'),
+        title: t('forms.bookings.confirmations.deleteTitle'),
+        message: t('forms.bookings.confirmations.deleteMessage'),
+        confirmLabel: t('forms.bookings.actions.delete'),
         cancelLabel: t('common.cancel'),
       },
     },
-  ], [navigate, handleDeleteBooking]);
+  ], [navigate, handleDeleteBooking, t]);
 
   // Определение колонок
   const columns: Column<Booking>[] = useMemo(() => [
     {
       id: 'service_recipient',
-      label: 'Получатель услуги',
+      label: t('forms.bookings.columns.serviceRecipient'),
       minWidth: 200,
       wrap: true,
       sortable: false,
@@ -472,7 +445,7 @@ const BookingsPage: React.FC = () => {
           <Typography sx={{ wordBreak: 'break-word' }}>
             {booking.service_recipient ? 
               `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` : 
-              'Данные отсутствуют'
+              t('forms.bookings.dataNotAvailable')
             }
           </Typography>
         </Box>
@@ -480,7 +453,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'recipient_phone',
-      label: t('tables.columns.phone'),
+      label: t('forms.bookings.columns.phone'),
       minWidth: 140,
       hideOnMobile: true,
       sortable: false,
@@ -495,7 +468,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'city',
-      label: t('tables.columns.city'),
+      label: t('forms.bookings.columns.city'),
       minWidth: 120,
       hideOnMobile: true,
       sortable: false,
@@ -510,9 +483,8 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'service_point',
-      label: 'Точка обслуживания',
+      label: t('forms.bookings.columns.servicePoint'),
       minWidth: 180,
-      wrap: true,
       hideOnMobile: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
@@ -523,7 +495,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'service_category',
-      label: 'Тип услуг',
+      label: t('forms.bookings.columns.serviceType'),
       minWidth: 150,
       hideOnMobile: true,
       sortable: false,
@@ -535,17 +507,17 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'booking_datetime',
-      label: 'Дата и время',
+      label: t('forms.bookings.columns.dateTime'),
       minWidth: 160,
       sortable: true,
       format: (value: any, booking: Booking) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ScheduleIcon fontSize="small" color="action" />
           <Box>
-            <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-              {format(new Date(booking.booking_date), 'dd.MM.yyyy')}
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {booking.booking_date ? format(new Date(booking.booking_date), 'dd.MM.yyyy') : '-'}
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ wordBreak: 'break-word' }}>
+            <Typography variant="caption" color="text.secondary">
               {formatTime(booking.start_time)}
             </Typography>
           </Box>
@@ -554,7 +526,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: t('tables.columns.status'),
+      label: t('forms.bookings.columns.status'),
       minWidth: 120,
       align: 'center',
       sortable: false,
@@ -581,7 +553,7 @@ const BookingsPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: t('tables.columns.actions'),
+      label: t('forms.bookings.columns.actions'),
       minWidth: 120,
       align: 'center',
       sortable: false,
@@ -593,7 +565,7 @@ const BookingsPage: React.FC = () => {
         />
       ),
     },
-  ], [tablePageStyles, formatTime, getClientInitials, handleStatusChipClick, bookingActions]);
+  ], [tablePageStyles, formatTime, getClientInitials, handleStatusChipClick, bookingActions, t]);
 
   // Отображение состояний загрузки и ошибок
   if (isLoading) {
@@ -608,7 +580,7 @@ const BookingsPage: React.FC = () => {
     return (
       <Box sx={tablePageStyles.errorContainer}>
         <Alert severity="error">
-          ❌ Ошибка при загрузке бронирований: {error.toString()}
+          {t('forms.bookings.loadingError')}: {error.toString()}
         </Alert>
       </Box>
     );
@@ -618,7 +590,7 @@ const BookingsPage: React.FC = () => {
     <Box sx={tablePageStyles.pageContainer}>
       {bookingsError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t(t('notifications.error.loadingFailed'))}
+          {t('forms.bookings.notifications.loadingFailed')}
         </Alert>
       )}
       
@@ -662,75 +634,42 @@ const BookingsPage: React.FC = () => {
       <Dialog
         open={confirmDialog.open}
         onClose={handleCancelStatusChange}
-        maxWidth="md"
-        fullWidth
+        aria-labelledby="confirm-status-dialog-title"
+        aria-describedby="confirm-status-dialog-description"
       >
-        <DialogTitle>
-          {t('Подтверждение изменения статуса')}
+        <DialogTitle id="confirm-status-dialog-title">
+          {t('forms.bookings.confirmations.statusChangeTitle')}
         </DialogTitle>
         <DialogContent>
+          <Typography id="confirm-status-dialog-description">
+            {t('forms.bookings.confirmations.statusChangeMessage')}
+          </Typography>
           {confirmDialog.booking && (
-            <Box>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                Вы действительно хотите изменить статус бронирования на <strong>"{getStatusDisplayName(confirmDialog.newStatus)}"</strong>?
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+              <Typography variant="body2">
+                <strong>Клиент:</strong> {confirmDialog.booking.service_recipient ? 
+                  `${confirmDialog.booking.service_recipient.first_name} ${confirmDialog.booking.service_recipient.last_name}` : 
+                  t('forms.bookings.dataNotAvailable')
+                }
               </Typography>
-              
-              <Box sx={{ 
-                mt: 2, 
-                p: 2, 
-                bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50', 
-                borderRadius: 1,
-                border: `1px solid ${theme.palette.mode === 'dark' ? theme.palette.grey[700] : theme.palette.grey[300]}`,
-              }}>
-                <Typography variant="body2" sx={{ 
-                  fontWeight: 'bold', 
-                  mb: 1,
-                  color: theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'
-                }}>
-                  📋 Детали бронирования:
-                </Typography>
-                <Box sx={{ pl: 2 }}>
-                  <Typography variant="body2">
-                    • <strong>Клиент:</strong> {confirmDialog.booking.service_recipient 
-                      ? `${confirmDialog.booking.service_recipient.first_name} ${confirmDialog.booking.service_recipient.last_name}` 
-                      : 'Данные отсутствуют'}
-                  </Typography>
-                  <Typography variant="body2">
-                    • <strong>Телефон:</strong> {confirmDialog.booking.service_recipient?.phone || '-'}
-                  </Typography>
-                  <Typography variant="body2">
-                    • <strong>Дата:</strong> {format(new Date(confirmDialog.booking.booking_date), 'dd.MM.yyyy')}
-                  </Typography>
-                  <Typography variant="body2">
-                    • <strong>Время:</strong> {formatTime(confirmDialog.booking.start_time)}
-                  </Typography>
-                  <Typography variant="body2">
-                    • <strong>Сервисная точка:</strong> {confirmDialog.booking.service_point?.name || '-'}
-                  </Typography>
-                  <Typography variant="body2">
-                    • <strong>Тип услуг:</strong> {confirmDialog.booking.service_category?.name || '-'}
-                  </Typography>
-                </Box>
-              </Box>
+              <Typography variant="body2">
+                <strong>Дата:</strong> {confirmDialog.booking.booking_date ? 
+                  format(new Date(confirmDialog.booking.booking_date), 'dd.MM.yyyy') : '-'
+                }
+              </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelStatusChange} color="inherit">
-            {t(t('common.cancel'))}
+            {t('common.cancel')}
           </Button>
-          <Button 
-            onClick={handleConfirmStatusChange} 
-            color="primary" 
-            variant="contained"
-            autoFocus
-          >
-            {t(t('common.confirm'))}
+          <Button onClick={handleConfirmStatusChange} variant="contained" autoFocus>
+            {t('common.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
       
-      {/* Уведомления */}
       <Snackbar
         open={notification.open}
         autoHideDuration={6000}

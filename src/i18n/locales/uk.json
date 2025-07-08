@@ -480,19 +480,6 @@
         "deleteError": "Помилка при удалении контента"
       }
     },
-    "bookings": {
-      "title": "Бронювання",
-      "createBooking": "Створити бронювання",
-      "editBooking": "Редагувати бронювання",
-      "searchPlaceholder": "Пошук за номером бронювання...",
-      "bookingsNotFound": "Бронювання не знайдено",
-      "noBookings": "Немає бронювань",
-      "createFirstBooking": "Створіть перше бронювання для початку роботи",
-      "fields": {
-        "client": "Клієнт",
-        "notes": "Примітки"
-      }
-    },
     "cities": {
       "title": "Міста",
       "createCity": "Додати місто",
