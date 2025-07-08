@@ -11,6 +11,8 @@ import clientRuTranslations from './locales/client-ru.json';
 import clientUkTranslations from './locales/client-uk.json';
 import modalsRuTranslations from './locales/modals-ru.json';
 import modalsUkTranslations from './locales/modals-uk.json';
+import tireCalculatorRuTranslations from './locales/tire-calculator-ru.json';
+import tireCalculatorUkTranslations from './locales/tire-calculator-uk.json';
 
 // Функция для глубокого объединения объектов
 const deepMerge = (target: any, source: any): any => {
@@ -31,19 +33,25 @@ const resources = {
   uk: {
     translation: deepMerge(
       deepMerge(
-        deepMerge(ukTranslations, settingsUkTranslations),
-        clientUkTranslations
+        deepMerge(
+          deepMerge(ukTranslations, settingsUkTranslations),
+          clientUkTranslations
+        ),
+        modalsUkTranslations
       ),
-      modalsUkTranslations
+      tireCalculatorUkTranslations
     ),
   },
   ru: {
     translation: deepMerge(
       deepMerge(
-        deepMerge(ruTranslations, settingsRuTranslations),
-        clientRuTranslations
+        deepMerge(
+          deepMerge(ruTranslations, settingsRuTranslations),
+          clientRuTranslations
+        ),
+        modalsRuTranslations
       ),
-      modalsRuTranslations
+      tireCalculatorRuTranslations
     ),
   },
 };
