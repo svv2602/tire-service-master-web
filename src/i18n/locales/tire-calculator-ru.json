@@ -1,0 +1,104 @@
+{
+  "tireCalculator": {
+    "title": "Калькулятор шин",
+    "subtitle": "Профессиональный подбор альтернативных размеров шин",
+    "description": "Найдите совместимые размеры шин с точным расчетом отклонений диаметра, влияния на спидометр и рекомендациями по безопасности.",
+    "inputMode": {
+      "manual": "Ввести вручную",
+      "popular": "Популярные размеры"
+    },
+    "fields": {
+      "width": "Ширина",
+      "profile": "Профиль",
+      "diameter": "Диаметр"
+    },
+    "result": {
+      "finalSize": "Итоговый размер",
+      "originalTire": "Исходная шина",
+      "alternatives": "Альтернативные размеры",
+      "found": "Найдено альтернативных размеров",
+      "speedometerImpact": "Влияние на спидометр (первые 3 варианта)"
+    },
+    "validation": {
+      "errors": "Ошибки валидации:",
+      "required": "Все поля обязательны для заполнения"
+    },
+    "info": {
+      "recommended": "±1% - Рекомендуется",
+      "attention": "±2% - Требует внимания",
+      "check": "±3% - Проверьте совместимость",
+      "speedometer": "Влияние на спидометр"
+    },
+    "important": {
+      "title": "Важная информация",
+      "deviation": "Рекомендуемое отклонение диаметра: не более ±3% для сохранения точности спидометра и работы систем ABS/ESP",
+      "indexes": "Индексы нагрузки и скорости: новые шины должны иметь индексы не ниже оригинальных",
+      "rimWidth": "Ширина диска: убедитесь, что ваш диск подходит для выбранной ширины шины",
+      "compatibility": "Совместимость с автомобилем: всегда сверяйтесь с рекомендациями производителя автомобиля"
+    },
+    "additionalCalculators": "Дополнительные калькуляторы",
+    "advancedSettings": {
+      "title": "Расширенные настройки",
+      "maxDeviation": "Максимальное отклонение",
+      "deviation1": "1%",
+      "deviation3": "3%",
+      "deviation5": "5%",
+      "allowedWidthRange": "Допустимый диапазон ширины",
+      "mm": "мм",
+      "widthRange10": "±10",
+      "widthRange20": "±20",
+      "widthRange50": "±50",
+      "allowedDiameterRange": "Допустимый диапазон диаметра",
+      "inch": "дюйм",
+      "diameterRange0": "0",
+      "diameterRange1": "±1",
+      "diameterRange2": "±2",
+      "diameterRange3": "±3"
+    },
+    "buttons": {
+      "reset": "Сбросить",
+      "calculate": "Рассчитать",
+      "calculating": "Расчет..."
+    },
+    "sizeCalculator": {
+      "title": "Подбор размера по диаметру"
+    },
+    "find_tire_sizes_description": "Подберите альтернативные размеры шин по целевому диаметру.",
+    "search_parameters": "Параметры поиска",
+    "target_diameter_label": "Целевой диаметр",
+    "target_diameter_helper_text": "Введите желаемый диаметр шины в мм",
+    "rim_diameter_label": "Диаметр диска",
+    "rim_diameter_helper_text": "Введите диаметр диска в дюймах",
+    "mm_unit": "мм",
+    "inches_unit": "дюйм",
+    "information": "Информация",
+    "search_based_on_popular_sizes": "Поиск по популярным размерам",
+    "show_sizes_with_up_to_3_deviation": "Показать размеры с отклонением до 3%",
+    "results_sorted_by_accuracy": "Результаты отсортированы по точности",
+    "recommend_selecting_sizes_with_up_to_1_deviation": "Рекомендуется выбирать размеры с отклонением до 1%",
+    "find_sizes_button": "Найти размеры",
+    "reset_button": "Сбросить",
+    "no_sizes_found_message": "Размеры не найдены",
+    "converter": {
+      "title": "Конвертер размеров шин",
+      "description": "Преобразование между метрической и дюймовой системами",
+      "metricSystem": "Метрическая система",
+      "metricExample": "Пример: 205/55R16",
+      "inchSystem": "Дюймовая система",
+      "inchExample": "Пример: 27.5/10R15",
+      "swap": "Поменять направление",
+      "conversionDirection": "Направление конвертации",
+      "metricToInch": "Метры в Дюймы",
+      "inchToMetric": "Дюймы в Метры",
+      "result": "Результат конвертации",
+      "recommendation": "Рекомендация",
+      "mm": "мм",
+      "inch": "дюйм",
+      "percent": "%",
+      "rSymbol": "R",
+      "slash": "/",
+      "calculate": "Рассчитать",
+      "reset": "Сбросить"
+    }
+  }
+} 

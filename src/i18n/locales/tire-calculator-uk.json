@@ -1,0 +1,104 @@
+{
+  "tireCalculator": {
+    "title": "Калькулятор шин",
+    "subtitle": "Професійний підбір альтернативних розмірів шин",
+    "description": "Знайдіть сумісні розміри шин з точним розрахунком відхилень діаметра, впливу на спідометр і рекомендаціями з безпеки.",
+    "inputMode": {
+      "manual": "Ввести вручну",
+      "popular": "Популярні розміри"
+    },
+    "fields": {
+      "width": "Ширина",
+      "profile": "Профіль",
+      "diameter": "Діаметр"
+    },
+    "result": {
+      "finalSize": "Підсумковий розмір",
+      "originalTire": "Оригінальна шина",
+      "alternatives": "Альтернативні розміри",
+      "found": "Знайдено альтернативних розмірів",
+      "speedometerImpact": "Вплив на спідометр (перші 3 варіанти)"
+    },
+    "validation": {
+      "errors": "Помилки валідації:",
+      "required": "Всі поля обов'язкові для заповнення"
+    },
+    "info": {
+      "recommended": "±1% - Рекомендується",
+      "attention": "±2% - Потребує уваги",
+      "check": "±3% - Перевірте сумісність",
+      "speedometer": "Вплив на спідометр"
+    },
+    "important": {
+      "title": "Важлива інформація",
+      "deviation": "Рекомендоване відхилення діаметра: не більше ±3% для збереження точності спідометра і роботи систем ABS/ESP",
+      "indexes": "Індекси навантаження і швидкості: нові шини повинні мати індекси не нижче оригінальних",
+      "rimWidth": "Ширина диска: переконайтеся, що ваш диск підходить для обраної ширини шини",
+      "compatibility": "Сумісність з автомобілем: завжди звіряйтеся з рекомендаціями виробника автомобіля"
+    },
+    "additionalCalculators": "Додаткові калькулятори",
+    "advancedSettings": {
+      "title": "Розширені налаштування",
+      "maxDeviation": "Максимальне відхилення",
+      "deviation1": "1%",
+      "deviation3": "3%",
+      "deviation5": "5%",
+      "allowedWidthRange": "Допустимий діапазон ширини",
+      "mm": "мм",
+      "widthRange10": "±10",
+      "widthRange20": "±20",
+      "widthRange50": "±50",
+      "allowedDiameterRange": "Допустимий діапазон діаметра",
+      "inch": "дюйм",
+      "diameterRange0": "0",
+      "diameterRange1": "±1",
+      "diameterRange2": "±2",
+      "diameterRange3": "±3"
+    },
+    "buttons": {
+      "reset": "Скинути",
+      "calculate": "Розрахувати",
+      "calculating": "Розрахунок..."
+    },
+    "sizeCalculator": {
+      "title": "Підбір розміру за діаметром"
+    },
+    "find_tire_sizes_description": "Підберіть альтернативні розміри шин за цільовим діаметром.",
+    "search_parameters": "Параметри пошуку",
+    "target_diameter_label": "Цільовий діаметр",
+    "target_diameter_helper_text": "Введіть бажаний діаметр шини в мм",
+    "rim_diameter_label": "Діаметр диска",
+    "rim_diameter_helper_text": "Введіть діаметр диска в дюймах",
+    "mm_unit": "мм",
+    "inches_unit": "дюйм",
+    "information": "Інформація",
+    "search_based_on_popular_sizes": "Пошук за популярними розмірами",
+    "show_sizes_with_up_to_3_deviation": "Показати розміри з відхиленням до 3%",
+    "results_sorted_by_accuracy": "Результати відсортовані за точністю",
+    "recommend_selecting_sizes_with_up_to_1_deviation": "Рекомендується обирати розміри з відхиленням до 1%",
+    "find_sizes_button": "Знайти розміри",
+    "reset_button": "Скинути",
+    "no_sizes_found_message": "Розміри не знайдено",
+    "converter": {
+      "title": "Конвертер розмірів шин",
+      "description": "Перетворення між метричною та дюймовою системами",
+      "metricSystem": "Метрична система",
+      "metricExample": "Приклад: 205/55R16",
+      "inchSystem": "Дюймова система",
+      "inchExample": "Приклад: 27.5/10R15",
+      "swap": "Змінити напрямок",
+      "conversionDirection": "Напрямок конвертації ",
+      "metricToInch": "Метри в Дюйми",
+      "inchToMetric": "Дюйми в Метри",
+      "result": "Результат конвертації",
+      "recommendation": "Рекомендація",
+      "mm": "мм",
+      "inch": "дюйм",
+      "percent": "%",
+      "rSymbol": "R",
+      "slash": "/",
+      "calculate": "Розрахувати",
+      "reset": "Скинути"
+    }
+  }
+} 
