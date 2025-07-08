@@ -421,15 +421,6 @@
         "deleteError": "Ошибка при удалении контента"
       }
     },
-    "reviews": {
-      "title": "Отзывы",
-      "createReview": "Создать отзыв",
-      "editReview": "Редактировать отзыв",
-      "searchPlaceholder": "Поиск по тексту отзыва...",
-      "reviewsNotFound": "Отзывы не найдены",
-      "noReviews": "Нет отзывов",
-      "createFirstReview": "Создайте первый отзыв для начала работы"
-    },
     "bookings": {
       "title": "Бронирования",
       "createBooking": "Создать бронирование",
@@ -612,6 +603,32 @@
           "phone": "Номер телефона"
         }
       }
+    },
+    "reviews": {
+      "title": "Управление отзывами",
+      "createReview": "Создать отзыв",
+      "reviewsNotFound": "Отзывы не найдены",
+      "noReviews": "Нет отзывов",
+      "createFirstReview": "Создайте первый отзыв для начала работы",
+      "subtitle": "Все отзывы клиентов и их статусы",
+      "addReview": "Добавить отзыв",
+      "editReview": "Редактировать отзыв",
+      "replyReview": "Ответить на отзыв",
+      "deleteReview": "Удалить отзыв",
+      "confirmDeleteTitle": "Подтверждение удаления",
+      "confirmDeleteMessage": "Вы действительно хотите удалить этот отзыв? Это действие нельзя будет отменить.",
+      "successPublish": "Отзыв успешно опубликован",
+      "successReject": "Отзыв успешно отклонен",
+      "successUnpublish": "Отзыв снят с публикации",
+      "successDelete": "Отзыв успешно удален",
+      "errorStatus": "Ошибка при изменении статуса отзыва",
+      "errorDelete": "Ошибка при удалении отзыва",
+      "published": "Опубликованных:",
+      "pending": "На модерации: ",
+      "rejected": "Отклоненных:",
+      "searchPlaceholder": "Поиск по тексту отзыва, имени клиента или телефону...",
+      "allStatuses": "Все статусы",
+      "allServicePoints": "Все сервисные точки"
     }
   },
   "forms": {

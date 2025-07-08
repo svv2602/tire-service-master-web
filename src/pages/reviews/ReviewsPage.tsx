@@ -88,21 +88,21 @@ interface ReviewWithClient {
   };
 }
 
-// Статусы отзывов с типизацией
-const REVIEW_STATUSES: Record<ReviewStatus, {
-  label: string;
-  color: 'error' | 'info' | 'success' | 'warning';
-  icon: React.ReactNode;
-}> = {
-  pending: { label: 'На модерации', color: 'warning', icon: <StarIcon /> },
-  published: { label: 'Опубликован', color: 'success', icon: <CheckIcon /> },
-  rejected: { label: 'Отклонен', color: 'error', icon: <CloseIcon /> },
-};
-
 const ReviewsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const theme = useTheme();
+
+  // Статусы отзывов с типизацией (теперь внутри компонента, чтобы использовать t)
+  const REVIEW_STATUSES: Record<ReviewStatus, {
+    label: string;
+    color: 'error' | 'info' | 'success' | 'warning';
+    icon: React.ReactNode;
+  }> = {
+    pending: { label: t('admin.reviews.status.pending'), color: 'warning', icon: <StarIcon /> },
+    published: { label: t('admin.reviews.status.published'), color: 'success', icon: <CheckIcon /> },
+    rejected: { label: t('admin.reviews.status.rejected'), color: 'error', icon: <CloseIcon /> },
+  };
   
   // Состояние для поиска, фильтрации и пагинации
   const [search, setSearch] = useState('');
@@ -180,37 +180,36 @@ const ReviewsPage: React.FC = () => {
         id: review.id.toString(),
         data: { status: status as ReviewStatus }
       }).unwrap();
-      
       setNotification({
         open: true,
-        message: `Отзыв успешно ${status === 'published' ? 'опубликован' : status === 'rejected' ? 'отклонен' : 'снят с публикации'}`,
+        message: status === 'published' ? t('admin.reviews.successPublish') : status === 'rejected' ? t('admin.reviews.successReject') : t('admin.reviews.successUnpublish'),
         severity: 'success'
       });
     } catch (error: any) {
       setNotification({
         open: true,
-        message: error?.data?.message || 'Ошибка при изменении статуса отзыва',
+        message: error?.data?.message || t('admin.reviews.errorStatus'),
         severity: 'error'
       });
     }
-  }, [updateReview]);
+  }, [updateReview, t]);
 
   const handleDeleteReview = useCallback(async (review: ReviewWithClient) => {
     try {
       await deleteReview(review.id.toString()).unwrap();
       setNotification({
         open: true,
-        message: 'Отзыв успешно удален',
+        message: t('admin.reviews.successDelete'),
         severity: 'success'
       });
     } catch (error: any) {
       setNotification({
         open: true,
-        message: error?.data?.message || 'Ошибка при удалении отзыва',
+        message: error?.data?.message || t('admin.reviews.errorDelete'),
         severity: 'error'
       });
     }
-  }, [deleteReview]);
+  }, [deleteReview, t]);
 
   // Конфигурация действий для ActionsMenu
   const reviewActions: ActionItem<ReviewWithClient>[] = useMemo(() => [
@@ -220,7 +219,7 @@ const ReviewsPage: React.FC = () => {
       icon: <CheckIcon />,
       onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'published'),
       color: 'success',
-      tooltip: 'Одобрить отзыв',
+      tooltip: t('tables.actions.approve'),
       isVisible: (review: ReviewWithClient) => review.status !== 'published'
     },
     {
@@ -229,16 +228,16 @@ const ReviewsPage: React.FC = () => {
       icon: <CloseIcon />,
       onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'rejected'),
       color: 'error',
-      tooltip: 'Отклонить отзыв',
+      tooltip: t('tables.actions.reject'),
       isVisible: (review: ReviewWithClient) => review.status !== 'rejected'
     },
     {
       id: 'unpublish',
-      label: 'Снять с публикации',
+      label: t('tables.actions.unpublish'),
       icon: <VisibilityOffIcon />,
       onClick: (review: ReviewWithClient) => handleUpdateReviewStatus(review, 'pending'),
       color: 'warning',
-      tooltip: 'Снять отзыв с публикации',
+      tooltip: t('tables.actions.unpublish'),
       isVisible: (review: ReviewWithClient) => review.status === 'published'
     },
     {
@@ -251,11 +250,11 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'reply',
-      label: 'Ответить',
+      label: t('tables.actions.reply'),
       icon: <ReplyIcon />,
       onClick: (review: ReviewWithClient) => navigate(`/admin/reviews/${review.id}/reply`),
       color: 'primary',
-      tooltip: 'Ответить на отзыв'
+      tooltip: t('admin.reviews.replyReview')
     },
     {
       id: 'delete',
@@ -263,14 +262,14 @@ const ReviewsPage: React.FC = () => {
       icon: <DeleteIcon />,
       onClick: handleDeleteReview,
       color: 'error',
-      tooltip: 'Удалить отзыв',
+      tooltip: t('admin.reviews.deleteReview'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить этот отзыв? Это действие нельзя будет отменить.',
+        title: t('admin.reviews.confirmDeleteTitle'),
+        message: t('admin.reviews.confirmDeleteMessage'),
       }
     }
-  ], [navigate, handleUpdateReviewStatus, handleDeleteReview]);
+  ], [navigate, handleUpdateReviewStatus, handleDeleteReview, t]);
 
   // Вспомогательные функции
   const getClientInitials = (review: ReviewWithClient) => {
@@ -289,12 +288,12 @@ const ReviewsPage: React.FC = () => {
 
   // Конфигурация заголовка страницы
   const headerConfig: PageHeaderConfig = {
-    title: 'Отзывы (PageTable)',
-    subtitle: `Демонстрация нового универсального компонента PageTable (${totalItems} отзывов)`,
+    title: t('admin.reviews.title'),
+    subtitle: t('admin.reviews.subtitle', { count: totalItems }),
     actions: [
       {
         id: 'add',
-        label: 'Добавить отзыв',
+        label: t('admin.reviews.addReview'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/reviews/new')
       }
@@ -303,7 +302,7 @@ const ReviewsPage: React.FC = () => {
 
   // Конфигурация поиска
   const searchConfig: SearchConfig = {
-    placeholder: 'Поиск по тексту отзыва, имени клиента или телефону...',
+    placeholder: t('admin.reviews.searchPlaceholder'),
     value: search,
     onChange: setSearch,
     showClearButton: true
@@ -318,7 +317,7 @@ const ReviewsPage: React.FC = () => {
       value: statusFilter,
       onChange: (value: string | number) => setStatusFilter(value as ReviewStatus | ''),
       options: [
-        { value: '', label: 'Все статусы' },
+        { value: '', label: t('admin.reviews.allStatuses') },
         ...Object.entries(REVIEW_STATUSES).map(([value, { label }]) => ({
           value,
           label
@@ -327,12 +326,12 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'service_point',
-      label: 'Сервисная точка',
+      label: t('tables.columns.servicePoint'),
       type: 'select',
       value: servicePointId,
       onChange: (value: string | number) => setServicePointId(value as string),
       options: [
-        { value: '', label: 'Все сервисные точки' },
+        { value: '', label: t('admin.reviews.allServicePoints') },
         ...servicePoints.map(point => ({
           value: point.id.toString(),
           label: point.name
@@ -345,7 +344,7 @@ const ReviewsPage: React.FC = () => {
   const columns: Column[] = [
     {
       id: 'client',
-      label: 'Клиент',
+      label: t('tables.columns.client'),
       minWidth: 200,
       wrap: true,
       format: (value: any, review: ReviewWithClient) => (
@@ -355,10 +354,10 @@ const ReviewsPage: React.FC = () => {
           </Avatar>
           <Box>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {review.client?.user?.first_name || 'Имя'} {review.client?.user?.last_name || 'Фамилия'}
+              {review.client?.user?.first_name || t('tables.columns.firstName')} {review.client?.user?.last_name || t('tables.columns.lastName')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {review.client?.user?.phone || 'Телефон не указан'}
+              {review.client?.user?.phone || t('tables.columns.phoneNotSpecified')}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
               ID: {review.client?.id}
@@ -369,7 +368,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'service_point',
-      label: 'Сервисная точка',
+      label: t('tables.columns.servicePoint'),
       minWidth: 180,
       wrap: true,
       hideOnMobile: true,
@@ -378,11 +377,11 @@ const ReviewsPage: React.FC = () => {
           <BusinessIcon color="action" />
           <Box>
             <Typography variant="body2">
-              {review.service_point?.name || `Точка #${review.service_point_id}`}
+              {review.service_point?.name || t('tables.columns.unknownServicePoint', { id: review.service_point_id })}
             </Typography>
             {review.booking && (
               <Typography variant="caption" color="text.secondary">
-                Бронирование #{review.booking.id}
+                {t('tables.columns.booking')} #{review.booking.id}
               </Typography>
             )}
           </Box>
@@ -391,7 +390,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'comment',
-      label: 'Отзыв',
+      label: t('tables.columns.comment'),
       minWidth: 300,
       maxWidth: 400,
       wrap: true,
@@ -433,7 +432,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'rating',
-      label: 'Оценка',
+      label: t('tables.columns.rating'),
       minWidth: 120,
       align: 'center',
       format: (value: any, review: ReviewWithClient) => (
@@ -464,7 +463,7 @@ const ReviewsPage: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: 'Дата',
+      label: t('tables.columns.date'),
       minWidth: 120,
       hideOnMobile: true,
       format: (value: any, review: ReviewWithClient) => (
@@ -505,13 +504,13 @@ const ReviewsPage: React.FC = () => {
         alignItems: 'center' 
       }}>
         <Typography variant="body2" color="success.main">
-          Опубликованных: <strong>{published}</strong>
+          {t('admin.reviews.published')}: <strong>{published}</strong>
         </Typography>
         <Typography variant="body2" color="warning.main">
-          На модерации: <strong>{pending}</strong>
+          {t('admin.reviews.pending')}: <strong>{pending}</strong>
         </Typography>
         <Typography variant="body2" color="error.main">
-          Отклоненных: <strong>{rejected}</strong>
+          {t('admin.reviews.rejected')}: <strong>{rejected}</strong>
         </Typography>
       </Box>
     );

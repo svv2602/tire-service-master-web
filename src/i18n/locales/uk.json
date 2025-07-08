@@ -421,15 +421,6 @@
         "deleteError": "Помилка при удалении контента"
       }
     },
-    "reviews": {
-      "title": "Отзывы",
-      "createReview": "Створити отзыв",
-      "editReview": "Редагувати отзыв",
-      "searchPlaceholder": "Пошук по тексту отзыва...",
-      "reviewsNotFound": "Отзывы не найдены",
-      "noReviews": "Ні отзывов",
-      "createFirstReview": "Создайте первый отзыв для начала работы"
-    },
     "bookings": {
       "title": "Бронирования",
       "createBooking": "Створити бронирование",
@@ -612,6 +603,32 @@
           "phone": "Номер телефону"
         }
       }
+    },
+    "reviews": {
+      "title": "Управління відгуками",
+      "createReview": "Створити отзыв",
+      "reviewsNotFound": "Отзывы не найдены",
+      "noReviews": "Ні отзывов",
+      "createFirstReview": "Создайте первый отзыв для начала работы",
+      "subtitle": "Всі відгуки клієнтів та їх статуси",
+      "addReview": "Додати відгук",
+      "editReview": "Редагувати відгук",
+      "replyReview": "Відповісти на відгук",
+      "deleteReview": "Видалити відгук",
+      "confirmDeleteTitle": "Підтвердження видалення",
+      "confirmDeleteMessage": "Ви дійсно бажаєте видалити цей відгук? Цю дію не можна буде скасувати.",
+      "successPublish": "Відгук успішно опубліковано",
+      "successReject": "Відгук успішно відхилено",
+      "successUnpublish": "Відгук знято з публікації",
+      "successDelete": "Відгук успішно видалено",
+      "errorStatus": "Помилка при зміні статусу відгуку",
+      "errorDelete": "Помилка при видаленні відгуку",
+      "published": "Опублікованих:",
+      "pending": "На модерації:",
+      "rejected": "Відхилених:",
+      "searchPlaceholder": "Пошук за текстом відгуку, ім'ям клієнта або телефоном...",
+      "allStatuses": "Всі статуси",
+      "allServicePoints": "Всі сервісні точки"
     }
   },
   "forms": {
@@ -1550,7 +1567,14 @@
       "section": "Секція",
       "type": "Тип",
       "regionCity": "Область / Місто",
-      "workingHours": "Графік роботи"
+      "workingHours": "Графік роботи",
+      "client": "Клієнт",
+      "servicePoint": "Сервісна точка",
+      "comment": "Відгук",
+      "rating": "Оцінка",
+      "status": "Статус",
+      "date": "Дата",
+      "actions": "Дії"
     },
     "actions": {
       "view": "Переглянути",
@@ -1561,6 +1585,8 @@
       "approve": "Схвалити",
       "reject": "Відхилити",
       "publish": "Опублікувати",
+      "unpublish": "Зняти з публікації",
+      "reply": "Відповісти",
       "unpublish": "Зняти з публікації"
     }
   },
