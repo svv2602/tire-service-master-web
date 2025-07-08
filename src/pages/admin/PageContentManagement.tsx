@@ -22,8 +22,9 @@ import {
   Paper,
   Tooltip,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
-// UI компоненты  
+// UI components  
 import { Table, Column } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import {
@@ -44,26 +45,28 @@ import {
   CreatePageContentRequest
 } from '../../api/pageContent.api';
 
-// Типи контенту з українськими назвами
+// Content types - will be translated dynamically
 const CONTENT_TYPES = {
-  hero: 'Головний банер',
-  service: 'Послуга',
-  city: 'Місто',
-  article: 'Стаття',
-  cta: 'Заклик до дії',
-  footer: 'Підвал'
+  hero: 'hero',
+  service: 'service',
+  city: 'city',
+  article: 'article',
+  cta: 'cta',
+  footer: 'footer'
 };
 
-// Секції сторінки
+// Page sections - will be translated dynamically
 const PAGE_SECTIONS = {
-  client: 'Головна сторінка клієнта',
-  admin: 'Панель адміністратора',
-  service: 'Сторінка послуг',
-  about: 'Про нас'
+  client: 'client',
+  admin: 'admin',
+  service: 'service',
+  about: 'about'
 };
 
 const PageContentManagement: React.FC = () => {
-  // Стан компонента
+  const { t } = useTranslation();
+  
+  // Component state
   const [openDialog, setOpenDialog] = useState(false);
   const [editingContent, setEditingContent] = useState<PageContent | null>(null);
   const [page, setPage] = useState(0);
@@ -72,7 +75,7 @@ const PageContentManagement: React.FC = () => {
   const [filterType, setFilterType] = useState('');
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  // Форма для створення/редагування контенту
+  // Form for creating/editing content
   const [formData, setFormData] = useState<Partial<CreatePageContentRequest>>({
     section: 'client',
     content_type: 'hero',
@@ -84,7 +87,7 @@ const PageContentManagement: React.FC = () => {
     active: true
   });
 
-  // API хуки
+  // API hooks
   const { data: contents, isLoading, error, refetch } = useGetPageContentsQuery({
     section: filterSection || undefined,
     content_type: filterType || undefined
@@ -94,7 +97,7 @@ const PageContentManagement: React.FC = () => {
   const [updateContent] = useUpdatePageContentMutation();
   const [deleteContent] = useDeletePageContentMutation();
 
-  // Обробники подій
+  // Event handlers
   const handleOpenDialog = (content?: PageContent) => {
     if (content) {
       setEditingContent(content);
@@ -143,26 +146,26 @@ const PageContentManagement: React.FC = () => {
           id: editingContent.id,
           ...formData
         }).unwrap();
-        setSnackbar({ open: true, message: 'Контент успішно оновлено!', severity: 'success' });
+        setSnackbar({ open: true, message: t('admin.pageContent.messages.updateSuccess'), severity: 'success' });
       } else {
         await createContent(formData as CreatePageContentRequest).unwrap();
-        setSnackbar({ open: true, message: 'Контент успішно створено!', severity: 'success' });
+        setSnackbar({ open: true, message: t('admin.pageContent.messages.createSuccess'), severity: 'success' });
       }
       handleCloseDialog();
       refetch();
     } catch (error) {
-      setSnackbar({ open: true, message: 'Помилка при збереженні контенту', severity: 'error' });
+      setSnackbar({ open: true, message: t('admin.pageContent.messages.saveError'), severity: 'error' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm('Ви впевнені, що хочете видалити цей контент?')) {
+    if (window.confirm(t('admin.pageContent.confirmDelete'))) {
       try {
         await deleteContent(id).unwrap();
-        setSnackbar({ open: true, message: 'Контент успішно видалено!', severity: 'success' });
+        setSnackbar({ open: true, message: t('admin.pageContent.messages.deleteSuccess'), severity: 'success' });
         refetch();
       } catch (error) {
-        setSnackbar({ open: true, message: 'Помилка при видаленні контенту', severity: 'error' });
+        setSnackbar({ open: true, message: t('admin.pageContent.messages.deleteError'), severity: 'error' });
       }
     }
   };
@@ -175,25 +178,27 @@ const PageContentManagement: React.FC = () => {
       }).unwrap();
       setSnackbar({ 
         open: true, 
-        message: `Контент ${!content.active ? 'активовано' : 'деактивовано'}!`, 
+        message: t('admin.pageContent.messages.statusChanged', { 
+          status: !content.active ? t('admin.pageContent.activated') : t('admin.pageContent.deactivated')
+        }), 
         severity: 'success' 
       });
       refetch();
     } catch (error) {
-      setSnackbar({ open: true, message: 'Помилка при зміні статусу', severity: 'error' });
+      setSnackbar({ open: true, message: t('admin.pageContent.messages.statusError'), severity: 'error' });
     }
   };
 
-  // Конфигурация колонок для UI Table
+  // Column configuration for UI Table
   const columns: Column[] = [
     { id: 'id', label: 'ID', minWidth: 50, align: 'left' },
     { 
       id: 'section', 
-      label: 'Секція', 
+      label: t('admin.pageContent.columns.section'), 
       minWidth: 120,
       format: (value: string) => (
         <Chip 
-          label={PAGE_SECTIONS[value as keyof typeof PAGE_SECTIONS] || value}
+          label={t(`admin.pageContent.sections.${value}`) || value}
           size="small"
           color="primary"
           variant="outlined"
@@ -202,11 +207,11 @@ const PageContentManagement: React.FC = () => {
     },
     { 
       id: 'content_type', 
-      label: 'Тип', 
+      label: t('admin.pageContent.columns.type'), 
       minWidth: 120,
       format: (value: string) => (
         <Chip 
-          label={CONTENT_TYPES[value as keyof typeof CONTENT_TYPES] || value}
+          label={t(`admin.pageContent.contentTypes.${value}`) || value}
           size="small"
           color="secondary"
           variant="outlined"
@@ -215,7 +220,7 @@ const PageContentManagement: React.FC = () => {
     },
     { 
       id: 'title', 
-      label: 'Заголовок', 
+      label: t('admin.pageContent.columns.title'), 
       minWidth: 200, 
       wrap: true,
       format: (value: string) => (
@@ -224,14 +229,14 @@ const PageContentManagement: React.FC = () => {
         </Typography>
       )
     },
-    { id: 'position', label: 'Позиція', minWidth: 80, align: 'center' },
+    { id: 'position', label: t('admin.pageContent.columns.position'), minWidth: 80, align: 'center' },
     { 
       id: 'active', 
-      label: 'Статус', 
+      label: t('admin.pageContent.columns.status'), 
       minWidth: 100,
       format: (value: boolean) => (
         <Chip 
-          label={value ? 'Активний' : 'Неактивний'}
+          label={value ? t('admin.pageContent.active') : t('admin.pageContent.inactive')}
           size="small"
           color={value ? 'success' : 'default'}
         />
@@ -239,12 +244,12 @@ const PageContentManagement: React.FC = () => {
     },
     { 
       id: 'actions', 
-      label: 'Дії', 
+      label: t('admin.pageContent.columns.actions'), 
       minWidth: 150,
       align: 'center',
       format: (value: any, row: PageContent) => (
         <Box display="flex" gap={1} justifyContent="center">
-          <Tooltip title="Редагувати">
+          <Tooltip title={t('admin.pageContent.actions.edit')}>
             <IconButton
               size="small"
               onClick={() => handleOpenDialog(row)}
@@ -253,7 +258,7 @@ const PageContentManagement: React.FC = () => {
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title={row.active ? 'Деактивувати' : 'Активувати'}>
+          <Tooltip title={row.active ? t('admin.pageContent.actions.deactivate') : t('admin.pageContent.actions.activate')}>
             <IconButton
               size="small"
               onClick={() => handleToggleActive(row)}
@@ -262,7 +267,7 @@ const PageContentManagement: React.FC = () => {
               {row.active ? <VisibilityOffIcon /> : <VisibilityIcon />}
             </IconButton>
           </Tooltip>
-          <Tooltip title="Видалити">
+          <Tooltip title={t('admin.pageContent.actions.delete')}>
             <IconButton
               size="small"
               onClick={() => handleDelete(row.id)}
@@ -276,10 +281,10 @@ const PageContentManagement: React.FC = () => {
     }
   ];
 
-  // Фільтрований контент
+  // Filtered content
   const filteredContents = contents?.data || [];
 
-  // Пагінація
+  // Pagination
   const paginatedContents = filteredContents.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -288,7 +293,7 @@ const PageContentManagement: React.FC = () => {
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Завантаження...</Typography>
+        <Typography>{t('admin.pageContent.loading')}</Typography>
       </Box>
     );
   }
@@ -296,17 +301,17 @@ const PageContentManagement: React.FC = () => {
   if (error) {
     return (
       <Alert severity="error">
-        Помилка завантаження контенту. Спробуйте оновити сторінку.
+        {t('admin.pageContent.loadError')}
       </Alert>
     );
   }
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
-      {/* Заголовок */}
+      {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" component="h1">
-          Управління контентом сторінок
+          {t('admin.pageContent.title')}
         </Typography>
         <Button
           variant="contained"
@@ -314,39 +319,39 @@ const PageContentManagement: React.FC = () => {
           onClick={() => handleOpenDialog()}
           sx={{ bgcolor: '#2196F3' }}
         >
-          Додати контент
+          {t('admin.pageContent.addContent')}
         </Button>
       </Box>
 
-      {/* Фільтри */}
+      {/* Filters */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
-              <InputLabel>Секція</InputLabel>
+              <InputLabel>{t('admin.pageContent.filters.section')}</InputLabel>
               <Select
                 value={filterSection}
-                label="Секція"
+                label={t('admin.pageContent.filters.section')}
                 onChange={(e) => setFilterSection(e.target.value)}
               >
-                <MenuItem value="">Всі секції</MenuItem>
+                <MenuItem value="">{t('admin.pageContent.filters.allSections')}</MenuItem>
                 {Object.entries(PAGE_SECTIONS).map(([key, label]) => (
-                  <MenuItem key={key} value={key}>{label}</MenuItem>
+                  <MenuItem key={key} value={key}>{t(`admin.pageContent.sections.${key}`)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={4}>
             <FormControl fullWidth>
-              <InputLabel>Тип контенту</InputLabel>
+              <InputLabel>{t('admin.pageContent.filters.contentType')}</InputLabel>
               <Select
                 value={filterType}
-                label="Тип контенту"
+                label={t('admin.pageContent.filters.contentType')}
                 onChange={(e) => setFilterType(e.target.value)}
               >
-                <MenuItem value="">Всі типи</MenuItem>
+                <MenuItem value="">{t('admin.pageContent.filters.allTypes')}</MenuItem>
                 {Object.entries(CONTENT_TYPES).map(([key, label]) => (
-                  <MenuItem key={key} value={key}>{label}</MenuItem>
+                  <MenuItem key={key} value={key}>{t(`admin.pageContent.contentTypes.${key}`)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -360,20 +365,20 @@ const PageContentManagement: React.FC = () => {
                 setPage(0);
               }}
             >
-              Скинути фільтри
+              {t('admin.pageContent.filters.reset')}
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Таблиця контенту з UI Table */}
+      {/* Content table with UI Table */}
       <Box sx={{ mb: 3 }}>
         <Table
           columns={columns}
           rows={paginatedContents}
         />
         
-        {/* Пагинация с UI Pagination */}
+        {/* Pagination with UI Pagination */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'center', 
@@ -389,37 +394,37 @@ const PageContentManagement: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Діалог створення/редагування */}
+      {/* Create/Edit dialog */}
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingContent ? 'Редагувати контент' : 'Створити новий контент'}
+          {editingContent ? t('admin.pageContent.dialog.editTitle') : t('admin.pageContent.dialog.createTitle')}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Секція</InputLabel>
+                <InputLabel>{t('admin.pageContent.dialog.section')}</InputLabel>
                 <Select
                   value={formData.section}
-                  label="Секція"
+                  label={t('admin.pageContent.dialog.section')}
                   onChange={(e) => handleFormChange('section', e.target.value)}
                 >
                   {Object.entries(PAGE_SECTIONS).map(([key, label]) => (
-                    <MenuItem key={key} value={key}>{label}</MenuItem>
+                    <MenuItem key={key} value={key}>{t(`admin.pageContent.sections.${key}`)}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth>
-                <InputLabel>Тип контенту</InputLabel>
+                <InputLabel>{t('admin.pageContent.dialog.contentType')}</InputLabel>
                 <Select
                   value={formData.content_type}
-                  label="Тип контенту"
+                  label={t('admin.pageContent.dialog.contentType')}
                   onChange={(e) => handleFormChange('content_type', e.target.value)}
                 >
                   {Object.entries(CONTENT_TYPES).map(([key, label]) => (
-                    <MenuItem key={key} value={key}>{label}</MenuItem>
+                    <MenuItem key={key} value={key}>{t(`admin.pageContent.contentTypes.${key}`)}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -427,7 +432,7 @@ const PageContentManagement: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Заголовок"
+                label={t('admin.pageContent.dialog.title')}
                 value={formData.title}
                 onChange={(e) => handleFormChange('title', e.target.value)}
                 required
@@ -436,7 +441,7 @@ const PageContentManagement: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Контент"
+                label={t('admin.pageContent.dialog.content')}
                 value={formData.content}
                 onChange={(e) => handleFormChange('content', e.target.value)}
                 multiline
@@ -447,7 +452,7 @@ const PageContentManagement: React.FC = () => {
             <Grid item xs={12} sm={8}>
               <TextField
                 fullWidth
-                label="URL зображення"
+                label={t('admin.pageContent.dialog.imageUrl')}
                 value={formData.image_url}
                 onChange={(e) => handleFormChange('image_url', e.target.value)}
                 placeholder="https://example.com/image.jpg"
@@ -456,7 +461,7 @@ const PageContentManagement: React.FC = () => {
             <Grid item xs={12} sm={4}>
               <TextField
                 fullWidth
-                label="Позиція"
+                label={t('admin.pageContent.dialog.position')}
                 type="number"
                 value={formData.position}
                 onChange={(e) => handleFormChange('position', parseInt(e.target.value) || 0)}
@@ -471,14 +476,14 @@ const PageContentManagement: React.FC = () => {
                     onChange={(e) => handleFormChange('active', e.target.checked)}
                   />
                 }
-                label="Активний"
+                label={t('admin.pageContent.dialog.active')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} startIcon={<CancelIcon />}>
-            Скасувати
+            {t('admin.pageContent.dialog.cancel')}
           </Button>
           <Button 
             onClick={handleSubmit} 
@@ -486,12 +491,12 @@ const PageContentManagement: React.FC = () => {
             startIcon={<SaveIcon />}
             sx={{ bgcolor: '#4CAF50' }}
           >
-            {editingContent ? 'Оновити' : 'Створити'}
+            {editingContent ? t('admin.pageContent.dialog.update') : t('admin.pageContent.dialog.create')}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar для повідомлень */}
+      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}

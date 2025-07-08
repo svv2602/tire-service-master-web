@@ -7,19 +7,22 @@ import {
   CardContent,
   Alert,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { BookingAnalytics } from '../../components/analytics/BookingAnalytics';
 import { useGetBookingsQuery } from '../../api/bookings.api';
 import { Booking } from '../../types/models';
 import { subDays, subMonths, startOfMonth, endOfMonth, format } from 'date-fns';
 
 const BookingAnalyticsPage: React.FC = () => {
-  // Состояние для периода анализа
+  const { t } = useTranslation();
+  
+  // Date range state for analysis
   const [dateRange, setDateRange] = useState({
-    start: subMonths(new Date(), 1), // Последний месяц по умолчанию
+    start: subMonths(new Date(), 1), // Last month by default
     end: new Date(),
   });
 
-  // Загрузка данных бронирований
+  // Load bookings data
   const { 
     data: bookingsResponse, 
     isLoading, 
@@ -27,7 +30,7 @@ const BookingAnalyticsPage: React.FC = () => {
   } = useGetBookingsQuery({
     from_date: format(dateRange.start, 'yyyy-MM-dd'),
     to_date: format(dateRange.end, 'yyyy-MM-dd'),
-    per_page: 1000, // Загружаем много записей для анализа
+    per_page: 1000, // Load many records for analysis
   });
 
   const bookings = useMemo(() => {
@@ -38,16 +41,16 @@ const BookingAnalyticsPage: React.FC = () => {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-          Аналитика бронирований
+          {t('admin.analytics.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Детальный анализ статистики бронирований, доходов и популярных услуг
+          {t('admin.analytics.subtitle')}
         </Typography>
       </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке данных: {error.toString()}
+          {t('admin.analytics.dataLoadError')}: {error.toString()}
         </Alert>
       )}
 

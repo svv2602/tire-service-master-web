@@ -21,6 +21,7 @@ import {
   SelectChangeEvent,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BookingCalendar } from '../../components/calendar/BookingCalendar';
 import { 
   useGetBookingsQuery, 
@@ -42,29 +43,30 @@ import {
 
 const BookingCalendarPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
-  // Состояние фильтров
+  // Filter state
   const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
     start: new Date(),
     end: new Date(),
   });
   
-  // Новые фильтры
+  // Filter state
   const [filters, setFilters] = useState<{
     servicePointId?: number;
     categoryId?: number;
   }>({});
 
-  // API запросы для фильтров
+  // API queries for filters
   const { data: servicePointsResponse } = useGetServicePointsQuery({
-    per_page: 100, // Загружаем все сервисные точки
+    per_page: 100, // Load all service points
   });
   
   const { data: categoriesResponse } = useGetServiceCategoriesQuery({
-    per_page: 100, // Загружаем все категории
+    per_page: 100, // Load all categories
   });
 
-  // API запрос для бронирований с фильтрами
+  // API query for bookings with filters
   const { 
     data: bookingsResponse, 
     isLoading, 
@@ -75,13 +77,13 @@ const BookingCalendarPage: React.FC = () => {
     to_date: format(dateRange.end, 'yyyy-MM-dd'),
     service_point_id: filters.servicePointId,
     service_category_id: filters.categoryId,
-    per_page: 1000, // Загружаем много записей для календаря
+    per_page: 1000, // Load many records for calendar
   });
 
   const [updateBookingStatus] = useUpdateBookingStatusMutation();
   const [cancelBooking] = useCancelBookingMutation();
 
-  // Состояние UI
+  // UI state
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [bulkActionDialog, setBulkActionDialog] = useState<{
     open: boolean;
@@ -98,7 +100,7 @@ const BookingCalendarPage: React.FC = () => {
   const servicePoints = servicePointsResponse?.data || [];
   const categories = categoriesResponse?.data || [];
 
-  // Обработчики фильтров
+  // Filter handlers
   const handleServicePointChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value;
     setFilters(prev => ({
@@ -119,10 +121,10 @@ const BookingCalendarPage: React.FC = () => {
     setFilters({});
   };
 
-  // Подсчет активных фильтров
+  // Count active filters
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
-  // Обработчики событий календаря
+  // Calendar event handlers
   const handleDateRangeChange = useCallback((start: Date, end: Date) => {
     setDateRange({ start, end });
   }, []);
@@ -158,7 +160,10 @@ const BookingCalendarPage: React.FC = () => {
       
       setSnackbar({
         open: true,
-        message: `Действие "${getActionName(action)}" выполнено для ${selectedBookings.length} записей`,
+        message: t('admin.bookingCalendar.messages.bulkActionSuccess', { 
+          action: getActionName(action), 
+          count: selectedBookings.length 
+        }),
         severity: 'success',
       });
 
@@ -166,7 +171,7 @@ const BookingCalendarPage: React.FC = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: `Ошибка при выполнении массового действия: ${error}`,
+        message: t('admin.bookingCalendar.messages.bulkActionError', { error: String(error) }),
         severity: 'error',
       });
     }
@@ -176,9 +181,9 @@ const BookingCalendarPage: React.FC = () => {
 
   const getActionName = (action: string) => {
     switch (action) {
-      case 'confirm': return 'Подтверждение';
-      case 'cancel': return 'Отмена';
-      case 'reschedule': return 'Перенос';
+      case 'confirm': return t('admin.bookingCalendar.actions.confirm');
+      case 'cancel': return t('admin.bookingCalendar.actions.cancel');
+      case 'reschedule': return t('admin.bookingCalendar.actions.reschedule');
       default: return action;
     }
   };
@@ -191,23 +196,23 @@ const BookingCalendarPage: React.FC = () => {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-          Календарь бронирований
+          {t('admin.bookingCalendar.title')}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Управление расписанием и массовые операции с бронированиями
+          {t('admin.bookingCalendar.subtitle')}
         </Typography>
       </Box>
 
-      {/* Панель фильтров */}
+      {/* Filter panel */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <FilterIcon sx={{ mr: 1 }} />
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Фильтры
+            {t('admin.bookingCalendar.filters.title')}
           </Typography>
           {activeFiltersCount > 0 && (
             <Chip 
-              label={`Активно: ${activeFiltersCount}`} 
+              label={t('admin.bookingCalendar.filters.activeCount', { count: activeFiltersCount })} 
               color="primary" 
               size="small" 
               sx={{ mr: 1 }}
@@ -219,21 +224,21 @@ const BookingCalendarPage: React.FC = () => {
             disabled={activeFiltersCount === 0}
             size="small"
           >
-            Очистить
+            {t('admin.bookingCalendar.filters.clear')}
           </Button>
         </Box>
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
-              <InputLabel>Сервисная точка</InputLabel>
+              <InputLabel>{t('admin.bookingCalendar.filters.servicePoint')}</InputLabel>
               <Select
                 value={filters.servicePointId?.toString() || ''}
                 onChange={handleServicePointChange}
-                label="Сервисная точка"
+                label={t('admin.bookingCalendar.filters.servicePoint')}
               >
                 <MenuItem value="">
-                  <em>Все сервисные точки</em>
+                  <em>{t('admin.bookingCalendar.filters.allServicePoints')}</em>
                 </MenuItem>
                 {servicePoints.map((point: ServicePoint) => (
                   <MenuItem key={point.id} value={point.id.toString()}>
@@ -246,14 +251,14 @@ const BookingCalendarPage: React.FC = () => {
 
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
-              <InputLabel>Категория услуг</InputLabel>
+              <InputLabel>{t('admin.bookingCalendar.filters.category')}</InputLabel>
               <Select
                 value={filters.categoryId?.toString() || ''}
                 onChange={handleCategoryChange}
-                label="Категория услуг"
+                label={t('admin.bookingCalendar.filters.category')}
               >
                 <MenuItem value="">
-                  <em>Все категории</em>
+                  <em>{t('admin.bookingCalendar.filters.allCategories')}</em>
                 </MenuItem>
                 {categories.map((category: ServiceCategory) => (
                   <MenuItem key={category.id} value={category.id.toString()}>
@@ -265,12 +270,14 @@ const BookingCalendarPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Индикаторы активных фильтров */}
+        {/* Active filter indicators */}
         {activeFiltersCount > 0 && (
           <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {filters.servicePointId && (
               <Chip
-                label={`Точка: ${servicePoints.find(p => p.id === filters.servicePointId)?.name || 'Неизвестно'}`}
+                label={t('admin.bookingCalendar.filters.pointLabel', { 
+                  name: servicePoints.find(p => p.id === filters.servicePointId)?.name || t('common.unknown')
+                })}
                 onDelete={() => setFilters(prev => ({ ...prev, servicePointId: undefined }))}
                 color="primary"
                 variant="outlined"
@@ -279,7 +286,9 @@ const BookingCalendarPage: React.FC = () => {
             )}
             {filters.categoryId && (
               <Chip
-                label={`Категория: ${categories.find(c => c.id === filters.categoryId)?.name || 'Неизвестно'}`}
+                label={t('admin.bookingCalendar.filters.categoryLabel', { 
+                  name: categories.find(c => c.id === filters.categoryId)?.name || t('common.unknown')
+                })}
                 onDelete={() => setFilters(prev => ({ ...prev, categoryId: undefined }))}
                 color="primary"
                 variant="outlined"
@@ -292,7 +301,7 @@ const BookingCalendarPage: React.FC = () => {
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Ошибка при загрузке данных: {error.toString()}
+          {t('admin.bookingCalendar.dataLoadError')}: {error.toString()}
         </Alert>
       )}
 
@@ -312,7 +321,7 @@ const BookingCalendarPage: React.FC = () => {
         }}
       />
 
-      {/* Диалог массовых действий */}
+      {/* Bulk actions dialog */}
       <Dialog
         open={bulkActionDialog.open}
         onClose={() => setBulkActionDialog({ open: false, bookings: [], action: '' })}
@@ -320,26 +329,28 @@ const BookingCalendarPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          Подтверждение массового действия
+          {t('admin.bookingCalendar.dialog.title')}
         </DialogTitle>
         <DialogContent>
           <Typography gutterBottom>
-            Вы действительно хотите выполнить действие "{getActionName(bulkActionDialog.action)}" 
-            для {bulkActionDialog.bookings.length} записей?
+            {t('admin.bookingCalendar.dialog.confirmMessage', {
+              action: getActionName(bulkActionDialog.action),
+              count: bulkActionDialog.bookings.length
+            })}
           </Typography>
           
           {bulkActionDialog.action === 'reschedule' && (
             <Box sx={{ mt: 2 }}>
               <TextField
                 fullWidth
-                label="Новая дата"
+                label={t('admin.bookingCalendar.dialog.newDate')}
                 type="date"
                 InputLabelProps={{ shrink: true }}
                 sx={{ mb: 2 }}
               />
               <TextField
                 fullWidth
-                label="Новое время"
+                label={t('admin.bookingCalendar.dialog.newTime')}
                 type="time"
                 InputLabelProps={{ shrink: true }}
               />
@@ -349,20 +360,20 @@ const BookingCalendarPage: React.FC = () => {
           {bulkActionDialog.action === 'cancel' && (
             <Box sx={{ mt: 2 }}>
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Причина отмены</InputLabel>
-                <Select label="Причина отмены">
-                  <MenuItem value="client_request">По просьбе клиента</MenuItem>
-                  <MenuItem value="service_unavailable">Услуга недоступна</MenuItem>
-                  <MenuItem value="technical_issues">Технические проблемы</MenuItem>
-                  <MenuItem value="other">Другая причина</MenuItem>
+                <InputLabel>{t('admin.bookingCalendar.dialog.cancelReason')}</InputLabel>
+                <Select label={t('admin.bookingCalendar.dialog.cancelReason')}>
+                  <MenuItem value="client_request">{t('admin.bookingCalendar.dialog.cancelReasons.clientRequest')}</MenuItem>
+                  <MenuItem value="service_unavailable">{t('admin.bookingCalendar.dialog.cancelReasons.serviceUnavailable')}</MenuItem>
+                  <MenuItem value="technical_issues">{t('admin.bookingCalendar.dialog.cancelReasons.technicalIssues')}</MenuItem>
+                  <MenuItem value="other">{t('admin.bookingCalendar.dialog.cancelReasons.other')}</MenuItem>
                 </Select>
               </FormControl>
               <TextField
                 fullWidth
-                label="Комментарий"
+                label={t('admin.bookingCalendar.dialog.comment')}
                 multiline
                 rows={3}
-                placeholder="Дополнительная информация..."
+                placeholder={t('admin.bookingCalendar.dialog.commentPlaceholder')}
               />
             </Box>
           )}
@@ -371,19 +382,19 @@ const BookingCalendarPage: React.FC = () => {
           <Button 
             onClick={() => setBulkActionDialog({ open: false, bookings: [], action: '' })}
           >
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={executeBulkAction}
             variant="contained"
             color={bulkActionDialog.action === 'cancel' ? 'error' : 'primary'}
           >
-            Выполнить
+            {t('admin.bookingCalendar.dialog.execute')}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Уведомления */}
+      {/* Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
