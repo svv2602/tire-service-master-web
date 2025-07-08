@@ -1,4 +1,114 @@
 {
+  "admin": {
+    "clients": {
+      "title": "Клиенты",
+      "createClient": "Добавить клиента",
+      "editClient": "Редактировать клиента",
+      "searchPlaceholder": "Поиск по имени, фамилии, email или телефону...",
+      "onlyActive": "Только активные",
+      "allClients": "Все клиенты",
+      "clientStatus": "Статус клиентов",
+      "deactivate": "Деактивировать",
+      "activate": "Активировать",
+      "view": "Просмотр",
+      "viewTooltip": "Просмотр детальной информации о клиенте",
+      "editTooltip": "Редактировать данные клиента",
+      "deleteTooltip": "Удалить клиента",
+      "deactivateTooltip": "Деактивировать клиента",
+      "activateTooltip": "Активировать клиента",
+      "carsTooltip": "Управление автомобилями клиента",
+      "changeStatus": "Изменить",
+      "cancel": "Отмена",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить",
+      "confirmStatusChange": "Подтверждение изменения статуса",
+      "confirmStatusMessage": "Вы действительно хотите изменить статус этого клиента?",
+      "confirmDelete": "Подтверждение удаления",
+      "confirmDeleteMessage": "Вы действительно хотите удалить этого клиента? Это действие нельзя отменить.",
+      "client": "Клиент",
+      "email": "Email",
+      "phone": "Телефон",
+      "notSpecified": "Не указан",
+      "status": "Статус",
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "deactivated": "Деактивирован",
+      "actions": "Действия",
+      "clientsNotFound": "Клиенты не найдены",
+      "noClients": "Нет клиентов",
+      "changeSearchCriteria": "Попробуйте изменить критерии поиска",
+      "createFirstClient": "Создайте первого клиента для начала работы",
+      "cars": "Автомобили",
+      "bookings": "Записи",
+      "reviews": "Отзывы",
+      "registrationDate": "Дата регистрации",
+      "lastActivity": "Последняя активность",
+      "stats": {
+        "foundClients": "Найдено клиентов: <strong>{{count}}</strong>",
+        "activeClients": "Активных: <strong>{{count}}</strong>",
+        "inactiveClients": "Неактивных: <strong>{{count}}</strong>",
+        "onlyActive": "(только активные)",
+        "withInactive": "(включая неактивных)"
+      },
+      "initials": {
+        "default": "К"
+      },
+      "messages": {
+        "statusChanged": "Статус клиента {{name}} изменен",
+        "deleted": "Клиент {{name}} успешно удален",
+        "statusError": "Ошибка при изменении статуса клиента",
+        "deleteError": "Ошибка при удалении клиента"
+      },
+      "form": {
+        "title": {
+          "edit": "Редактирование клиента",
+          "create": "Новый клиент"
+        },
+        "fields": {
+          "firstName": "Имя",
+          "firstNameRequired": "Имя *",
+          "lastName": "Фамилия",
+          "lastNameRequired": "Фамилия *",
+          "middleName": "Отчество",
+          "phone": "Номер телефона",
+          "phoneRequired": "Номер телефона *",
+          "email": "Email",
+          "emailPlaceholder": "example@email.com (необязательно)",
+          "activeClient": "Активный клиент",
+          "notificationMethod": "Способ уведомлений",
+          "marketingConsent": "Согласие на маркетинг"
+        },
+        "validation": {
+          "firstNameRequired": "Имя обязательно",
+          "firstNameMin": "Имя должно быть не менее 2 символов",
+          "lastNameRequired": "Фамилия обязательна",
+          "lastNameMin": "Фамилия должна быть не менее 2 символов",
+          "emailInvalid": "Введите корректный email",
+          "phoneRequired": "Номер телефона обязателен",
+          "phoneInvalid": "Введите корректный номер телефона"
+        },
+        "alerts": {
+          "fillRequiredFields": "Заполните все обязательные поля:",
+          "allFieldsFilled": "Все обязательные поля заполнены. Можете создать клиента.",
+          "unknownError": "Произошла неизвестная ошибка"
+        },
+        "buttons": {
+          "cancel": "Отмена",
+          "save": "Сохранить",
+          "create": "Создать"
+        },
+        "messages": {
+          "clientUpdated": "Клиент успешно обновлен",
+          "clientCreated": "Клиент успешно создан"
+        },
+        "requiredFields": {
+          "firstName": "Имя",
+          "lastName": "Фамилия",
+          "phone": "Номер телефона"
+        }
+      }
+    }
+  },
   "forms": {
     "client": {
       "title": {
