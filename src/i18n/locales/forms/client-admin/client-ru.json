@@ -1,0 +1,25 @@
+{
+  "forms": {
+    "client": {
+      "title": {
+        "create": "Новый клиент",
+        "edit": "Редактировать клиента"
+      },
+      "fields": {
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "email": "Email",
+        "phone": "Телефон",
+        "isActive": "Активный клиент"
+      },
+      "validation": {
+        "firstNameRequired": "Имя обязательно",
+        "lastNameRequired": "Фамилия обязательна",
+        "emailRequired": "Email обязателен",
+        "phoneRequired": "Телефон обязателен"
+      },
+      "emailPlaceholder": "example@email.com (необязательно)",
+      "canCreate": "Можете создать клиента"
+    }
+  }
+} 
