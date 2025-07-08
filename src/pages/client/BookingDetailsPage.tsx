@@ -175,14 +175,14 @@ const BookingDetailsPage: React.FC = () => {
     try {
       await cancelBooking({
         id: id,
-        cancellation_reason_id: 10, // "Изменение расписания"
-        cancellation_comment: 'Отменено клиентом через веб-интерфейс'
+        cancellation_reason_id: 10, // t('client.bookingDetails.cancellationReasonScheduleChange')
+        cancellation_comment: t('client.bookingDetails.cancellationCommentByClient')
       }).unwrap();
       setCancelDialogOpen(false);
-      // Перенаправляем на страницу бронирований с активной вкладкой "Отмененные"
+      // t('client.bookingDetails.redirectToCancelledTab')
       navigate('/client/bookings?tab=cancelled');
     } catch (error: any) {
-      setCancelError(error.data?.error || 'Не удалось отменить бронирование');
+      setCancelError(error.data?.error || t('client.bookingDetails.cancelError'));
     }
   };
   

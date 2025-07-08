@@ -438,6 +438,27 @@ const PartnersPage: React.FC = () => {
     onPageChange: handlePageChange,
   }), [page, pageSize, totalItems, handlePageChange]);
 
+  // Статистика для отображения между поиском и таблицей
+  const statisticsContent = useMemo(() => {
+    if (partners.length === 0) return null;
+    
+    return (
+      <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          {t('admin.partners.stats.foundPartners', { count: totalItems })}
+        </Typography>
+        <Typography variant="body2" color="success.main">
+          {t('admin.partners.stats.activePartners', { count: partners.filter(p => p.is_active).length })}
+        </Typography>
+        {partners.filter(p => !p.is_active).length > 0 && (
+          <Typography variant="body2" color="error.main">
+            {t('admin.partners.stats.inactivePartners', { count: partners.filter(p => !p.is_active).length })}
+          </Typography>
+        )}
+      </Box>
+    );
+  }, [partners, totalItems, t]);
+
   // Отображение ошибки загрузки
   if (error) {
     return (
@@ -460,28 +481,12 @@ const PartnersPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Статистика */}
-      {partners.length > 0 && (
-        <Box sx={{ mb: 2, display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('admin.partners.stats.foundPartners', { count: totalItems })}
-          </Typography>
-          <Typography variant="body2" color="success.main">
-            {t('admin.partners.stats.activePartners', { count: partners.filter(p => p.is_active).length })}
-          </Typography>
-          {partners.filter(p => !p.is_active).length > 0 && (
-            <Typography variant="body2" color="error.main">
-              {t('admin.partners.stats.inactivePartners', { count: partners.filter(p => !p.is_active).length })}
-            </Typography>
-          )}
-        </Box>
-      )}
-
       {/* PageTable */}
       <PageTable<Partner>
         header={headerConfig}
         search={searchConfig}
         filters={filtersConfig}
+        customContent={statisticsContent}
         columns={columns}
         rows={partners}
         loading={isLoading}

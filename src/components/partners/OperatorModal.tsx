@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useTranslation } from 'react-i18next';
 import type { Operator } from '../../api/operators.api';
 import { PhoneField } from '../ui/PhoneField';
 
@@ -23,19 +24,20 @@ interface OperatorModalProps {
   operator: Operator | null;
 }
 
-const validationSchema = (isEdit: boolean) =>
+const createValidationSchema = (isEdit: boolean, t: any) =>
   yup.object({
-    first_name: yup.string().required('Имя обязательно'),
-    last_name: yup.string().required('Фамилия обязательна'),
-    email: yup.string().email('Некорректный email').required('Email обязателен'),
-    phone: yup.string().required('Телефон обязателен'),
-    password: isEdit ? yup.string() : yup.string().min(6, 'Минимум 6 символов').required('Пароль обязателен'),
-    position: yup.string().required('Должность обязательна'),
-    access_level: yup.number().min(1).max(5).required('Уровень доступа обязателен'),
+    first_name: yup.string().required(t('forms.partner.operators.validation.firstNameRequired')),
+    last_name: yup.string().required(t('forms.partner.operators.validation.lastNameRequired')),
+    email: yup.string().email(t('forms.partner.operators.validation.emailInvalid')).required(t('forms.partner.operators.validation.emailRequired')),
+    phone: yup.string().required(t('forms.partner.operators.validation.phoneRequired')),
+    password: isEdit ? yup.string() : yup.string().min(6, t('forms.partner.operators.validation.passwordMin')).required(t('forms.partner.operators.validation.passwordRequired')),
+    position: yup.string().required(t('forms.partner.operators.validation.positionRequired')),
+    access_level: yup.number().min(1).max(5).required(t('forms.partner.operators.validation.accessLevelRequired')),
     is_active: yup.boolean(),
   });
 
 export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onSave, operator }) => {
+  const { t } = useTranslation();
   const isEdit = Boolean(operator);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -59,7 +61,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
       is_active: operator?.is_active ?? true,
     },
     enableReinitialize: true,
-    validationSchema: validationSchema(isEdit),
+    validationSchema: createValidationSchema(isEdit, t),
     onSubmit: async (values) => {
       try {
         setSuccessMessage(null);
@@ -84,7 +86,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
         
         await onSave(data);
         
-        setSuccessMessage(isEdit ? 'Сотрудник успешно обновлен' : 'Сотрудник успешно добавлен');
+        setSuccessMessage(isEdit ? t('forms.partner.operators.messages.updateSuccess') : t('forms.partner.operators.messages.createSuccess'));
         
         setTimeout(() => {
           onClose();
@@ -92,7 +94,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
       } catch (error: any) {
         console.error('Ошибка при сохранении сотрудника:', error);
         
-        let message = 'Произошла ошибка при сохранении сотрудника';
+        let message = t('forms.partner.operators.errors.saveError');
         if (error.data?.errors) {
           message = Object.entries(error.data.errors)
             .map(([key, value]) => `${key}: ${value}`)
@@ -108,7 +110,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{isEdit ? 'Редактировать сотрудника' : 'Добавить сотрудника'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('forms.partner.operators.title.edit') : t('forms.partner.operators.title.create')}</DialogTitle>
       <form onSubmit={formik.handleSubmit} autoComplete="off">
         <DialogContent>
           {successMessage && (
@@ -126,7 +128,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
               <TextField
                 fullWidth
                 name="first_name"
-                label="Имя"
+                label={t('forms.partner.operators.fields.firstName')}
                 value={formik.values.first_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -138,7 +140,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
               <TextField
                 fullWidth
                 name="last_name"
-                label="Фамилия"
+                label={t('forms.partner.operators.fields.lastName')}
                 value={formik.values.last_name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -150,7 +152,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
               <TextField
                 fullWidth
                 name="email"
-                label="Email"
+                label={t('forms.partner.operators.fields.email')}
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -163,7 +165,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
                 fullWidth
                 required
                 name="phone"
-                label="Телефон"
+                label={t('forms.partner.operators.fields.phone')}
                 value={formik.values.phone}
                 onChange={(value) => formik.setFieldValue('phone', value)}
                 onBlur={() => formik.setFieldTouched('phone', true)}
@@ -176,7 +178,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
                 <TextField
                   fullWidth
                   name="password"
-                  label="Пароль"
+                  label={t('forms.partner.operators.fields.password')}
                   type="password"
                   value={formik.values.password}
                   onChange={formik.handleChange}
@@ -191,7 +193,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
                 <TextField
                   fullWidth
                   name="password"
-                  label="Новый пароль (опционально)"
+                  label={t('forms.partner.operators.fields.newPassword')}
                   type="password"
                   value={formik.values.password}
                   onChange={formik.handleChange}
@@ -205,7 +207,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
               <TextField
                 fullWidth
                 name="position"
-                label="Должность"
+                label={t('forms.partner.operators.fields.position')}
                 value={formik.values.position}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -217,7 +219,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
               <TextField
                 fullWidth
                 name="access_level"
-                label="Уровень доступа (1-5)"
+                label={t('forms.partner.operators.fields.accessLevel')}
                 type="number"
                 value={formik.values.access_level}
                 onChange={formik.handleChange}
@@ -236,15 +238,15 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
                     name="is_active"
                   />
                 }
-                label="Активен"
+                label={t('forms.partner.operators.fields.isActive')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Отмена</Button>
+          <Button onClick={onClose}>{t('forms.common.cancel')}</Button>
           <Button type="submit" variant="contained" color="primary">
-            {isEdit ? 'Сохранить' : 'Добавить'}
+            {isEdit ? t('forms.common.save') : t('forms.common.add')}
           </Button>
         </DialogActions>
       </form>

@@ -13,6 +13,8 @@ import clientAdminRuTranslations from './locales/forms/client-admin/client-ru.js
 import clientAdminUkTranslations from './locales/forms/client-admin/client-uk.json';
 import clientClientRuTranslations from './locales/forms/client-client/client-ru.json';
 import clientClientUkTranslations from './locales/forms/client-client/client-uk.json';
+import partnersRuTranslations from './locales/forms/partners/partners-ru.json';
+import partnersUkTranslations from './locales/forms/partners/partners-uk.json';
 import modalsRuTranslations from './locales/forms/modals/modals-ru.json';
 import modalsUkTranslations from './locales/forms/modals/modals-uk.json';
 import partnerRuTranslations from './locales/forms/partners/partner-ru.json';
@@ -64,10 +66,13 @@ const resources = {
                     deepMerge(
                       deepMerge(
                         deepMerge(
-                          deepMerge(ukTranslations, settingsUkTranslations),
-                          clientAdminUkTranslations
+                          deepMerge(
+                            deepMerge(ukTranslations, settingsUkTranslations),
+                            clientAdminUkTranslations
+                          ),
+                          clientClientUkTranslations
                         ),
-                        clientClientUkTranslations
+                        partnersUkTranslations
                       ),
                       modalsUkTranslations
                     ),
@@ -100,10 +105,13 @@ const resources = {
                     deepMerge(
                       deepMerge(
                         deepMerge(
-                          deepMerge(ruTranslations, settingsRuTranslations),
-                          clientAdminRuTranslations
+                          deepMerge(
+                            deepMerge(ruTranslations, settingsRuTranslations),
+                            clientAdminRuTranslations
+                          ),
+                          clientClientRuTranslations
                         ),
-                        clientClientRuTranslations
+                        partnersRuTranslations
                       ),
                       modalsRuTranslations
                     ),

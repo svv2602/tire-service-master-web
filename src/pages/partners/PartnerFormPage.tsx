@@ -1375,6 +1375,7 @@ const PartnerFormPage: React.FC = () => {
                         fullWidth
                         required
                         name="user.phone"
+                        label={t('forms.partner.fields.phone')}
                         value={formik.values.user?.phone || ''}
                         onChange={(value) => formik.setFieldValue('user.phone', value)}
                         onBlur={() => formik.setFieldTouched('user.phone', true)}
@@ -1486,7 +1487,7 @@ const PartnerFormPage: React.FC = () => {
                       fullWidth
                       required
                       name="user.email"
-                      label="Email"
+                      label={t('forms.partner.fields.email')}
                       type="email"
                       value={formik.values.user?.email || ''}
                       onChange={formik.handleChange}
@@ -1502,6 +1503,7 @@ const PartnerFormPage: React.FC = () => {
                       fullWidth
                       required
                       name="user.phone"
+                      label={t('forms.partner.fields.phone')}
                       value={formik.values.user?.phone || ''}
                       onChange={(value) => formik.setFieldValue('user.phone', value)}
                       onBlur={() => formik.setFieldTouched('user.phone', true)}
