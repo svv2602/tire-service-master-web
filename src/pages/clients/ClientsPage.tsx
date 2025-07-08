@@ -238,7 +238,7 @@ const ClientsPage: React.FC = () => {
       icon: <CarIcon />,
       onClick: (client: Client) => navigate(`/admin/clients/${client.id}/cars`),
       color: 'info',
-      tooltip: 'Управление автомобилями клиента'
+              tooltip: t('admin.clients.carsTooltip')
     },
     {
       id: 'toggle-status',
@@ -251,13 +251,13 @@ const ClientsPage: React.FC = () => {
       confirmationConfig: {
         title: t('admin.clients.confirmStatusChange'),
         message: t('admin.clients.confirmStatusMessage'),
-        confirmLabel: 'Изменить',
-        cancelLabel: 'Отмена',
+        confirmLabel: t('admin.clients.changeStatus'),
+        cancelLabel: t('admin.clients.cancel'),
       }
     },
     {
       id: 'delete',
-      label: 'Удалить',
+              label: t('admin.clients.delete'),
       icon: <DeleteIcon />,
       onClick: (client: Client) => handleDelete(client),
       color: 'error',
@@ -266,8 +266,8 @@ const ClientsPage: React.FC = () => {
       confirmationConfig: {
         title: t('admin.clients.confirmDelete'),
         message: t('admin.clients.confirmDeleteMessage'),
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
+                  confirmLabel: t('admin.clients.deleteConfirm'),
+          cancelLabel: t('admin.clients.cancel'),
       }
     }
   ], [navigate, handleToggleStatus, handleDelete, t]);

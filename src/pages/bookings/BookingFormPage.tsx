@@ -679,7 +679,7 @@ const BookingFormPage: React.FC = () => {
                   labelId="client-label"
                   value={formik.values.client_id || ''}
                   onChange={handleClientChange}
-                  label="Клиент"
+                  label={t('admin.bookings.fields.client')}
                 >
                   {/* ✅ Опция для гостевого бронирования */}
                   <MenuItem value="">
@@ -869,7 +869,7 @@ const BookingFormPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                label="Примечания"
+                                  label={t('admin.bookings.fields.notes')}
                 value={formik.values.notes}
                 onChange={handleNotesChange}
                 error={formik.touched.notes && Boolean(formik.errors.notes)}

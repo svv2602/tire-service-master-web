@@ -239,7 +239,7 @@ const ServicePointFormPage: React.FC = () => {
     if (!response.ok) {
       const errorData = await response.text();
       console.error(t('errors.photoUploadError'), response.status, errorData);
-      throw new Error(`Ошибка загрузки фотографии: ${response.status}`);
+              throw new Error(`Photo upload error: ${response.status}`);
     }
     
     const result = await response.json();
@@ -257,16 +257,16 @@ const ServicePointFormPage: React.FC = () => {
   // Проверяем корректность данных и права доступа
   useEffect(() => {
     if (isEditMode && !partnerId) {
-      console.error('ОШИБКА: Попытка редактирования сервисной точки без partnerId в URL');
-      alert('Ошибка: Некорректный URL для редактирования сервисной точки');
+      console.error('ERROR: Editing service point without partnerId in URL');
+      alert(t('errors.invalidEditUrl'));
       navigate('/service-points');
       return;
     }
     
     // Проверяем partnerId при создании новой сервисной точки
     if (!isEditMode && !partnerId) {
-      console.error('ОШИБКА: Попытка создания сервисной точки без partnerId в URL');
-      alert('Ошибка: Для создания сервисной точки необходимо указать партнера в URL. Перейдите в раздел "Партнеры" и создайте сервисную точку оттуда.');
+      console.error('ERROR: Creating service point without partnerId in URL');
+      alert(t('errors.partnerRequiredForCreation'));
       navigate('/partners');
       return;
     }
@@ -281,18 +281,18 @@ const ServicePointFormPage: React.FC = () => {
       console.log('ID оператора пользователя:', currentUser.operator_id);
       
       // Если пользователь - партнер, может работать только со своими сервисными точками
-      if (userRole === 'partner' && currentUser.partner_id && Number(partnerId) !== currentUser.partner_id) {
-        console.error('ОШИБКА: Партнер пытается получить доступ к чужим сервисным точкам');
-        alert('Ошибка: У вас нет прав для работы с сервисными точками этого партнера');
-        navigate(`/admin/partners/${currentUser.partner_id}/edit`);
+      if (userRole === 'partner' && currentUser.partner_id !== Number(partnerId)) {
+        console.warn('Access denied: Partner can only work with their own service points');
+        alert(t('errors.noPermissionForPartner'));
+        navigate('/service-points');
         return;
       }
-      
-      // Если пользователь - оператор, может работать только с сервисными точками своего партнера
-      if (userRole === 'operator' && currentUser.operator?.partner_id && Number(partnerId) !== currentUser.operator.partner_id) {
-        console.error('ОШИБКА: Оператор пытается получить доступ к чужим сервисным точкам');
-        alert('Ошибка: У вас нет прав для работы с сервисными точками этого партнера');
-        navigate(`/admin/partners/${currentUser.operator.partner_id}/service-points`);
+
+      // Для операторов проверяем права через operator_id
+      if (userRole === 'operator' && !currentUser.operator_id) {
+        console.warn('Access denied: Operator has no access');
+        alert(t('errors.noPermissionForPartner'));
+        navigate('/service-points');
         return;
       }
     }

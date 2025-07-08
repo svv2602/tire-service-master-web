@@ -22,6 +22,7 @@ import {
   Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../store/store';
 import { UserRole } from '../../types';
 import { phoneValidation } from '../../utils/validation';
@@ -58,6 +59,7 @@ interface UserFormData {
 }
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -82,7 +84,7 @@ const ProfilePage: React.FC = () => {
     lastName: user?.last_name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    position: user ? getRoleLabel(user.role) : 'Користувач',
+    position: user ? getRoleLabel(user.role) : t('admin.users.roles.user'),
     oldPassword: '',
     newPassword: '',
     confirmPassword: '',
@@ -185,19 +187,19 @@ const ProfilePage: React.FC = () => {
 
   // Получение метки роли
   function getRoleLabel(role?: string): string {
-    if (!role) return 'Користувач';
+    if (!role) return t('admin.users.roles.user');
     
     switch (role) {
       case UserRole.ADMIN:
-        return 'Адміністратор';
+        return t('admin.users.roles.admin');
       case UserRole.PARTNER:
-        return 'Партнер';
+        return t('admin.users.roles.partner');
       case UserRole.MANAGER:
-        return 'Менеджер';
+        return t('admin.users.roles.manager');
       case UserRole.CLIENT:
-        return 'Клієнт';
+        return t('admin.users.roles.client');
       default:
-        return 'Користувач';
+        return t('admin.users.roles.user');
     }
   }
 
@@ -397,7 +399,7 @@ const ProfilePage: React.FC = () => {
                   secondary={
                     <Chip 
                       size="small"
-                      label={user?.is_active ? 'Активний' : 'Неактивний'} 
+                      label={user?.is_active ? t('common.active') : t('common.inactive')} 
                       color={user?.is_active ? 'success' : 'error'}
                       sx={{
                         mt: SIZES.spacing.xs,
@@ -488,7 +490,7 @@ const ProfilePage: React.FC = () => {
               <Box sx={{ gridColumn: '1 / -1' }}>
                 <TextField
                   fullWidth
-                  label="Посада"
+                  label={t('admin.users.fields.position')}
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}

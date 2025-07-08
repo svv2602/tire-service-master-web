@@ -181,7 +181,7 @@ const createValidationSchema = (isEdit: boolean, t: any) => yup.object({
     .min(2, t('forms.partner.validation.contactPersonMin')),
   
   website: yup.string()
-    .url('Введите корректный URL (например, https://example.com)')
+    .url(t('forms.partner.validation.websiteUrlInvalid'))
     .nullable(),
   
   tax_number: yup.string()
@@ -214,25 +214,25 @@ const createValidationSchema = (isEdit: boolean, t: any) => yup.object({
   
   new_password: yup.string()
     .nullable()
-    .min(6, 'Пароль должен быть не менее 6 символов'),
+    .min(6, t('forms.partner.validation.passwordMin')),
   
   user: isEdit 
     ? yup.object().nullable()
     : yup.object().shape({
         email: yup.string()
-          .email('Введите корректный email')
-          .required('Email обязателен'),
+          .email(t('forms.partner.validation.emailInvalid'))
+          .required(t('forms.partner.validation.emailRequired')),
         phone: phoneValidation,
         first_name: yup.string()
-          .required('Имя обязательно')
-          .min(2, 'Имя должно быть не менее 2 символов'),
+          .required(t('forms.partner.validation.firstNameRequired'))
+          .min(2, t('forms.partner.validation.firstNameMin')),
         last_name: yup.string()
-          .required('Фамилия обязательна')
-          .min(2, 'Фамилия должна быть не менее 2 символов'),
+          .required(t('forms.partner.validation.lastNameRequired'))
+          .min(2, t('forms.partner.validation.lastNameMin')),
         password: yup.string()
-          .min(6, 'Пароль должен быть не менее 6 символов')
+          .min(6, t('forms.partner.validation.passwordMin'))
           .nullable(),
-      }).required(t('forms.partner.sections.userInfo') + ' обязательны'),
+      }).required(t('forms.partner.validation.userInfoRequired')),
 });
 
 const PartnerFormPage: React.FC = () => {
@@ -480,8 +480,8 @@ const PartnerFormPage: React.FC = () => {
     const requiredFields = {
       company_name: 'Название компании',
       legal_address: 'Юридический адрес',
-      region_id: 'Регион',
-      city_id: 'Город',
+          region_id: t('forms.partner.fields.region'),
+    city_id: t('forms.partner.fields.city'),
       ...((!isEdit) && {
         'user.email': 'Email Партнера',
         'user.phone': 'Телефон Партнера',
@@ -733,7 +733,7 @@ const PartnerFormPage: React.FC = () => {
     ];
     if (isEdit) {
       baseTabs.push({ label: 'Сервисные точки', value: 1 });
-      baseTabs.push({ label: 'Сотрудники', value: 2 });
+      baseTabs.push({ label: t('forms.partner.tabs.operators'), value: 2 });
     }
     return baseTabs;
   }, [isEdit]);
@@ -982,10 +982,10 @@ const PartnerFormPage: React.FC = () => {
         columns={[
           { id: 'fio', label: 'ФИО', format: (_: any, row: Operator) => row.user ? `${row.user.first_name} ${row.user.last_name}` : 'Данные не загружены' },
           { id: 'email', label: 'Email', format: (_: any, row: Operator) => row.user?.email || 'Не указан' },
-          { id: 'phone', label: 'Телефон', format: (_: any, row: Operator) => row.user?.phone || 'Не указан' },
-          { id: 'position', label: 'Должность', format: (_: any, row: Operator) => row.position },
-          { id: 'access_level', label: 'Доступ', format: (_: any, row: Operator) => row.access_level },
-          { id: 'status', label: 'Статус', format: (_: any, row: Operator) => (
+                { id: 'phone', label: t('forms.partner.operators.columns.phone'), format: (_: any, row: Operator) => row.user?.phone || t('forms.partner.operators.notSpecified') },
+      { id: 'position', label: t('forms.partner.operators.columns.position'), format: (_: any, row: Operator) => row.position },
+      { id: 'access_level', label: t('forms.partner.operators.columns.access'), format: (_: any, row: Operator) => row.access_level },
+      { id: 'status', label: t('forms.partner.operators.columns.status'), format: (_: any, row: Operator) => (
             <FormControlLabel
               control={
                 <Switch
@@ -998,9 +998,9 @@ const PartnerFormPage: React.FC = () => {
               sx={{ m: 0 }}
             />
           ) },
-          { id: 'actions', label: 'Действия', format: (_: any, row: Operator) => (
+          { id: 'actions', label: t('forms.partner.operators.columns.actions'), format: (_: any, row: Operator) => (
             <Box sx={tablePageStyles.actionsContainer}>
-              <Tooltip title="Редактировать">
+              <Tooltip title={t('forms.partner.operators.actions.edit')}>
                 <IconButton
                   onClick={() => handleEditOperator(row)}
                   size="small"
@@ -1010,7 +1010,7 @@ const PartnerFormPage: React.FC = () => {
                   <EditIcon />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={row.is_active ? "Деактивировать" : "Удалить"}>
+              <Tooltip title={row.is_active ? t('forms.partner.operators.actions.deactivate') : t('forms.partner.operators.actions.delete')}>
                 <IconButton
                   onClick={() => handleDeleteOperator(row)}
                   size="small"
@@ -1263,7 +1263,7 @@ const PartnerFormPage: React.FC = () => {
                     id="region_id"
                     name="region_id"
                     value={formik.values.region_id?.toString() || ''}
-                    label="Регион"
+                    label={t('forms.partner.fields.region')}
                     onChange={handleRegionChange}
                     error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                     disabled={isLoading}
@@ -1295,7 +1295,7 @@ const PartnerFormPage: React.FC = () => {
                     id="city_id"
                     name="city_id"
                     value={formik.values.city_id?.toString() || ''}
-                    label="Город"
+                    label={t('forms.partner.fields.city')}
                     onChange={handleCityChange}
                     error={formik.touched.city_id && Boolean(formik.errors.city_id)}
                     disabled={isLoading || !formik.values.region_id}
@@ -1330,7 +1330,7 @@ const PartnerFormPage: React.FC = () => {
                         name="is_active"
                       />
                     }
-                    label="Активный партнер"
+                    label={t('forms.partner.fields.isActive')}
                   />
                   {!formik.values.is_active && (
                     <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
@@ -1388,7 +1388,7 @@ const PartnerFormPage: React.FC = () => {
                         fullWidth
                         required
                         name="user.first_name"
-                        label="Имя"
+                        label={t('forms.partner.fields.firstName')}
                         value={formik.values.user?.first_name || ''}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -1402,7 +1402,7 @@ const PartnerFormPage: React.FC = () => {
                         fullWidth
                         required
                         name="user.last_name"
-                        label="Фамилия"
+                        label={t('forms.partner.fields.lastName')}
                         value={formik.values.user?.last_name || ''}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
@@ -1415,7 +1415,7 @@ const PartnerFormPage: React.FC = () => {
                       <TextField
                         fullWidth
                         name="new_password"
-                        label="Новый пароль"
+                        label={t('forms.partner.fields.newPassword')}
                         type="password"
                         value={formik.values.new_password || ''}
                         onChange={formik.handleChange}
@@ -1427,7 +1427,7 @@ const PartnerFormPage: React.FC = () => {
                     </Grid>
                     <Grid item xs={12}>
                       <Typography variant="caption" color="text.secondary">
-                        Оставьте поле пароля пустым, если не хотите его менять
+                        {t('forms.partner.messages.passwordHint')}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -1456,7 +1456,7 @@ const PartnerFormPage: React.FC = () => {
                       fullWidth
                       required
                       name="user.first_name"
-                      label="Имя"
+                      label={t('forms.partner.fields.firstName')}
                       value={formik.values.user?.first_name || ''}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -1471,7 +1471,7 @@ const PartnerFormPage: React.FC = () => {
                       fullWidth
                       required
                       name="user.last_name"
-                      label="Фамилия"
+                      label={t('forms.partner.fields.lastName')}
                       value={formik.values.user?.last_name || ''}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
@@ -1515,7 +1515,7 @@ const PartnerFormPage: React.FC = () => {
                     <TextField
                       fullWidth
                       name="user.password"
-                      label="Пароль"
+                      label={t('forms.partner.fields.password')}
                       type="password"
                       value={formik.values.user?.password || ''}
                       onChange={formik.handleChange}
@@ -1563,7 +1563,7 @@ const PartnerFormPage: React.FC = () => {
                       onClick={() => navigate('/admin/partners')}
                       sx={secondaryButtonStyles}
                     >
-                      Отмена
+                      {t('forms.common.cancel')}
                     </Button>
                     <Button
                       type="submit"
@@ -1577,7 +1577,7 @@ const PartnerFormPage: React.FC = () => {
                       onClick={!formik.isValid ? handleDisabledButtonClick : undefined}
                       sx={primaryButtonStyles}
                     >
-                      {(createLoading || updateLoading) ? 'Сохранение...' : 'Сохранить'}
+                      {(createLoading || updateLoading) ? t('forms.common.saving') : t('forms.common.save')}
                     </Button>
                   </Box>
                 </Box>

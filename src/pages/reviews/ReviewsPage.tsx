@@ -142,7 +142,7 @@ const ReviewsPage: React.FC = () => {
         status: review.status || (review.is_published ? 'published' : 'pending'),
         client: review.client || {
           id: review.client_id || 0,
-          first_name: 'Неизвестно',
+          first_name: t('common.unknown'),
           last_name: '',
           user: review.client?.user || null
         },

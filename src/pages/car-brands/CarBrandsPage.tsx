@@ -108,7 +108,7 @@ const CarBrandsPage: React.FC = () => {
       }).unwrap();
       return {
         success: true,
-        message: `Бренд ${!brand.is_active ? 'активирован' : 'деактивирован'}`
+        message: !brand.is_active ? t('admin.carBrands.brandActivated') : t('admin.carBrands.brandDeactivated')
       };
     } catch (error) {
       return {

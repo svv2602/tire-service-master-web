@@ -1,54 +1,49 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
   Container,
   Typography,
+  Box,
   Button,
-  Paper,
   Chip,
-  Divider,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  CircularProgress,
+  Paper,
   Alert,
+  CircularProgress,
   IconButton,
   Tooltip,
+  Grid,
   Fade,
-  useTheme
+  Divider,
+  Card,
+  CardContent,
+  CardMedia
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
-  Visibility as VisibilityIcon,
-  Schedule as ScheduleIcon,
-  Person as PersonIcon,
-  CalendarToday as CalendarIcon,
-  Category as CategoryIcon,
-  Star as StarIcon,
-  Tag as TagIcon,
   Share as ShareIcon,
-  Print as PrintIcon
+  Print as PrintIcon,
+  Star as StarIcon,
+  Person as PersonIcon,
+  Schedule as ScheduleIcon,
+  Visibility as VisibilityIcon,
+  LocalOffer as TagIcon
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 
+// Импорт хуков и утилит
 import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
-import { ARTICLE_STATUS_LABELS } from '../../types/articles';
 
 // Импорт централизованной системы стилей
-import { 
-  getCardStyles, 
-  getButtonStyles, 
-  getChipStyles,
-  SIZES,
-  getThemeColors
-} from '../../styles';
+import { getCardStyles, getButtonStyles } from '../../styles/components';
+import { getThemeColors } from '../../styles/theme';
 
 const ArticleViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
   const colors = getThemeColors(theme);
   
   const { article, loading, error } = useArticle(id || null);
@@ -95,7 +90,7 @@ const ArticleViewPage: React.FC = () => {
         }}>
           <CircularProgress size={48} sx={{ mb: 2 }} />
           <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            Загрузка статьи...
+            {t('admin.articles.loadingArticles')}
           </Typography>
         </Box>
       </Container>
@@ -107,7 +102,7 @@ const ArticleViewPage: React.FC = () => {
       <Container maxWidth="xl" sx={{ py: 3 }}>
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Alert severity="error" sx={{ mb: 3, display: 'inline-block' }}>
-            {error || 'Статья не найдена'}
+            {error || t('admin.articles.articlesNotFound')}
           </Alert>
           <Box>
             <Button
@@ -116,7 +111,7 @@ const ArticleViewPage: React.FC = () => {
               onClick={() => navigate('/articles')}
               sx={secondaryButtonStyles}
             >
-              Вернуться к списку статей
+              {t('common.back')} к списку статей
             </Button>
           </Box>
         </Box>
@@ -135,16 +130,16 @@ const ArticleViewPage: React.FC = () => {
             onClick={() => navigate('/articles')}
             sx={secondaryButtonStyles}
           >
-            Назад к списку статей
+            {t('common.back')} к списку статей
           </Button>
           
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title="Поделиться">
+            <Tooltip title={t('common.share', 'Поделиться')}>
               <IconButton size="small" sx={{ color: colors.textSecondary }}>
                 <ShareIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Печать">
+            <Tooltip title={t('common.print', 'Печать')}>
               <IconButton size="small" sx={{ color: colors.textSecondary }}>
                 <PrintIcon />
               </IconButton>
@@ -156,220 +151,200 @@ const ArticleViewPage: React.FC = () => {
               sx={buttonStyles}
               size="small"
             >
-              Редактировать
+              {t('common.edit')}
             </Button>
           </Box>
         </Box>
       </Fade>
 
+      {/* Основное содержимое */}
       <Grid container spacing={4}>
-        {/* Основное содержимое */}
         <Grid item xs={12} lg={8}>
           <Fade in timeout={500}>
-            <Box>
+            <Paper sx={{ ...cardStyles, overflow: 'visible' }}>
               {/* Заголовок статьи */}
-              <Paper sx={{ ...cardStyles, mb: 3 }}>
+              <Box sx={{ position: 'relative', mb: 4 }}>
                 {/* Статусы и метки */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                   <Chip
-                    label={ARTICLE_STATUS_LABELS[article.status as keyof typeof ARTICLE_STATUS_LABELS]}
-                    color={getStatusColor(article.status) as any}
-                    variant="filled"
-                    size="small"
-                  />
-                  <Chip
-                    icon={<CategoryIcon />}
-                    label={article.category_name}
-                    variant="outlined"
+                    label={article.status === 'published' ? t('admin.articles.status.published') : 
+                          article.status === 'draft' ? t('admin.articles.status.draft') : 
+                          t('admin.articles.status.archived')}
+                    color={getStatusColor(article.status)}
                     size="small"
                   />
                   {article.featured && (
                     <Chip
                       icon={<StarIcon />}
-                      label="Рекомендуется"
-                      sx={getChipStyles(theme, 'warning')}
+                      label={t('admin.articles.meta.featured')}
+                      color="warning"
                       size="small"
                     />
                   )}
                 </Box>
 
                 {/* Заголовок */}
-                <Typography variant="h3" component="h1" sx={{ 
-                  fontWeight: 700,
+                <Typography variant="h3" component="h1" sx={{
+                  fontSize: { xs: '1.75rem', md: '2.5rem' },
+                  fontWeight: 800,
                   color: colors.textPrimary,
-                  mb: 3,
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
+                  mb: 2
                 }}>
                   {article.title}
                 </Typography>
 
                 {/* Описание */}
-                <Typography variant="h6" component="p" sx={{ 
-                  color: colors.textSecondary,
-                  fontWeight: 400,
-                  lineHeight: 1.6,
-                  mb: 4
-                }}>
-                  {article.excerpt}
-                </Typography>
-
-                <Divider sx={{ mb: 3 }} />
+                {article.excerpt && (
+                  <Typography variant="h6" sx={{
+                    color: colors.textSecondary,
+                    fontWeight: 400,
+                    lineHeight: 1.5,
+                    mb: 3
+                  }}>
+                    {article.excerpt}
+                  </Typography>
+                )}
 
                 {/* Метаинформация */}
-                <Grid container spacing={3} sx={{ color: colors.textSecondary }}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.author?.name || 'Неизвестный автор'}</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CalendarIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{formatDate(article.published_at || null)}</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ScheduleIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.reading_time || 5} мин чтения</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <VisibilityIcon sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">{article.views_count?.toLocaleString() || '0'} просмотров</Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </Paper>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PersonIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
+                    <Typography variant="body2">{article.author?.name || t('admin.articles.meta.unknownAuthor')}</Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ScheduleIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
+                    <Typography variant="body2">{formatDate(article.published_at || null)}</Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ScheduleIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
+                    <Typography variant="body2">{article.reading_time || 5} {t('admin.articles.meta.readingTime')}</Typography>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <VisibilityIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
+                    <Typography variant="body2">{article.views_count?.toLocaleString() || '0'} просмотров</Typography>
+                  </Box>
+                </Box>
+              </Box>
 
               {/* Главное изображение */}
               {article.featured_image && (
-                <Fade in timeout={700}>
-                  <Paper sx={{ ...cardStyles, mb: 3, overflow: 'hidden', p: 0 }}>
-                    <Box
-                      component="img"
-                      src={article.featured_image}
-                      alt={article.title}
-                      sx={{
-                        width: '100%',
-                        height: 400,
-                        objectFit: 'cover',
-                        borderRadius: SIZES.borderRadius.md
-                      }}
-                    />
-                  </Paper>
-                </Fade>
+                <Box sx={{ mb: 4, borderRadius: 2, overflow: 'hidden' }}>
+                  <img
+                    src={article.featured_image}
+                    alt={article.title}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      maxHeight: '400px',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                </Box>
               )}
 
               {/* Содержимое статьи */}
-              <Fade in timeout={900}>
-                <Paper sx={{ ...cardStyles, mb: 3 }}>
-                  <Box
-                    sx={{
-                      '& h1, & h2, & h3, & h4, & h5, & h6': {
-                        color: colors.textPrimary,
-                        fontWeight: 600,
-                        mt: 3,
-                        mb: 2,
-                        '&:first-of-type': { mt: 0 }
-                      },
-                      '& p': {
-                        color: colors.textPrimary,
-                        lineHeight: 1.8,
-                        mb: 2,
-                        fontSize: '1.1rem'
-                      },
-                      '& ul, & ol': {
-                        color: colors.textPrimary,
-                        mb: 2,
-                        pl: 3,
-                        '& li': { mb: 1 }
-                      },
-                      '& blockquote': {
-                        borderLeft: 4,
-                        borderColor: colors.primary,
-                        pl: 3,
-                        py: 1,
-                        my: 3,
-                        bgcolor: colors.backgroundField,
-                        fontStyle: 'italic',
-                        color: colors.textSecondary
-                      },
-                      '& a': {
-                        color: colors.primary,
-                        textDecoration: 'none',
-                        '&:hover': { textDecoration: 'underline' }
-                      },
-                      '& img': {
-                        maxWidth: '100%',
-                        height: 'auto',
-                        borderRadius: SIZES.borderRadius.sm,
-                        my: 2
-                      },
-                      '& code': {
-                        bgcolor: colors.backgroundField,
-                        color: colors.primary,
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: SIZES.borderRadius.sm,
-                        fontFamily: 'monospace'
-                      },
-                      '& pre': {
-                        bgcolor: colors.backgroundField,
-                        p: 2,
-                        borderRadius: SIZES.borderRadius.sm,
-                        overflow: 'auto',
-                        '& code': { bgcolor: 'transparent', p: 0 }
-                      }
-                    }}
-                    dangerouslySetInnerHTML={{ __html: article.content }}
-                  />
-                </Paper>
-              </Fade>
+              <Box 
+                sx={{ 
+                  '& > *': { mb: 2 },
+                  '& p': {
+                    fontSize: '1.1rem',
+                    lineHeight: 1.8,
+                    color: colors.textPrimary,
+                    textAlign: 'justify'
+                  },
+                  '& h1, & h2, & h3, & h4, & h5, & h6': {
+                    color: colors.textPrimary,
+                    fontWeight: 600,
+                    mt: 3,
+                    mb: 2
+                  },
+                  '& ul, & ol': {
+                    pl: 3
+                  },
+                  '& li': {
+                    mb: 1,
+                    fontSize: '1.1rem',
+                    lineHeight: 1.7
+                  },
+                  '& img': {
+                    maxWidth: '100%',
+                    height: 'auto',
+                    borderRadius: 1,
+                    my: 2
+                  },
+                  '& blockquote': {
+                    borderLeft: `4px solid ${theme.palette.primary.main}`,
+                    pl: 2,
+                    py: 1,
+                    my: 2,
+                    fontStyle: 'italic',
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                    borderRadius: 1
+                  },
+                  '& code': {
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                    padding: '2px 6px',
+                    borderRadius: 1,
+                    fontSize: '0.9em',
+                    fontFamily: 'monospace'
+                  },
+                  '& pre': {
+                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                    p: 2,
+                    borderRadius: 1,
+                    overflow: 'auto',
+                    '& code': {
+                      backgroundColor: 'transparent',
+                      padding: 0
+                    }
+                  }
+                }}
+                dangerouslySetInnerHTML={{ __html: article.content }}
+              />
 
               {/* Теги */}
               {article.tags && article.tags.length > 0 && (
-                <Fade in timeout={1100}>
-                  <Paper sx={{ ...cardStyles, mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <TagIcon sx={{ color: colors.textSecondary }} />
-                      <Typography variant="h6" sx={{ color: colors.textPrimary }}>
-                        Теги
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {article.tags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={`#${tag}`}
-                          variant="outlined"
-                          size="small"
-                          sx={{ color: colors.textSecondary }}
-                        />
-                      ))}
-                    </Box>
-                  </Paper>
-                </Fade>
+                <Box sx={{ mt: 4, pt: 3, borderTop: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <TagIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
+                    <Typography variant="h6" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
+                      {t('common.tags', 'Теги')}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {article.tags.map((tag: string) => (
+                      <Chip
+                        key={tag}
+                        label={tag}
+                        variant="outlined"
+                        size="small"
+                        sx={{ borderRadius: 1 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
               )}
-            </Box>
+            </Paper>
           </Fade>
         </Grid>
 
-        {/* Боковая панель */}
         <Grid item xs={12} lg={4}>
           <Fade in timeout={600}>
             <Box>
               {/* Информация о статье */}
               <Paper sx={{ ...cardStyles, mb: 3 }}>
                 <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
-                  О статье
+                  {t('admin.articles.meta.about', 'О статье')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      Категория:
+                      {t('admin.articles.columns.category')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
                       {article.category_name}
@@ -377,10 +352,10 @@ const ArticleViewPage: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      Автор:
+                      {t('admin.articles.meta.author')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
-                      {article.author?.name || 'Неизвестный автор'}
+                      {article.author?.name || t('admin.articles.meta.unknownAuthor')}
                     </Typography>
                   </Box>
                   <Box>
@@ -401,7 +376,7 @@ const ArticleViewPage: React.FC = () => {
                   </Box>
                   <Box>
                     <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                      Просмотры:
+                      {t('admin.articles.columns.views')}:
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: colors.textPrimary }}>
                       {article.views_count?.toLocaleString() || '0'}
@@ -412,56 +387,51 @@ const ArticleViewPage: React.FC = () => {
 
               {/* Связанные статьи */}
               {relatedArticles && relatedArticles.length > 0 && (
-                <Paper sx={{ ...cardStyles }}>
+                <Paper sx={cardStyles}>
                   <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 3 }}>
                     Похожие статьи
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {relatedArticles.slice(0, 3).map((relatedArticle) => (
-                      <Card 
+                    {relatedArticles.slice(0, 3).map((relatedArticle: any) => (
+                      <Card
                         key={relatedArticle.id}
-                        sx={{ 
+                        sx={{
                           cursor: 'pointer',
-                          transition: SIZES.transitions.medium,
-                          '&:hover': { 
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
                             transform: 'translateY(-2px)',
-                            boxShadow: 2
+                            boxShadow: theme.shadows[4]
                           }
                         }}
-                        onClick={() => navigate(`/articles/${relatedArticle.id}`)}
+                        onClick={() => navigate(`/admin/articles/${relatedArticle.id}`)}
                       >
-                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                          <Typography 
-                            variant="subtitle2" 
-                            sx={{ 
-                              fontWeight: 600,
-                              color: colors.textPrimary,
-                              mb: 1,
-                              lineHeight: 1.3
-                            }}
-                          >
+                        {relatedArticle.image_url && (
+                          <CardMedia
+                            component="img"
+                            height="100"
+                            image={relatedArticle.image_url}
+                            alt={relatedArticle.title}
+                            sx={{ objectFit: 'cover' }}
+                          />
+                        )}
+                        <CardContent sx={{ p: 2 }}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                             {relatedArticle.title}
                           </Typography>
-                          <Typography 
-                            variant="caption" 
-                            sx={{ 
-                              color: colors.textSecondary,
-                              display: 'block',
-                              mb: 1
-                            }}
-                          >
-                            {relatedArticle.excerpt}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <ScheduleIcon sx={{ fontSize: 14, color: colors.textSecondary }} />
-                            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                              {relatedArticle.reading_time || 5} мин
+                          {relatedArticle.excerpt && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: colors.textSecondary,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              {relatedArticle.excerpt}
                             </Typography>
-                            <VisibilityIcon sx={{ fontSize: 14, color: colors.textSecondary, ml: 1 }} />
-                            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                              {relatedArticle.views_count}
-                            </Typography>
-                          </Box>
+                          )}
                         </CardContent>
                       </Card>
                     ))}

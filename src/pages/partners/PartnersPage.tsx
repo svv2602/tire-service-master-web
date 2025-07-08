@@ -164,7 +164,7 @@ const PartnersPage: React.FC = () => {
       await deletePartner(partner.id).unwrap();
       setErrorMessage(null);
     } catch (error: any) {
-      let errorMessage = 'Ошибка при удалении партнера';
+      let errorMessage = t('admin.partners.errors.deleteError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -181,7 +181,7 @@ const PartnersPage: React.FC = () => {
       
       setErrorMessage(errorMessage);
     }
-  }, [deletePartner]);
+  }, [deletePartner, t]);
 
   const handleToggleStatus = useCallback(async (partner: Partner) => {
     // Если партнер активен и мы хотим его деактивировать, показываем диалог подтверждения
@@ -198,7 +198,7 @@ const PartnersPage: React.FC = () => {
       }).unwrap();
       setErrorMessage(null);
     } catch (error: any) {
-      let errorMessage = 'Ошибка при активации партнера';
+      let errorMessage = t('admin.partners.errors.activateError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -215,7 +215,7 @@ const PartnersPage: React.FC = () => {
       
       setErrorMessage(errorMessage);
     }
-  }, [togglePartnerActive]);
+  }, [togglePartnerActive, t]);
 
   // Обработчик подтверждения деактивации партнера
   const handleConfirmDeactivation = useCallback(async () => {
@@ -247,7 +247,7 @@ const PartnersPage: React.FC = () => {
       setErrorMessage(null);
       setDeactivateDialog({ open: false, partner: null, isFromDelete: false });
     } catch (error: any) {
-      let errorMessage = isFromDelete ? 'Ошибка при удалении партнера' : 'Ошибка при деактивации партнера';
+      let errorMessage = isFromDelete ? t('admin.partners.errors.deleteError') : t('admin.partners.errors.deactivateError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -264,7 +264,7 @@ const PartnersPage: React.FC = () => {
       
       setErrorMessage(errorMessage);
     }
-  }, [deactivateDialog.partner, deactivateDialog.isFromDelete, togglePartnerActive, deletePartner]);
+  }, [deactivateDialog.partner, deactivateDialog.isFromDelete, togglePartnerActive, deletePartner, t]);
 
   // Обработчик отмены деактивации
   const handleCancelDeactivation = useCallback(() => {
@@ -321,7 +321,7 @@ const PartnersPage: React.FC = () => {
       icon: <EditIcon />,
       onClick: (partner: Partner) => handleEditPartner(partner),
       color: 'primary',
-      tooltip: 'Редактировать данные партнера'
+      tooltip: t('admin.partners.editTooltip')
     },
     {
       id: 'service-points',
@@ -329,7 +329,7 @@ const PartnersPage: React.FC = () => {
       icon: <StoreIcon />,
       onClick: (partner: Partner) => navigate(`/admin/partners/${partner.id}/service-points`),
       color: 'info',
-      tooltip: 'Управление сервисными точками партнера'
+      tooltip: t('admin.partners.servicePointsTooltip')
     },
     {
       id: 'delete',
@@ -337,7 +337,7 @@ const PartnersPage: React.FC = () => {
       icon: <DeleteIcon />,
       onClick: (partner: Partner) => handleDeletePartner(partner),
       color: 'error',
-      tooltip: 'Удалить партнера'
+      tooltip: t('admin.partners.deleteTooltip')
     }
   ], [handleEditPartner, handleDeletePartner, navigate, t]);
 

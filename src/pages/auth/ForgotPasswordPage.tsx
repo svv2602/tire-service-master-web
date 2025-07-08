@@ -2,9 +2,11 @@ import React from 'react';
 import { Container, Paper, Typography, Box, Link } from '@mui/material';
 import { ForgotPasswordForm } from '../../components/auth/ForgotPasswordForm';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleBackToLogin = () => {
     navigate('/login');
@@ -14,11 +16,11 @@ const ForgotPasswordPage: React.FC = () => {
     <Container maxWidth="sm" sx={{ mt: 8 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom textAlign="center">
-          Восстановление пароля
+          {t('auth.forgotPasswordTitle')}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
-          Введите email или телефон, указанные при регистрации, и мы отправим инструкции по восстановлению пароля.
+          {t('auth.forgotPasswordDescription')}
         </Typography>
         
         <ForgotPasswordForm onBack={handleBackToLogin} />
@@ -30,7 +32,7 @@ const ForgotPasswordPage: React.FC = () => {
             onClick={handleBackToLogin}
             sx={{ textDecoration: 'none' }}
           >
-            Вернуться на страницу входа
+            {t('auth.backToLoginPage')}
           </Link>
         </Box>
       </Paper>

@@ -14,6 +14,7 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 import { Button } from '../../components/ui/Button';
 import { Add as AddIcon } from '@mui/icons-material';
 import { convertStatusToKey } from '../../utils/bookingStatus';
+import { useNavigate } from 'react-router-dom';
 
 // Функция для конвертации типов Booking
 const convertBooking = (modelBooking: ModelBooking): Booking => {
@@ -51,6 +52,7 @@ interface BookingsFilter {
 }
 
 const MyBookingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -108,22 +110,17 @@ const MyBookingsPage: React.FC = () => {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3 
-        }}>
-          <Typography variant="h4" component="h1" gutterBottom>
-            Мои записи на шиномонтаж
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+            {t('client.myBookings.title')}
           </Typography>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             startIcon={<AddIcon />}
-                            onClick={() => window.location.href = '/client/booking'}
+            onClick={() => navigate('/client/booking')}
             sx={{ ml: 2 }}
           >
-            Записаться на обслуживание
+            {t('client.myBookings.newBooking')}
           </Button>
         </Box>
       
@@ -134,10 +131,11 @@ const MyBookingsPage: React.FC = () => {
             indicatorColor="primary"
             textColor="primary"
             variant="fullWidth"
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
           >
-            <Tab label="Предстоящие" />
-            <Tab label="Завершенные" />
-            <Tab label="Отмененные" />
+            <Tab label={t('client.myBookings.tabs.upcoming')} />
+            <Tab label={t('client.myBookings.tabs.completed')} />
+            <Tab label={t('client.myBookings.tabs.cancelled')} />
           </Tabs>
         </Paper>
       
@@ -148,37 +146,35 @@ const MyBookingsPage: React.FC = () => {
       
         <Box mt={3}>
           {isLoading ? (
-            <Box display="flex" justifyContent="center" my={4}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
               <CircularProgress />
             </Box>
           ) : isError ? (
-            <Alert severity="error">❌ Произошла ошибка при загрузке записей</Alert>
-          ) : convertedBookings.length > 0 ? (
-            <BookingsList 
-              bookings={convertedBookings} 
-            />
-          ) : (
-            <Box sx={{ 
-              textAlign: 'center',
-              py: 6,
-              px: 3
-            }}>
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                {tabValue === 0 && 'У вас нет предстоящих записей'}
-                {tabValue === 1 && 'У вас нет завершенных записей'}
-                {tabValue === 2 && 'У вас нет отмененных записей'}
+            <Alert severity="error" sx={{ mb: 3 }}>
+              ❌ {t('client.myBookings.loadError')}
+            </Alert>
+          ) : convertedBookings.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary' }}>
+                {tabValue === 0 && t('client.myBookings.noUpcoming')}
+                {tabValue === 1 && t('client.myBookings.noCompleted')}
+                {tabValue === 2 && t('client.myBookings.noCancelled')}
               </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Выберите удобный сервисный центр и запишитесь на обслуживание
+              <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+                {t('client.myBookings.description')}
               </Typography>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => window.location.href = '/client/booking'}
+                onClick={() => navigate('/client/booking')}
               >
-                Записаться на обслуживание
+                {t('client.myBookings.newBooking')}
               </Button>
             </Box>
+          ) : (
+            <BookingsList 
+              bookings={convertedBookings}
+            />
           )}
         </Box>
       </Container>

@@ -176,7 +176,7 @@ export const UsersPage: React.FC = () => {
         severity: 'success'
       });
     } catch (error) {
-      console.error('Ошибка при деактивации пользователя:', error);
+      console.error('Error deactivating user:', error);
       setNotification({
         open: true,
         message: t('notifications.error.deletingFailed'),
@@ -210,7 +210,7 @@ export const UsersPage: React.FC = () => {
         severity: 'success'
       });
     } catch (error) {
-      console.error('Ошибка при изменении статуса пользователя:', error);
+      console.error('Error changing user status:', error);
       setNotification({
         open: true,
         message: t('notifications.error.savingFailed'),

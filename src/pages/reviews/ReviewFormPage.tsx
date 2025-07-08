@@ -273,7 +273,7 @@ const ReviewFormPage: React.FC = () => {
                   <MenuItem value="">{t('forms.review.placeholders.selectClient')}</MenuItem>
                   {clientsData?.data.map((client: any) => (
                     <MenuItem key={client.id} value={client.id}>
-                      {client.user?.last_name || 'Фамилия'} {client.user?.first_name || 'Имя'} ({client.user?.email || 'email'})
+                                                  {client.user?.last_name || t('common.unknown')} {client.user?.first_name || t('common.unknown')} ({client.user?.email || 'email'})
                     </MenuItem>
                   ))}
                 </Select>

@@ -117,26 +117,26 @@ const ClientMainPage: React.FC = () => {
   const currentArticles = mainPageArticles.length > 0 ? mainPageArticles : [
     {
       id: 1,
-      title: 'Как выбрать зимние шины',
-      excerpt: 'Подробное руководство по выбору зимних шин для безопасной езды',
+      title: t('client.mainPage.fallbackArticles.winterTires.title'),
+      excerpt: t('client.mainPage.fallbackArticles.winterTires.excerpt'),
       reading_time: 5,
-      author: { name: 'Эксперт по шинам' },
+      author: { name: t('client.mainPage.fallbackArticles.winterTires.author') },
       created_at: new Date().toISOString()
     },
     {
       id: 2,
-      title: 'Правильное давление в шинах',
-      excerpt: 'Влияние давления на безопасность и расход топлива',
+      title: t('client.mainPage.fallbackArticles.tirePressure.title'),
+      excerpt: t('client.mainPage.fallbackArticles.tirePressure.excerpt'),
       reading_time: 3,
-      author: { name: 'Технический специалист' },
+      author: { name: t('client.mainPage.fallbackArticles.tirePressure.author') },
       created_at: new Date().toISOString()
     },
     {
       id: 3,
-      title: 'Сезонное хранение шин',
-      excerpt: 'Как правильно хранить шины в межсезонье',
+      title: t('client.mainPage.fallbackArticles.tireStorage.title'),
+      excerpt: t('client.mainPage.fallbackArticles.tireStorage.excerpt'),
       reading_time: 4,
-      author: { name: 'Мастер сервиса' },
+      author: { name: t('client.mainPage.fallbackArticles.tireStorage.author') },
       created_at: new Date().toISOString()
     }
   ];
@@ -174,7 +174,7 @@ const ClientMainPage: React.FC = () => {
                     <Box
                       component="img"
                       src="/image_app/serviceman.png" 
-                      alt="Профессиональный сервисмен" 
+                      alt={t('client.mainPage.servicemanAlt')} 
                       sx={{
                         width: '100%',
                         height: '100%',
@@ -228,7 +228,7 @@ const ClientMainPage: React.FC = () => {
                             renderInput={(params) => (
                               <TextField
                                 {...params}
-                                label={currentHero.settings?.city_placeholder || 'Оберіть місто'}
+                                label={currentHero.settings?.city_placeholder || t('client.mainPage.cityPlaceholder')}
                                 fullWidth
                                 InputProps={{
                                   ...params.InputProps,
@@ -236,7 +236,7 @@ const ClientMainPage: React.FC = () => {
                                 }}
                               />
                             )}
-                            noOptionsText="Городи не знайдені"
+                            noOptionsText={t('client.mainPage.noCitiesFound')}
                             loadingText={t('client.mainPage.loading')}
                             loading={citiesLoading}
                           />

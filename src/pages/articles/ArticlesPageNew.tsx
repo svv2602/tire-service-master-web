@@ -24,6 +24,7 @@ import {
   Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Импорты UI компонентов
 import { PageTable } from '../../components/common/PageTable';
@@ -42,16 +43,10 @@ import { useArticleActions } from '../../hooks/useArticles';
 import { ArticleSummary } from '../../types/articles';
 import { getTablePageStyles, getCardStyles } from '../../styles/components';
 
-// Константы для статусов
-const ARTICLE_STATUS_LABELS = {
-  published: 'Опубликовано',
-  draft: 'Черновик',
-  archived: 'Архив'
-} as const;
-
 const ArticlesPageNew: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
   const cardStyles = getCardStyles(theme);
   
@@ -72,6 +67,16 @@ const ArticlesPageNew: React.FC = () => {
     message: '',
     severity: 'info'
   });
+
+  // Функция для получения переводов статусов
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      published: t('admin.articles.status.published'),
+      draft: t('admin.articles.status.draft'),
+      archived: t('admin.articles.status.archived')
+    };
+    return statusMap[status] || status;
+  };
 
   // Подготовка фильтров для API
   const filters = useMemo(() => ({
@@ -109,25 +114,25 @@ const ArticlesPageNew: React.FC = () => {
       if (result.success) {
         setNotification({
           open: true,
-          message: `Статья "${article.title}" успешно удалена`,
+          message: t('admin.articles.messages.deleteSuccess', { title: article.title }),
           severity: 'success'
         });
         refetch();
       } else {
         setNotification({
           open: true,
-          message: `Ошибка при удалении статьи: ${result.error}`,
+          message: t('admin.articles.messages.deleteError', { error: result.error }),
           severity: 'error'
         });
       }
     } catch (error: any) {
       setNotification({
         open: true,
-        message: 'Произошла ошибка при удалении статьи',
+        message: t('admin.articles.messages.deleteErrorGeneral'),
         severity: 'error'
       });
     }
-  }, [deleteArticle, refetch]);
+  }, [deleteArticle, refetch, t]);
 
   const handleCloseNotification = useCallback(() => {
     setNotification(prev => ({ ...prev, open: false }));
@@ -152,33 +157,33 @@ const ArticlesPageNew: React.FC = () => {
 
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'База знаний (PageTable)',
-    subtitle: 'Управление статьями и материалами для клиентов',
+    title: t('admin.articles.title'),
+    subtitle: t('admin.articles.subtitle'),
     actions: [
       {
         id: 'add',
-        label: 'Создать статью',
+        label: t('admin.articles.createArticle'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/articles/new'),
         variant: 'contained'
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск статей по названию или содержанию...',
+    placeholder: t('admin.articles.searchPlaceholder'),
     value: searchQuery,
     onChange: handleSearchChange
-  }), [searchQuery, handleSearchChange]);
+  }), [searchQuery, handleSearchChange, t]);
 
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'category',
-      label: 'Категория',
+      label: t('admin.articles.filters.category'),
       type: 'select',
       value: selectedCategory,
       options: [
-        { value: '', label: 'Все категории' },
+        { value: '', label: t('admin.articles.filters.allCategories') },
         ...categories.map((category: any) => ({
           value: category.key || category.name,
           label: category.name
@@ -191,26 +196,26 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('admin.articles.filters.status'),
       type: 'select',
       value: selectedStatus,
       options: [
-        { value: '', label: 'Все статусы' },
-        { value: 'published', label: 'Опубликовано' },
-        { value: 'draft', label: 'Черновик' },
-        { value: 'archived', label: 'Архив' }
+        { value: '', label: t('admin.articles.filters.allStatuses') },
+        { value: 'published', label: t('admin.articles.status.published') },
+        { value: 'draft', label: t('admin.articles.status.draft') },
+        { value: 'archived', label: t('admin.articles.status.archived') }
       ],
       onChange: (value: any) => {
         setSelectedStatus(value);
         setPage(0);
       }
     }
-  ], [selectedCategory, selectedStatus, categories]);
+  ], [selectedCategory, selectedStatus, categories, t]);
 
   const columns: Column<ArticleSummary>[] = useMemo(() => [
     {
       id: 'title',
-      label: 'Статья',
+      label: t('admin.articles.columns.article'),
       sortable: true,
       render: (article: ArticleSummary) => (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -230,7 +235,7 @@ const ArticlesPageNew: React.FC = () => {
               {article.featured && (
                 <Chip
                   icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
-                  label="Рекомендуемая"
+                  label={t('admin.articles.meta.featured')}
                   size="small"
                   color="warning"
                 />
@@ -249,19 +254,11 @@ const ArticlesPageNew: React.FC = () => {
             >
               {article.excerpt}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <TimeIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-                <Typography variant="caption">
-                  {article.reading_time || 5} мин
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <PersonIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-                <Typography variant="caption">
-                  {article.author?.name || 'Автор'}
-                </Typography>
-              </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PersonIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
+              <Typography variant="caption" sx={{ color: theme.palette.text.secondary }}>
+                {article.author?.name || t('admin.articles.meta.unknownAuthor')}
+              </Typography>
             </Box>
           </Box>
         </Box>
@@ -269,24 +266,24 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'category',
-      label: 'Категория',
+      label: t('admin.articles.columns.category'),
       align: 'center',
       hideOnMobile: true,
       render: (article: ArticleSummary) => (
         <Typography variant="body2">
-          {article.category_name || article.category || '-'}
+          {article.category_name || '—'}
         </Typography>
       )
     },
     {
       id: 'status',
-      label: 'Статус',
+      label: t('admin.articles.columns.status'),
       align: 'center',
       render: (article: ArticleSummary) => (
         <Chip
-          label={ARTICLE_STATUS_LABELS[article.status as keyof typeof ARTICLE_STATUS_LABELS]}
+          label={getStatusLabel(article.status)}
           color={
-            article.status === 'published' ? 'success' : 
+            article.status === 'published' ? 'success' :
             article.status === 'draft' ? 'warning' : 'default'
           }
           size="small"
@@ -295,12 +292,12 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'views_count',
-      label: 'Просмотры',
+      label: t('admin.articles.columns.views'),
       align: 'center',
       hideOnMobile: true,
       render: (article: ArticleSummary) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-          <VisibilityIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
+          <VisibilityIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
           <Typography variant="body2">
             {article.views_count || 0}
           </Typography>
@@ -309,7 +306,7 @@ const ArticlesPageNew: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: 'Дата создания',
+      label: t('admin.articles.columns.createdAt'),
       align: 'center',
       hideOnMobile: true,
       render: (article: ArticleSummary) => (
@@ -321,35 +318,35 @@ const ArticlesPageNew: React.FC = () => {
         </Box>
       )
     }
-  ], [theme.palette, navigate]);
+  ], [theme.palette, navigate, t, getStatusLabel]);
 
   const actionsConfig: ActionConfig<ArticleSummary>[] = useMemo(() => [
     {
-      label: 'Просмотр',
+      label: t('admin.articles.actions.view'),
       icon: <ViewIcon />,
       onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}`),
       color: 'primary'
     },
     {
-      label: 'Редактировать',
+      label: t('admin.articles.actions.edit'),
       icon: <EditIcon />,
       onClick: (article: ArticleSummary) => navigate(`/admin/articles/${article.id}/edit`),
       color: 'success'
     },
     {
-      label: 'Удалить',
+      label: t('admin.articles.actions.delete'),
       icon: <DeleteIcon />,
       onClick: (article: ArticleSummary) => handleDeleteArticle(article),
       color: 'error',
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить эту статью? Это действие нельзя будет отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
+        title: t('admin.articles.deleteConfirmTitle'),
+        message: t('admin.articles.deleteConfirmMessage'),
+        confirmLabel: t('common.delete'),
+        cancelLabel: t('common.cancel'),
       }
     }
-  ], [navigate, handleDeleteArticle]);
+  ], [navigate, handleDeleteArticle, t]);
 
   return (
     <Box sx={tablePageStyles.container}>
@@ -362,7 +359,7 @@ const ArticlesPageNew: React.FC = () => {
               {totalItems}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Всего статей
+              {t('admin.articles.stats.total')}
             </Typography>
           </Box>
         </Grid>
@@ -373,7 +370,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.published}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Опубликовано
+              {t('admin.articles.stats.published')}
             </Typography>
           </Box>
         </Grid>
@@ -384,7 +381,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.totalViews}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Просмотров
+              {t('admin.articles.stats.views')}
             </Typography>
           </Box>
         </Grid>
@@ -395,7 +392,7 @@ const ArticlesPageNew: React.FC = () => {
               {stats.drafts}
             </Typography>
             <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
-              Черновиков
+              {t('admin.articles.stats.drafts')}
             </Typography>
           </Box>
         </Grid>
@@ -416,12 +413,12 @@ const ArticlesPageNew: React.FC = () => {
           onPageChange: handlePageChange
         }}
         emptyState={{
-          title: searchQuery || selectedCategory || selectedStatus ? 'Статьи не найдены' : 'Нет статей',
+          title: searchQuery || selectedCategory || selectedStatus ? t('admin.articles.noResultsFound') : t('admin.articles.noArticles'),
           description: searchQuery || selectedCategory || selectedStatus
-            ? 'Попробуйте изменить критерии поиска'
-            : 'Создайте первую статью для начала работы',
+            ? t('admin.articles.noResultsDescription')
+            : t('admin.articles.noArticlesDescription'),
           action: (!searchQuery && !selectedCategory && !selectedStatus) ? {
-            label: 'Создать статью',
+            label: t('admin.articles.createArticle'),
             icon: <AddIcon />,
             onClick: () => navigate('/admin/articles/new')
           } : undefined

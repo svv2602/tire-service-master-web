@@ -172,7 +172,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       
       showNotification(message, severity);
     } catch (error: any) {
-      console.error('Ошибка при удалении сервисной точки:', error);
+      console.error('Error deleting service point:', error);
       
       // Обработка различных типов ошибок
       if (error.data?.action === 'blocked') {
