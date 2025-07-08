@@ -85,7 +85,7 @@ const ClientCarFormPage: React.FC = () => {
    * RTK Query хуки для загрузки справочников
    */
   const { data: carBrandsData, isLoading: isLoadingBrands } = useGetCarBrandsQuery({});
-  const { data: carTypesData, isLoading: isLoadingTypes } = useGetCarTypesQuery();
+  const { data: carTypesData, isLoading: isLoadingTypes } = useGetCarTypesQuery({});
 
   const carBrands = carBrandsData?.data || [];
   const carTypes = carTypesData || [];

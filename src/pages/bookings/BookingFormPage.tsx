@@ -140,7 +140,7 @@ const BookingFormPage: React.FC = () => {
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
   const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({} as any);
-  const { data: carTypesData, isLoading: carTypesLoading } = useGetCarTypesQuery();
+  const { data: carTypesData, isLoading: carTypesLoading } = useGetCarTypesQuery({});
   const { data: serviceCategoriesData, isLoading: serviceCategoriesLoading } = useGetServiceCategoriesQuery({});
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   const { data: bookingStatusesData, isLoading: bookingStatusesLoading } = useGetBookingStatusesQuery();

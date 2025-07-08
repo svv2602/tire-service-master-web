@@ -155,7 +155,7 @@ const ClientProfilePage: React.FC = () => {
 
   // API для справочников
   const { data: brandsData } = useGetCarBrandsQuery({});
-  const { data: carTypesData } = useGetCarTypesQuery();
+  const { data: carTypesData } = useGetCarTypesQuery({});
 
   // Схема валидации для профиля
   const validationSchema = Yup.object({

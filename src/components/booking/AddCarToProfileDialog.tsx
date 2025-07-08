@@ -54,7 +54,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
   const [createMyClientCar] = useCreateMyClientCarMutation();
   const [createClientCar] = useCreateClientCarMutation();
   const { data: carBrandsData } = useGetCarBrandsQuery({});
-  const { data: carTypesData } = useGetCarTypesQuery();
+  const { data: carTypesData } = useGetCarTypesQuery({});
   const invalidateCache = useInvalidateCache();
 
   // Получаем текущего пользователя из Redux

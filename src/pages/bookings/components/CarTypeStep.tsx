@@ -82,8 +82,10 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   // Рефы для управления фокусом
   const licensePlateRef = useRef<HTMLInputElement>(null);
   
-  // Загрузка данных
-  const { data: carTypesData, isLoading: isLoadingCarTypes, error: carTypesError } = useGetCarTypesQuery();
+  // Загрузка данных с учетом текущей локали
+  const { data: carTypesData, isLoading: isLoadingCarTypes, error: carTypesError } = useGetCarTypesQuery({ 
+    locale: t('locale') === 'uk' ? 'uk' : 'ru' 
+  });
   const { data: brandsData } = useGetCarBrandsQuery({});
   const { data: modelsData } = useGetCarModelsByBrandIdQuery(
     { brandId: selectedBrandId?.toString() || '' },
