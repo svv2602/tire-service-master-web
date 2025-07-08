@@ -17,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { TireAlternative } from '../../../types/tire-calculator';
 import { calculateSpeedometerImpact } from '../../../utils/tire-calculator';
+import { useTranslation } from 'react-i18next';
 
 interface SpeedometerImpactCardProps {
   alternative: TireAlternative;
@@ -28,6 +29,7 @@ const SpeedometerImpactCard: React.FC<SpeedometerImpactCardProps> = ({
   originalDiameter
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const impact = calculateSpeedometerImpact(originalDiameter, alternative.calculatedDiameter);
 
   const getTrendIcon = () => {
@@ -66,7 +68,7 @@ const SpeedometerImpactCard: React.FC<SpeedometerImpactCardProps> = ({
               </Typography>
             </Box>
             <Typography variant="caption" color="text.secondary">
-              Диаметр: {alternative.calculatedDiameter.toFixed(1)} мм
+              {t('tireCalculator.diameter')}: {alternative.calculatedDiameter.toFixed(1)} мм
             </Typography>
           </Grid>
 
@@ -86,7 +88,7 @@ const SpeedometerImpactCard: React.FC<SpeedometerImpactCardProps> = ({
           {/* Визуализация отклонения */}
           <Grid item xs={12} sm={3}>
             <Typography variant="caption" color="text.secondary" gutterBottom>
-              Отклонение спидометра
+              {t('tireCalculator.speedometer_deviation')}
             </Typography>
             <Box sx={{ position: 'relative' }}>
               <LinearProgress
@@ -125,10 +127,17 @@ const SpeedometerImpactCard: React.FC<SpeedometerImpactCardProps> = ({
           {/* Практическое влияние */}
           <Grid item xs={12} sm={4}>
             <Typography variant="body2" fontWeight="medium">
-              При 100 км/ч → {impact.realSpeed.toFixed(1)} км/ч
+              {t('tireCalculator.at_speed', { speed: 100, real: impact.realSpeed.toFixed(1) })}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {impact.description}
+              {/* Локализуем описание влияния на спидометр */}
+              {impact.description === 'Влияние на спидометр минимальное'
+                ? t('tireCalculator.speedometer_impact_minimal')
+                : impact.description.includes('меньше реальной скорости')
+                  ? t('tireCalculator.speedometer_impact_less', { value: Math.abs(impact.deviationKmh).toFixed(1) })
+                  : impact.description.includes('больше реальной скорости')
+                    ? t('tireCalculator.speedometer_impact_more', { value: Math.abs(impact.deviationKmh).toFixed(1) })
+                    : impact.description}
             </Typography>
             
             {/* Дополнительные скорости */}

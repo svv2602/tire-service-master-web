@@ -111,6 +111,29 @@
       "slash": "/",
       "calculate": "Розрахувати",
       "reset": "Скинути"
-    }
+    },
+    "alternative_sizes_title": "Альтернативні розміри",
+    "found_sizes_summary": "Знайдено {{count}} альтернативних розмірів. Показано: {{shown}}",
+    "recommended": "Рекомендується ±1%",
+    "attention": "Потребує уваги ±2%",
+    "check": "Перевірте сумісність ±3%",
+    "all": "Всі ({{count}})",
+    "recommended_with_count": "Рекомендується ±1% ({{count}})",
+    "attention_with_count": "Потребує уваги ±2% ({{count}})",
+    "check_with_count": "Перевірте сумісність ±3% ({{count}})",
+    "col_recommendation": "Рек.",
+    "col_tire_size": "Розмір шини",
+    "col_width": "Ширина",
+    "col_profile": "Профіль",
+    "col_diameter": "Діаметр",
+    "col_deviation": "Відхилення",
+    "col_total_diameter": "Загальний діаметр",
+    "col_rim_width": "Ширина диска",
+    "col_speedometer": "Спідометр",
+    "speedometer_deviation": "Відхилення спідометра",
+    "at_speed": "При {{speed}} км/год → {{real}} км/год",
+    "speedometer_impact_minimal": "Вплив на спідометр мінімальний",
+    "speedometer_impact_less": "Спідометр буде показувати менше реальної швидкості на {{value}} км/год",
+    "speedometer_impact_more": "Спідометр буде показувати більше реальної швидкості на {{value}} км/год"
   }
 } 
