@@ -1,0 +1,61 @@
+{
+  "forms": {
+    "user": {
+      "title": {
+        "create": "Створити користувача",
+        "edit": "Редагувати користувача"
+      },
+      "sections": {
+        "loginType": "Тип входу",
+        "basicInfo": "Основна інформація",
+        "roleAndStatus": "Роль та статус",
+        "password": "Пароль",
+        "changePassword": "Змінити пароль",
+        "contactInfo": "Контактна інформація",
+        "addressInfo": "Адресна інформація",
+        "workInfo": "Робоча інформація"
+      },
+      "loginType": {
+        "selectMethod": "Оберіть основний спосіб входу",
+        "email": "Email",
+        "phone": "Телефон"
+      },
+      "fields": {
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "middleName": "По батькові",
+        "email": "Email",
+        "emailOptional": "Email (необов'язково)",
+        "phone": "Телефон",
+        "phoneOptional": "Телефон (необов'язково)",
+        "password": "Пароль",
+        "newPassword": "Новий пароль (залиште порожнім, якщо не хочете змінювати)",
+        "confirmPassword": "Підтвердження пароля",
+        "role": "Роль",
+        "position": "Посада",
+        "isActive": "Активний користувач"
+      },
+      "roles": {
+        "admin": "Адміністратор",
+        "manager": "Менеджер",
+        "partner": "Партнер",
+        "operator": "Оператор",
+        "client": "Клієнт",
+        "user": "Користувач"
+      },
+      "validation": {
+        "emailRequired": "Email обов'язковий",
+        "phoneRequired": "Телефон обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+        "roleRequired": "Роль обов'язкова",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMin": "Пароль повинен містити мінімум 6 символів",
+        "passwordsNotMatch": "Паролі не збігаються"
+      }
+    }
+  }
+} 

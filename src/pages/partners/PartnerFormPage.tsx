@@ -731,9 +731,9 @@ const PartnerFormPage: React.FC = () => {
     const baseTabs = [
                   { label: t('forms.partner.tabs.basicInfo'), value: 0 },
     ];
-    if (isEdit) {
-              baseTabs.push({ label: t('forms.partner.tabs.servicePoints'), value: 1 });
-      baseTabs.push({ label: t('forms.partner.tabs.operators'), value: 2 });
+          if (isEdit) {
+        baseTabs.push({ label: t('forms.partner.tabs.servicePoints'), value: 1 });
+        baseTabs.push({ label: t('forms.partner.tabs.operators'), value: 2 });
     }
     return baseTabs;
   }, [isEdit]);
@@ -1063,7 +1063,7 @@ const PartnerFormPage: React.FC = () => {
           variant="h4" 
           sx={{ fontSize: SIZES.fontSize.xl }}
         >
-          {isEdit ? t('forms.partner.editPartner') : t('forms.partner.createPartner')}
+                        {isEdit ? t('forms.partner.title.edit') : t('forms.partner.title.create')}
         </Typography>
       </Box>
       

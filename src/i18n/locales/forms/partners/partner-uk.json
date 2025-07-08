@@ -1,0 +1,122 @@
+{
+  "partner": {
+    "title": {
+      "create": "Створити партнера",
+      "edit": "Редагувати партнера"
+    },
+    "sections": {
+      "companyInfo": "Інформація про компанію",
+      "legalInfo": "Юридична інформація",
+      "location": "Місцезнаходження",
+      "adminData": "Дані адміністратора партнера"
+    },
+    "fields": {
+      "companyName": "Назва компанії",
+      "companyDescription": "Опис компанії",
+      "contactPerson": "Контактна особа",
+      "website": "Веб-сайт",
+      "logo": "Логотип партнера",
+      "uploadLogo": "Завантажити логотип",
+      "taxNumber": "Податковий номер (необов'язково)",
+      "legalAddress": "Юридична адреса",
+      "region": "Регіон",
+      "city": "Місто",
+      "isActive": "Активний партнер",
+      "firstName": "Ім'я",
+      "lastName": "Прізвище",
+      "email": "Email",
+      "phone": "Телефон",
+      "password": "Пароль",
+      "newPassword": "Новий пароль"
+    },
+    "phoneField": {
+      "label": "Телефон",
+      "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
+      "placeholder": "+38 (067) 123-45-67"
+    },
+    "placeholders": {
+      "website": "https://example.com",
+      "taxNumber": "12345678",
+      "selectRegion": "Виберіть регіон",
+      "selectCity": "Виберіть місто"
+    },
+    "messages": {
+      "logoFormats": "Підтримуються формати: JPEG, PNG, GIF, WebP. Максимальний розмір: 5MB",
+      "passwordHint": "Залиште поле пароля порожнім, якщо не хочете його змінювати",
+      "loadingCities": "Завантаження міст...",
+      "deactivationWarning": "При деактивації партнера також будуть деактивовані всі його сервісні точки та співробітники",
+      "updateSuccess": "Партнера успішно оновлено",
+      "createSuccess": "Партнера успішно створено",
+      "operatorDeactivated": "Співробітника деактивовано",
+      "operatorDeleted": "Співробітника видалено",
+      "operatorActivated": "Співробітника активовано",
+      "servicePointDeactivated": "Сервісну точку деактивовано",
+      "servicePointActivated": "Сервісну точку активовано",
+      "deactivateSuccess": "Партнера та всі пов'язані записи успішно деактивовано",
+      "activateSuccess": "Партнера успішно активовано"
+    },
+    "errors": {
+      "operatorError": "Не вдалося деактивувати/видалити співробітника",
+      "cannotActivateServicePoint": "Неможливо активувати сервісну точку, оскільки партнер неактивний",
+      "servicePointStatusError": "Не вдалося змінити статус сервісної точки",
+      "cannotActivateOperator": "Неможливо активувати співробітника, оскільки партнер неактивний",
+      "operatorStatusError": "Не вдалося змінити статус співробітника",
+      "saveError": "Сталася помилка при збереженні партнера",
+      "fileSizeError": "Розмір файлу не повинен перевищувати 5MB",
+      "fileFormatError": "Підтримуються лише зображення у форматах JPEG, PNG, GIF, WebP",
+      "deactivateError": "Помилка при деактивації партнера",
+      "activateError": "Помилка при активації партнера"
+    },
+    "confirmations": {
+      "deactivatePartner": "При деактивації партнера також будуть деактивовані всі його сервісні точки та співробітники. Продовжити?"
+    },
+    "tabs": {
+      "basicInfo": "Основна інформація",
+      "servicePoints": "Сервісні точки",
+      "operators": "Співробітники"
+    },
+    "operatorTable": {
+      "fullName": "ПІБ",
+      "dataNotLoaded": "Дані не завантажено",
+      "notSpecified": "Не вказано"
+    },
+    "operators": {
+      "columns": {
+        "fio": "ПІБ",
+        "email": "Email",
+        "phone": "Телефон",
+        "position": "Посада",
+        "access": "Доступ",
+        "status": "Статус",
+        "actions": "Дії"
+      },
+      "actions": {
+        "edit": "Редагувати",
+        "deactivate": "Деактивувати",
+        "delete": "Видалити"
+      },
+      "notSpecified": "Не вказано"
+    },
+    "validation": {
+      "companyNameRequired": "Назва компанії обов'язкова",
+      "companyNameMin": "Назва компанії повинна бути не менше 2 символів",
+      "contactPersonMin": "Контактна особа повинна бути не менше 2 символів",
+      "websiteUrlInvalid": "Введіть коректний URL (наприклад, https://example.com)",
+      "taxNumberInvalid": "Неправильний формат податкового номера",
+      "legalAddressRequired": "Юридична адреса обов'язкова",
+      "legalAddressMax": "Юридична адреса не повинна перевищувати 500 символів",
+      "logoUrlInvalid": "Неправильний URL логотипа",
+      "regionRequired": "Регіон обов'язковий",
+      "cityRequired": "Місто обов'язкове",
+      "emailRequired": "Email обов'язковий",
+      "emailInvalid": "Введіть коректний email",
+      "firstNameRequired": "Ім'я обов'язкове",
+      "firstNameMin": "Ім'я повинно бути не менше 2 символів",
+      "lastNameRequired": "Прізвище обов'язкове",
+      "lastNameMin": "Прізвище повинно бути не менше 2 символів",
+      "passwordMin": "Пароль повинен бути не менше 6 символів",
+      "userInfoRequired": "Дані користувача обов'язкові",
+      "fixErrors": "Виправте помилки у формі"
+    }
+  }
+} 

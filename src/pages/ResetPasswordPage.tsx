@@ -29,7 +29,7 @@ const ResetPasswordPage: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   
-  // Получаем токен из URL
+  // Get token from URL
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');
     if (tokenFromUrl) {
@@ -37,17 +37,17 @@ const ResetPasswordPage: React.FC = () => {
     }
   }, [searchParams]);
   
-  // Проверяем токен
+  // Verify token
   const { 
     data: tokenData, 
     isLoading: isVerifying, 
     isError: isTokenError,
     error: tokenError 
   } = useVerifyResetTokenQuery(token, {
-    skip: !token // Пропускаем запрос, если токен не задан
+    skip: !token // Skip request if token is not set
   });
   
-  // Мутация для сброса пароля
+  // Reset password mutation
   const [resetPassword, { isLoading: isResetting }] = useResetPasswordMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,12 +78,12 @@ const ResetPasswordPage: React.FC = () => {
       
       setSuccess(true);
       
-      // Перенаправляем на страницу входа через 3 секунды
+      // Redirect to login page after 3 seconds
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (err: any) {
-      console.error('❌ Ошибка сброса пароля:', err);
+      console.error('❌ Password reset error:', err);
       setError(err.data?.error || t('auth.errors.reset_password_error'));
     }
   };

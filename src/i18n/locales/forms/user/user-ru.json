@@ -1,0 +1,61 @@
+{
+  "forms": {
+    "user": {
+      "title": {
+        "create": "Создать пользователя",
+        "edit": "Редактировать пользователя"
+      },
+      "sections": {
+        "loginType": "Тип входа",
+        "basicInfo": "Основная информация",
+        "roleAndStatus": "Роль и статус",
+        "password": "Пароль",
+        "changePassword": "Изменить пароль",
+        "contactInfo": "Контактная информация",
+        "addressInfo": "Адресная информация",
+        "workInfo": "Рабочая информация"
+      },
+      "loginType": {
+        "selectMethod": "Выберите основной способ входа",
+        "email": "Email",
+        "phone": "Телефон"
+      },
+      "fields": {
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "middleName": "Отчество",
+        "email": "Email",
+        "emailOptional": "Email (необязательно)",
+        "phone": "Телефон",
+        "phoneOptional": "Телефон (необязательно)",
+        "password": "Пароль",
+        "newPassword": "Новый пароль (оставьте пустым, если не хотите менять)",
+        "confirmPassword": "Подтверждение пароля",
+        "role": "Роль",
+        "position": "Должность",
+        "isActive": "Активный пользователь"
+      },
+      "roles": {
+        "admin": "Администратор",
+        "manager": "Менеджер",
+        "partner": "Партнер",
+        "operator": "Оператор",
+        "client": "Клиент",
+        "user": "Пользователь"
+      },
+      "validation": {
+        "emailRequired": "Email обязателен",
+        "phoneRequired": "Телефон обязателен",
+        "emailInvalid": "Введите корректный email",
+        "firstNameRequired": "Имя обязательно",
+        "firstNameMin": "Имя должно быть не менее 2 символов",
+        "lastNameRequired": "Фамилия обязательна",
+        "lastNameMin": "Фамилия должна быть не менее 2 символов",
+        "roleRequired": "Роль обязательна",
+        "passwordRequired": "Пароль обязателен",
+        "passwordMin": "Пароль должен содержать минимум 6 символов",
+        "passwordsNotMatch": "Пароли не совпадают"
+      }
+    }
+  }
+} 

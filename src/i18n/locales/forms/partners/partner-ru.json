@@ -1,0 +1,122 @@
+{
+  "partner": {
+    "title": {
+      "create": "Создать партнера",
+      "edit": "Редактировать партнера"
+    },
+    "sections": {
+      "companyInfo": "Основная информация о компании",
+      "legalInfo": "Юридическая информация",
+      "location": "Местоположение",
+      "adminData": "Данные администратора Партнера"
+    },
+    "fields": {
+      "companyName": "Название компании",
+      "companyDescription": "Описание компании",
+      "contactPerson": "Контактное лицо",
+      "website": "Веб-сайт",
+      "logo": "Логотип партнера",
+      "uploadLogo": "Загрузить лого",
+      "taxNumber": "Налоговый номер (необязательно)",
+      "legalAddress": "Юридический адрес",
+      "region": "Регион",
+      "city": "Город",
+      "isActive": "Активный партнер",
+      "firstName": "Имя",
+      "lastName": "Фамилия",
+      "email": "Email",
+      "phone": "Телефон",
+      "password": "Пароль",
+      "newPassword": "Новый пароль"
+    },
+    "phoneField": {
+      "label": "Телефон",
+      "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
+      "placeholder": "+38 (067) 123-45-67"
+    },
+    "placeholders": {
+      "website": "https://example.com",
+      "taxNumber": "12345678",
+      "selectRegion": "Выберите регион",
+      "selectCity": "Выберите город"
+    },
+    "messages": {
+      "logoFormats": "Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB",
+      "passwordHint": "Оставьте поле пароля пустым, если не хотите его менять",
+      "loadingCities": "Загрузка городов...",
+      "deactivationWarning": "При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники",
+      "updateSuccess": "Партнер успешно обновлен",
+      "createSuccess": "Партнер успешно создан",
+      "operatorDeactivated": "Сотрудник деактивирован",
+      "operatorDeleted": "Сотрудник удален",
+      "operatorActivated": "Сотрудник активирован",
+      "servicePointDeactivated": "Сервисная точка деактивирована",
+      "servicePointActivated": "Сервисная точка активирована",
+      "deactivateSuccess": "Партнер и все связанные записи успешно деактивированы",
+      "activateSuccess": "Партнер успешно активирован"
+    },
+    "errors": {
+      "operatorError": "Не удалось деактивировать/удалить сотрудника",
+      "cannotActivateServicePoint": "Нельзя активировать сервисную точку, так как партнер неактивен",
+      "servicePointStatusError": "Не удалось изменить статус сервисной точки",
+      "cannotActivateOperator": "Нельзя активировать сотрудника, так как партнер неактивен",
+      "operatorStatusError": "Не удалось изменить статус сотрудника",
+      "saveError": "Произошла ошибка при сохранении партнера",
+      "fileSizeError": "Размер файла не должен превышать 5MB",
+      "fileFormatError": "Поддерживаются только изображения в форматах JPEG, PNG, GIF, WebP",
+      "deactivateError": "Ошибка при деактивации партнера",
+      "activateError": "Ошибка при активации партнера"
+    },
+    "confirmations": {
+      "deactivatePartner": "При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники. Продолжить?"
+    },
+    "tabs": {
+      "basicInfo": "Основная информация",
+      "servicePoints": "Сервисные точки",
+      "operators": "Сотрудники"
+    },
+    "operatorTable": {
+      "fullName": "ФИО",
+      "dataNotLoaded": "Данные не загружены",
+      "notSpecified": "Не указан"
+    },
+    "operators": {
+      "columns": {
+        "fio": "ФИО",
+        "email": "Email",
+        "phone": "Телефон",
+        "position": "Должность",
+        "access": "Доступ",
+        "status": "Статус",
+        "actions": "Действия"
+      },
+      "actions": {
+        "edit": "Редактировать",
+        "deactivate": "Деактивировать",
+        "delete": "Удалить"
+      },
+      "notSpecified": "Не указан"
+    },
+    "validation": {
+      "companyNameRequired": "Название компании обязательно",
+      "companyNameMin": "Название компании должно быть не менее 2 символов",
+      "contactPersonMin": "Контактное лицо должно быть не менее 2 символов",
+      "websiteUrlInvalid": "Введите корректный URL (например, https://example.com)",
+      "taxNumberInvalid": "Неверный формат налогового номера",
+      "legalAddressRequired": "Юридический адрес обязателен",
+      "legalAddressMax": "Юридический адрес не должен превышать 500 символов",
+      "logoUrlInvalid": "Неверный URL логотипа",
+      "regionRequired": "Регион обязателен",
+      "cityRequired": "Город обязателен",
+      "emailRequired": "Email обязателен",
+      "emailInvalid": "Введите корректный email",
+      "firstNameRequired": "Имя обязательно",
+      "firstNameMin": "Имя должно быть не менее 2 символов",
+      "lastNameRequired": "Фамилия обязательна",
+      "lastNameMin": "Фамилия должна быть не менее 2 символов",
+      "passwordMin": "Пароль должен быть не менее 6 символов",
+      "userInfoRequired": "Данные пользователя обязательны",
+      "fixErrors": "Исправьте ошибки в форме"
+    }
+  }
+} 

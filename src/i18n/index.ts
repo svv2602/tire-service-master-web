@@ -2,56 +2,100 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import translation files
+// Import main translation files
 import ukTranslations from './locales/uk.json';
 import ruTranslations from './locales/ru.json';
-import settingsRuTranslations from './locales/settings-ru.json';
-import settingsUkTranslations from './locales/settings-uk.json';
-import clientRuTranslations from './locales/client-ru.json';
-import clientUkTranslations from './locales/client-uk.json';
-import modalsRuTranslations from './locales/modals-ru.json';
-import modalsUkTranslations from './locales/modals-uk.json';
-import tireCalculatorRuTranslations from './locales/tire-calculator-ru.json';
-import tireCalculatorUkTranslations from './locales/tire-calculator-uk.json';
 
-// Функция для глубокого объединения объектов
-const deepMerge = (target: any, source: any): any => {
+// Import form translation files
+import settingsRuTranslations from './locales/forms/settings/settings-ru.json';
+import settingsUkTranslations from './locales/forms/settings/settings-uk.json';
+import clientRuTranslations from './locales/forms/client/client-ru.json';
+import clientUkTranslations from './locales/forms/client/client-uk.json';
+import modalsRuTranslations from './locales/forms/modals/modals-ru.json';
+import modalsUkTranslations from './locales/forms/modals/modals-uk.json';
+import partnerRuTranslations from './locales/forms/partners/partner-ru.json';
+import partnerUkTranslations from './locales/forms/partners/partner-uk.json';
+import tireCalculatorRuTranslations from './locales/forms/tire-calculator/tire-calculator-ru.json';
+import tireCalculatorUkTranslations from './locales/forms/tire-calculator/tire-calculator-uk.json';
+
+// Import new form translation files
+import commonRuTranslations from './locales/forms/common/common-ru.json';
+import commonUkTranslations from './locales/forms/common/common-uk.json';
+import userRuTranslations from './locales/forms/user/user-ru.json';
+import userUkTranslations from './locales/forms/user/user-uk.json';
+import bookingRuTranslations from './locales/forms/booking/booking-ru.json';
+import bookingUkTranslations from './locales/forms/booking/booking-uk.json';
+
+// Deep merge utility function
+function deepMerge(target: any, source: any): any {
   const result = { ...target };
   
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-      result[key] = deepMerge(result[key] || {}, source[key]);
-    } else {
-      result[key] = source[key];
+    if (source.hasOwnProperty(key)) {
+      if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+        result[key] = deepMerge(result[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
     }
   }
   
   return result;
-};
+}
 
 const resources = {
   uk: {
     translation: deepMerge(
       deepMerge(
         deepMerge(
-          deepMerge(ukTranslations, settingsUkTranslations),
-          clientUkTranslations
+          deepMerge(
+            deepMerge(
+              deepMerge(
+                deepMerge(
+                  deepMerge(
+                    deepMerge(ukTranslations, settingsUkTranslations),
+                    clientUkTranslations
+                  ),
+                  modalsUkTranslations
+                ),
+                partnerUkTranslations
+              ),
+              tireCalculatorUkTranslations
+            ),
+            commonUkTranslations
+          ),
+          userUkTranslations
         ),
-        modalsUkTranslations
+        bookingUkTranslations
       ),
-      tireCalculatorUkTranslations
+      {} // Placeholder for future form translations
     ),
   },
   ru: {
     translation: deepMerge(
       deepMerge(
         deepMerge(
-          deepMerge(ruTranslations, settingsRuTranslations),
-          clientRuTranslations
+          deepMerge(
+            deepMerge(
+              deepMerge(
+                deepMerge(
+                  deepMerge(
+                    deepMerge(ruTranslations, settingsRuTranslations),
+                    clientRuTranslations
+                  ),
+                  modalsRuTranslations
+                ),
+                partnerRuTranslations
+              ),
+              tireCalculatorRuTranslations
+            ),
+            commonRuTranslations
+          ),
+          userRuTranslations
         ),
-        modalsRuTranslations
+        bookingRuTranslations
       ),
-      tireCalculatorRuTranslations
+      {} // Placeholder for future form translations
     ),
   },
 };
@@ -61,22 +105,16 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
+    lng: 'uk',
     fallbackLng: 'uk',
-    debug: process.env.NODE_ENV === 'development',
-    
+    debug: false,
     interpolation: {
       escapeValue: false,
     },
-    
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
   });
-
-// Экспортируем i18n в глобальную область для отладки
-if (typeof window !== 'undefined') {
-  (window as any).i18n = i18n;
-}
 
 export default i18n; 

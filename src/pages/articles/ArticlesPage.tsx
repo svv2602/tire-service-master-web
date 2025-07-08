@@ -28,7 +28,7 @@ import {
   CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 
-// Импорты UI компонентов
+// UI components imports
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { Select } from '../../components/ui/Select';
@@ -36,7 +36,7 @@ import { Pagination } from '../../components/ui/Pagination';
 import { Chip } from '../../components/ui/Chip';
 import { Table, type Column } from '../../components/ui';
 
-// Локальные импорты
+// Local imports
 import { useGetArticlesQuery, useGetCategoriesQuery } from '../../api/articles.api';
 import { useArticleActions } from '../../hooks/useArticles';
 import { ArticleSummary } from '../../types/articles';
@@ -45,7 +45,7 @@ import {
   getCardStyles
 } from '../../styles/components';
 
-// Константы для статусов
+// Status constants
 const ArticlesPage: React.FC = () => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -55,7 +55,7 @@ const ArticlesPage: React.FC = () => {
   // Redux state
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  // Функция для получения переводов статусов
+  // Function to get status translations
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
       published: t('admin.articles.status.published'),
@@ -65,13 +65,13 @@ const ArticlesPage: React.FC = () => {
     return statusMap[status] || status;
   };
   
-  // Состояние для фильтров
+  // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSort, setSelectedSort] = useState('recent');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Подготовка фильтров для API
+  // Prepare filters for API
   const filters = useMemo(() => ({
     query: searchQuery || undefined,
     category: selectedCategory || undefined,
@@ -79,12 +79,12 @@ const ArticlesPage: React.FC = () => {
     per_page: 12
   }), [searchQuery, selectedCategory, currentPage]);
 
-  // Хуки для данных
+  // Data hooks
   const { data, error, isLoading, refetch } = useGetArticlesQuery(filters);
   const { data: categoriesData } = useGetCategoriesQuery();
   const { deleteArticle } = useArticleActions();
 
-  // Данные для отображения
+  // Display data
   const displayArticles = useMemo(() => data?.data || [], [data?.data]);
   const displayPagination = useMemo(() => data?.meta || {
     current_page: 1,
@@ -94,22 +94,22 @@ const ArticlesPage: React.FC = () => {
   }, [data?.meta]);
   const categories = categoriesData || [];
 
-  // Добавляем логирование для отладки
+  // Debug logging
   React.useEffect(() => {
-    console.log('📊 ArticlesPage: Данные обновились', {
+    console.log('📊 ArticlesPage: Data updated', {
       totalArticles: displayArticles.length,
       totalCount: displayPagination.total_count,
       filters,
       articles: displayArticles.map(a => ({ id: a.id, title: a.title, status: a.status })),
-      error: error ? 'Есть ошибка' : 'Нет ошибки',
+      error: error ? 'Has error' : 'No error',
       isLoading
     });
     
-    // Дополнительная отладка для проверки авторизации
-    console.log('🔑 Статус авторизации:', isAuthenticated ? 'авторизован' : 'не авторизован');
+    // Additional debug for authorization check
+    console.log('🔑 Authorization status:', isAuthenticated ? 'authenticated' : 'not authenticated');
   }, [displayArticles, displayPagination, filters, error, isLoading, isAuthenticated]);
 
-  // Обработчики событий
+  // Event handlers
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
@@ -140,25 +140,25 @@ const ArticlesPage: React.FC = () => {
   const handleDeleteArticle = useCallback(async (articleId: number) => {
     if (window.confirm(t('admin.articles.deleteConfirm'))) {
       try {
-        console.log('Удаление статьи:', articleId);
+        console.log('Deleting article:', articleId);
         const result = await deleteArticle(articleId);
         
         if (result.success) {
-          console.log('Статья успешно удалена');
-          refetch(); // Обновляем список статей
+          console.log('Article successfully deleted');
+          refetch(); // Refresh articles list
         } else {
-          console.error('Ошибка при удалении статьи:', result.error);
+          console.error('Error deleting article:', result.error);
           alert(`${t('admin.articles.messages.deleteError')} ${result.error}`);
         }
       } catch (error) {
-        console.error('Ошибка при удалении статьи:', error);
+        console.error('Error deleting article:', error);
         alert(t('admin.articles.messages.deleteErrorGeneral'));
       }
     }
   }, [deleteArticle, refetch, t]);
 
   /**
-   * Конфигурация колонок таблицы
+   * Table columns configuration
    */
   const columns: Column[] = useMemo(() => [
     {
@@ -323,7 +323,7 @@ const ArticlesPage: React.FC = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: SIZES.spacing.lg }}>
-      {/* Заголовок страницы */}
+      {/* Page header */}
       <Box sx={{ mb: SIZES.spacing.lg }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: SIZES.spacing.md }}>
           <Box>
@@ -352,7 +352,7 @@ const ArticlesPage: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Статистика */}
+      {/* Statistics */}
       <Grid container spacing={3} sx={{ mb: SIZES.spacing.lg }}>
         <Grid item xs={12} sm={6} md={3}>
           <Box sx={{ ...cardStyles, textAlign: 'center', p: SIZES.spacing.lg }}>
@@ -400,7 +400,7 @@ const ArticlesPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Фильтры */}
+      {/* Filters */}
       <Box sx={{ ...cardStyles, mb: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
         <Typography variant="h6" sx={{
           color: theme.palette.text.primary,
@@ -462,7 +462,7 @@ const ArticlesPage: React.FC = () => {
         </Grid>
       </Box>
 
-      {/* Таблица статей */}
+      {/* Articles table */}
       <Box sx={{ ...cardStyles, p: SIZES.spacing.lg }}>
         {isLoading ? (
           <Box sx={{
@@ -501,13 +501,13 @@ const ArticlesPage: React.FC = () => {
           </Box>
         ) : (
           <>
-            {/* Таблица */}
+            {/* Table */}
             <Table
               columns={columns}
               rows={displayArticles}
             />
 
-            {/* Пагинация */}
+            {/* Pagination */}
             {displayPagination.total_pages > 1 && (
               <Box sx={{
                 display: 'flex',
