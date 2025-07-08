@@ -225,7 +225,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary={t('bookingSteps.review.dateTime')}
-                  secondary={`${formatBookingDate()} в ${formData.start_time}`}
+                  secondary={`${formatBookingDate()} ${t('bookingSteps.review.dateTimeSeparator')} ${formData.start_time}`}
                 />
               </ListItem>
             </List>
