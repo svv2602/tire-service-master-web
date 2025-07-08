@@ -199,25 +199,10 @@ const TireInputForm: React.FC<TireInputFormProps> = ({
               opt.value.profile === originalTire.profile &&
               opt.value.diameter === originalTire.diameter
             ) || null}
-            onChange={(_, value) => {
-              if (value && typeof value === 'object') {
-                onTireSizeChange(value.value);
-              }
-            }}
+            onChange={(_, value) => handleAutocompleteChange(value?.label || '')}
             renderInput={(params) => (
-              <TextField
-                {...params}
-                label={t('tireCalculator.fields.selectSize')}
-                placeholder={t('tireCalculator.fields.selectSizePlaceholder')}
-                fullWidth
-              />
+              <TextField {...params} label={t('tireCalculator.inputMode.popular')} variant="outlined" />
             )}
-            freeSolo
-            onInputChange={(_, value) => {
-              if (value && value.includes('/') && value.includes('R')) {
-                handleAutocompleteChange(value);
-              }
-            }}
           />
         </Box>
       )}

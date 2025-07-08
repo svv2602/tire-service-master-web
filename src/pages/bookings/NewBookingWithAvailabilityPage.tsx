@@ -730,23 +730,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       <SuccessDialog
         open={successDialogOpen}
         onClose={handleSuccessDialogClose}
-        title={t('booking.success.title')}
+        title={t('bookingModals.success.title')}
         message={
           isAuthenticated 
-            ? t('booking.success.messageAuth')
-            : t('booking.success.messageGuest')
+            ? t('bookingModals.success.messageAuth')
+            : t('bookingModals.success.messageGuest')
         }
         primaryButtonText={
           isAuthenticated 
-            ? t('booking.success.myBookings') 
-            : t('booking.success.goHome')
+            ? t('bookingModals.success.myBookings') 
+            : t('bookingModals.success.goHome')
         }
         onPrimaryAction={
           isAuthenticated 
             ? handleGoToProfile 
             : handleGoHome
         }
-        secondaryButtonText={isAuthenticated ? t('booking.success.returnHome') : undefined}
+        secondaryButtonText={isAuthenticated ? t('bookingModals.success.returnHome') : undefined}
         onSecondaryAction={isAuthenticated ? handleGoHome : undefined}
       />
       

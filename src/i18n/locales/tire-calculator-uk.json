@@ -100,14 +100,5 @@
       "calculate": "Розрахувати",
       "reset": "Скинути"
     }
-  },
-  "userMenu": {
-    "profile": "Профіль",
-    "myBookings": "Мої бронювання",
-    "myReviews": "Мої відгуки",
-    "toWebsite": "На сайт",
-    "adminPanel": "Адмін-панель",
-    "logout": "Вийти",
-    "login": "Увійти"
   }
 } 
