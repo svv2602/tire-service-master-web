@@ -1200,21 +1200,6 @@
         },
         "loading": "Загрузка бренда..."
       },
-      "tireCalculator": {
-        "title": "Калькулятор шин",
-        "fields": {
-          "currentWidth": "Текущая ширина",
-          "currentProfile": "Текущий профиль",
-          "currentDiameter": "Текущий диаметр",
-          "newWidth": "Новая ширина",
-          "newProfile": "Новый профиль",
-          "newDiameter": "Новый диаметр"
-        },
-        "buttons": {
-          "calculate": "Рассчитать",
-          "reset": "Сбросить"
-        }
-      },
       "review": {
         "title": {
           "create": "Новый отзыв",

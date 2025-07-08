@@ -6,11 +6,18 @@
     "inputMode": {
       "manual": "Ввести вручну",
       "popular": "Популярні розміри"
-    },
+    },    
+    
     "fields": {
       "width": "Ширина",
       "profile": "Профіль",
-      "diameter": "Діаметр"
+      "diameter": "Діаметр",
+      "currentWidth": "Поточна ширина",
+      "currentProfile": "Поточний профіль",
+      "currentDiameter": "Поточний діаметр",
+      "newWidth": "Нова ширина",
+      "newProfile": "Новий профіль",
+      "newDiameter": "Новий діаметр"
     },
     "result": {
       "finalSize": "Підсумковий розмір",
@@ -79,6 +86,11 @@
     "find_sizes_button": "Знайти розміри",
     "reset_button": "Скинути",
     "no_sizes_found_message": "Розміри не знайдено",
+    "diameter": "Діаметр",
+    "deviation": "Відхилення:",
+    "from_target": "від цільового значення",
+    "found_sizes": "Знайдені розміри",
+    "recommendation": "Рекомендація",
     "converter": {
       "title": "Конвертер розмірів шин",
       "description": "Перетворення між метричною та дюймовою системами",
@@ -91,7 +103,7 @@
       "metricToInch": "Метри в Дюйми",
       "inchToMetric": "Дюйми в Метри",
       "result": "Результат конвертації",
-      "recommendation": "Рекомендація",
+ 
       "mm": "мм",
       "inch": "дюйм",
       "percent": "%",

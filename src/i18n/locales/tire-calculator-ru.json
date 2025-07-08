@@ -10,7 +10,13 @@
     "fields": {
       "width": "Ширина",
       "profile": "Профиль",
-      "diameter": "Диаметр"
+      "diameter": "Диаметр",
+      "currentWidth": "Текущая ширина",
+      "currentProfile": "Текущий профиль",
+      "currentDiameter": "Текущий диаметр",
+      "newWidth": "Новая ширина",
+      "newProfile": "Новый профиль",
+      "newDiameter": "Новый диаметр"
     },
     "result": {
       "finalSize": "Итоговый размер",
@@ -99,6 +105,10 @@
       "slash": "/",
       "calculate": "Рассчитать",
       "reset": "Сбросить"
-    }
+    },
+    "recommendation": "Рекомендация",
+    "deviation": "Отклонение:",
+    "from_target": "от целевого значения",
+    "found_sizes": "Найденные размеры"
   }
 } 
