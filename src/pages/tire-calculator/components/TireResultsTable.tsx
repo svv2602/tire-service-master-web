@@ -24,6 +24,7 @@ import {
 import { TireAlternative } from '../../../types/tire-calculator';
 import { calculateSpeedometerImpact } from '../../../utils/tire-calculator';
 import { Button } from '../../../components/ui';
+import { useTranslation } from 'react-i18next';
 
 interface TireResultsTableProps {
   alternatives: TireAlternative[];
@@ -38,6 +39,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
   alternatives,
   originalDiameter
 }) => {
+  const { t } = useTranslation();
   const [sortField, setSortField] = useState<SortField>('deviation');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterType, setFilterType] = useState<FilterType>('recommended'); // По умолчанию показываем только рекомендуемые
@@ -123,27 +125,27 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
     
     if (absDeviation <= 1) {
       return (
-        <Tooltip title="Рекомендуется (отклонение ≤1%)">
+        <Tooltip title={t('tireCalculator.recommended')}>
           <CheckCircleIcon color="success" fontSize="small" />
         </Tooltip>
       );
     }
     if (absDeviation <= 2) {
       return (
-        <Tooltip title="Требует внимания (отклонение ≤2%)">
+        <Tooltip title={t('tireCalculator.attention')}>
           <WarningIcon color="warning" fontSize="small" />
         </Tooltip>
       );
     }
     if (absDeviation <= 3) {
       return (
-        <Tooltip title="Проверьте совместимость (отклонение ≤3%)">
+        <Tooltip title={t('tireCalculator.check')}>
           <InfoIcon color="info" fontSize="small" />
         </Tooltip>
       );
     }
     return (
-      <Tooltip title="Превышает рекомендуемое отклонение">
+      <Tooltip title={t('tireCalculator.check')}>
         <WarningIcon color="error" fontSize="small" />
       </Tooltip>
     );
@@ -166,7 +168,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
   if (alternatives.length === 0) {
     return (
       <Alert severity="info">
-        Альтернативные размеры не найдены. Попробуйте изменить параметры поиска.
+        {t('tireCalculator.found_sizes') + ' ' + t('tireCalculator.no_sizes_found_message')}
       </Alert>
     );
   }
@@ -194,8 +196,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
   return (
     <Box>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Найдено {alternatives.length} альтернативных размеров. 
-        {filterType !== 'all' && ` Показано: ${filteredAlternatives.length}`}
+        {t('tireCalculator.found_sizes_summary', { count: alternatives.length, shown: filterType !== 'all' ? filteredAlternatives.length : alternatives.length })}
       </Typography>
 
       {/* Кнопки быстрого фильтра */}
@@ -207,7 +208,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
           onClick={() => setFilterType('recommended')}
           color="success"
         >
-          Рекомендуется ±1% ({getFilterCount('recommended')})
+          {t('tireCalculator.recommended_with_count', { count: getFilterCount('recommended') })}
         </Button>
         
         <Button
@@ -217,7 +218,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
           onClick={() => setFilterType('warning')}
           color="warning"
         >
-          Требует внимания ±2% ({getFilterCount('warning')})
+          {t('tireCalculator.attention_with_count', { count: getFilterCount('warning') })}
         </Button>
         
         <Button
@@ -227,7 +228,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
           onClick={() => setFilterType('info')}
           color="info"
         >
-          Проверьте совместимость ±3% ({getFilterCount('info')})
+          {t('tireCalculator.check_with_count', { count: getFilterCount('info') })}
         </Button>
         
         <Button
@@ -235,7 +236,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
           size="small"
           onClick={() => setFilterType('all')}
         >
-          Все ({getFilterCount('all')})
+          {t('tireCalculator.all', { count: getFilterCount('all') })}
         </Button>
       </Box>
 
@@ -245,8 +246,8 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
             <TableRow>
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Рек.
-                  <Tooltip title="Рекомендация на основе отклонения диаметра">
+                  {t('tireCalculator.col_recommendation')}
+                  <Tooltip title={t('tireCalculator.recommendation')}>
                     <InfoIcon fontSize="small" color="action" />
                   </Tooltip>
                 </Box>
@@ -258,7 +259,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
                   direction={sortField === 'size' ? sortDirection : 'asc'}
                   onClick={() => handleSort('size')}
                 >
-                  Размер шины
+                  {t('tireCalculator.col_tire_size')}
                 </TableSortLabel>
               </TableCell>
 
@@ -268,11 +269,11 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
                   direction={sortField === 'width' ? sortDirection : 'asc'}
                   onClick={() => handleSort('width')}
                 >
-                  Ширина
+                  {t('tireCalculator.col_width')}
                 </TableSortLabel>
               </TableCell>
 
-              <TableCell align="center">Профиль</TableCell>
+              <TableCell align="center">{t('tireCalculator.col_profile')}</TableCell>
 
               <TableCell align="center">
                 <TableSortLabel
@@ -280,7 +281,7 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
                   direction={sortField === 'diameter' ? sortDirection : 'asc'}
                   onClick={() => handleSort('diameter')}
                 >
-                  Диаметр
+                  {t('tireCalculator.col_diameter')}
                 </TableSortLabel>
               </TableCell>
 
@@ -290,13 +291,13 @@ const TireResultsTable: React.FC<TireResultsTableProps> = ({
                   direction={sortField === 'deviation' ? sortDirection : 'asc'}
                   onClick={() => handleSort('deviation')}
                 >
-                  Отклонение
+                  {t('tireCalculator.col_deviation')}
                 </TableSortLabel>
               </TableCell>
 
-              <TableCell align="center">Общий диаметр</TableCell>
-              <TableCell align="center">Ширина диска</TableCell>
-              <TableCell align="center">Спидометр</TableCell>
+              <TableCell align="center">{t('tireCalculator.col_total_diameter')}</TableCell>
+              <TableCell align="center">{t('tireCalculator.col_rim_width')}</TableCell>
+              <TableCell align="center">{t('tireCalculator.col_speedometer')}</TableCell>
             </TableRow>
           </TableHead>
           
