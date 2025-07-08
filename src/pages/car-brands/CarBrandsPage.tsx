@@ -113,7 +113,7 @@ const CarBrandsPage: React.FC = () => {
     } catch (error) {
       return {
         success: false,
-        message: 'Ошибка при изменении статуса бренда'
+        message: t('admin.carBrands.statusChangeError')
       };
     }
   }, [toggleActive]);
@@ -123,10 +123,10 @@ const CarBrandsPage: React.FC = () => {
       await deleteBrand(brand.id.toString()).unwrap();
       return {
         success: true,
-        message: 'Бренд успешно удален'
+        message: t('admin.carBrands.brandDeletedSuccess')
       };
     } catch (error: any) {
-      let errorMessage = 'Ошибка при удалении бренда';
+      let errorMessage = t('admin.carBrands.brandDeleteError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
