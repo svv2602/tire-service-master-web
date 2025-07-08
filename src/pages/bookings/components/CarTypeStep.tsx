@@ -341,12 +341,12 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
             </Box>
             
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {clientCar.brand?.name || 'Неизвестная марка'} {clientCar.model?.name || 'Неизвестная модель'}
+              {clientCar.brand?.name || t('bookingSteps.carType.unknownBrand')} {clientCar.model?.name || t('bookingSteps.carType.unknownModel')}
             </Typography>
             
             {clientCar.year && (
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Год: {clientCar.year}
+                {t('bookingSteps.carType.year')}: {clientCar.year}
               </Typography>
             )}
             
@@ -513,7 +513,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
                 value={formData.license_plate}
                 onChange={handleLicensePlateChange}
                 onBlur={handleLicensePlateBlur}
-                placeholder="АА1234ВВ"
+                placeholder={t('bookingSteps.carType.licensePlatePlaceholder')}
                 required
                 error={!!errors.license_plate}
                 helperText={errors.license_plate || t('bookingSteps.carType.vehicleNumberDescription')}
@@ -543,7 +543,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
             </AccordionSummary>
             <AccordionDetails>
               <Select
-                label="Марка"
+                label={t('bookingSteps.carType.carBrand')}
                 value={selectedBrandId || ''}
                 onChange={(value) => handleBrandChange(Number(value))}
                 options={brands.map(brand => ({ value: brand.id, label: brand.name }))}
@@ -567,7 +567,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
             </AccordionSummary>
             <AccordionDetails>
               <Select
-                label="Модель"
+                label={t('bookingSteps.carType.carModel')}
                 value={models.find(m => m.name === formData.car_model)?.id || ''}
                 onChange={(value) => handleModelChange(Number(value))}
                 options={models.map(model => ({ value: model.id, label: model.name }))}
