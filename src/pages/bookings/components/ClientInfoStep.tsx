@@ -211,6 +211,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             onChange={handleFieldChange('phone')}
             error={!!errors.phone}
             helperText={errors.phone || t('bookingSteps.clientInfo.helperText.phoneFormat')}
+            placeholder={t('bookingSteps.clientInfo.placeholders.phone', '+38 (067) 123-45-67')}
             required
             InputProps={{
               startAdornment: (
