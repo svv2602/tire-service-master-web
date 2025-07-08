@@ -441,8 +441,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setIsSubmitting(false);
       
       // Проверяем, стоит ли предложить добавить машину в профиль
-      if (shouldOfferToAddCar(authUser, clientCars, formData)) {
-        const carData = prepareCarDataForDialog(formData);
+      const carData = prepareCarDataForDialog(formData);
+      if (shouldOfferToAddCar(carData, clientCars)) {
         setCarDataForDialog(carData);
         setAddCarDialogOpen(true);
       } else {

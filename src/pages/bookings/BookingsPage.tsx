@@ -136,7 +136,7 @@ const BookingsPage: React.FC = () => {
   const cities = citiesData?.data || [];
   const servicePoints = servicePointsData?.data || [];
   const serviceCategories = serviceCategoriesData?.data || [];
-  const bookingStatuses = bookingStatusesData?.data || [];
+  const bookingStatuses = bookingStatusesData || [];
 
   // Функция форматирования времени
   const formatTime = useCallback((timeString: string) => {
@@ -328,7 +328,7 @@ const BookingsPage: React.FC = () => {
       onChange: (value) => setStatusFilter(value as string),
       options: [
         { value: '', label: t('forms.bookings.filters.allStatuses') },
-        ...bookingStatuses.map(status => ({
+        ...bookingStatuses.map((status: any) => ({
           value: status.key || status.id?.toString() || '',
           label: status.name
         }))
@@ -623,7 +623,7 @@ const BookingsPage: React.FC = () => {
           horizontal: 'left',
         }}
       >
-        {bookingStatuses.map((status) => (
+        {bookingStatuses.map((status: any) => (
           <MenuItem key={status.key || status.id} onClick={() => handleStatusSelect(status.key || status.id.toString())}>
             {status.name}
           </MenuItem>
