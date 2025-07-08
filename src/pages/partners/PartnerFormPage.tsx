@@ -353,11 +353,11 @@ const PartnerFormPage: React.FC = () => {
           id: operator.id, 
           data: requestData
         }).unwrap();
-        setSuccessMessage('Сотрудник деактивирован');
+        setSuccessMessage(t('forms.partner.messages.operatorDeactivated'));
       } else {
         // Если оператор неактивен - удаляем его
         await deleteOperator({ id: operator.id, partnerId }).unwrap();
-        setSuccessMessage('Сотрудник удален');
+        setSuccessMessage(t('forms.partner.messages.operatorDeleted'));
       }
       
       // Обновляем список операторов
@@ -367,7 +367,7 @@ const PartnerFormPage: React.FC = () => {
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error('Ошибка при деактивации/удалении сотрудника:', error);
-      setApiError('Не удалось деактивировать/удалить сотрудника');
+      setApiError(t('forms.partner.errors.operatorError'));
       setTimeout(() => setApiError(null), 3000);
     }
   };
@@ -393,7 +393,7 @@ const PartnerFormPage: React.FC = () => {
   const handleToggleServicePointStatus = async (servicePoint: ServicePoint) => {
     // Проверяем, можно ли активировать сервисную точку
     if (!servicePoint.is_active && !formik.values.is_active) {
-      setApiError('Нельзя активировать сервисную точку, так как партнер неактивен');
+      setApiError(t('forms.partner.errors.cannotActivateServicePoint'));
       setTimeout(() => setApiError(null), 3000);
       return;
     }
@@ -414,8 +414,8 @@ const PartnerFormPage: React.FC = () => {
       
       // Отображаем сообщение об успехе
       setSuccessMessage(servicePoint.is_active 
-        ? 'Сервисная точка деактивирована' 
-        : 'Сервисная точка активирована');
+                ? t('forms.partner.messages.servicePointDeactivated')
+        : t('forms.partner.messages.servicePointActivated'));
       
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -424,7 +424,7 @@ const PartnerFormPage: React.FC = () => {
       // Проверяем, есть ли сообщение об ошибке валидации
       const errorMessage = error?.data?.errors?.is_active?.[0] || 
                           error?.data?.message || 
-                          'Не удалось изменить статус сервисной точки';
+                          t('forms.partner.errors.servicePointStatusError');
       setApiError(errorMessage);
       setTimeout(() => setApiError(null), 3000);
     }
@@ -434,7 +434,7 @@ const PartnerFormPage: React.FC = () => {
   const handleToggleOperatorStatus = async (operator: Operator) => {
     // Проверяем, можно ли активировать оператора
     if (!operator.is_active && !formik.values.is_active) {
-      setApiError('Нельзя активировать сотрудника, так как партнер неактивен');
+      setApiError(t('forms.partner.errors.cannotActivateOperator'));
       setTimeout(() => setApiError(null), 3000);
       return;
     }
@@ -460,7 +460,7 @@ const PartnerFormPage: React.FC = () => {
       refetchOperators();
       
       // Отображаем сообщение об успехе
-      setSuccessMessage(operator.is_active ? 'Сотрудник деактивирован' : 'Сотрудник активирован');
+      setSuccessMessage(operator.is_active ? t('forms.partner.messages.operatorDeactivated') : t('forms.partner.messages.operatorActivated'));
       
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -469,7 +469,7 @@ const PartnerFormPage: React.FC = () => {
       // Проверяем, есть ли сообщение об ошибке валидации
       const errorMessage = error?.data?.errors?.is_active?.[0] || 
                           error?.data?.message || 
-                          'Не удалось изменить статус сотрудника';
+                          t('forms.partner.errors.operatorStatusError');
       setApiError(errorMessage);
       setTimeout(() => setApiError(null), 3000);
     }
@@ -478,15 +478,15 @@ const PartnerFormPage: React.FC = () => {
   // Функция для получения списка незаполненных обязательных полей
   const getRequiredFieldErrors = () => {
     const requiredFields = {
-      company_name: 'Название компании',
-      legal_address: 'Юридический адрес',
-          region_id: t('forms.partner.fields.region'),
-    city_id: t('forms.partner.fields.city'),
+      company_name: t('forms.partner.fields.companyName'),
+      legal_address: t('forms.partner.fields.legalAddress'),
+      region_id: t('forms.partner.fields.region'),
+      city_id: t('forms.partner.fields.city'),
       ...((!isEdit) && {
-        'user.email': 'Email Партнера',
-        'user.phone': 'Телефон Партнера',
-        'user.first_name': 'Имя Партнера',
-        'user.last_name': 'Фамилия Партнера'
+        'user.email': t('forms.partner.fields.email'),
+        'user.phone': t('forms.partner.fields.phone'),
+        'user.first_name': t('forms.partner.fields.firstName'),
+        'user.last_name': t('forms.partner.fields.lastName')
       })
     };
 
@@ -657,7 +657,7 @@ const PartnerFormPage: React.FC = () => {
       }
     } catch (error: any) {
       console.log('Полная ошибка:', error);
-      let errorMessage = 'Произошла ошибка при сохранении партнера';
+      let errorMessage = t('forms.partner.errors.saveError');
       
       if (error.data?.errors) {
         errorMessage = Object.entries(error.data.errors)
@@ -729,10 +729,10 @@ const PartnerFormPage: React.FC = () => {
   // Вкладки для режима редактирования
   const tabs = useMemo(() => {
     const baseTabs = [
-      { label: 'Основная информация', value: 0 },
+                  { label: t('forms.partner.tabs.basicInfo'), value: 0 },
     ];
     if (isEdit) {
-      baseTabs.push({ label: 'Сервисные точки', value: 1 });
+              baseTabs.push({ label: t('forms.partner.tabs.servicePoints'), value: 1 });
       baseTabs.push({ label: t('forms.partner.tabs.operators'), value: 2 });
     }
     return baseTabs;
@@ -870,14 +870,14 @@ const PartnerFormPage: React.FC = () => {
     if (file) {
       // Валидация размера файла
       if (file.size > MAX_FILE_SIZE) {
-        setApiError('Размер файла не должен превышать 5MB');
+        setApiError(t('forms.partner.errors.fileSizeError'));
         setTimeout(() => setApiError(null), 3000);
         return;
       }
 
       // Валидация типа файла
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-        setApiError('Поддерживаются только изображения в форматах JPEG, PNG, GIF, WebP');
+        setApiError(t('forms.partner.errors.fileFormatError'));
         setTimeout(() => setApiError(null), 3000);
         return;
       }
@@ -909,7 +909,7 @@ const PartnerFormPage: React.FC = () => {
     if (!newActiveStatus && isEdit && partnerId) {
       // Показываем диалог подтверждения
       if (window.confirm(
-        'При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники. Продолжить?'
+        t('forms.partner.confirmations.deactivatePartner')
       )) {
         try {
           // Вызываем API для деактивации партнера (это автоматически деактивирует связанные записи)
@@ -919,7 +919,7 @@ const PartnerFormPage: React.FC = () => {
           }).unwrap();
           
           formik.setFieldValue('is_active', false);
-          setSuccessMessage('Партнер и все связанные записи успешно деактивированы');
+          setSuccessMessage(t('forms.partner.messages.deactivateSuccess'));
           
           // Обновляем данные сервисных точек и операторов
           if (servicePointsData) {
@@ -929,7 +929,7 @@ const PartnerFormPage: React.FC = () => {
             refetchOperators();
           }
         } catch (error: any) {
-          setApiError(error?.data?.message || 'Ошибка при деактивации партнера');
+          setApiError(error?.data?.message || t('forms.partner.errors.deactivateError'));
           setTimeout(() => setApiError(null), 3000);
         }
       }
@@ -943,10 +943,10 @@ const PartnerFormPage: React.FC = () => {
           }).unwrap();
           
           formik.setFieldValue('is_active', true);
-          setSuccessMessage('Партнер успешно активирован');
+          setSuccessMessage(t('forms.partner.messages.activateSuccess'));
           setTimeout(() => setSuccessMessage(null), 3000);
         } catch (error: any) {
-          setApiError(error?.data?.message || 'Ошибка при активации партнера');
+          setApiError(error?.data?.message || t('forms.partner.errors.activateError'));
           setTimeout(() => setApiError(null), 3000);
         }
       } else {
@@ -980,8 +980,8 @@ const PartnerFormPage: React.FC = () => {
       {/* Таблица сотрудников */}
       <Table
         columns={[
-          { id: 'fio', label: 'ФИО', format: (_: any, row: Operator) => row.user ? `${row.user.first_name} ${row.user.last_name}` : 'Данные не загружены' },
-          { id: 'email', label: 'Email', format: (_: any, row: Operator) => row.user?.email || 'Не указан' },
+                { id: 'fio', label: t('forms.partner.operatorTable.fullName'), format: (_: any, row: Operator) => row.user ? `${row.user.first_name} ${row.user.last_name}` : t('forms.partner.operatorTable.dataNotLoaded') },
+      { id: 'email', label: t('forms.partner.fields.email'), format: (_: any, row: Operator) => row.user?.email || t('forms.partner.operatorTable.notSpecified') },
                 { id: 'phone', label: t('forms.partner.operators.columns.phone'), format: (_: any, row: Operator) => row.user?.phone || t('forms.partner.operators.notSpecified') },
       { id: 'position', label: t('forms.partner.operators.columns.position'), format: (_: any, row: Operator) => row.position },
       { id: 'access_level', label: t('forms.partner.operators.columns.access'), format: (_: any, row: Operator) => row.access_level },
@@ -1057,13 +1057,13 @@ const PartnerFormPage: React.FC = () => {
             mr: SIZES.spacing.md 
           }}
         >
-          Назад
+          {t('common.back')}
         </Button>
         <Typography 
           variant="h4" 
           sx={{ fontSize: SIZES.fontSize.xl }}
         >
-          {isEdit ? 'Редактировать партнера' : 'Создать партнера'}
+          {isEdit ? t('forms.partner.editPartner') : t('forms.partner.createPartner')}
         </Typography>
       </Box>
       
@@ -1089,7 +1089,7 @@ const PartnerFormPage: React.FC = () => {
               {/* Основная информация о компании */}
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>
-                  Основная информация о компании
+                  {t('forms.partner.sections.companyInfo')}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
               </Grid>
@@ -1145,7 +1145,7 @@ const PartnerFormPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <Box sx={textFieldStyles}>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    t('forms.partner.fields.logo')
+                    {t('forms.partner.fields.logo')}
                   </Typography>
                   
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -1177,7 +1177,7 @@ const PartnerFormPage: React.FC = () => {
                             <UploadIcon />
                           </IconButton>
                           <Typography variant="body2" color="primary">
-                            t('forms.partner.fields.uploadLogo')
+                            {t('forms.partner.fields.uploadLogo')}
                           </Typography>
                         </Box>
                       </label>
@@ -1191,7 +1191,7 @@ const PartnerFormPage: React.FC = () => {
                   </Box>
 
                   <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
-                    t('forms.partner.messages.logoFormats')
+                    {t('forms.partner.messages.logoFormats')}
                   </Typography>
                 </Box>
               </Grid>
@@ -1206,7 +1206,7 @@ const PartnerFormPage: React.FC = () => {
                     fontSize: SIZES.fontSize.lg 
                   }}
                 >
-                  t('forms.partner.sections.legalInfo')
+                  {t('forms.partner.sections.legalInfo')}
                 </Typography>
                 <Divider sx={{ mb: SIZES.spacing.md }} />
               </Grid>
@@ -1251,7 +1251,7 @@ const PartnerFormPage: React.FC = () => {
                     fontSize: SIZES.fontSize.lg 
                   }}
                 >
-                  t('forms.partner.sections.location')
+                  {t('forms.partner.sections.location')}
                 </Typography>
                 <Divider sx={{ mb: SIZES.spacing.md }} />
               </Grid>
@@ -1314,7 +1314,7 @@ const PartnerFormPage: React.FC = () => {
                   )}
                   {citiesLoading && (
                     <Typography variant="caption" color="text.secondary">
-                      Загрузка городов...
+                      {t('forms.partner.messages.loadingCities')}
                     </Typography>
                   )}
                 </FormControl>
@@ -1334,7 +1334,7 @@ const PartnerFormPage: React.FC = () => {
                   />
                   {!formik.values.is_active && (
                     <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 1 }}>
-                      При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники
+                      {t('forms.partner.messages.deactivationWarning')}
                     </Typography>
                   )}
                 </Box>
@@ -1351,7 +1351,7 @@ const PartnerFormPage: React.FC = () => {
                       fontSize: SIZES.fontSize.lg 
                     }}
                   >
-                    Данные администратора Партнера
+                    {t('forms.partner.sections.adminData')}
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                   <Grid container spacing={2}>
@@ -1360,7 +1360,7 @@ const PartnerFormPage: React.FC = () => {
                         fullWidth
                         required
                         name="user.email"
-                        label="Email"
+                        label={t('forms.partner.fields.email')}
                         type="email"
                         value={formik.values.user?.email || ''}
                         onChange={formik.handleChange}
@@ -1446,7 +1446,7 @@ const PartnerFormPage: React.FC = () => {
                         fontSize: SIZES.fontSize.lg 
                       }}
                     >
-                      Данные администратора Партнера
+                      {t('forms.partner.sections.adminData')}
                     </Typography>
                     <Divider sx={{ mb: SIZES.spacing.md }} />
                   </Grid>

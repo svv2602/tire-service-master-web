@@ -770,7 +770,48 @@
       },
       "messages": {
         "logoFormats": "Поддерживаются форматы: JPEG, PNG, GIF, WebP. Максимальный размер: 5MB",
-        "passwordHint": "Оставьте поле пароля пустым, если не хотите его менять"
+        "passwordHint": "Оставьте поле пароля пустым, если не хотите его менять",
+        "loadingCities": "Загрузка городов...",
+        "deactivationWarning": "При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники",
+        "updateSuccess": "Партнер успешно обновлен",
+        "createSuccess": "Партнер успешно создан",
+        "operatorDeactivated": "Сотрудник деактивирован",
+        "operatorDeleted": "Сотрудник удален",
+        "operatorActivated": "Сотрудник активирован",
+        "servicePointDeactivated": "Сервисная точка деактивирована",
+        "servicePointActivated": "Сервисная точка активирована",
+        "deactivateSuccess": "Партнер и все связанные записи успешно деактивированы",
+        "activateSuccess": "Партнер успешно активирован"
+      },
+      "errors": {
+        "operatorError": "Не удалось деактивировать/удалить сотрудника",
+        "cannotActivateServicePoint": "Нельзя активировать сервисную точку, так как партнер неактивен",
+        "servicePointStatusError": "Не удалось изменить статус сервисной точки",
+        "cannotActivateOperator": "Нельзя активировать сотрудника, так как партнер неактивен",
+        "operatorStatusError": "Не удалось изменить статус сотрудника",
+        "saveError": "Произошла ошибка при сохранении партнера",
+        "fileSizeError": "Размер файла не должен превышать 5MB",
+        "fileFormatError": "Поддерживаются только изображения в форматах JPEG, PNG, GIF, WebP",
+        "deactivateError": "Ошибка при деактивации партнера",
+        "activateError": "Ошибка при активации партнера"
+      },
+      "confirmations": {
+        "deactivatePartner": "При деактивации партнера также будут деактивированы все его сервисные точки и сотрудники. Продолжить?"
+      },
+      "tabs": {
+        "basicInfo": "Основная информация",
+        "servicePoints": "Сервисные точки"
+      },
+      "sections": {
+        "companyInfo": "Основная информация о компании",
+        "legalInfo": "Юридическая информация",
+        "location": "Местоположение",
+        "adminData": "Данные администратора Партнера"
+      },
+      "operatorTable": {
+        "fullName": "ФИО",
+        "dataNotLoaded": "Данные не загружены",
+        "notSpecified": "Не указан"
       },
       "validation": {
         "companyNameRequired": "Название компании обязательно",
