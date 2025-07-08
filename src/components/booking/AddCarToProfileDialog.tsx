@@ -27,6 +27,7 @@ import { selectCurrentUser } from '../../store/slices/authSlice';
 import { ClientCarFormData } from '../../types/client';
 import { UserRole } from '../../types/user-role';
 import { useInvalidateCache } from '../../api/baseApi';
+import { useTranslation } from 'react-i18next';
 
 interface AddCarToProfileDialogProps {
   open: boolean;
@@ -46,6 +47,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
   carData,
   onCarAdded,
 }) => {
+  const { t } = useTranslation();
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -184,7 +186,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
         <Box display="flex" alignItems="center" gap={1}>
           <CarIcon color="primary" />
           <Typography variant="h6">
-            Добавить автомобиль в профиль
+            {t('bookingModals.addCarTitle')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -193,101 +195,44 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
         {success ? (
           <Alert severity="success" sx={{ mb: 2 }}>
             <Typography variant="body1">
-              Автомобиль успешно добавлен в ваш профиль!
+              {t('bookingModals.add') + ' ' + t('bookingModals.afterAdd')}
             </Typography>
           </Alert>
         ) : (
           <>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              Вы использовали автомобиль для бронирования, которого нет в профиле. 
-              Хотите добавить его для удобства будущих бронирований?
+              {t('bookingModals.addCarDescription')}
             </Typography>
-
-            <Card variant="outlined" sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Данные автомобиля
-                </Typography>
-                
-                <Box display="flex" flexDirection="column" gap={1}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Номер:
-                    </Typography>
-                    <Chip 
-                      label={carData.license_plate} 
-                      variant="outlined" 
-                      size="small"
-                      color="primary"
-                    />
-                  </Box>
-
-                  {carData.car_brand && (
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">
-                        Марка:
-                      </Typography>
-                      <Typography variant="body2" fontWeight="medium">
-                        {carData.car_brand}
-                      </Typography>
-                    </Box>
-                  )}
-
-                  {carData.car_model && (
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">
-                        Модель:
-                      </Typography>
-                      <Typography variant="body2" fontWeight="medium">
-                        {carData.car_model}
-                      </Typography>
-                    </Box>
-                  )}
-
-                                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="body2" color="text.secondary">
-                      Тип:
-                    </Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {getCarTypeName(carData.car_type_id)}
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              {t('bookingModals.carData')}
+            </Typography>
+            <Box sx={{ mb: 2 }}>
+              <Chip label={`${t('bookingModals.number')}: ${carData.license_plate}`} sx={{ mr: 1 }} />
+              <Chip label={`${t('bookingModals.type')}: ${getCarTypeName(carData.car_type_id)}`} />
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {t('bookingModals.afterAdd')}
+            </Typography>
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
+              <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
             )}
-
-            <Typography variant="body2" color="text.secondary">
-              После добавления можно будет быстро выбирать этот автомобиль при создании новых бронирований.
-            </Typography>
           </>
         )}
       </DialogContent>
-
       <DialogActions>
-        <Button 
-          onClick={handleClose}
-          disabled={isAdding}
-          startIcon={<CloseIcon />}
-        >
-          {success ? 'Закрыть' : 'Не добавлять'}
+        <Button onClick={handleClose} disabled={isAdding}>
+          {t('bookingModals.skip')}
         </Button>
-        
-        {!success && (
-          <Button
-            onClick={handleAddCar}
-            disabled={isAdding}
-            variant="contained"
-            startIcon={isAdding ? <CircularProgress size={16} /> : <AddIcon />}
-          >
-            {isAdding ? 'Добавление...' : 'Добавить в профиль'}
-          </Button>
-        )}
+        <Button
+          onClick={handleAddCar}
+          color="primary"
+          variant="contained"
+          startIcon={<AddIcon />}
+          disabled={isAdding || success}
+        >
+          {isAdding ? <CircularProgress size={20} /> : t('bookingModals.add')}
+        </Button>
       </DialogActions>
     </Dialog>
   );
