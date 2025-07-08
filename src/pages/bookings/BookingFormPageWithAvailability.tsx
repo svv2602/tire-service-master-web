@@ -100,10 +100,10 @@ const BookingFormPageWithAvailability: React.FC = () => {
   
   // Мемоизированные моковые данные
   const mockClients = useMemo(() => [
-    { id: 1, name: 'Иван Петренко', phone: '+380 67 123 45 67' },
-    { id: 2, name: 'Мария Коваленко', phone: '+380 50 222 33 44' },
-    { id: 3, name: 'Алексей Шевченко', phone: '+380 63 555 66 77' },
-  ], []);
+    { id: 1, name: t('forms.bookings.mockData.clients.ivan'), phone: '+380 67 123 45 67' },
+    { id: 2, name: t('forms.bookings.mockData.clients.maria'), phone: '+380 50 222 33 44' },
+    { id: 3, name: t('forms.bookings.mockData.clients.alex'), phone: '+380 63 555 66 77' },
+  ], [t]);
   
   const mockCars = useMemo(() => [
     { id: 1, brand: 'Toyota', model: 'Camry', number: 'АА1234КК', client_id: 1 },
@@ -112,11 +112,11 @@ const BookingFormPageWithAvailability: React.FC = () => {
   ], []);
   
   const mockAvailableServices = useMemo(() => [
-    { id: 1, name: 'Замена шин', price: 400, duration: 30 },
-    { id: 2, name: 'Балансировка', price: 200, duration: 15 },
-    { id: 3, name: 'Ремонт диска', price: 600, duration: 45 },
-    { id: 4, name: 'Подкачка шин', price: 100, duration: 10 },
-  ], []);
+    { id: 1, name: t('forms.bookings.mockData.services.tireChange'), price: 400, duration: 30 },
+    { id: 2, name: t('forms.bookings.mockData.services.balancing'), price: 200, duration: 15 },
+    { id: 3, name: t('forms.bookings.mockData.services.rimRepair'), price: 600, duration: 45 },
+    { id: 4, name: t('forms.bookings.mockData.services.tirePump'), price: 100, duration: 10 },
+  ], [t]);
 
   // Инициализация моковых данных
   useEffect(() => {
@@ -256,41 +256,50 @@ const BookingFormPageWithAvailability: React.FC = () => {
       };
 
       if (isEditMode && id) {
-        const updateData = { ...bookingData };
-        await updateBooking({ id, booking: updateData }).unwrap();
-        setSuccess('Бронирование успешно обновлено');
+        await updateBooking({ id, booking: bookingData }).unwrap();
+        setSuccess(t('forms.bookings.form.messages.bookingUpdatedSuccess'));
       } else {
         await createBooking(bookingData).unwrap();
-        setSuccess('Бронирование успешно создано');
+        setSuccess(t('forms.bookings.form.messages.bookingCreatedSuccess'));
       }
-
-      // Перенаправляем на список бронирований
+      
+      // Перенаправление через 2 секунды
       setTimeout(() => {
-        navigate('/bookings');
+        navigate('/admin/bookings');
       }, 2000);
+      
     } catch (err: any) {
-      setError(err?.data?.message || 'Ошибка при сохранении бронирования');
+      console.error('Ошибка при сохранении:', err);
+      setError(err?.data?.message || t('forms.bookings.form.messages.bookingSaveErrorText'));
     } finally {
       setSaving(false);
     }
   };
 
+  const handleCancel = () => {
+    navigate('/admin/bookings');
+  };
+
   const isLoading = servicePointsLoading;
 
   return (
-          <Box sx={tablePageStyles.pageContainer}>
-      {/* Заголовок */}
-      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/bookings')}
-        >
-          Назад
-        </Button>
-        <Typography variant="h4" component="h1">
-          {isEditMode ? 'Редактирование бронирования' : 'Новое бронирование'}
+    <Box sx={tablePageStyles.pageContainer}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3 
+      }}>
+        <Typography variant="h4">
+          {isEditMode ? t('forms.bookings.form.editTitle') : t('forms.bookings.form.createTitle')}
         </Typography>
+        <Button 
+          variant="outlined" 
+          startIcon={<ArrowBackIcon />}
+          onClick={handleCancel}
+        >
+          {t('common.back')}
+        </Button>
       </Box>
 
       {/* Сообщения */}
@@ -311,17 +320,17 @@ const BookingFormPageWithAvailability: React.FC = () => {
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Основная информация
+              {t('forms.bookings.form.basicInfo')}
             </Typography>
             
             <Grid container spacing={2}>
               {/* Клиент */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Клиент</InputLabel>
+                  <InputLabel>{t('forms.bookings.form.client')}</InputLabel>
                   <Select
                     value={formData.client_id || ''}
-                    label="Клиент"
+                    label={t('forms.bookings.form.client')}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
                       client_id: Number(e.target.value) || undefined
@@ -339,10 +348,10 @@ const BookingFormPageWithAvailability: React.FC = () => {
               {/* Автомобиль */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Автомобиль</InputLabel>
+                  <InputLabel>{t('forms.bookings.form.carInfo')}</InputLabel>
                   <Select
                     value={formData.car_id || ''}
-                    label="Автомобиль"
+                    label={t('forms.bookings.form.carInfo')}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
                       car_id: Number(e.target.value) || undefined
@@ -360,10 +369,10 @@ const BookingFormPageWithAvailability: React.FC = () => {
               {/* Сервисная точка */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel>Сервисная точка</InputLabel>
+                  <InputLabel>{t('forms.bookings.form.servicePoint')}</InputLabel>
                   <Select
                     value={formData.service_point_id || ''}
-                    label="Сервисная точка"
+                    label={t('forms.bookings.form.servicePoint')}
                     onChange={(e) => handleServicePointChange(Number(e.target.value) || 0)}
                   >
                     {servicePointsData?.data.map((point: any) => (
@@ -386,7 +395,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Примечания"
+                  label={t('forms.bookings.form.notes')}
                   multiline
                   rows={3}
                   value={formData.notes}
@@ -402,7 +411,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
           {/* Выбор услуг */}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Услуги
+              {t('forms.bookings.form.services')}
             </Typography>
             
             <Grid container spacing={2}>
@@ -433,7 +442,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
             {formData.services.length > 0 && (
               <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle1" gutterBottom>
-                  Выбранные услуги:
+                  {t('forms.bookings.selectedServices')}:
                 </Typography>
                 {formData.services.map((service) => (
                   <Chip
@@ -444,7 +453,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
                   />
                 ))}
                 <Typography variant="h6" sx={{ mt: 2, color: 'primary.main' }}>
-                  Итого: {totalPrice} грн • Время: {estimatedDuration} мин
+                  {t('forms.bookings.total')}: {totalPrice} грн • {t('forms.bookings.time')}: {estimatedDuration} мин
                 </Typography>
               </Box>
             )}
@@ -455,7 +464,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <TimeIcon />
-                Выбор времени
+                {t('forms.bookings.timeSelection')}
               </Typography>
               
               <AvailabilitySelector
@@ -486,14 +495,14 @@ const BookingFormPageWithAvailability: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
             <Typography variant="h6" gutterBottom>
-              Сводка бронирования
+              {t('forms.bookings.bookingSummary')}
             </Typography>
             
             <Box sx={{ space: 2 }}>
               {formData.client_id && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Клиент:
+                    {t('forms.bookings.form.client')}:
                   </Typography>
                   <Typography variant="body2">
                     {clients.find(c => c.id === formData.client_id)?.name}
@@ -504,7 +513,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
               {formData.service_point_id && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Сервисная точка:
+                    {t('forms.bookings.form.servicePoint')}:
                   </Typography>
                   <Typography variant="body2">
                     {servicePointsData?.data.find((p: any) => p.id === formData.service_point_id)?.name}
@@ -515,13 +524,13 @@ const BookingFormPageWithAvailability: React.FC = () => {
               {selectedDate && selectedTime && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Дата и время:
+                    {t('forms.bookings.dateAndTime')}:
                   </Typography>
                   <Typography variant="body2">
                     {selectedDate.toLocaleDateString('ru-RU')} в {selectedTime}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Продолжительность: {estimatedDuration} мин
+                    {t('forms.bookings.duration')}: {estimatedDuration} мин
                   </Typography>
                 </Box>
               )}
@@ -530,7 +539,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
 
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                  Итого:
+                  {t('forms.bookings.total')}:
                 </Typography>
                 <Typography variant="h5" color="primary.main">
                   {totalPrice} грн
@@ -545,7 +554,7 @@ const BookingFormPageWithAvailability: React.FC = () => {
                 onClick={handleSave}
                 disabled={!isFormValid() || saving}
               >
-                {saving ? t('common.saving') : (isEditMode ? 'Обновить' : 'Создать бронирование')}
+                {saving ? t('common.saving') : (isEditMode ? t('forms.bookings.form.update') : t('forms.bookings.form.create'))}
               </Button>
             </Box>
           </Paper>

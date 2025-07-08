@@ -64,6 +64,7 @@
         "title": "Форма бронирования",
         "createTitle": "Новое бронирование",
         "editTitle": "Редактирование бронирования",
+        "basicInfo": "Основная информация",
         "client": "Клиент",
         "servicePoint": "Точка обслуживания",
         "carType": "Тип автомобиля",
@@ -83,15 +84,29 @@
         "creating": "Создание...",
         "updating": "Обновление...",
         "serviceRecipient": "Данные получателя услуги",
+        "serviceRecipientData": "Данные получателя услуги",
         "guestBooking": "(Гостевое бронирование)",
+        "guestBookingOption": "Гостевое бронирование (без регистрации)",
         "carInfo": "Информация об автомобиле",
+        "carData": "Данные автомобиля",
         "carBrand": "Марка автомобиля",
         "carModel": "Модель автомобиля",
         "licensePlate": "Номер автомобиля",
+        "firstName": "Имя получателя услуги",
+        "lastName": "Фамилия получателя услуги",
+        "phone": "Телефон получателя услуги",
+        "email": "Email получателя услуги (опционально)",
         "serviceRecipientFirstName": "Имя получателя услуги",
         "serviceRecipientLastName": "Фамилия получателя услуги",
         "serviceRecipientPhone": "Телефон получателя услуги",
         "serviceRecipientEmail": "Email получателя услуги (опционально)",
+        "dateTimeSection": "Дата и время записи",
+        "selectedDateTime": "Выбранные дата и время",
+        "notSpecified": "не указано",
+        "changeDateTime": "Изменить дату и время",
+        "dateTimeNotSelected": "Дата и время не выбраны",
+        "selectDateTime": "Выбрать дату и время записи",
+        "selectDateTimeTitle": "Выберите дату и время записи",
         "validation": {
           "servicePointRequired": "Выберите точку обслуживания",
           "carTypeRequired": "Выберите тип автомобиля",
@@ -105,14 +120,22 @@
         "messages": {
           "createSuccess": "Бронирование успешно создано",
           "updateSuccess": "Бронирование успешно обновлено",
+          "bookingCreatedSuccess": "Бронирование успешно создано",
+          "bookingUpdatedSuccess": "Бронирование успешно обновлено",
           "saveError": "Ошибка при сохранении бронирования. Проверьте данные и попробуйте снова.",
+          "bookingSaveError": "Ошибка при сохранении бронирования:",
+          "bookingSaveErrorText": "Ошибка при сохранении бронирования. Проверьте данные и попробуйте снова.",
           "createError": "Произошла ошибка при создании бронирования",
           "selectServicePointFirst": "Сначала выберите точку обслуживания",
+          "selectServicePointError": "Сначала выберите точку обслуживания",
           "selectCategoryFirst": "Сначала выберите категорию услуг",
-          "invalidDateFormat": "Неверный формат даты",
-          "timeParsingError": "Ошибка парсинга времени",
-          "dateFormattingError": "Ошибка форматирования даты",
-          "endTimeCalculationError": "Ошибка расчета времени окончания"
+          "selectCategoryError": "Сначала выберите категорию услуг",
+          "invalidDateFormat": "Неверный формат даты:",
+          "timeParsingError": "Ошибка парсинга времени:",
+          "dateFormattingError": "Ошибка форматирования даты:",
+          "endTimeCalculationError": "Ошибка расчета времени окончания",
+          "bookingCreateError": "Произошла ошибка при создании бронирования",
+          "loginToViewBookings": "Войдите в систему, чтобы просмотреть ваши бронирования"
         },
         "placeholders": {
           "selectClient": "Выберите клиента",
@@ -169,7 +192,14 @@
           "rimRepair": "Ремонт диска",
           "tirePump": "Подкачка шин"
         }
-      }
+      },
+      "selectedServices": "Выбранные услуги",
+      "total": "Итого",
+      "time": "Время",
+      "timeSelection": "Выбор времени",
+      "bookingSummary": "Сводка бронирования",
+      "dateAndTime": "Дата и время",
+      "duration": "Продолжительность"
     }
   }
 } 

@@ -404,88 +404,76 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       }
 
     } catch (error: any) {
-      console.error('❌ Ошибка создания бронирования:', error);
-      setSubmitError(
-        error?.data?.error || 
-        error?.data?.message || 
-        error?.message || 
-        'Произошла ошибка при создании бронирования'
-      );
-    } finally {
+      console.error('❌ Ошибка при создании бронирования для авторизованного пользователя:', error);
       setIsSubmitting(false);
+      setSubmitError(
+        error?.data?.message || 
+        t('forms.bookings.form.messages.bookingCreateError')
+      );
     }
   };
 
-  // Создание гостевого бронирования
+  // ✅ Создание бронирования для неавторизованного пользователя
   const createGuestBooking = async () => {
     try {
-      setIsSubmitting(true);
-      setSubmitError(null);
-
-      // Подготавливаем данные для отправки в формате, ожидаемом бэкендом
-      const bookingData: any = {
-        // Данные бронирования (обязательно)
-        booking: {
-          service_point_id: formData.service_point_id,
-          service_category_id: formData.service_category_id,
-          booking_date: formData.booking_date,
-          start_time: formData.start_time,
-          service_recipient_first_name: formData.service_recipient.first_name,
-          service_recipient_last_name: formData.service_recipient.last_name,
-          service_recipient_phone: formData.service_recipient.phone,
-          service_recipient_email: formData.service_recipient.email,
-          notes: formData.notes,
-        },
-        // Данные автомобиля
-        car: {
-          car_type_id: formData.car_type_id,
-          car_brand: formData.car_brand,
-          car_model: formData.car_model,
-          license_plate: formData.license_plate,
-        },
-        // Услуги (если есть)
+      console.log('📝 Создание гостевого бронирования...');
+      
+      const bookingData = {
+        service_category_id: formData.service_category_id,
+        service_point_id: formData.service_point_id,
+        booking_date: formData.booking_date,
+        start_time: formData.start_time,
+        car_type_id: formData.car_type_id,
+        car_brand: formData.car_brand,
+        car_model: formData.car_model,
+        license_plate: formData.license_plate,
         services: formData.services,
-        // Длительность
-        duration_minutes: formData.duration_minutes || 30,
+        notes: formData.notes,
+        service_recipient: formData.service_recipient,
       };
 
-      // Отладочная информация
-      console.log('🚀 Отправляем данные гостевого бронирования:', JSON.stringify(bookingData, null, 2));
+      console.log('📋 Данные гостевого бронирования:', bookingData);
 
-      const response = await createClientBooking(bookingData).unwrap();
+      const result = await createClientBooking(bookingData).unwrap();
+      console.log('✅ Гостевое бронирование успешно создано:', result);
 
-      // Сохраняем данные созданного бронирования и показываем модальное окно
-      setCreatedBooking(response);
-      setSuccessDialogOpen(true);
+      setCreatedBooking(result);
+      setIsSubmitting(false);
+      
+      // Проверяем, стоит ли предложить добавить машину в профиль
+      if (shouldOfferToAddCar(authUser, clientCars, formData)) {
+        const carData = prepareCarDataForDialog(formData);
+        setCarDataForDialog(carData);
+        setAddCarDialogOpen(true);
+      } else {
+        setSuccessDialogOpen(true);
+      }
 
     } catch (error: any) {
-      console.error('❌ Ошибка создания бронирования:', error);
-      setSubmitError(
-        error?.data?.error || 
-        error?.data?.message || 
-        error?.message || 
-        'Произошла ошибка при создании бронирования'
-      );
-    } finally {
+      console.error('❌ Ошибка при создании гостевого бронирования:', error);
       setIsSubmitting(false);
+      setSubmitError(
+        error?.data?.message || 
+        t('forms.bookings.form.messages.bookingCreateError')
+      );
     }
   };
 
-  // Обработчики модального окна успешного создания бронирования
+  // ✅ Обработчик закрытия диалога успеха
   const handleSuccessDialogClose = () => {
     setSuccessDialogOpen(false);
-    setCreatedBooking(null);
   };
 
+  // ✅ Переход в профиль (только для авторизованных пользователей)
   const handleGoToProfile = () => {
-    handleSuccessDialogClose();
-    if (currentUser) {
-      navigate('/client/bookings');
+    if (isAuthenticated) {
+      navigate('/profile/bookings');
     } else {
-      navigate('/client/auth/login', {
-        state: { 
-          redirectTo: '/client/bookings',
-          message: 'Войдите в систему, чтобы просмотреть ваши бронирования'
+      // Для неавторизованных пользователей предлагаем войти
+      navigate('/auth/login', {
+        state: {
+          from: location.pathname,
+          message: t('forms.bookings.form.messages.loginToViewBookings')
         }
       });
     }

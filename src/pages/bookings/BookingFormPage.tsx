@@ -79,27 +79,27 @@ interface BookingDetails {
 
 // Схема валидации для формы бронирования
 const createValidationSchema = (t: any) => yup.object({
-  service_point_id: yup.number().required('Выберите точку обслуживания'),
+  service_point_id: yup.number().required(t('forms.bookings.form.validation.servicePointRequired')),
   client_id: yup.number().nullable(), // ✅ Клиент опционален для гостевых бронирований
-  car_type_id: yup.number().required('Выберите тип автомобиля'),
-  category_id: yup.number().required('Выберите категорию услуг'),
-  booking_date: yup.string().required('Выберите дату'),
-  start_time: yup.string().required('Выберите время начала'),
+  car_type_id: yup.number().required(t('forms.bookings.form.validation.carTypeRequired')),
+  category_id: yup.number().required(t('forms.bookings.form.validation.categoryRequired')),
+  booking_date: yup.string().required(t('forms.bookings.form.validation.dateRequired')),
+  start_time: yup.string().required(t('forms.bookings.form.validation.startTimeRequired')),
   notes: yup.string(),
   // ✅ Валидация для гостевых бронирований
   service_recipient_first_name: yup.string().when('client_id', {
     is: (client_id: number | null) => !client_id,
-    then: (schema) => schema.required('Имя получателя услуги обязательно для гостевых бронирований'),
+    then: (schema) => schema.required(t('forms.bookings.form.validation.firstNameRequired')),
     otherwise: (schema) => schema.optional()
   }),
   service_recipient_last_name: yup.string().when('client_id', {
     is: (client_id: number | null) => !client_id,
-    then: (schema) => schema.required('Фамилия получателя услуги обязательна для гостевых бронирований'),
+    then: (schema) => schema.required(t('forms.bookings.form.validation.lastNameRequired')),
     otherwise: (schema) => schema.optional()
   }),
   service_recipient_phone: yup.string().when('client_id', {
     is: (client_id: number | null) => !client_id,
-    then: (schema) => schema.required('Телефон получателя услуги обязателен для гостевых бронирований'),
+    then: (schema) => schema.required(t('forms.bookings.form.validation.phoneRequired')),
     otherwise: (schema) => schema.optional()
   }),
 });
@@ -160,14 +160,14 @@ const BookingFormPage: React.FC = () => {
       // Если это полная дата, извлекаем время
       const date = new Date(dateTimeString);
       if (isNaN(date.getTime())) {
-        console.warn('Неверный формат даты:', dateTimeString);
+        console.warn(t('forms.bookings.form.messages.invalidDateFormat'), dateTimeString);
         return '';
       }
       
       // Возвращаем время в формате HH:mm
       return date.toTimeString().substring(0, 5);
     } catch (error) {
-      console.error('Ошибка парсинга времени:', error);
+      console.error(t('forms.bookings.form.messages.timeParsingError'), error);
       return '';
     }
   };
@@ -188,7 +188,7 @@ const BookingFormPage: React.FC = () => {
       const [year, month, day] = dateString.split('-');
       return `${day}.${month}.${year}`;
     } catch (error) {
-      console.error('Ошибка форматирования даты:', error);
+      console.error(t('forms.bookings.form.messages.dateFormattingError'), error);
       return dateString; // Возвращаем исходную строку в случае ошибки
     }
   };
@@ -290,18 +290,18 @@ const BookingFormPage: React.FC = () => {
             id: id.toString(), 
             booking: bookingData
           }).unwrap();
-          setSuccess('Бронирование успешно обновлено');
+          setSuccess(t('forms.bookings.form.messages.bookingUpdatedSuccess'));
         } else {
           await createBooking(bookingData).unwrap();
-          setSuccess('Бронирование успешно создано');
+          setSuccess(t('forms.bookings.form.messages.bookingCreatedSuccess'));
         }
         
         setTimeout(() => {
           navigate('/admin/bookings');
         }, 1500);
       } catch (err) {
-        console.error('Ошибка при сохранении бронирования:', err);
-        setError('Ошибка при сохранении бронирования. Проверьте данные и попробуйте снова.');
+        console.error(t('forms.bookings.form.messages.bookingSaveError'), err);
+        setError(t('forms.bookings.form.messages.bookingSaveErrorText'));
       } finally {
         setLoading(false);
       }
@@ -512,12 +512,12 @@ const BookingFormPage: React.FC = () => {
   // ✅ Обработчики для модального окна выбора времени
   const handleOpenTimePicker = useCallback(() => {
     if (!currentServicePointId) {
-      setError('Сначала выберите точку обслуживания');
+      setError(t('forms.bookings.form.messages.selectServicePointError'));
       return;
     }
     
     if (!currentCategoryId) {
-      setError('Сначала выберите категорию услуг');
+      setError(t('forms.bookings.form.messages.selectCategoryError'));
       return;
     }
     
@@ -533,7 +533,7 @@ const BookingFormPage: React.FC = () => {
     }
     
     setTimePickerOpen(true);
-  }, [currentServicePointId, currentCategoryId, formik.values.booking_date, selectedDate]);
+  }, [currentServicePointId, currentCategoryId, formik.values.booking_date, selectedDate, t]);
 
   const handleCloseTimePicker = useCallback(() => {
     setTimePickerOpen(false);
@@ -612,7 +612,7 @@ const BookingFormPage: React.FC = () => {
         mb: SIZES.spacing.lg 
       }}>
         <Typography variant="h4">
-          {isEditMode ? 'Редактирование бронирования' : 'Новое бронирование'}
+          {isEditMode ? t('forms.bookings.form.editTitle') : t('forms.bookings.form.createTitle')}
         </Typography>
         <Button 
           variant="outlined" 
@@ -620,7 +620,7 @@ const BookingFormPage: React.FC = () => {
           onClick={handleBack}
           sx={outlinedButtonStyles}
         >
-          Назад к списку
+          {t('common.back')}
         </Button>
       </Box>
       
@@ -639,7 +639,7 @@ const BookingFormPage: React.FC = () => {
       <form onSubmit={formik.handleSubmit}>
         <Paper sx={cardStyles}>
           <Typography variant="h6" sx={{ mb: SIZES.spacing.md }}>
-            Основная информация
+            {t('forms.bookings.form.basicInfo')}
           </Typography>
           
           <Grid container spacing={2}>
@@ -649,12 +649,12 @@ const BookingFormPage: React.FC = () => {
                 error={formik.touched.service_point_id && Boolean(formik.errors.service_point_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel id="service-point-label">Точка обслуживания</InputLabel>
+                <InputLabel id="service-point-label">{t('forms.bookings.form.servicePoint')}</InputLabel>
                 <Select
                   labelId="service-point-label"
                   value={formik.values.service_point_id}
                   onChange={handleServicePointChange}
-                  label="Точка обслуживания"
+                  label={t('forms.bookings.form.servicePoint')}
                 >
                   {servicePointsData?.data?.map((servicePoint: ServicePoint) => (
                     <MenuItem key={servicePoint.id} value={servicePoint.id}>
@@ -674,16 +674,16 @@ const BookingFormPage: React.FC = () => {
                 error={formik.touched.client_id && Boolean(formik.errors.client_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel id="client-label">Клиент</InputLabel>
+                <InputLabel id="client-label">{t('forms.bookings.form.client')}</InputLabel>
                 <Select
                   labelId="client-label"
                   value={formik.values.client_id || ''}
                   onChange={handleClientChange}
-                  label={t('admin.bookings.fields.client')}
+                  label={t('forms.bookings.form.client')}
                 >
                   {/* ✅ Опция для гостевого бронирования */}
                   <MenuItem value="">
-                    <em>Гостевое бронирование (без регистрации)</em>
+                    <em>{t('forms.bookings.form.guestBookingOption')}</em>
                   </MenuItem>
                   {clientsData?.data?.map((client: Client) => (
                     <MenuItem key={client.id} value={client.id}>
@@ -703,12 +703,12 @@ const BookingFormPage: React.FC = () => {
                 error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel id="car-type-label">Тип автомобиля</InputLabel>
+                <InputLabel id="car-type-label">{t('forms.bookings.form.carType')}</InputLabel>
                 <Select
                   labelId="car-type-label"
                   value={formik.values.car_type_id}
                   onChange={handleCarTypeChange}
-                  label="Тип автомобиля"
+                  label={t('forms.bookings.form.carType')}
                 >
                   {carTypesData?.map((carType: CarType) => (
                     <MenuItem key={carType.id} value={carType.id}>
@@ -728,12 +728,12 @@ const BookingFormPage: React.FC = () => {
                 error={formik.touched.category_id && Boolean(formik.errors.category_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel id="category-label">Категория услуг</InputLabel>
+                <InputLabel id="category-label">{t('forms.bookings.form.category')}</InputLabel>
                 <Select
                   labelId="category-label"
                   value={formik.values.category_id}
                   onChange={handleCategoryChange}
-                  label="Категория услуг"
+                  label={t('forms.bookings.form.category')}
                 >
                   {serviceCategoriesData?.data?.map((category) => (
                     <MenuItem key={category.id} value={category.id}>
@@ -755,12 +755,12 @@ const BookingFormPage: React.FC = () => {
                   error={formik.touched.status_id && Boolean(formik.errors.status_id)}
                   sx={textFieldStyles}
                 >
-                  <InputLabel id="status-label">Статус бронирования</InputLabel>
+                  <InputLabel id="status-label">{t('forms.bookings.form.status')}</InputLabel>
                   <Select
                     labelId="status-label"
                     value={formik.values.status_id || ''}
                     onChange={handleStatusChange}
-                    label="Статус бронирования"
+                    label={t('forms.bookings.form.status')}
                   >
                     {bookingStatusesData?.map((status) => (
                       <MenuItem key={status.key || status.id} value={status.key || status.id}>
@@ -777,7 +777,7 @@ const BookingFormPage: React.FC = () => {
             
             <Grid item xs={12}>
               <Typography variant="subtitle1" sx={{ mt: SIZES.spacing.md, mb: SIZES.spacing.sm }}>
-                Дата и время записи
+                {t('forms.bookings.form.dateTimeSection')}
               </Typography>
             </Grid>
             
@@ -790,7 +790,7 @@ const BookingFormPage: React.FC = () => {
                 backgroundColor: theme.palette.background.default
               }}>
                 <Typography variant="body2" sx={{ mb: 1, color: theme.palette.text.secondary }}>
-                  Выбранные дата и время
+                  {t('forms.bookings.form.selectedDateTime')}
                 </Typography>
                 
                 {formik.values.booking_date && formik.values.start_time ? (
@@ -803,7 +803,7 @@ const BookingFormPage: React.FC = () => {
                         size="small"
                       />
                       <Chip
-                        label={`🕐 ${formik.values.start_time} - ${formik.values.end_time || 'не указано'}`}
+                        label={`🕐 ${formik.values.start_time} - ${formik.values.end_time || t('forms.bookings.form.notSpecified')}`}
                         color="primary"
                         variant="outlined"
                         size="small"
@@ -816,7 +816,7 @@ const BookingFormPage: React.FC = () => {
                         onClick={handleOpenTimePicker}
                         sx={{ textTransform: 'none' }}
                       >
-                        Изменить дату и время
+                        {t('forms.bookings.form.changeDateTime')}
                       </Button>
                       <Button
                         variant="text"
@@ -831,21 +831,21 @@ const BookingFormPage: React.FC = () => {
                         }}
                         sx={{ textTransform: 'none' }}
                       >
-                        Очистить
+                        {t('common.clear')}
                       </Button>
                     </Box>
                   </Box>
                 ) : (
                   <Box>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Дата и время не выбраны
+                      {t('forms.bookings.form.dateTimeNotSelected')}
                     </Typography>
                     <Button
                       variant="contained"
                       onClick={handleOpenTimePicker}
                       sx={{ textTransform: 'none' }}
                     >
-                      Выбрать дату и время записи
+                      {t('forms.bookings.form.selectDateTime')}
                     </Button>
                   </Box>
                 )}
@@ -869,7 +869,7 @@ const BookingFormPage: React.FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                                  label={t('admin.bookings.fields.notes')}
+                label={t('forms.bookings.form.notes')}
                 value={formik.values.notes}
                 onChange={handleNotesChange}
                 error={formik.touched.notes && Boolean(formik.errors.notes)}
@@ -884,14 +884,14 @@ const BookingFormPage: React.FC = () => {
         {(!formik.values.client_id || isEditMode) && (
           <Paper sx={{ ...cardStyles, mt: SIZES.spacing.lg }}>
             <Typography variant="h6" sx={{ mb: SIZES.spacing.md }}>
-              Данные получателя услуги {!formik.values.client_id && '(Гостевое бронирование)'}
+              {t('forms.bookings.form.serviceRecipientData')} {(!formik.values.client_id && t('forms.bookings.form.guestBooking'))}
             </Typography>
             
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Имя получателя услуги"
+                  label={t('forms.bookings.form.firstName')}
                   value={formik.values.service_recipient_first_name}
                   onChange={(e) => formik.setFieldValue('service_recipient_first_name', e.target.value)}
                   error={formik.touched.service_recipient_first_name && Boolean(formik.errors.service_recipient_first_name)}
@@ -903,7 +903,7 @@ const BookingFormPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Фамилия получателя услуги"
+                  label={t('forms.bookings.form.lastName')}
                   value={formik.values.service_recipient_last_name}
                   onChange={(e) => formik.setFieldValue('service_recipient_last_name', e.target.value)}
                   error={formik.touched.service_recipient_last_name && Boolean(formik.errors.service_recipient_last_name)}
@@ -914,7 +914,7 @@ const BookingFormPage: React.FC = () => {
               
               <Grid item xs={12} md={6}>
                 <PhoneField
-                  label="Телефон получателя услуги"
+                  label={t('forms.bookings.form.phone')}
                   value={formik.values.service_recipient_phone}
                   onChange={(value) => formik.setFieldValue('service_recipient_phone', value)}
                   error={formik.touched.service_recipient_phone && Boolean(formik.errors.service_recipient_phone)}
@@ -926,7 +926,7 @@ const BookingFormPage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Email получателя услуги (опционально)"
+                  label={t('forms.bookings.form.email')}
                   type="email"
                   value={formik.values.service_recipient_email}
                   onChange={(e) => formik.setFieldValue('service_recipient_email', e.target.value)}
@@ -938,14 +938,14 @@ const BookingFormPage: React.FC = () => {
               
               <Grid item xs={12}>
                 <Typography variant="subtitle1" sx={{ mt: SIZES.spacing.md, mb: SIZES.spacing.sm }}>
-                  Данные автомобиля
+                  {t('forms.bookings.form.carData')}
                 </Typography>
               </Grid>
               
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Марка автомобиля"
+                  label={t('forms.bookings.form.carBrand')}
                   value={formik.values.car_brand}
                   onChange={(e) => formik.setFieldValue('car_brand', e.target.value)}
                   error={formik.touched.car_brand && Boolean(formik.errors.car_brand)}
@@ -957,7 +957,7 @@ const BookingFormPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Модель автомобиля"
+                  label={t('forms.bookings.form.carModel')}
                   value={formik.values.car_model}
                   onChange={(e) => formik.setFieldValue('car_model', e.target.value)}
                   error={formik.touched.car_model && Boolean(formik.errors.car_model)}
@@ -969,7 +969,7 @@ const BookingFormPage: React.FC = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
-                  label="Номер автомобиля"
+                  label={t('forms.bookings.form.licensePlate')}
                   value={formik.values.license_plate}
                   onChange={(e) => formik.setFieldValue('license_plate', e.target.value)}
                   error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
@@ -994,7 +994,7 @@ const BookingFormPage: React.FC = () => {
             onClick={handleCancel}
             sx={outlinedButtonStyles}
           >
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
@@ -1015,7 +1015,7 @@ const BookingFormPage: React.FC = () => {
         fullWidth
       >
         <DialogTitle>
-          Выберите дату и время записи
+          {t('forms.bookings.form.selectDateTimeTitle')}
         </DialogTitle>
         <DialogContent>
           <AvailabilitySelector
@@ -1031,14 +1031,14 @@ const BookingFormPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseTimePicker}>
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmTimeSelection}
             variant="contained"
             disabled={!selectedDate || !selectedTimeSlot}
           >
-            Подтвердить
+            {t('common.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
