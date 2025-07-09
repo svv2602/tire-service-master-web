@@ -3,7 +3,7 @@
     "todayButton": "Сегодня",
     "views": {
       "day": "День",
-      "week": "Неделя",
+      "week": "Неделя", 
       "month": "Месяц"
     },
     "stats": {
@@ -94,34 +94,27 @@
     }
   },
   "pageContentForm": {
-    "sections": {
-      "client_main": "Главная страница клиента",
-      "admin_dashboard": "Панель администратора",
-      "partner_portal": "Портал партнера",
-      "knowledge_base": "База знаний",
-      "about": "О нас",
-      "contacts": "Контакты"
-    },
-    "serviceCategories": {
-      "tire_service": "Шиномонтаж",
-      "balancing": "Балансирование",
-      "repair": "Ремонт",
-      "diagnostics": "Диагностика",
-      "storage": "Хранение",
-      "consultations": "Консультации"
-    },
     "fields": {
-      "section": "Секция",
-      "contentType": "Тип контента",
-      "title": "Заголовок"
+      "active": "Активный",
+      "category": "Категория"
     },
-    "availableSettings": "Доступные настройки",
+    "sections": {
+      "settings": "Настройки",
+      "image": "Изображение",
+      "gallery": "Галерея изображений"
+    },
     "buttons": {
-      "cancel": "Отмена",
+      "uploadImage": "Загрузить изображение",
+      "addToGallery": "Добавить изображения в галерею",
+      "cancel": "Отменить",
       "saving": "Сохранение...",
       "update": "Обновить",
       "create": "Создать"
-    }
+    },
+    "imagePreview": "Предварительный просмотр",
+    "imagePreviewText": "Предварительный просмотр изображения",
+    "galleryItem": "Галерея {{index}}",
+    "availableSettings": "Доступные настройки"
   },
   "reviewLoginPrompt": {
     "title": "Войдите, чтобы оставить отзыв",
@@ -180,7 +173,7 @@
     "reviewsNotLoaded": "Отзывы пока не загружены",
     "days": {
       "monday": "Понедельник",
-      "tuesday": "Вторник",
+      "tuesday": "Вторник", 
       "wednesday": "Среда",
       "thursday": "Четверг",
       "friday": "Пятница",
@@ -313,6 +306,30 @@
       "photoGalleryWithName": "Фотогалерея - {name}",
       "photoNumber": "Фото {number}",
       "close": "Закрыть"
+    },
+    "servicePointCard": {
+      "bookAppointment": "Записаться",
+      "viewDetails": "Подробнее",
+      "workingHours": "Режим работы",
+      "workingHoursNotSpecified": "График работы не указан",
+      "rating": "Рейтинг",
+      "reviews": "отзывов",
+      "posts": "постов",
+      "services": "Услуги",
+      "servicesFrom": "от {price} грн",
+      "loadingServices": "Загрузка услуг...",
+      "servicesNotLoaded": "Услуги не загружены",
+      "description": "Описание",
+      "collapse": "Свернуть",
+      "workingDays": {
+        "monday": "Понедельник",
+        "tuesday": "Вторник",
+        "wednesday": "Среда", 
+        "thursday": "Четверг",
+        "friday": "Пятница",
+        "saturday": "Суббота",
+        "sunday": "Воскресенье"
+      }
     }
   },
   "timeSlotPicker": {
@@ -339,7 +356,7 @@
   "reviewCard": {
     "status": {
       "published": "Опубликован",
-      "pending": "На модерации",
+      "pending": "На модерации", 
       "rejected": "Отклонен",
       "unknown": "Неизвестно"
     },
@@ -380,7 +397,7 @@
       "groupBy": "Группировка",
       "periodOptions": {
         "week": "Неделя",
-        "month": "Месяц",
+        "month": "Месяц", 
         "quarter": "Квартал",
         "year": "Год"
       },
@@ -492,6 +509,36 @@
   "imageOptimizer": {
     "unavailable": "Изображение недоступно"
   },
+  "pageContentForm": {
+    "sections": {
+      "client_main": "Главная страница клиента",
+      "admin_dashboard": "Панель администратора",
+      "partner_portal": "Портал партнера",
+      "knowledge_base": "База знаний",
+      "about": "О нас",
+      "contacts": "Контакты"
+    },
+    "serviceCategories": {
+      "tire_service": "Шиномонтаж",
+      "balancing": "Балансирование",
+      "repair": "Ремонт",
+      "diagnostics": "Диагностика",
+      "storage": "Хранение",
+      "consultations": "Консультации"
+    },
+    "fields": {
+      "section": "Секция",
+      "contentType": "Тип контента",
+      "title": "Заголовок"
+    },
+    "availableSettings": "Доступные настройки",
+    "buttons": {
+      "cancel": "Отмена",
+      "saving": "Сохранение...",
+      "update": "Обновить",
+      "create": "Создать"
+    }
+  },
   "clientInfoForm": {
     "title": "Контактные данные",
     "fields": {
@@ -542,11 +589,11 @@
     "workingDays": {
       "monday": "Понедельник",
       "tuesday": "Вторник",
-      "wednesday": "Среда",
+      "wednesday": "Среда", 
       "thursday": "Четверг",
       "friday": "Пятница",
       "saturday": "Суббота",
       "sunday": "Воскресенье"
     }
   }
-}
+} 

@@ -3,7 +3,7 @@
     "todayButton": "Сьогодні",
     "views": {
       "day": "День",
-      "week": "Тиждень",
+      "week": "Тиждень", 
       "month": "Місяць"
     },
     "stats": {
@@ -94,34 +94,27 @@
     }
   },
   "pageContentForm": {
-    "sections": {
-      "client_main": "Головна сторінка клієнта",
-      "admin_dashboard": "Панель адміністратора",
-      "partner_portal": "Портал партнера",
-      "knowledge_base": "База знань",
-      "about": "Про нас",
-      "contacts": "Контакти"
-    },
-    "serviceCategories": {
-      "tire_service": "Шиномонтаж",
-      "balancing": "Балансування",
-      "repair": "Ремонт",
-      "diagnostics": "Діагностика",
-      "storage": "Зберігання",
-      "consultations": "Консультації"
-    },
     "fields": {
-      "section": "Секція",
-      "contentType": "Тип контенту",
-      "title": "Заголовок"
+      "active": "Активний",
+      "category": "Категорія"
     },
-    "availableSettings": "Доступні налаштування",
+    "sections": {
+      "settings": "Налаштування",
+      "image": "Зображення",
+      "gallery": "Галерея зображень"
+    },
     "buttons": {
+      "uploadImage": "Завантажити зображення",
+      "addToGallery": "Додати зображення в галерею",
       "cancel": "Скасувати",
       "saving": "Збереження...",
       "update": "Оновити",
       "create": "Створити"
-    }
+    },
+    "imagePreview": "Попередній перегляд",
+    "imagePreviewText": "Попередній перегляд зображення",
+    "galleryItem": "Галерея {{index}}",
+    "availableSettings": "Доступні налаштування"
   },
   "reviewLoginPrompt": {
     "title": "Увійдіть, щоб залишити відгук",
@@ -180,7 +173,7 @@
     "reviewsNotLoaded": "Відгуки поки не завантажені",
     "days": {
       "monday": "Понеділок",
-      "tuesday": "Вівторок",
+      "tuesday": "Вівторок", 
       "wednesday": "Середа",
       "thursday": "Четвер",
       "friday": "П'ятниця",
@@ -243,36 +236,38 @@
     "guestBookingPrefix": "Ви створюєте"
   },
   "loginPrompt": {
-    "title": "Увійдіть, щоб отримати доступ",
-    "description": "Для доступу до цієї функції необхідно увійти в систему або зареєструватися.",
-    "benefitsTitle": "Створіть акаунт для:",
+    "title": "Увійдіть в систему для доступу до ваших записів",
+    "description": "Для перегляду історії записів та керування вашими бронюваннями необхідно увійти в систему або зареєструватися.",
+    "benefitsTitle": "Переваги реєстрації:",
     "benefits": {
-      "manageBookings": "Управління бронюваннями",
-      "quickAccess": "Швидкого доступу до послуг",
-      "notifications": "Отримання сповіщень",
-      "history": "Перегляду історії"
+      "historyAccess": "Перегляд історії всіх ваших записів",
+      "manageBookings": "Зручне керування бронюваннями",
+      "rescheduleCancel": "Можливість переносити та скасовувати записи",
+      "quickBooking": "Швидке бронювання без повторного введення даних"
     },
     "buttons": {
       "login": "Увійти",
       "register": "Зареєструватися",
-      "skip": "Пропустити"
+      "continueWithout": "Продовжити без реєстрації"
     },
-    "imageAlt": "Ілюстрація входу в систему"
+    "imageAlt": "Ілюстрація входу"
   },
   "existingUserDialog": {
-    "title": "Знайдено існуючий акаунт",
-    "foundAccount": "Ми знайшли акаунт з таким номером телефону:",
-    "quickBookingQuestion": "Хочете швидко увійти та оформити бронювання?",
+    "title": "Виявлено існуючий обліковий запис",
+    "foundAccount": "Ми знайшли ваш обліковий запис:",
+    "notSpecified": "Не вказано",
+    "quickBookingQuestion": "Хочете увійти в обліковий запис для швидкого оформлення бронювання?",
     "fields": {
       "password": "Пароль"
     },
-    "validation": {
-      "passwordRequired": "Пароль обов'язковий"
-    },
     "buttons": {
-      "login": "Увійти та забронювати",
       "continueAsGuest": "Продовжити як гість",
+      "login": "Увійти та забронювати",
       "loggingIn": "Вхід..."
+    },
+    "validation": {
+      "passwordRequired": "Введіть пароль",
+      "wrongPassword": "Невірний пароль"
     }
   },
   "clientSearchPage": {
@@ -311,21 +306,56 @@
       "photoGalleryWithName": "Фотогалерея - {name}",
       "photoNumber": "Фото {number}",
       "close": "Закрити"
+    },
+    "servicePointCard": {
+      "servicePointPhoto": "Фото сервісної точки",
+      "photos": "фото",
+      "photoGallery": "Фотогалерея",
+      "working": "Працює",
+      "notWorking": "Не працює",
+      "availableCategories": "Доступні категорії",
+      "categoryDescription": "Опис категорії",
+      "services": "послуг",
+      "categoriesNotLoaded": "Категорії не завантажені",
+      "workingHours": "Режим роботи",
+      "details": "Детальніше",
+      "selected": "Обрано",
+      "select": "Обрати",
+      "bookAppointment": "Записатися",
+      "viewDetails": "Детальніше",
+      "workingHoursNotSpecified": "Графік роботи не вказаний",
+      "rating": "Рейтинг",
+      "reviews": "відгуків",
+      "posts": "постів",
+      "servicesFrom": "від {price} грн",
+      "loadingServices": "Завантаження послуг...",
+      "servicesNotLoaded": "Послуги не завантажені",
+      "description": "Опис",
+      "collapse": "Згорнути",
+      "workingDays": {
+        "monday": "Понеділок",
+        "tuesday": "Вівторок",
+        "wednesday": "Середа",
+        "thursday": "Четвер",
+        "friday": "П'ятниця",
+        "saturday": "Субота",
+        "sunday": "Неділя"
+      }
     }
   },
   "timeSlotPicker": {
-    "noSlots": "На вибрану дату немає доступних слотів.",
-    "selectOtherDate": "Будь ласка, виберіть іншу дату.",
-    "postsAvailable": "{{available}} з {{total}} вільно",
-    "selectedTime": "Вибраний час: {{time}}"
+    "noSlots": "Немає доступних слотів на обрану дату.",
+    "selectOtherDate": "Будь ласка, оберіть іншу дату.",
+    "postsAvailable": "з {total} вільно",
+    "selectedTime": "Обрано: {time}"
   },
   "dayDetailsPanel": {
     "information": "Інформація",
-    "selectDateToView": "Виберіть дату для перегляду детальної інформації",
-    "selectedDate": "Вибрана дата: {{date}}",
-    "selectedTime": "Вибраний час: {{time}}",
-    "freeSlots": "Вільних слотів: {{count}}",
-    "occupiedSlots": "Зайнятих слотів: {{count}}",
+    "selectDateToView": "Оберіть дату для перегляду доступності",
+    "selectedDate": "Обрана дата",
+    "selectedTime": "Обраний час",
+    "freeSlots": "Вільно",
+    "occupiedSlots": "Зайнято",
     "free": "Вільно",
     "mediumLoad": "Середнє навантаження",
     "highLoad": "Високе навантаження"
@@ -389,10 +419,40 @@
   "imageOptimizer": {
     "unavailable": "Зображення недоступне"
   },
+  "pageContentForm": {
+    "sections": {
+      "client_main": "Головна сторінка клієнта",
+      "admin_dashboard": "Панель адміністратора",
+      "partner_portal": "Портал партнера",
+      "knowledge_base": "База знань",
+      "about": "Про нас",
+      "contacts": "Контакти"
+    },
+    "serviceCategories": {
+      "tire_service": "Шиномонтаж",
+      "balancing": "Балансування",
+      "repair": "Ремонт",
+      "diagnostics": "Діагностика",
+      "storage": "Зберігання",
+      "consultations": "Консультації"
+    },
+    "fields": {
+      "section": "Секція",
+      "contentType": "Тип контенту",
+      "title": "Заголовок"
+    },
+    "availableSettings": "Доступні налаштування",
+    "buttons": {
+      "cancel": "Скасувати",
+      "saving": "Збереження...",
+      "update": "Оновити",
+      "create": "Створити"
+    }
+  },
   "reviewCard": {
     "status": {
       "published": "Опубліковано",
-      "pending": "На модерації",
+      "pending": "На модерації", 
       "rejected": "Відхилено",
       "unknown": "Невідомо"
     },
@@ -433,7 +493,7 @@
       "groupBy": "Групування",
       "periodOptions": {
         "week": "Тиждень",
-        "month": "Місяць",
+        "month": "Місяць", 
         "quarter": "Квартал",
         "year": "Рік"
       },
@@ -490,6 +550,60 @@
       "cancelledBookings": "Скасовано"
     }
   },
+  "loginPrompt": {
+    "title": "Увійдіть, щоб отримати доступ",
+    "description": "Для доступу до цієї функції необхідно увійти в систему або зареєструватися.",
+    "benefitsTitle": "Створіть акаунт для:",
+    "benefits": {
+      "manageBookings": "Управління бронюваннями",
+      "quickAccess": "Швидкого доступу до послуг",
+      "notifications": "Отримання сповіщень",
+      "history": "Перегляду історії"
+    },
+    "buttons": {
+      "login": "Увійти",
+      "register": "Зареєструватися",
+      "skip": "Пропустити"
+    },
+    "imageAlt": "Ілюстрація входу в систему"
+  },
+  "existingUserDialog": {
+    "title": "Знайдено існуючий акаунт",
+    "foundAccount": "Ми знайшли акаунт з таким номером телефону:",
+    "quickBookingQuestion": "Хочете швидко увійти та оформити бронювання?",
+    "fields": {
+      "password": "Пароль"
+    },
+    "validation": {
+      "passwordRequired": "Пароль обов'язковий"
+    },
+    "buttons": {
+      "login": "Увійти та забронювати",
+      "continueAsGuest": "Продовжити як гість",
+      "loggingIn": "Вхід..."
+    }
+  },
+  "timeSlotPicker": {
+    "noSlots": "На вибрану дату немає доступних слотів.",
+    "selectOtherDate": "Будь ласка, виберіть іншу дату.",
+    "postsAvailable": "{{available}} з {{total}} вільно",
+    "selectedTime": "Вибраний час: {{time}}"
+  },
+  "dayDetailsPanel": {
+    "information": "Інформація",
+    "selectDateToView": "Виберіть дату для перегляду детальної інформації",
+    "selectedDate": "Вибрана дата: {{date}}",
+    "selectedTime": "Вибраний час: {{time}}",
+    "freeSlots": "Вільних слотів: {{count}}",
+    "occupiedSlots": "Зайнятих слотів: {{count}}",
+    "free": "Вільно",
+    "mediumLoad": "Середнє навантаження",
+    "highLoad": "Високе навантаження"
+  },
+  "bookingChart": {
+    "noData": "Немає даних для відображення",
+    "bookingsCount": "Кількість бронювань"
+  },
   "clientInfoForm": {
     "title": "Контактні дані",
     "fields": {
@@ -511,40 +625,5 @@
       "notifications": "Отримувати сповіщення на email"
     },
     "privacyNotice": "На вказаний номер телефону надійде SMS з підтвердженням запису. Ми не передаємо ваші дані третім особам і не використовуємо їх для розсилки реклами."
-  },
-  "servicePointCard": {
-    "servicePointPhoto": "Фото сервісної точки",
-    "photos": "фото",
-    "photoGallery": "Фотогалерея",
-    "working": "Працює",
-    "notWorking": "Не працює",
-    "availableCategories": "Доступні категорії",
-    "categoryDescription": "Опис категорії",
-    "services": "послуг",
-    "categoriesNotLoaded": "Категорії не завантажені",
-    "workingHours": "Режим роботи",
-    "details": "Детальніше",
-    "selected": "Обрано",
-    "select": "Обрати",
-    "bookAppointment": "Записатися",
-    "viewDetails": "Детальніше",
-    "workingHoursNotSpecified": "Графік роботи не вказаний",
-    "rating": "Рейтинг",
-    "reviews": "відгуків",
-    "posts": "постів",
-    "servicesFrom": "від {price} грн",
-    "loadingServices": "Завантаження послуг...",
-    "servicesNotLoaded": "Послуги не завантажені",
-    "description": "Опис",
-    "collapse": "Згорнути",
-    "workingDays": {
-      "monday": "Понеділок",
-      "tuesday": "Вівторок",
-      "wednesday": "Середа",
-      "thursday": "Четвер",
-      "friday": "П'ятниця",
-      "saturday": "Субота",
-      "sunday": "Неділя"
-    }
   }
-}
+} 
