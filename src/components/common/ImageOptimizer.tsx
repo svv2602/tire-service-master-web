@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Skeleton } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface ImageOptimizerProps {
   src: string;
@@ -30,6 +31,7 @@ const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
   quality = 80,
   objectFit = 'cover'
 }) => {
+  const { t } = useTranslation('components');
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
@@ -85,7 +87,7 @@ const ImageOptimizer: React.FC<ImageOptimizerProps> = ({
           textAlign="center"
           p={1}
         >
-          Изображение недоступно
+          {t('imageOptimizer.unavailable')}
         </Box>
       )}
     </Box>

@@ -22,6 +22,7 @@ import { setCredentials } from '../../store/slices/authSlice';
 import { BookingFormData } from '../../types/booking';
 import { generatePasswordFromPhone } from '../../utils/phoneUtils';
 import { UserRole } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export interface CreateAccountDialogProps {
   /** Открыто ли диалоговое окно */
@@ -52,6 +53,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const { t } = useTranslation('components');
   
   // Состояния формы
   const [error, setError] = useState('');
@@ -249,7 +251,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
         <Box display="flex" alignItems="center" gap={2}>
           <PersonAddIcon color="primary" />
           <Typography variant="h6">
-            Создать ЛК и показать бронирование
+            {t('createAccountDialog.title')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -257,29 +259,29 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
       <DialogContent>
         <Alert severity="success" sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Ваше бронирование успешно создано!</strong>
+            <strong>{t('createAccountDialog.successMessage')}</strong>
           </Typography>
           <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-            Создайте личный кабинет, чтобы управлять своими бронированиями и получать уведомления.
+            {t('createAccountDialog.description')}
           </Typography>
         </Alert>
 
         <Box sx={{ mb: 3 }}>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Создайте личный кабинет для:
+            {t('createAccountDialog.benefitsTitle')}
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0 }}>
             <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-              Управления вашими бронированиями
+              {t('createAccountDialog.benefits.manageBookings')}
             </Typography>
             <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-              Получения уведомлений о записях
+              {t('createAccountDialog.benefits.notifications')}
             </Typography>
             <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-              Быстрого повторного бронирования
+              {t('createAccountDialog.benefits.quickRebooking')}
             </Typography>
             <Typography component="li" variant="body2">
-              Сохранения данных автомобилей
+              {t('createAccountDialog.benefits.saveCarData')}
             </Typography>
           </Box>
         </Box>
@@ -297,42 +299,42 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
             fontWeight: 'medium',
             color: theme.palette.mode === 'dark' ? 'grey.200' : 'grey.700'
           }}>
-            Данные для аккаунта:
+            {t('createAccountDialog.accountData')}:
           </Typography>
           <Typography variant="body2" sx={{ 
             mb: 0.5,
             color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
           }}>
-            <strong>Имя:</strong> {bookingData.service_recipient.first_name} {bookingData.service_recipient.last_name}
+            <strong>{t('createAccountDialog.fields.name')}:</strong> {bookingData.service_recipient.first_name} {bookingData.service_recipient.last_name}
           </Typography>
           <Typography variant="body2" sx={{ 
             mb: 0.5,
             color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
           }}>
-            <strong>Телефон:</strong> {bookingData.service_recipient.phone}
+            <strong>{t('createAccountDialog.fields.phone')}:</strong> {bookingData.service_recipient.phone}
           </Typography>
           {bookingData.service_recipient.email && (
             <Typography variant="body2" sx={{ 
               mb: 0.5,
               color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
             }}>
-              <strong>Email:</strong> {bookingData.service_recipient.email}
+              <strong>{t('createAccountDialog.fields.email')}:</strong> {bookingData.service_recipient.email}
             </Typography>
           )}
           <Typography variant="body2" sx={{ 
             color: theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'
           }}>
-            <strong>Временный пароль:</strong> {generatedPassword}
+            <strong>{t('createAccountDialog.fields.tempPassword')}:</strong> {generatedPassword}
           </Typography>
         </Box>
 
         {/* Информация о временном пароле */}
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Ваш временный пароль: {generatedPassword}</strong>
+            <strong>{t('createAccountDialog.tempPasswordInfo', { password: generatedPassword })}</strong>
           </Typography>
           <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-            Пароль создан на основе вашего номера телефона. Вы сможете изменить его позже в настройках личного кабинета.
+            {t('createAccountDialog.passwordNote')}
           </Typography>
         </Alert>
 
@@ -349,7 +351,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
           onClick={handleContinueWithoutAccount}
           disabled={isCreating}
         >
-          Продолжить без аккаунта
+          {t('createAccountDialog.buttons.continueWithout')}
         </Button>
         <Button
           variant="contained"
@@ -357,7 +359,7 @@ export const CreateAccountDialog: React.FC<CreateAccountDialogProps> = ({
           disabled={isCreating}
           startIcon={isCreating ? <CircularProgress size={20} /> : <AccountCircleIcon />}
         >
-          {isCreating ? 'Создание ЛК...' : 'Создать ЛК и показать бронирование'}
+          {isCreating ? t('createAccountDialog.buttons.creating') : t('createAccountDialog.buttons.createAccount')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -155,7 +155,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       ) : (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-Вы создаете <strong>{t('bookingSteps.clientInfo.status.guestBooking')}</strong>. 
+            {t('components:clientInfoStep.guestBookingPrefix')} <strong>{t('bookingSteps.clientInfo.status.guestBooking')}</strong>. 
             {t('bookingSteps.clientInfo.status.guestBookingInfo')}
           </Typography>
         </Alert>

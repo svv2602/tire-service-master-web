@@ -33,6 +33,7 @@ import {
 } from '../api/pageContent.api';
 import { getTablePageStyles } from '../styles/components';
 import { useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface PageContentFormProps {
   initialData?: PageContent;
@@ -41,24 +42,24 @@ interface PageContentFormProps {
   isLoading?: boolean;
 }
 
-// Секции
-const SECTIONS = [
-  { key: 'client_main', name: 'Головна сторінка клієнта' },
-  { key: 'admin_dashboard', name: 'Панель адміністратора' },
-  { key: 'partner_portal', name: 'Портал партнера' },
-  { key: 'knowledge_base', name: 'База знань' },
-  { key: 'about', name: 'Про нас' },
-  { key: 'contacts', name: 'Контакти' },
+// Функция для получения секций (зависит от переводов)
+const getSections = (t: any) => [
+  { key: 'client_main', name: t('pageContentForm.sections.client_main') },
+  { key: 'admin_dashboard', name: t('pageContentForm.sections.admin_dashboard') },
+  { key: 'partner_portal', name: t('pageContentForm.sections.partner_portal') },
+  { key: 'knowledge_base', name: t('pageContentForm.sections.knowledge_base') },
+  { key: 'about', name: t('pageContentForm.sections.about') },
+  { key: 'contacts', name: t('pageContentForm.sections.contacts') },
 ];
 
-// Категории услуг
-const SERVICE_CATEGORIES = [
-  'Шиномонтаж',
-  'Балансування',
-  'Ремонт',
-  'Діагностика',
-  'Зберігання',
-  'Консультації',
+// Функция для получения категорий услуг (зависит от переводов)
+const getServiceCategories = (t: any) => [
+  t('pageContentForm.serviceCategories.tire_service'),
+  t('pageContentForm.serviceCategories.balancing'),
+  t('pageContentForm.serviceCategories.repair'),
+  t('pageContentForm.serviceCategories.diagnostics'),
+  t('pageContentForm.serviceCategories.storage'),
+  t('pageContentForm.serviceCategories.consultations'),
 ];
 
 const PageContentForm: React.FC<PageContentFormProps> = ({
@@ -69,6 +70,12 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
 }) => {
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const { t } = useTranslation('components');
+  
+  // Получаем локализованные данные
+  const SECTIONS = getSections(t);
+  const SERVICE_CATEGORIES = getServiceCategories(t);
+  
   const [formData, setFormData] = useState<CreatePageContentRequest>({
     section: '',
     content_type: '',
@@ -213,11 +220,11 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
         {/* Основные поля */}
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.section}>
-            <InputLabel>Секція</InputLabel>
+            <InputLabel>{t('pageContentForm.fields.section')}</InputLabel>
             <Select
               value={formData.section}
               onChange={(e) => handleInputChange('section', e.target.value)}
-              label="Секція"
+              label={t('pageContentForm.fields.section')}
             >
               {SECTIONS.map((section) => (
                 <MenuItem key={section.key} value={section.key}>
@@ -235,11 +242,11 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
 
         <Grid item xs={12} md={6}>
           <FormControl fullWidth error={!!errors.content_type}>
-            <InputLabel>Тип контенту</InputLabel>
+            <InputLabel>{t('pageContentForm.fields.contentType')}</InputLabel>
             <Select
               value={formData.content_type}
               onChange={(e) => handleInputChange('content_type', e.target.value)}
-              label="Тип контенту"
+              label={t('pageContentForm.fields.contentType')}
             >
               {Object.values(CONTENT_TYPES).map((type) => (
                 <MenuItem key={type.key} value={type.key}>
@@ -258,7 +265,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
         <Grid item xs={12}>
           <TextField
             fullWidth
-            label="Заголовок"
+            label={t('pageContentForm.fields.title')}
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
             error={!!errors.title}
@@ -302,7 +309,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                 onChange={(e) => handleInputChange('active', e.target.checked)}
               />
             }
-            label="Активний"
+            label={t('pageContentForm.fields.active')}
           />
         </Grid>
 
@@ -310,7 +317,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
         {settingsFields.length > 0 && (
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom>
-              Налаштування
+              {t('pageContentForm.sections.settings')}
             </Typography>
             <Grid container spacing={2}>
               {settingsFields.map((field) => (
@@ -321,7 +328,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                       value={formData.settings?.[field] || ''}
                       onChange={(_, value) => handleSettingsChange(field, value)}
                       renderInput={(params) => (
-                        <TextField {...params} label="Категорія" />
+                        <TextField {...params} label={t('pageContentForm.fields.category')} />
                       )}
                       freeSolo
                     />
@@ -342,7 +349,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
         {/* Загрузка изображения */}
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom>
-            Зображення
+            {t('pageContentForm.sections.image')}
           </Typography>
           
           <Box sx={{ mb: 2 }}>
@@ -360,7 +367,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                 startIcon={<UploadIcon />}
                 sx={{ mr: 2 }}
               >
-                Завантажити зображення
+                {t('pageContentForm.buttons.uploadImage')}
               </Button>
             </label>
             
@@ -377,11 +384,11 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                 component="img"
                 height="200"
                 image={imagePreview}
-                alt="Попередній перегляд"
+                alt={t('pageContentForm.imagePreview')}
               />
               <CardContent>
                 <Typography variant="body2" color="text.secondary">
-                  Попередній перегляд зображення
+                  {t('pageContentForm.imagePreviewText')}
                 </Typography>
               </CardContent>
             </Card>
@@ -391,7 +398,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
         {/* Галерея изображений */}
         <Grid item xs={12}>
           <Typography variant="h6" gutterBottom>
-            Галерея зображень
+            {t('pageContentForm.sections.gallery')}
           </Typography>
           
           <Box sx={{ mb: 2 }}>
@@ -409,7 +416,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                 component="span"
                 startIcon={<AddIcon />}
               >
-                Додати зображення в галерею
+                {t('pageContentForm.buttons.addToGallery')}
               </Button>
             </label>
           </Box>
@@ -423,7 +430,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
                       component="img"
                       height="120"
                       image={preview}
-                      alt={`Галерея ${index + 1}`}
+                      alt={t('pageContentForm.galleryItem', { index: index + 1 })}
                     />
                     <CardContent sx={{ p: 1 }}>
                       <IconButton
@@ -451,7 +458,7 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
               {settingsFields.length > 0 && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="caption">
-                    Доступні налаштування: {settingsFields.map(field => (
+                    {t('pageContentForm.availableSettings')}: {settingsFields.map(field => (
                       <Chip key={field} label={field} size="small" sx={{ mr: 0.5 }} />
                     ))}
                   </Typography>
@@ -469,14 +476,14 @@ const PageContentForm: React.FC<PageContentFormProps> = ({
               onClick={onCancel}
               disabled={isLoading}
             >
-              Скасувати
+              {t('pageContentForm.buttons.cancel')}
             </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={isLoading}
             >
-              {isLoading ? 'Збереження...' : (initialData ? 'Оновити' : 'Створити')}
+              {isLoading ? t('pageContentForm.buttons.saving') : (initialData ? t('pageContentForm.buttons.update') : t('pageContentForm.buttons.create'))}
             </Button>
           </Box>
         </Grid>

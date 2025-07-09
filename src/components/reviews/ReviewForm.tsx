@@ -16,19 +16,19 @@ interface ReviewFormProps {
 }
 
 const ReviewForm: React.FC<ReviewFormProps> = ({ servicePointId, onSubmit, isSubmitting, error }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const [hoverRating, setHoverRating] = useState<number | null>(null);
 
   // Схема валидации
   const validationSchema = Yup.object({
-    service_point_id: Yup.string().required(t('Выберите сервисную точку')),
+    service_point_id: Yup.string().required(t('reviewForm.validation.selectServicePoint')),
     rating: Yup.number()
-      .required(t('Пожалуйста, поставьте оценку'))
-      .min(1, t('Пожалуйста, поставьте оценку')),
+      .required(t('reviewForm.validation.ratingRequired'))
+      .min(1, t('reviewForm.validation.ratingRequired')),
     comment: Yup.string()
-      .required(t('Пожалуйста, напишите отзыв'))
-      .min(10, t('Отзыв должен содержать минимум 10 символов'))
-      .max(1000, t('Отзыв не должен превышать 1000 символов')),
+      .required(t('reviewForm.validation.commentRequired'))
+      .min(10, t('reviewForm.validation.commentMinLength'))
+      .max(1000, t('reviewForm.validation.commentMaxLength')),
   });
 
   // Настройка formik
@@ -46,38 +46,28 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ servicePointId, onSubmit, isSub
 
   // Описание оценки в зависимости от количества звезд
   const getRatingLabel = (rating: number) => {
-    switch (rating) {
-      case 1:
-        return t('Ужасно');
-      case 2:
-        return t('Плохо');
-      case 3:
-        return t('Нормально');
-      case 4:
-        return t('Хорошо');
-      case 5:
-        return t('Отлично');
-      default:
-        return '';
+    if (rating >= 1 && rating <= 5) {
+      return t(`reviewForm.ratingLabels.${rating}`);
     }
+    return '';
   };
 
   return (
     <Paper elevation={3} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {t('Оставить отзыв')}
+        {t('reviewForm.title')}
       </Typography>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t('Произошла ошибка при отправке отзыва. Пожалуйста, попробуйте еще раз.')}
+          {t('reviewForm.errorMessage')}
         </Alert>
       )}
 
       <form onSubmit={formik.handleSubmit}>
         <Box mb={3}>
           <Typography component="legend" gutterBottom>
-            {t('Ваша оценка')}*
+            {t('reviewForm.fields.rating')}*
           </Typography>
           <Box display="flex" alignItems="center">
             <Rating
@@ -107,7 +97,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ servicePointId, onSubmit, isSub
           <TextField
             id="comment"
             name="comment"
-            label={t('Ваш отзыв')}
+            label={t('reviewForm.fields.comment')}
             multiline
             rows={4}
             value={formik.values.comment}
@@ -115,7 +105,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ servicePointId, onSubmit, isSub
             onBlur={formik.handleBlur}
             error={formik.touched.comment && Boolean(formik.errors.comment)}
             helperText={formik.touched.comment && formik.errors.comment}
-            placeholder={t('Поделитесь своими впечатлениями о сервисе...')}
+            placeholder={t('reviewForm.fields.commentPlaceholder')}
           />
           <Box display="flex" justifyContent="flex-end" mt={1}>
             <Typography variant="caption" color={formik.values.comment.length > 1000 ? 'error' : 'textSecondary'}>
@@ -132,7 +122,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ servicePointId, onSubmit, isSub
             disabled={isSubmitting}
             startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           >
-            {t('Отправить отзыв')}
+            {t('reviewForm.submitButton')}
           </Button>
         </Box>
       </form>

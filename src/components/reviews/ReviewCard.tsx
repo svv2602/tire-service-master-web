@@ -15,7 +15,7 @@ interface ReviewCardProps {
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review, showServicePoint = false }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const navigate = useNavigate();
 
   // Форматирование даты
@@ -45,13 +45,13 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, showServicePoint = fals
   const getStatusName = (status: string) => {
     switch (status) {
       case 'published':
-        return t('Опубликован');
+        return t('reviewCard.status.published');
       case 'pending':
-        return t('На модерации');
+        return t('reviewCard.status.pending');
       case 'rejected':
-        return t('Отклонен');
+        return t('reviewCard.status.rejected');
       default:
-        return t('Неизвестно');
+        return t('reviewCard.status.unknown');
     }
   };
 
@@ -97,7 +97,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, showServicePoint = fals
             <Divider sx={{ my: 2 }} />
             <Box bgcolor="grey.100" p={1.5} borderRadius={1}>
               <Typography variant="subtitle2" gutterBottom>
-                {t('Ответ сервиса')}:
+                {t('reviewCard.serviceResponse')}:
               </Typography>
               <Typography variant="body2">
                 {review.response}
@@ -109,12 +109,12 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review, showServicePoint = fals
       
       <CardActions>
         <Button size="small" onClick={handleViewDetails}>
-          {t('Подробнее')}
+          {t('reviewCard.buttons.viewDetails')}
         </Button>
         
         {review.status === 'published' && (
           <Button size="small" color="primary">
-            {t('Редактировать')}
+            {t('reviewCard.buttons.edit')}
           </Button>
         )}
       </CardActions>

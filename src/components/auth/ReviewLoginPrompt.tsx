@@ -12,7 +12,7 @@ interface ReviewLoginPromptProps {
 }
 
 const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const navigate = useNavigate();
 
   const handleLogin = () => {
@@ -35,30 +35,30 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
           <Box display="flex" alignItems="center" mb={2}>
             <RateReviewOutlinedIcon fontSize="large" color="primary" sx={{ mr: 2 }} />
             <Typography variant="h5" component="h2">
-              {t('Войдите, чтобы оставить отзыв')}
+              {t('reviewLoginPrompt.title')}
             </Typography>
           </Box>
           
           <Typography variant="body1" color="textSecondary" paragraph>
-            {t('Для того чтобы оставить отзыв о сервисе, необходимо войти в систему или зарегистрироваться.')}
+            {t('reviewLoginPrompt.description')}
           </Typography>
           
           <Typography variant="body1" paragraph>
-            {t('Почему стоит оставить отзыв:')}
+            {t('reviewLoginPrompt.whyReview')}
           </Typography>
           
           <Box component="ul" sx={{ pl: 2 }}>
             <Typography component="li" variant="body1" gutterBottom>
-              {t('Помочь другим клиентам выбрать хороший сервис')}
+              {t('reviewLoginPrompt.benefits.helpOthers')}
             </Typography>
             <Typography component="li" variant="body1" gutterBottom>
-              {t('Отметить качественное обслуживание')}
+              {t('reviewLoginPrompt.benefits.recognizeQuality')}
             </Typography>
             <Typography component="li" variant="body1" gutterBottom>
-              {t('Поделиться своим опытом')}
+              {t('reviewLoginPrompt.benefits.shareExperience')}
             </Typography>
             <Typography component="li" variant="body1" gutterBottom>
-              {t('Помочь сервису стать лучше')}
+              {t('reviewLoginPrompt.benefits.helpImprove')}
             </Typography>
           </Box>
           
@@ -70,7 +70,7 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
                 startIcon={<LockOutlinedIcon />}
                 onClick={handleLogin}
               >
-                {t('Войти')}
+                {t('reviewLoginPrompt.buttons.login')}
               </Button>
               
               <Button
@@ -79,7 +79,7 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
                 startIcon={<PersonAddOutlinedIcon />}
                 onClick={handleRegister}
               >
-                {t('Зарегистрироваться')}
+                {t('reviewLoginPrompt.buttons.register')}
               </Button>
             </Box>
             
@@ -91,7 +91,7 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
               onClick={handleSkipAuth}
               sx={{ alignSelf: 'center', mt: 1 }}
             >
-              {t('Пропустить отзыв')}
+              {t('reviewLoginPrompt.buttons.skip')}
             </Button>
           </Box>
         </Grid>
@@ -100,7 +100,7 @@ const ReviewLoginPrompt: React.FC<ReviewLoginPromptProps> = ({ servicePointId })
           <Box
             component="img"
             src="/assets/images/review-prompt.svg"
-            alt={t('Иллюстрация отзыва')}
+            alt={t('reviewLoginPrompt.imageAlt')}
             sx={{ width: '100%', height: 'auto' }}
           />
         </Grid>

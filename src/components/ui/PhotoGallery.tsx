@@ -19,6 +19,7 @@ import {
   Close as CloseIcon,
   PhotoLibrary as PhotoLibraryIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface Photo {
   id: number;
@@ -46,6 +47,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   fallbackIcon = '🚗'
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation('components');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -112,7 +114,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           <CardMedia
             component="img"
             image={mainPhoto.url}
-            alt={mainPhoto.description || 'Фото сервисной точки'}
+            alt={mainPhoto.description || t('photoGallery.servicePointPhoto')}
             sx={{
               width: '100%',
               height: '100%',
@@ -182,7 +184,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               fontWeight: 600
             }}
           >
-            Главное фото
+            {t('photoGallery.mainPhoto')}
           </Box>
         )}
       </Box>
@@ -243,7 +245,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           >
             <img
               src={sortedPhotos[currentPhotoIndex]?.url}
-              alt={sortedPhotos[currentPhotoIndex]?.description || 'Фото сервисной точки'}
+              alt={sortedPhotos[currentPhotoIndex]?.description || t('photoGallery.servicePointPhoto')}
               style={{
                 maxWidth: '100%',
                 maxHeight: '100%',
@@ -304,7 +306,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             
             {sortedPhotos.length > 1 && (
               <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                {currentPhotoIndex + 1} из {sortedPhotos.length}
+                {t('photoGallery.photoCounter', { current: currentPhotoIndex + 1, total: sortedPhotos.length })}
               </Typography>
             )}
           </Box>
@@ -343,7 +345,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
                 >
                   <img
                     src={photo.url}
-                    alt={photo.description || `Фото ${index + 1}`}
+                    alt={photo.description || t('photoGallery.photoNumber', { number: index + 1 })}
                     style={{
                       width: '100%',
                       height: '100%',
@@ -368,7 +370,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               }
             }}
           >
-            Закрыть
+            {t('photoGallery.close')}
           </Button>
         </DialogActions>
       </Dialog>

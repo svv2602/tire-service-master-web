@@ -27,6 +27,7 @@ import {
 import type { ServicePoint } from '../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../types/working-hours';
 import { FlexBox } from '../components/styled/CommonComponents';
+import { useTranslation } from 'react-i18next';
 
 interface ServicePointDetailsProps {
   servicePoint: ServicePoint;
@@ -37,17 +38,17 @@ type DaysMap = {
 };
 
 // Вспомогательные функции
-const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): string => {
-  if (!workingHours) return 'График работы не указан';
+const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined, t: (key: string) => string): string => {
+  if (!workingHours) return t('servicePointDetails.workingHoursNotSpecified');
 
   const days = {
-    monday: 'Понедельник',
-    tuesday: 'Вторник',
-    wednesday: 'Среда',
-    thursday: 'Четверг',
-    friday: 'Пятница',
-    saturday: 'Суббота',
-    sunday: 'Воскресенье'
+    monday: t('servicePointDetails.days.monday'),
+    tuesday: t('servicePointDetails.days.tuesday'),
+    wednesday: t('servicePointDetails.days.wednesday'),
+    thursday: t('servicePointDetails.days.thursday'),
+    friday: t('servicePointDetails.days.friday'),
+    saturday: t('servicePointDetails.days.saturday'),
+    sunday: t('servicePointDetails.days.sunday')
   } as const;
 
   const workingDays = (Object.entries(workingHours) as [keyof WorkingHoursSchedule, WorkingHours][])
@@ -55,7 +56,7 @@ const formatWorkingHours = (workingHours: WorkingHoursSchedule | undefined): str
     .map(([day, hours]) => `${days[day as keyof typeof days]}: ${hours.start}-${hours.end}`)
     .join(', ');
 
-  return workingDays || 'График работы не указан';
+  return workingDays || t('servicePointDetails.workingHoursNotSpecified');
 };
 
 const formatDate = (date: string): string => {
@@ -64,6 +65,8 @@ const formatDate = (date: string): string => {
 };
 
 const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint }) => {
+  const { t } = useTranslation('components');
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Основная информация */}
@@ -91,11 +94,11 @@ const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint 
           <Grid item xs={12} md={6}>
             <FlexBox alignItems="center" gap={1} my={2}>
               <ScheduleIcon color="action" />
-              <Typography>Режим работы: {formatWorkingHours(servicePoint.working_hours)}</Typography>
+              <Typography>{t('servicePointDetails.workingHours')}: {formatWorkingHours(servicePoint.working_hours, t)}</Typography>
             </FlexBox>
             
             <Chip
-              label={servicePoint.is_active ? 'Активна' : 'Неактивна'}
+              label={servicePoint.is_active ? t('servicePointDetails.active') : t('servicePointDetails.inactive')}
               color={servicePoint.is_active ? 'success' : 'error'}
               sx={{ mb: 2 }}
             />
@@ -106,11 +109,11 @@ const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint 
       {/* Отзывы */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" gutterBottom>
-          Отзывы клиентов
+          {t('servicePointDetails.clientReviews')}
         </Typography>
         
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Отзывы пока не загружены
+          {t('servicePointDetails.reviewsNotLoaded')}
         </Typography>
       </Paper>
     </Box>

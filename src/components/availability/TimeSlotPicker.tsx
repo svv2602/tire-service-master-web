@@ -11,6 +11,7 @@ import { useTheme } from '@mui/material/styles';
 import { getThemeColors } from '../../styles';
 import { AccessTime as TimeIcon, CheckCircle as CheckIcon, People as PeopleIcon } from '@mui/icons-material';
 import type { AvailableTimeSlot } from '../../types/availability';
+import { useTranslation } from 'react-i18next';
 
 interface TimeSlotPickerProps {
   selectedTimeSlot: string | null;
@@ -27,6 +28,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   isLoading = false,
   hideSelectedChip = false,
 }) => {
+  const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
 
@@ -44,12 +46,12 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
           textAlign: 'center', 
           bgcolor: colors.backgroundSecondary,
           borderRadius: 2
-        }}>
+        }}        >
           <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            Нет доступных слотов на выбранную дату.
+            {t('timeSlotPicker.noSlots')}
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-            Пожалуйста, выберите другую дату.
+            {t('timeSlotPicker.selectOtherDate')}
           </Typography>
         </Box>
       ) : (
@@ -86,7 +88,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <PeopleIcon sx={{ fontSize: 14 }} />
                       <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
-                        {slot.available_posts} из {slot.total_posts} свободно
+                        {slot.available_posts} {t('timeSlotPicker.postsAvailable', { total: slot.total_posts })}
                       </Typography>
                     </Box>
                     {isSelected && (
@@ -115,7 +117,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Chip
             color="primary"
-            label={`Выбрано: ${selectedTimeSlot}`}
+            label={t('timeSlotPicker.selectedTime', { time: selectedTimeSlot })}
             onDelete={() => onTimeSlotChange(null)}
             sx={{ fontWeight: 500 }}
           />

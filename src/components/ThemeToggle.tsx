@@ -6,15 +6,17 @@ import {
 } from '@mui/icons-material';
 import { getInteractiveStyles } from '../styles';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const ThemeToggle: React.FC = () => {
   const theme = useTheme();
   const { toggleTheme, mode } = useThemeMode();
+  const { t } = useTranslation('components');
   const isDarkMode = mode === 'dark';
   const interactiveStyles = getInteractiveStyles(theme);
 
   return (
-    <Tooltip title={isDarkMode ? 'Переключить на светлую тему' : 'Переключить на темную тему'}>
+    <Tooltip title={isDarkMode ? t('themeToggle.lightMode') : t('themeToggle.darkMode')}>
       <IconButton
         onClick={toggleTheme}
         color="inherit"
@@ -27,6 +29,7 @@ const ThemeToggle: React.FC = () => {
             transform: 'rotate(180deg)',
           },
         }}
+        aria-label={t('themeToggle.ariaLabel')}
       >
         {isDarkMode ? (
           <LightModeIcon sx={{ fontSize: 20 }} />

@@ -1,12 +1,15 @@
 import React from 'react';
 import { Box, Typography, Paper, Chip } from '@mui/material';
 import { ServicePoint } from '../types/models';
+import { useTranslation } from 'react-i18next';
 
 interface ServicePointMapProps {
   servicePoints: ServicePoint[];
 }
 
 const ServicePointMap: React.FC<ServicePointMapProps> = ({ servicePoints }) => {
+  const { t } = useTranslation('components');
+  
   // Фильтруем только активные сервисные точки
   const activeServicePoints = servicePoints.filter(point => point.is_active);
 
@@ -14,17 +17,17 @@ const ServicePointMap: React.FC<ServicePointMapProps> = ({ servicePoints }) => {
     <Box sx={{ height: 400, width: '100%' }}>
       <Paper sx={{ p: 2, height: '100%' }}>
         <Typography variant="h6" gutterBottom>
-          Сервисные точки
+          {t('servicePointMap.title')}
         </Typography>
         
         {activeServicePoints.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            Нет активных сервисных точек для отображения
+            {t('servicePointMap.noActivePoints')}
           </Typography>
         ) : (
           <Box sx={{ mt: 2 }}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Найдено {activeServicePoints.length} активных точек
+              {t('servicePointMap.foundActivePoints', { count: activeServicePoints.length })}
             </Typography>
             
             {activeServicePoints.map((point) => (
@@ -36,10 +39,10 @@ const ServicePointMap: React.FC<ServicePointMapProps> = ({ servicePoints }) => {
                   {point.address}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Телефон: {point.contact_phone}
+                  {t('servicePointMap.phone')}: {point.contact_phone}
                 </Typography>
                 <Chip
-                  label="Активна"
+                  label={t('servicePointMap.active')}
                   color="success"
                   size="small"
                   sx={{ mt: 1 }}

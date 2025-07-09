@@ -56,6 +56,7 @@ import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Booking } from '../../types/models';
 import { getStatusDisplayName } from '../../utils/bookingStatus';
+import { useTranslation } from 'react-i18next';
 
 interface AnalyticsFilter {
   period: 'week' | 'month' | 'quarter' | 'year' | 'custom';
@@ -93,6 +94,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const { t } = useTranslation('components');
 
   // Фильтры
   const [filter, setFilter] = useState<AnalyticsFilter>({
@@ -313,7 +315,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Распределение по статусам
+            {t('bookingAnalytics.titles.statusDistribution')}
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -344,7 +346,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Динамика бронирований
+          {t('bookingAnalytics.titles.bookingTrend')}
         </Typography>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={analyticsData.chartData}>
@@ -364,7 +366,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
               stackId="1"
               stroke={colors.primary}
               fill={colors.primary}
-              name="Всего"
+                             name={t('bookingAnalytics.labels.totalBookings')}
             />
             <Area
               type="monotone"
@@ -372,7 +374,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
               stackId="2"
               stroke="#4CAF50"
               fill="#4CAF50"
-              name="Завершено"
+                             name={t('bookingAnalytics.labels.completedBookings')}
             />
             <Area
               type="monotone"
@@ -380,7 +382,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
               stackId="3"
               stroke="#F44336"
               fill="#F44336"
-              name="Отменено"
+                             name={t('bookingAnalytics.labels.cancelledBookings')}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -393,15 +395,15 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
     <Card>
       <CardContent>
         <Typography variant="h6" gutterBottom>
-          Топ сервисных точек
+          {t('bookingAnalytics.titles.topServicePoints')}
         </Typography>
         <TableContainer>
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Сервисная точка</TableCell>
-                <TableCell align="right">Бронирований</TableCell>
-                <TableCell align="right">Доход</TableCell>
+                                 <TableCell>{t('bookingAnalytics.table.headers.servicePoint')}</TableCell>
+                 <TableCell align="right">{t('bookingAnalytics.table.headers.bookingsCount')}</TableCell>
+                 <TableCell align="right">{t('bookingAnalytics.table.headers.revenue')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -433,35 +435,35 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
         gap: 2
       }}>
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Аналитика бронирований
+                     {t('bookingAnalytics.titles.main')}
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
           {/* Фильтры периода */}
           <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Период</InputLabel>
-            <Select
-              value={filter.period}
-              label="Период"
+                         <InputLabel>{t('bookingAnalytics.filters.period')}</InputLabel>
+             <Select
+               value={filter.period}
+               label={t('bookingAnalytics.filters.period')}
               onChange={(e) => handleFilterChange({ period: e.target.value as any })}
             >
-              <MenuItem value="week">Неделя</MenuItem>
-              <MenuItem value="month">Месяц</MenuItem>
-              <MenuItem value="quarter">Квартал</MenuItem>
-              <MenuItem value="year">Год</MenuItem>
+                             <MenuItem value="week">{t('bookingAnalytics.filters.periodOptions.week')}</MenuItem>
+               <MenuItem value="month">{t('bookingAnalytics.filters.periodOptions.month')}</MenuItem>
+               <MenuItem value="quarter">{t('bookingAnalytics.filters.periodOptions.quarter')}</MenuItem>
+               <MenuItem value="year">{t('bookingAnalytics.filters.periodOptions.year')}</MenuItem>
             </Select>
           </FormControl>
 
           <FormControl size="small" sx={{ minWidth: 120 }}>
-            <InputLabel>Группировка</InputLabel>
-            <Select
-              value={filter.groupBy}
-              label="Группировка"
+                         <InputLabel>{t('bookingAnalytics.filters.groupBy')}</InputLabel>
+             <Select
+               value={filter.groupBy}
+               label={t('bookingAnalytics.filters.groupBy')}
               onChange={(e) => handleFilterChange({ groupBy: e.target.value as any })}
             >
-              <MenuItem value="day">По дням</MenuItem>
-              <MenuItem value="week">По неделям</MenuItem>
-              <MenuItem value="month">По месяцам</MenuItem>
+                             <MenuItem value="day">{t('bookingAnalytics.filters.groupByOptions.day')}</MenuItem>
+               <MenuItem value="week">{t('bookingAnalytics.filters.groupByOptions.week')}</MenuItem>
+               <MenuItem value="month">{t('bookingAnalytics.filters.groupByOptions.month')}</MenuItem>
             </Select>
           </FormControl>
 
@@ -472,19 +474,19 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
               onClick={() => setViewType('charts')}
               startIcon={<BarChartIcon />}
             >
-              Графики
+                             {t('bookingAnalytics.views.charts')}
             </Button>
             <Button 
               variant={viewType === 'table' ? 'contained' : 'outlined'}
               onClick={() => setViewType('table')}
               startIcon={<TableChartIcon />}
             >
-              Таблица
+                             {t('bookingAnalytics.views.table')}
             </Button>
           </ButtonGroup>
 
           {/* Действия */}
-          <Tooltip title="Обновить данные">
+           <Tooltip title={t('bookingAnalytics.actions.refresh')}>
             <IconButton onClick={onRefresh} disabled={loading}>
               <RefreshIcon />
             </IconButton>
@@ -495,7 +497,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
             startIcon={<DownloadIcon />}
             onClick={() => handleExport('csv')}
           >
-            Экспорт CSV
+                         {t('bookingAnalytics.actions.exportCsv')}
           </Button>
 
           <Button
@@ -503,7 +505,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
             startIcon={<DownloadIcon />}
             onClick={() => handleExport('excel')}
           >
-            Экспорт Excel
+                         {t('bookingAnalytics.actions.exportExcel')}
           </Button>
         </Box>
       </Box>
@@ -512,14 +514,14 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Всего бронирований"
+                         title={t('bookingAnalytics.stats.totalBookings')}
             value={analyticsData.total}
             icon={<AssessmentIcon />}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Завершено"
+                         title={t('bookingAnalytics.stats.completed')}
             value={analyticsData.completed}
             color="#4CAF50"
             icon={<TrendingUpIcon />}
@@ -527,7 +529,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Отменено"
+                         title={t('bookingAnalytics.stats.cancelled')}
             value={analyticsData.cancelled}
             color="#F44336"
             icon={<TrendingDownIcon />}
@@ -535,7 +537,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title="Общий доход"
+                         title={t('bookingAnalytics.stats.totalRevenue')}
             value={`${analyticsData.revenue.toLocaleString('ru-RU')} ₽`}
             color="#2196F3"
             icon={<PieChartIcon />}
@@ -559,15 +561,15 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Топ категории услуг
+                                     {t('bookingAnalytics.charts.topCategories')}
                 </Typography>
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell>Категория</TableCell>
-                        <TableCell align="right">Бронирований</TableCell>
-                        <TableCell align="right">Доход</TableCell>
+                                                 <TableCell>{t('bookingAnalytics.table.headers.category')}</TableCell>
+                         <TableCell align="right">{t('bookingAnalytics.table.headers.bookingsCount')}</TableCell>
+                         <TableCell align="right">{t('bookingAnalytics.table.headers.revenue')}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -592,19 +594,19 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Детальная таблица бронирований
+                             {t('bookingAnalytics.titles.detailedBookingTable')}
             </Typography>
             <TableContainer sx={{ maxHeight: 600 }}>
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Дата</TableCell>
-                    <TableCell>Время</TableCell>
-                    <TableCell>Клиент</TableCell>
-                    <TableCell>Сервисная точка</TableCell>
-                    <TableCell>Статус</TableCell>
-                    <TableCell align="right">Сумма</TableCell>
+                                         <TableCell>{t('bookingAnalytics.table.headers.id')}</TableCell>
+                     <TableCell>{t('bookingAnalytics.table.headers.date')}</TableCell>
+                     <TableCell>{t('bookingAnalytics.table.headers.time')}</TableCell>
+                     <TableCell>{t('bookingAnalytics.table.headers.client')}</TableCell>
+                     <TableCell>{t('bookingAnalytics.table.headers.servicePoint')}</TableCell>
+                     <TableCell>{t('bookingAnalytics.table.headers.status')}</TableCell>
+                     <TableCell align="right">{t('bookingAnalytics.table.headers.amount')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -620,7 +622,7 @@ export const BookingAnalytics: React.FC<BookingAnalyticsProps> = ({
                           `${booking.client.user?.first_name || booking.client.first_name || ''} ${booking.client.user?.last_name || booking.client.last_name || ''}`.trim() :
                           booking.service_recipient ? 
                             `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` :
-                            'Гостевая запись'
+                                                         t('bookingAnalytics.table.guestBooking')
                         }
                       </TableCell>
                       <TableCell>{booking.service_point?.name}</TableCell>

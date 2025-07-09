@@ -64,7 +64,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   totalBookings,
   appliedFilters,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -200,7 +200,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             startIcon={<TodayIcon />}
             sx={{ minWidth: 120 }}
           >
-            {t('forms.components.bookingCalendar.todayButton')}
+            {t('bookingCalendar.todayButton')}
           </Button>
           
           <IconButton onClick={() => navigateCalendar('next')}>
@@ -221,21 +221,21 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             onClick={() => setView('day')}
             startIcon={<CalendarViewIcon />}
           >
-            {t('forms.components.bookingCalendar.views.day')}
+            {t('bookingCalendar.views.day')}
           </Button>
           <Button 
             variant={view === 'week' ? 'contained' : 'outlined'}
             onClick={() => setView('week')}
             startIcon={<ViewWeekIcon />}
           >
-            {t('forms.components.bookingCalendar.views.week')}
+            {t('bookingCalendar.views.week')}
           </Button>
           <Button 
             variant={view === 'month' ? 'contained' : 'outlined'}
             onClick={() => setView('month')}
             startIcon={<ViewModuleIcon />}
           >
-            {t('forms.components.bookingCalendar.views.month')}
+            {t('bookingCalendar.views.month')}
           </Button>
         </ButtonGroup>
       </Box>
@@ -254,10 +254,10 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="body1">
-            <strong>{t('forms.components.bookingCalendar.stats.found')}:</strong> {bookings.length}
+            <strong>{t('bookingCalendar.stats.found')}:</strong> {bookings.length}
             {totalBookings && totalBookings !== bookings.length && (
               <span style={{ color: colors.textSecondary }}>
-                {' '}{t('forms.components.bookingCalendar.stats.outOf')} {totalBookings} {t('forms.components.bookingCalendar.stats.total')}
+                {' '}{t('bookingCalendar.stats.outOf')} {totalBookings} {t('bookingCalendar.stats.total')}
               </span>
             )}
           </Typography>
@@ -266,7 +266,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {appliedFilters.servicePoint && (
                 <Chip 
-                  label={`${t('forms.components.bookingCalendar.filters.servicePoint')}: ${appliedFilters.servicePoint}`}
+                  label={`${t('bookingCalendar.filters.servicePoint')}: ${appliedFilters.servicePoint}`}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -274,7 +274,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               )}
               {appliedFilters.category && (
                 <Chip 
-                  label={`${t('forms.components.bookingCalendar.filters.category')}: ${appliedFilters.category}`}
+                  label={`${t('bookingCalendar.filters.category')}: ${appliedFilters.category}`}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -314,23 +314,23 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     return (
       <Box sx={{ mb: 2, p: 2, bgcolor: colors.backgroundSecondary, borderRadius: 1 }}>
         <Typography variant="body2" sx={{ mb: 1 }}>
-          Выбрано записей: {selectedBookings.size}
+          {t('bookingCalendar.bulkActions.selected')}: {selectedBookings.size}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Button size="small" onClick={() => handleBulkAction('confirm')}>
-            Подтвердить все
+            {t('bookingCalendar.bulkActions.confirmAll')}
           </Button>
           <Button size="small" onClick={() => handleBulkAction('cancel')}>
-            Отменить все
+            {t('bookingCalendar.bulkActions.cancelAll')}
           </Button>
           <Button size="small" onClick={() => handleBulkAction('reschedule')}>
-            Перенести все
+            {t('bookingCalendar.bulkActions.rescheduleAll')}
           </Button>
           <Button size="small" onClick={selectAllBookings}>
-            Выбрать все
+            {t('bookingCalendar.bulkActions.selectAll')}
           </Button>
           <Button size="small" onClick={clearSelection}>
-            Очистить выбор
+            {t('bookingCalendar.bulkActions.clearSelection')}
           </Button>
         </Box>
       </Box>
@@ -374,7 +374,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                     `${booking.client.user?.first_name || booking.client.first_name || ''} ${booking.client.user?.last_name || booking.client.last_name || ''}`.trim() :
                     booking.service_recipient ? 
                       `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` :
-                      'Гостевая запись'
+                      t('bookingCalendar.guestBooking')
                   }
                 </Typography>
               </Box>
@@ -397,11 +397,14 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     return (
       <Box>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Записи на {format(currentDate, 'd MMMM yyyy', { locale: ru })} ({dayBookings.length})
+          {t('bookingCalendar.dayView.title', { 
+            date: format(currentDate, 'd MMMM yyyy', { locale: ru }), 
+            count: dayBookings.length 
+          })}
         </Typography>
         {dayBookings.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography color="text.secondary">На этот день записей нет</Typography>
+            <Typography color="text.secondary">{t('bookingCalendar.dayView.noBookings')}</Typography>
           </Box>
         ) : (
           dayBookings.map(booking => (
@@ -447,7 +450,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                 ))}
                 {dayBookings.length > 3 && (
                   <Typography variant="caption" color="text.secondary">
-                    +{dayBookings.length - 3} ещё
+                    {t('bookingCalendar.weekView.moreCount', { count: dayBookings.length - 3 })}
                   </Typography>
                 )}
               </CardContent>
@@ -470,8 +473,16 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       <Box>
         {/* Заголовки дней недели */}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, mb: 1 }}>
-          {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-            <Typography key={day} variant="subtitle2" sx={{ textAlign: 'center', fontWeight: 600 }}>
+          {[
+            t('bookingCalendar.monthView.weekDays.mon'),
+            t('bookingCalendar.monthView.weekDays.tue'),
+            t('bookingCalendar.monthView.weekDays.wed'),
+            t('bookingCalendar.monthView.weekDays.thu'),
+            t('bookingCalendar.monthView.weekDays.fri'),
+            t('bookingCalendar.monthView.weekDays.sat'),
+            t('bookingCalendar.monthView.weekDays.sun')
+          ].map((day, index) => (
+            <Typography key={index} variant="subtitle2" sx={{ textAlign: 'center', fontWeight: 600 }}>
               {day}
             </Typography>
           ))}
@@ -518,7 +529,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                       ))}
                       {dayBookings.length > 2 && (
                         <Typography variant="caption" color="text.secondary">
-                          +{dayBookings.length - 2}
+                          {t('bookingCalendar.monthView.moreCount', { count: dayBookings.length - 2 })}
                         </Typography>
                       )}
                     </Box>
@@ -541,13 +552,16 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       fullWidth
     >
       <DialogTitle>
-        Записи на {selectedDayBookings.length > 0 ? 
-          format(new Date(selectedDayBookings[0].booking_date), 'd MMMM yyyy', { locale: ru }) : ''
+        {selectedDayBookings.length > 0 ? 
+          t('bookingCalendar.dayDetails.title', { 
+            date: format(new Date(selectedDayBookings[0].booking_date), 'd MMMM yyyy', { locale: ru })
+          }) : 
+          t('bookingCalendar.dayDetails.titleEmpty')
         }
       </DialogTitle>
       <DialogContent>
         {selectedDayBookings.length === 0 ? (
-          <Typography>На этот день записей нет</Typography>
+          <Typography>{t('bookingCalendar.dayDetails.noBookings')}</Typography>
         ) : (
           <List>
             {selectedDayBookings.map(booking => (
@@ -564,7 +578,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
                       `${booking.client.user?.first_name || booking.client.first_name || ''} ${booking.client.user?.last_name || booking.client.last_name || ''}`.trim() :
                       booking.service_recipient ? 
                         `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` :
-                        'Гостевая запись'
+                        t('bookingCalendar.guestBooking')
                   }
                 />
                 <Chip 
@@ -578,7 +592,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setDayDetailsOpen(false)}>Закрыть</Button>
+        <Button onClick={() => setDayDetailsOpen(false)}>{t('bookingCalendar.dayDetails.close')}</Button>
       </DialogActions>
     </Dialog>
   );
@@ -590,7 +604,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       
       {loading ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography>Загрузка...</Typography>
+          <Typography>{t('bookingCalendar.loading')}</Typography>
         </Box>
       ) : (
         <>

@@ -9,6 +9,7 @@ import {
 } from '@mui/icons-material';
 import { useThemeMode } from '../../../contexts/ThemeContext';
 import { tokens } from '../../../styles/theme/tokens';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Компонент для переключения между светлой и темной темой
@@ -16,10 +17,11 @@ import { tokens } from '../../../styles/theme/tokens';
 const ThemeToggle: React.FC = () => {
   const theme = useTheme();
   const { mode, toggleTheme } = useThemeMode();
+  const { t } = useTranslation('components');
   const isDarkMode = mode === 'dark';
 
   return (
-    <Tooltip title={isDarkMode ? 'Переключить на светлую тему' : 'Переключить на темную тему'}>
+    <Tooltip title={isDarkMode ? t('themeToggle.lightMode') : t('themeToggle.darkMode')}>
       <IconButton
         onClick={toggleTheme}
         sx={{
@@ -45,7 +47,7 @@ const ThemeToggle: React.FC = () => {
             transform: 'scale(0.95) rotate(180deg)',
           },
         }}
-        aria-label="Переключить тему"
+        aria-label={t('themeToggle.ariaLabel')}
       >
         {isDarkMode ? (
           <LightModeIcon sx={{ fontSize: 22, color: '#FFC107' }} />

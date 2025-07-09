@@ -7,12 +7,12 @@
       "month": "Месяц"
     },
     "stats": {
-      "found": "Найдено бронирований",
+      "found": "Найдено",
       "outOf": "из",
-      "total": "общих"
+      "total": "всего"
     },
     "filters": {
-      "servicePoint": "Точка",
+      "servicePoint": "Сервисная точка",
       "category": "Категория"
     },
     "bulkActions": {
@@ -24,22 +24,32 @@
       "clearSelection": "Очистить выбор"
     },
     "dayView": {
-      "recordsFor": "Записи на",
-      "noRecords": "На этот день записей нет"
+      "title": "Записи на {{date}} ({{count}})",
+      "noBookings": "На этот день записей нет"
     },
     "weekView": {
-      "more": "ещё"
+      "moreCount": "+{{count}} ещё"
     },
     "monthView": {
-      "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+      "weekDays": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Вс"
+      },
+      "moreCount": "+{{count}}"
     },
-    "dayDialog": {
-      "title": "Записи на",
-      "noRecords": "На этот день записей нет",
-      "closeButton": "Закрыть"
+    "dayDetails": {
+      "title": "Записи на {{date}}",
+      "titleEmpty": "Записи на день",
+      "noBookings": "На этот день записей нет",
+      "close": "Закрыть"
     },
     "loading": "Загрузка...",
-    "guestRecord": "Гостевая запись"
+    "guestBooking": "Гостевая запись"
   },
   "bookingFilters": {
     "dateFrom": "Дата с",
@@ -82,5 +92,473 @@
       "saturday": "Суббота",
       "sunday": "Воскресенье"
     }
+  },
+  "pageContentForm": {
+    "fields": {
+      "active": "Активный",
+      "category": "Категория"
+    },
+    "sections": {
+      "settings": "Настройки",
+      "image": "Изображение",
+      "gallery": "Галерея изображений"
+    },
+    "buttons": {
+      "uploadImage": "Загрузить изображение",
+      "addToGallery": "Добавить изображения в галерею",
+      "cancel": "Отменить",
+      "saving": "Сохранение...",
+      "update": "Обновить",
+      "create": "Создать"
+    },
+    "imagePreview": "Предварительный просмотр",
+    "imagePreviewText": "Предварительный просмотр изображения",
+    "galleryItem": "Галерея {{index}}",
+    "availableSettings": "Доступные настройки"
+  },
+  "reviewLoginPrompt": {
+    "title": "Войдите, чтобы оставить отзыв",
+    "description": "Для того чтобы оставить отзыв о сервисе, необходимо войти в систему или зарегистрироваться.",
+    "whyReview": "Почему стоит оставить отзыв:",
+    "benefits": {
+      "helpOthers": "Помочь другим клиентам выбрать хороший сервис",
+      "recognizeQuality": "Отметить качественное обслуживание",
+      "shareExperience": "Поделиться своим опытом",
+      "helpImprove": "Помочь сервису стать лучше"
+    },
+    "buttons": {
+      "login": "Войти",
+      "register": "Зарегистрироваться",
+      "skip": "Пропустить отзыв"
+    },
+    "imageAlt": "Иллюстрация отзыва"
+  },
+  "createAccountDialog": {
+    "title": "Создать ЛК и показать бронирование",
+    "successMessage": "Ваше бронирование успешно создано!",
+    "description": "Создайте личный кабинет, чтобы управлять своими бронированиями и получать уведомления.",
+    "benefitsTitle": "Создайте личный кабинет для:",
+    "benefits": {
+      "manageBookings": "Управления вашими бронированиями",
+      "notifications": "Получения уведомлений о записях",
+      "quickRebooking": "Быстрого повторного бронирования",
+      "saveCarData": "Сохранения данных автомобилей"
+    },
+    "accountData": "Данные для аккаунта",
+    "fields": {
+      "name": "Имя",
+      "phone": "Телефон",
+      "email": "Email",
+      "tempPassword": "Временный пароль"
+    },
+    "tempPasswordInfo": "Ваш временный пароль: {{password}}",
+    "passwordNote": "Пароль создан на основе вашего номера телефона. Вы сможете изменить его позже в настройках личного кабинета.",
+    "buttons": {
+      "continueWithout": "Продолжить без аккаунта",
+      "creating": "Создание ЛК...",
+      "createAccount": "Создать ЛК и показать бронирование"
+    }
+  },
+  "themeToggle": {
+    "lightMode": "Переключить на светлую тему",
+    "darkMode": "Переключить на темную тему",
+    "ariaLabel": "Переключить тему"
+  },
+  "servicePointDetails": {
+    "workingHours": "Режим работы",
+    "workingHoursNotSpecified": "График работы не указан",
+    "active": "Активна",
+    "inactive": "Неактивна",
+    "clientReviews": "Отзывы клиентов",
+    "reviewsNotLoaded": "Отзывы пока не загружены",
+    "days": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник", 
+      "wednesday": "Среда",
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    }
+  },
+  "servicePointMap": {
+    "title": "Сервисные точки",
+    "noActivePoints": "Нет активных сервисных точек для отображения",
+    "foundActivePoints": "Найдено {{count}} активных точек",
+    "phone": "Телефон",
+    "active": "Активна"
+  },
+  "carModelsList": {
+    "title": "Модели автомобилей",
+    "searchPlaceholder": "Поиск моделей",
+    "addModel": "Добавить модель",
+    "editModel": "Редактировать модель",
+    "newModel": "Новая модель",
+    "deleteModel": "Удалить модель",
+    "columns": {
+      "name": "Название",
+      "status": "Статус",
+      "actions": "Действия"
+    },
+    "status": {
+      "active": "Активна",
+      "inactive": "Неактивна"
+    },
+    "form": {
+      "modelName": "Название модели",
+      "activeModel": "Активная модель",
+      "save": "Сохранить",
+      "create": "Создать",
+      "cancel": "Отмена"
+    },
+    "validation": {
+      "nameRequired": "Название модели обязательно",
+      "nameMinLength": "Название должно содержать минимум 2 символа",
+      "nameMaxLength": "Название не должно превышать 100 символов"
+    },
+    "emptyState": {
+      "noModels": "В данном бренде пока нет моделей",
+      "noModelsFound": "Модели не найдены",
+      "addFirstModel": "Добавьте первую модель в этот бренд",
+      "changeSearchCriteria": "Попробуйте изменить критерии поиска"
+    },
+    "dialogs": {
+      "deleteTitle": "Подтвердите удаление",
+      "deleteMessage": "Вы уверены, что хотите удалить модель \"{name}\"? Это действие нельзя отменить.",
+      "deleteConfirm": "Удалить"
+    },
+    "tooltips": {
+      "edit": "Редактировать модель",
+      "delete": "Удалить модель"
+    }
+  },
+  "clientInfoStep": {
+    "guestBookingPrefix": "Вы создаете"
+  },
+  "loginPrompt": {
+    "title": "Войдите в систему для доступа к вашим записям",
+    "description": "Для просмотра истории записей и управления вашими бронированиями необходимо войти в систему или зарегистрироваться.",
+    "benefitsTitle": "Преимущества регистрации:",
+    "benefits": {
+      "historyAccess": "Просмотр истории всех ваших записей",
+      "manageBookings": "Удобное управление бронированиями",
+      "rescheduleCancel": "Возможность переносить и отменять записи",
+      "quickBooking": "Быстрое бронирование без повторного ввода данных"
+    },
+    "buttons": {
+      "login": "Войти",
+      "register": "Зарегистрироваться",
+      "continueWithout": "Продолжить без регистрации"
+    },
+    "imageAlt": "Иллюстрация входа"
+  },
+  "existingUserDialog": {
+    "title": "Обнаружен существующий аккаунт",
+    "foundAccount": "Мы нашли ваш аккаунт:",
+    "notSpecified": "Не указан",
+    "quickBookingQuestion": "Хотите войти в аккаунт для быстрого оформления бронирования?",
+    "fields": {
+      "password": "Пароль"
+    },
+    "buttons": {
+      "continueAsGuest": "Продолжить как гость",
+      "login": "Войти и забронировать",
+      "loggingIn": "Вход..."
+    },
+    "validation": {
+      "passwordRequired": "Введите пароль",
+      "wrongPassword": "Неверный пароль"
+    }
+  },
+  "clientSearchPage": {
+    "searchResults": "Результаты поиска",
+    "servicePointsInCity": "Сервисные точки в городе \"{city}\"",
+    "byQuery": "по запросу \"{query}\"",
+    "found": "Найдено: {count}",
+    "cityFound": "Город найден",
+    "toMainPage": "На главную",
+    "selectServiceType": "Выберите тип услуг",
+    "selectCategoryDescription": "Выберите категорию услуг для поиска подходящих сервисных точек",
+    "availableServices": "Доступно услуг: {count}",
+    "availableServicePoints": "Доступно сервисов: {count}",
+    "loading": {
+      "categories": "Загрузка категорий услуг...",
+      "servicePoints": "Поиск сервисных точек..."
+    },
+    "errors": {
+      "categoriesLoading": "Ошибка загрузки категорий услуг. Попробуйте позже.",
+      "dataLoading": "Ошибка загрузки данных. Попробуйте позже.",
+      "cityNotFound": "Город \"{city}\" не найден или в нем нет сервисных точек."
+    },
+    "servicePoints": {
+      "title": "Сервисные точки",
+      "description": "Сервисные точки, предоставляющие услуги выбранной категории в городе \"{city}\"",
+      "notFound": "Сервисные точки не найдены",
+      "notFoundDescription": "Для выбранной категории услуг не найдено сервисных точек в этом городе",
+      "selectOtherCategory": "Выбрать другую категорию"
+    },
+    "photoGallery": {
+      "servicePointPhoto": "Фото сервисной точки",
+      "showAllPhotos": "Показать все фото",
+      "photoCounter": "{current} из {total}",
+      "mainPhoto": "Главное фото",
+      "photoGallery": "Фотогалерея",
+      "photoGalleryWithName": "Фотогалерея - {name}",
+      "photoNumber": "Фото {number}",
+      "close": "Закрыть"
+    },
+    "servicePointCard": {
+      "bookAppointment": "Записаться",
+      "viewDetails": "Подробнее",
+      "workingHours": "Режим работы",
+      "workingHoursNotSpecified": "График работы не указан",
+      "rating": "Рейтинг",
+      "reviews": "отзывов",
+      "posts": "постов",
+      "services": "Услуги",
+      "servicesFrom": "от {price} грн",
+      "loadingServices": "Загрузка услуг...",
+      "servicesNotLoaded": "Услуги не загружены",
+      "description": "Описание",
+      "collapse": "Свернуть",
+      "workingDays": {
+        "monday": "Понедельник",
+        "tuesday": "Вторник",
+        "wednesday": "Среда", 
+        "thursday": "Четверг",
+        "friday": "Пятница",
+        "saturday": "Суббота",
+        "sunday": "Воскресенье"
+      }
+    }
+  },
+  "timeSlotPicker": {
+    "noSlots": "Нет доступных слотов на выбранную дату.",
+    "selectOtherDate": "Пожалуйста, выберите другую дату.",
+    "postsAvailable": "из {total} свободно",
+    "selectedTime": "Выбрано: {time}"
+  },
+  "dayDetailsPanel": {
+    "information": "Информация",
+    "selectDateToView": "Выберите дату для просмотра доступности",
+    "selectedDate": "Выбранная дата",
+    "selectedTime": "Выбранное время",
+    "freeSlots": "Свободно",
+    "occupiedSlots": "Занято",
+    "free": "Свободно",
+    "mediumLoad": "Средняя загрузка",
+    "highLoad": "Высокая загрузка"
+  },
+  "bookingChart": {
+    "noData": "Нет данных для отображения",
+    "bookingsCount": "Количество бронирований"
+  },
+  "reviewCard": {
+    "status": {
+      "published": "Опубликован",
+      "pending": "На модерации", 
+      "rejected": "Отклонен",
+      "unknown": "Неизвестно"
+    },
+    "serviceResponse": "Ответ сервиса",
+    "buttons": {
+      "viewDetails": "Подробнее",
+      "edit": "Редактировать"
+    }
+  },
+  "reviewForm": {
+    "title": "Оставить отзыв",
+    "fields": {
+      "servicePoint": "Выберите сервисную точку",
+      "rating": "Ваша оценка",
+      "comment": "Ваш отзыв",
+      "commentPlaceholder": "Поделитесь своими впечатлениями о сервисе..."
+    },
+    "validation": {
+      "selectServicePoint": "Выберите сервисную точку",
+      "ratingRequired": "Пожалуйста, поставьте оценку",
+      "commentRequired": "Пожалуйста, напишите отзыв",
+      "commentMinLength": "Отзыв должен содержать минимум 10 символов",
+      "commentMaxLength": "Отзыв не должен превышать 1000 символов"
+    },
+    "ratingLabels": {
+      "1": "Ужасно",
+      "2": "Плохо",
+      "3": "Нормально",
+      "4": "Хорошо",
+      "5": "Отлично"
+    },
+    "submitButton": "Отправить отзыв",
+    "errorMessage": "Произошла ошибка при отправке отзыва. Пожалуйста, попробуйте еще раз."
+  },
+  "bookingAnalytics": {
+    "filters": {
+      "period": "Период",
+      "groupBy": "Группировка",
+      "periodOptions": {
+        "week": "Неделя",
+        "month": "Месяц", 
+        "quarter": "Квартал",
+        "year": "Год"
+      },
+      "groupByOptions": {
+        "day": "По дням",
+        "week": "По неделям",
+        "month": "По месяцам"
+      }
+    },
+    "views": {
+      "charts": "Графики",
+      "table": "Таблица"
+    },
+    "actions": {
+      "refresh": "Обновить данные",
+      "exportCsv": "Экспорт CSV",
+      "exportExcel": "Экспорт Excel"
+    },
+    "stats": {
+      "totalBookings": "Всего бронирований",
+      "completed": "Завершено",
+      "cancelled": "Отменено",
+      "totalRevenue": "Общий доход"
+    },
+    "charts": {
+      "topCategories": "Топ категории услуг",
+      "detailedTable": "Детальная таблица бронирований"
+    },
+    "table": {
+      "headers": {
+        "id": "ID",
+        "date": "Дата",
+        "time": "Время",
+        "client": "Клиент",
+        "servicePoint": "Сервисная точка",
+        "status": "Статус",
+        "amount": "Сумма",
+        "category": "Категория",
+        "bookingsCount": "Бронирований",
+        "revenue": "Доход"
+      },
+      "guestBooking": "Гостевая запись"
+    },
+    "titles": {
+      "main": "Аналитика бронирований",
+      "statusDistribution": "Распределение по статусам",
+      "bookingTrend": "Динамика бронирований",
+      "topServicePoints": "Топ сервисных точек",
+      "detailedBookingTable": "Детальная таблица бронирований"
+    },
+    "labels": {
+      "totalBookings": "Всего",
+      "completedBookings": "Завершено",
+      "cancelledBookings": "Отменено"
+    }
+  },
+  "servicesList": {
+    "title": "Услуги в категории",
+    "searchPlaceholder": "Поиск услуг",
+    "addService": "Добавить услугу",
+    "editService": "Редактировать услугу",
+    "newService": "Новая услуга",
+    "columns": {
+      "name": "Название",
+      "status": "Статус",
+      "actions": "Действия"
+    },
+    "status": {
+      "active": "Активна",
+      "inactive": "Неактивна"
+    },
+    "actions": {
+      "edit": "Редактировать",
+      "delete": "Удалить"
+    },
+    "form": {
+      "serviceName": "Название услуги",
+      "description": "Описание",
+      "sortOrder": "Порядок сортировки",
+      "activeService": "Активна",
+      "cancel": "Отмена",
+      "save": "Сохранить",
+      "create": "Создать"
+    },
+    "validation": {
+      "nameRequired": "Название услуги обязательно",
+      "nameMinLength": "Название должно содержать минимум 2 символа",
+      "nameMaxLength": "Название не должно превышать 100 символов",
+      "descriptionMaxLength": "Описание не должно превышать 500 символов",
+      "sortOrderMinValue": "Порядок сортировки должен быть неотрицательным"
+    },
+    "errors": {
+      "savingError": "Произошла ошибка при сохранении услуги",
+      "deletingError": "Произошла ошибка при удалении услуги"
+    },
+    "emptyState": {
+      "notFound": "Услуги не найдены",
+      "noServices": "В данной категории пока нет услуг",
+      "changeSearch": "Попробуйте изменить критерии поиска",
+      "addFirst": "Добавьте первую услугу в эту категорию"
+    },
+    "deleteDialog": {
+      "title": "Подтверждение удаления",
+      "message": "Вы уверены, что хотите удалить эту услугу?",
+      "cancel": "Отмена",
+      "confirm": "Удалить"
+    }
+  },
+  "imageOptimizer": {
+    "unavailable": "Изображение недоступно"
+  },
+  "pageContentForm": {
+    "sections": {
+      "client_main": "Главная страница клиента",
+      "admin_dashboard": "Панель администратора",
+      "partner_portal": "Портал партнера",
+      "knowledge_base": "База знаний",
+      "about": "О нас",
+      "contacts": "Контакты"
+    },
+    "serviceCategories": {
+      "tire_service": "Шиномонтаж",
+      "balancing": "Балансирование",
+      "repair": "Ремонт",
+      "diagnostics": "Диагностика",
+      "storage": "Хранение",
+      "consultations": "Консультации"
+    },
+    "fields": {
+      "section": "Секция",
+      "contentType": "Тип контента",
+      "title": "Заголовок"
+    },
+    "availableSettings": "Доступные настройки",
+    "buttons": {
+      "cancel": "Отмена",
+      "saving": "Сохранение...",
+      "update": "Обновить",
+      "create": "Создать"
+    }
+  },
+  "clientInfoForm": {
+    "title": "Контактные данные",
+    "fields": {
+      "name": "Ваше имя",
+      "email": "Email",
+      "emailOptional": "Необязательно",
+      "notes": "Комментарий к записи",
+      "notesPlaceholder": "Укажите дополнительную информацию, которая может быть полезна специалистам (необязательно)"
+    },
+    "validation": {
+      "nameRequired": "Введите ваше имя",
+      "nameMinLength": "Имя должно содержать не менее 2 символов",
+      "phoneRequired": "Введите номер телефона",
+      "phoneInvalid": "Введите корректный номер телефона",
+      "emailInvalid": "Введите корректный email"
+    },
+    "agreements": {
+      "termsAcceptance": "Я согласен на обработку персональных данных и принимаю условия пользовательского соглашения",
+      "notifications": "Получать уведомления на email"
+    },
+    "privacyNotice": "На указанный номер телефона придет SMS с подтверждением записи. Мы не передаем ваши данные третьим лицам и не используем их для рассылки рекламы."
   }
 } 

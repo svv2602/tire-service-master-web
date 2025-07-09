@@ -41,7 +41,7 @@ interface ClientInfoFormProps {
 const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientInfo, isAuthenticated }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   
   const [errors, setErrors] = useState({
     name: '',
@@ -83,20 +83,20 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
 
     switch (field) {
       case 'name':
-        errorMessage = !value ? 'Введите ваше имя' : '';
+        errorMessage = !value ? t('clientInfoForm.validation.nameRequired') : '';
         if (value && value.length < 2) {
-          errorMessage = 'Имя должно содержать не менее 2 символов';
+          errorMessage = t('clientInfoForm.validation.nameMinLength');
         }
         break;
       case 'phone':
-        errorMessage = !value ? 'Введите номер телефона' : '';
+        errorMessage = !value ? t('clientInfoForm.validation.phoneRequired') : '';
         if (value && value.length < 10) {
-          errorMessage = 'Введите корректный номер телефона';
+          errorMessage = t('clientInfoForm.validation.phoneInvalid');
         }
         break;
       case 'email':
         if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          errorMessage = 'Введите корректный email';
+          errorMessage = t('clientInfoForm.validation.emailInvalid');
         }
         break;
       default:
@@ -124,14 +124,14 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: colors.textPrimary }}>
-        Контактные данные
+        {t('clientInfoForm.title')}
       </Typography>
       
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <TextField
             id="client-name"
-            label="Ваше имя"
+            label={t('clientInfoForm.fields.name')}
             variant="outlined"
             fullWidth
             required
@@ -164,13 +164,13 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
           <FormControl fullWidth error={!!errors.email}>
             <TextField
               id="client-email"
-              label="Email"
+              label={t('clientInfoForm.fields.email')}
               variant="outlined"
               fullWidth
               value={clientInfo.email}
               onChange={handleEmailChange}
               error={!!errors.email}
-              helperText={errors.email || 'Необязательно'}
+              helperText={errors.email || t('clientInfoForm.fields.emailOptional')}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -186,14 +186,14 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
         <Grid item xs={12}>
           <TextField
             id="client-notes"
-            label="Комментарий к записи"
+            label={t('clientInfoForm.fields.notes')}
             variant="outlined"
             fullWidth
             multiline
             rows={4}
             value={clientInfo.notes}
             onChange={handleNotesChange}
-            placeholder="Укажите дополнительную информацию, которая может быть полезна специалистам (необязательно)"
+            placeholder={t('clientInfoForm.fields.notesPlaceholder')}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -215,7 +215,7 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
             }
             label={
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                Я согласен на обработку персональных данных и принимаю условия пользовательского соглашения
+                {t('clientInfoForm.agreements.termsAcceptance')}
               </Typography>
             }
           />
@@ -231,7 +231,7 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
                 color="primary"
               />
             }
-            label={t('Получать уведомления на email')}
+            label={t('clientInfoForm.agreements.notifications')}
             sx={{ mt: 2 }}
           />
         </Grid>
@@ -239,8 +239,7 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
       
       <Box sx={{ mt: 4, p: 2, bgcolor: colors.backgroundSecondary, borderRadius: 2 }}>
         <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-          На указанный номер телефона придет SMS с подтверждением записи.
-          Мы не передаем ваши данные третьим лицам и не используем их для рассылки рекламы.
+          {t('clientInfoForm.privacyNotice')}
         </Typography>
       </Box>
     </Box>

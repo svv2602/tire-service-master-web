@@ -40,6 +40,7 @@ import {
   useDeleteServiceMutation,
 } from '../api/servicesList.api';
 import { Service, ServiceFormData } from '../types/service';
+import { useTranslation } from 'react-i18next';
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -57,6 +58,7 @@ interface ServicesListProps {
 }
 
 export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
+  const { t } = useTranslation('components');
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
@@ -84,6 +86,17 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const [updateService] = useUpdateServiceMutation();
   const [deleteService] = useDeleteServiceMutation();
 
+  const validationSchemaWithTranslations = Yup.object({
+    name: Yup.string()
+      .required(t('servicesList.validation.nameRequired'))
+      .min(2, t('servicesList.validation.nameMinLength'))
+      .max(100, t('servicesList.validation.nameMaxLength')),
+    description: Yup.string()
+      .max(500, t('servicesList.validation.descriptionMaxLength')),
+    is_active: Yup.boolean(),
+    sort_order: Yup.number().min(0, t('servicesList.validation.sortOrderMinValue')),
+  });
+
   const formik = useFormik<ServiceFormData>({
     initialValues: {
       name: '',
@@ -91,7 +104,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       is_active: true,
       sort_order: 0,
     },
-    validationSchema,
+    validationSchema: validationSchemaWithTranslations,
     onSubmit: async (values) => {
       try {
         if (selectedService) {
@@ -109,7 +122,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         handleCloseDialog();
       } catch (error: any) {
         console.error('Error saving service:', error);
-        let errorMessage = 'Произошла ошибка при сохранении услуги';
+        let errorMessage = t('servicesList.errors.savingError');
         
         if (error.data?.errors) {
           const errors = error.data.errors as Record<string, string[]>;
@@ -178,7 +191,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       handleCloseDeleteDialog();
     } catch (error: any) {
       console.error('Ошибка при удалении услуги:', error);
-      let errorMessage = 'Произошла ошибка при удалении услуги';
+      let errorMessage = t('servicesList.errors.deletingError');
       
       // Обрабатываем различные форматы ошибок от API
       if (error.data?.error) {
@@ -217,7 +230,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const columns: Column[] = [
     {
       id: 'name',
-      label: 'Название',
+      label: t('servicesList.columns.name'),
       minWidth: 200,
       wrap: true,
       format: (value: string) => (
@@ -234,11 +247,11 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('servicesList.columns.status'),
       align: 'center',
       format: (value: boolean) => (
         <Chip 
-          label={value ? 'Активна' : 'Неактивна'}
+          label={value ? t('servicesList.status.active') : t('servicesList.status.inactive')}
           color={value ? 'success' : 'default'}
           size="small"
           sx={tablePageStyles.statusChip}
@@ -247,12 +260,12 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('servicesList.columns.actions'),
       align: 'right',
       minWidth: 120,
       format: (value: any, row: Service) => (
         <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
+          <Tooltip title={t('servicesList.actions.edit')}>
             <IconButton 
               size="small"
               onClick={() => handleOpenDialog(row)}
@@ -261,7 +274,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Удалить">
+          <Tooltip title={t('servicesList.actions.delete')}>
             <IconButton 
               size="small"
               onClick={() => handleOpenDeleteDialog(row)}
@@ -304,13 +317,13 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         }}
       >
         <BuildIcon />
-        Услуги в категории
+        {t('servicesList.title')}
       </Typography>
 
       {/* Поиск и кнопка добавления */}
       <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          placeholder="Поиск услуг"
+          placeholder={t('servicesList.searchPlaceholder')}
           variant="outlined"
           size="small"
           value={searchQuery}
@@ -323,7 +336,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
           onClick={() => handleOpenDialog()}
           sx={tablePageStyles.primaryButton}
         >
-          Добавить услугу
+          {t('servicesList.addService')}
         </Button>
       </Box>
 
@@ -350,12 +363,12 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       {services.length === 0 && !isLoading && (
         <Box sx={tablePageStyles.emptyStateContainer}>
           <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
-            {searchQuery ? 'Услуги не найдены' : 'В данной категории пока нет услуг'}
+            {searchQuery ? t('servicesList.emptyState.notFound') : t('servicesList.emptyState.noServices')}
           </Typography>
           <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
             {searchQuery 
-              ? 'Попробуйте изменить критерии поиска'
-              : 'Добавьте первую услугу в эту категорию'
+              ? t('servicesList.emptyState.changeSearch')
+              : t('servicesList.emptyState.addFirst')
             }
           </Typography>
           {!searchQuery && (
@@ -365,7 +378,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
               onClick={() => handleOpenDialog()}
               sx={tablePageStyles.primaryButton}
             >
-              Добавить услугу
+              {t('servicesList.addService')}
             </Button>
           )}
         </Box>
@@ -395,7 +408,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         }}
       >
         <DialogTitle sx={tablePageStyles.dialogTitle}>
-          {selectedService ? 'Редактировать услугу' : 'Новая услуга'}
+          {selectedService ? t('servicesList.editService') : t('servicesList.newService')}
         </DialogTitle>
         <DialogContent sx={{ pt: SIZES.spacing.sm }}>
           {error && (
@@ -411,7 +424,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             <TextField
               fullWidth
               name="name"
-              label="Название услуги"
+              label={t('servicesList.form.serviceName')}
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -422,7 +435,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             <TextField
               fullWidth
               name="description"
-              label="Описание"
+              label={t('servicesList.form.description')}
               multiline
               rows={3}
               value={formik.values.description}
@@ -436,7 +449,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             <TextField
               fullWidth
               name="sort_order"
-              label="Порядок сортировки"
+              label={t('servicesList.form.sortOrder')}
               type="number"
               value={formik.values.sort_order}
               onChange={formik.handleChange}
@@ -453,7 +466,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
                   name="is_active"
                 />
               }
-              label="Активна"
+              label={t('servicesList.form.activeService')}
             />
           </Box>
         </DialogContent>
@@ -462,7 +475,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             onClick={handleCloseDialog}
             sx={tablePageStyles.secondaryButton}
           >
-            Отмена
+            {t('servicesList.form.cancel')}
           </Button>
           <Button 
             onClick={formik.submitForm}
@@ -470,7 +483,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             disabled={formik.isSubmitting}
             sx={tablePageStyles.primaryButton}
           >
-            {selectedService ? 'Сохранить' : 'Создать'}
+            {selectedService ? t('servicesList.form.save') : t('servicesList.form.create')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -486,12 +499,11 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
         }}
       >
         <DialogTitle sx={tablePageStyles.dialogTitle}>
-          Подтверждение удаления
+          {t('servicesList.deleteDialog.title')}
         </DialogTitle>
         <DialogContent sx={{ pt: SIZES.spacing.sm }}>
           <DialogContentText sx={tablePageStyles.dialogText}>
-            Вы действительно хотите удалить услугу "{serviceToDelete?.name}"?
-            Это действие нельзя будет отменить.
+            {t('servicesList.deleteDialog.message', { name: serviceToDelete?.name })}
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={tablePageStyles.dialogActions}>
@@ -499,14 +511,14 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
             onClick={handleCloseDeleteDialog}
             sx={tablePageStyles.secondaryButton}
           >
-            Отмена
+            {t('servicesList.deleteDialog.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteService}
             variant="contained"
             sx={tablePageStyles.dangerButton}
           >
-            Удалить
+            {t('servicesList.deleteDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

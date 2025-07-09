@@ -2,12 +2,15 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Booking } from '../types/models';
+import { useTranslation } from 'react-i18next';
 
 interface BookingChartProps {
   data: Booking[];
 }
 
 const BookingChart: React.FC<BookingChartProps> = ({ data }) => {
+  const { t } = useTranslation('components');
+  
   // Подготовка данных для графика
   const chartData = React.useMemo(() => {
     const groupedByDate = data.reduce((acc, booking) => {
@@ -25,7 +28,7 @@ const BookingChart: React.FC<BookingChartProps> = ({ data }) => {
     return (
       <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Typography variant="body1" color="text.secondary">
-          Нет данных для отображения
+          {t('bookingChart.noData')}
         </Typography>
       </Box>
     );
@@ -43,7 +46,7 @@ const BookingChart: React.FC<BookingChartProps> = ({ data }) => {
             type="monotone"
             dataKey="count"
             stroke="#1976d2"
-            name="Количество бронирований"
+            name={t('bookingChart.bookingsCount')}
             strokeWidth={2}
           />
         </LineChart>

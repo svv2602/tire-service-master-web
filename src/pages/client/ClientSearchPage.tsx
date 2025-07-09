@@ -97,6 +97,7 @@ const PhotoGallery: React.FC<{
   servicePointName?: string;
 }> = ({ photos = [], height = 200, showCounter = true, fallbackIcon = '🚗', servicePointName }) => {
   const theme = useTheme();
+  const { t } = useTranslation('components');
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
@@ -171,7 +172,7 @@ const PhotoGallery: React.FC<{
             <CardMedia
               component="img"
               image={mainPhoto.url.replace(/\?.*$/, '') + '?w=600&h=400&fit=crop&auto=format,compress&q=85'}
-              alt={mainPhoto.description || 'Фото сервисной точки'}
+              alt={mainPhoto.description || t('clientSearchPage.photoGallery.servicePointPhoto')}
               sx={{
                 width: '100%',
                 height: '100%',
@@ -243,9 +244,9 @@ const PhotoGallery: React.FC<{
                 fontSize: '0.75rem',
                 fontWeight: 600
               }}
-            >
-              Главное фото
-            </Box>
+                          >
+                {t('clientSearchPage.photoGallery.mainPhoto')}
+              </Box>
           )}
         </Box>
 
@@ -300,7 +301,7 @@ const PhotoGallery: React.FC<{
                 <CardMedia
                   component="img"
                   image={photo.url.replace(/\?.*$/, '') + '?w=120&h=80&fit=crop&auto=format,compress&q=80'}
-                  alt={photo.description || `Фото ${index + 1}`}
+                  alt={photo.description || t('clientSearchPage.photoGallery.photoCounter', { current: index + 1, total: sortedPhotos.length })}
                   sx={{
                     width: '100%',
                     height: '100%',
@@ -337,7 +338,7 @@ const PhotoGallery: React.FC<{
           pb: 1
         }}>
           <Typography variant="h6">
-            {servicePointName ? `Фотогалерея - ${servicePointName}` : 'Фотогалерея'}
+            {servicePointName ? t('clientSearchPage.photoGallery.photoGalleryWithName', { name: servicePointName }) : t('clientSearchPage.photoGallery.photoGallery')}
           </Typography>
           <IconButton onClick={handleCloseModal} size="small">
             ✕
@@ -629,7 +630,7 @@ interface WorkingSchedule {
 
 // Компонент карточки сервисной точки
 const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ servicePoint }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
@@ -726,7 +727,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
                 precision={0.1}
               />
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                ({servicePoint.reviews_count} {t('client.search.reviews')})
+                ({servicePoint.reviews_count} {t('clientSearchPage.servicePointCard.reviews')})
               </Typography>
             </Box>
             
@@ -770,7 +771,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <DescriptionIcon sx={{ color: theme.palette.primary.main }} />
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Опис
+                    {t('clientSearchPage.servicePointCard.description')}
                   </Typography>
                 </Box>
                 {descriptionExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -806,7 +807,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BuildIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Послуги ({servicesLoading ? '...' : services.length})
+                  {t('clientSearchPage.servicePointCard.services')} ({servicesLoading ? '...' : services.length})
                 </Typography>
               </Box>
               {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -835,7 +836,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
                 </List>
               ) : (
                 <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  Услуги не загружены
+                  {t('clientSearchPage.servicePointCard.servicesNotLoaded')}
                 </Typography>
               )}
             </Collapse>
@@ -855,7 +856,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Графік роботи
+                  {t('clientSearchPage.servicePointCard.workingHours')}
                 </Typography>
               </Box>
               {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -896,7 +897,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
           onClick={() => setShowDetails(!showDetails)}
           sx={{ color: colors.textSecondary }}
         >
-          {showDetails ? 'Згорнути' : t('client.search.viewDetails')}
+          {showDetails ? t('clientSearchPage.servicePointCard.collapse') : t('clientSearchPage.servicePointCard.viewDetails')}
         </Button>
         
         <Button
@@ -914,7 +915,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
             }
           }}
         >
-          Подробнее
+          {t('clientSearchPage.servicePointCard.viewDetails')}
         </Button>
         
         <Box sx={{ flexGrow: 1 }} />
@@ -929,7 +930,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
             '&:hover': { bgcolor: theme.palette.primary.dark }
           }}
         >
-          {t('client.search.bookNow')}
+          {t('clientSearchPage.servicePointCard.bookAppointment')}
         </Button>
       </CardActions>
     </Card>
@@ -937,7 +938,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
 };
 
 const ClientSearchPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
@@ -1018,7 +1019,7 @@ const ClientSearchPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             <CircularProgress size={60} />
             <Typography variant="h6" sx={{ ml: 2, color: colors.textSecondary }}>
-              Завантаження категорій послуг...
+              {t('clientSearchPage.loading.categories')}
             </Typography>
           </Box>
         </Container>
@@ -1033,13 +1034,13 @@ const ClientSearchPage: React.FC = () => {
         {/* Заголовок результатов */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: colors.textPrimary }}>
-            🔍 Результати пошуку
+            🔍 {t('clientSearchPage.searchResults')}
           </Typography>
           
           {searchParams.city && (
             <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
-              Сервісні точки в місті "{searchParams.city}"
-              {searchParams.query && ` за запитом "${searchParams.query}"`}
+              {t('clientSearchPage.servicePointsInCity', { city: searchParams.city })}
+              {searchParams.query && ` ${t('clientSearchPage.byQuery', { query: searchParams.query })}`}
             </Typography>
           )}
 
@@ -1047,13 +1048,13 @@ const ClientSearchPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
               <Chip 
-                label={`Знайдено: ${totalFound}`} 
+                label={t('clientSearchPage.found', { count: totalFound })} 
                 color="primary" 
                 variant="outlined" 
               />
               {cityFound && searchParams.city && (
                 <Chip 
-                  label={`Місто знайдено`} 
+                  label={t('clientSearchPage.cityFound')} 
                   color="success" 
                   size="small" 
                   variant="outlined" 
@@ -1066,7 +1067,7 @@ const ClientSearchPage: React.FC = () => {
               onClick={() => window.location.href = '/client'}
               sx={secondaryButtonStyles}
             >
-              На головну
+              {t('clientSearchPage.toMainPage')}
             </Button>
           </Box>
         </Box>
@@ -1075,10 +1076,10 @@ const ClientSearchPage: React.FC = () => {
         {categoriesResult && categoriesResult.data.length > 0 && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="h5" sx={{ fontWeight: 600, mb: 3, color: colors.textPrimary }}>
-              Виберіть тип послуг
+              {t('clientSearchPage.selectServiceType')}
             </Typography>
             <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 3 }}>
-              Виберіть категорію послуг для пошуку підходящих сервісних точок
+              {t('clientSearchPage.selectCategoryDescription')}
             </Typography>
             
             <Grid container spacing={3}>
@@ -1112,12 +1113,12 @@ const ClientSearchPage: React.FC = () => {
                       </Typography>
                       <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
                         <Chip 
-                          label={`Доступно услуг: ${category.services_count}`}
+                          label={t('clientSearchPage.availableServices', { count: category.services_count })}
                           size="small"
                           variant="outlined"
                         />
                         <Chip 
-                          label={`Доступно сервісів: ${category.service_points_count}`}
+                          label={t('clientSearchPage.availableServicePoints', { count: category.service_points_count })}
                           size="small"
                           variant="outlined"
                         />
@@ -1133,20 +1134,20 @@ const ClientSearchPage: React.FC = () => {
         {/* Обработка ошибок */}
         {categoriesError && (
           <Alert severity="error" sx={{ mb: 4 }}>
-            Помилка завантаження категорій послуг. Спробуйте пізніше.
+            {t('clientSearchPage.errors.categoriesLoading')}
           </Alert>
         )}
 
         {error && (
           <Alert severity="error" sx={{ mb: 4 }}>
-            Помилка завантаження даних. Спробуйте пізніше.
+            {t('clientSearchPage.errors.dataLoading')}
           </Alert>
         )}
 
         {/* Случай, когда город не найден */}
         {!cityFound && searchParams.city && (
           <Alert severity="warning" sx={{ mb: 4 }}>
-            Місто "{searchParams.city}" не знайдено або в ньому немає сервісних точок.
+            {t('clientSearchPage.errors.cityNotFound', { city: searchParams.city })}
           </Alert>
         )}
 
@@ -1158,7 +1159,7 @@ const ClientSearchPage: React.FC = () => {
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
                 <CircularProgress size={40} />
                 <Typography variant="h6" sx={{ ml: 2, color: colors.textSecondary }}>
-                  Пошук сервісних точок...
+                  {t('clientSearchPage.loading.servicePoints')}
                 </Typography>
               </Box>
             )}
@@ -1167,10 +1168,10 @@ const ClientSearchPage: React.FC = () => {
             {!isLoading && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
-                  🏢 Сервісні точки
+                  🏢 {t('clientSearchPage.servicePoints.title')}
                 </Typography>
                 <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-                  Сервісні точки, що надають послуги обраної категорії в місті "{searchParams.city}"
+                  {t('clientSearchPage.servicePoints.description', { city: searchParams.city })}
                 </Typography>
               </Box>
             )}
@@ -1178,17 +1179,17 @@ const ClientSearchPage: React.FC = () => {
             {servicePoints.length === 0 && !isLoading && !error ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  😔 Сервісні точки не знайдені
+                  😔 {t('clientSearchPage.servicePoints.notFound')}
                 </Typography>
                 <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
-                  Для обраної категорії послуг не знайдено сервісних точок у цьому місті
+                  {t('clientSearchPage.servicePoints.notFoundDescription')}
                 </Typography>
                 <Button 
                   variant="outlined" 
                   onClick={() => setSelectedCategory(null)}
                   sx={secondaryButtonStyles}
                 >
-                  Обрати іншу категорію
+                  {t('clientSearchPage.servicePoints.selectOtherCategory')}
                 </Button>
               </Box>
             ) : !isLoading && (

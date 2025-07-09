@@ -30,6 +30,7 @@ import {
   Chip,
   useTheme,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 // UI компоненты
 import { Table, Column } from '../components/ui/Table';
@@ -51,18 +52,6 @@ import {
 import { CarModel, CarModelFormData } from '../types/car';
 import { getTablePageStyles, SIZES } from '../styles';
 
-/**
- * Схема валидации формы модели автомобиля
- */
-const validationSchema = Yup.object({
-  name: Yup.string()
-    .required('Название модели обязательно')
-    .min(2, 'Название должно содержать минимум 2 символа')
-    .max(100, 'Название не должно превышать 100 символов'),
-  is_active: Yup.boolean(),
-  brand_id: Yup.number().required('ID бренда обязателен'),
-});
-
 interface CarModelsListProps {
   brandId: string;
 }
@@ -73,6 +62,7 @@ interface CarModelsListProps {
 const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const { t } = useTranslation('components');
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -82,6 +72,16 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const PER_PAGE = 10;
+
+  // Схема валидации формы модели автомобиля
+  const validationSchema = Yup.object({
+    name: Yup.string()
+      .required(t('carModelsList.validation.nameRequired'))
+      .min(2, t('carModelsList.validation.nameMinLength'))
+      .max(100, t('carModelsList.validation.nameMaxLength')),
+    is_active: Yup.boolean(),
+    brand_id: Yup.number().required('ID бренда обязателен'),
+  });
 
   // RTK Query хуки для работы с API моделей
   const { data: response, isLoading } = useGetCarModelsByBrandIdQuery({
@@ -103,22 +103,22 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const modelActions: ActionItem<CarModel>[] = [
     {
       id: 'edit',
-      label: 'Редактировать',
+      label: t('carModelsList.editModel'),
       icon: <EditIcon />,
       color: 'primary',
-      tooltip: 'Редактировать модель',
+      tooltip: t('carModelsList.tooltips.edit'),
       onClick: (model: CarModel) => handleOpenDialog(model),
     },
     {
       id: 'delete',
-      label: 'Удалить',
+      label: t('carModelsList.deleteModel'),
       icon: <DeleteIcon />,
       color: 'error',
-      tooltip: 'Удалить модель',
+      tooltip: t('carModelsList.tooltips.delete'),
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтвердите удаление',
-        message: 'Вы уверены, что хотите удалить эту модель? Это действие нельзя отменить.',
+        title: t('carModelsList.dialogs.deleteTitle'),
+        message: t('carModelsList.dialogs.deleteMessage', { name: '{item.name}' }),
       },
       onClick: (model: CarModel) => handleOpenDeleteDialog(model),
     },
@@ -128,7 +128,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   const columns: Column[] = [
     { 
       id: 'name', 
-      label: 'Название', 
+      label: t('carModelsList.columns.name'), 
       minWidth: 200,
       format: (value: string, row: CarModel) => (
         <Typography 
@@ -145,11 +145,11 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     },
     { 
       id: 'is_active', 
-      label: 'Статус', 
+      label: t('carModelsList.columns.status'), 
       minWidth: 120,
       format: (value: boolean) => (
         <Chip 
-          label={value ? 'Активна' : 'Неактивна'}
+          label={value ? t('carModelsList.status.active') : t('carModelsList.status.inactive')}
           color={value ? 'success' : 'default'}
           size="small"
           sx={tablePageStyles.statusChip}
@@ -158,7 +158,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
     },
     { 
       id: 'actions', 
-      label: 'Действия', 
+      label: t('carModelsList.columns.actions'), 
       minWidth: 120,
       align: 'right',
       format: (value: any, row: CarModel) => (
@@ -198,33 +198,13 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         handleCloseDialog();
       } catch (error: any) {
         console.error('Error saving model:', error);
-        let errorMessage = 'Произошла ошибка при сохранении модели';
-        
-        // Обрабатываем различные форматы ошибок от API
-        if (error.data?.error) {
-          // Основной формат ошибок с ограничениями
-          errorMessage = error.data.error;
-        } else if (error.data?.errors) {
-          // Ошибки валидации
-          const errors = error.data.errors as Record<string, string[]>;
-          errorMessage = Object.entries(errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('; ');
-        } else if (error.data?.message) {
-          // Альтернативный формат
-          errorMessage = error.data.message;
-        } else if (error.message) {
-          // Общие ошибки
-          errorMessage = error.message;
-        }
-        
-        setError(errorMessage);
+        setError(error.data?.message || 'Произошла ошибка при сохранении модели');
       }
     },
   });
 
   /**
-   * Обработчик открытия диалога создания/редактирования
+   * Открытие диалога создания/редактирования модели
    */
   const handleOpenDialog = (model?: CarModel) => {
     if (model) {
@@ -238,12 +218,12 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       setSelectedModel(null);
       formik.resetForm();
     }
-    setIsDialogOpen(true);
     setError(null);
+    setIsDialogOpen(true);
   };
 
   /**
-   * Обработчик закрытия диалога создания/редактирования
+   * Закрытие диалога создания/редактирования
    */
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
@@ -253,7 +233,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   };
 
   /**
-   * Обработчик открытия диалога удаления
+   * Открытие диалога подтверждения удаления
    */
   const handleOpenDeleteDialog = (model: CarModel) => {
     setModelToDelete(model);
@@ -262,7 +242,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   };
 
   /**
-   * Обработчик закрытия диалога удаления
+   * Закрытие диалога подтверждения удаления
    */
   const handleCloseDeleteDialog = () => {
     setIsDeleteDialogOpen(false);
@@ -271,7 +251,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   };
 
   /**
-   * Обработчик удаления модели
+   * Удаление модели
    */
   const handleDeleteModel = async () => {
     if (!modelToDelete) return;
@@ -281,30 +261,11 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         brandId,
         id: modelToDelete.id.toString(),
       }).unwrap();
+      
       handleCloseDeleteDialog();
     } catch (error: any) {
       console.error('Error deleting model:', error);
-      let errorMessage = 'Произошла ошибка при удалении модели';
-      
-      // Обрабатываем различные форматы ошибок от API
-      if (error.data?.error) {
-        // Основной формат ошибок с ограничениями
-        errorMessage = error.data.error;
-      } else if (error.data?.message) {
-        // Альтернативный формат
-        errorMessage = error.data.message;
-      } else if (error.data?.errors) {
-        // Ошибки валидации
-        const errors = error.data.errors as Record<string, string[]>;
-        errorMessage = Object.entries(errors)
-          .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-          .join('; ');
-      } else if (error.message) {
-        // Общие ошибки
-        errorMessage = error.message;
-      }
-      
-      setError(errorMessage);
+      setError(error.data?.message || 'Произошла ошибка при удалении модели');
     }
   };
 
@@ -316,7 +277,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
   };
 
   /**
-   * Обработчик поиска моделей
+   * Обработчик поиска
    */
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
@@ -337,7 +298,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       {/* Поиск и кнопка добавления */}
       <Box sx={tablePageStyles.filtersContainer}>
         <TextField
-          placeholder="Поиск моделей"
+          placeholder={t('carModelsList.searchPlaceholder')}
           variant="outlined"
           size="small"
           value={searchQuery}
@@ -350,7 +311,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
           onClick={() => handleOpenDialog()}
           sx={tablePageStyles.primaryButton}
         >
-          Добавить модель
+          {t('carModelsList.addModel')}
         </Button>
       </Box>
 
@@ -377,12 +338,12 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
       {models.length === 0 && !isLoading && (
         <Box sx={tablePageStyles.emptyStateContainer}>
           <Typography variant="h6" sx={tablePageStyles.emptyStateTitle}>
-            {searchQuery ? 'Модели не найдены' : 'В данном бренде пока нет моделей'}
+            {searchQuery ? t('carModelsList.emptyState.noModelsFound') : t('carModelsList.emptyState.noModels')}
           </Typography>
           <Typography variant="body2" sx={tablePageStyles.emptyStateDescription}>
             {searchQuery 
-              ? 'Попробуйте изменить критерии поиска'
-              : 'Добавьте первую модель в этот бренд'
+              ? t('carModelsList.emptyState.changeSearchCriteria')
+              : t('carModelsList.emptyState.addFirstModel')
             }
           </Typography>
           {!searchQuery && (
@@ -392,7 +353,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
               onClick={() => handleOpenDialog()}
               sx={tablePageStyles.primaryButton}
             >
-              Добавить модель
+              {t('carModelsList.addModel')}
             </Button>
           )}
         </Box>
@@ -421,7 +382,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         }}
       >
         <DialogTitle sx={tablePageStyles.dialogTitle}>
-          {selectedModel ? 'Редактировать модель' : 'Новая модель'}
+          {selectedModel ? t('carModelsList.editModel') : t('carModelsList.newModel')}
         </DialogTitle>
         <DialogContent sx={{ pt: SIZES.spacing.sm }}>
           {error && (
@@ -438,7 +399,7 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
             <TextField
               fullWidth
               name="name"
-              label="Название модели"
+              label={t('carModelsList.form.modelName')}
               value={formik.values.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
@@ -455,20 +416,20 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
                   name="is_active"
                 />
               }
-              label="Активная модель"
+              label={t('carModelsList.form.activeModel')}
             />
           </Box>
         </DialogContent>
         <DialogActions sx={tablePageStyles.dialogActions}>
           <Button onClick={handleCloseDialog}>
-            Отмена
+            {t('carModelsList.form.cancel')}
           </Button>
           <Button 
             onClick={formik.submitForm}
             variant="contained"
             disabled={formik.isSubmitting}
           >
-            {selectedModel ? 'Сохранить' : 'Создать'}
+            {selectedModel ? t('carModelsList.form.save') : t('carModelsList.form.create')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -484,12 +445,11 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         }}
       >
         <DialogTitle sx={tablePageStyles.dialogTitle}>
-          Подтвердите удаление
+          {t('carModelsList.dialogs.deleteTitle')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Вы уверены, что хотите удалить модель "{modelToDelete?.name}"?
-            Это действие нельзя отменить.
+            {t('carModelsList.dialogs.deleteMessage', { name: modelToDelete?.name })}
           </DialogContentText>
           {error && (
             <Alert 
@@ -503,14 +463,14 @@ const CarModelsList: React.FC<CarModelsListProps> = ({ brandId }) => {
         </DialogContent>
         <DialogActions sx={tablePageStyles.dialogActions}>
           <Button onClick={handleCloseDeleteDialog}>
-            Отмена
+            {t('carModelsList.form.cancel')}
           </Button>
           <Button 
             onClick={handleDeleteModel}
             variant="contained"
             color="error"
           >
-            Удалить
+            {t('carModelsList.dialogs.deleteConfirm')}
           </Button>
         </DialogActions>
       </Dialog>

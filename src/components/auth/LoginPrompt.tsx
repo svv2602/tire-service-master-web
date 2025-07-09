@@ -7,7 +7,7 @@ import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 
 const LoginPrompt: React.FC = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const navigate = useNavigate();
 
   const handleLogin = () => {
@@ -29,29 +29,29 @@ const LoginPrompt: React.FC = () => {
         <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} md={7}>
             <Typography variant="h5" component="h1" gutterBottom>
-              {t('Войдите в систему для доступа к вашим записям')}
+              {t('loginPrompt.title')}
             </Typography>
             
             <Typography variant="body1" color="textSecondary" paragraph>
-              {t('Для просмотра истории записей и управления вашими бронированиями необходимо войти в систему или зарегистрироваться.')}
+              {t('loginPrompt.description')}
             </Typography>
             
             <Typography variant="body1" paragraph>
-              {t('Преимущества регистрации:')}
+              {t('loginPrompt.benefitsTitle')}
             </Typography>
             
             <Box component="ul" sx={{ pl: 2 }}>
               <Typography component="li" variant="body1" gutterBottom>
-                {t('Просмотр истории всех ваших записей')}
+                {t('loginPrompt.benefits.historyAccess')}
               </Typography>
               <Typography component="li" variant="body1" gutterBottom>
-                {t('Удобное управление бронированиями')}
+                {t('loginPrompt.benefits.manageBookings')}
               </Typography>
               <Typography component="li" variant="body1" gutterBottom>
-                {t('Возможность переносить и отменять записи')}
+                {t('loginPrompt.benefits.rescheduleCancel')}
               </Typography>
               <Typography component="li" variant="body1" gutterBottom>
-                {t('Быстрое бронирование без повторного ввода данных')}
+                {t('loginPrompt.benefits.quickBooking')}
               </Typography>
             </Box>
             
@@ -64,7 +64,7 @@ const LoginPrompt: React.FC = () => {
                   startIcon={<LockOutlinedIcon />}
                   onClick={handleLogin}
                 >
-                  {t('Войти')}
+                  {t('loginPrompt.buttons.login')}
                 </Button>
                 
                 <Button
@@ -74,7 +74,7 @@ const LoginPrompt: React.FC = () => {
                   startIcon={<PersonAddOutlinedIcon />}
                   onClick={handleRegister}
                 >
-                  {t('Зарегистрироваться')}
+                  {t('loginPrompt.buttons.register')}
                 </Button>
               </Box>
               
@@ -86,7 +86,7 @@ const LoginPrompt: React.FC = () => {
                 onClick={handleContinueWithoutAuth}
                 sx={{ alignSelf: 'center', mt: 1 }}
               >
-                {t('Продолжить без регистрации')}
+                {t('loginPrompt.buttons.continueWithout')}
               </Button>
             </Box>
           </Grid>
@@ -95,7 +95,7 @@ const LoginPrompt: React.FC = () => {
             <Box
               component="img"
               src="/assets/images/login-prompt.svg"
-              alt={t('Иллюстрация входа')}
+              alt={t('loginPrompt.imageAlt')}
               sx={{ width: '100%', height: 'auto' }}
             />
           </Grid>

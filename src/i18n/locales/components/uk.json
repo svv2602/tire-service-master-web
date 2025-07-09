@@ -7,12 +7,12 @@
       "month": "Місяць"
     },
     "stats": {
-      "found": "Знайдено бронювань",
+      "found": "Знайдено",
       "outOf": "з",
-      "total": "загальних"
+      "total": "всього"
     },
     "filters": {
-      "servicePoint": "Точка",
+      "servicePoint": "Сервісна точка",
       "category": "Категорія"
     },
     "bulkActions": {
@@ -24,22 +24,32 @@
       "clearSelection": "Очистити вибір"
     },
     "dayView": {
-      "recordsFor": "Записи на",
-      "noRecords": "На цей день записів немає"
+      "title": "Записи на {{date}} ({{count}})",
+      "noBookings": "На цей день записів немає"
     },
     "weekView": {
-      "more": "ще"
+      "moreCount": "+{{count}} ще"
     },
     "monthView": {
-      "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"]
+      "weekDays": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Нд"
+      },
+      "moreCount": "+{{count}}"
     },
-    "dayDialog": {
-      "title": "Записи на",
-      "noRecords": "На цей день записів немає",
-      "closeButton": "Закрити"
+    "dayDetails": {
+      "title": "Записи на {{date}}",
+      "titleEmpty": "Записи на день",
+      "noBookings": "На цей день записів немає",
+      "close": "Закрити"
     },
     "loading": "Завантаження...",
-    "guestRecord": "Гостьовий запис"
+    "guestBooking": "Гостьовий запис"
   },
   "bookingFilters": {
     "dateFrom": "Дата з",
@@ -82,5 +92,527 @@
       "saturday": "Субота",
       "sunday": "Неділя"
     }
+  },
+  "pageContentForm": {
+    "fields": {
+      "active": "Активний",
+      "category": "Категорія"
+    },
+    "sections": {
+      "settings": "Налаштування",
+      "image": "Зображення",
+      "gallery": "Галерея зображень"
+    },
+    "buttons": {
+      "uploadImage": "Завантажити зображення",
+      "addToGallery": "Додати зображення в галерею",
+      "cancel": "Скасувати",
+      "saving": "Збереження...",
+      "update": "Оновити",
+      "create": "Створити"
+    },
+    "imagePreview": "Попередній перегляд",
+    "imagePreviewText": "Попередній перегляд зображення",
+    "galleryItem": "Галерея {{index}}",
+    "availableSettings": "Доступні налаштування"
+  },
+  "reviewLoginPrompt": {
+    "title": "Увійдіть, щоб залишити відгук",
+    "description": "Для того щоб залишити відгук про сервіс, необхідно увійти в систему або зареєструватися.",
+    "whyReview": "Чому варто залишити відгук:",
+    "benefits": {
+      "helpOthers": "Допомогти іншим клієнтам вибрати хороший сервіс",
+      "recognizeQuality": "Відзначити якісне обслуговування",
+      "shareExperience": "Поділитися своїм досвідом",
+      "helpImprove": "Допомогти сервісу стати кращим"
+    },
+    "buttons": {
+      "login": "Увійти",
+      "register": "Зареєструватися",
+      "skip": "Пропустити відгук"
+    },
+    "imageAlt": "Ілюстрація відгуку"
+  },
+  "createAccountDialog": {
+    "title": "Створити ОК і показати бронювання",
+    "successMessage": "Ваше бронювання успішно створено!",
+    "description": "Створіть особистий кабінет, щоб керувати своїми бронюваннями та отримувати сповіщення.",
+    "benefitsTitle": "Створіть особистий кабінет для:",
+    "benefits": {
+      "manageBookings": "Керування вашими бронюваннями",
+      "notifications": "Отримання сповіщень про записи",
+      "quickRebooking": "Швидкого повторного бронювання",
+      "saveCarData": "Збереження даних автомобілів"
+    },
+    "accountData": "Дані для облікового запису",
+    "fields": {
+      "name": "Ім'я",
+      "phone": "Телефон",
+      "email": "Email",
+      "tempPassword": "Тимчасовий пароль"
+    },
+    "tempPasswordInfo": "Ваш тимчасовий пароль: {{password}}",
+    "passwordNote": "Пароль створено на основі вашого номера телефону. Ви зможете змінити його пізніше в налаштуваннях особистого кабінету.",
+    "buttons": {
+      "continueWithout": "Продовжити без облікового запису",
+      "creating": "Створення ОК...",
+      "createAccount": "Створити ОК і показати бронювання"
+    }
+  },
+  "themeToggle": {
+    "lightMode": "Переключити на світлу тему",
+    "darkMode": "Переключити на темну тему",
+    "ariaLabel": "Переключити тему"
+  },
+  "servicePointDetails": {
+    "workingHours": "Режим роботи",
+    "workingHoursNotSpecified": "Графік роботи не вказаний",
+    "active": "Активна",
+    "inactive": "Неактивна",
+    "clientReviews": "Відгуки клієнтів",
+    "reviewsNotLoaded": "Відгуки поки не завантажені",
+    "days": {
+      "monday": "Понеділок",
+      "tuesday": "Вівторок", 
+      "wednesday": "Середа",
+      "thursday": "Четвер",
+      "friday": "П'ятниця",
+      "saturday": "Субота",
+      "sunday": "Неділя"
+    }
+  },
+  "servicePointMap": {
+    "title": "Сервісні точки",
+    "noActivePoints": "Немає активних сервісних точок для відображення",
+    "foundActivePoints": "Знайдено {{count}} активних точок",
+    "phone": "Телефон",
+    "active": "Активна"
+  },
+  "carModelsList": {
+    "title": "Моделі автомобілів",
+    "searchPlaceholder": "Пошук моделей",
+    "addModel": "Додати модель",
+    "editModel": "Редагувати модель",
+    "newModel": "Нова модель",
+    "deleteModel": "Видалити модель",
+    "columns": {
+      "name": "Назва",
+      "status": "Статус",
+      "actions": "Дії"
+    },
+    "status": {
+      "active": "Активна",
+      "inactive": "Неактивна"
+    },
+    "form": {
+      "modelName": "Назва моделі",
+      "activeModel": "Активна модель",
+      "save": "Зберегти",
+      "create": "Створити",
+      "cancel": "Скасувати"
+    },
+    "validation": {
+      "nameRequired": "Назва моделі обов'язкова",
+      "nameMinLength": "Назва повинна містити мінімум 2 символи",
+      "nameMaxLength": "Назва не повинна перевищувати 100 символів"
+    },
+    "emptyState": {
+      "noModels": "В даному бренді поки немає моделей",
+      "noModelsFound": "Моделі не знайдені",
+      "addFirstModel": "Додайте першу модель в цей бренд",
+      "changeSearchCriteria": "Спробуйте змінити критерії пошуку"
+    },
+    "dialogs": {
+      "deleteTitle": "Підтвердьте видалення",
+      "deleteMessage": "Ви впевнені, що хочете видалити модель \"{name}\"? Цю дію неможливо скасувати.",
+      "deleteConfirm": "Видалити"
+    },
+    "tooltips": {
+      "edit": "Редагувати модель",
+      "delete": "Видалити модель"
+    }
+  },
+  "clientInfoStep": {
+    "guestBookingPrefix": "Ви створюєте"
+  },
+  "loginPrompt": {
+    "title": "Увійдіть в систему для доступу до ваших записів",
+    "description": "Для перегляду історії записів та керування вашими бронюваннями необхідно увійти в систему або зареєструватися.",
+    "benefitsTitle": "Переваги реєстрації:",
+    "benefits": {
+      "historyAccess": "Перегляд історії всіх ваших записів",
+      "manageBookings": "Зручне керування бронюваннями",
+      "rescheduleCancel": "Можливість переносити та скасовувати записи",
+      "quickBooking": "Швидке бронювання без повторного введення даних"
+    },
+    "buttons": {
+      "login": "Увійти",
+      "register": "Зареєструватися",
+      "continueWithout": "Продовжити без реєстрації"
+    },
+    "imageAlt": "Ілюстрація входу"
+  },
+  "existingUserDialog": {
+    "title": "Виявлено існуючий обліковий запис",
+    "foundAccount": "Ми знайшли ваш обліковий запис:",
+    "notSpecified": "Не вказано",
+    "quickBookingQuestion": "Хочете увійти в обліковий запис для швидкого оформлення бронювання?",
+    "fields": {
+      "password": "Пароль"
+    },
+    "buttons": {
+      "continueAsGuest": "Продовжити як гість",
+      "login": "Увійти та забронювати",
+      "loggingIn": "Вхід..."
+    },
+    "validation": {
+      "passwordRequired": "Введіть пароль",
+      "wrongPassword": "Невірний пароль"
+    }
+  },
+  "clientSearchPage": {
+    "searchResults": "Результати пошуку",
+    "servicePointsInCity": "Сервісні точки в місті \"{city}\"",
+    "byQuery": "за запитом \"{query}\"",
+    "found": "Знайдено: {count}",
+    "cityFound": "Місто знайдено",
+    "toMainPage": "На головну",
+    "selectServiceType": "Виберіть тип послуг",
+    "selectCategoryDescription": "Виберіть категорію послуг для пошуку підходящих сервісних точок",
+    "availableServices": "Доступно послуг: {count}",
+    "availableServicePoints": "Доступно сервісів: {count}",
+    "loading": {
+      "categories": "Завантаження категорій послуг...",
+      "servicePoints": "Пошук сервісних точок..."
+    },
+    "errors": {
+      "categoriesLoading": "Помилка завантаження категорій послуг. Спробуйте пізніше.",
+      "dataLoading": "Помилка завантаження даних. Спробуйте пізніше.",
+      "cityNotFound": "Місто \"{city}\" не знайдено або в ньому немає сервісних точок."
+    },
+    "servicePoints": {
+      "title": "Сервісні точки",
+      "description": "Сервісні точки, що надають послуги обраної категорії в місті \"{city}\"",
+      "notFound": "Сервісні точки не знайдені",
+      "notFoundDescription": "Для обраної категорії послуг не знайдено сервісних точок у цьому місті",
+      "selectOtherCategory": "Обрати іншу категорію"
+    },
+    "photoGallery": {
+      "servicePointPhoto": "Фото сервісної точки",
+      "showAllPhotos": "Показати всі фото",
+      "photoCounter": "{current} з {total}",
+      "mainPhoto": "Головне фото",
+      "photoGallery": "Фотогалерея",
+      "photoGalleryWithName": "Фотогалерея - {name}",
+      "photoNumber": "Фото {number}",
+      "close": "Закрити"
+    },
+    "servicePointCard": {
+      "bookAppointment": "Записатися",
+      "viewDetails": "Детальніше",
+      "workingHours": "Режим роботи",
+      "workingHoursNotSpecified": "Графік роботи не вказаний",
+      "rating": "Рейтинг",
+      "reviews": "відгуків",
+      "posts": "постів",
+      "services": "Послуги",
+      "servicesFrom": "від {price} грн",
+      "loadingServices": "Завантаження послуг...",
+      "servicesNotLoaded": "Послуги не завантажені",
+      "description": "Опис",
+      "collapse": "Згорнути",
+      "workingDays": {
+        "monday": "Понеділок",
+        "tuesday": "Вівторок",
+        "wednesday": "Середа",
+        "thursday": "Четвер",
+        "friday": "П'ятниця",
+        "saturday": "Субота",
+        "sunday": "Неділя"
+      }
+    }
+  },
+  "timeSlotPicker": {
+    "noSlots": "Немає доступних слотів на обрану дату.",
+    "selectOtherDate": "Будь ласка, оберіть іншу дату.",
+    "postsAvailable": "з {total} вільно",
+    "selectedTime": "Обрано: {time}"
+  },
+  "dayDetailsPanel": {
+    "information": "Інформація",
+    "selectDateToView": "Оберіть дату для перегляду доступності",
+    "selectedDate": "Обрана дата",
+    "selectedTime": "Обраний час",
+    "freeSlots": "Вільно",
+    "occupiedSlots": "Зайнято",
+    "free": "Вільно",
+    "mediumLoad": "Середнє навантаження",
+    "highLoad": "Високе навантаження"
+  },
+  "bookingChart": {
+    "noData": "Немає даних для відображення",
+    "bookingsCount": "Кількість бронювань"
+  },
+  "servicesList": {
+    "title": "Послуги в категорії",
+    "searchPlaceholder": "Пошук послуг",
+    "addService": "Додати послугу",
+    "editService": "Редагувати послугу",
+    "newService": "Нова послуга",
+    "columns": {
+      "name": "Назва",
+      "status": "Статус",
+      "actions": "Дії"
+    },
+    "status": {
+      "active": "Активна",
+      "inactive": "Неактивна"
+    },
+    "actions": {
+      "edit": "Редагувати",
+      "delete": "Видалити"
+    },
+    "form": {
+      "serviceName": "Назва послуги",
+      "description": "Опис",
+      "sortOrder": "Порядок сортування",
+      "activeService": "Активна",
+      "cancel": "Скасувати",
+      "save": "Зберегти",
+      "create": "Створити"
+    },
+    "validation": {
+      "nameRequired": "Назва послуги обов'язкова",
+      "nameMinLength": "Назва повинна містити мінімум 2 символи",
+      "nameMaxLength": "Назва не повинна перевищувати 100 символів",
+      "descriptionMaxLength": "Опис не повинен перевищувати 500 символів",
+      "sortOrderMinValue": "Порядок сортування повинен бути невід'ємним"
+    },
+    "errors": {
+      "savingError": "Сталася помилка при збереженні послуги",
+      "deletingError": "Сталася помилка при видаленні послуги"
+    },
+    "emptyState": {
+      "notFound": "Послуги не знайдені",
+      "noServices": "У цій категорії поки немає послуг",
+      "changeSearch": "Спробуйте змінити критерії пошуку",
+      "addFirst": "Додайте першу послугу в цю категорію"
+    },
+    "deleteDialog": {
+      "title": "Підтвердження видалення",
+      "message": "Ви впевнені, що хочете видалити цю послугу?",
+      "cancel": "Скасування",
+      "confirm": "Видалити"
+    }
+  },
+  "imageOptimizer": {
+    "unavailable": "Зображення недоступне"
+  },
+  "pageContentForm": {
+    "sections": {
+      "client_main": "Головна сторінка клієнта",
+      "admin_dashboard": "Панель адміністратора",
+      "partner_portal": "Портал партнера",
+      "knowledge_base": "База знань",
+      "about": "Про нас",
+      "contacts": "Контакти"
+    },
+    "serviceCategories": {
+      "tire_service": "Шиномонтаж",
+      "balancing": "Балансування",
+      "repair": "Ремонт",
+      "diagnostics": "Діагностика",
+      "storage": "Зберігання",
+      "consultations": "Консультації"
+    },
+    "fields": {
+      "section": "Секція",
+      "contentType": "Тип контенту",
+      "title": "Заголовок"
+    },
+    "availableSettings": "Доступні налаштування",
+    "buttons": {
+      "cancel": "Скасувати",
+      "saving": "Збереження...",
+      "update": "Оновити",
+      "create": "Створити"
+    }
+  },
+  "reviewCard": {
+    "status": {
+      "published": "Опубліковано",
+      "pending": "На модерації", 
+      "rejected": "Відхилено",
+      "unknown": "Невідомо"
+    },
+    "serviceResponse": "Відповідь сервісу",
+    "buttons": {
+      "viewDetails": "Детальніше",
+      "edit": "Редагувати"
+    }
+  },
+  "reviewForm": {
+    "title": "Залишити відгук",
+    "fields": {
+      "servicePoint": "Оберіть сервісну точку",
+      "rating": "Ваша оцінка",
+      "comment": "Ваш відгук",
+      "commentPlaceholder": "Поділіться своїми враженнями про сервіс..."
+    },
+    "validation": {
+      "selectServicePoint": "Оберіть сервісну точку",
+      "ratingRequired": "Будь ласка, поставте оцінку",
+      "commentRequired": "Будь ласка, напишіть відгук",
+      "commentMinLength": "Відгук повинен містити мінімум 10 символів",
+      "commentMaxLength": "Відгук не повинен перевищувати 1000 символів"
+    },
+    "ratingLabels": {
+      "1": "Жахливо",
+      "2": "Погано",
+      "3": "Нормально",
+      "4": "Добре",
+      "5": "Відмінно"
+    },
+    "submitButton": "Надіслати відгук",
+    "errorMessage": "Сталася помилка при надсиланні відгуку. Будь ласка, спробуйте ще раз."
+  },
+  "bookingAnalytics": {
+    "filters": {
+      "period": "Період",
+      "groupBy": "Групування",
+      "periodOptions": {
+        "week": "Тиждень",
+        "month": "Місяць", 
+        "quarter": "Квартал",
+        "year": "Рік"
+      },
+      "groupByOptions": {
+        "day": "По днях",
+        "week": "По тижнях",
+        "month": "По місяцях"
+      }
+    },
+    "views": {
+      "charts": "Графіки",
+      "table": "Таблиця"
+    },
+    "actions": {
+      "refresh": "Оновити дані",
+      "exportCsv": "Експорт CSV",
+      "exportExcel": "Експорт Excel"
+    },
+    "stats": {
+      "totalBookings": "Всього бронювань",
+      "completed": "Завершено",
+      "cancelled": "Скасовано",
+      "totalRevenue": "Загальний дохід"
+    },
+    "charts": {
+      "topCategories": "Топ категорії послуг",
+      "detailedTable": "Детальна таблиця бронювань"
+    },
+    "table": {
+      "headers": {
+        "id": "ID",
+        "date": "Дата",
+        "time": "Час",
+        "client": "Клієнт",
+        "servicePoint": "Сервісна точка",
+        "status": "Статус",
+        "amount": "Сума",
+        "category": "Категорія",
+        "bookingsCount": "Бронювань",
+        "revenue": "Дохід"
+      },
+      "guestBooking": "Гостьовий запис"
+    },
+    "titles": {
+      "main": "Аналітика бронювань",
+      "statusDistribution": "Розподіл за статусами",
+      "bookingTrend": "Динаміка бронювань",
+      "topServicePoints": "Топ сервісних точок",
+      "detailedBookingTable": "Детальна таблиця бронювань"
+    },
+    "labels": {
+      "totalBookings": "Всього",
+      "completedBookings": "Завершено",
+      "cancelledBookings": "Скасовано"
+    }
+  },
+  "loginPrompt": {
+    "title": "Увійдіть, щоб отримати доступ",
+    "description": "Для доступу до цієї функції необхідно увійти в систему або зареєструватися.",
+    "benefitsTitle": "Створіть акаунт для:",
+    "benefits": {
+      "manageBookings": "Управління бронюваннями",
+      "quickAccess": "Швидкого доступу до послуг",
+      "notifications": "Отримання сповіщень",
+      "history": "Перегляду історії"
+    },
+    "buttons": {
+      "login": "Увійти",
+      "register": "Зареєструватися",
+      "skip": "Пропустити"
+    },
+    "imageAlt": "Ілюстрація входу в систему"
+  },
+  "existingUserDialog": {
+    "title": "Знайдено існуючий акаунт",
+    "foundAccount": "Ми знайшли акаунт з таким номером телефону:",
+    "quickBookingQuestion": "Хочете швидко увійти та оформити бронювання?",
+    "fields": {
+      "password": "Пароль"
+    },
+    "validation": {
+      "passwordRequired": "Пароль обов'язковий"
+    },
+    "buttons": {
+      "login": "Увійти та забронювати",
+      "continueAsGuest": "Продовжити як гість",
+      "loggingIn": "Вхід..."
+    }
+  },
+  "timeSlotPicker": {
+    "noSlots": "На вибрану дату немає доступних слотів.",
+    "selectOtherDate": "Будь ласка, виберіть іншу дату.",
+    "postsAvailable": "{{available}} з {{total}} вільно",
+    "selectedTime": "Вибраний час: {{time}}"
+  },
+  "dayDetailsPanel": {
+    "information": "Інформація",
+    "selectDateToView": "Виберіть дату для перегляду детальної інформації",
+    "selectedDate": "Вибрана дата: {{date}}",
+    "selectedTime": "Вибраний час: {{time}}",
+    "freeSlots": "Вільних слотів: {{count}}",
+    "occupiedSlots": "Зайнятих слотів: {{count}}",
+    "free": "Вільно",
+    "mediumLoad": "Середнє навантаження",
+    "highLoad": "Високе навантаження"
+  },
+  "bookingChart": {
+    "noData": "Немає даних для відображення",
+    "bookingsCount": "Кількість бронювань"
+  },
+  "clientInfoForm": {
+    "title": "Контактні дані",
+    "fields": {
+      "name": "Ваше ім'я",
+      "email": "Email",
+      "emailOptional": "Необов'язково",
+      "notes": "Коментар до запису",
+      "notesPlaceholder": "Вкажіть додаткову інформацію, яка може бути корисна спеціалістам (необов'язково)"
+    },
+    "validation": {
+      "nameRequired": "Введіть ваше ім'я",
+      "nameMinLength": "Ім'я повинно містити не менше 2 символів",
+      "phoneRequired": "Введіть номер телефону",
+      "phoneInvalid": "Введіть коректний номер телефону",
+      "emailInvalid": "Введіть коректний email"
+    },
+    "agreements": {
+      "termsAcceptance": "Я згоден на обробку персональних даних і приймаю умови користувацької угоди",
+      "notifications": "Отримувати сповіщення на email"
+    },
+    "privacyNotice": "На вказаний номер телефону надійде SMS з підтвердженням запису. Ми не передаємо ваші дані третім особам і не використовуємо їх для розсилки реклами."
   }
 } 

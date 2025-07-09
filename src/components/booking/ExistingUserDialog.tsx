@@ -12,6 +12,7 @@ import {
 import { Person as PersonIcon, AccountCircle as AccountCircleIcon } from '@mui/icons-material';
 import { Button, TextField } from '../ui';
 import { useLoginMutation } from '../../api/auth.api';
+import { useTranslation } from 'react-i18next';
 
 interface ExistingUserDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
   onLoginSuccess,
   onContinueAsGuest,
 }) => {
+  const { t } = useTranslation('components');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loginClient, { isLoading }] = useLoginMutation();
@@ -47,7 +49,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
 
   const handleLogin = async () => {
     if (!password.trim()) {
-      setError('Введите пароль');
+      setError(t('existingUserDialog.validation.passwordRequired'));
       return;
     }
 
@@ -61,7 +63,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
       onLoginSuccess(result);
       onClose();
     } catch (err: any) {
-      setError(err?.data?.message || 'Неверный пароль');
+      setError(err?.data?.message || t('existingUserDialog.validation.wrongPassword'));
     }
   };
 
@@ -76,7 +78,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
         <Box display="flex" alignItems="center" gap={2}>
           <AccountCircleIcon color="primary" />
           <Typography variant="h6">
-            Обнаружен существующий аккаунт
+            {t('existingUserDialog.title')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -84,7 +86,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
       <DialogContent>
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2" sx={{ mb: 1 }}>
-            <strong>Мы нашли ваш аккаунт:</strong>
+            <strong>{t('existingUserDialog.foundAccount')}</strong>
           </Typography>
           <Box display="flex" alignItems="center" gap={1} sx={{ mb: 1 }}>
             <PersonIcon fontSize="small" />
@@ -93,16 +95,16 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-            📧 {user.email || 'Не указан'} • 📱 {user.phone}
+            📧 {user.email || t('existingUserDialog.notSpecified')} • 📱 {user.phone}
           </Typography>
         </Alert>
 
         <Typography variant="body1" sx={{ mb: 3 }}>
-          Хотите войти в аккаунт для быстрого оформления бронирования?
+          {t('existingUserDialog.quickBookingQuestion')}
         </Typography>
 
         <TextField
-          label="Пароль"
+          label={t('existingUserDialog.fields.password')}
           type="password"
           value={password}
           onChange={(e) => {
@@ -133,7 +135,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
           onClick={handleContinueAsGuest}
           disabled={isLoading}
         >
-          Продолжить как гость
+          {t('existingUserDialog.buttons.continueAsGuest')}
         </Button>
         <Button
           variant="contained"
@@ -141,7 +143,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
           disabled={isLoading || !password.trim()}
           startIcon={isLoading ? <CircularProgress size={20} /> : undefined}
         >
-          {isLoading ? 'Вход...' : 'Войти и забронировать'}
+          {isLoading ? t('existingUserDialog.buttons.loggingIn') : t('existingUserDialog.buttons.login')}
         </Button>
       </DialogActions>
     </Dialog>
