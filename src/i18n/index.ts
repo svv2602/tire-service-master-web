@@ -50,6 +50,14 @@ import reviewUkTranslations from './locales/forms/reviews/review-uk.json';
 import clientServicePointsRuTranslations from './locales/forms/client-service-points/client-service-points-ru.json';
 import clientServicePointsUkTranslations from './locales/forms/client-service-points/client-service-points-uk.json';
 
+// Profile
+import profileRuTranslations from './locales/forms/profile/profile-ru.json';
+import profileUkTranslations from './locales/forms/profile/profile-uk.json';
+
+// Car Brands
+import carBrandsRuTranslations from './locales/forms/car-brands/car-brands-ru.json';
+import carBrandsUkTranslations from './locales/forms/car-brands/car-brands-uk.json';
+
 // Deep merge utility function
 function deepMerge(target: any, source: any): any {
   const result = { ...target };
@@ -87,7 +95,10 @@ const ukTranslationModules = [
   servicePointsUkTranslations,
   regionsUkTranslations,
   reviewsUkTranslations,
+  reviewUkTranslations,
   clientServicePointsUkTranslations,
+  profileUkTranslations,
+  carBrandsUkTranslations,
 ];
 
 // Russian translation modules
@@ -110,7 +121,10 @@ const ruTranslationModules = [
   servicePointsRuTranslations,
   regionsRuTranslations,
   reviewsRuTranslations,
+  reviewRuTranslations,
   clientServicePointsRuTranslations,
+  profileRuTranslations,
+  carBrandsRuTranslations,
 ];
 
 const resources = {

@@ -1,11 +1,16 @@
 {
   "forms": {
     "profile": {
-      "title": "Профіль користувача",
+      "title": "Мій профіль",
       "sections": {
         "userInfo": "Інформація про користувача",
         "editProfile": "Редагування профілю",
-        "passwordChange": "Зміна пароля"
+        "passwordChange": "Зміна пароля",
+        "personalData": "Особисті дані",
+        "myCars": "Мої автомобілі",
+        "statistics": "Статистика",
+        "security": "Безпека",
+        "settings": "Налаштування"
       },
       "fields": {
         "firstName": "Ім'я",
@@ -19,15 +24,97 @@
         "newPassword": "Новий пароль",
         "confirmPassword": "Підтвердіть пароль"
       },
+      "status": {
+        "client": "Клієнт",
+        "administrator": "Адміністратор"
+      },
+      "cars": {
+        "addCar": "Додати автомобіль",
+        "editCar": "Редагувати автомобіль",
+        "noCars": "У вас поки немає доданих автомобілів",
+        "carBrand": "Марка автомобіля",
+        "carModel": "Модель автомобіля",
+        "yearOfManufacture": "Рік випуску",
+        "licensePlate": "Номер автомобіля",
+        "carType": "Тип автомобіля",
+        "selectBrand": "Оберіть марку",
+        "selectModel": "Оберіть модель",
+        "brand": "Марка",
+        "model": "Модель",
+        "year": "Рік",
+        "notSpecified": "Не вказано",
+        "unknownBrand": "Невідома марка",
+        "unknownModel": "Невідома модель",
+        "primaryCar": "Основний автомобіль",
+        "makePrimaryCar": "Зробити основним автомобілем",
+        "primaryCarHint": "Основний автомобіль буде запропонований за замовчуванням при бронюванні послуг",
+        "licensePlatePlaceholder": "А123БВ777",
+        "deleteCarConfirmTitle": "Видалити автомобіль?",
+        "deleteCarConfirmMessage": "Ви впевнені, що хочете видалити автомобіль",
+        "deleteCarConfirmWarning": "Цю дію неможливо скасувати.",
+        "deleteCarConfirm": "Видалити автомобіль?",
+        "deleteCarMessage": "Ви впевнені, що хочете видалити автомобіль",
+        "deleteCarWarning": "Цю дію неможливо скасувати."
+      },
+      "statistics": {
+        "totalBookings": "Всього бронювань",
+        "completedServices": "Виконаних послуг",
+        "activeBookings": "Активних бронювань",
+        "statisticsUsage": "Статистика використання"
+      },
+      "security": {
+        "securityAccount": "Безпека акаунту",
+        "changePasswordDescription": "Оновіть пароль для захисту вашого акаунту",
+        "changePasswordHint": "Оновіть пароль для захисту вашого акаунту",
+        "reviewLogin": "Логін для відгуків",
+        "reviewLoginDescription": "Встановіть унікальний логін для публічного відображення у відгуках",
+        "reviewLoginHint": "Встановіть унікальний логін для публічного відображення у відгуках",
+        "twoFactorAuth": "Двофакторна автентифікація",
+        "twoFactorAuthDescription": "Додатковий захист акаунту",
+        "twoFactorAuthHint": "Додатковий захист акаунту",
+        "comingSoon": "Незабаром"
+      },
+      "settings": {
+        "settingsNotifications": "Налаштування сповіщень",
+        "emailNotifications": "Отримувати сповіщення на email",
+        "emailNotificationsHint": "Сповіщення про статус бронювань на email",
+        "pushNotifications": "Push-сповіщення",
+        "pushNotificationsHint": "Отримувати push-сповіщення в браузері"
+      },
+      "hints": {
+        "contactInfoHint": "Для зв'язку з вами необхідно вказати хоча б одні з контактних даних: email або номер телефону. Рекомендуємо заповнити обидва поля для більш зручної взаємодії з сервісом.",
+        "addFirstCarHint": "Додайте перший автомобіль для зручного бронювання послуг"
+      },
       "buttons": {
         "save": "Зберегти зміни",
+        "saveChanges": "Зберегти зміни",
+        "saving": "Збереження...",
+        "cancel": "Скасування",
         "changePassword": "Змінити пароль",
-        "cancelPasswordChange": "Скасувати зміну пароля"
+        "changingPassword": "Зміна...",
+        "changing": "Зміна...",
+        "cancelPasswordChange": "Скасувати зміну пароля",
+        "addCar": "Додати автомобіль",
+        "editCar": "Редагувати",
+        "deleteCar": "Видалити",
+        "deleting": "Видалення...",
+        "delete": "Видалити"
       },
       "messages": {
         "saveSuccess": "Дані профілю успішно оновлено!",
         "passwordChangeSuccess": "Пароль успішно змінено!",
-        "organizationName": "Твоя шина"
+        "organizationName": "Твоя шина",
+        "profileUpdated": "Профіль успішно оновлено",
+        "profileUpdateError": "Помилка при оновленні профілю",
+        "passwordChanged": "Пароль успішно змінено",
+        "passwordChangeError": "Помилка при зміні пароля",
+        "carUpdated": "Автомобіль успішно оновлено",
+        "carAdded": "Автомобіль успішно додано",
+        "carSaveError": "Помилка при збереженні автомобіля",
+        "carDeleted": "Автомобіль успішно видалено",
+        "carDeleteError": "Помилка при видаленні автомобіля",
+        "loading": "Завантаження...",
+        "userIdNotFound": "ID користувача не знайдено"
       },
       "errors": {
         "passwordMismatch": "Новий пароль і підтвердження не збігаються",
@@ -37,15 +124,28 @@
       },
       "validation": {
         "emailRequired": "Email обов'язковий",
-        "emailInvalid": "Введіть коректний email",
-        "firstNameRequired": "Ім'я обов'язкове",
-        "firstNameMin": "Ім'я має бути не менше 2 символів",
-        "lastNameRequired": "Прізвище обов'язкове",
-        "lastNameMin": "Прізвище має бути не менше 2 символів",
+        "emailInvalid": "Неправильний формат email",
+        "firstNameRequired": "Ім'я обов'язкове для заповнення",
+        "firstNameMin": "Ім'я повинно містити мінімум 2 символи",
+        "firstNameMax": "Ім'я не повинно перевищувати 50 символів",
+        "lastNameRequired": "Прізвище обов'язкове для заповнення",
+        "lastNameMin": "Прізвище повинно містити мінімум 2 символи",
+        "lastNameMax": "Прізвище не повинно перевищувати 50 символів",
         "phoneRequired": "Телефон обов'язковий",
-        "currentPasswordRequired": "Введіть поточний пароль",
-        "passwordMin": "Пароль має містити мінімум 6 символів",
-        "passwordsMatch": "Паролі не збігаються"
+        "phoneMin": "Номер телефону повинен містити мінімум 10 цифр",
+        "phonePattern": "Номер телефону може містити тільки цифри, пробіли та символи +, -, (, )",
+        "emailOrPhoneRequired": "Необхідно вказати email або номер телефону",
+        "currentPasswordRequired": "Поточний пароль обов'язковий",
+        "passwordMin": "Новий пароль повинен містити мінімум 6 символів",
+        "passwordsMatch": "Паролі не збігаються",
+        "passwordRequired": "Новий пароль обов'язковий",
+        "confirmPasswordRequired": "Підтвердження пароля обов'язкове",
+        "carBrandRequired": "Марка автомобіля обов'язкова",
+        "carModelRequired": "Модель автомобіля обов'язкова",
+        "yearMin": "Рік не може бути менше 1900",
+        "yearMax": "Рік не може бути більше наступного року",
+        "yearRequired": "Рік випуску обов'язковий",
+        "licensePlateRequired": "Номер автомобіля обов'язковий"
       }
     }
   }

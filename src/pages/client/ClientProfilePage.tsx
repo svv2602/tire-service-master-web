@@ -160,22 +160,22 @@ const ClientProfilePage: React.FC = () => {
   // Схема валидации для профиля
   const validationSchema = Yup.object({
     first_name: Yup.string()
-      .min(2, 'Имя должно содержать минимум 2 символа')
-      .max(50, 'Имя не должно превышать 50 символов')
-      .required('Имя обязательно для заполнения'),
+      .min(2, t('forms.profile.validation.firstNameMin'))
+      .max(50, t('forms.profile.validation.firstNameMax'))
+      .required(t('forms.profile.validation.firstNameRequired')),
     last_name: Yup.string()
-      .min(2, 'Фамилия должна содержать минимум 2 символа')
-      .max(50, 'Фамилия не должна превышать 50 символов')
-      .required('Фамилия обязательна для заполнения'),
+      .min(2, t('forms.profile.validation.lastNameMin'))
+      .max(50, t('forms.profile.validation.lastNameMax'))
+      .required(t('forms.profile.validation.lastNameRequired')),
     email: Yup.string()
-      .email('Неверный формат email')
-      .test('email-or-phone', 'Необходимо указать email или номер телефона', function(value) {
+      .email(t('forms.profile.validation.emailInvalid'))
+      .test('email-or-phone', t('forms.profile.validation.emailOrPhoneRequired'), function(value) {
         return value || this.parent.phone;
       }),
     phone: Yup.string()
-      .min(10, 'Номер телефона должен содержать минимум 10 цифр')
-      .matches(/^[\d\s\+\-\(\)]+$/, 'Номер телефона может содержать только цифры, пробелы и символы +, -, (, )')
-      .test('phone-or-email', 'Необходимо указать email или номер телефона', function(value) {
+      .min(10, t('forms.profile.validation.phoneMin'))
+      .matches(/^[\d\s\+\-\(\)]+$/, t('forms.profile.validation.phonePattern'))
+      .test('phone-or-email', t('forms.profile.validation.emailOrPhoneRequired'), function(value) {
         return value || this.parent.email;
       }),
   });
@@ -183,15 +183,15 @@ const ClientProfilePage: React.FC = () => {
   // Схема валидации для автомобиля
   const carValidationSchema = Yup.object({
     brand_id: Yup.number()
-      .required('Марка автомобиля обязательна'),
+      .required(t('forms.profile.validation.carBrandRequired')),
     model_id: Yup.number()
-      .required('Модель автомобиля обязательна'),
+      .required(t('forms.profile.validation.carModelRequired')),
     year: Yup.number()
-      .min(1900, 'Год не может быть меньше 1900')
-      .max(new Date().getFullYear() + 1, 'Год не может быть больше следующего года')
-      .required('Год выпуска обязателен'),
+      .min(1900, t('forms.profile.validation.yearMin'))
+      .max(new Date().getFullYear() + 1, t('forms.profile.validation.yearMax'))
+      .required(t('forms.profile.validation.yearRequired')),
     license_plate: Yup.string()
-      .required('Номер автомобиля обязателен'),
+      .required(t('forms.profile.validation.licensePlateRequired')),
     car_type_id: Yup.number()
       .nullable(),
     is_primary: Yup.boolean(),
@@ -200,13 +200,13 @@ const ClientProfilePage: React.FC = () => {
   // Схема валидации для изменения пароля
   const passwordValidationSchema = Yup.object({
     current_password: Yup.string()
-      .required('Текущий пароль обязателен'),
+      .required(t('forms.profile.validation.currentPasswordRequired')),
     new_password: Yup.string()
-      .min(6, 'Новый пароль должен содержать минимум 6 символов')
-      .required('Новый пароль обязателен'),
+      .min(6, t('forms.profile.validation.passwordMin'))
+      .required(t('forms.profile.validation.passwordRequired')),
     confirm_password: Yup.string()
-      .oneOf([Yup.ref('new_password')], 'Пароли не совпадают')
-      .required('Подтверждение пароля обязательно'),
+      .oneOf([Yup.ref('new_password')], t('forms.profile.validation.passwordsMatch'))
+      .required(t('forms.profile.validation.confirmPasswordRequired')),
   });
 
   // Formik для управления формой профиля
@@ -242,7 +242,7 @@ const ClientProfilePage: React.FC = () => {
 
         setNotification({
           open: true,
-          message: 'Профиль успешно обновлен',
+          message: t('forms.profile.messages.profileUpdated'),
           severity: 'success',
         });
 
@@ -254,7 +254,7 @@ const ClientProfilePage: React.FC = () => {
       } catch (error) {
         setNotification({
           open: true,
-          message: 'Ошибка при обновлении профиля',
+          message: t('forms.profile.messages.profileUpdateError'),
           severity: 'error',
         });
       }
@@ -290,14 +290,14 @@ const ClientProfilePage: React.FC = () => {
           }).unwrap();
           setNotification({
             open: true,
-            message: 'Автомобиль успешно обновлен',
+            message: t('forms.profile.messages.carUpdated'),
             severity: 'success',
           });
         } else {
           await createCar(values).unwrap();
           setNotification({
             open: true,
-            message: 'Автомобиль успешно добавлен',
+            message: t('forms.profile.messages.carAdded'),
             severity: 'success',
           });
         }
@@ -309,7 +309,7 @@ const ClientProfilePage: React.FC = () => {
       } catch (error) {
         setNotification({
           open: true,
-          message: 'Ошибка при сохранении автомобиля',
+          message: t('forms.profile.messages.carSaveError'),
           severity: 'error',
         });
       }
@@ -327,7 +327,7 @@ const ClientProfilePage: React.FC = () => {
     onSubmit: async (values) => {
       try {
         if (!user?.id) {
-          throw new Error('ID пользователя не найден');
+          throw new Error(t('forms.profile.messages.userIdNotFound'));
         }
         
         await changePassword({
@@ -338,7 +338,7 @@ const ClientProfilePage: React.FC = () => {
 
         setNotification({
           open: true,
-          message: 'Пароль успешно изменен',
+          message: t('forms.profile.messages.passwordChanged'),
           severity: 'success',
         });
 
@@ -347,7 +347,7 @@ const ClientProfilePage: React.FC = () => {
       } catch (error: any) {
         setNotification({
           open: true,
-          message: error?.data || 'Ошибка при изменении пароля',
+          message: error?.data || t('forms.profile.messages.passwordChangeError'),
           severity: 'error',
         });
       }
@@ -399,7 +399,7 @@ const ClientProfilePage: React.FC = () => {
   const handleBrandChange = (brandId: number) => {
     setSelectedBrandId(brandId);
     carFormik.setFieldValue('brand_id', brandId);
-    carFormik.setFieldValue('model_id', 0); // Сбрасываем модель при смене бренда
+          carFormik.setFieldValue('model_id', 0);
   };
 
   const handleDeleteCar = async () => {
@@ -409,7 +409,7 @@ const ClientProfilePage: React.FC = () => {
       await deleteCar(carToDelete.id.toString()).unwrap();
       setNotification({
         open: true,
-        message: 'Автомобиль успешно удален',
+        message: t('forms.profile.messages.carDeleted'),
         severity: 'success',
       });
       setDeleteDialogOpen(false);
@@ -418,7 +418,7 @@ const ClientProfilePage: React.FC = () => {
     } catch (error) {
       setNotification({
         open: true,
-        message: 'Ошибка при удалении автомобиля',
+        message: t('forms.profile.messages.carDeleteError'),
         severity: 'error',
       });
     }
@@ -450,7 +450,7 @@ const ClientProfilePage: React.FC = () => {
     return (
       <ClientLayout>
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          <Typography>{t('client.profile.loading')}</Typography>
+          <Typography>{t('forms.profile.messages.loading')}</Typography>
         </Container>
       </ClientLayout>
     );
@@ -466,7 +466,7 @@ const ClientProfilePage: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Заголовок страницы */}
         <Typography variant="h4" sx={{ mb: 4, color: 'text.primary' }}>
-          {t('client.profile.title')}
+          {t('forms.profile.title')}
         </Typography>
 
         {/* Основная информация пользователя */}
@@ -492,7 +492,7 @@ const ClientProfilePage: React.FC = () => {
                 {user.email}
               </Typography>
               <Chip
-                label={user.role === 'client' ? t('client.profile.client') : t('client.profile.administrator')}
+                label={user.role === 'client' ? t('forms.profile.status.client') : t('forms.profile.status.administrator')}
                 color="primary"
                 size="small"
               />
@@ -504,36 +504,36 @@ const ClientProfilePage: React.FC = () => {
         <Card>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={activeTab} onChange={handleTabChange} aria-label="profile tabs">
-              <Tab
-                icon={<PersonIcon />}
-                label={t('client.profile.personalData')}
-                id="profile-tab-0"
-                aria-controls="profile-tabpanel-0"
-              />
-              <Tab
-                icon={<CarIcon />}
-                label={t('client.profile.myCars')}
-                id="profile-tab-1"
-                aria-controls="profile-tabpanel-1"
-              />
-              <Tab
-                icon={<StatsIcon />}
-                label={t('client.profile.statistics')}
-                id="profile-tab-2"
-                aria-controls="profile-tabpanel-2"
-              />
-              <Tab
-                icon={<LockIcon />}
-                label={t('client.profile.security')}
-                id="profile-tab-3"
-                aria-controls="profile-tabpanel-3"
-              />
-              <Tab
-                icon={<SettingsIcon />}
-                label={t('client.profile.settings')}
-                id="profile-tab-4"
-                aria-controls="profile-tabpanel-4"
-              />
+                          <Tab
+              icon={<PersonIcon />}
+              label={t('forms.profile.sections.personalData')}
+              id="profile-tab-0"
+              aria-controls="profile-tabpanel-0"
+            />
+            <Tab
+              icon={<CarIcon />}
+              label={t('forms.profile.sections.myCars')}
+              id="profile-tab-1"
+              aria-controls="profile-tabpanel-1"
+            />
+            <Tab
+              icon={<StatsIcon />}
+              label={t('forms.profile.sections.statistics')}
+              id="profile-tab-2"
+              aria-controls="profile-tabpanel-2"
+            />
+            <Tab
+              icon={<LockIcon />}
+              label={t('forms.profile.sections.security')}
+              id="profile-tab-3"
+              aria-controls="profile-tabpanel-3"
+            />
+            <Tab
+              icon={<SettingsIcon />}
+              label={t('forms.profile.sections.settings')}
+              id="profile-tab-4"
+              aria-controls="profile-tabpanel-4"
+            />
             </Tabs>
           </Box>
 
@@ -546,11 +546,11 @@ const ClientProfilePage: React.FC = () => {
               </Alert>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="first_name"
-                    name="first_name"
-                    label="Имя"
+                                      <TextField
+                      fullWidth
+                      id="first_name"
+                      name="first_name"
+                      label={t('forms.profile.fields.firstName')}
                     value={formik.values.first_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -559,11 +559,11 @@ const ClientProfilePage: React.FC = () => {
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    id="last_name"
-                    name="last_name"
-                    label="Фамилия"
+                                      <TextField
+                      fullWidth
+                      id="last_name"
+                      name="last_name"
+                      label={t('forms.profile.fields.lastName')}
                     value={formik.values.last_name}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
@@ -576,7 +576,7 @@ const ClientProfilePage: React.FC = () => {
                     fullWidth
                     id="email"
                     name="email"
-                    label="Email"
+                    label={t('forms.profile.fields.email')}
                     type="email"
                     value={formik.values.email}
                     onChange={formik.handleChange}
@@ -590,7 +590,7 @@ const ClientProfilePage: React.FC = () => {
                     fullWidth
                     id="phone"
                     name="phone"
-                    label="Номер телефона"
+                    label={t('forms.profile.fields.phone')}
                     value={formik.values.phone}
                     onChange={(value) => formik.setFieldValue('phone', value)}
                     onBlur={formik.handleBlur}
@@ -605,14 +605,14 @@ const ClientProfilePage: React.FC = () => {
                       variant="contained"
                       disabled={isUpdating}
                     >
-                      {isUpdating ? 'Сохранение...' : 'Сохранить изменения'}
+                      {isUpdating ? t('forms.profile.buttons.saving') : t('forms.profile.buttons.saveChanges')}
                     </Button>
                     <Button
                       type="button"
                       variant="outlined"
                       onClick={() => formik.resetForm()}
                     >
-                      Отменить
+                      {t('forms.profile.buttons.cancel')}
                     </Button>
                   </Box>
                 </Grid>
@@ -624,14 +624,14 @@ const ClientProfilePage: React.FC = () => {
           <TabPanel value={activeTab} index={1}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6" sx={{ color: 'text.primary' }}>
-                {t('client.profile.myCars')}
+                {t('forms.profile.sections.myCars')}
               </Typography>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
                 onClick={() => handleOpenCarDialog()}
               >
-                {t('client.profile.addCar')}
+                {t('forms.profile.cars.addCar')}
               </Button>
             </Box>
 
@@ -641,7 +641,7 @@ const ClientProfilePage: React.FC = () => {
               </Box>
             ) : cars.length === 0 ? (
               <Alert severity="info" sx={{ mb: 2 }}>
-                {t('client.profile.noCars')}. Добавьте первый автомобиль для удобного бронирования услуг.
+                {t('forms.profile.cars.noCars')}. {t('forms.profile.hints.addFirstCarHint')}
               </Alert>
             ) : (
               <Grid container spacing={2}>
@@ -653,12 +653,12 @@ const ClientProfilePage: React.FC = () => {
                           <CarIcon color="primary" />
                           <Box>
                             <Typography variant="h6" sx={{ mb: 0.5 }}>
-                              {car.brand?.name || 'Неизвестная марка'} {car.model?.name || 'Неизвестная модель'}
+                              {car.brand?.name || t('forms.profile.cars.unknownBrand')} {car.model?.name || t('forms.profile.cars.unknownModel')}
                             </Typography>
                             {car.is_primary && (
                               <Chip
                                 icon={<StarIcon />}
-                                label="Основной"
+                                label={t('forms.profile.cars.primaryCar')}
                                 size="small"
                                 color="primary"
                                 variant="outlined"
@@ -667,7 +667,7 @@ const ClientProfilePage: React.FC = () => {
                           </Box>
                         </Box>
                         <Box>
-                          <Tooltip title="Редактировать">
+                          <Tooltip title={t('forms.profile.buttons.editCar')}>
                             <IconButton
                               size="small"
                               onClick={() => handleOpenCarDialog(car)}
@@ -675,7 +675,7 @@ const ClientProfilePage: React.FC = () => {
                               <EditIcon />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Удалить">
+                          <Tooltip title={t('forms.profile.buttons.deleteCar')}>
                             <IconButton
                               size="small"
                               color="error"
@@ -689,19 +689,19 @@ const ClientProfilePage: React.FC = () => {
                       
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>Марка:</strong> {car.brand?.name || 'Не указана'}
+                          <strong>{t('forms.profile.cars.brand')}:</strong> {car.brand?.name || t('forms.profile.cars.notSpecified')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>Модель:</strong> {car.model?.name || 'Не указана'}
+                          <strong>{t('forms.profile.cars.model')}:</strong> {car.model?.name || t('forms.profile.cars.notSpecified')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>Год:</strong> {car.year}
+                          <strong>{t('forms.profile.cars.year')}:</strong> {car.year}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>Номер:</strong> {car.license_plate}
+                          <strong>{t('forms.profile.cars.licensePlate')}:</strong> {car.license_plate}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>Тип:</strong> {car.car_type?.name || 'Не указан'}
+                          <strong>{t('forms.profile.cars.carType')}:</strong> {car.car_type?.name || t('forms.profile.cars.notSpecified')}
                         </Typography>
                       </Box>
                     </Card>
@@ -714,7 +714,7 @@ const ClientProfilePage: React.FC = () => {
           {/* Вкладка t('client.profile.statistics') */}
           <TabPanel value={activeTab} index={2}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-              {t('client.profile.statistics')} использования
+              {t('forms.profile.statistics.statisticsUsage')}
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
@@ -723,7 +723,7 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('client.profile.totalBookings')}
+                    {t('forms.profile.statistics.totalBookings')}
                   </Typography>
                 </Card>
               </Grid>
@@ -733,7 +733,7 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('client.profile.completedServices')}
+                    {t('forms.profile.statistics.completedServices')}
                   </Typography>
                 </Card>
               </Grid>
@@ -743,7 +743,7 @@ const ClientProfilePage: React.FC = () => {
                     0
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('client.profile.activeBookings')}
+                    {t('forms.profile.statistics.activeBookings')}
                   </Typography>
                 </Card>
               </Grid>
@@ -754,7 +754,7 @@ const ClientProfilePage: React.FC = () => {
           <TabPanel value={activeTab} index={3}>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, color: 'text.primary' }}>
               <LockIcon />
-              {t('client.profile.security')} аккаунта
+              {t('forms.profile.security.securityAccount')}
             </Typography>
             
             <List>
@@ -763,14 +763,14 @@ const ClientProfilePage: React.FC = () => {
                   <LockIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Изменить пароль"
-                  secondary="Обновите пароль для защиты вашего аккаунта"
+                  primary={t('forms.profile.buttons.changePassword')}
+                  secondary={t('forms.profile.security.changePasswordHint')}
                 />
                 <Button
                   variant="outlined"
                   onClick={handleOpenPasswordDialog}
                 >
-                  Изменить
+                  {t('forms.profile.buttons.editCar')}
                 </Button>
               </ListItem>
               
@@ -781,14 +781,14 @@ const ClientProfilePage: React.FC = () => {
                   <PersonIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Логин для отзывов"
-                  secondary="Установите уникальный логин для публичного отображения в отзывах"
+                  primary={t('forms.profile.security.reviewLogin')}
+                  secondary={t('forms.profile.security.reviewLoginHint')}
                 />
                 <Button
                   variant="outlined"
                   disabled
                 >
-                  Скоро
+                  {t('forms.profile.security.comingSoon')}
                 </Button>
               </ListItem>
               
@@ -799,12 +799,12 @@ const ClientProfilePage: React.FC = () => {
                   <SecurityIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Двухфакторная аутентификация"
-                  secondary="Дополнительная защита аккаунта"
+                  primary={t('forms.profile.security.twoFactorAuth')}
+                  secondary={t('forms.profile.security.twoFactorAuthHint')}
                 />
                 <FormControlLabel
                   control={<Switch disabled />}
-                  label="Скоро"
+                  label={t('forms.profile.security.comingSoon')}
                 />
               </ListItem>
             </List>
@@ -813,7 +813,7 @@ const ClientProfilePage: React.FC = () => {
           {/* Вкладка t('client.profile.settings') */}
           <TabPanel value={activeTab} index={4}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
-              {t('client.profile.settings')} уведомлений
+              {t('forms.profile.settings.settingsNotifications')}
             </Typography>
             <List>
               <ListItem>
@@ -821,8 +821,8 @@ const ClientProfilePage: React.FC = () => {
                   <EmailIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Email уведомления"
-                  secondary="Получать уведомления о статусе бронирований на email"
+                  primary={t('forms.profile.settings.emailNotifications')}
+                  secondary={t('forms.profile.settings.emailNotificationsHint')}
                 />
                 <FormControlLabel
                   control={<Switch defaultChecked />}
@@ -835,8 +835,8 @@ const ClientProfilePage: React.FC = () => {
                   <NotificationsIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Push уведомления"
-                  secondary="Получать push-уведомления в браузере"
+                  primary={t('forms.profile.settings.pushNotifications')}
+                  secondary={t('forms.profile.settings.pushNotificationsHint')}
                 />
                 <FormControlLabel
                   control={<Switch />}
@@ -849,8 +849,8 @@ const ClientProfilePage: React.FC = () => {
                   <SecurityIcon />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Двухфакторная аутентификация"
-                  secondary="Дополнительная защита аккаунта"
+                  primary={t('forms.profile.security.twoFactorAuth')}
+                  secondary={t('forms.profile.security.twoFactorAuthHint')}
                 />
                 <FormControlLabel
                   control={<Switch />}
@@ -866,7 +866,7 @@ const ClientProfilePage: React.FC = () => {
       <Dialog open={carDialogOpen} onClose={handleCloseCarDialog} maxWidth="md" fullWidth>
         <form onSubmit={carFormik.handleSubmit}>
           <DialogTitle>
-            {editingCar ? 'Редактировать автомобиль' : t('client.profile.addCar')}
+            {editingCar ? t('forms.profile.cars.editCar') : t('forms.profile.cars.addCar')}
           </DialogTitle>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -874,7 +874,7 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   select
                   fullWidth
-                  label="Марка автомобиля"
+                  label={t('forms.profile.cars.carBrand')}
                   name="brand_id"
                   value={carFormik.values.brand_id || ''}
                   onChange={(e) => handleBrandChange(Number(e.target.value))}
@@ -882,7 +882,7 @@ const ClientProfilePage: React.FC = () => {
                   error={carFormik.touched.brand_id && Boolean(carFormik.errors.brand_id)}
                   helperText={carFormik.touched.brand_id && carFormik.errors.brand_id}
                 >
-                  <MenuItem value="">Выберите марку</MenuItem>
+                  <MenuItem value="">{t('forms.profile.cars.selectBrand')}</MenuItem>
                   {brandsData?.data?.map((brand) => (
                     <MenuItem key={brand.id} value={brand.id}>
                       {brand.name}
@@ -895,7 +895,7 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   select
                   fullWidth
-                  label="Модель автомобиля"
+                  label={t('forms.profile.cars.carModel')}
                   name="model_id"
                   value={carFormik.values.model_id || ''}
                   onChange={carFormik.handleChange}
@@ -904,7 +904,7 @@ const ClientProfilePage: React.FC = () => {
                   helperText={carFormik.touched.model_id && carFormik.errors.model_id}
                   disabled={!selectedBrandId}
                 >
-                  <MenuItem value="">Выберите модель</MenuItem>
+                  <MenuItem value="">{t('forms.profile.cars.selectModel')}</MenuItem>
                   {modelsData?.car_models?.map((model) => (
                     <MenuItem key={model.id} value={model.id}>
                       {model.name}
@@ -916,7 +916,7 @@ const ClientProfilePage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Год выпуска"
+                  label={t('forms.profile.cars.yearOfManufacture')}
                   name="year"
                   type="number"
                   value={carFormik.values.year}
@@ -931,14 +931,14 @@ const ClientProfilePage: React.FC = () => {
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Номер автомобиля"
+                  label={t('forms.profile.cars.licensePlate')}
                   name="license_plate"
                   value={carFormik.values.license_plate}
                   onChange={carFormik.handleChange}
                   onBlur={carFormik.handleBlur}
                   error={carFormik.touched.license_plate && Boolean(carFormik.errors.license_plate)}
                   helperText={carFormik.touched.license_plate && carFormik.errors.license_plate}
-                  placeholder="А123БВ777"
+                  placeholder={t('forms.profile.cars.licensePlatePlaceholder')}
                 />
               </Grid>
               
@@ -946,13 +946,13 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   select
                   fullWidth
-                  label="Тип автомобиля (необязательно)"
+                  label={t('forms.profile.cars.carType')}
                   name="car_type_id"
                   value={carFormik.values.car_type_id || ''}
                   onChange={carFormik.handleChange}
                   onBlur={carFormik.handleBlur}
                 >
-                  <MenuItem value="">Не указан</MenuItem>
+                  <MenuItem value="">{t('forms.profile.cars.notSpecified')}</MenuItem>
                   {carTypesData?.map((type) => (
                     <MenuItem key={type.id} value={type.id}>
                       {type.name}
@@ -975,27 +975,27 @@ const ClientProfilePage: React.FC = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <StarIcon color={carFormik.values.is_primary ? 'primary' : 'disabled'} />
                       <Typography variant="body2">
-                        Сделать основным автомобилем
+                        {t('forms.profile.cars.makePrimaryCar')}
                       </Typography>
                     </Box>
                   }
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                  Основной автомобиль будет предложен по умолчанию при бронировании услуг
+                  {t('forms.profile.cars.primaryCarHint')}
                 </Typography>
               </Grid>
             </Grid>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseCarDialog}>
-              Отмена
+              {t('forms.profile.buttons.cancel')}
             </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={isCreating || isUpdatingCar}
             >
-              {isCreating || isUpdatingCar ? 'Сохранение...' : 'Сохранить'}
+              {isCreating || isUpdatingCar ? t('forms.profile.buttons.saving') : t('forms.profile.buttons.save')}
             </Button>
           </DialogActions>
         </form>
@@ -1007,7 +1007,7 @@ const ClientProfilePage: React.FC = () => {
           <DialogTitle>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <LockIcon />
-              Изменить пароль
+              {t('forms.profile.buttons.changePassword')}
             </Box>
           </DialogTitle>
           <DialogContent>
@@ -1016,7 +1016,7 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   fullWidth
                   type="password"
-                  label="Текущий пароль"
+                  label={t('forms.profile.fields.currentPassword')}
                   name="current_password"
                   value={passwordFormik.values.current_password}
                   onChange={passwordFormik.handleChange}
@@ -1029,7 +1029,7 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   fullWidth
                   type="password"
-                  label="Новый пароль"
+                  label={t('forms.profile.fields.newPassword')}
                   name="new_password"
                   value={passwordFormik.values.new_password}
                   onChange={passwordFormik.handleChange}
@@ -1042,7 +1042,7 @@ const ClientProfilePage: React.FC = () => {
                 <TextField
                   fullWidth
                   type="password"
-                  label="Подтвердите новый пароль"
+                  label={t('forms.profile.fields.confirmPassword')}
                   name="confirm_password"
                   value={passwordFormik.values.confirm_password}
                   onChange={passwordFormik.handleChange}
@@ -1055,14 +1055,14 @@ const ClientProfilePage: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClosePasswordDialog}>
-              Отмена
+              {t('forms.profile.buttons.cancel')}
             </Button>
             <Button
               type="submit"
               variant="contained"
               disabled={isChangingPassword}
             >
-              {isChangingPassword ? 'Изменение...' : 'Изменить пароль'}
+              {isChangingPassword ? t('forms.profile.buttons.changing') : t('forms.profile.buttons.changePassword')}
             </Button>
           </DialogActions>
         </form>
@@ -1070,22 +1070,22 @@ const ClientProfilePage: React.FC = () => {
 
       {/* Диалог подтверждения удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>Удалить автомобиль?</DialogTitle>
+        <DialogTitle>{t('forms.profile.cars.deleteCarConfirm')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить автомобиль{' '}
+            {t('forms.profile.cars.deleteCarMessage')}{' '}
             <strong>
               {carToDelete?.brand?.name} {carToDelete?.model?.name} ({carToDelete?.license_plate})
             </strong>
             ?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Это действие нельзя отменить.
+            {t('forms.profile.cars.deleteCarWarning')}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>
-            Отмена
+            {t('forms.profile.buttons.cancel')}
           </Button>
           <Button
             onClick={handleDeleteCar}
@@ -1093,7 +1093,7 @@ const ClientProfilePage: React.FC = () => {
             variant="contained"
             disabled={isDeleting}
           >
-            {isDeleting ? 'Удаление...' : 'Удалить'}
+            {isDeleting ? t('forms.profile.buttons.deleting') : t('forms.profile.buttons.delete')}
           </Button>
         </DialogActions>
       </Dialog>
