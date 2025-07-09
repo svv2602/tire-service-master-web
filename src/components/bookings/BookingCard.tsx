@@ -81,7 +81,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
       const date = new Date(`2000-01-01T${timeString}`);
       return format(date, 'HH:mm');
     } catch (error) {
-      console.warn('Ошибка форматирования времени:', timeString);
+      console.warn(t('forms.clientPages.bookingCard.comments.errorFormat'), timeString);
       return timeString;
     }
   };
@@ -96,14 +96,14 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
       const fullAddress = cityName ? `${address}, ${cityName}` : address;
       
       return {
-        name: name || `Сервисная точка #${booking.service_point.id}`,
+        name: name || `${t('forms.clientPages.bookingCard.servicePointFallback')} #${booking.service_point.id}`,
         address: fullAddress
       };
     }
     
     // Fallback если нет данных о сервисной точке
     return {
-      name: `${t('Сервисная точка')} #${booking.service_point_id}`,
+      name: `${t('forms.clientPages.bookingCard.servicePointFallback')} #${booking.service_point_id}`,
       address: ''
     };
   };
@@ -141,7 +141,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
       
       await cancelClientBooking({
         id: booking.id,
-        cancellation_comment: cancellationComment || 'Отменено клиентом'
+        cancellation_comment: cancellationComment || t('forms.clientPages.bookingCard.cancelDialog.defaultComment')
       }).unwrap();
       
       // Закрываем диалог
@@ -156,11 +156,11 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
       navigate('/client/bookings?tab=cancelled');
       
     } catch (error: any) {
-      console.error('Ошибка при отмене записи:', error);
+      console.error(t('forms.clientPages.bookingCard.comments.errorCancel'), error);
       setCancelError(
         error?.data?.error || 
         error?.message || 
-        'Произошла ошибка при отмене записи'
+        t('forms.clientPages.bookingCard.cancelDialog.errorMessage')
       );
     }
   };
@@ -181,7 +181,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
         <CardContent>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
             <Typography variant="h6" component="h3">
-              {t('Бронирование')} #{booking.id}
+              {t('forms.clientPages.bookingCard.title')} #{booking.id}
             </Typography>
             <Chip 
               label={getStatusName(booking.status)} 
@@ -191,34 +191,34 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
           </Box>
           
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            {t('Дата')}: {formattedDate}
+            {t('forms.clientPages.bookingCard.date')}: {formattedDate}
           </Typography>
           
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            {t('Время')}: {formatTime(booking.start_time)} - {booking.end_time}
+            {t('forms.clientPages.bookingCard.time')}: {formatTime(booking.start_time)} - {booking.end_time}
           </Typography>
           
           {booking.service_point && (
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              {t('Сервисная точка')}: {booking.service_point.name}
+              {t('forms.clientPages.bookingCard.servicePoint')}: {booking.service_point.name}
             </Typography>
           )}
           
           {booking.notes && (
             <Typography variant="body2" color="text.secondary" mt={1}>
-              {t('Примечания')}: {booking.notes}
+              {t('forms.clientPages.bookingCard.notes')}: {booking.notes}
             </Typography>
           )}
         </CardContent>
         
         <CardActions>
           <Button size="small" onClick={handleViewDetails}>
-            {t('Подробнее')}
+            {t('forms.clientPages.bookingCard.actions.details')}
           </Button>
           
           {canModifyBooking && (
             <Button size="small" color="primary" onClick={handleReschedule}>
-              {t('Перенести')}
+              {t('forms.clientPages.bookingCard.actions.reschedule')}
             </Button>
           )}
           
@@ -229,7 +229,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
               onClick={handleCancelClick}
               disabled={isCancelling}
             >
-              {isCancelling ? <CircularProgress size={16} /> : t('Отменить')}
+              {isCancelling ? <CircularProgress size={16} /> : t('forms.clientPages.bookingCard.actions.cancel')}
             </Button>
           )}
         </CardActions>
@@ -243,11 +243,14 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
         fullWidth
       >
         <DialogTitle>
-          Отмена записи
+          {t('forms.clientPages.bookingCard.cancelDialog.title')}
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Вы действительно хотите отменить запись на {formattedDate} в {formatTime(booking.start_time)}?
+            {t('forms.clientPages.bookingCard.cancelDialog.message', { 
+              date: formattedDate, 
+              time: formatTime(booking.start_time) 
+            })}
           </DialogContentText>
           
           {cancelError && (
@@ -257,13 +260,13 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
           )}
           
           <TextField
-            label="Причина отмены (необязательно)"
+            label={t('forms.clientPages.bookingCard.cancelDialog.reasonLabel')}
             multiline
             rows={3}
             fullWidth
             value={cancellationComment}
             onChange={(e) => setCancellationComment(e.target.value)}
-            placeholder="Укажите причину отмены записи..."
+            placeholder={t('forms.clientPages.bookingCard.cancelDialog.reasonPlaceholder')}
             sx={{ mt: 1 }}
           />
         </DialogContent>
@@ -272,7 +275,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
             onClick={handleCancelDialogClose}
             disabled={isCancelling}
           >
-            Назад
+            {t('forms.clientPages.bookingCard.cancelDialog.backButton')}
           </Button>
           <Button 
             onClick={handleConfirmCancel}
@@ -283,10 +286,10 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onClick, onBookingUp
             {isCancelling ? (
               <>
                 <CircularProgress size={16} sx={{ mr: 1 }} />
-                Отменяем...
+                {t('forms.clientPages.bookingCard.actions.cancelling')}
               </>
             ) : (
-              'Отменить запись'
+              t('forms.clientPages.bookingCard.cancelDialog.confirmButton')
             )}
           </Button>
         </DialogActions>

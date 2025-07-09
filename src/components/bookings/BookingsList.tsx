@@ -16,7 +16,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, onBookingUpdated 
     return (
       <Box textAlign="center" py={4}>
         <Typography variant="body1" color="textSecondary">
-          {t('Записи не найдены')}
+          {t('forms.clientPages.bookingsList.noBookingsFound')}
         </Typography>
       </Box>
     );

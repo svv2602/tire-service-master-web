@@ -1,0 +1,86 @@
+{
+  "bookingCalendar": {
+    "todayButton": "Сегодня",
+    "views": {
+      "day": "День",
+      "week": "Неделя", 
+      "month": "Месяц"
+    },
+    "stats": {
+      "found": "Найдено бронирований",
+      "outOf": "из",
+      "total": "общих"
+    },
+    "filters": {
+      "servicePoint": "Точка",
+      "category": "Категория"
+    },
+    "bulkActions": {
+      "selected": "Выбрано записей",
+      "confirmAll": "Подтвердить все",
+      "cancelAll": "Отменить все",
+      "rescheduleAll": "Перенести все",
+      "selectAll": "Выбрать все",
+      "clearSelection": "Очистить выбор"
+    },
+    "dayView": {
+      "recordsFor": "Записи на",
+      "noRecords": "На этот день записей нет"
+    },
+    "weekView": {
+      "more": "ещё"
+    },
+    "monthView": {
+      "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+    },
+    "dayDialog": {
+      "title": "Записи на",
+      "noRecords": "На этот день записей нет",
+      "closeButton": "Закрыть"
+    },
+    "loading": "Загрузка...",
+    "guestRecord": "Гостевая запись"
+  },
+  "bookingFilters": {
+    "dateFrom": "Дата с",
+    "dateTo": "Дата по",
+    "resetButton": "Сбросить"
+  },
+  "bookingStatus": {
+    "title": "Статус бронирования",
+    "cancelled": "Запись отменена",
+    "steps": {
+      "pending": "В ожидании",
+      "confirmed": "Подтверждено",
+      "inProgress": "В процессе",
+      "completed": "Завершено"
+    }
+  },
+  "bookingStatusBadge": {
+    "pending": "В ожидании",
+    "confirmed": "Подтверждено",
+    "inProgress": "В процессе",
+    "completed": "Завершено",
+    "cancelled": "Отменено"
+  },
+  "contactService": {
+    "title": "Контактная информация",
+    "loadError": "Не удалось загрузить контактную информацию",
+    "noInfo": "Информация отсутствует",
+    "defaultServiceName": "Шиномонтажный сервис",
+    "workingHours": "Часы работы",
+    "closed": "Выходной",
+    "formatError": "Ошибка форматирования рабочих часов:",
+    "callButton": "Позвонить в сервис",
+    "emailButton": "Написать на почту",
+    "days": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник",
+      "wednesday": "Среда",
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    }
+  }
+} 

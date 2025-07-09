@@ -58,6 +58,10 @@ import profileUkTranslations from './locales/forms/profile/profile-uk.json';
 import carBrandsRuTranslations from './locales/forms/car-brands/car-brands-ru.json';
 import carBrandsUkTranslations from './locales/forms/car-brands/car-brands-uk.json';
 
+// Components translations
+import componentsRuTranslations from './locales/components/ru.json';
+import componentsUkTranslations from './locales/components/uk.json';
+
 // Deep merge utility function
 function deepMerge(target: any, source: any): any {
   const result = { ...target };
@@ -130,9 +134,11 @@ const ruTranslationModules = [
 const resources = {
   uk: {
     translation: ukTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
+    components: componentsUkTranslations,
   },
   ru: {
     translation: ruTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
+    components: componentsRuTranslations,
   },
 };
 

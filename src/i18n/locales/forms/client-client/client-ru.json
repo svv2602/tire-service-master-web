@@ -1,5 +1,49 @@
 {
   "forms": {
+    "components": {
+      "bookingCalendar": {
+        "todayButton": "Сегодня",
+        "views": {
+          "day": "День",
+          "week": "Неделя", 
+          "month": "Месяц"
+        },
+        "stats": {
+          "found": "Найдено бронирований",
+          "outOf": "из",
+          "total": "общих"
+        },
+        "filters": {
+          "servicePoint": "Точка",
+          "category": "Категория"
+        },
+        "bulkActions": {
+          "selected": "Выбрано записей",
+          "confirmAll": "Подтвердить все",
+          "cancelAll": "Отменить все",
+          "rescheduleAll": "Перенести все",
+          "selectAll": "Выбрать все",
+          "clearSelection": "Очистить выбор"
+        },
+        "dayView": {
+          "recordsFor": "Записи на",
+          "noRecords": "На этот день записей нет"
+        },
+        "weekView": {
+          "more": "ещё"
+        },
+        "monthView": {
+          "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+        },
+        "dayDialog": {
+          "title": "Записи на",
+          "noRecords": "На этот день записей нет",
+          "closeButton": "Закрыть"
+        },
+        "loading": "Загрузка...",
+        "guestRecord": "Гостевая запись"
+      }
+    },
     "clientPages": {
       "myBookings": {
         "title": "Мои записи",
@@ -167,6 +211,79 @@
       "main": {
         "cityNotSelected": "Город не выбран для поиска",
         "navigatingToBooking": "Переход на бронирование с городом:"
+      },
+      "bookingCard": {
+        "title": "Бронирование",
+        "date": "Дата",
+        "time": "Время",
+        "servicePoint": "Сервисная точка",
+        "notes": "Примечания",
+        "actions": {
+          "details": "Подробнее",
+          "reschedule": "Перенести",
+          "cancel": "Отменить",
+          "cancelling": "Отменяем..."
+        },
+        "cancelDialog": {
+          "title": "Отмена записи",
+          "message": "Вы действительно хотите отменить запись на {{date}} в {{time}}?",
+          "reasonLabel": "Причина отмены (необязательно)",
+          "reasonPlaceholder": "Укажите причину отмены записи...",
+          "backButton": "Назад",
+          "confirmButton": "Отменить запись",
+          "defaultComment": "Отменено клиентом",
+          "errorMessage": "Произошла ошибка при отмене записи"
+        },
+        "servicePointFallback": "Сервисная точка",
+        "comments": {
+          "errorFormat": "Ошибка форматирования времени:",
+          "errorCancel": "Ошибка при отмене записи:"
+        }
+      },
+      "bookingFilters": {
+        "dateFrom": "Дата с",
+        "dateTo": "Дата по",
+        "resetButton": "Сбросить"
+      },
+      "bookingStatus": {
+        "title": "Статус бронирования",
+        "cancelled": "Запись отменена",
+        "steps": {
+          "pending": "В ожидании",
+          "confirmed": "Подтверждено",
+          "inProgress": "В процессе",
+          "completed": "Завершено"
+        }
+      },
+      "bookingStatusBadge": {
+        "pending": "В ожидании",
+        "confirmed": "Подтверждено",
+        "inProgress": "В процессе",
+        "completed": "Завершено",
+        "cancelled": "Отменено"
+      },
+      "bookingsList": {
+        "noBookingsFound": "Записи не найдены"
+      },
+      "contactService": {
+        "title": "Контактная информация",
+        "loadError": "Не удалось загрузить контактную информацию",
+        "noInfo": "Информация отсутствует",
+        "defaultServiceName": "Шиномонтажный сервис",
+        "workingHours": "Часы работы",
+        "closed": "Выходной",
+        "formatError": "Ошибка форматирования рабочих часов:",
+        "callButton": "Позвонить в сервис",
+        "emailButton": "Написать на почту",
+        "days": {
+          "monday": "Понедельник",
+          "tuesday": "Вторник",
+          "wednesday": "Среда",
+          "thursday": "Четверг",
+          "friday": "Пятница",
+          "saturday": "Суббота",
+          "sunday": "Воскресенье"
+        }
       },
       "myBookingsList": {
         "title": "Мои записи на шиномонтаж",

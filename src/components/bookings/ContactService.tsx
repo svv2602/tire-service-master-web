@@ -12,7 +12,7 @@ interface ContactServiceProps {
 }
 
 const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   
   // Запрос на получение данных о сервисной точке
   const { data: servicePoint, isLoading, isError } = useGetServicePointByIdQuery(String(servicePointId));
@@ -21,7 +21,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
     return (
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          {t('Контактная информация')}
+          {t('contactService.title')}
         </Typography>
         <Box display="flex" justifyContent="center" my={3}>
           <CircularProgress size={30} />
@@ -34,10 +34,10 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
     return (
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h6" gutterBottom>
-          {t('Контактная информация')}
+          {t('contactService.title')}
         </Typography>
         <Alert severity="warning" sx={{ mt: 2 }}>
-          {t('Не удалось загрузить контактную информацию')}
+          {t('contactService.loadError')}
         </Alert>
       </Paper>
     );
@@ -45,7 +45,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
 
   // Преобразуем рабочие часы в строку для отображения
   const formatWorkingHours = (workingHours: any): string => {
-    if (!workingHours) return 'Информация отсутствует';
+    if (!workingHours) return t('contactService.noInfo');
     
     try {
       if (typeof workingHours === 'string') {
@@ -54,36 +54,36 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
       
       // Предполагаем, что workingHours - это объект с днями недели
       const daysTranslation: Record<string, string> = {
-        monday: 'Понедельник',
-        tuesday: 'Вторник',
-        wednesday: 'Среда',
-        thursday: 'Четверг',
-        friday: 'Пятница',
-        saturday: 'Суббота',
-        sunday: 'Воскресенье'
+        monday: t('contactService.days.monday'),
+        tuesday: t('contactService.days.tuesday'),
+        wednesday: t('contactService.days.wednesday'),
+        thursday: t('contactService.days.thursday'),
+        friday: t('contactService.days.friday'),
+        saturday: t('contactService.days.saturday'),
+        sunday: t('contactService.days.sunday')
       };
       
       return Object.entries(workingHours)
         .map(([day, hours]) => {
-          if (!hours || (hours as any).closed) return `${daysTranslation[day]}: Выходной`;
+          if (!hours || (hours as any).closed) return `${daysTranslation[day]}: ${t('contactService.closed')}`;
           return `${daysTranslation[day]}: ${(hours as any).start || ''} - ${(hours as any).end || ''}`;
         })
         .join('\n');
     } catch (error) {
-      console.error('Ошибка форматирования рабочих часов:', error);
-      return 'Информация отсутствует';
+      console.error(t('contactService.formatError'), error);
+      return t('contactService.noInfo');
     }
   };
 
   return (
     <Paper elevation={2} sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {t('Контактная информация')}
+        {t('contactService.title')}
       </Typography>
       
       <Box mt={2}>
         <Typography variant="subtitle1" gutterBottom>
-          {servicePoint.name || t('Шиномонтажный сервис')}
+          {servicePoint.name || t('contactService.defaultServiceName')}
         </Typography>
         
         {servicePoint.address && (
@@ -122,7 +122,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
             <AccessTimeIcon fontSize="small" sx={{ mr: 1, mt: 0.3, color: 'text.secondary' }} />
             <Box>
               <Typography variant="body2" gutterBottom>
-                {t('Часы работы')}:
+                {t('contactService.workingHours')}:
               </Typography>
               <Typography variant="body2" component="div" sx={{ whiteSpace: 'pre-line' }}>
                 {formatWorkingHours(servicePoint.working_hours)}
@@ -142,7 +142,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
           startIcon={<PhoneIcon />}
           disabled={!servicePoint.phone}
         >
-          {t('Позвонить в сервис')}
+          {t('contactService.callButton')}
         </Button>
         
         {servicePoint.email && (
@@ -153,7 +153,7 @@ const ContactService: React.FC<ContactServiceProps> = ({ servicePointId }) => {
             startIcon={<EmailIcon />}
             sx={{ mt: 1 }}
           >
-            {t('Написать на почту')}
+            {t('contactService.emailButton')}
           </Button>
         )}
       </Box>

@@ -31,17 +31,17 @@ const getActiveStep = (status: string): number => {
 };
 
 export const BookingStatus: React.FC<BookingStatusProps> = ({ booking }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
 
   // Получение активного шага
   const activeStep = getActiveStep(booking.status);
 
   // Шаги процесса
   const steps = [
-    t('В ожидании'),
-    t('Подтверждено'),
-    t('В процессе'),
-    t('Завершено')
+    t('bookingStatus.steps.pending'),
+    t('bookingStatus.steps.confirmed'),
+    t('bookingStatus.steps.inProgress'),
+    t('bookingStatus.steps.completed')
   ];
 
   const statusKey = convertStatusToKey(booking.status);
@@ -52,13 +52,13 @@ export const BookingStatus: React.FC<BookingStatusProps> = ({ booking }) => {
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        {t('Статус бронирования')}
+        {t('bookingStatus.title')}
       </Typography>
 
       {isCancelled ? (
         <Box mt={2}>
           <Typography variant="body1" color="error" gutterBottom>
-            {t('Запись отменена')}
+            {t('bookingStatus.cancelled')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {getStatusDisplayName(booking.status)}

@@ -1,0 +1,86 @@
+{
+  "bookingCalendar": {
+    "todayButton": "Сьогодні",
+    "views": {
+      "day": "День",
+      "week": "Тиждень", 
+      "month": "Місяць"
+    },
+    "stats": {
+      "found": "Знайдено бронювань",
+      "outOf": "з",
+      "total": "загальних"
+    },
+    "filters": {
+      "servicePoint": "Точка",
+      "category": "Категорія"
+    },
+    "bulkActions": {
+      "selected": "Вибрано записів",
+      "confirmAll": "Підтвердити всі",
+      "cancelAll": "Скасувати всі",
+      "rescheduleAll": "Перенести всі",
+      "selectAll": "Вибрати всі",
+      "clearSelection": "Очистити вибір"
+    },
+    "dayView": {
+      "recordsFor": "Записи на",
+      "noRecords": "На цей день записів немає"
+    },
+    "weekView": {
+      "more": "ще"
+    },
+    "monthView": {
+      "days": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"]
+    },
+    "dayDialog": {
+      "title": "Записи на",
+      "noRecords": "На цей день записів немає",
+      "closeButton": "Закрити"
+    },
+    "loading": "Завантаження...",
+    "guestRecord": "Гостьовий запис"
+  },
+  "bookingFilters": {
+    "dateFrom": "Дата з",
+    "dateTo": "Дата по",
+    "resetButton": "Скинути"
+  },
+  "bookingStatus": {
+    "title": "Статус бронювання",
+    "cancelled": "Запис скасовано",
+    "steps": {
+      "pending": "Очікує",
+      "confirmed": "Підтверджено",
+      "inProgress": "В процесі",
+      "completed": "Завершено"
+    }
+  },
+  "bookingStatusBadge": {
+    "pending": "Очікує",
+    "confirmed": "Підтверджено",
+    "inProgress": "В процесі",
+    "completed": "Завершено",
+    "cancelled": "Скасовано"
+  },
+  "contactService": {
+    "title": "Контактна інформація",
+    "loadError": "Не вдалося завантажити контактну інформацію",
+    "noInfo": "Інформація відсутня",
+    "defaultServiceName": "Шиномонтажний сервіс",
+    "workingHours": "Години роботи",
+    "closed": "Вихідний",
+    "formatError": "Помилка форматування робочих годин:",
+    "callButton": "Подзвонити в сервіс",
+    "emailButton": "Написати на пошту",
+    "days": {
+      "monday": "Понеділок",
+      "tuesday": "Вівторок",
+      "wednesday": "Середа",
+      "thursday": "Четвер",
+      "friday": "П'ятниця",
+      "saturday": "Субота",
+      "sunday": "Неділя"
+    }
+  }
+} 

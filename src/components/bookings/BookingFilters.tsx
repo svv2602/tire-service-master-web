@@ -14,7 +14,7 @@ interface BookingFiltersProps {
 }
 
 const BookingFilters: React.FC<BookingFiltersProps> = ({ filters, onFilterChange }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
 
   // Обработчик изменения даты "с"
   const handleDateFromChange = (date: Date | null) => {
@@ -47,7 +47,7 @@ const BookingFilters: React.FC<BookingFiltersProps> = ({ filters, onFilterChange
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={12} sm={5} md={4}>
           <DatePicker
-            label={t('Дата с')}
+            label={t('bookingFilters.dateFrom')}
             value={filters.dateFrom ? new Date(filters.dateFrom) : null}
             onChange={handleDateFromChange}
             slotProps={{
@@ -62,7 +62,7 @@ const BookingFilters: React.FC<BookingFiltersProps> = ({ filters, onFilterChange
         
         <Grid item xs={12} sm={5} md={4}>
           <DatePicker
-            label={t('Дата по')}
+            label={t('bookingFilters.dateTo')}
             value={filters.dateTo ? new Date(filters.dateTo) : null}
             onChange={handleDateToChange}
             slotProps={{
@@ -82,7 +82,7 @@ const BookingFilters: React.FC<BookingFiltersProps> = ({ filters, onFilterChange
               onClick={handleResetFilters}
               size="medium"
             >
-              {t('Сбросить')}
+              {t('bookingFilters.resetButton')}
             </Button>
           </Box>
         </Grid>

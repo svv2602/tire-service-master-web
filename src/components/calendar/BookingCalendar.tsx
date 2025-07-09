@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors } from '../../styles';
+import { useTranslation } from 'react-i18next';
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, 
          addWeeks, addMonths, startOfMonth, endOfMonth, isSameDay, isToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -63,6 +64,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   totalBookings,
   appliedFilters,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -198,7 +200,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             startIcon={<TodayIcon />}
             sx={{ minWidth: 120 }}
           >
-            Сегодня
+            {t('forms.components.bookingCalendar.todayButton')}
           </Button>
           
           <IconButton onClick={() => navigateCalendar('next')}>
@@ -219,21 +221,21 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             onClick={() => setView('day')}
             startIcon={<CalendarViewIcon />}
           >
-            День
+            {t('forms.components.bookingCalendar.views.day')}
           </Button>
           <Button 
             variant={view === 'week' ? 'contained' : 'outlined'}
             onClick={() => setView('week')}
             startIcon={<ViewWeekIcon />}
           >
-            Неделя
+            {t('forms.components.bookingCalendar.views.week')}
           </Button>
           <Button 
             variant={view === 'month' ? 'contained' : 'outlined'}
             onClick={() => setView('month')}
             startIcon={<ViewModuleIcon />}
           >
-            Месяц
+            {t('forms.components.bookingCalendar.views.month')}
           </Button>
         </ButtonGroup>
       </Box>
@@ -252,10 +254,10 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="body1">
-            <strong>Найдено бронирований:</strong> {bookings.length}
+            <strong>{t('forms.components.bookingCalendar.stats.found')}:</strong> {bookings.length}
             {totalBookings && totalBookings !== bookings.length && (
               <span style={{ color: colors.textSecondary }}>
-                {' '}из {totalBookings} общих
+                {' '}{t('forms.components.bookingCalendar.stats.outOf')} {totalBookings} {t('forms.components.bookingCalendar.stats.total')}
               </span>
             )}
           </Typography>
@@ -264,7 +266,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
               {appliedFilters.servicePoint && (
                 <Chip 
-                  label={`Точка: ${appliedFilters.servicePoint}`}
+                  label={`${t('forms.components.bookingCalendar.filters.servicePoint')}: ${appliedFilters.servicePoint}`}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -272,7 +274,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
               )}
               {appliedFilters.category && (
                 <Chip 
-                  label={`Категория: ${appliedFilters.category}`}
+                  label={`${t('forms.components.bookingCalendar.filters.category')}: ${appliedFilters.category}`}
                   size="small"
                   color="primary"
                   variant="outlined"
