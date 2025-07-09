@@ -95,7 +95,10 @@
         "myBookingsTitle": "Мои записи",
         "bookingNumber": "Запись №{{id}}",
         "priceUnit": "грн",
-        "quantityUnit": "шт."
+        "quantityUnit": "шт.",
+        "car": "Автомобиль",
+        "licensePlate": "Номер",
+        "client": "Клиент"
       },
       "profile": {
         "firstName": "Имя",

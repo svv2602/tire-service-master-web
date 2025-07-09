@@ -175,14 +175,13 @@ const BookingDetailsPage: React.FC = () => {
     try {
       await cancelBooking({
         id: id,
-        cancellation_reason_id: 10, // t('client.bookingDetails.cancellationReasonScheduleChange')
-        cancellation_comment: t('client.bookingDetails.cancellationCommentByClient')
+        cancellation_reason_id: 10,
+        cancellation_comment: t('forms.clientPages.bookingDetails.cancellationCommentByClient')
       }).unwrap();
       setCancelDialogOpen(false);
-      // t('client.bookingDetails.redirectToCancelledTab')
       navigate('/client/bookings?tab=cancelled');
     } catch (error: any) {
-      setCancelError(error.data?.error || t('client.bookingDetails.cancelError'));
+      setCancelError(error.data?.error || t('forms.clientPages.bookingDetails.cancelError'));
     }
   };
   
@@ -232,7 +231,7 @@ const BookingDetailsPage: React.FC = () => {
       parts.push(`г. ${servicePoint.city.name}`);
     }
     
-    return parts.join(', ') || t('client.bookingDetails.servicePoint');
+    return parts.join(', ') || t('forms.clientPages.bookingDetails.servicePoint');
   };
   
   // Если данные загружаются
@@ -252,7 +251,7 @@ const BookingDetailsPage: React.FC = () => {
       <ClientLayout>
         <Container maxWidth="md" sx={{ py: 4 }}>
           <Alert severity="error" sx={{ mb: 2 }}>
-            Не удалось загрузить данные бронирования. Пожалуйста, попробуйте позже.
+            {t('forms.clientPages.bookingDetails.errorLoadingTitle')}
           </Alert>
           <Button 
             variant="outlined" 
@@ -261,7 +260,7 @@ const BookingDetailsPage: React.FC = () => {
             to="/client/bookings"
             sx={secondaryButtonStyles}
           >
-            Вернуться к списку
+            {t('forms.clientPages.bookingDetails.backToListButton')}
           </Button>
         </Container>
       </ClientLayout>
@@ -276,7 +275,7 @@ const BookingDetailsPage: React.FC = () => {
       {/* Навигационная панель с заголовком и кнопкой создания записи */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
-          Мои записи
+          {t('forms.clientPages.bookingDetails.myBookingsTitle')}
         </Typography>
         
         <Button
@@ -285,7 +284,7 @@ const BookingDetailsPage: React.FC = () => {
           onClick={handleNewBooking}
           sx={primaryButtonStyles}
         >
-          Новая запись
+          {t('forms.clientPages.bookingDetails.newBookingButton')}
         </Button>
       </Box>
       
@@ -295,7 +294,7 @@ const BookingDetailsPage: React.FC = () => {
         {/* Заголовок с номером записи и статусом */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            Запись №{booking.id}
+            {t('forms.clientPages.bookingDetails.bookingNumber', { id: booking.id })}
           </Typography>
           <BookingStatusBadge status={bookingStatus} />
         </Box>
@@ -304,12 +303,12 @@ const BookingDetailsPage: React.FC = () => {
         
         {/* Основная информация о бронировании - компактная сетка */}
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          {/* {t('client.bookingDetails.date')} и время в одной строке */}
+          {/* Дата и время в одной строке */}
           <Grid item xs={12} sm={6}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <CalendarIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                {t('client.bookingDetails.date')}:
+                {t('forms.clientPages.bookingDetails.date')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatBookingDate(booking.booking_date)}
@@ -321,7 +320,7 @@ const BookingDetailsPage: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <TimeIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                {t('client.bookingDetails.time')}:
+                {t('forms.clientPages.bookingDetails.time')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {formatTime(booking.start_time)}
@@ -334,7 +333,7 @@ const BookingDetailsPage: React.FC = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
               <CategoryIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                Категория:
+                {t('forms.clientPages.bookingDetails.category')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {booking.service_category?.name || '—'}
@@ -351,7 +350,7 @@ const BookingDetailsPage: React.FC = () => {
             <LocationIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem', mt: 0.1 }} />
             <Box sx={{ flexGrow: 1 }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                {t('client.bookingDetails.servicePoint')}:
+                {t('forms.clientPages.bookingDetails.servicePoint')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500, lineHeight: 1.3 }}>
                 {formatServicePointInfo(booking.service_point)}
@@ -376,7 +375,7 @@ const BookingDetailsPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
             <CarIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
             <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-              Автомобиль:
+              {t('forms.clientPages.bookingDetails.car')}:
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {booking.car_info?.brand && booking.car_info?.model 
@@ -389,7 +388,7 @@ const BookingDetailsPage: React.FC = () => {
           {booking.car_info?.license_plate && (
             <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                Номер:
+                {t('forms.clientPages.bookingDetails.licensePlate')}:
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                 {booking.car_info.license_plate}
@@ -406,7 +405,7 @@ const BookingDetailsPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <PersonIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                  Клиент:
+                  {t('forms.clientPages.bookingDetails.client')}:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {booking.client.name || '—'}
@@ -415,7 +414,7 @@ const BookingDetailsPage: React.FC = () => {
               
               <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                  Телефон:
+                  {t('forms.clientPages.bookingDetails.phone')}:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {booking.client.phone || '—'}
@@ -433,7 +432,7 @@ const BookingDetailsPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
                 <ServiceIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
                 <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Услуги:
+                  {t('forms.clientPages.bookingDetails.services')}:
                 </Typography>
               </Box>
               
@@ -451,11 +450,11 @@ const BookingDetailsPage: React.FC = () => {
                         {service.name}
                       </Typography>
                       <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                        {service.quantity} шт. × {service.price} грн
+                        {service.quantity} {t('forms.clientPages.bookingDetails.quantityUnit')} × {service.price} {t('forms.clientPages.bookingDetails.priceUnit')}
                       </Typography>
                     </Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: colors.primary }}>
-                      {service.quantity * service.price} грн
+                      {service.quantity * service.price} {t('forms.clientPages.bookingDetails.priceUnit')}
                     </Typography>
                   </Box>
                 ))}
@@ -473,7 +472,7 @@ const BookingDetailsPage: React.FC = () => {
                 <CommentIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem', mt: 0.1 }} />
                 <Box>
                   <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                    Примечания:
+                    {t('forms.clientPages.bookingDetails.notes')}:
                   </Typography>
                   <Typography variant="body2" sx={{ backgroundColor: colors.backgroundField, p: 1, borderRadius: 1 }}>
                     {booking.notes}
@@ -496,7 +495,7 @@ const BookingDetailsPage: React.FC = () => {
             sx={{ ...secondaryButtonStyles, minWidth: 'auto' }}
             size="small"
           >
-            Назад
+            {t('forms.clientPages.bookingDetails.backButton')}
           </Button>
           
           <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -511,7 +510,7 @@ const BookingDetailsPage: React.FC = () => {
                   sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
                   size="small"
                 >
-                  Перенести
+                  {t('forms.clientPages.bookingDetails.rescheduleButton')}
                 </Button>
               )}
               
@@ -525,7 +524,7 @@ const BookingDetailsPage: React.FC = () => {
                   sx={{ ...dangerButtonStyles, minWidth: 'auto' }}
                   size="small"
                 >
-                  {isCancelling ? <CircularProgress size={16} /> : 'Отменить'}
+                  {isCancelling ? <CircularProgress size={16} /> : t('forms.clientPages.bookingDetails.cancelButton')}
                 </Button>
               )}
               
@@ -539,7 +538,7 @@ const BookingDetailsPage: React.FC = () => {
                   sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
                   size="small"
                 >
-                  Новая запись
+                  {t('forms.clientPages.bookingDetails.newBookingButton')}
                 </Button>
               )}
             </Box>
@@ -552,7 +551,7 @@ const BookingDetailsPage: React.FC = () => {
                 textAlign: 'right',
                 maxWidth: '200px'
               }}>
-                Запись отменена. Действия недоступны.
+                {t('forms.clientPages.bookingDetails.cancelledMessage')}
               </Typography>
             )}
             
@@ -564,7 +563,7 @@ const BookingDetailsPage: React.FC = () => {
                 textAlign: 'right',
                 maxWidth: '200px'
               }}>
-                Услуга выполнена. Изменения недоступны.
+                {t('forms.clientPages.bookingDetails.completedMessage')}
               </Typography>
             )}
           </Box>
@@ -576,10 +575,10 @@ const BookingDetailsPage: React.FC = () => {
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
       >
-        <DialogTitle>Отмена записи</DialogTitle>
+        <DialogTitle>{t('forms.clientPages.bookingDetails.cancelDialogTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Вы уверены, что хотите отменить запись? Это действие нельзя отменить.
+            {t('forms.clientPages.bookingDetails.cancelDialogText')}
           </DialogContentText>
           {cancelError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -593,7 +592,7 @@ const BookingDetailsPage: React.FC = () => {
             sx={secondaryButtonStyles}
             disabled={isCancelling}
           >
-            Отмена
+            {t('forms.clientPages.bookingDetails.cancelDialogCancel')}
           </Button>
           <Button 
             onClick={handleCancelBooking} 
@@ -602,7 +601,7 @@ const BookingDetailsPage: React.FC = () => {
             disabled={isCancelling}
             sx={dangerButtonStyles}
           >
-            {isCancelling ? <CircularProgress size={24} /> : 'Подтвердить отмену'}
+            {isCancelling ? <CircularProgress size={24} /> : t('forms.clientPages.bookingDetails.confirmCancel')}
           </Button>
         </DialogActions>
       </Dialog>
