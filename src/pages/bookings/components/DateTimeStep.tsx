@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { format, parseISO, addDays } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateLocale } from '../../../hooks/useDateLocale';
 import {
   LocationOn as LocationIcon,
 } from '@mui/icons-material';
@@ -51,6 +51,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   isValid,
 }) => {
   const { t } = useTranslation();
+  const dateLocale = useDateLocale();
   const theme = useTheme();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
@@ -299,7 +300,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
               {t('bookingSteps.dateTime.selectDate')}
             </Typography>
             {selectedDate && (
-              <Chip label={format(selectedDate, 'd MMMM yyyy', { locale: ru })} color="success" size="small" />
+              <Chip label={format(selectedDate, 'd MMMM yyyy', { locale: dateLocale })} color="success" size="small" />
             )}
           </Stack>
         </AccordionSummary>
