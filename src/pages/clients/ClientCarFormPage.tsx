@@ -38,14 +38,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
  * Проверяет обязательность полей и форматы данных
  */
 const createValidationSchema = (t: any) => Yup.object({
-  brand_id: Yup.number().required('Обязательное поле'),
-  model_id: Yup.number().required('Обязательное поле'),
+  brand_id: Yup.number().required(t('admin.clients.cars.form.validation.required')),
+  model_id: Yup.number().required(t('admin.clients.cars.form.validation.required')),
   year: Yup.number()
-    .min(1900, 'Год должен быть не раньше 1900')
-    .max(new Date().getFullYear(), 'Год не может быть больше текущего')
-    .required('Обязательное поле'),
+    .min(1900, t('admin.clients.cars.form.validation.yearMin'))
+    .max(new Date().getFullYear(), t('admin.clients.cars.form.validation.yearMax'))
+    .required(t('admin.clients.cars.form.validation.required')),
   license_plate: Yup.string()
-    .required('Обязательное поле'),
+    .required(t('admin.clients.cars.form.validation.required')),
   car_type_id: Yup.number().nullable(),
   is_primary: Yup.boolean(),
 });
@@ -137,10 +137,10 @@ const ClientCarFormPage: React.FC = () => {
         setSuccessMessage('');
         if (isEditMode && carId && clientId) {
           await updateCar({ clientId, carId, data: values }).unwrap();
-          setSuccessMessage('Автомобиль успешно обновлен');
+          setSuccessMessage(t('admin.clients.cars.form.messages.carUpdated'));
         } else if (clientId) {
           await createCar({ clientId, data: { car: values } }).unwrap();
-          setSuccessMessage('Автомобиль успешно создан');
+          setSuccessMessage(t('admin.clients.cars.form.messages.carCreated'));
         }
         setTimeout(() => navigate(`/admin/clients/${clientId}/cars`), 1000);
       } catch (error) {
@@ -188,7 +188,7 @@ const ClientCarFormPage: React.FC = () => {
     return (
       <Box sx={{ p: SIZES.spacing.xl }}>
         <Alert severity="error">
-          Клиент не найден
+          {t('admin.clients.cars.form.messages.clientNotFound')}
         </Alert>
       </Box>
     );
@@ -203,10 +203,10 @@ const ClientCarFormPage: React.FC = () => {
           onClick={handleCancel}
           sx={{ mr: 2 }}
         >
-          Назад
+          {t('admin.clients.cars.form.buttons.back')}
         </Button>
         <Typography variant="h4">
-          {isEditMode ? 'Редактирование автомобиля' : 'Добавление автомобиля'}
+          {isEditMode ? t('admin.clients.cars.form.title.edit') : t('admin.clients.cars.form.title.create')}
         </Typography>
       </Box>
 
@@ -227,7 +227,7 @@ const ClientCarFormPage: React.FC = () => {
             mb: SIZES.spacing.lg 
           }}
         >
-          {isEditMode ? 'Редактирование автомобиля' : 'Новый автомобиль'}
+          {isEditMode ? t('admin.clients.cars.form.title.editHeader') : t('admin.clients.cars.form.title.createHeader')}
         </Typography>
 
         <form onSubmit={formik.handleSubmit}>
@@ -239,7 +239,7 @@ const ClientCarFormPage: React.FC = () => {
                 error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel>Марка автомобиля *</InputLabel>
+                <InputLabel>{t('admin.clients.cars.form.fields.brand')}</InputLabel>
                 <Select
                   name="brand_id"
                   value={formik.values.brand_id || ''}
@@ -248,11 +248,11 @@ const ClientCarFormPage: React.FC = () => {
                     // Сбрасываем модель при смене марки
                     formik.setFieldValue('model_id', 0);
                   }}
-                  label="Марка автомобиля *"
+                  label={t('admin.clients.cars.form.fields.brand')}
                   disabled={isLoadingBrands}
                 >
                   <MenuItem value="">
-                    <em>Выберите марку</em>
+                    <em>{t('admin.clients.cars.form.placeholders.selectBrand')}</em>
                   </MenuItem>
                   {carBrands.map((brand) => (
                     <MenuItem key={brand.id} value={brand.id}>
@@ -276,16 +276,16 @@ const ClientCarFormPage: React.FC = () => {
                 sx={textFieldStyles}
                 disabled={!formik.values.brand_id || isLoadingModels}
               >
-                <InputLabel>Модель автомобиля *</InputLabel>
+                <InputLabel>{t('admin.clients.cars.form.fields.model')}</InputLabel>
                 <Select
                   name="model_id"
                   value={formik.values.model_id || ''}
                   onChange={(e) => formik.setFieldValue('model_id', Number(e.target.value))}
-                  label="Модель автомобиля *"
+                  label={t('admin.clients.cars.form.fields.model')}
                   disabled={!formik.values.brand_id || isLoadingModels}
                 >
                   <MenuItem value="">
-                    <em>Выберите модель</em>
+                    <em>{t('admin.clients.cars.form.placeholders.selectModel')}</em>
                   </MenuItem>
                   {carModels.map((model) => (
                     <MenuItem key={model.id} value={model.id}>
@@ -306,7 +306,7 @@ const ClientCarFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="year"
-                label="Год выпуска"
+                label={t('admin.clients.cars.form.fields.year')}
                 type="number"
                 value={formik.values.year}
                 onChange={formik.handleChange}
@@ -321,7 +321,7 @@ const ClientCarFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="license_plate"
-                label="Гос. номер"
+                label={t('admin.clients.cars.form.fields.licensePlate')}
                 value={formik.values.license_plate}
                 onChange={formik.handleChange}
                 error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
@@ -337,16 +337,16 @@ const ClientCarFormPage: React.FC = () => {
                 error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel>Тип автомобиля</InputLabel>
+                <InputLabel>{t('admin.clients.cars.form.fields.carType')}</InputLabel>
                 <Select
                   name="car_type_id"
                   value={formik.values.car_type_id || ''}
                   onChange={(e) => formik.setFieldValue('car_type_id', Number(e.target.value) || null)}
-                  label="Тип автомобиля"
+                  label={t('admin.clients.cars.form.fields.carType')}
                   disabled={isLoadingTypes}
                 >
                   <MenuItem value="">
-                    <em>Выберите тип (необязательно)</em>
+                    <em>{t('admin.clients.cars.form.placeholders.selectType')}</em>
                   </MenuItem>
                   {carTypes.map((type) => (
                     <MenuItem key={type.id} value={type.id}>
@@ -372,7 +372,7 @@ const ClientCarFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                   />
                 }
-                label="Основной автомобиль"
+                label={t('admin.clients.cars.form.fields.isPrimary')}
               />
             </Grid>
 
@@ -389,7 +389,7 @@ const ClientCarFormPage: React.FC = () => {
                   onClick={handleCancel}
                   sx={secondaryButtonStyles}
                 >
-                  Отмена
+                  {t('admin.clients.cars.form.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -397,7 +397,7 @@ const ClientCarFormPage: React.FC = () => {
                   disabled={isLoading}
                   sx={primaryButtonStyles}
                 >
-                  {isEditMode ? t('common.save') : t('common.create')}
+                  {isEditMode ? t('admin.clients.cars.form.buttons.save') : t('admin.clients.cars.form.buttons.create')}
                 </Button>
               </Box>
             </Grid>

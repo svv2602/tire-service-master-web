@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -35,6 +36,7 @@ import {
 import { getTablePageStyles } from '../../styles/components';
 
 const ClientCarsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -69,7 +71,7 @@ const ClientCarsPage: React.FC = () => {
       setSelectedCar(null);
       setErrorMessage(null);
     } catch (error: any) {
-      let errorMessage = 'Ошибка при удалении автомобиля';
+      let errorMessage = t('admin.clients.cars.deleteError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -90,7 +92,7 @@ const ClientCarsPage: React.FC = () => {
   const columns: Column[] = useMemo(() => [
     {
       id: 'brand',
-      label: 'Марка',
+      label: t('admin.clients.cars.columns.brand'),
       wrap: true,
       format: (value, row: ClientCar) => (
         <Box sx={tablePageStyles.avatarContainer}>
@@ -101,7 +103,7 @@ const ClientCarsPage: React.FC = () => {
     },
     {
       id: 'model',
-      label: 'Модель',
+      label: t('admin.clients.cars.columns.model'),
       wrap: true,
       format: (value, row: ClientCar) => (
         <Typography>{getModelName(row.model)}</Typography>
@@ -109,21 +111,21 @@ const ClientCarsPage: React.FC = () => {
     },
     {
       id: 'year',
-      label: 'Год',
+      label: t('admin.clients.cars.columns.year'),
       align: 'center'
     },
     {
       id: 'license_plate',
-      label: 'Гос. номер',
+      label: t('admin.clients.cars.columns.licensePlate'),
       wrap: true
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('admin.clients.cars.columns.actions'),
       align: 'right',
       format: (value, row: ClientCar) => (
         <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Редактировать">
+          <Tooltip title={t('admin.clients.cars.actions.edit')}>
             <IconButton
               size="small"
               onClick={() => handleEditClick(row.id)}
@@ -132,7 +134,7 @@ const ClientCarsPage: React.FC = () => {
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Удалить">
+          <Tooltip title={t('admin.clients.cars.actions.delete')}>
             <IconButton
               size="small"
               color="error"
@@ -145,7 +147,7 @@ const ClientCarsPage: React.FC = () => {
         </Box>
       )
     }
-  ], [handleEditClick, handleDeleteClick, tablePageStyles, getBrandName, getModelName]);
+  ], [handleEditClick, handleDeleteClick, tablePageStyles, getBrandName, getModelName, t]);
 
   // Обработка загрузки
   if (isLoading) {
@@ -161,7 +163,7 @@ const ClientCarsPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Клиент не найден
+          {t('admin.clients.cars.clientNotFound')}
         </Alert>
       </Box>
     );
@@ -181,7 +183,7 @@ const ClientCarsPage: React.FC = () => {
       {/* Заголовок */}
       <Box sx={tablePageStyles.headerContainer}>
         <Typography variant="h4" sx={tablePageStyles.title}>
-          Автомобили клиента {client.first_name} {client.last_name}
+          {t('admin.clients.cars.pageTitle', { name: `${client.first_name} ${client.last_name}` })}
         </Typography>
         <Button
           variant="contained"
@@ -189,7 +191,7 @@ const ClientCarsPage: React.FC = () => {
           onClick={() => navigate(`/admin/clients/${clientId}/cars/new`)}
           sx={tablePageStyles.createButton}
         >
-          Добавить автомобиль
+          {t('admin.clients.cars.addCar')}
         </Button>
       </Box>
 
@@ -204,22 +206,24 @@ const ClientCarsPage: React.FC = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle>{t('admin.clients.cars.deleteDialog.title')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить автомобиль {selectedCar ? getBrandName(selectedCar.brand) : ''} {selectedCar ? getModelName(selectedCar.model) : ''}?
+            {t('admin.clients.cars.deleteDialog.message', { 
+              carName: selectedCar ? `${getBrandName(selectedCar.brand)} ${getModelName(selectedCar.model)}` : ''
+            })}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            Отмена
+            {t('admin.clients.cars.deleteDialog.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmDelete} 
             color="error"
             disabled={isDeleting}
           >
-            Удалить
+            {t('admin.clients.cars.deleteDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -560,5 +560,40 @@
       "notifications": "Получать уведомления на email"
     },
     "privacyNotice": "На указанный номер телефона придет SMS с подтверждением записи. Мы не передаем ваши данные третьим лицам и не используем их для рассылки рекламы."
+  },
+  "servicePointCard": {
+    "servicePointPhoto": "Фото сервисной точки",
+    "photos": "фото",
+    "photoGallery": "Фотогалерея",
+    "working": "Работает",
+    "notWorking": "Не работает",
+    "availableCategories": "Доступные категории",
+    "categoryDescription": "Описание категории",
+    "services": "услуг",
+    "categoriesNotLoaded": "Категории не загружены",
+    "workingHours": "Режим работы",
+    "details": "Подробнее",
+    "selected": "Выбрано",
+    "select": "Выбрать",
+    "bookAppointment": "Записаться",
+    "viewDetails": "Подробнее",
+    "workingHoursNotSpecified": "График работы не указан",
+    "rating": "Рейтинг",
+    "reviews": "отзывов",
+    "posts": "постов",
+    "servicesFrom": "от {price} грн",
+    "loadingServices": "Загрузка услуг...",
+    "servicesNotLoaded": "Услуги не загружены",
+    "description": "Описание",
+    "collapse": "Свернуть",
+    "workingDays": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник",
+      "wednesday": "Среда", 
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    }
   }
 } 
