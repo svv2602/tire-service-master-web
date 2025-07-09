@@ -1,6 +1,5 @@
 {
-  "forms": {
-    "review": {
+  "review": {
       "title": {
         "createAdmin": "Создать отзыв",
         "editAdmin": "Редактировать отзыв",
@@ -63,5 +62,4 @@
         "reviewText": "Текст отзыва"
       }
     }
-  }
 } 

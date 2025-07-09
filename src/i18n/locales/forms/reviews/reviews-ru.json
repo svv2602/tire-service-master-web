@@ -1,7 +1,6 @@
 {
-  "forms": {
-    "reviews": {
-      "myReviews": {
+  "reviews": {
+    "myReviews": {
         "title": "Мои отзывы",
         "writeReview": "Написать отзыв",
         "noReviews": "У вас пока нет отзывов",
@@ -31,7 +30,26 @@
           "save": "Сохранить",
           "cancel": "Отмена"
         }
+      },
+      "title": {
+        "create": "Создать отзыв"
+      },
+      "fields": {
+        "reviewText": "Текст отзыва"
+      },
+      "buttons": {
+        "back": "Назад",
+        "cancel": "Отмена", 
+        "delete": "Удалить",
+        "save": "Сохранить",
+        "saveChanges": "Сохранить изменения"
+      },
+      "messages": {
+        "saveError": "Ошибка при сохранении",
+        "saving": "Сохранение..."
+      },
+      "validation": {
+        "fillAllFields": "Заполните все обязательные поля"
       }
     }
-  }
 } 

@@ -1,7 +1,6 @@
 {
-  "forms": {
-    "reviews": {
-      "myReviews": {
+  "reviews": {
+    "myReviews": {
         "title": "Мої відгуки",
         "writeReview": "Написати відгук",
         "noReviews": "У вас поки немає відгуків",
@@ -31,7 +30,26 @@
           "save": "Зберегти",
           "cancel": "Скасувати"
         }
+      },
+      "title": {
+        "create": "Створити відгук"
+      },
+      "fields": {
+        "reviewText": "Текст відгуку"
+      },
+      "buttons": {
+        "back": "Назад",
+        "cancel": "Скасувати", 
+        "delete": "Видалити",
+        "save": "Зберегти",
+        "saveChanges": "Зберегти зміни"
+      },
+      "messages": {
+        "saveError": "Помилка при збереженні",
+        "saving": "Збереження..."
+      },
+      "validation": {
+        "fillAllFields": "Заповніть всі обов'язкові поля"
       }
     }
-  }
 } 
