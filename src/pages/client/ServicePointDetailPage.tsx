@@ -401,10 +401,10 @@ const ServicePointDetailPage: React.FC = () => {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="info">
-          Сервисная точка не найдена
+          {t('forms.clientPages.servicePointDetail.notFound')}
         </Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack} sx={{ mt: 2 }}>
-          Вернуться назад
+          {t('forms.clientPages.servicePointDetail.backButton')}
         </Button>
       </Container>
     );
@@ -425,14 +425,14 @@ const ServicePointDetailPage: React.FC = () => {
           sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
         >
           <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-          Главная
+          {t('forms.clientPages.servicePointDetail.breadcrumbHome')}
         </Link>
         <Link 
           color="inherit" 
           href="/client/search"
           sx={{ textDecoration: 'none' }}
         >
-          Поиск сервисов
+          {t('forms.clientPages.servicePointDetail.breadcrumbSearch')}
         </Link>
         <Typography color="text.primary">{servicePointData.name}</Typography>
       </Breadcrumbs>

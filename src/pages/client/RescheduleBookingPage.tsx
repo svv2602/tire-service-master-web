@@ -198,7 +198,7 @@ const RescheduleBookingPage: React.FC = () => {
         <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
           <Container maxWidth="lg" sx={{ py: 4 }}>
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t('Ошибка при загрузке данных о записи')}
+              {t('forms.clientPages.rescheduleBooking.loadingError')}
             </Alert>
             <Button 
               startIcon={<ArrowBackIcon />} 
@@ -206,7 +206,7 @@ const RescheduleBookingPage: React.FC = () => {
               variant="outlined"
               sx={secondaryButtonStyles}
             >
-              {t('Вернуться к записи')}
+              {t('forms.clientPages.rescheduleBooking.backToBooking')}
             </Button>
           </Container>
         </Box>
@@ -227,10 +227,10 @@ const RescheduleBookingPage: React.FC = () => {
                 sx={{ mr: 2, ...secondaryButtonStyles }}
                 variant="outlined"
               >
-                {t('Назад')}
+                {t('forms.clientPages.rescheduleBooking.back')}
               </Button>
               <Typography variant="h4" component="h1">
-                {t('client.reschedule.title')} №{booking.id}
+                {t('forms.clientPages.rescheduleBooking.title')} №{booking.id}
               </Typography>
             </Box>
 
@@ -241,32 +241,32 @@ const RescheduleBookingPage: React.FC = () => {
               disabled={!canSave}
               sx={primaryButtonStyles}
             >
-              {isUpdating ? t('Сохранение...') : t('client.reschedule.confirmReschedule')}
+              {isUpdating ? t('forms.clientPages.rescheduleBooking.saving') : t('forms.clientPages.rescheduleBooking.confirmReschedule')}
             </Button>
           </Box>
 
           {/* Ошибка при обновлении */}
           {isUpdateError && (
             <Alert severity="error" sx={{ mb: 3 }}>
-              {t('Ошибка при переносе записи. Пожалуйста, попробуйте еще раз.')}
+              {t('forms.clientPages.rescheduleBooking.rescheduleError')}
             </Alert>
           )}
 
           {/* Информация о текущей записи */}
           <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
             <Typography variant="h6" gutterBottom>
-              {t('client.reschedule.currentBooking')}
+              {t('forms.clientPages.rescheduleBooking.currentBooking')}
             </Typography>
             
             <Box mt={2} mb={2}>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Дата')}:</strong> {format(parseISO(booking.booking_date), 'dd.MM.yyyy')}
+                <strong>{t('forms.clientPages.rescheduleBooking.date')}:</strong> {format(parseISO(booking.booking_date), 'dd.MM.yyyy')}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Время')}:</strong> {formatTime(booking.start_time)}
+                <strong>{t('forms.clientPages.rescheduleBooking.time')}:</strong> {formatTime(booking.start_time)}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Сервисная точка')}:</strong> {servicePointData?.name || booking.service_point?.name || `#${booking.service_point?.id}`}
+                <strong>{t('forms.clientPages.rescheduleBooking.servicePoint')}:</strong> {servicePointData?.name || booking.service_point?.name || `#${booking.service_point?.id}`}
               </Typography>
               {servicePointData?.address && (
                 <Typography variant="body2" color="textSecondary">
@@ -280,7 +280,7 @@ const RescheduleBookingPage: React.FC = () => {
 
           {/* Выбор новой даты и времени */}
           <Typography variant="h6" gutterBottom>
-            {t('Выберите новую дату и время')}
+            {t('forms.clientPages.rescheduleBooking.selectNewDateTime')}
           </Typography>
 
           <Box sx={{ mt: 3 }}>
@@ -304,7 +304,7 @@ const RescheduleBookingPage: React.FC = () => {
               {/* Заголовок с кнопкой справа */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                 <Typography variant="h6">
-                  {t('Новая дата и время')}
+                  {t('forms.clientPages.rescheduleBooking.newDateTime')}
                 </Typography>
                 
                 {/* Кнопка подтверждения справа */}
@@ -316,15 +316,15 @@ const RescheduleBookingPage: React.FC = () => {
                   sx={primaryButtonStyles}
                   size="large"
                 >
-                  {isUpdating ? t('Сохранение...') : t('client.reschedule.confirmReschedule')}
+                  {isUpdating ? t('forms.clientPages.rescheduleBooking.saving') : t('forms.clientPages.rescheduleBooking.confirmReschedule')}
                 </Button>
               </Box>
               
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Дата')}:</strong> {format(selectedDate, 'dd.MM.yyyy')}
+                <strong>{t('forms.clientPages.rescheduleBooking.date')}:</strong> {format(selectedDate, 'dd.MM.yyyy')}
               </Typography>
               <Typography variant="body1" gutterBottom>
-                <strong>{t('Время')}:</strong> {selectedTimeSlot}
+                <strong>{t('forms.clientPages.rescheduleBooking.time')}:</strong> {selectedTimeSlot}
                 {(() => {
                   const selectedSlotData = availableTimeSlots.find(slot => slot.time === selectedTimeSlot);
                   if (selectedSlotData?.duration_minutes) {
@@ -343,13 +343,13 @@ const RescheduleBookingPage: React.FC = () => {
           {/* Предупреждения */}
           {!selectedDate && (
             <Alert severity="warning" sx={{ mt: 3 }}>
-              {t('client.reschedule.selectDate')} для продолжения
+              {t('forms.clientPages.rescheduleBooking.selectDate')} для продолжения
             </Alert>
           )}
 
           {selectedDate && !selectedTimeSlot && (
             <Alert severity="warning" sx={{ mt: 3 }}>
-              {t('client.reschedule.selectTime')} для продолжения
+              {t('forms.clientPages.rescheduleBooking.selectTime')} для продолжения
             </Alert>
           )}
         </Container>

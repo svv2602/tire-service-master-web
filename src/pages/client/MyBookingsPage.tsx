@@ -210,7 +210,7 @@ const MyBookingsPage: React.FC = () => {
       <ClientLayout>
         <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <CircularProgress />
-          <Typography sx={{ ml: 2 }}>{t('client.myBookings.loading')}</Typography>
+          <Typography sx={{ ml: 2 }}>{t('forms.clientPages.myBookings.loading')}</Typography>
         </Box>
       </ClientLayout>
     );
@@ -229,17 +229,17 @@ const MyBookingsPage: React.FC = () => {
           <Container maxWidth="lg" sx={{ py: 4 }}>
             <Alert severity="error">
               <Typography variant="h6" gutterBottom>
-                Не удалось определить профиль клиента
+                {t('forms.clientPages.myBookings.clientProfileError')}
               </Typography>
               <Typography variant="body2" component="div">
-                Ошибка: {userError ? JSON.stringify(userError) : clientError ? JSON.stringify(clientError) : 'Неизвестная ошибка'}
+                {t('forms.clientPages.myBookings.error')}: {userError ? JSON.stringify(userError) : clientError ? JSON.stringify(clientError) : t('forms.clientPages.myBookings.unknownError')}
               </Typography>
               <Button 
                 variant="outlined" 
                 onClick={() => window.location.reload()} 
                 sx={{ mt: 2 }}
               >
-                Перезагрузить страницу
+                {t('forms.clientPages.myBookings.reloadPage')}
               </Button>
             </Alert>
           </Container>
@@ -260,10 +260,10 @@ const MyBookingsPage: React.FC = () => {
               onClose={() => setShowWelcomeMessage(false)}
             >
               <Typography variant="body1" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {t('client.myBookings.welcome')}
+                {t('forms.clientPages.myBookings.welcome')}
               </Typography>
               <Typography variant="body2">
-                Ваш аккаунт успешно создан и бронирование добавлено. Теперь вы можете управлять своими записями.
+                {t('forms.clientPages.myBookings.welcomeMessage')}
               </Typography>
             </Alert>
           )}
@@ -271,7 +271,7 @@ const MyBookingsPage: React.FC = () => {
           {/* Заголовок с кнопкой создания записи */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h4" component="h1">
-              {t('client.myBookings.title')} {clientFromApi?.user ? `(${clientFromApi.user.first_name} ${clientFromApi.user.last_name})` : `(Client ID: ${clientId})`}
+              {t('forms.clientPages.myBookings.title')} {clientFromApi?.user ? `(${clientFromApi.user.first_name} ${clientFromApi.user.last_name})` : `(Client ID: ${clientId})`}
             </Typography>
             
             <Button
@@ -280,7 +280,7 @@ const MyBookingsPage: React.FC = () => {
               onClick={handleNewBooking}
               sx={primaryButtonStyles}
             >
-              {t('client.myBookings.newBooking')}
+              {t('forms.clientPages.myBookings.newBooking')}
             </Button>
           </Box>
           
@@ -293,10 +293,10 @@ const MyBookingsPage: React.FC = () => {
               textColor="primary"
               variant="fullWidth"
             >
-              <Tab label={t('client.myBookings.upcoming')} />
-              <Tab label={t('client.myBookings.confirmed')} />
-              <Tab label={t('client.myBookings.completed')} />
-              <Tab label={t('client.myBookings.cancelled')} />
+              <Tab label={t('forms.clientPages.myBookings.upcoming')} />
+              <Tab label={t('forms.clientPages.myBookings.confirmed')} />
+              <Tab label={t('forms.clientPages.myBookings.completed')} />
+              <Tab label={t('forms.clientPages.myBookings.cancelled')} />
             </Tabs>
           </Paper>
           
@@ -312,15 +312,15 @@ const MyBookingsPage: React.FC = () => {
               <Box display="flex" justifyContent="center" my={4}>
                 <CircularProgress />
                 <Typography sx={{ ml: 2 }}>
-                  Загружаем бронирования для клиента {clientId}...
+                  {t('forms.clientPages.myBookings.loadingBookings', { clientId })}
                 </Typography>
               </Box>
             ) : isError ? (
               <Alert severity="error" sx={{ mb: 2 }}>
-                {t('Произошла ошибка при загрузке записей')}
+                {t('forms.clientPages.myBookings.loadingError')}
                 <br />
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Ошибка: {error ? JSON.stringify(error) : 'Неизвестная ошибка'}
+                  {t('forms.clientPages.myBookings.error')}: {error ? JSON.stringify(error) : t('forms.clientPages.myBookings.unknownError')}
                 </Typography>
                 <Button 
                   variant="outlined" 
@@ -328,7 +328,7 @@ const MyBookingsPage: React.FC = () => {
                   onClick={() => refetch()}
                   sx={{ ml: 2 }}
                 >
-                  Повторить
+                  {t('forms.clientPages.myBookings.retry')}
                 </Button>
               </Alert>
             ) : convertedBookings.length > 0 ? (
@@ -339,13 +339,13 @@ const MyBookingsPage: React.FC = () => {
             ) : (
               <Alert severity="info" sx={{ textAlign: 'center', py: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('У вас нет записей')}
+                  {t('forms.clientPages.myBookings.noBookings')}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  {tabValue === 0 && 'У вас нет предстоящих записей'}
-                  {tabValue === 1 && 'У вас нет подтвержденных записей'}
-                  {tabValue === 2 && 'У вас нет завершенных записей'}
-                  {tabValue === 3 && 'У вас нет отмененных записей'}
+                  {tabValue === 0 && t('forms.clientPages.myBookings.noUpcomingBookings')}
+                  {tabValue === 1 && t('forms.clientPages.myBookings.noConfirmedBookings')}
+                  {tabValue === 2 && t('forms.clientPages.myBookings.noCompletedBookings')}
+                  {tabValue === 3 && t('forms.clientPages.myBookings.noCancelledBookings')}
                 </Typography>
                 <Button
                   variant="contained"
@@ -353,7 +353,7 @@ const MyBookingsPage: React.FC = () => {
                   onClick={handleNewBooking}
                   sx={primaryButtonStyles}
                 >
-                  Создать первую запись
+                  {t('forms.clientPages.myBookings.createFirstBooking')}
                 </Button>
               </Alert>
             )}

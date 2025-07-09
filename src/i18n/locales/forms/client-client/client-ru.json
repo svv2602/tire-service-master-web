@@ -1,6 +1,30 @@
 {
   "forms": {
     "clientPages": {
+      "myBookings": {
+        "title": "Мои записи",
+        "loading": "Загрузка...",
+        "welcome": "Добро пожаловать!",
+        "welcomeMessage": "Ваш аккаунт успешно создан и бронирование добавлено. Теперь вы можете управлять своими записями.",
+        "newBooking": "Новая запись",
+        "upcoming": "Предстоящие",
+        "confirmed": "Подтвержденные", 
+        "completed": "Завершенные",
+        "cancelled": "Отмененные",
+        "loadingBookings": "Загружаем бронирования для клиента {{clientId}}...",
+        "loadingError": "Произошла ошибка при загрузке записей",
+        "unknownError": "Неизвестная ошибка",
+        "retry": "Повторить",
+        "noBookings": "У вас нет записей",
+        "noUpcomingBookings": "У вас нет предстоящих записей",
+        "noConfirmedBookings": "У вас нет подтвержденных записей",
+        "noCompletedBookings": "У вас нет завершенных записей",
+        "noCancelledBookings": "У вас нет отмененных записей",
+        "createFirstBooking": "Создать первую запись",
+        "clientProfileError": "Не удалось определить профиль клиента",
+        "reloadPage": "Перезагрузить страницу",
+        "error": "Ошибка"
+      },
       "bookingDetails": {
         "cancellationCommentByClient": "Отменено клиентом через веб-интерфейс",
         "cancelError": "Не удалось отменить бронирование",
@@ -143,6 +167,73 @@
       "main": {
         "cityNotSelected": "Город не выбран для поиска",
         "navigatingToBooking": "Переход на бронирование с городом:"
+      },
+      "myReviews": {
+        "title": "Мои отзывы",
+        "createReview": "Оставить отзыв",
+        "published": "Опубликованные",
+        "pending": "На модерации",
+        "loading": "Загрузка отзывов...",
+        "loadingError": "Произошла ошибка при загрузке отзывов",
+        "noReviews": "У вас нет отзывов",
+        "noReviewsDescription": "Оставьте отзыв о сервисе, которым вы воспользовались",
+        "createFirstReview": "Оставить отзыв"
+      },
+      "rescheduleBooking": {
+        "title": "Перенос записи",
+        "currentBooking": "Текущая запись",
+        "confirmReschedule": "Подтвердить перенос",
+        "saving": "Сохранение...",
+        "loadingError": "Ошибка при загрузке данных о записи",
+        "backToBooking": "Вернуться к записи",
+        "back": "Назад",
+        "rescheduleError": "Ошибка при переносе записи. Пожалуйста, попробуйте еще раз.",
+        "date": "Дата",
+        "time": "Время",
+        "servicePoint": "Сервисная точка",
+        "selectNewDateTime": "Выберите новую дату и время",
+        "newDateTime": "Новая дата и время",
+        "selectDate": "Выберите дату",
+        "selectTime": "Выберите время"
+      },
+      "reviewForm": {
+        "title": "Новый отзыв",
+        "back": "Назад",
+        "loading": "Загрузка...",
+        "noCompletedBookings": "У вас нет завершенных записей",
+        "noCompletedBookingsDescription": "Вы можете оставить отзыв только после завершения обслуживания",
+        "bookToService": "Записаться на обслуживание",
+        "selectBookingLabel": "Выберите запись для отзыва",
+        "bookingSelectPlaceholder": "Запись на обслуживание",
+        "selectBookingOption": "Выберите запись",
+        "bookingNumber": "Запись №"
+      },
+      "servicePointDetail": {
+        "notFound": "Сервисная точка не найдена",
+        "backButton": "Вернуться назад",
+        "breadcrumbHome": "Главная",
+        "breadcrumbSearch": "Поиск сервисов",
+        "workingStatus": "Работает",
+        "closedStatus": "Временно закрыто",
+        "backToSearch": "Назад",
+        "bookNow": "Записаться",
+        "description": "Описание",
+        "availableCategories": "Доступные категории услуг",
+        "servicesInCategory": "Услуги в данной категории уточняйте по контактному телефону",
+        "phone": "Телефон",
+        "servicesNotFound": "Услуги не найдены",
+        "contactInfo": "Контактная информация",
+        "address": "Адрес",
+        "partner": "Партнер",
+        "workingHours": "Режим работы",
+        "bookService": "Записаться на обслуживание",
+        "selectCategory": "Выберите категорию услуг",
+        "selectCategoryDescription": "Пожалуйста, выберите категорию услуг для записи в",
+        "duration": "Длительность",
+        "minutes": "мин",
+        "cancel": "Отмена",
+        "service": "услуга",
+        "services": "услуги"
       }
     }
   }

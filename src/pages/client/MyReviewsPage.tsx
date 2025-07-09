@@ -89,7 +89,7 @@ const MyReviewsPage: React.FC = () => {
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h4" component="h1">
-              {t('client.reviews.title')}
+              {t('forms.clientPages.myReviews.title')}
             </Typography>
             
             <Button 
@@ -98,7 +98,7 @@ const MyReviewsPage: React.FC = () => {
               startIcon={<AddIcon />}
               onClick={handleCreateReview}
             >
-              {t('Оставить отзыв')}
+              {t('forms.clientPages.myReviews.createReview')}
             </Button>
           </Box>
           
@@ -110,8 +110,8 @@ const MyReviewsPage: React.FC = () => {
               textColor="primary"
               variant="fullWidth"
             >
-              <Tab label={t('Опубликованные')} />
-              <Tab label={t('На модерации')} />
+              <Tab label={t('forms.clientPages.myReviews.published')} />
+              <Tab label={t('forms.clientPages.myReviews.pending')} />
             </Tabs>
           </Paper>
           
@@ -121,7 +121,7 @@ const MyReviewsPage: React.FC = () => {
                 <CircularProgress />
               </Box>
             ) : isError ? (
-              <Alert severity="error">❌ {t('Произошла ошибка при загрузке отзывов')}</Alert>
+              <Alert severity="error">❌ {t('forms.clientPages.myReviews.loadingError')}</Alert>
             ) : convertedReviews.length > 0 ? (
               <ReviewsList 
                 reviews={convertedReviews} 
@@ -130,10 +130,10 @@ const MyReviewsPage: React.FC = () => {
             ) : (
               <Paper sx={{ p: 4, textAlign: 'center' }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('client.reviews.noReviews')}
+                  {t('forms.clientPages.myReviews.noReviews')}
                 </Typography>
                 <Typography variant="body1" color="textSecondary" paragraph>
-                  {t('Оставьте отзыв о сервисе, которым вы воспользовались')}
+                  {t('forms.clientPages.myReviews.noReviewsDescription')}
                 </Typography>
                 <Button 
                   variant="contained" 
@@ -142,7 +142,7 @@ const MyReviewsPage: React.FC = () => {
                   onClick={handleCreateReview}
                   sx={{ mt: 2 }}
                 >
-                  {t('Оставить отзыв')}
+                  {t('forms.clientPages.myReviews.createFirstReview')}
                 </Button>
               </Paper>
             )}

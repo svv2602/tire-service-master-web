@@ -89,10 +89,10 @@ const ReviewFormPage: React.FC = () => {
               onClick={handleBack}
               sx={{ mr: 2 }}
             >
-              {t('Назад')}
+              {t('forms.clientPages.reviewForm.back')}
             </Button>
             <Typography variant="h4" component="h1">
-              {t('Новый отзыв')}
+              {t('forms.clientPages.reviewForm.title')}
             </Typography>
           </Box>
 
@@ -103,10 +103,10 @@ const ReviewFormPage: React.FC = () => {
           ) : completedBookings.length === 0 ? (
             <Paper sx={{ p: 4, textAlign: 'center' }}>
               <Typography variant="h6" gutterBottom>
-                {t('У вас нет завершенных записей')}
+                {t('forms.clientPages.reviewForm.noCompletedBookings')}
               </Typography>
               <Typography variant="body1" color="textSecondary" paragraph>
-                {t('Вы можете оставить отзыв только после завершения обслуживания')}
+                {t('forms.clientPages.reviewForm.noCompletedBookingsDescription')}
               </Typography>
               <Button 
                 variant="contained" 
@@ -114,29 +114,29 @@ const ReviewFormPage: React.FC = () => {
                 onClick={() => navigate('/client/booking')}
                 sx={{ mt: 2 }}
               >
-                {t('Записаться на обслуживание')}
+                {t('forms.clientPages.reviewForm.bookToService')}
               </Button>
             </Paper>
           ) : (
             <>
               <Paper sx={{ p: 3, mb: 4 }}>
                 <Typography variant="h6" gutterBottom>
-                  {t('client.reviewForm.selectBooking')} для отзыва
+                  {t('forms.clientPages.reviewForm.selectBookingLabel')}
                 </Typography>
                 
                 <FormControl fullWidth sx={{ mb: 2 }}>
-                  <InputLabel id="booking-select-label">{t('Запись на обслуживание')}</InputLabel>
+                  <InputLabel id="booking-select-label">{t('forms.clientPages.reviewForm.bookingSelectPlaceholder')}</InputLabel>
                   <Select
                     labelId="booking-select-label"
                     id="booking-select"
                     value={selectedBookingId}
                     onChange={handleBookingChange}
-                    label={t('Запись на обслуживание')}
+                    label={t('forms.clientPages.reviewForm.bookingSelectPlaceholder')}
                   >
-                    <MenuItem value="">{t('client.reviewForm.selectBooking')}</MenuItem>
+                    <MenuItem value="">{t('forms.clientPages.reviewForm.selectBookingOption')}</MenuItem>
                     {completedBookings.map((booking) => (
                       <MenuItem key={booking.id} value={String(booking.id)}>
-                        {t('Запись №')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})
+                        {t('forms.clientPages.reviewForm.bookingNumber')}{booking.id} - {booking.booking_date} ({booking.start_time}-{booking.end_time})
                       </MenuItem>
                     ))}
                   </Select>
