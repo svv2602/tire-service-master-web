@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Language State</title>
+</head>
+<body>
+    <h1>Проверка состояния языка</h1>
+    
+    <div>
+        <h2>Current Language Settings:</h2>
+        <div id="languageInfo"></div>
+    </div>
+    
+    <div>
+        <h2>Actions:</h2>
+        <button onclick="setRussian()">Установить русский язык</button>
+        <button onclick="setUkrainian()">Установить украинский язык</button>
+        <button onclick="clearStorage()">Очистить localStorage</button>
+        <button onclick="checkState()">Обновить информацию</button>
+    </div>
+
+    <script>
+        function checkState() {
+            const info = document.getElementById('languageInfo');
+            const i18nextLng = localStorage.getItem('i18nextLng');
+            const currentLang = localStorage.getItem('language');
+            
+            info.innerHTML = `
+                <p><strong>i18nextLng:</strong> ${i18nextLng || 'not set'}</p>
+                <p><strong>language:</strong> ${currentLang || 'not set'}</p>
+                <p><strong>Navigator language:</strong> ${navigator.language}</p>
+                <p><strong>All localStorage items:</strong></p>
+                <ul>
+                    ${Object.keys(localStorage).map(key => 
+                        `<li>${key}: ${localStorage.getItem(key)}</li>`
+                    ).join('')}
+                </ul>
+            `;
+        }
+        
+        function setRussian() {
+            localStorage.setItem('i18nextLng', 'ru');
+            localStorage.setItem('language', 'ru');
+            alert('Русский язык установлен! Перезагрузите страницу приложения.');
+            checkState();
+        }
+        
+        function setUkrainian() {
+            localStorage.setItem('i18nextLng', 'uk');
+            localStorage.setItem('language', 'uk');
+            alert('Украинский язык установлен! Перезагрузите страницу приложения.');
+            checkState();
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            alert('localStorage очищен! Перезагрузите страницу приложения.');
+            checkState();
+        }
+        
+        // Автоматически проверяем состояние при загрузке
+        checkState();
+    </script>
+</body>
+</html> 
