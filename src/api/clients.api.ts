@@ -55,8 +55,7 @@ export const clientsApi = baseApi.injectEndpoints({
         params,
       }),
       providesTags: (result, error, arg) => {
-        // Проверяем, что result существует и имеет массив data
-        if (result && result.data && Array.isArray(result.data)) {
+        if (result?.data && Array.isArray(result.data)) {
           return [
             ...result.data.map(({ id }) => ({ type: 'Client' as const, id })),
             'Client',

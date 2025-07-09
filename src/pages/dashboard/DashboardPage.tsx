@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -28,6 +29,7 @@ import ServicePointMap from '../../components/ServicePointMap';
 
 const DashboardPage: React.FC = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const dashboardStyles = getDashboardStyles(theme);
 
   // RTK Query хуки с типизацией
@@ -54,25 +56,25 @@ const DashboardPage: React.FC = () => {
   // Статистика
   const stats = [
     {
-      title: 'Партнеры',
+      title: t('forms.dashboard.stats.partners.title'),
       value: partnersData?.pagination?.total_count || 0,
       icon: <BusinessIcon />,
       color: '#1976d2',
-      description: 'Всего партнеров в системе',
+      description: t('forms.dashboard.stats.partners.description'),
     },
     {
-      title: 'Сервисные точки',
+      title: t('forms.dashboard.stats.servicePoints.title'),
       value: servicePointsData?.pagination?.total_count || 0,
       icon: <LocationIcon />,
       color: '#388e3c',
-      description: 'Активных точек обслуживания',
+      description: t('forms.dashboard.stats.servicePoints.description'),
     },
     {
-      title: 'Клиенты',
+      title: t('forms.dashboard.stats.clients.title'),
       value: clientsData?.pagination?.total_count || 0,
       icon: <PeopleIcon />,
       color: '#e64a19',
-      description: 'Зарегистрированных клиентов',
+      description: t('forms.dashboard.stats.clients.description'),
     },
   ];
 
@@ -89,7 +91,7 @@ const DashboardPage: React.FC = () => {
     return (
       <Box sx={dashboardStyles.errorContainer}>
         <Alert severity="error" sx={dashboardStyles.errorAlert}>
-          Ошибка при загрузке данных для дашборда
+          {t('forms.dashboard.errorMessage')}
         </Alert>
       </Box>
     );
@@ -98,7 +100,7 @@ const DashboardPage: React.FC = () => {
   return (
     <Box sx={dashboardStyles.pageContainer}>
       <Typography variant="h4" sx={dashboardStyles.pageTitle}>
-        Панель управления
+        {t('forms.dashboard.title')}
       </Typography>
 
       {/* Статистика */}
@@ -117,7 +119,7 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} md={8}>
           <Card sx={dashboardStyles.chartCard}>
             <Typography variant="h6" sx={dashboardStyles.chartTitle}>
-              Статистика бронирований
+              {t('forms.dashboard.charts.bookingStats')}
             </Typography>
             <BookingChart data={bookingsData?.data || []} />
           </Card>
@@ -126,7 +128,7 @@ const DashboardPage: React.FC = () => {
         <Grid item xs={12} md={4}>
           <Card sx={dashboardStyles.chartCard}>
             <Typography variant="h6" sx={dashboardStyles.chartTitle}>
-              Карта точек обслуживания
+              {t('forms.dashboard.charts.servicePointsMap')}
             </Typography>
             <ServicePointMap servicePoints={servicePointsData?.data || []} />
           </Card>

@@ -31,7 +31,7 @@ export const servicesApi = baseApi.injectEndpoints({
         pagination: response.pagination,
       }),
       providesTags: (result) =>
-        result?.data
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }) => ({ type: 'Service' as const, id })),
               'Service',

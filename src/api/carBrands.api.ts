@@ -43,7 +43,7 @@ export const carBrandsApi = baseApi.injectEndpoints({
         }
       }),
       providesTags: (result) =>
-        result?.data
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }) => ({ type: 'CarBrands' as const, id })),
               'CarBrands',

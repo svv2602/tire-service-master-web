@@ -17,7 +17,7 @@ export const partnersApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<Partner>) => transformPaginatedResponse(response),
       providesTags: (result) =>
-        result?.data
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }: Partner) => ({ type: 'Partners' as const, id })),
               'Partners',

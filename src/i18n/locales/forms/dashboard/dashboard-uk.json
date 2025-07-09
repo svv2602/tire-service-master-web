@@ -1,0 +1,27 @@
+{
+  "forms": {
+    "dashboard": {
+      "title": "Панель керування",
+      "loading": "Завантаження...",
+      "errorMessage": "Помилка при завантаженні даних для дашборда",
+      "stats": {
+        "partners": {
+          "title": "Партнери",
+          "description": "Всього партнерів в системі"
+        },
+        "servicePoints": {
+          "title": "Сервісні точки",
+          "description": "Активних точок обслуговування"
+        },
+        "clients": {
+          "title": "Клієнти",
+          "description": "Зареєстрованих клієнтів"
+        }
+      },
+      "charts": {
+        "bookingStats": "Статистика бронювань",
+        "servicePointsMap": "Карта точок обслуговування"
+      }
+    }
+  }
+} 

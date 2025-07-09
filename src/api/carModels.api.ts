@@ -40,7 +40,7 @@ export const carModelsApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: ApiResponse<CarModel>) => transformPaginatedResponse(response),
       providesTags: (result) =>
-        result?.data
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }) => ({ type: 'CarModels' as const, id })),
               'CarModels',

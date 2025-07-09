@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Container,
@@ -29,6 +30,7 @@ import ClientLayout from '../../components/client/ClientLayout';
 
 const ArticleDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
@@ -63,10 +65,10 @@ const ArticleDetailPage: React.FC = () => {
             <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
               <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>❌</Typography>
               <Typography variant="h5" sx={{ color: colors.textPrimary, mb: 2 }}>
-                Статья не найдена
+                {t('forms.articles.detail.notFound')}
               </Typography>
               <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 4 }}>
-                {error || 'Запрашиваемая статья не существует или была удалена'}
+                {error || t('forms.articles.detail.notFoundDescription')}
               </Typography>
               <Button
                 component={Link}
@@ -75,7 +77,7 @@ const ArticleDetailPage: React.FC = () => {
                 startIcon={<ArrowBackIcon />}
                 sx={buttonStyles}
               >
-                Вернуться к базе знаний
+                {t('forms.articles.detail.backToKnowledgeBase')}
               </Button>
             </Paper>
           </Container>
@@ -93,10 +95,10 @@ const ArticleDetailPage: React.FC = () => {
   };
 
   const formatReadingTime = (minutes: number) => {
-    if (minutes < 1) return 'Менее минуты';
-    if (minutes === 1) return '1 минута';
-    if (minutes < 5) return `${minutes} минуты`;
-    return `${minutes} минут`;
+    if (minutes < 1) return t('forms.articles.detail.readingTime.lessThanMinute');
+    if (minutes === 1) return t('forms.articles.detail.readingTime.oneMinute');
+    if (minutes < 5) return t('forms.articles.detail.readingTime.fewMinutes', { count: minutes });
+    return t('forms.articles.detail.readingTime.manyMinutes', { count: minutes });
   };
 
   return (
@@ -122,7 +124,7 @@ const ArticleDetailPage: React.FC = () => {
                   }
                 }}
               >
-                Назад к базе знаний
+                {t('forms.articles.detail.backToArticles')}
               </Button>
 
               <Grid container spacing={4}>
@@ -181,7 +183,7 @@ const ArticleDetailPage: React.FC = () => {
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <ViewIcon sx={{ fontSize: 18, color: colors.textSecondary }} />
                             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                              {article.views_count} просмотров
+                              {t('forms.articles.detail.readingTime.views', { count: article.views_count })}
                             </Typography>
                           </Box>
                         )}
@@ -331,7 +333,7 @@ const ArticleDetailPage: React.FC = () => {
                             mb: 3 
                           }}
                         >
-                          Похожие статьи
+                          {t('forms.articles.detail.relatedArticles')}
                         </Typography>
                         {relatedLoading ? (
                           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -363,7 +365,7 @@ const ArticleDetailPage: React.FC = () => {
                           mb: 2 
                         }}
                       >
-                        Нужна помощь?
+                        {t('forms.articles.detail.needHelp')}
                       </Typography>
                       <Typography 
                         variant="body2" 
@@ -372,7 +374,7 @@ const ArticleDetailPage: React.FC = () => {
                           mb: 3 
                         }}
                       >
-                        Закажите профессиональный шиномонтаж у наших мастеров
+                        {t('forms.articles.detail.helpDescription')}
                       </Typography>
                       <Button
                         component={Link}
@@ -381,7 +383,7 @@ const ArticleDetailPage: React.FC = () => {
                         fullWidth
                         sx={buttonStyles}
                       >
-                        Записаться на шиномонтаж
+                        {t('forms.articles.detail.bookService')}
                       </Button>
                     </CardContent>
                   </Card>

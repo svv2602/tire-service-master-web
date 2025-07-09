@@ -21,7 +21,7 @@ export const reviewsApi = baseApi.injectEndpoints({
         params: filter,
       }),
       providesTags: (result: ReviewsApiResponse | undefined) =>
-        result?.data
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map((review: Review) => ({ type: 'Review' as const, id: review.id })),
               'Review',
@@ -32,7 +32,7 @@ export const reviewsApi = baseApi.injectEndpoints({
     getReviewsByServicePoint: build.query<Review[], string>({
       query: (servicePointId: string) => `reviews?service_point_id=${servicePointId}`,
       providesTags: (result: Review[] | undefined) =>
-        result
+        result && Array.isArray(result)
           ? [
               ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
@@ -43,7 +43,7 @@ export const reviewsApi = baseApi.injectEndpoints({
     getReviewsByClient: build.query<Review[], string>({
       query: (clientId: string) => `reviews?client_id=${clientId}`,
       providesTags: (result: Review[] | undefined) =>
-        result
+        result && Array.isArray(result)
           ? [
               ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',
@@ -54,7 +54,7 @@ export const reviewsApi = baseApi.injectEndpoints({
     getReviewsByPartner: build.query<Review[], string>({
       query: (partnerId: string) => `reviews?partner_id=${partnerId}`,
       providesTags: (result: Review[] | undefined) =>
-        result
+        result && Array.isArray(result)
           ? [
               ...result.map(({ id }) => ({ type: 'Review' as const, id })),
               'Review',

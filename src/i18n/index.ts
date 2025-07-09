@@ -35,6 +35,8 @@ import authRuTranslations from './locales/forms/auth/auth-ru.json';
 import authUkTranslations from './locales/forms/auth/auth-uk.json';
 import bookingsRuTranslations from './locales/forms/bookings/bookings-ru.json';
 import bookingsUkTranslations from './locales/forms/bookings/bookings-uk.json';
+import dashboardRuTranslations from './locales/forms/dashboard/dashboard-ru.json';
+import dashboardUkTranslations from './locales/forms/dashboard/dashboard-uk.json';
 
 // Deep merge utility function
 function deepMerge(target: any, source: any): any {
@@ -53,84 +55,50 @@ function deepMerge(target: any, source: any): any {
   return result;
 }
 
+// Ukrainian translation modules
+const ukTranslationModules = [
+  ukTranslations,
+  settingsUkTranslations,
+  clientAdminUkTranslations,
+  clientClientUkTranslations,
+  partnersUkTranslations,
+  modalsUkTranslations,
+  partnerUkTranslations,
+  tireCalculatorUkTranslations,
+  commonUkTranslations,
+  userUkTranslations,
+  bookingUkTranslations,
+  articlesUkTranslations,
+  authUkTranslations,
+  bookingsUkTranslations,
+  dashboardUkTranslations,
+];
+
+// Russian translation modules
+const ruTranslationModules = [
+  ruTranslations,
+  settingsRuTranslations,
+  clientAdminRuTranslations,
+  clientClientRuTranslations,
+  partnersRuTranslations,
+  modalsRuTranslations,
+  partnerRuTranslations,
+  tireCalculatorRuTranslations,
+  commonRuTranslations,
+  userRuTranslations,
+  bookingRuTranslations,
+  articlesRuTranslations,
+  authRuTranslations,
+  bookingsRuTranslations,
+  dashboardRuTranslations,
+];
+
 const resources = {
   uk: {
-    translation: deepMerge(
-      deepMerge(
-        deepMerge(
-          deepMerge(
-            deepMerge(
-              deepMerge(
-                deepMerge(
-                  deepMerge(
-                    deepMerge(
-                      deepMerge(
-                        deepMerge(
-                          deepMerge(
-                            deepMerge(ukTranslations, settingsUkTranslations),
-                            clientAdminUkTranslations
-                          ),
-                          clientClientUkTranslations
-                        ),
-                        partnersUkTranslations
-                      ),
-                      modalsUkTranslations
-                    ),
-                    partnerUkTranslations
-                  ),
-                  tireCalculatorUkTranslations
-                ),
-                commonUkTranslations
-              ),
-              userUkTranslations
-            ),
-            bookingUkTranslations
-          ),
-          articlesUkTranslations
-        ),
-        authUkTranslations
-      ),
-      bookingsUkTranslations
-    ),
+    translation: ukTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
   },
   ru: {
-    translation: deepMerge(
-      deepMerge(
-        deepMerge(
-          deepMerge(
-            deepMerge(
-              deepMerge(
-                deepMerge(
-                  deepMerge(
-                    deepMerge(
-                      deepMerge(
-                        deepMerge(
-                          deepMerge(
-                            deepMerge(ruTranslations, settingsRuTranslations),
-                            clientAdminRuTranslations
-                          ),
-                          clientClientRuTranslations
-                        ),
-                        partnersRuTranslations
-                      ),
-                      modalsRuTranslations
-                    ),
-                    partnerRuTranslations
-                  ),
-                  tireCalculatorRuTranslations
-                ),
-                commonRuTranslations
-              ),
-              userRuTranslations
-            ),
-            bookingRuTranslations
-          ),
-          articlesRuTranslations
-        ),
-        authRuTranslations
-      ),
-      bookingsRuTranslations
-    ),
+    translation: ruTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
   },
 };
 

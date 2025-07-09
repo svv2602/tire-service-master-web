@@ -87,12 +87,12 @@ export const servicePointsApi = baseApi.injectEndpoints({
         }
       }),
       providesTags: (result) =>
-        result
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }) => ({ type: 'ServicePoint' as const, id })),
-              { type: 'ServicePoint' as const, id: 'LIST' },
+              'ServicePoint',
             ]
-          : [{ type: 'ServicePoint' as const, id: 'LIST' }],
+          : ['ServicePoint'],
       // Кэширование на 5 минут
       keepUnusedDataFor: 300,
     }),
@@ -114,7 +114,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
         }
       }),
       providesTags: (result, _error, { partner_id }) =>
-        result
+        result?.data && Array.isArray(result.data)
           ? [
               ...result.data.map(({ id }) => ({ type: 'ServicePoint' as const, id })),
               { type: 'ServicePoint' as const, id: 'LIST' },

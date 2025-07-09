@@ -1,33 +1,36 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Container,
   Typography,
   TextField,
+  InputAdornment,
   Grid,
   Card,
   CardContent,
-  Button,
-  InputAdornment,
   Pagination,
-  useTheme,
+  Button,
   Paper,
-  Fade
+  Fade,
+  useTheme
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Build as BuildIcon,
-  DirectionsCar as CarIcon,
-  School as SchoolIcon
+  School as SchoolIcon,
+  DirectionsCar as CarIcon
 } from '@mui/icons-material';
-import { useArticles, useArticleCategories, usePopularArticles } from '../../hooks/useArticles';
-import { ArticlesFilters } from '../../types/articles';
+
+import ClientLayout from '../../components/client/ClientLayout';
 import ArticleCard from '../../components/knowledge-base/ArticleCard';
 import ArticleFilters from '../../components/knowledge-base/ArticleFilters';
-import { getThemeColors, getButtonStyles, getCardStyles } from '../../styles';
-import ClientLayout from '../../components/client/ClientLayout';
+import { useArticles, useArticleCategories, usePopularArticles } from '../../hooks/useArticles';
+import { ArticlesFilters } from '../../types/articles';
+import { getThemeColors, getCardStyles, getButtonStyles } from '../../styles';
 
 const KnowledgeBasePage: React.FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
@@ -88,11 +91,10 @@ const KnowledgeBasePage: React.FC = () => {
           <Container maxWidth="lg">
             <Box sx={{ textAlign: 'center', maxWidth: 800, mx: 'auto' }}>
               <Typography variant="h2" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
-                База знаний о шинах
+                {t('forms.articles.knowledgeBase.title')}
               </Typography>
               <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                Полезные статьи, советы экспертов и руководства по выбору и уходу за шинами. 
-                Все что нужно знать автомобилисту.
+                {t('forms.articles.knowledgeBase.subtitle')}
               </Typography>
               
               {/* Быстрый поиск */}
@@ -100,7 +102,7 @@ const KnowledgeBasePage: React.FC = () => {
                 <TextField
                   fullWidth
                   variant="outlined"
-                  placeholder="Найти статью..."
+                  placeholder={t('forms.articles.knowledgeBase.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   InputProps={{
@@ -140,10 +142,10 @@ const KnowledgeBasePage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                   <Box>
                     <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: colors.textPrimary, mb: 1 }}>
-                      Рекомендуемые статьи
+                      {t('forms.articles.knowledgeBase.featuredTitle')}
                     </Typography>
                     <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-                      Самые полезные и популярные материалы
+                      {t('forms.articles.knowledgeBase.featuredSubtitle')}
                     </Typography>
                   </Box>
                 </Box>
@@ -194,13 +196,13 @@ const KnowledgeBasePage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
                 <Box>
                   <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: colors.textPrimary, mb: 1 }}>
-                    {searchQuery ? `Результаты поиска "${searchQuery}"` : 
-                     selectedCategory ? `Статьи: ${categories.find(c => c.key === selectedCategory)?.name}` : 
-                     'Все статьи'}
+                    {searchQuery ? t('forms.articles.knowledgeBase.searchResults', { query: searchQuery }) : 
+                     selectedCategory ? t('forms.articles.knowledgeBase.categoryResults', { category: categories.find(c => c.key === selectedCategory)?.name }) : 
+                     t('forms.articles.knowledgeBase.allArticles')}
                   </Typography>
                   {!loading && (
                     <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-                      Найдено статей: {pagination.total_count}
+                      {t('forms.articles.knowledgeBase.articlesFound', { count: pagination.total_count })}
                     </Typography>
                   )}
                 </Box>
@@ -227,7 +229,7 @@ const KnowledgeBasePage: React.FC = () => {
                 <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
                   <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>❌</Typography>
                   <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1 }}>
-                    Ошибка загрузки
+                    {t('forms.articles.knowledgeBase.errors.loadingError')}
                   </Typography>
                   <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 3 }}>
                     {error}
@@ -237,19 +239,19 @@ const KnowledgeBasePage: React.FC = () => {
                     onClick={() => fetchArticles()}
                     sx={buttonStyles}
                   >
-                    Попробовать снова
+                    {t('forms.articles.knowledgeBase.errors.tryAgain')}
                   </Button>
                 </Paper>
               ) : articles.length === 0 ? (
                 <Paper sx={{ ...cardStyles, textAlign: 'center', py: 8 }}>
                   <Typography variant="h1" sx={{ fontSize: '4rem', mb: 2 }}>🔍</Typography>
                   <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1 }}>
-                    Статьи не найдены
+                    {t('forms.articles.knowledgeBase.emptyStates.notFound')}
                   </Typography>
                   <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 3 }}>
                     {searchQuery || selectedCategory ? 
-                      'Попробуйте изменить параметры поиска' : 
-                      'Статьи пока не добавлены'}
+                      t('forms.articles.knowledgeBase.emptyStates.changeFilters') : 
+                      t('forms.articles.knowledgeBase.emptyStates.noArticles')}
                   </Typography>
                   {(searchQuery || selectedCategory) && (
                     <Button
@@ -257,7 +259,7 @@ const KnowledgeBasePage: React.FC = () => {
                       onClick={handleClearFilters}
                       sx={buttonStyles}
                     >
-                      Сбросить фильтры
+                      {t('forms.articles.knowledgeBase.emptyStates.clearFilters')}
                     </Button>
                   )}
                 </Paper>
@@ -298,10 +300,10 @@ const KnowledgeBasePage: React.FC = () => {
                   <Paper sx={{ ...cardStyles, textAlign: 'center', p: 4 }}>
                     <BuildIcon sx={{ fontSize: 48, color: colors.primary, mb: 2 }} />
                     <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1, fontWeight: 600 }}>
-                      Экспертные советы
+                      {t('forms.articles.knowledgeBase.infoBlocks.expertAdvice.title')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                      Профессиональные рекомендации от опытных мастеров шиномонтажа
+                      {t('forms.articles.knowledgeBase.infoBlocks.expertAdvice.description')}
                     </Typography>
                   </Paper>
                 </Grid>
@@ -310,10 +312,10 @@ const KnowledgeBasePage: React.FC = () => {
                   <Paper sx={{ ...cardStyles, textAlign: 'center', p: 4 }}>
                     <SchoolIcon sx={{ fontSize: 48, color: colors.primary, mb: 2 }} />
                     <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1, fontWeight: 600 }}>
-                      Подробные гиды
+                      {t('forms.articles.knowledgeBase.infoBlocks.detailedGuides.title')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                      Пошаговые инструкции по выбору, установке и обслуживанию шин
+                      {t('forms.articles.knowledgeBase.infoBlocks.detailedGuides.description')}
                     </Typography>
                   </Paper>
                 </Grid>
@@ -322,10 +324,10 @@ const KnowledgeBasePage: React.FC = () => {
                   <Paper sx={{ ...cardStyles, textAlign: 'center', p: 4 }}>
                     <CarIcon sx={{ fontSize: 48, color: colors.primary, mb: 2 }} />
                     <Typography variant="h6" sx={{ color: colors.textPrimary, mb: 1, fontWeight: 600 }}>
-                      Для всех авто
+                      {t('forms.articles.knowledgeBase.infoBlocks.allVehicles.title')}
                     </Typography>
                     <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                      Материалы для владельцев легковых автомобилей, внедорожников и коммерческого транспорта
+                      {t('forms.articles.knowledgeBase.infoBlocks.allVehicles.description')}
                     </Typography>
                   </Paper>
                 </Grid>
