@@ -172,7 +172,7 @@ const PhotoGallery: React.FC<{
             <CardMedia
               component="img"
               image={mainPhoto.url.replace(/\?.*$/, '') + '?w=600&h=400&fit=crop&auto=format,compress&q=85'}
-              alt={mainPhoto.description || t('servicePointCard.servicePointPhoto')}
+              alt={mainPhoto.description || t('components:servicePointCard.servicePointPhoto')}
               sx={{
                 width: '100%',
                 height: '100%',
@@ -205,7 +205,7 @@ const PhotoGallery: React.FC<{
           {/* Счетчик фотографий */}
           {showCounter && hasPhotos && photos.length > 1 && (
             <Chip
-              label={`${photos.length} ${t('servicePointCard.photos')}`}
+              label={`${photos.length} ${t('components:servicePointCard.photos')}`}
               size="small"
               sx={{
                 position: 'absolute',
@@ -306,7 +306,7 @@ const PhotoGallery: React.FC<{
           <DialogTitle sx={{ pb: 1 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" component="div">
-                {servicePointName ? `${t('servicePointCard.photoGallery')} - ${servicePointName}` : t('servicePointCard.photoGallery')}
+                {servicePointName ? `${t('components:servicePointCard.photoGallery')} - ${servicePointName}` : t('components:servicePointCard.photoGallery')}
               </Typography>
               <Box sx={{ 
                 display: 'flex', 
@@ -334,7 +334,7 @@ const PhotoGallery: React.FC<{
               <CardMedia
                 component="img"
                 image={sortedPhotos[currentPhotoIndex].url}
-                alt={sortedPhotos[currentPhotoIndex].description || `${t('servicePointCard.servicePointPhoto')} ${currentPhotoIndex + 1}`}
+                alt={sortedPhotos[currentPhotoIndex].description || `${t('components:servicePointCard.servicePointPhoto')} ${currentPhotoIndex + 1}`}
                 sx={{
                   width: '100%',
                   height: 'auto',
@@ -507,7 +507,7 @@ const PhotoGallery: React.FC<{
                     <CardMedia
                       component="img"
                       image={photo.url.replace(/\?.*$/, '') + '?w=160&h=120&fit=crop&auto=format,compress&q=80'}
-                      alt={photo.description || `${t('servicePointCard.servicePointPhoto')} ${index + 1}`}
+                      alt={photo.description || `${t('components:servicePointCard.servicePointPhoto')} ${index + 1}`}
                       sx={{
                         width: '100%',
                         height: '100%',
@@ -532,7 +532,7 @@ const PhotoGallery: React.FC<{
               <Box sx={{ flex: 1 }}>
                 {hasPhotos && sortedPhotos[currentPhotoIndex] && (
                   <Typography variant="body2" color="text.secondary">
-                    {sortedPhotos[currentPhotoIndex].description || t('servicePointCard.servicePointPhoto')}
+                    {sortedPhotos[currentPhotoIndex].description || t('components:servicePointCard.servicePointPhoto')}
                   </Typography>
                 )}
               </Box>
@@ -587,7 +587,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
-  const { t } = useTranslation();
+  const { t } = useTranslation(['components']);
   
   const [showDetails, setShowDetails] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -664,17 +664,17 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                 precision={0.1}
               />
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                ({servicePoint.reviews_count || 0} {t('servicePointCard.reviews')})
+                ({servicePoint.reviews_count || 0} {t('components:servicePointCard.reviews')})
               </Typography>
             </Box>
             
             <Chip 
               label={
                 servicePoint.work_status === 'working' || servicePoint.work_status === 'Працює'
-                  ? t('servicePointCard.working')
+                  ? t('components:servicePointCard.working')
                   : servicePoint.work_status === 'Не працює' || servicePoint.work_status === 'not_working'
-                  ? t('servicePointCard.notWorking')
-                  : servicePoint.work_status || (servicePoint.is_active !== false ? t('servicePointCard.working') : t('servicePointCard.notWorking'))
+                  ? t('components:servicePointCard.notWorking')
+                  : servicePoint.work_status || (servicePoint.is_active !== false ? t('components:servicePointCard.working') : t('components:servicePointCard.notWorking'))
               }
               size="small" 
               color={servicePoint.is_active !== false ? 'success' : 'default'}
@@ -714,7 +714,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <BuildIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {t('servicePointCard.availableCategories')} ({isLoadingCategories ? '...' : categories.length})
+                  {t('components:servicePointCard.availableCategories')} ({isLoadingCategories ? '...' : categories.length})
                 </Typography>
               </Box>
               {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -734,7 +734,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary={category.name}
-                        secondary={`${category.description || t('servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('servicePointCard.services')}`}
+                        secondary={`${category.description || t('components:servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('components:servicePointCard.services')}`}
                         primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />
@@ -743,7 +743,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                 </List>
               ) : (
                 <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  {t('servicePointCard.categoriesNotLoaded')}
+                  {t('components:servicePointCard.categoriesNotLoaded')}
                 </Typography>
               )}
             </Collapse>
@@ -766,7 +766,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {t('servicePointCard.workingHours')}
+                  {t('components:servicePointCard.workingHours')}
                 </Typography>
               </Box>
               {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -823,7 +823,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               }
             }}
           >
-            {t('servicePointCard.details')}
+            {t('components:servicePointCard.details')}
           </Button>
         )}
         <Box sx={{ flexGrow: 1 }} />
@@ -833,7 +833,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             {isSelected ? (
               <Chip
                 icon={<CheckCircleIcon />}
-                label={t('servicePointCard.selected')}
+                label={t('components:servicePointCard.selected')}
                 color="primary"
                 size="small"
                 variant="filled"
@@ -851,7 +851,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                   '&:hover': { bgcolor: theme.palette.primary.dark }
                 }}
               >
-                {t('servicePointCard.select')}
+                {t('components:servicePointCard.select')}
               </Button>
             )}
           </>
