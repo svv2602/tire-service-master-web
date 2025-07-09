@@ -975,7 +975,7 @@ const PartnerFormPage: React.FC = () => {
   const renderOperatorsTab = () => (
     <Box sx={{ mt: 2 }}>
       <Button variant="contained" color="primary" onClick={handleAddOperator} sx={{ mb: 2 }}>
-        Добавить сотрудника
+        {t('forms.partner.operators.addButton')}
       </Button>
       {/* Таблица сотрудников */}
       <Table

@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { User } from '../../types/user';
@@ -49,6 +50,7 @@ interface Car {
 }
 
 const MyCarsList: React.FC = () => {
+  const { t } = useTranslation();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +63,7 @@ const MyCarsList: React.FC = () => {
       const clientId = user?.id;
       
       if (!clientId) {
-        throw new Error('Отсутствует идентификатор клиента');
+        throw new Error(t('forms.clientPages.myCars.clientIdError'));
       }
       
       const response = await fetchWithAuth(`/api/v1/clients/${clientId}/cars`);
@@ -69,11 +71,11 @@ const MyCarsList: React.FC = () => {
       setCars(data.cars || []);
     } catch (error) {
       console.error('Error fetching cars:', error);
-      setError('Ошибка при загрузке автомобилей');
+      setError(t('forms.clientPages.myCars.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   useEffect(() => {
     fetchCars();
@@ -95,18 +97,18 @@ const MyCarsList: React.FC = () => {
       );
       
       if (!response.ok) {
-        throw new Error('Не удалось установить автомобиль как основной');
+        throw new Error(t('forms.clientPages.myCars.setPrimaryFailed'));
       }
       
       fetchCars();
     } catch (error) {
       console.error('Error setting primary car:', error);
-      setError('Ошибка при установке основного автомобиля');
+      setError(t('forms.clientPages.myCars.setPrimaryError'));
     }
   };
 
   const handleDeleteCar = async (carId: number) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот автомобиль?')) {
+    if (!window.confirm(t('forms.clientPages.myCars.confirmDelete'))) {
       return;
     }
     
@@ -121,14 +123,14 @@ const MyCarsList: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось удалить автомобиль');
+        throw new Error(errorData.error || t('forms.clientPages.myCars.deleteError'));
       }
       
       // Обновляем список автомобилей
       fetchCars();
     } catch (err) {
       console.error('Ошибка удаления автомобиля:', err);
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('forms.clientPages.myCars.unknownError'));
     }
   };
 
@@ -155,14 +157,14 @@ const MyCarsList: React.FC = () => {
     return (
       <Box sx={{ my: SIZES.spacing.lg, p: SIZES.spacing.lg }}>
         <Alert severity="error">
-          ❌ Ошибка загрузки данных: {error}
+          ❌ {t('forms.clientPages.myCars.loadingDataError')}: {error}
         </Alert>
         <Button 
           variant="outlined" 
           onClick={fetchCars}
           sx={{ mt: 2 }}
         >
-          Попробовать снова
+          {t('forms.clientPages.myCars.retry')}
         </Button>
       </Box>
     );
@@ -180,14 +182,14 @@ const MyCarsList: React.FC = () => {
           fontSize: SIZES.fontSize.xl,
           fontWeight: 600
         }}>
-          Мои автомобили
+          {t('forms.clientPages.myCars.title')}
         </Typography>
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
           onClick={() => window.location.href = '/my-cars/new'}
         >
-          Добавить автомобиль
+          {t('forms.clientPages.myCars.addCar')}
         </Button>
       </Box>
       
@@ -203,13 +205,13 @@ const MyCarsList: React.FC = () => {
             fontSize: SIZES.fontSize.lg,
             fontWeight: 600
           }}>
-            У вас пока нет добавленных автомобилей
+            {t('forms.clientPages.myCars.noCars')}
           </Typography>
           <Typography color="textSecondary" paragraph sx={{
             fontSize: SIZES.fontSize.md,
             mb: SIZES.spacing.md
           }}>
-            Добавьте свой первый автомобиль, чтобы ускорить процесс записи на шиномонтаж
+            {t('forms.clientPages.myCars.noCarsDescription')}
           </Typography>
           <Button 
             variant="contained" 
@@ -217,7 +219,7 @@ const MyCarsList: React.FC = () => {
             onClick={() => window.location.href = '/my-cars/new'}
             sx={{ mt: SIZES.spacing.md }}
           >
-            Добавить автомобиль
+            {t('forms.clientPages.myCars.addFirstCar')}
           </Button>
         </Box>
       ) : (
@@ -235,7 +237,7 @@ const MyCarsList: React.FC = () => {
                 {car.is_primary && (
                   <Chip 
                     icon={<StarIcon />} 
-                    label="Основной" 
+                    label={t('forms.clientPages.myCars.primary')} 
                     color="success"
                     size="small"
                     sx={{ 
@@ -257,12 +259,12 @@ const MyCarsList: React.FC = () => {
                     fontSize: SIZES.fontSize.sm,
                     mb: SIZES.spacing.sm
                   }}>
-                    Гос. номер: {car.license_plate}
+                    {t('forms.clientPages.myCars.licensePlate')}: {car.license_plate}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{
                     fontSize: SIZES.fontSize.sm
                   }}>
-                    Цвет: {car.color}
+                    {t('forms.clientPages.myCars.color')}: {car.color}
                   </Typography>
                 </Box>
                 <Box sx={{ 
@@ -295,7 +297,7 @@ const MyCarsList: React.FC = () => {
                       onClick={() => handleSetPrimary(car.id.toString())}
                       size="small"
                     >
-                      Сделать основным
+                      {t('forms.clientPages.myCars.setPrimary')}
                     </Button>
                   )}
                 </Box>

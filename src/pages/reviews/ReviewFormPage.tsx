@@ -375,7 +375,7 @@ const ReviewFormPage: React.FC = () => {
                     </Button>
                   )}
                   <Button type="submit" variant="contained" disabled={isSubmitting || isUpdating || !isFormValid()} startIcon={<StarIcon />} sx={primaryButtonStyles}>
-                    {isEditMode ? (isUpdating ? t('forms.review.messages.saving') : t('forms.review.buttons.saveChanges')) : (isSubmitting ? 'Сохранение...' : t('forms.review.buttons.save'))}
+                    {isEditMode ? (isUpdating ? t('forms.reviews.messages.saving') : t('forms.reviews.buttons.saveChanges')) : (isSubmitting ? t('forms.reviews.messages.saving') : t('forms.reviews.buttons.save'))}
                   </Button>
                 </Box>
               </Box>
@@ -388,8 +388,8 @@ const ReviewFormPage: React.FC = () => {
             <Typography>{t('forms.review.messages.deleteConfirm')}</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
-            <Button onClick={handleDelete} color="error" disabled={isDeleting}>Удалить</Button>
+            <Button onClick={() => setDeleteDialogOpen(false)}>{t('forms.reviews.buttons.cancel')}</Button>
+            <Button onClick={handleDelete} color="error" disabled={isDeleting}>{t('forms.reviews.buttons.delete')}</Button>
           </DialogActions>
         </Dialog>
       </Box>
@@ -419,7 +419,7 @@ const ReviewFormPage: React.FC = () => {
             onClick={handleBack}
             sx={secondaryButtonStyles}
           >
-            Назад
+            {t('forms.reviews.buttons.back')}
           </Button>
           <Typography 
             variant="h4"
@@ -428,7 +428,7 @@ const ReviewFormPage: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            Новый отзыв
+            {t('forms.reviews.title.create')}
           </Typography>
         </Box>
         <Alert severity="info">
@@ -452,7 +452,7 @@ const ReviewFormPage: React.FC = () => {
           onClick={handleBack}
           sx={secondaryButtonStyles}
         >
-          Назад
+          {t('forms.reviews.buttons.back')}
         </Button>
         <Typography 
           variant="h4"
@@ -461,7 +461,7 @@ const ReviewFormPage: React.FC = () => {
             fontWeight: 600,
           }}
         >
-          Новый отзыв
+          {t('forms.reviews.title.create')}
         </Typography>
       </Box>
 
@@ -473,7 +473,7 @@ const ReviewFormPage: React.FC = () => {
             setFormError(null);
             setSuccess(false);
             if (!selectedBookingId || !rating || !comment) {
-              setFormError('Заполните все обязательные поля');
+              setFormError(t('forms.reviews.validation.fillAllFields'));
               return;
             }
             try {
@@ -490,7 +490,7 @@ const ReviewFormPage: React.FC = () => {
               setRating(0);
               setComment('');
             } catch (error: any) {
-              setFormError(error?.data?.message || 'Ошибка при сохранении отзыва');
+              setFormError(error?.data?.message || t('forms.reviews.messages.saveError'));
             }
           }}
         >
@@ -559,7 +559,7 @@ const ReviewFormPage: React.FC = () => {
               multiline
               rows={4}
               name="comment"
-              label="Текст отзыва"
+              label={t('forms.reviews.fields.reviewText')}
               value={comment}
               onChange={e => setComment(e.target.value)}
               sx={textFieldStyles}
@@ -575,7 +575,7 @@ const ReviewFormPage: React.FC = () => {
                 onClick={handleBack}
                 sx={secondaryButtonStyles}
               >
-                Отмена
+                {t('forms.reviews.buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -584,7 +584,7 @@ const ReviewFormPage: React.FC = () => {
                 startIcon={<StarIcon />}
                 sx={primaryButtonStyles}
               >
-                {isSubmitting ? 'Сохранение...' : t('forms.review.buttons.publish')}
+                {isSubmitting ? t('forms.reviews.messages.saving') : t('forms.review.buttons.publish')}
               </Button>
             </Box>
           </Box>

@@ -21,6 +21,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { 
@@ -48,6 +49,7 @@ interface CarType {
 }
 
 const NewCarForm: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
@@ -213,7 +215,7 @@ const NewCarForm: React.FC = () => {
   return (
     <Box sx={{ my: SIZES.spacing.lg }}>
       <Typography variant="h5" component="h1" gutterBottom>
-        Добавление нового автомобиля
+        {t('forms.clientPages.newCarForm.title')}
       </Typography>
       
       <Paper sx={cardStyles}>
@@ -228,13 +230,13 @@ const NewCarForm: React.FC = () => {
             {/* Марка автомобиля */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth sx={textFieldStyles}>
-                <InputLabel id="car-brand-label">Марка автомобиля</InputLabel>
+                <InputLabel id="car-brand-label">{t('forms.clientPages.newCarForm.carBrand')}</InputLabel>
                 <Select
                   labelId="car-brand-label"
                   name="car_brand_id"
                   value={formData.car_brand_id || ''}
                   onChange={handleSelectChange}
-                  label="Марка автомобиля"
+                  label={t('forms.clientPages.newCarForm.carBrand')}
                   required
                 >
                   {carBrands.map(brand => (
@@ -249,13 +251,13 @@ const NewCarForm: React.FC = () => {
             {/* Модель автомобиля */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth disabled={!formData.car_brand_id} sx={textFieldStyles}>
-                <InputLabel id="car-model-label">Модель автомобиля</InputLabel>
+                <InputLabel id="car-model-label">{t('forms.clientPages.newCarForm.carModel')}</InputLabel>
                 <Select
                   labelId="car-model-label"
                   name="car_model_id"
                   value={formData.car_model_id || ''}
                   onChange={handleSelectChange}
-                  label="Модель автомобиля"
+                  label={t('forms.clientPages.newCarForm.carModel')}
                   required
                 >
                   {filteredModels.map(model => (
@@ -271,7 +273,7 @@ const NewCarForm: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Марка (если нет в списке)"
+                label={t('forms.clientPages.newCarForm.customBrand')}
                 name="make"
                 value={formData.make}
                 onChange={handleInputChange}
@@ -284,7 +286,7 @@ const NewCarForm: React.FC = () => {
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Модель (если нет в списке)"
+                label={t('forms.clientPages.newCarForm.customModel')}
                 name="model"
                 value={formData.model}
                 onChange={handleInputChange}
@@ -297,7 +299,7 @@ const NewCarForm: React.FC = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Год выпуска"
+                label={t('forms.clientPages.newCarForm.year')}
                 name="year"
                 type="number"
                 value={formData.year}
@@ -312,7 +314,7 @@ const NewCarForm: React.FC = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Гос. номер"
+                label={t('forms.clientPages.newCarForm.licensePlate')}
                 name="license_plate"
                 value={formData.license_plate}
                 onChange={handleInputChange}
@@ -325,7 +327,7 @@ const NewCarForm: React.FC = () => {
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                label="Цвет"
+                label={t('forms.clientPages.newCarForm.color')}
                 name="color"
                 value={formData.color}
                 onChange={handleInputChange}
@@ -337,13 +339,13 @@ const NewCarForm: React.FC = () => {
             {/* Тип автомобиля */}
             <Grid item xs={12} md={6}>
               <FormControl fullWidth sx={textFieldStyles}>
-                <InputLabel id="car-type-label">Тип автомобиля</InputLabel>
+                <InputLabel id="car-type-label">{t('forms.clientPages.newCarForm.carType')}</InputLabel>
                 <Select
                   labelId="car-type-label"
                   name="car_type_id"
                   value={formData.car_type_id || ''}
                   onChange={handleSelectChange}
-                  label="Тип автомобиля"
+                  label={t('forms.clientPages.newCarForm.carType')}
                   required
                 >
                   {carTypes.map(type => (
@@ -365,7 +367,7 @@ const NewCarForm: React.FC = () => {
                     name="is_primary"
                   />
                 } 
-                label="Сделать основным автомобилем"
+                label={t('forms.clientPages.newCarForm.isPrimary')}
               />
             </Grid>
             

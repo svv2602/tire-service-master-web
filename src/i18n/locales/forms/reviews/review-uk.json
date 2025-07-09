@@ -1,0 +1,67 @@
+{
+  "forms": {
+    "review": {
+      "title": {
+        "createAdmin": "Створити відгук",
+        "editAdmin": "Редагувати відгук",
+        "reply": "Відповідь на відгук"
+      },
+      "fields": {
+        "client": "Клієнт",
+        "booking": "Бронювання",
+        "servicePoint": "Сервісна точка",
+        "rating": "Оцінка",
+        "yourRating": "Ваша оцінка",
+        "reviewText": "Текст відгуку",
+        "status": "Статус",
+        "response": "Ваша відповідь"
+      },
+      "placeholders": {
+        "selectClient": "Оберіть клієнта",
+        "selectBooking": "Оберіть бронювання",
+        "withoutBooking": "Без бронювання",
+        "selectServicePoint": "Оберіть сервісну точку"
+      },
+      "statuses": {
+        "published": "Опубліковано",
+        "pending": "На модерації",
+        "rejected": "Відхилено"
+      },
+      "buttons": {
+        "cancel": "Скасувати",
+        "delete": "Видалити",
+        "publish": "Опублікувати",
+        "save": "Зберегти",
+        "reply": "Відповісти",
+        "backToList": "Назад до списку"
+      },
+      "messages": {
+        "saveError": "Помилка при збереженні відгуку",
+        "deleteError": "Помилка при видаленні відгуку",
+        "createSuccess": "Відгук успішно створено",
+        "updateSuccess": "Відгук успішно оновлено",
+        "deleting": "Видалення...",
+        "deleteConfirm": "Ви дійсно хочете видалити цей відгук?",
+        "redirecting": "Перенаправлення...",
+        "noBookings": "У даного клієнта немає завершених бронювань",
+        "loadingError": "Помилка при завантаженні відгуку",
+        "reviewNotFound": "Відгук не знайдено",
+        "saveResponseError": "Помилка при збереженні відповіді",
+        "saving": "Збереження..."
+      },
+      "validation": {
+        "fillAllFields": "Заповніть всі обов'язкові поля",
+        "allFieldsFilled": "Всі поля заповнені коректно",
+        "responseRequired": "Відповідь обов'язкова",
+        "responseMinLength": "Відповідь повинна містити мінімум 10 символів",
+        "responseMaxLength": "Відповідь не повинна перевищувати 1000 символів"
+      },
+      "requiredFields": {
+        "client": "Клієнт",
+        "bookingOrServicePoint": "Бронювання або сервісна точка",
+        "rating": "Оцінка",
+        "reviewText": "Текст відгуку"
+      }
+    }
+  }
+} 

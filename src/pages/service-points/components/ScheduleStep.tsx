@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
   Alert,
 } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
 import { DAYS_OF_WEEK, getDayName } from '../../../types/working-hours';
 import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../../types/working-hours';
@@ -43,6 +44,7 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
 }, {} as WorkingHoursSchedule);
 
 const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   // Отладочная информация
   console.log('=== ScheduleStep Debug ===');
   console.log('isEditMode:', isEditMode);
@@ -97,12 +99,12 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
   return (
     <Box>
       <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
-        График работы
+        {t('forms.servicePoint.steps.schedule')}
       </Typography>
 
       {!hasWorkingDays && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Необходимо указать хотя бы один рабочий день
+          {t('forms.servicePoint.schedule.atLeastOneWorkingDay')}
         </Alert>
       )}
       
@@ -118,7 +120,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             <Grid item xs={12} md={6} key={day.id}>
               <Paper sx={{ p: 2, border: '1px solid #e0e0e0' }}>
                 <Typography variant="subtitle1" gutterBottom>
-                  {day.name}
+                  {t(`forms.servicePoint.days.${day.key}`)}
                 </Typography>
                 
                 <Grid container spacing={2}>
@@ -142,7 +144,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                           name={`working_hours.${day.key}.is_working_day`}
                         />
                       }
-                      label="Рабочий день"
+                      label={t('forms.servicePoint.schedule.workingDay')}
                     />
                   </Grid>
 
@@ -152,7 +154,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                         <TextField
                           fullWidth
                           type="time"
-                          label="Начало работы"
+                          label={t('forms.servicePoint.schedule.startTime')}
                           value={dayHours.start}
                           onChange={(e) => {
                             const newWorkingHours = {
@@ -172,7 +174,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                         <TextField
                           fullWidth
                           type="time"
-                          label="Конец работы"
+                          label={t('forms.servicePoint.schedule.endTime')}
                           value={dayHours.end}
                           onChange={(e) => {
                             const newWorkingHours = {
@@ -200,7 +202,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
       {/* Быстрые действия */}
       <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
         <Typography variant="body2" color="text.secondary">
-          Быстрые действия:
+          {t('forms.servicePoint.schedule.quickActions')}:
         </Typography>
         
         <Typography 
@@ -227,7 +229,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             formik.setFieldValue('working_hours', newWorkingHours);
           }}
         >
-          Стандартный график (Пн-Пт 9:00-18:00)
+          {t('forms.servicePoint.schedule.standardSchedule')}
         </Typography>
 
         <Typography 
@@ -246,7 +248,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             formik.setFieldValue('working_hours', newWorkingHours);
           }}
         >
-          Ежедневно (8:00-20:00)
+          {t('forms.servicePoint.schedule.dailySchedule')}
         </Typography>
 
         <Typography 
@@ -265,7 +267,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             formik.setFieldValue('working_hours', newWorkingHours);
           }}
         >
-          Очистить все
+          {t('forms.servicePoint.schedule.clearAll')}
         </Typography>
       </Box>
     </Box>

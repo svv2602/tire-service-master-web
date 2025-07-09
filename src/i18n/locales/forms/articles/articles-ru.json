@@ -181,6 +181,102 @@
         "deleteError": "Ошибка при удалении статьи:",
         "deleteErrorGeneral": "Произошла ошибка при удалении статьи"
       }
+    },
+    "pageContent": {
+      "title": {
+        "create": "Создание контента страницы",
+        "edit": "Редактирование контента страницы"
+      },
+      "fields": {
+        "section": "Секция",
+        "contentType": "Тип контента",
+        "title": "Заголовок",
+        "content": "Содержимое",
+        "image": "Изображение",
+        "orImageUrl": "Или URL изображения",
+        "position": "Позиция",
+        "active": "Активен"
+      },
+      "sections": {
+        "client": "Клиентская часть",
+        "admin": "Админская часть",
+        "service": "Услуги",
+        "about": "О нас"
+      },
+      "contentTypes": {
+        "hero": "Главный баннер",
+        "service": "Услуга",
+        "city": "Город",
+        "article": "Статья",
+        "cta": "Призыв к действию",
+        "footer": "Подвал"
+      },
+      "buttons": {
+        "cancel": "Отмена",
+        "create": "Создать",
+        "update": "Обновить",
+        "uploadImage": "Загрузить изображение",
+        "deleteImage": "Удалить изображение"
+      },
+      "messages": {
+        "selectImage": "Пожалуйста, выберите изображение",
+        "fileSizeError": "Размер файла не должен превышать 5MB",
+        "imagePreview": "Предпросмотр изображения",
+        "clearUploadedImage": "Очистите загруженное изображение, чтобы использовать URL",
+        "urlAlternative": "Или укажите URL изображения",
+        "createSuccess": "Контент успешно создан",
+        "updateSuccess": "Контент успешно обновлен",
+        "saveError": "Ошибка при сохранении",
+        "loadError": "Ошибка при загрузке данных",
+        "searchPlaceholder": "Найти по заголовку или содержимому..."
+      },
+      "showInactive": "Показать неактивный контент"
+    },
+    "reviews": {
+      "title": {
+        "create": "Создание отзыва",
+        "edit": "Редактирование отзыва"
+      },
+      "fields": {
+        "client": "Клиент",
+        "booking": "Бронирование",
+        "servicePoint": "Сервисная точка",
+        "rating": "Оценка",
+        "yourRating": "Ваша оценка",
+        "reviewText": "Текст отзыва",
+        "status": "Статус"
+      },
+      "statuses": {
+        "published": "Опубликован",
+        "pending": "На модерации", 
+        "rejected": "Отклонен"
+      },
+      "buttons": {
+        "cancel": "Отмена",
+        "save": "Сохранить отзыв",
+        "saveChanges": "Сохранить изменения",
+        "publish": "Опубликовать отзыв",
+        "delete": "Удалить",
+        "back": "Назад"
+      },
+      "messages": {
+        "saving": "Сохранение...",
+        "deleting": "Удаление...",
+        "saveError": "Ошибка при сохранении отзыва",
+        "deleteError": "Ошибка при удалении отзыва",
+        "deleteConfirm": "Вы уверены, что хотите удалить этот отзыв?",
+        "noBookings": "У вас нет завершенных бронирований для написания отзыва"
+      },
+      "validation": {
+        "fillAllFields": "Заполните все обязательные поля",
+        "allFieldsFilled": "Все поля заполнены корректно"
+      },
+      "requiredFields": {
+        "client": "Клиент",
+        "bookingOrServicePoint": "Бронирование или сервисная точка",
+        "rating": "Оценка",
+        "reviewText": "Текст отзыва"
+      }
     }
   }
 } 

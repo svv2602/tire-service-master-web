@@ -11,6 +11,7 @@ import { RootState } from '../../store';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -55,16 +56,16 @@ interface Booking {
   comment?: string;
 }
 
-const getStatusChip = (status: string) => {
+const getStatusChip = (status: string, t: any) => {
   switch (status) {
     case 'pending':
-      return <Chip icon={<EventNoteIcon />} label="Ожидает подтверждения" color="warning" />;
+      return <Chip icon={<EventNoteIcon />} label={t('forms.clientPages.myBookingsList.status.pending')} color="warning" />;
     case 'confirmed':
-      return <Chip icon={<EventAvailableIcon />} label="Подтверждено" color="success" />;
+      return <Chip icon={<EventAvailableIcon />} label={t('forms.clientPages.myBookingsList.status.confirmed')} color="success" />;
     case 'completed':
-      return <Chip icon={<EventAvailableIcon />} label="Выполнено" color="success" />;
+      return <Chip icon={<EventAvailableIcon />} label={t('forms.clientPages.myBookingsList.status.completed')} color="success" />;
     case 'cancelled':
-      return <Chip icon={<EventBusyIcon />} label="Отменено" color="error" />;
+      return <Chip icon={<EventBusyIcon />} label={t('forms.clientPages.myBookingsList.status.cancelled')} color="error" />;
     default:
       return <Chip label={status} />;
   }
@@ -84,6 +85,7 @@ const MyBookingsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { t } = useTranslation();
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -91,7 +93,7 @@ const MyBookingsList: React.FC = () => {
       const clientId = user?.id;
       
       if (!clientId) {
-        throw new Error('Отсутствует идентификатор клиента');
+        throw new Error(t('forms.clientPages.myBookingsList.actions.clientIdError'));
       }
       
       const response = await fetchWithAuth(`/api/v1/clients/${clientId}/bookings`);
@@ -99,18 +101,18 @@ const MyBookingsList: React.FC = () => {
       setBookings(data.bookings || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      setError('Ошибка при загрузке бронирований');
+      setError(t('forms.clientPages.myBookingsList.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   useEffect(() => {
     fetchBookings();
   }, [fetchBookings]);
 
   const handleCancelBooking = async (bookingId: number) => {
-    if (!window.confirm('Вы уверены, что хотите отменить запись?')) {
+    if (!window.confirm(t('forms.clientPages.myBookingsList.actions.confirmCancel'))) {
       return;
     }
     
@@ -127,7 +129,7 @@ const MyBookingsList: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось отменить запись');
+        throw new Error(errorData.error || t('forms.clientPages.myBookingsList.actions.cancelError'));
       }
       
       // Обновляем список записей
@@ -162,7 +164,7 @@ const MyBookingsList: React.FC = () => {
           onClick={fetchBookings} 
           sx={{ mt: 2 }}
         >
-          Попробовать снова
+          {t('forms.clientPages.myBookingsList.retry')}
         </Button>
       </Box>
     );
@@ -180,14 +182,14 @@ const MyBookingsList: React.FC = () => {
           fontSize: SIZES.fontSize.xl,
           fontWeight: 600
         }}>
-          Мои записи на шиномонтаж
+          {t('forms.clientPages.myBookingsList.title')}
         </Typography>
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
           onClick={() => window.location.href = '/client/booking'}
         >
-          Записаться на шиномонтаж
+          {t('forms.clientPages.myBookingsList.newBooking')}
         </Button>
       </Box>
       
@@ -203,13 +205,13 @@ const MyBookingsList: React.FC = () => {
             fontSize: SIZES.fontSize.lg,
             fontWeight: 600
           }}>
-            У вас пока нет записей на шиномонтаж
+            {t('forms.clientPages.myBookingsList.noBookings')}
           </Typography>
           <Typography color="textSecondary" paragraph sx={{
             fontSize: SIZES.fontSize.md,
             mb: SIZES.spacing.md
           }}>
-            Выберите сервисный центр и запишитесь на удобное время
+            {t('forms.clientPages.myBookingsList.noBookingsDescription')}
           </Typography>
           <Button 
             variant="contained" 
@@ -217,7 +219,7 @@ const MyBookingsList: React.FC = () => {
             onClick={() => window.location.href = '/client/booking'}
             sx={{ mt: SIZES.spacing.md }}
           >
-            Выбрать сервисный центр
+            {t('forms.clientPages.myBookingsList.selectServiceCenter')}
           </Button>
         </Box>
       ) : (
@@ -243,35 +245,35 @@ const MyBookingsList: React.FC = () => {
                     }}>
                       {booking.service_point_name}
                     </Typography>
-                    {getStatusChip(booking.status)}
+                    {getStatusChip(booking.status, t)}
                   </Box>
                   
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{
                     fontSize: SIZES.fontSize.sm,
                     mb: SIZES.spacing.sm
                   }}>
-                    <strong>Автомобиль:</strong> {booking.car_name}
+                    <strong>{t('forms.clientPages.myBookingsList.fields.car')}:</strong> {booking.car_name}
                   </Typography>
                   
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{
                     fontSize: SIZES.fontSize.sm,
                     mb: SIZES.spacing.sm
                   }}>
-                    <strong>Дата и время:</strong> {formatDate(booking.start_time)}
+                    <strong>{t('forms.clientPages.myBookingsList.fields.dateTime')}:</strong> {formatDate(booking.start_time)}
                   </Typography>
                   
                   <Typography variant="body2" color="text.secondary" gutterBottom sx={{
                     fontSize: SIZES.fontSize.sm,
                     mb: SIZES.spacing.sm
                   }}>
-                    <strong>Услуги:</strong> {booking.services.map(service => service.name).join(', ')}
+                    <strong>{t('forms.clientPages.myBookingsList.fields.services')}:</strong> {booking.services.map(service => service.name).join(', ')}
                   </Typography>
                   
                   <Typography variant="body1" fontWeight="bold" sx={{
                     mt: SIZES.spacing.md,
                     fontSize: SIZES.fontSize.md
                   }}>
-                    Стоимость: {booking.total_price} ₽
+                    {t('forms.clientPages.myBookingsList.fields.cost')}: {booking.total_price} ₽
                   </Typography>
                   
                   {booking.comment && (
@@ -279,7 +281,7 @@ const MyBookingsList: React.FC = () => {
                       <Typography variant="body2" color="text.secondary" sx={{
                         fontSize: SIZES.fontSize.sm
                       }}>
-                        <strong>Комментарий:</strong> {booking.comment}
+                        <strong>{t('forms.clientPages.myBookingsList.fields.comment')}:</strong> {booking.comment}
                       </Typography>
                     </Box>
                   )}
@@ -296,7 +298,7 @@ const MyBookingsList: React.FC = () => {
                     onClick={() => window.location.href = `/bookings/${booking.id}`}
                     size="small"
                   >
-                    Подробнее
+                    {t('forms.clientPages.myBookingsList.actions.details')}
                   </Button>
                   
                   {(booking.status === 'pending' || booking.status === 'confirmed') && (
@@ -305,7 +307,7 @@ const MyBookingsList: React.FC = () => {
                       size="small"
                       onClick={() => handleCancelBooking(booking.id)}
                     >
-                      Отменить запись
+                      {t('forms.clientPages.myBookingsList.actions.cancel')}
                     </Button>
                   )}
                 </Box>

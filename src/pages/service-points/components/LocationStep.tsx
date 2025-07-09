@@ -12,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import { useGetRegionsQuery } from '../../../api/regions.api';
 import { useGetCitiesQuery } from '../../../api/cities.api';
 import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
@@ -24,6 +25,7 @@ interface LocationStepProps {
 }
 
 const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
@@ -95,7 +97,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
           color: theme.palette.text.primary,
         }}
       >
-        Адрес и местоположение
+        {t('forms.servicePoint.steps.location')}
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>
@@ -110,7 +112,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               },
             }}
           >
-            <InputLabel id="region-id-label">Регион</InputLabel>
+            <InputLabel id="region-id-label">{t('forms.servicePoint.fields.region')}</InputLabel>
             <Select
               labelId="region-id-label"
               id="region_id"
@@ -122,11 +124,11 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
                 formik.setFieldValue('region_id', regionId);
               }}
               onBlur={formik.handleBlur}
-              label="Регион"
+              label={t('forms.servicePoint.fields.region')}
               disabled={regionsLoading}
             >
               <MenuItem value="0" disabled>
-                {regionsLoading ? 'Загрузка...' : 'Выберите регион'}
+                {regionsLoading ? t('forms.servicePoint.messages.loading') : t('forms.servicePoint.selectRegion')}
               </MenuItem>
               {regionsData.map((region: Region) => (
                 <MenuItem key={region.id} value={region.id.toString()}>
@@ -149,7 +151,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               },
             }}
           >
-            <InputLabel id="city-id-label">Город</InputLabel>
+            <InputLabel id="city-id-label">{t('forms.servicePoint.fields.city')}</InputLabel>
             <Select
               labelId="city-id-label"
               id="city_id"
@@ -159,11 +161,11 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
                 formik.setFieldValue('city_id', Number(e.target.value));
               }}
               onBlur={formik.handleBlur}
-              label="Город"
+              label={t('forms.servicePoint.fields.city')}
               disabled={!selectedRegionId || citiesLoading}
             >
               <MenuItem value="0" disabled>
-                {citiesLoading ? 'Загрузка...' : 'Выберите город'}
+                {citiesLoading ? t('forms.servicePoint.messages.loading') : t('forms.servicePoint.selectCity')}
               </MenuItem>
               {citiesData.map((city: City) => (
                 <MenuItem key={city.id} value={city.id.toString()}>
@@ -175,7 +177,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               <FormHelperText error>{formik.errors.city_id as string}</FormHelperText>
             )}
             {!selectedRegionId && (
-              <FormHelperText>Сначала выберите регион</FormHelperText>
+              <FormHelperText>{t('forms.servicePoint.messages.selectRegionFirst')}</FormHelperText>
             )}
           </FormControl>
         </Grid>
@@ -185,13 +187,13 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
             fullWidth
             id="address"
             name="address"
-            label="Адрес"
+            label={t('forms.servicePoint.fields.address')}
             value={formik.values.address}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             error={formik.touched.address && Boolean(formik.errors.address)}
             helperText={formik.touched.address && formik.errors.address}
-            placeholder="Введите полный адрес сервисной точки"
+            placeholder={t('forms.servicePoint.fields.addressPlaceholder')}
             required
             sx={{
               ...textFieldStyles,
@@ -207,7 +209,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
             fullWidth
             id="latitude"
             name="latitude"
-            label="Широта"
+            label={t('forms.servicePoint.fields.latitude')}
             type="number"
             value={formik.values.latitude || ''}
             onChange={formik.handleChange}
@@ -235,7 +237,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
             fullWidth
             id="longitude"
             name="longitude"
-            label="Долгота"
+            label={t('forms.servicePoint.fields.longitude')}
             type="number"
             value={formik.values.longitude || ''}
             onChange={formik.handleChange}

@@ -45,14 +45,15 @@ import {
 } from '@mui/icons-material';
 import { ServicePoint } from '../../types/models';
 import { Partner } from '../../types/models';
+import { useTranslation } from 'react-i18next';
 
-const getDayName = (day: number): string => {
-  const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-  return days[day];
+const getDayName = (day: number, t: any): string => {
+  return t(`forms.servicePoints.getDayName.${day}`);
 };
 
 const ServicePointDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
 
   const { data: basicInfo } = useGetServicePointBasicInfoQuery(id || '', {
     skip: !id
@@ -112,7 +113,7 @@ const ServicePointDetailsPage = () => {
     return (
       <Box p={3}>
         <Typography variant="h6" color="error">
-          Сервисная точка не найдена
+          {t('forms.servicePoints.messages.notFound')}
         </Typography>
       </Box>
     );
@@ -138,7 +139,7 @@ const ServicePointDetailsPage = () => {
             )}
             {city && (
               <Chip
-                label={city.data?.name || 'Неизвестный город'}
+                label={city.data?.name || t('servicePoints.unknownCity')}
                 color="secondary"
                 variant="outlined"
               />
@@ -150,7 +151,7 @@ const ServicePointDetailsPage = () => {
       {partner && (
         <>
           <Typography variant="h6" gutterBottom>
-            Информация о партнере:
+            {t('servicePoints.partnerInfo')}:
           </Typography>
           <Card sx={{ mb: 4 }}>
             <CardContent>
@@ -161,14 +162,14 @@ const ServicePointDetailsPage = () => {
                 {partner.company_description}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Телефон: {partner.user?.phone || 'Не указан'}
+                {t('servicePoints.phone')}: {partner.user?.phone || t('servicePoints.notSpecified')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Email: {partner.user?.email || 'Не указан'}
+                {t('servicePoints.email')}: {partner.user?.email || t('servicePoints.notSpecified')}
               </Typography>
               {partner.contact_person && (
                 <Typography variant="body2" color="text.secondary">
-                  Контактное лицо: {partner.contact_person}
+                  {t('servicePoints.contactPerson')}: {partner.contact_person}
                 </Typography>
               )}
             </CardContent>
@@ -180,7 +181,7 @@ const ServicePointDetailsPage = () => {
       {photos && photos.data && photos.data.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom>
-            Фотографии:
+            {t('servicePoints.photos')}:
           </Typography>
           <Grid container spacing={2} sx={{ mb: 4 }}>
             {photos.data.map((photo) => (
@@ -190,7 +191,7 @@ const ServicePointDetailsPage = () => {
                     component="img"
                     height="200"
                     image={photo.url}
-                    alt={photo.description || 'Фото сервисной точки'}
+                    alt={photo.description || t('servicePoints.servicePointPhoto')}
                   />
                   {photo.description && (
                     <CardContent>
@@ -209,30 +210,30 @@ const ServicePointDetailsPage = () => {
       {schedule && schedule.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom>
-            Расписание на {new Date().toLocaleDateString('ru-RU')}:
+            {t('servicePoints.scheduleFor')} {new Date().toLocaleDateString('ru-RU', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })}:
           </Typography>
           <TableContainer component={Paper} sx={{ mb: 4 }}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>День недели</TableCell>
-                  <TableCell>Время работы</TableCell>
-                  <TableCell>Статус</TableCell>
+                  <TableCell>{t('servicePoints.dayOfWeek')}</TableCell>
+                  <TableCell>{t('servicePoints.workingHours')}</TableCell>
+                  <TableCell>{t('servicePoints.status')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {schedule.map((workingDay: WorkingHours, index: number) => (
                   <TableRow key={index}>
-                    <TableCell>{getDayName(index)}</TableCell>
+                    <TableCell>{getDayName(index, t)}</TableCell>
                     <TableCell>
                       {workingDay.is_working_day 
                         ? `${workingDay.start} - ${workingDay.end}`
-                        : 'Выходной'
+                        : t('servicePoints.dayOff')
                       }
                     </TableCell>
                     <TableCell>
                       <Chip 
-                        label={workingDay.is_working_day ? 'Рабочий день' : 'Выходной'} 
+                        label={workingDay.is_working_day ? t('servicePoints.workingDay') : t('servicePoints.dayOff')} 
                         color={workingDay.is_working_day ? 'success' : 'default'} 
                         size="small" 
                       />
@@ -246,7 +247,7 @@ const ServicePointDetailsPage = () => {
       )}
 
       <Typography variant="h6" gutterBottom>
-        Услуги:
+        {t('servicePoints.services')}:
       </Typography>
       {servicePointServicesData.length > 0 ? (
         <Grid container spacing={2}>
@@ -257,7 +258,7 @@ const ServicePointDetailsPage = () => {
                 <Card>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      {serviceDetails?.name || 'Услуга'}
+                      {serviceDetails?.name || t('servicePoints.service')}
                     </Typography>
                     {serviceDetails?.description && (
                       <Typography variant="body2" color="text.secondary" paragraph>
@@ -265,11 +266,11 @@ const ServicePointDetailsPage = () => {
                       </Typography>
                     )}
                     <Typography variant="body1" color="primary">
-                      {service.price || 'Цена по запросу'} руб.
+                      {service.price || t('servicePoints.priceOnRequest')} {t('servicePoints.ruble')}
                     </Typography>
                     {service.duration && (
                       <Typography variant="body2" color="text.secondary">
-                        Длительность: {service.duration} мин.
+                        {t('servicePoints.duration')}: {service.duration} {t('servicePoints.minutes')}
                       </Typography>
                     )}
                   </CardContent>
@@ -280,7 +281,7 @@ const ServicePointDetailsPage = () => {
         </Grid>
       ) : (
         <Typography variant="body1" color="text.secondary">
-          Услуги не найдены
+          {t('servicePoints.noServicesFound')}
         </Typography>
       )}
     </Box>

@@ -81,6 +81,7 @@
       "notSpecified": "Не вказано"
     },
     "operators": {
+      "addButton": "Додати співробітника",
       "columns": {
         "fio": "ПІБ",
         "email": "Email",

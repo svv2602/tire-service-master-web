@@ -1,0 +1,52 @@
+{
+  "forms": {
+    "profile": {
+      "title": "Профиль пользователя",
+      "sections": {
+        "userInfo": "Информация о пользователе",
+        "editProfile": "Редактирование профиля",
+        "passwordChange": "Смена пароля"
+      },
+      "fields": {
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "email": "Email",
+        "phone": "Телефон",
+        "position": "Должность",
+        "organization": "Организация",
+        "userStatus": "Статус пользователя",
+        "currentPassword": "Текущий пароль",
+        "newPassword": "Новый пароль",
+        "confirmPassword": "Подтвердите пароль"
+      },
+      "buttons": {
+        "save": "Сохранить изменения",
+        "changePassword": "Изменить пароль",
+        "cancelPasswordChange": "Отменить смену пароля"
+      },
+      "messages": {
+        "saveSuccess": "Данные профиля успешно обновлены!",
+        "passwordChangeSuccess": "Пароль успешно изменен!",
+        "organizationName": "Твоя шина"
+      },
+      "errors": {
+        "passwordMismatch": "Новый пароль и подтверждение не совпадают",
+        "passwordMinLength": "Новый пароль должен содержать минимум 8 символов",
+        "passwordChangeError": "Ошибка смены пароля",
+        "saveError": "Ошибка сохранения данных"
+      },
+      "validation": {
+        "emailRequired": "Email обязателен",
+        "emailInvalid": "Введите корректный email",
+        "firstNameRequired": "Имя обязательно",
+        "firstNameMin": "Имя должно быть не менее 2 символов",
+        "lastNameRequired": "Фамилия обязательна",
+        "lastNameMin": "Фамилия должна быть не менее 2 символов",
+        "phoneRequired": "Телефон обязателен",
+        "currentPasswordRequired": "Введите текущий пароль",
+        "passwordMin": "Пароль должен содержать минимум 6 символов",
+        "passwordsMatch": "Пароли не совпадают"
+      }
+    }
+  }
+} 

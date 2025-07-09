@@ -13,6 +13,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import { useGetWorkStatusesQuery } from '../../../api/servicePoints.api';
 import { SIZES, getFormStyles } from '../../../styles';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
@@ -24,6 +25,7 @@ interface SettingsStepProps {
 }
 
 const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   const { data: workStatusesData, isLoading: workStatusesLoading } = useGetWorkStatusesQuery();
   const workStatuses = workStatusesData || [];
   const theme = useTheme();
@@ -49,7 +51,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
           color: theme.palette.text.primary,
         }}
       >
-        Параметры работы
+        {t('forms.servicePoint.steps.settings')}
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>
@@ -64,7 +66,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
                 name="is_active"
               />
             }
-            label="Точка активна"
+            label={t('forms.servicePoint.fields.isActive')}
           />
         </Grid>
 
@@ -80,7 +82,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
               },
             }}
           >
-            <InputLabel id="work-status-label">Статус работы</InputLabel>
+            <InputLabel id="work-status-label">{t('forms.servicePoint.fields.workStatus')}</InputLabel>
             <Select
               labelId="work-status-label"
               id="work_status"
@@ -89,7 +91,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
               onChange={(e) => {
                 formik.setFieldValue('work_status', e.target.value);
               }}
-              label="Статус работы"
+              label={t('forms.servicePoint.fields.workStatus')}
               disabled={workStatusesLoading}
             >
               {workStatuses.map((status) => (
@@ -100,7 +102,7 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
             </Select>
             {workStatusesLoading && (
               <FormHelperText>
-                Загрузка статусов работы...
+                {t('forms.servicePoint.messages.loadingWorkStatuses')}
               </FormHelperText>
             )}
             {formik.touched.work_status && formik.errors.work_status && (

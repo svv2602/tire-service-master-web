@@ -20,23 +20,25 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetReviewByIdQuery,
   useUpdateReviewMutation,
 } from '../../api';
 import { ReviewUpdateData } from '../../types/models';
 
-// Схема валидации
-const validationSchema = yup.object({
-  response: yup.string()
-    .required('Ответ обязателен')
-    .min(10, 'Ответ должен содержать минимум 10 символов')
-    .max(1000, 'Ответ не должен превышать 1000 символов'),
-});
-
 const ReviewReplyPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // Схема валидации с переводами
+  const validationSchema = yup.object({
+    response: yup.string()
+      .required(t('forms.review.validation.responseRequired'))
+      .min(10, t('forms.review.validation.responseMinLength'))
+      .max(1000, t('forms.review.validation.responseMaxLength')),
+  });
 
   // RTK Query хуки
   const { 
@@ -62,7 +64,7 @@ const ReviewReplyPage: React.FC = () => {
           }).unwrap();
           navigate('/admin/reviews');
         } catch (error) {
-          console.error('Ошибка при сохранении ответа:', error);
+          console.error(t('forms.review.messages.saveResponseError'), error);
         }
       }
     },
@@ -102,7 +104,7 @@ const ReviewReplyPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке отзыва: {reviewError.toString()}
+          {t('forms.review.messages.loadingError')}: {reviewError.toString()}
         </Alert>
       </Box>
     );
@@ -112,7 +114,7 @@ const ReviewReplyPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Отзыв не найден
+          {t('forms.review.messages.reviewNotFound')}
         </Alert>
       </Box>
     );
@@ -122,9 +124,9 @@ const ReviewReplyPage: React.FC = () => {
     <Box sx={{ p: 3 }}>
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Ответ на отзыв</Typography>
+        <Typography variant="h4">{t('forms.review.title.reply')}</Typography>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
-          Назад к списку
+          {t('forms.review.buttons.backToList')}
         </Button>
       </Box>
 
@@ -171,7 +173,7 @@ const ReviewReplyPage: React.FC = () => {
             rows={4}
             id="response"
             name="response"
-            label="Ваш ответ"
+            label={t('forms.review.fields.response')}
             value={formik.values.response}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -182,7 +184,7 @@ const ReviewReplyPage: React.FC = () => {
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
             <Button onClick={handleBack}>
-              Отмена
+              {t('forms.review.buttons.cancel')}
             </Button>
             <Button
               type="submit"
@@ -190,7 +192,7 @@ const ReviewReplyPage: React.FC = () => {
               startIcon={<ReplyIcon />}
               disabled={formik.isSubmitting || updateLoading}
             >
-              {formik.isSubmitting || updateLoading ? 'Сохранение...' : 'Ответить'}
+              {formik.isSubmitting || updateLoading ? t('forms.review.messages.saving') : t('forms.review.buttons.reply')}
             </Button>
           </Box>
         </form>

@@ -218,10 +218,10 @@ const PageContentPage: React.FC = () => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Поиск контента"
+              label={t('forms.pageContent.fields.title')}
               value={searchQuery}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-              placeholder="Найти по заголовку или содержимому..."
+              placeholder={t('forms.pageContent.messages.searchPlaceholder')}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -239,7 +239,7 @@ const PageContentPage: React.FC = () => {
                   onChange={(event) => setShowInactive(event.target.checked)}
                 />
               }
-              label="Показать неактивный контент"
+              label={t('forms.pageContent.showInactive')}
             />
           </Grid>
         </Grid>

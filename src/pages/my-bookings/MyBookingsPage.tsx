@@ -16,9 +16,9 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { convertStatusToKey } from '../../utils/bookingStatus';
 import { useNavigate } from 'react-router-dom';
 
-// Функция для конвертации типов Booking
+// Function to convert Booking types
 const convertBooking = (modelBooking: ModelBooking): Booking => {
-  // Извлекаем статус из API ответа - теперь это всегда строка
+  // Extract status from API response - now it's always a string
   const statusName = modelBooking.status || 'pending';
     
   return {
@@ -44,7 +44,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
   };
 };
 
-// Интерфейс для фильтров
+// Interface for filters
 interface BookingsFilter {
   status?: BookingStatusKey;
   dateFrom?: string;
@@ -64,17 +64,17 @@ const MyBookingsPage: React.FC = () => {
     status: BOOKING_STATUSES.PENDING,
   });
 
-  // Запрос на получение записей клиента
+  // Request for client bookings
   const { data: bookingsData, isLoading, isError, refetch } = useGetBookingsByClientQuery(
     currentUser?.id ? String(currentUser.id) : '', 
     { skip: !currentUser?.id }
   );
 
-  // Обработчик изменения вкладки
+  // Handler for tab change
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
     
-    // Обновляем фильтры в зависимости от выбранной вкладки
+    // Update filters based on selected tab
     if (newValue === 0) {
       setFilters({ ...filters, status: BOOKING_STATUSES.PENDING });
     } else if (newValue === 1) {
@@ -84,24 +84,24 @@ const MyBookingsPage: React.FC = () => {
     }
   };
 
-  // Обработчик изменения фильтров
+  // Handler for filter changes
   const handleFilterChange = (newFilters: Partial<BookingsFilter>) => {
     setFilters({ ...filters, ...newFilters });
   };
 
-  // Эффект для обновления данных при изменении фильтров
+  // Effect to update data when filters change
   useEffect(() => {
     if (currentUser?.id) {
       refetch();
     }
   }, [filters, currentUser, refetch]);
 
-  // Если пользователь не авторизован, показываем предложение войти
+  // If user is not authenticated, show login prompt
   if (!currentUser) {
     return <LoginPrompt />;
   }
 
-  // Конвертируем данные бронирований
+  // Convert booking data
   const convertedBookings = bookingsData?.data
     ? bookingsData.data.map(convertBooking)
         .filter(booking => booking.status === filters.status)

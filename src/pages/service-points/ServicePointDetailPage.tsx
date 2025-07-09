@@ -74,7 +74,7 @@ const ServicePointDetailPage: React.FC = () => {
           {error.toString()}
         </Alert>
         <Button startIcon={<ArrowBackIcon />} onClick={handleBack}>
-          Вернуться к списку
+          {t('forms.servicePoints.buttons.back')}
         </Button>
       </Box>
     );
@@ -103,14 +103,14 @@ const ServicePointDetailPage: React.FC = () => {
             onClick={handleEdit}
             sx={{ mr: 1 }}
           >
-            Редактировать
+            {t('forms.servicePoints.buttons.edit')}
           </Button>
           <Button
             variant="outlined"
             startIcon={<PhotoIcon />}
             onClick={handlePhotos}
           >
-            Фотографии
+            {t('forms.servicePoints.buttons.photos')}
           </Button>
         </Box>
       </Box>
@@ -120,7 +120,7 @@ const ServicePointDetailPage: React.FC = () => {
           <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
               <InfoIcon sx={{ mr: 1, color: 'primary.main' }} />
-              <Typography variant="h6">Основная информация</Typography>
+              <Typography variant="h6">{t('forms.servicePoints.sections.basicInfo')}</Typography>
             </Box>
             
             <Grid container spacing={2}>
@@ -129,7 +129,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <LocationIcon sx={{ mt: 0.5, mr: 1, color: 'text.secondary' }} />
                   <Box>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Адрес
+                      {t('forms.servicePoints.fields.address')}
                     </Typography>
                     <Typography>{servicePoint.address}</Typography>
                   </Box>
@@ -141,7 +141,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <PhoneIcon sx={{ mt: 0.5, mr: 1, color: 'text.secondary' }} />
                   <Box>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Контактный телефон
+                      {t('forms.servicePoints.fields.contactPhone')}
                     </Typography>
                     <Typography>{servicePoint.contact_phone}</Typography>
                   </Box>
@@ -153,7 +153,7 @@ const ServicePointDetailPage: React.FC = () => {
                   <BusinessIcon sx={{ mt: 0.5, mr: 1, color: 'text.secondary' }} />
                   <Box>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Партнер
+                      {t('forms.servicePoints.fields.partner')}
                     </Typography>
                     <Typography>{servicePoint.partner?.company_name}</Typography>
                   </Box>

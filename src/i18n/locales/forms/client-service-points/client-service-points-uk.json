@@ -1,0 +1,47 @@
+{
+  "forms": {
+    "clientServicePoints": {
+      "favorites": {
+        "title": "Улюблені сервісні центри",
+        "findServiceCenters": "Знайти сервісні центри",
+        "empty": {
+          "title": "У вас поки немає улюблених сервісних центрів",
+          "description": "Додавайте сервісні центри до улюблених, щоб швидко знаходити їх при записі на шиномонтаж"
+        },
+        "errors": {
+          "loadFailed": "Не вдалося завантажити дані улюблених сервісних центрів",
+          "removeFailed": "Не вдалося видалити з улюблених",
+          "unknownError": "Невідома помилка",
+          "unknownFormat": "Невідомий формат даних",
+          "unsupportedFormat": "Непідтримуваний формат даних від API"
+        },
+        "actions": {
+          "tryAgain": "Спробувати ще раз",
+          "confirmRemove": "Ви впевнені, що хочете видалити цей сервісний центр з улюблених?"
+        }
+      },
+      "search": {
+        "title": "Пошук сервісних центрів",
+        "filters": {
+          "searchPlaceholder": "Пошук за назвою або адресою...",
+          "selectService": "Оберіть послугу",
+          "allServices": "Всі послуги"
+        },
+        "errors": {
+          "loadServicePointsFailed": "Не вдалося завантажити дані сервісних центрів",
+          "loadServicesFailed": "Не вдалося завантажити дані послуг",
+          "favoriteToggleFailed": "Не вдалося {{action}} улюблені",
+          "favoriteAdd": "додати до",
+          "favoriteRemove": "прибрати з",
+          "unknownError": "Невідома помилка",
+          "unknownFormat": "Невідомий формат даних",
+          "unsupportedFormat": "Непідтримуваний формат даних від API",
+          "filterError": "Помилка при фільтрації сервісних точок"
+        },
+        "actions": {
+          "tryAgain": "Спробувати ще раз"
+        }
+      }
+    }
+  }
+} 

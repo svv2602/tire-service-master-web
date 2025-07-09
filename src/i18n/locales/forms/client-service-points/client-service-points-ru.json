@@ -1,0 +1,47 @@
+{
+  "forms": {
+    "clientServicePoints": {
+      "favorites": {
+        "title": "Избранные сервисные центры",
+        "findServiceCenters": "Найти сервисные центры",
+        "empty": {
+          "title": "У вас пока нет избранных сервисных центров",
+          "description": "Добавляйте сервисные центры в избранное, чтобы быстро находить их при записи на шиномонтаж"
+        },
+        "errors": {
+          "loadFailed": "Не удалось загрузить данные избранных сервисных центров",
+          "removeFailed": "Не удалось удалить из избранного",
+          "unknownError": "Неизвестная ошибка",
+          "unknownFormat": "Неизвестный формат данных",
+          "unsupportedFormat": "Неподдерживаемый формат данных от API"
+        },
+        "actions": {
+          "tryAgain": "Попробовать снова",
+          "confirmRemove": "Вы уверены, что хотите удалить этот сервисный центр из избранного?"
+        }
+      },
+      "search": {
+        "title": "Поиск сервисных центров",
+        "filters": {
+          "searchPlaceholder": "Поиск по названию или адресу...",
+          "selectService": "Выберите услугу",
+          "allServices": "Все услуги"
+        },
+        "errors": {
+          "loadServicePointsFailed": "Не удалось загрузить данные сервисных центров", 
+          "loadServicesFailed": "Не удалось загрузить данные услуг",
+          "favoriteToggleFailed": "Не удалось {{action}} избранное",
+          "favoriteAdd": "добавить в",
+          "favoriteRemove": "убрать из",
+          "unknownError": "Неизвестная ошибка",
+          "unknownFormat": "Неизвестный формат данных",
+          "unsupportedFormat": "Неподдерживаемый формат данных от API",
+          "filterError": "Ошибка при фильтрации сервисных точек"
+        },
+        "actions": {
+          "tryAgain": "Попробовать снова"
+        }
+      }
+    }
+  }
+} 

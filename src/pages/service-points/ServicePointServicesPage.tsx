@@ -33,6 +33,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchWithAuth } from '../../api/apiUtils';
 import { ServiceCategory } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 // Импорты UI компонентов
 import { Table, type Column } from '../../components/ui';
@@ -51,6 +52,7 @@ interface ServicePointService {
 }
 
 const ServicePointServicesPage: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -96,7 +98,7 @@ const ServicePointServicesPage: React.FC = () => {
     },
     {
       id: 'name',
-      label: 'Название',
+      label: t('forms.servicePoint.services.name'),
       wrap: true,
       format: (value, row: ServicePointService) => (
         <Box sx={tablePageStyles.avatarContainer}>
@@ -109,11 +111,11 @@ const ServicePointServicesPage: React.FC = () => {
     },
     {
       id: 'category',
-      label: 'Категория',
+      label: t('forms.servicePoint.services.category'),
       wrap: true,
       format: (value, row: ServicePointService) => (
         <Chip 
-          label={row.category?.name || 'Без категории'} 
+          label={row.category?.name || t('forms.servicePoint.services.withoutCategory')} 
           variant="outlined" 
           size="small"
         />
@@ -121,7 +123,7 @@ const ServicePointServicesPage: React.FC = () => {
     },
     {
       id: 'description',
-      label: 'Описание',
+      label: t('forms.servicePoint.posts.descriptionLabel'),
       wrap: true,
       format: (value, row: ServicePointService) => (
         <Typography variant="body2" color="text.secondary">
@@ -132,24 +134,24 @@ const ServicePointServicesPage: React.FC = () => {
 
     {
       id: 'price',
-      label: 'Цена',
+      label: t('forms.servicePoint.services.price'),
       align: 'center',
       format: (value, row: ServicePointService) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
           <MoneyIcon fontSize="small" color="action" />
           <Typography variant="body2" fontWeight="medium">
-            {row.current_price_for_service_point || row.price || 'По запросу'} ₽
+            {row.current_price_for_service_point || row.price || t('forms.servicePoint.services.priceOnRequest')} ₽
           </Typography>
         </Box>
       )
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('forms.servicePoint.services.actions'),
       align: 'right',
       format: (value, row: ServicePointService) => (
         <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title="Удалить услугу">
+          <Tooltip title={t('forms.servicePoint.services.deleteService')}>
             <IconButton
               onClick={() => handleDeleteClick(row)}
               size="small"
@@ -167,12 +169,12 @@ const ServicePointServicesPage: React.FC = () => {
     try {
       const response = await fetchWithAuth(`/api/v1/service_points/${id}`);
       if (!response.ok) {
-        throw new Error('Не удалось загрузить данные точки обслуживания');
+        throw new Error(t('forms.servicePoint.services.loadingError'));
       }
       const data = await response.json();
       setServicePoint(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('forms.servicePoint.services.unknownError'));
     }
   }, [id]);
   
@@ -181,12 +183,12 @@ const ServicePointServicesPage: React.FC = () => {
       setLoading(true);
       const response = await fetchWithAuth(`/api/v1/service_points/${id}/services`);
       if (!response.ok) {
-        throw new Error('Не удалось загрузить услуги');
+        throw new Error(t('forms.servicePoint.services.servicesLoadingError'));
       }
       const data = await response.json();
       setServices(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('forms.servicePoint.services.unknownError'));
     } finally {
       setLoading(false);
     }
@@ -213,14 +215,14 @@ const ServicePointServicesPage: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось добавить услугу');
+        throw new Error(errorData.error || t('forms.servicePoint.services.addService'));
       }
       
       fetchServices();
       setAddDialogOpen(false);
       setSelectedService(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('forms.servicePoint.services.unknownError'));
     }
   };
   
@@ -234,14 +236,14 @@ const ServicePointServicesPage: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Не удалось удалить услугу');
+        throw new Error(errorData.error || t('forms.servicePoint.services.serviceDeleteError'));
       }
       
       fetchServices();
       setDeleteDialogOpen(false);
       setServiceToDelete(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      setError(err instanceof Error ? err.message : t('forms.servicePoint.services.unknownError'));
     }
   };
   
@@ -282,14 +284,14 @@ const ServicePointServicesPage: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">
-          Управление услугами
+          {t('forms.servicePoint.services.managementTitle')}
           {servicePoint && <Typography variant="subtitle1" component="span"> – {servicePoint.name}</Typography>}
         </Typography>
         <Button 
           startIcon={<ArrowBackIcon />} 
           onClick={handleBack}
         >
-          К точке обслуживания
+          {t('forms.servicePoint.services.backToServicePoint')}
         </Button>
       </Box>
       
@@ -301,14 +303,14 @@ const ServicePointServicesPage: React.FC = () => {
       
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Фильтры</Typography>
+          <Typography variant="h6">{t('forms.servicePoint.services.filters')}</Typography>
           <Button 
             variant="contained" 
             color="primary" 
             startIcon={<AddIcon />}
             onClick={() => setAddDialogOpen(true)}
           >
-            Добавить услугу
+            {t('forms.servicePoint.services.addService')}
           </Button>
         </Box>
         
@@ -316,7 +318,7 @@ const ServicePointServicesPage: React.FC = () => {
           <Box sx={{ width: { xs: '100%', md: '48%' } }}>
             <TextField
               fullWidth
-              label="Поиск по названию"
+              label={t('forms.servicePoint.services.searchByName')}
               value={searchQuery}
               onChange={handleSearchChange}
               InputProps={{
@@ -330,14 +332,14 @@ const ServicePointServicesPage: React.FC = () => {
           </Box>
           <Box sx={{ width: { xs: '100%', md: '48%' } }}>
             <FormControl fullWidth>
-              <InputLabel id="category-select-label">Категория</InputLabel>
+              <InputLabel id="category-select-label">{t('forms.servicePoint.services.category')}</InputLabel>
               <Select
                 labelId="category-select-label"
                 value={categoryFilter}
                 onChange={handleCategoryChange}
-                label="Категория"
+                label={t('forms.servicePoint.services.category')}
               >
-                <MenuItem value="">Все категории</MenuItem>
+                <MenuItem value="">{t('forms.servicePoint.services.allCategories')}</MenuItem>
                 {/* TODO: Load categories from API */}
               </Select>
             </FormControl>
@@ -366,31 +368,31 @@ const ServicePointServicesPage: React.FC = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Добавить услугу</DialogTitle>
+        <DialogTitle>{t('forms.servicePoint.services.addServiceTitle')}</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <FormControl fullWidth>
-              <InputLabel id="service-select-label">Услуга</InputLabel>
+              <InputLabel id="service-select-label">{t('forms.servicePoint.services.service')}</InputLabel>
               <Select
                 labelId="service-select-label"
                 value={selectedService || ''}
                 onChange={(e) => setSelectedService(e.target.value as number)}
-                label="Услуга"
+                label={t('forms.servicePoint.services.service')}
               >
-                <MenuItem value="">Выберите услугу</MenuItem>
+                <MenuItem value="">{t('forms.servicePoint.services.selectService')}</MenuItem>
                 {/* TODO: Load available services from API */}
               </Select>
             </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setAddDialogOpen(false)}>{t('forms.servicePoint.services.cancel')}</Button>
           <Button 
             variant="contained" 
             onClick={handleAddService}
             disabled={!selectedService}
           >
-            Добавить
+            {t('forms.servicePoint.services.add')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -400,20 +402,20 @@ const ServicePointServicesPage: React.FC = () => {
         open={deleteDialogOpen} 
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>Удаление услуги</DialogTitle>
+        <DialogTitle>{t('forms.servicePoint.services.deleteServiceTitle')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить услугу "{serviceToDelete?.name}"?
+            {t('forms.servicePoint.services.deleteServiceConfirm', { serviceName: serviceToDelete?.name })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('forms.servicePoint.services.cancel')}</Button>
           <Button 
             variant="contained" 
             color="error" 
             onClick={handleDeleteService}
           >
-            Удалить
+            {t('forms.servicePoint.services.delete')}
           </Button>
         </DialogActions>
       </Dialog>

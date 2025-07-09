@@ -1,0 +1,52 @@
+{
+  "forms": {
+    "profile": {
+      "title": "Профіль користувача",
+      "sections": {
+        "userInfo": "Інформація про користувача",
+        "editProfile": "Редагування профілю",
+        "passwordChange": "Зміна пароля"
+      },
+      "fields": {
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "email": "Email",
+        "phone": "Телефон",
+        "position": "Посада",
+        "organization": "Організація",
+        "userStatus": "Статус користувача",
+        "currentPassword": "Поточний пароль",
+        "newPassword": "Новий пароль",
+        "confirmPassword": "Підтвердіть пароль"
+      },
+      "buttons": {
+        "save": "Зберегти зміни",
+        "changePassword": "Змінити пароль",
+        "cancelPasswordChange": "Скасувати зміну пароля"
+      },
+      "messages": {
+        "saveSuccess": "Дані профілю успішно оновлено!",
+        "passwordChangeSuccess": "Пароль успішно змінено!",
+        "organizationName": "Твоя шина"
+      },
+      "errors": {
+        "passwordMismatch": "Новий пароль і підтвердження не збігаються",
+        "passwordMinLength": "Новий пароль має містити мінімум 8 символів",
+        "passwordChangeError": "Помилка зміни пароля",
+        "saveError": "Помилка збереження даних"
+      },
+      "validation": {
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "firstNameRequired": "Ім'я обов'язкове",
+        "firstNameMin": "Ім'я має бути не менше 2 символів",
+        "lastNameRequired": "Прізвище обов'язкове",
+        "lastNameMin": "Прізвище має бути не менше 2 символів",
+        "phoneRequired": "Телефон обов'язковий",
+        "currentPasswordRequired": "Введіть поточний пароль",
+        "passwordMin": "Пароль має містити мінімум 6 символів",
+        "passwordsMatch": "Паролі не збігаються"
+      }
+    }
+  }
+} 

@@ -6,6 +6,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import { SIZES, getFormStyles } from '../../../styles';
 import { PhoneField } from '../../../components/ui';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
@@ -19,6 +20,7 @@ interface ContactStepProps {
 }
 
 const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
 
@@ -27,12 +29,12 @@ const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePo
     contact_phone: phoneValidation,
     address: yup
       .string()
-      .required('Адрес обязателен')
-      .min(5, 'Адрес должен быть не менее 5 символов'),
+      .required(t('forms.servicePoint.validation.addressRequired'))
+      .min(5, t('forms.servicePoint.validation.addressMinLength')),
     description: yup
       .string()
-      .required('Описание обязательно')
-      .min(10, 'Описание должно быть не менее 10 символов')
+      .required(t('forms.servicePoint.validation.descriptionRequired'))
+      .min(10, t('forms.servicePoint.validation.descriptionMinLength'))
   });
 
   return (
@@ -47,7 +49,7 @@ const ContactStep: React.FC<ContactStepProps> = ({ formik, isEditMode, servicePo
           color: theme.palette.text.primary,
         }}
       >
-        Контактная информация
+        {t('forms.servicePoint.steps.contact')}
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>

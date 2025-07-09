@@ -37,6 +37,18 @@ import bookingsRuTranslations from './locales/forms/bookings/bookings-ru.json';
 import bookingsUkTranslations from './locales/forms/bookings/bookings-uk.json';
 import dashboardRuTranslations from './locales/forms/dashboard/dashboard-ru.json';
 import dashboardUkTranslations from './locales/forms/dashboard/dashboard-uk.json';
+import servicePointsRuTranslations from './locales/forms/service-points/service-points-ru.json';
+import servicePointsUkTranslations from './locales/forms/service-points/service-points-uk.json';
+import regionsRuTranslations from './locales/forms/regions/region-ru.json';
+import regionsUkTranslations from './locales/forms/regions/region-uk.json';
+import reviewsRuTranslations from './locales/forms/reviews/reviews-ru.json';
+import reviewsUkTranslations from './locales/forms/reviews/reviews-uk.json';
+import reviewRuTranslations from './locales/forms/reviews/review-ru.json';
+import reviewUkTranslations from './locales/forms/reviews/review-uk.json';
+
+// Client Service Points
+import clientServicePointsRuTranslations from './locales/forms/client-service-points/client-service-points-ru.json';
+import clientServicePointsUkTranslations from './locales/forms/client-service-points/client-service-points-uk.json';
 
 // Deep merge utility function
 function deepMerge(target: any, source: any): any {
@@ -72,6 +84,10 @@ const ukTranslationModules = [
   authUkTranslations,
   bookingsUkTranslations,
   dashboardUkTranslations,
+  servicePointsUkTranslations,
+  regionsUkTranslations,
+  reviewsUkTranslations,
+  clientServicePointsUkTranslations,
 ];
 
 // Russian translation modules
@@ -91,6 +107,10 @@ const ruTranslationModules = [
   authRuTranslations,
   bookingsRuTranslations,
   dashboardRuTranslations,
+  servicePointsRuTranslations,
+  regionsRuTranslations,
+  reviewsRuTranslations,
+  clientServicePointsRuTranslations,
 ];
 
 const resources = {

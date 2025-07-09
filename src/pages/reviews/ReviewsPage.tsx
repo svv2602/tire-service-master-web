@@ -148,7 +148,7 @@ const ReviewsPage: React.FC = () => {
         },
         service_point: review.service_point || {
           id: review.service_point_id || 0,
-          name: 'Неизвестная точка',
+          name: t('tables.columns.unknownServicePoint'),
           address: '',
           phone: ''
         }

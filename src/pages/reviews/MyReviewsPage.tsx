@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetReviewsByClientQuery, 
   useDeleteReviewMutation,
@@ -33,6 +34,7 @@ import { Review } from '../../types/models';
 import { RootState } from '../../store';
 
 const MyReviewsPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // Получаем userId из Redux store
@@ -84,7 +86,7 @@ const MyReviewsPage: React.FC = () => {
         setDeleteDialogOpen(false);
         setSelectedReview(null);
       } catch (error) {
-        console.error('Ошибка при удалении отзыва:', error);
+        console.error(t('forms.reviews.myReviews.deleteError'), error);
       }
     }
   };
@@ -102,7 +104,7 @@ const MyReviewsPage: React.FC = () => {
         setEditDialogOpen(false);
         setSelectedReview(null);
       } catch (error) {
-        console.error('Ошибка при обновлении отзыва:', error);
+        console.error(t('forms.reviews.myReviews.updateError'), error);
       }
     }
   };
@@ -128,7 +130,7 @@ const MyReviewsPage: React.FC = () => {
   const columns: Column[] = [
     {
       id: 'service_point',
-      label: 'Сервисная точка',
+      label: t('forms.reviews.myReviews.table.servicePoint'),
       minWidth: 200,
       wrap: true,
       format: (value: any, row: Review) => (
@@ -140,7 +142,7 @@ const MyReviewsPage: React.FC = () => {
     },
     {
       id: 'comment',
-      label: 'Отзыв',
+      label: t('forms.reviews.myReviews.table.comment'),
       minWidth: 300,
       wrap: true,
       format: (value: string) => (
@@ -160,7 +162,7 @@ const MyReviewsPage: React.FC = () => {
     },
     {
       id: 'rating',
-      label: 'Оценка',
+      label: t('forms.reviews.myReviews.table.rating'),
       align: 'center',
       format: (value: number) => (
         <Rating value={value} readOnly size="small" />
@@ -168,17 +170,17 @@ const MyReviewsPage: React.FC = () => {
     },
     {
       id: 'created_at',
-      label: 'Дата',
+      label: t('forms.reviews.myReviews.table.date'),
       format: (value: string) => formatDate(value)
     },
     {
       id: 'actions',
-      label: 'Действия',
+      label: t('forms.reviews.myReviews.table.actions'),
       align: 'right',
       minWidth: 120,
       format: (value: any, row: Review) => (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Tooltip title="Редактировать">
+          <Tooltip title={t('forms.reviews.myReviews.actions.edit')}>
             <IconButton 
               onClick={() => handleEditClick(row)}
               size="small"
@@ -187,7 +189,7 @@ const MyReviewsPage: React.FC = () => {
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Удалить">
+          <Tooltip title={t('forms.reviews.myReviews.actions.delete')}>
             <IconButton 
               onClick={() => handleDeleteClick(row)}
               size="small"
@@ -214,7 +216,7 @@ const MyReviewsPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          Ошибка при загрузке отзывов: {reviewsError.toString()}
+          {t('forms.reviews.myReviews.loadingError')}: {reviewsError.toString()}
         </Alert>
       </Box>
     );
@@ -224,13 +226,13 @@ const MyReviewsPage: React.FC = () => {
     <Box sx={{ p: 3 }}>
       {/* Заголовок */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Мои отзывы</Typography>
+        <Typography variant="h4">{t('forms.reviews.myReviews.title')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => navigate('/admin/reviews/new')}
         >
-          Написать отзыв
+          {t('forms.reviews.myReviews.writeReview')}
         </Button>
       </Box>
 
@@ -243,7 +245,7 @@ const MyReviewsPage: React.FC = () => {
         {reviews.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
-              У вас пока нет отзывов
+              {t('forms.reviews.myReviews.noReviews')}
             </Typography>
           </Box>
         )}
@@ -263,23 +265,23 @@ const MyReviewsPage: React.FC = () => {
 
       {/* Диалог удаления */}
       <Dialog open={deleteDialogOpen} onClose={handleCloseDialogs}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle>{t('forms.reviews.myReviews.deleteDialog.title')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите удалить этот отзыв?
+            {t('forms.reviews.myReviews.deleteDialog.message')}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialogs}>Отмена</Button>
+          <Button onClick={handleCloseDialogs}>{t('forms.reviews.myReviews.deleteDialog.cancel')}</Button>
           <Button onClick={handleDeleteConfirm} color="error">
-            Удалить
+            {t('forms.reviews.myReviews.deleteDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог редактирования */}
       <Dialog open={editDialogOpen} onClose={handleCloseDialogs} maxWidth="sm" fullWidth>
-        <DialogTitle>Редактирование отзыва</DialogTitle>
+        <DialogTitle>{t('forms.reviews.myReviews.editDialog.title')}</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Rating
@@ -291,16 +293,16 @@ const MyReviewsPage: React.FC = () => {
               fullWidth
               multiline
               rows={4}
-              label="Текст отзыва"
+              label={t('forms.reviews.myReviews.editDialog.commentLabel')}
               value={editedComment}
               onChange={(e) => setEditedComment(e.target.value)}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialogs}>Отмена</Button>
+          <Button onClick={handleCloseDialogs}>{t('forms.reviews.myReviews.editDialog.cancel')}</Button>
           <Button onClick={handleEditConfirm} variant="contained">
-            Сохранить
+            {t('forms.reviews.myReviews.editDialog.save')}
           </Button>
         </DialogActions>
       </Dialog>

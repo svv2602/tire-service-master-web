@@ -614,7 +614,7 @@ const ServicePointFormPage: React.FC = () => {
             }
           }
           
-          setSuccessMessage('Точка обслуживания успешно создана');
+          setSuccessMessage(isEditMode ? t('forms.servicePoints.messages.updateSuccess') : t('forms.servicePoints.messages.createSuccess'));
           
           // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного создания
           console.log('Принудительно обновляем кэш всех списков сервисных точек после создания');
@@ -656,7 +656,7 @@ const ServicePointFormPage: React.FC = () => {
           error?.data?.message || 
           error?.data?.error ||
           error?.message ||
-          'Ошибка при сохранении точки обслуживания'
+          t('forms.servicePoints.messages.saveError')
         );
       }
     },
@@ -668,7 +668,7 @@ const ServicePointFormPage: React.FC = () => {
       const defaultPost = {
         id: Date.now(),
         post_number: 1,
-        name: 'Пост 1',
+        name: t('forms.servicePoints.messages.defaultPostName'),
         description: '',
         slot_duration: 30,
         is_active: true,
@@ -832,15 +832,15 @@ const ServicePointFormPage: React.FC = () => {
     const incompleteSteps: string[] = [];
     
     if (!isBasicInfoComplete()) incompleteSteps.push(t('forms.servicePoint.steps.basic'));
-    if (!isLocationComplete()) incompleteSteps.push('Адрес и местоположение');
-    if (!isContactComplete()) incompleteSteps.push('Контактная информация');
+    if (!isLocationComplete()) incompleteSteps.push(t('forms.servicePoints.form.incompleteSteps.addressAndLocation'));
+    if (!isContactComplete()) incompleteSteps.push(t('forms.servicePoints.form.incompleteSteps.contactInfo'));
     if (!isSettingsComplete()) incompleteSteps.push(t('forms.servicePoint.steps.settings'));
-    if (!isScheduleComplete()) incompleteSteps.push('Расписание работы');
-    if (!isPostsComplete()) incompleteSteps.push('Рабочие посты');
+    if (!isScheduleComplete()) incompleteSteps.push(t('forms.servicePoints.form.incompleteSteps.schedule'));
+    if (!isPostsComplete()) incompleteSteps.push(t('forms.servicePoints.form.incompleteSteps.workingPosts'));
     // Услуги показываем как незаполненные только если они добавлены, но заполнены некорректно
     const activeServices = formik.values.services?.filter(service => !service._destroy) || [];
     if (activeServices.length > 0 && !isServicesComplete()) {
-      incompleteSteps.push('Услуги (некорректно заполнены)');
+      incompleteSteps.push(t('forms.servicePoints.form.incompleteSteps.servicesIncorrect'));
     }
     
     return incompleteSteps;
@@ -909,7 +909,7 @@ const ServicePointFormPage: React.FC = () => {
               mr: 1,
               flexShrink: 0, // Не сжимаем текст
             }}>
-              Шаг {activeStep + 1} из {FORM_STEPS.length}:
+{t('forms.servicePoints.form.stepCounter', { current: activeStep + 1, total: FORM_STEPS.length })}:
             </Typography>
             <Typography variant="subtitle2" sx={{ 
               fontWeight: 600,
@@ -1123,8 +1123,8 @@ const ServicePointFormPage: React.FC = () => {
           }}
         >
           {isEditMode 
-            ? `Редактирование точки: ${servicePoint?.name || t('common.loading')}` 
-            : 'Создание точки обслуживания'
+            ? `${t('forms.servicePoints.form.editingPoint')} ${servicePoint?.name || t('common.loading')}` 
+            : t('forms.servicePoints.form.creatingPoint')
           }
         </Typography>
         <Button 
@@ -1140,7 +1140,7 @@ const ServicePointFormPage: React.FC = () => {
             flexShrink: 0, // Не сжимаем кнопку
           }}
         >
-          Назад к списку
+          {t('forms.servicePoints.form.backToList')}
         </Button>
       </Box>
 
@@ -1183,7 +1183,7 @@ const ServicePointFormPage: React.FC = () => {
                 minWidth: isMobile ? '100%' : 100,
               }}
             >
-              Назад
+              {t('common.back')}
             </Button>
 
             <Box sx={{ 
@@ -1206,7 +1206,7 @@ const ServicePointFormPage: React.FC = () => {
                     px: isMobile ? 2 : 2, // Уменьшаем горизонтальный padding
                   }}
                 >
-                  Далее
+                  {t('common.next')}
                 </Button>
               ) : (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: isMobile ? 'stretch' : 'flex-end' }}>

@@ -81,6 +81,7 @@
       "notSpecified": "Не указан"
     },
     "operators": {
+      "addButton": "Добавить сотрудника",
       "columns": {
         "fio": "ФИО",
         "email": "Email",

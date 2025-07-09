@@ -1,0 +1,67 @@
+{
+  "forms": {
+    "review": {
+      "title": {
+        "createAdmin": "Создать отзыв",
+        "editAdmin": "Редактировать отзыв",
+        "reply": "Ответ на отзыв"
+      },
+      "fields": {
+        "client": "Клиент",
+        "booking": "Бронирование",
+        "servicePoint": "Сервисная точка",
+        "rating": "Оценка",
+        "yourRating": "Ваша оценка",
+        "reviewText": "Текст отзыва",
+        "status": "Статус",
+        "response": "Ваш ответ"
+      },
+      "placeholders": {
+        "selectClient": "Выберите клиента",
+        "selectBooking": "Выберите бронирование",
+        "withoutBooking": "Без бронирования",
+        "selectServicePoint": "Выберите сервисную точку"
+      },
+      "statuses": {
+        "published": "Опубликован",
+        "pending": "На модерации",
+        "rejected": "Отклонен"
+      },
+      "buttons": {
+        "cancel": "Отмена",
+        "delete": "Удалить",
+        "publish": "Опубликовать",
+        "save": "Сохранить",
+        "reply": "Ответить",
+        "backToList": "Назад к списку"
+      },
+      "messages": {
+        "saveError": "Ошибка при сохранении отзыва",
+        "deleteError": "Ошибка при удалении отзыва",
+        "createSuccess": "Отзыв успешно создан",
+        "updateSuccess": "Отзыв успешно обновлен",
+        "deleting": "Удаление...",
+        "deleteConfirm": "Вы действительно хотите удалить этот отзыв?",
+        "redirecting": "Перенаправление...",
+        "noBookings": "У данного клиента нет завершенных бронирований",
+        "loadingError": "Ошибка при загрузке отзыва",
+        "reviewNotFound": "Отзыв не найден",
+        "saveResponseError": "Ошибка при сохранении ответа",
+        "saving": "Сохранение..."
+      },
+      "validation": {
+        "fillAllFields": "Заполните все обязательные поля",
+        "allFieldsFilled": "Все поля заполнены корректно",
+        "responseRequired": "Ответ обязателен",
+        "responseMinLength": "Ответ должен содержать минимум 10 символов",
+        "responseMaxLength": "Ответ не должен превышать 1000 символов"
+      },
+      "requiredFields": {
+        "client": "Клиент",
+        "bookingOrServicePoint": "Бронирование или сервисная точка",
+        "rating": "Оценка",
+        "reviewText": "Текст отзыва"
+      }
+    }
+  }
+} 

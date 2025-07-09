@@ -142,12 +142,12 @@ const ProfilePage: React.FC = () => {
     // Проверка паролей при изменении
     if (changePassword) {
       if (formData.newPassword !== formData.confirmPassword) {
-        setError('Новый пароль и подтверждение не совпадают');
+        setError(t('forms.profile.errors.passwordMismatch'));
         setLoading(false);
         return;
       }
       if (formData.newPassword.length < 8) {
-        setError('Новый пароль должен содержать минимум 8 символов');
+        setError(t('forms.profile.errors.passwordMinLength'));
         setLoading(false);
         return;
       }
@@ -169,7 +169,7 @@ const ProfilePage: React.FC = () => {
           confirmPassword: '',
         });
       } catch (err: any) {
-        setError(err?.data || 'Ошибка смены пароля');
+        setError(err?.data || t('forms.profile.errors.passwordChangeError'));
       } finally {
         setLoading(false);
       }
@@ -234,29 +234,29 @@ const ProfilePage: React.FC = () => {
   const validationSchema = yup.object({
     email: yup
       .string()
-      .email('Введите корректный email')
-      .required('Email обязателен'),
+      .email(t('forms.profile.validation.emailFormat'))
+      .required(t('forms.profile.validation.emailRequired')),
     first_name: yup
       .string()
-      .required('Имя обязательно')
-      .min(2, 'Имя должно быть не менее 2 символов'),
+      .required(t('forms.profile.validation.firstNameRequired'))
+      .min(2, t('forms.profile.validation.firstNameMinLength')),
     last_name: yup
       .string()
-      .required('Фамилия обязательна')
-      .min(2, 'Фамилия должна быть не менее 2 символов'),
+      .required(t('forms.profile.validation.lastNameRequired'))
+      .min(2, t('forms.profile.validation.lastNameMinLength')),
     phone: phoneValidation,
     current_password: yup
       .string()
-      .min(6, 'Пароль должен содержать минимум 6 символов')
-      .test('required-if-new-password', 'Введите текущий пароль', function(value) {
+      .min(6, t('forms.profile.validation.passwordMinLength'))
+      .test('required-if-new-password', t('forms.profile.validation.currentPasswordRequired'), function(value) {
         return !this.parent.new_password || (this.parent.new_password && value);
       }),
     new_password: yup
       .string()
-      .min(6, 'Пароль должен содержать минимум 6 символов'),
+      .min(6, t('forms.profile.validation.passwordMinLength')),
     new_password_confirmation: yup
       .string()
-      .test('passwords-match', 'Пароли не совпадают', function(value) {
+      .test('passwords-match', t('forms.profile.validation.passwordsMatch'), function(value) {
         return !this.parent.new_password || this.parent.new_password === value;
       })
   });
@@ -268,7 +268,7 @@ const ProfilePage: React.FC = () => {
         fontSize: SIZES.fontSize.xl,
         fontWeight: 600
       }}>
-        Профіль користувача
+        {t('forms.profile.title')}
       </Typography>
 
       <Box sx={{ 
@@ -340,7 +340,7 @@ const ProfilePage: React.FC = () => {
                   <EmailIcon color="primary" />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="body2" color="textSecondary">Email</Typography>}
+                  primary={<Typography variant="body2" color="textSecondary">{t('forms.profile.fields.email')}</Typography>}
                   secondary={<Typography variant="body1">{user?.email}</Typography>}
                 />
               </ListItem>
@@ -377,8 +377,8 @@ const ProfilePage: React.FC = () => {
                   <BusinessIcon color="primary" />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="body2" color="textSecondary">Організація</Typography>}
-                  secondary={<Typography variant="body1">Твоя шина</Typography>}
+                  primary={<Typography variant="body2" color="textSecondary">{t('forms.profile.fields.organization')}</Typography>}
+                  secondary={<Typography variant="body1">{t('forms.profile.messages.organizationName')}</Typography>}
                 />
               </ListItem>
               
@@ -395,7 +395,7 @@ const ProfilePage: React.FC = () => {
                   <CalendarIcon color="primary" />
                 </ListItemIcon>
                 <ListItemText 
-                  primary={<Typography variant="body2" color="textSecondary">Статус користувача</Typography>}
+                  primary={<Typography variant="body2" color="textSecondary">{t('forms.profile.fields.userStatus')}</Typography>}
                   secondary={
                     <Chip 
                       size="small"
@@ -431,7 +431,7 @@ const ProfilePage: React.FC = () => {
               gutterBottom
               sx={{ fontWeight: 'medium', mb: SIZES.spacing.sm }}
             >
-              Редагування профілю
+              {t('forms.profile.sections.editProfile')}
             </Typography>
             <Divider sx={{ mb: SIZES.spacing.lg }} />
             
@@ -447,7 +447,7 @@ const ProfilePage: React.FC = () => {
               <Box>
                 <TextField
                   fullWidth
-                  label="Ім'я"
+                  label={t('forms.profile.fields.firstName')}
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
@@ -458,7 +458,7 @@ const ProfilePage: React.FC = () => {
               <Box>
                 <TextField
                   fullWidth
-                  label="Прізвище"
+                  label={t('forms.profile.fields.lastName')}
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
@@ -469,7 +469,7 @@ const ProfilePage: React.FC = () => {
               <Box>
                 <TextField
                   fullWidth
-                  label="Email"
+                  label={t('forms.profile.fields.email')}
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
@@ -490,7 +490,7 @@ const ProfilePage: React.FC = () => {
               <Box sx={{ gridColumn: '1 / -1' }}>
                 <TextField
                   fullWidth
-                  label={t('admin.users.fields.position')}
+                  label={t('forms.profile.fields.position')}
                   name="position"
                   value={formData.position}
                   onChange={handleInputChange}
@@ -509,7 +509,7 @@ const ProfilePage: React.FC = () => {
                     mb: changePassword ? SIZES.spacing.md : 0
                   }}
                 >
-                  {changePassword ? 'Скасувати зміну пароля' : 'Змінити пароль'}
+                  {changePassword ? t('forms.profile.buttons.cancelPasswordChange') : t('forms.profile.buttons.changePassword')}
                 </Button>
               </Box>
               
@@ -518,7 +518,7 @@ const ProfilePage: React.FC = () => {
                   <Box sx={{ gridColumn: '1 / -1' }}>
                     <TextField
                       fullWidth
-                      label="Поточний пароль"
+                      label={t('forms.profile.fields.currentPassword')}
                       name="oldPassword"
                       type="password"
                       value={formData.oldPassword}
@@ -530,7 +530,7 @@ const ProfilePage: React.FC = () => {
                   <Box>
                     <TextField
                       fullWidth
-                      label="Новий пароль"
+                      label={t('forms.profile.fields.newPassword')}
                       name="newPassword"
                       type="password"
                       value={formData.newPassword}
@@ -542,7 +542,7 @@ const ProfilePage: React.FC = () => {
                   <Box>
                     <TextField
                       fullWidth
-                      label="Підтвердіть пароль"
+                      label={t('forms.profile.fields.confirmPassword')}
                       name="confirmPassword"
                       type="password"
                       value={formData.confirmPassword}
@@ -563,7 +563,7 @@ const ProfilePage: React.FC = () => {
                     disabled={loading || isChangingPassword}
                     sx={primaryButtonStyles}
                   >
-                    Зберегти зміни
+                    {t('forms.profile.buttons.save')}
                   </Button>
                 </Box>
               </Box>
@@ -575,7 +575,7 @@ const ProfilePage: React.FC = () => {
       {/* Уведомление об успешном сохранении */}
       <Snackbar
         open={saveSuccess}
-        message="Дані профілю успішно оновлено!"
+        message={t('forms.profile.messages.saveSuccess')}
         severity="success"
         onClose={handleCloseSnackbar}
       />

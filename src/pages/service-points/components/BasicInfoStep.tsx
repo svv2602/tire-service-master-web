@@ -12,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FormikProps } from 'formik';
+import { useTranslation } from 'react-i18next';
 import { useGetPartnersQuery } from '../../../api/partners.api';
 import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Partner, ServicePoint } from '../../../types/models';
@@ -23,6 +24,7 @@ interface BasicInfoStepProps {
 }
 
 const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servicePoint }) => {
+  const { t } = useTranslation();
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
   const partnersData = partners?.data || [];
   const theme = useTheme();
@@ -48,7 +50,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
           color: theme.palette.text.primary,
         }}
       >
-        Основная информация
+        {t('forms.servicePoint.steps.basic')}
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>
@@ -57,7 +59,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             fullWidth
             id="name"
             name="name"
-            label="Название точки"
+            label={t('forms.servicePoint.fields.name')}
             value={formik.values.name}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -85,7 +87,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
               },
             }}
           >
-            <InputLabel id="partner-id-label">Партнер</InputLabel>
+            <InputLabel id="partner-id-label">{t('forms.servicePoint.fields.partner')}</InputLabel>
             <Select
               labelId="partner-id-label"
               id="partner_id"
@@ -95,11 +97,11 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
                 formik.setFieldValue('partner_id', Number(e.target.value));
               }}
               onBlur={formik.handleBlur}
-              label="Партнер"
+              label={t('forms.servicePoint.fields.partner')}
               disabled={partnersLoading || isEditMode}
             >
               <MenuItem value="0" disabled>
-                {partnersLoading ? 'Загрузка...' : 'Выберите партнера'}
+                {partnersLoading ? t('forms.servicePoint.messages.loading') : t('forms.servicePoint.selectPartner')}
               </MenuItem>
               {partnersData.map((partner: Partner) => (
                 <MenuItem key={partner.id} value={partner.id.toString()}>
@@ -112,7 +114,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             )}
             {isEditMode && (
               <FormHelperText sx={{ color: 'text.secondary' }}>
-                Партнер не может быть изменен после создания сервисной точки
+                {t('forms.servicePoint.messages.partnerCannotBeChanged')}
               </FormHelperText>
             )}
           </FormControl>
@@ -123,7 +125,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             fullWidth
             id="description"
             name="description"
-            label="Описание"
+            label={t('forms.servicePoint.fields.description')}
             multiline
             rows={4}
             value={formik.values.description}
@@ -131,7 +133,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             onBlur={formik.handleBlur}
             error={formik.touched.description && Boolean(formik.errors.description)}
             helperText={formik.touched.description && formik.errors.description}
-            placeholder="Введите описание сервисной точки"
+            placeholder={t('forms.servicePoint.fields.descriptionPlaceholder')}
             sx={{
               ...textFieldStyles,
               '& .MuiOutlinedInput-root': {
