@@ -49,10 +49,24 @@ const MyReviewsPage: React.FC = () => {
   });
 
   // Запрос на получение отзывов клиента
+  // Используем client_id если есть, иначе user_id
+  const clientId = (currentUser as any)?.client_id || currentUser?.id;
   const { data: reviewsData, isLoading, isError, refetch } = useGetReviewsByClientQuery(
-    currentUser?.id ? String(currentUser.id) : '',
-    { skip: !currentUser?.id }
+    clientId ? String(clientId) : '',
+    { skip: !clientId }
   );
+
+  // Отладочная информация для понимания структуры данных
+  console.log('🔍 MyReviewsPage DEBUG:', {
+    currentUser,
+    clientId,
+    reviewsData,
+    isArray: Array.isArray(reviewsData),
+    dataType: typeof reviewsData,
+    dataKeys: reviewsData ? Object.keys(reviewsData) : null,
+    isLoading,
+    isError
+  });
 
   // Обработчик изменения вкладки
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -77,11 +91,22 @@ const MyReviewsPage: React.FC = () => {
   }
 
   // Конвертируем данные отзывов
-  const convertedReviews = reviewsData
-    ? reviewsData
-        .map(convertReview)
-        .filter((review: any) => review.status === filters.status)
-    : [];
+  let reviewsArray: ModelReview[] = [];
+  
+  if (reviewsData) {
+    // Проверяем разные возможные структуры ответа API
+    if (Array.isArray(reviewsData)) {
+      reviewsArray = reviewsData;
+    } else if (reviewsData && typeof reviewsData === 'object' && 'data' in reviewsData && Array.isArray((reviewsData as any).data)) {
+      reviewsArray = (reviewsData as any).data;
+    } else if (reviewsData && typeof reviewsData === 'object' && Array.isArray((reviewsData as any).reviews)) {
+      reviewsArray = (reviewsData as any).reviews;
+    }
+  }
+  
+  const convertedReviews = reviewsArray
+    .map(convertReview)
+    .filter((review: any) => review.status === filters.status);
 
   return (
     <ClientLayout>

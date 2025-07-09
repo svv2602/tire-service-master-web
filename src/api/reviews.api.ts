@@ -42,6 +42,18 @@ export const reviewsApi = baseApi.injectEndpoints({
 
     getReviewsByClient: build.query<Review[], string>({
       query: (clientId: string) => `reviews?client_id=${clientId}`,
+      transformResponse: (response: any): Review[] => {
+        // Обрабатываем разные возможные структуры ответа
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
+          return response.data;
+        } else if (response && typeof response === 'object' && Array.isArray(response.reviews)) {
+          return response.reviews;
+        }
+        console.warn('⚠️ Неожиданная структура ответа getReviewsByClient:', response);
+        return [];
+      },
       providesTags: (result: Review[] | undefined) =>
         result && Array.isArray(result)
           ? [
