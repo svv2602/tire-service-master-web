@@ -533,7 +533,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                         justifyContent: 'space-between', 
                         mb: SIZES.spacing.sm 
                       }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.sm }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: SIZES.spacing.sm, mr: 2 }}>
                           <ScheduleIcon 
                             fontSize="small" 
                             color={post.has_custom_schedule ? 'primary' : 'disabled'} 
