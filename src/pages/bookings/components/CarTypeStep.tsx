@@ -92,13 +92,13 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
     { skip: !selectedBrandId }
   );
   
-  // Загрузка автомобилей клиента (только для авторизованных пользователей)
+  // Загрузка автомобилей пользователя (для всех авторизованных пользователей)
   const { 
     data: clientCars, 
     isLoading: isLoadingClientCars, 
     error: clientCarsError 
   } = useGetMyClientCarsQuery(undefined, { 
-    skip: !isAuthenticated || !user 
+    skip: !isAuthenticated || !user
   });
   
   // Получаем данные из API
@@ -112,7 +112,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   // Автоматически открываем аккордеон при загрузке компонента (если тип не выбран)
   useEffect(() => {
     if (!formData.car_type_id && carTypes.length > 0) {
-      // Если есть автомобили клиента, открываем их, иначе типы авто
+      // Если есть автомобили пользователя, открываем их, иначе типы авто
       if (isAuthenticated && clientCars && clientCars.length > 0) {
         setMyCarAccordionOpen(true);
       } else {
