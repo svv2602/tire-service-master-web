@@ -1051,25 +1051,39 @@
         "dataNotLoaded": "Дані не завантажені",
         "notSpecified": "Не вказано"
       }
-    }
-  },
-  "locale": "uk",
-  "userMenu": {
-    "profile": "Профіль",
-    "myBookings": "Мої бронювання",
-    "myReviews": "Мої відгуки",
-    "toWebsite": "На сайт",
-    "adminPanel": "Адмін-панель",
-    "logout": "Вийти",
-    "login": "Увійти"
-  },
-  "confirmDialog": {
-    "title": "Підтвердження",
-    "message": "Ви впевнені?",
-    "cancel": "Скасування",
-    "confirm": "Підтвердити"
-  },
-  "forms": {
+    },
+    "carBrand": {
+      "title": {
+        "create": "Створення бренду автомобіля",
+        "edit": "Редагування бренду автомобіля"
+      },
+      "sections": {
+        "brandInfo": "Інформація про бренд"
+      },
+      "fields": {
+        "name": "Назва бренду",
+        "logo": "Логотип",
+        "isActive": "Активний бренд"
+      },
+      "buttons": {
+        "uploadLogo": "Завантажити логотип"
+      },
+      "validation": {
+        "nameRequired": "Назва бренду обов'язкова для заповнення",
+        "nameMin": "Назва бренду повинна містити мінімум 2 символи",
+        "nameMax": "Назва бренду повинна містити максимум 100 символів"
+      },
+      "messages": {
+        "createSuccess": "Бренд автомобіля успішно створено",
+        "updateSuccess": "Бренд автомобіля успішно оновлено",
+        "saveError": "Помилка при збереженні бренду",
+        "validationError": "Помилка валідації даних",
+        "fileSizeError": "Розмір файлу не повинен перевищувати 1 МБ",
+        "fileTypeError": "Підтримуються тільки файли JPEG та PNG",
+        "logoRequirements": "Підтримуються файли JPEG та PNG розміром до 1 МБ"
+      },
+      "loading": "Завантаження даних бренду..."
+    },
     "region": {
       "title": {
         "create": "Створити регіон",
@@ -1154,5 +1168,21 @@
       "back": "Назад",
       "update": "Оновити"
     }
+  },
+  "locale": "uk",
+  "userMenu": {
+    "profile": "Профіль",
+    "myBookings": "Мої бронювання",
+    "myReviews": "Мої відгуки",
+    "toWebsite": "На сайт",
+    "adminPanel": "Адмін-панель",
+    "logout": "Вийти",
+    "login": "Увійти"
+  },
+  "confirmDialog": {
+    "title": "Підтвердження",
+    "message": "Ви впевнені?",
+    "cancel": "Скасування",
+    "confirm": "Підтвердити"
   }
 }

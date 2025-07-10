@@ -1061,25 +1061,39 @@
         "dataNotLoaded": "Данные не загружены",
         "notSpecified": "Не указано"
       }
-    }
-  },
-  "locale": "ru",
-  "userMenu": {
-    "profile": "Профиль",
-    "myBookings": "Мои бронирования",
-    "myReviews": "Мои отзывы",
-    "toWebsite": "На сайт",
-    "adminPanel": "Админ-панель",
-    "logout": "Выйти",
-    "login": "Войти"
-  },
-  "confirmDialog": {
-    "title": "Подтверждение",
-    "message": "Вы уверены?",
-    "cancel": "Отмена",
-    "confirm": "Подтвердить"
-  },
-  "forms": {
+    },
+    "carBrand": {
+      "title": {
+        "create": "Создание бренда автомобиля",
+        "edit": "Редактирование бренда автомобиля"
+      },
+      "sections": {
+        "brandInfo": "Информация о бренде"
+      },
+      "fields": {
+        "name": "Название бренда",
+        "logo": "Логотип",
+        "isActive": "Активный бренд"
+      },
+      "buttons": {
+        "uploadLogo": "Загрузить логотип"
+      },
+      "validation": {
+        "nameRequired": "Название бренда обязательно для заполнения",
+        "nameMin": "Название бренда должно содержать минимум 2 символа",
+        "nameMax": "Название бренда должно содержать максимум 100 символов"
+      },
+      "messages": {
+        "createSuccess": "Бренд автомобиля успешно создан",
+        "updateSuccess": "Бренд автомобиля успешно обновлен",
+        "saveError": "Ошибка при сохранении бренда",
+        "validationError": "Ошибка валидации данных",
+        "fileSizeError": "Размер файла не должен превышать 1 МБ",
+        "fileTypeError": "Поддерживаются только файлы JPEG и PNG",
+        "logoRequirements": "Поддерживаются файлы JPEG и PNG размером до 1 МБ"
+      },
+      "loading": "Загрузка данных бренда..."
+    },
     "region": {
       "title": {
         "create": "Создать регион",
@@ -1164,5 +1178,21 @@
       "back": "Назад",
       "update": "Обновить"
     }
+  },
+  "locale": "ru",
+  "userMenu": {
+    "profile": "Профиль",
+    "myBookings": "Мои бронирования",
+    "myReviews": "Мои отзывы",
+    "toWebsite": "На сайт",
+    "adminPanel": "Админ-панель",
+    "logout": "Выйти",
+    "login": "Войти"
+  },
+  "confirmDialog": {
+    "title": "Подтверждение",
+    "message": "Вы уверены?",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить"
   }
 }
