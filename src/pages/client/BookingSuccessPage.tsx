@@ -66,7 +66,7 @@ const BookingSuccessPage: React.FC = () => {
           </Typography>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
-              Главная
+              {t('forms.clientPages.bookingSuccess.breadcrumbHome')}
             </Button>
             <ThemeToggle />
             <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
@@ -80,12 +80,12 @@ const BookingSuccessPage: React.FC = () => {
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ mb: 4 }}>
           <Link to="/client" style={{ display: 'flex', alignItems: 'center', color: colors.textSecondary, textDecoration: 'none' }}>
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-            Главная
+            {t('forms.clientPages.bookingSuccess.breadcrumbHome')}
           </Link>
                         <Link to="/client/booking" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
-            Запись на услугу
+            {t('forms.clientPages.bookingSuccess.breadcrumbBooking')}
           </Link>
-          <Typography sx={{ color: colors.textPrimary }}>Подтверждение</Typography>
+          <Typography sx={{ color: colors.textPrimary }}>{t('forms.clientPages.bookingSuccess.breadcrumbConfirmation')}</Typography>
         </Breadcrumbs>
 
         <Paper sx={{ p: 4, mb: 4, borderRadius: 2, textAlign: 'center' }}>
@@ -96,10 +96,10 @@ const BookingSuccessPage: React.FC = () => {
           ) : error ? (
             <Box sx={{ py: 4 }}>
               <Typography variant="h5" sx={{ color: colors.error, mb: 2 }}>
-                Ошибка при загрузке данных
+                {t('forms.clientPages.bookingSuccess.loadError')}
               </Typography>
               <Typography variant="body1">
-                Не удалось загрузить информацию о бронировании. Пожалуйста, проверьте номер бронирования.
+                {t('forms.clientPages.bookingSuccess.loadErrorText')}
               </Typography>
               <Button 
                 variant="contained" 
@@ -107,7 +107,7 @@ const BookingSuccessPage: React.FC = () => {
                 to="/client" 
                 sx={{ ...primaryButtonStyles, mt: 4 }}
               >
-                Вернуться на главную
+                {t('forms.clientPages.bookingSuccess.backToMainOnError')}
               </Button>
             </Box>
           ) : (
@@ -129,13 +129,13 @@ const BookingSuccessPage: React.FC = () => {
                   <CheckCircleIcon sx={{ fontSize: 40 }} />
                 </Box>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                  Запись подтверждена!
+                  {t('forms.clientPages.bookingSuccess.title')}
                 </Typography>
                 <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  Номер вашей записи: <strong>{bookingId}</strong>
+                  {t('forms.clientPages.bookingSuccess.bookingNumber')} <strong>{bookingId}</strong>
                 </Typography>
                 <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-                  Мы отправили детали записи на ваш телефон
+                  {t('forms.clientPages.bookingSuccess.smsNotification')}
                 </Typography>
               </Box>
               
@@ -143,7 +143,7 @@ const BookingSuccessPage: React.FC = () => {
               
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, textAlign: 'left' }}>
-                  Детали записи
+                  {t('forms.clientPages.bookingSuccess.detailsTitle')}
                 </Typography>
                 
                 <Grid container spacing={3}>
@@ -151,7 +151,7 @@ const BookingSuccessPage: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
                       <CalendarIcon sx={{ fontSize: 40, color: colors.primary, mb: 1 }} />
                       <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-                        Дата
+                        {t('forms.clientPages.bookingSuccess.date')}
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {bookingData?.booking_date ? formatBookingDate(bookingData.booking_date) : '—'}
@@ -163,7 +163,7 @@ const BookingSuccessPage: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
                       <TimeIcon sx={{ fontSize: 40, color: colors.primary, mb: 1 }} />
                       <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-                        Время
+                        {t('forms.clientPages.bookingSuccess.time')}
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {bookingData?.start_time || '—'}
@@ -175,7 +175,7 @@ const BookingSuccessPage: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
                       <LocationIcon sx={{ fontSize: 40, color: colors.primary, mb: 1 }} />
                       <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-                        Сервисный центр
+                        {t('forms.clientPages.bookingSuccess.serviceCenter')}
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {bookingData?.service_point?.name || '—'}
@@ -200,7 +200,7 @@ const BookingSuccessPage: React.FC = () => {
                   href={`tel:${bookingData?.service_point?.phone || ''}`}
                   sx={primaryButtonStyles}
                 >
-                  Позвонить в сервис
+                  {t('forms.clientPages.bookingSuccess.callService')}
                 </Button>
               </Box>
             </>
@@ -209,8 +209,7 @@ const BookingSuccessPage: React.FC = () => {
         
         <Paper sx={{ p: 3, borderRadius: 2, bgcolor: colors.backgroundSecondary }}>
           <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-            Если вам нужно изменить или отменить запись, пожалуйста, свяжитесь с сервисным центром по телефону.
-            Отмена записи возможна не позднее чем за 2 часа до назначенного времени.
+            {t('forms.clientPages.bookingSuccess.changeInfo')}
           </Typography>
         </Paper>
       </Container>

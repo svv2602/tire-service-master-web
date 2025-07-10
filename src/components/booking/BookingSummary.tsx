@@ -28,6 +28,7 @@ import { getThemeColors } from '../../styles';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useGetServicePointByIdQuery } from '../../api/servicePoints.api';
+import { useTranslation } from 'react-i18next';
 
 interface BookingService {
   service_id: number;
@@ -63,6 +64,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   bookingTime,
   services
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -96,7 +98,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   return (
     <Box>
       <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: colors.textPrimary }}>
-        Подтверждение записи
+        {t('forms.clientPages.bookingSummary.title')}
       </Typography>
       
       <Grid container spacing={3}>
@@ -104,7 +106,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <Paper sx={{ p: 2, height: '100%', borderRadius: 2, bgcolor: colors.backgroundCard }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: colors.textPrimary }}>
               <LocationIcon sx={{ mr: 1, verticalAlign: 'middle', color: colors.primary }} />
-              Сервисный центр
+              {t('forms.clientPages.bookingSummary.serviceCenter')}
             </Typography>
             
             {isLoadingServicePoint ? (
@@ -122,7 +124,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                   {servicePointData?.address || 'Адрес не указан'}
                 </Typography>
                 <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  {servicePointData?.phone || 'Телефон не указан'}
+                  {servicePointData?.phone || t('forms.clientPages.bookingSummary.phoneNotSpecified')}
                 </Typography>
               </>
             )}
@@ -135,7 +137,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                   <CalendarIcon sx={{ mr: 1, color: colors.primary }} />
                   <Box>
                     <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                      Дата
+                      {t('forms.clientPages.bookingSummary.date')}
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       {formatBookingDate(bookingDate)}
@@ -149,10 +151,10 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                   <TimeIcon sx={{ mr: 1, color: colors.primary }} />
                   <Box>
                     <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                      Время
+                      {t('forms.clientPages.bookingSummary.time')}
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {bookingTime || 'Не выбрано'}
+                      {bookingTime || t('forms.clientPages.bookingSummary.notSelected')}
                     </Typography>
                   </Box>
                 </Box>
@@ -165,13 +167,13 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <Paper sx={{ p: 2, height: '100%', borderRadius: 2, bgcolor: colors.backgroundCard }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: colors.textPrimary }}>
               <CarIcon sx={{ mr: 1, verticalAlign: 'middle', color: colors.primary }} />
-              Автомобиль
+              {t('forms.clientPages.bookingSummary.car')}
             </Typography>
             
             <List dense disablePadding>
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Марка и модель"
+                  primary={t('forms.clientPages.bookingSummary.brandAndModel')}
                   secondary={`${carInfo.brand} ${carInfo.model}`}
                   primaryTypographyProps={{ variant: 'body2', color: colors.textSecondary }}
                   secondaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
@@ -180,7 +182,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Год выпуска"
+                  primary={t('forms.clientPages.bookingSummary.year')}
                   secondary={carInfo.year}
                   primaryTypographyProps={{ variant: 'body2', color: colors.textSecondary }}
                   secondaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
@@ -189,7 +191,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               
               <ListItem disableGutters>
                 <ListItemText
-                  primary="Номер автомобиля"
+                  primary={t('forms.clientPages.bookingSummary.licensePlate')}
                   secondary={carInfo.licensePlate}
                   primaryTypographyProps={{ variant: 'body2', color: colors.textSecondary }}
                   secondaryTypographyProps={{ variant: 'body1', fontWeight: 500 }}
@@ -203,13 +205,13 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <Paper sx={{ p: 2, borderRadius: 2, bgcolor: colors.backgroundCard }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: colors.textPrimary }}>
               <PersonIcon sx={{ mr: 1, verticalAlign: 'middle', color: colors.primary }} />
-              Контактные данные
+              {t('forms.clientPages.bookingSummary.contactInfo')}
             </Typography>
             
             <Grid container spacing={2}>
               <Grid item xs={12} sm={4}>
                 <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Имя
+                  {t('forms.clientPages.bookingSummary.name')}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {clientInfo.name}
@@ -218,7 +220,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               
               <Grid item xs={12} sm={4}>
                 <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Телефон
+                  {t('forms.clientPages.bookingSummary.phone')}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {formatPhoneForDisplay(clientInfo.phone)}
@@ -227,7 +229,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               
               <Grid item xs={12} sm={4}>
                 <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                  Email
+                  {t('forms.clientPages.bookingSummary.email')}
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
                   {clientInfo.email || '—'}
@@ -237,7 +239,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
               {clientInfo.notes && (
                 <Grid item xs={12}>
                   <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                    Комментарий
+                    {t('forms.clientPages.bookingSummary.comment')}
                   </Typography>
                   <Typography variant="body1">
                     {clientInfo.notes}
@@ -252,12 +254,12 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <Paper sx={{ p: 2, borderRadius: 2, bgcolor: colors.backgroundCard }}>
             <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: colors.textPrimary }}>
               <BuildIcon sx={{ mr: 1, verticalAlign: 'middle', color: colors.primary }} />
-              Услуги
+              {t('forms.clientPages.bookingSummary.services')}
             </Typography>
             
             {services.length === 0 ? (
               <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-                Услуги не выбраны
+                {t('forms.clientPages.bookingSummary.servicesNotSelected')}
               </Typography>
             ) : (
               <>
@@ -286,7 +288,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    Итого:
+                    {t('forms.clientPages.bookingSummary.total')}:
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 700, color: colors.primary }}>
                     {totalPrice} ₽
@@ -300,8 +302,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
       
       <Box sx={{ mt: 4, p: 2, bgcolor: colors.backgroundSecondary, borderRadius: 2 }}>
         <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-          Нажимая кнопку "Подтвердить запись", вы соглашаетесь с условиями предоставления услуг.
-          После подтверждения записи вы получите SMS с информацией о вашей записи.
+          {t('forms.clientPages.bookingSummary.confirmationText')}
         </Typography>
       </Box>
     </Box>
