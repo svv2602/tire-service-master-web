@@ -71,7 +71,7 @@ const ClientCarsPage: React.FC = () => {
       setSelectedCar(null);
       setErrorMessage(null);
     } catch (error: any) {
-      let errorMessage = t('admin.clients.cars.deleteError');
+      let errorMessage = t('admin.clients.carsManagement.deleteError');
       
       if (error.data?.error) {
         errorMessage = error.data.error;
@@ -92,7 +92,7 @@ const ClientCarsPage: React.FC = () => {
   const columns: Column[] = useMemo(() => [
     {
       id: 'brand',
-      label: t('admin.clients.cars.columns.brand'),
+      label: t('admin.clients.carsManagement.columns.brand'),
       wrap: true,
       format: (value, row: ClientCar) => (
         <Box sx={tablePageStyles.avatarContainer}>
@@ -103,7 +103,7 @@ const ClientCarsPage: React.FC = () => {
     },
     {
       id: 'model',
-      label: t('admin.clients.cars.columns.model'),
+      label: t('admin.clients.carsManagement.columns.model'),
       wrap: true,
       format: (value, row: ClientCar) => (
         <Typography>{getModelName(row.model)}</Typography>
@@ -111,21 +111,21 @@ const ClientCarsPage: React.FC = () => {
     },
     {
       id: 'year',
-      label: t('admin.clients.cars.columns.year'),
+      label: t('admin.clients.carsManagement.columns.year'),
       align: 'center'
     },
     {
       id: 'license_plate',
-      label: t('admin.clients.cars.columns.licensePlate'),
+      label: t('admin.clients.carsManagement.columns.licensePlate'),
       wrap: true
     },
     {
       id: 'actions',
-      label: t('admin.clients.cars.columns.actions'),
+      label: t('admin.clients.carsManagement.columns.actions'),
       align: 'right',
       format: (value, row: ClientCar) => (
         <Box sx={tablePageStyles.actionsContainer}>
-          <Tooltip title={t('admin.clients.cars.actions.edit')}>
+          <Tooltip title={t('admin.clients.carsManagement.actions.edit')}>
             <IconButton
               size="small"
               onClick={() => handleEditClick(row.id)}
@@ -134,7 +134,7 @@ const ClientCarsPage: React.FC = () => {
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t('admin.clients.cars.actions.delete')}>
+          <Tooltip title={t('admin.clients.carsManagement.actions.delete')}>
             <IconButton
               size="small"
               color="error"
@@ -163,7 +163,7 @@ const ClientCarsPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          {t('admin.clients.cars.clientNotFound')}
+          {t('admin.clients.carsManagement.clientNotFound')}
         </Alert>
       </Box>
     );
@@ -183,7 +183,7 @@ const ClientCarsPage: React.FC = () => {
       {/* Заголовок */}
       <Box sx={tablePageStyles.headerContainer}>
         <Typography variant="h4" sx={tablePageStyles.title}>
-          {t('admin.clients.cars.pageTitle', { name: `${client.first_name} ${client.last_name}` })}
+          {t('admin.clients.carsManagement.pageTitle', { name: `${client.first_name} ${client.last_name}` })}
         </Typography>
         <Button
           variant="contained"
@@ -191,7 +191,7 @@ const ClientCarsPage: React.FC = () => {
           onClick={() => navigate(`/admin/clients/${clientId}/cars/new`)}
           sx={tablePageStyles.createButton}
         >
-          {t('admin.clients.cars.addCar')}
+          {t('admin.clients.carsManagement.addCar')}
         </Button>
       </Box>
 
@@ -206,24 +206,24 @@ const ClientCarsPage: React.FC = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
       >
-        <DialogTitle>{t('admin.clients.cars.deleteDialog.title')}</DialogTitle>
+        <DialogTitle>{t('admin.clients.carsManagement.deleteDialog.title')}</DialogTitle>
         <DialogContent>
           <Typography>
-            {t('admin.clients.cars.deleteDialog.message', { 
+            {t('admin.clients.carsManagement.deleteDialog.message', { 
               carName: selectedCar ? `${getBrandName(selectedCar.brand)} ${getModelName(selectedCar.model)}` : ''
             })}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            {t('admin.clients.cars.deleteDialog.cancel')}
+            {t('admin.clients.carsManagement.deleteDialog.cancel')}
           </Button>
           <Button 
             onClick={handleConfirmDelete} 
             color="error"
             disabled={isDeleting}
           >
-            {t('admin.clients.cars.deleteDialog.confirm')}
+            {t('admin.clients.carsManagement.deleteDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>
