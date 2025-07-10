@@ -171,7 +171,7 @@
       "title": "Управление пользователями",
       "createUser": "Создать пользователя",
       "editUser": "Редактировать пользователя",
-      "userManagement": "Управление пользователями (PageTable)",
+      "userManagement": "Управление пользователями",
       "searchPlaceholder": "Поиск по email, имени, фамилии или номеру телефона...",
       "onlyActive": "Только активные",
       "allUsers": "Все пользователи",
@@ -212,6 +212,47 @@
       },
       "initials": {
         "default": "П"
+      }
+    },
+    "clients": {
+      "title": "Клиенты",
+      "createClient": "Добавить клиента",
+      "editClient": "Редактировать клиента",
+      "searchPlaceholder": "Поиск по имени, фамилии, email или телефону...",
+      "clientStatus": "Статус клиентов",
+      "onlyActive": "Только активные",
+      "allClients": "Все клиенты",
+      "client": "Клиент",
+      "phone": "Телефон",
+      "cars": "Автомобили",
+      "status": "Статус",
+      "active": "Активен",
+      "inactive": "Неактивен",
+      "registrationDate": "Дата регистрации",
+      "actions": "Действия",
+      "editTooltip": "Редактировать данные клиента",
+      "carsTooltip": "Управление автомобилями клиента",
+      "deactivateTooltip": "Деактивировать клиента",
+      "activateTooltip": "Активировать клиента",
+      "deleteTooltip": "Удалить клиента",
+      "deactivate": "Деактивировать",
+      "activate": "Активировать",
+      "delete": "Удалить",
+      "confirmStatusChange": "Подтверждение изменения статуса",
+      "confirmStatusMessage": "Вы действительно хотите изменить статус этого клиента?",
+      "changeStatus": "Изменить статус",
+      "cancel": "Отмена",
+      "confirmDelete": "Подтверждение удаления",
+      "confirmDeleteMessage": "Вы уверены, что хотите удалить этого клиента? Это действие нельзя отменить.",
+      "deleteConfirm": "Удалить",
+      "messages": {
+        "statusChanged": "Статус клиента {{name}} изменен",
+        "statusError": "Ошибка при изменении статуса клиента",
+        "deleted": "Клиент {{name}} удален",
+        "deleteError": "Ошибка при удалении клиента"
+      },
+      "initials": {
+        "default": "К"
       }
     },
     "carBrands": {
@@ -949,6 +990,77 @@
       "select": "Выберите...",
       "search": "Поиск...",
       "noResults": "Результатов не найдено"
+    }
+  },
+  "searchAndFilters": {
+    "filters": "Фильтры",
+    "searchPlaceholder": "Поиск...",
+    "clear": "Очистить"
+  },
+  "components": {
+    "table": {
+      "empty": "Нет данных для отображения"
+    },
+    "pageTable": {
+      "actions": "Действия",
+      "empty": "Нет данных для отображения"
+    }
+  },
+  "forms": {
+    "partner": {
+      "title": {
+        "create": "Создание партнера",
+        "edit": "Редактирование партнера"
+      },
+      "sections": {
+        "companyInfo": "Информация о компании",
+        "legalInfo": "Юридическая информация",
+        "location": "Местоположение",
+        "userInfo": "Информация о пользователе"
+      },
+      "fields": {
+        "companyName": "Название компании",
+        "companyDescription": "Описание компании",
+        "website": "Веб-сайт",
+        "logo": "Логотип",
+        "email": "Email"
+      },
+      "placeholders": {
+        "website": "https://example.com"
+      },
+      "validation": {
+        "companyNameRequired": "Название компании обязательно",
+        "companyNameMin": "Название должно быть не менее 2 символов",
+        "companyNameMax": "Название не должно превышать 100 символов",
+        "descriptionMax": "Описание не должно превышать 2000 символов",
+        "contactPersonMin": "Контактное лицо должно быть не менее 2 символов",
+        "websiteUrlInvalid": "Введите корректный URL",
+        "taxNumberInvalid": "Введите корректный налоговый номер",
+        "legalAddressRequired": "Юридический адрес обязателен",
+        "legalAddressMax": "Адрес не должен превышать 500 символов",
+        "logoUrlInvalid": "Введите корректный URL логотипа"
+      },
+      "operators": {
+        "addButton": "Добавить оператора",
+        "columns": {
+          "phone": "Телефон",
+          "position": "Должность",
+          "access": "Уровень доступа",
+          "status": "Статус",
+          "actions": "Действия"
+        },
+        "notSpecified": "Не указано",
+        "actions": {
+          "edit": "Редактировать",
+          "deactivate": "Деактивировать",
+          "delete": "Удалить"
+        }
+      },
+      "operatorTable": {
+        "fullName": "ФИО",
+        "dataNotLoaded": "Данные не загружены",
+        "notSpecified": "Не указано"
+      }
     }
   },
   "locale": "ru",

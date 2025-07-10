@@ -183,7 +183,7 @@
       "title": "Управління користувачами",
       "createUser": "Створити користувача",
       "editUser": "Редагувати користувача",
-      "userManagement": "Управління користувачами (PageTable)",
+      "userManagement": "Управління користувачами",
       "searchPlaceholder": "Пошук за email, ім'ям, прізвищем або номером телефону...",
       "onlyActive": "Тільки активні",
       "allUsers": "Всі користувачі",
@@ -980,6 +980,77 @@
       "select": "Выберите...",
       "search": "Пошук...",
       "noResults": "Результатов не найдено"
+    }
+  },
+  "searchAndFilters": {
+    "filters": "Фільтри",
+    "searchPlaceholder": "Пошук...",
+    "clear": "Очистити"
+  },
+  "components": {
+    "table": {
+      "empty": "Немає даних для відображення"
+    },
+    "pageTable": {
+      "actions": "Дії",
+      "empty": "Немає даних для відображення"
+    }
+  },
+  "forms": {
+    "partner": {
+      "title": {
+        "create": "Створення партнера",
+        "edit": "Редагування партнера"
+      },
+      "sections": {
+        "companyInfo": "Інформація про компанію",
+        "legalInfo": "Юридична інформація",
+        "location": "Місцеположення",
+        "userInfo": "Інформація про користувача"
+      },
+      "fields": {
+        "companyName": "Назва компанії",
+        "companyDescription": "Опис компанії",
+        "website": "Веб-сайт",
+        "logo": "Логотип",
+        "email": "Email"
+      },
+      "placeholders": {
+        "website": "https://example.com"
+      },
+      "validation": {
+        "companyNameRequired": "Назва компанії обов'язкова",
+        "companyNameMin": "Назва повинна бути не менше 2 символів",
+        "companyNameMax": "Назва не повинна перевищувати 100 символів",
+        "descriptionMax": "Опис не повинен перевищувати 2000 символів",
+        "contactPersonMin": "Контактна особа повинна бути не менше 2 символів",
+        "websiteUrlInvalid": "Введіть коректний URL",
+        "taxNumberInvalid": "Введіть коректний податковий номер",
+        "legalAddressRequired": "Юридична адреса обов'язкова",
+        "legalAddressMax": "Адреса не повинна перевищувати 500 символів",
+        "logoUrlInvalid": "Введіть коректний URL логотипу"
+      },
+      "operators": {
+        "addButton": "Додати оператора",
+        "columns": {
+          "phone": "Телефон",
+          "position": "Посада",
+          "access": "Рівень доступу",
+          "status": "Статус",
+          "actions": "Дії"
+        },
+        "notSpecified": "Не вказано",
+        "actions": {
+          "edit": "Редагувати",
+          "deactivate": "Деактивувати",
+          "delete": "Видалити"
+        }
+      },
+      "operatorTable": {
+        "fullName": "ПІБ",
+        "dataNotLoaded": "Дані не завантажені",
+        "notSpecified": "Не вказано"
+      }
     }
   },
   "locale": "uk",

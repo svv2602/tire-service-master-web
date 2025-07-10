@@ -31,8 +31,7 @@ import {
   Person as PersonIcon,
   Check as CheckIcon,
   Close as CloseIcon,
-  RestoreFromTrash as RestoreIcon,
-  Visibility as VisibilityIcon
+  RestoreFromTrash as RestoreIcon
 } from '@mui/icons-material';
 import {
   useGetUsersQuery,
@@ -261,14 +260,6 @@ export const UsersPage: React.FC = () => {
 
   // Конфигурация действий для ActionsMenu
   const userActions: ActionItem<User>[] = useMemo(() => [
-    {
-      id: 'view',
-      label: t('admin.users.view'),
-      icon: <VisibilityIcon />,
-      onClick: (user: User) => navigate(`/admin/users/${user.id}`),
-      color: 'info',
-      tooltip: t('admin.users.viewTooltip')
-    },
     {
       id: 'edit',
       label: t('tables.actions.edit'),

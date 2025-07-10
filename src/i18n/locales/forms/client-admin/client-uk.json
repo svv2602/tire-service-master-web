@@ -59,7 +59,7 @@
         "statusError": "Помилка при зміні статусу клієнта",
         "deleteError": "Помилка при видаленні клієнта"
       },
-      "cars": {
+      "carsManagement": {
         "pageTitle": "Автомобілі клієнта {{name}}",
         "addCar": "Додати автомобіль",
         "clientNotFound": "Клієнт не знайдений",
