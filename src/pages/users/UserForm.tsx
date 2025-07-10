@@ -232,10 +232,10 @@ const UserForm: React.FC = () => {
         
         if (isEdit) {
           await updateUser({ id: userId.toString(), data: userData }).unwrap();
-          setSuccessMessage('Пользователь успешно обновлен');
+          setSuccessMessage(t('forms.user.messages.updateSuccess'));
         } else {
           await createUser(userData).unwrap();
-          setSuccessMessage('Пользователь успешно создан');
+          setSuccessMessage(t('forms.user.messages.createSuccess'));
         }
         
         // Переходим к списку пользователей через небольшую задержку

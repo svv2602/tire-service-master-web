@@ -543,7 +543,7 @@ const ServicePointFormPage: React.FC = () => {
             console.log('Нет новых фотографий для загрузки при обновлении');
           }
           
-          setSuccessMessage('Точка обслуживания успешно обновлена');
+          setSuccessMessage(t('forms.servicePoints.messages.updateSuccess'));
           
           // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ КЭША после успешного обновления
           console.log('Принудительно обновляем кэш всех списков сервисных точек');
