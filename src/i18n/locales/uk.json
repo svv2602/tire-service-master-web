@@ -173,9 +173,10 @@
     }
   },
   "language": {
-    "uk": "Українська",
-    "ru": "Російська",
-    "selectLanguage": "Оберіть мову"
+    "uk": "UA",
+    "ru": "RU",
+    "selectLanguage": "Оберіть мову",
+    "switchLanguage": "Перемкнути мову"
   },
   "admin": {
     "users": {

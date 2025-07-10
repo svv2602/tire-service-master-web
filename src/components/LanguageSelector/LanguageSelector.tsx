@@ -1,10 +1,11 @@
 import React from 'react';
-import { Select, MenuItem, FormControl, Box, IconButton, Menu } from '@mui/material';
-import { Language as LanguageIcon } from '@mui/icons-material';
+import { IconButton, Menu, MenuItem, Tooltip, useTheme } from '@mui/material';
 import { useTranslation } from '../../hooks/useTranslation';
+import { tokens } from '../../styles/theme/tokens';
 
 export const LanguageSelector: React.FC = () => {
   const { t, changeLanguage, currentLanguage } = useTranslation();
+  const theme = useTheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -22,34 +23,50 @@ export const LanguageSelector: React.FC = () => {
   };
 
   const getCurrentLanguageLabel = () => {
-    return currentLanguage === 'uk' ? 'УК' : 'РУ';
+    return currentLanguage === 'uk' ? 'UA' : 'RU';
   };
 
   return (
-    <Box>
-      <IconButton
-        onClick={handleClick}
-        size="small"
-        sx={{ 
-          color: 'inherit',
-          border: '1px solid rgba(255, 255, 255, 0.23)',
-          borderRadius: 1,
-          px: 1,
-          minWidth: 50,
-          '&:hover': {
-            borderColor: 'rgba(255, 255, 255, 0.5)',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          }
-        }}
-        aria-controls={open ? 'language-menu' : undefined}
-        aria-haspopup="true"
-        aria-expanded={open ? 'true' : undefined}
-      >
-        <LanguageIcon sx={{ fontSize: 18, mr: 0.5 }} />
-        <Box component="span" sx={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
+    <>
+      <Tooltip title={t('language.switchLanguage')}>
+        <IconButton
+          onClick={handleClick}
+          sx={{
+            ml: 1,
+            color: theme.palette.mode === 'dark' ? '#fff' : '#0d2345',
+            backgroundColor: theme.palette.mode === 'dark' 
+              ? 'rgba(255, 255, 255, 0.1)' 
+              : '#fff',
+            border: theme.palette.mode === 'dark' 
+              ? '1px solid rgba(255, 255, 255, 0.2)' 
+              : '1.5px solid #1976d2',
+            transition: tokens.transitions.duration.normal,
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            minWidth: 'auto',
+            width: 40,
+            height: 40,
+            '&:hover': {
+              backgroundColor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.2)' 
+                : '#e3f0ff',
+              borderColor: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.3)' 
+                : '#1565c0',
+              transform: 'scale(1.05)',
+            },
+            '&:active': {
+              transform: 'scale(0.95)',
+            },
+          }}
+          aria-controls={open ? 'language-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          aria-label={t('language.switchLanguage')}
+        >
           {getCurrentLanguageLabel()}
-        </Box>
-      </IconButton>
+        </IconButton>
+      </Tooltip>
       <Menu
         id="language-menu"
         anchorEl={anchorEl}
@@ -58,20 +75,22 @@ export const LanguageSelector: React.FC = () => {
         MenuListProps={{
           'aria-labelledby': 'language-button',
         }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <MenuItem 
           onClick={() => handleLanguageChange('uk')}
           selected={currentLanguage === 'uk'}
         >
-          🇺🇦 {t('language.uk')}
+          {t('language.uk')}
         </MenuItem>
         <MenuItem 
           onClick={() => handleLanguageChange('ru')}
           selected={currentLanguage === 'ru'}
         >
-          🇷🇺 {t('language.ru')}
+          {t('language.ru')}
         </MenuItem>
       </Menu>
-    </Box>
+    </>
   );
 }; 

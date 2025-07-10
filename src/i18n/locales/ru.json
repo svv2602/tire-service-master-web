@@ -161,9 +161,10 @@
     }
   },
   "language": {
-    "uk": "Украинский",
-    "ru": "Русский",
-    "selectLanguage": "Выберите язык"
+    "uk": "UA",
+    "ru": "RU",
+    "selectLanguage": "Выберите язык",
+    "switchLanguage": "Переключить язык"
   },
   "admin": {
     "users": {
