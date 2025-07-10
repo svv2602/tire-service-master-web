@@ -12,13 +12,15 @@ import {
   AccordionSummary,
   AccordionDetails,
   Chip,
-  Stack
+  Stack,
+  Button
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { format, parseISO, addDays } from 'date-fns';
 import { useDateLocale } from '../../../hooks/useDateLocale';
 import {
   LocationOn as LocationIcon,
+  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -209,7 +211,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots]);
   
-  // Обработчик выбора даты с переходом к выбору времени
+  // Обработчик выбора даты БЕЗ автоматического перехода к выбору времени
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
     setSelectedTimeSlot(null);
@@ -218,7 +220,15 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       booking_date: date ? format(date, 'yyyy-MM-dd') : '',
       start_time: '',
     }));
-    if (date) {
+    // УБИРАЕМ автоматический переход к выбору времени
+    // if (date) {
+    //   setExpandedPanel('time');
+    // }
+  };
+
+  // Обработчик кнопки "Далее" для перехода к выбору времени
+  const handleProceedToTimeSelection = () => {
+    if (selectedDate) {
       setExpandedPanel('time');
     }
   };
@@ -322,6 +332,24 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
               />
             </Box>
           </Box>
+          
+          {/* Кнопка "Далее" для перехода к выбору времени */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            <Button
+              variant="contained"
+              onClick={handleProceedToTimeSelection}
+              disabled={!selectedDate}
+              endIcon={<ArrowForwardIcon />}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 3,
+                py: 1
+              }}
+            >
+              {t('bookingSteps.dateTime.proceedToTimeSelection')}
+            </Button>
+          </Box>
         </AccordionDetails>
       </Accordion>
       {/* Аккордеон выбора времени */}
@@ -332,8 +360,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               {t('bookingSteps.dateTime.selectTime')}
             </Typography>
+            {/* Отображаем только выбранное время */}
             {selectedTimeSlot && (
-              <Chip label={selectedTimeSlot} color="success" size="small" />
+              <Chip 
+                label={selectedTimeSlot} 
+                color="success" 
+                size="small" 
+              />
             )}
           </Stack>
         </AccordionSummary>
