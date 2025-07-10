@@ -103,13 +103,13 @@ const ClientMainPage: React.FC = () => {
 
   // Используем данные из API или fallback
   const currentHero = heroContent || {
-    title: t('client.mainPage.title'),
-    content: t('client.mainPage.subtitle'),
+    title: t('forms.clientPages.mainPage.title'),
+    content: t('forms.clientPages.mainPage.subtitle'),
     settings: {
-      subtitle: t('client.mainPage.subtitle'),
-      button_text: t('client.mainPage.searchButton'),
-      search_placeholder: t('client.mainPage.searchPlaceholder'),
-      city_placeholder: t('client.mainPage.cityPlaceholder')
+      subtitle: t('forms.clientPages.mainPage.subtitle'),
+      button_text: t('forms.clientPages.mainPage.searchButton'),
+      search_placeholder: t('forms.clientPages.mainPage.searchPlaceholder'),
+      city_placeholder: t('forms.clientPages.mainPage.cityPlaceholder')
     }
   };
   
@@ -117,26 +117,26 @@ const ClientMainPage: React.FC = () => {
   const currentArticles = mainPageArticles.length > 0 ? mainPageArticles : [
     {
       id: 1,
-      title: t('client.mainPage.fallbackArticles.winterTires.title'),
-      excerpt: t('client.mainPage.fallbackArticles.winterTires.excerpt'),
+      title: t('forms.clientPages.mainPage.fallbackArticles.winterTires.title'),
+      excerpt: t('forms.clientPages.mainPage.fallbackArticles.winterTires.excerpt'),
       reading_time: 5,
-      author: { name: t('client.mainPage.fallbackArticles.winterTires.author') },
+      author: { name: t('forms.clientPages.mainPage.fallbackArticles.winterTires.author') },
       created_at: new Date().toISOString()
     },
     {
       id: 2,
-      title: t('client.mainPage.fallbackArticles.tirePressure.title'),
-      excerpt: t('client.mainPage.fallbackArticles.tirePressure.excerpt'),
+      title: t('forms.clientPages.mainPage.fallbackArticles.tirePressure.title'),
+      excerpt: t('forms.clientPages.mainPage.fallbackArticles.tirePressure.excerpt'),
       reading_time: 3,
-      author: { name: t('client.mainPage.fallbackArticles.tirePressure.author') },
+      author: { name: t('forms.clientPages.mainPage.fallbackArticles.tirePressure.author') },
       created_at: new Date().toISOString()
     },
     {
       id: 3,
-      title: t('client.mainPage.fallbackArticles.tireStorage.title'),
-      excerpt: t('client.mainPage.fallbackArticles.tireStorage.excerpt'),
+      title: t('forms.clientPages.mainPage.fallbackArticles.tireStorage.title'),
+      excerpt: t('forms.clientPages.mainPage.fallbackArticles.tireStorage.excerpt'),
       reading_time: 4,
-      author: { name: t('client.mainPage.fallbackArticles.tireStorage.author') },
+      author: { name: t('forms.clientPages.mainPage.fallbackArticles.tireStorage.author') },
       created_at: new Date().toISOString()
     }
   ];
@@ -144,7 +144,7 @@ const ClientMainPage: React.FC = () => {
   if (contentLoading || citiesLoading || articlesLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <Typography>{t('client.mainPage.loading')}</Typography>
+        <Typography>{t('forms.clientPages.mainPage.loading')}</Typography>
       </Box>
     );
   }
@@ -174,7 +174,7 @@ const ClientMainPage: React.FC = () => {
                     <Box
                       component="img"
                       src="/image_app/serviceman.png" 
-                      alt={t('client.mainPage.servicemanAlt')} 
+                      alt={t('forms.clientPages.mainPage.servicemanAlt')} 
                       sx={{
                         width: '100%',
                         height: '100%',
@@ -254,7 +254,7 @@ const ClientMainPage: React.FC = () => {
                               '&:hover': { bgcolor: theme.palette.primary.dark }
                             }}
                           >
-                            {currentHero.settings?.button_text || t('client.mainPage.searchButton')}
+                            {currentHero.settings?.button_text || t('forms.clientPages.mainPage.searchButton')}
                           </Button>
                         </Grid>
                       </Grid>
@@ -275,7 +275,7 @@ const ClientMainPage: React.FC = () => {
               fontWeight: 700,
               color: colors.textPrimary 
             }}>
-              {t('client.mainPage.articlesTitle')}
+              {t('forms.clientPages.mainPage.articlesTitle')}
             </Typography>
             
             <Grid container spacing={3}>
@@ -311,9 +311,9 @@ const ClientMainPage: React.FC = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                            {typeof article.author === 'string' ? article.author : article.author?.name || t('client.mainPage.unknownAuthor')}
+                            {typeof article.author === 'string' ? article.author : article.author?.name || t('forms.clientPages.mainPage.unknownAuthor')}
                           </Typography>
-                          <Chip label={`${article.reading_time || 5} ${t('client.mainPage.minutes')}`} size="small" variant="outlined" />
+                          <Chip label={`${article.reading_time || 5} ${t('forms.clientPages.mainPage.minutes')}`} size="small" variant="outlined" />
                         </Box>
                       </CardContent>
                       <CardActions>
@@ -322,7 +322,7 @@ const ClientMainPage: React.FC = () => {
                           sx={{ color: theme.palette.primary.main }}
                           onClick={() => navigate(`/knowledge-base/${article.id}`)}
                         >
-                          {t('client.mainPage.readMore')}
+                          {t('forms.clientPages.mainPage.readMore')}
                         </Button>
                       </CardActions>
                     </Card>
@@ -339,7 +339,7 @@ const ClientMainPage: React.FC = () => {
                 sx={secondaryButtonStyles}
                 onClick={() => navigate('/knowledge-base')}
               >
-                {t('client.mainPage.allArticles')}
+                {t('forms.clientPages.mainPage.allArticles')}
               </Button>
             </Box>
           </Container>
@@ -354,10 +354,10 @@ const ClientMainPage: React.FC = () => {
           <Container maxWidth="md">
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
-                {ctaContent?.title || t('client.mainPage.readyToBook')}
+                {ctaContent?.title || t('forms.clientPages.mainPage.readyToBook')}
               </Typography>
               <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                {ctaContent?.content || t('client.mainPage.chooseTimeAndService')}
+                {ctaContent?.content || t('forms.clientPages.mainPage.chooseTimeAndService')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <Button 
@@ -371,7 +371,7 @@ const ClientMainPage: React.FC = () => {
                   }}
                   onClick={() => navigate('/client/booking')}
                 >
-                  {ctaContent?.settings?.primary_button_text || t('client.mainPage.bookOnlineButton')}
+                  {ctaContent?.settings?.primary_button_text || t('forms.clientPages.mainPage.bookOnlineButton')}
                 </Button>
                 <Button 
                   variant="outlined" 
@@ -387,7 +387,7 @@ const ClientMainPage: React.FC = () => {
                   }}
                   onClick={() => navigate('/client/profile')}
                 >
-                  {ctaContent?.settings?.secondary_button_text || t('client.mainPage.personalCabinetButton')}
+                  {ctaContent?.settings?.secondary_button_text || t('forms.clientPages.mainPage.personalCabinetButton')}
                 </Button>
               </Box>
             </Box>
@@ -400,10 +400,10 @@ const ClientMainPage: React.FC = () => {
             <Grid container spacing={4}>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                  {footerContent?.title || t('client.mainPage.footerTitle')}
+                  {footerContent?.title || t('forms.clientPages.mainPage.footerTitle')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  {footerContent?.content || t('client.mainPage.footerDescription')}
+                  {footerContent?.content || t('forms.clientPages.mainPage.footerDescription')}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <IconButton size="small">
@@ -416,13 +416,13 @@ const ClientMainPage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  {t('client.mainPage.servicesTitle')}
+                  {t('forms.clientPages.mainPage.servicesTitle')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   {(footerContent?.settings?.services_links || [
-                    t('client.mainPage.services.tireChange'),
-                    t('client.mainPage.services.balancing'),
-                    t('client.mainPage.services.repair')
+                    t('forms.clientPages.mainPage.services.tireChange'),
+                    t('forms.clientPages.mainPage.services.balancing'),
+                    t('forms.clientPages.mainPage.services.repair')
                   ]).map((link: string) => (
                     <Link key={link} to="/client/services" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
                       {link}
@@ -432,13 +432,13 @@ const ClientMainPage: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={4}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  {t('client.mainPage.information')}
+                  {t('forms.clientPages.mainPage.information')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                   {(footerContent?.settings?.info_links || [
-                    t('client.mainPage.knowledgeBase'), 
-                    t('client.mainPage.personalCabinetButton'), 
-                    t('client.mainPage.forBusiness')
+                    t('forms.clientPages.mainPage.knowledgeBase'), 
+                    t('forms.clientPages.mainPage.personalCabinetButton'), 
+                    t('forms.clientPages.mainPage.forBusiness')
                   ]).map((link: string, index: number) => {
                     const routes = ['/knowledge-base', '/client/profile', '/login'];
                     return (
@@ -458,7 +458,7 @@ const ClientMainPage: React.FC = () => {
               borderTop: `1px solid ${colors.borderPrimary}` 
             }}>
               <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                {footerContent?.settings?.copyright || t('client.mainPage.copyright')}
+                {footerContent?.settings?.copyright || t('forms.clientPages.mainPage.copyright')}
               </Typography>
             </Box>
           </Container>
