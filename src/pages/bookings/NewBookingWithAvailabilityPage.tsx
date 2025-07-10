@@ -491,7 +491,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // ✅ Переход в профиль (только для авторизованных пользователей)
   const handleGoToProfile = () => {
     if (isAuthenticated) {
-      navigate('/profile/bookings');
+      navigate('/client/bookings');
     } else {
       // Для неавторизованных пользователей предлагаем войти
       navigate('/auth/login', {
