@@ -326,11 +326,15 @@
     "selectDateToView": "Выберите дату для просмотра доступности",
     "selectedDate": "Выбранная дата",
     "selectedTime": "Выбранное время",
+    "workload": "Загруженность",
+    "percentOccupied": "% занято",
     "freeSlots": "Свободно",
     "occupiedSlots": "Занято",
     "free": "Свободно",
     "mediumLoad": "Средняя загрузка",
-    "highLoad": "Высокая загрузка"
+    "highLoad": "Высокая загрузка",
+    "notWorkingMessage": "В этот день сервисная точка не работает",
+    "todayBookingByPhone": "Для записи на сегодня звоните по телефону"
   },
   "bookingChart": {
     "noData": "Нет данных для отображения",

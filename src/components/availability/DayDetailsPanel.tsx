@@ -20,7 +20,7 @@ import {
   Block as EventOffIcon
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { useDateLocale } from '../../hooks/useDateLocale';
 
 interface DayDetailsPanelProps {
   selectedDate: Date | null;
@@ -47,12 +47,13 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
+  const dateLocale = useDateLocale();
   
   // Форматирование даты
   const formatDate = (date: Date | null) => {
     if (!date) return '';
-    return format(date, 'd MMMM yyyy (EEEE)', { locale: ru });
+    return format(date, 'd MMMM yyyy (EEEE)', { locale: dateLocale });
   };
   
   // Определение цвета для индикатора загруженности

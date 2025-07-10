@@ -3,14 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { ru } from 'date-fns/locale';
-import { Provider } from 'react-redux';
+import { ru, uk } from 'date-fns/locale';
+import { Provider, useSelector } from 'react-redux';
 import { store } from './store/index';
 import MainLayout from './components/layouts/MainLayout';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LoadingScreen } from './components/LoadingScreen';
 import LoadingSpinner from './components/common/LoadingSpinner';
-import { useSelector } from 'react-redux';
 import { RootState } from './store/index';
 import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
 // import { extendClients } from './utils/clientExtensions';
@@ -20,6 +19,7 @@ import './styles/overrides/textfield-overrides.css';
 
 // Инициализация i18n
 import './i18n';
+import { useTranslation } from 'react-i18next';
 
 // Ленивая загрузка страниц аутентификации
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -164,19 +164,24 @@ const ProtectedRoute: React.FC<{
   return <>{children}</>;
 };
 
-function App() {
-  // Инициализация расширений для клиентов
-  useEffect(() => {
-    // Здесь мы будем инициализировать расширения для клиентов
-    // при необходимости в будущем
-    console.debug('Client extensions ready');
-  }, []);
+// Компонент для динамической локализации дат
+const DateLocalizationWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { i18n } = useTranslation();
+  const dateLocale = i18n.language === 'uk' ? uk : ru;
+  
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={dateLocale}>
+      {children}
+    </LocalizationProvider>
+  );
+};
 
+const App: React.FC = () => {
   return (
     <Provider store={store}>
       <ThemeProvider>
         <SnackbarProvider>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
+          <DateLocalizationWrapper>
             <CssBaseline />
             <GlobalUIStyles />
             <AuthInitializer>
@@ -327,11 +332,11 @@ function App() {
                 </Suspense>
               </Router>
             </AuthInitializer>
-          </LocalizationProvider>
+          </DateLocalizationWrapper>
         </SnackbarProvider>
       </ThemeProvider>
     </Provider>
   );
-}
+};
 
 export default App;

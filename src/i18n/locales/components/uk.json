@@ -322,13 +322,17 @@
   "dayDetailsPanel": {
     "information": "Інформація",
     "selectDateToView": "Виберіть дату для перегляду детальної інформації",
-    "selectedDate": "Вибрана дата: {{date}}",
-    "selectedTime": "Вибраний час: {{time}}",
-    "freeSlots": "Вільних слотів: {{count}}",
-    "occupiedSlots": "Зайнятих слотів: {{count}}",
+    "selectedDate": "Вибрана дата",
+    "selectedTime": "Вибраний час",
+    "workload": "Завантаженість",
+    "percentOccupied": "% зайнято",
+    "freeSlots": "Вільно",
+    "occupiedSlots": "Зайнято",
     "free": "Вільно",
     "mediumLoad": "Середнє навантаження",
-    "highLoad": "Високе навантаження"
+    "highLoad": "Високе навантаження",
+    "notWorkingMessage": "В цей день сервісна точка не працює",
+    "todayBookingByPhone": "Для запису на сьогодні телефонуйте за номером"
   },
   "bookingChart": {
     "noData": "Немає даних для відображення",
