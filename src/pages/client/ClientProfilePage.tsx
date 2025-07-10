@@ -46,6 +46,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Star as StarIcon,
+  Favorite as FavoriteIcon,
 } from '@mui/icons-material';
 
 // Типы
@@ -70,6 +71,7 @@ import { ClientCar, ClientCarFormData } from '../../types/client';
 import ClientLayout from '../../components/client/ClientLayout';
 import { PhoneField } from '../../components/ui/PhoneField';
 import Notification from '../../components/Notification';
+import FavoritePointsTab from '../../components/client/FavoritePointsTab';
 
 // Валидация
 import { useFormik } from 'formik';
@@ -520,22 +522,28 @@ const ClientProfilePage: React.FC = () => {
               aria-controls="profile-tabpanel-1"
             />
             <Tab
-              icon={<StatsIcon />}
-              label={t('forms.profile.sections.statistics')}
+              icon={<FavoriteIcon />}
+              label={t('forms.profile.sections.favoritePoints')}
               id="profile-tab-2"
               aria-controls="profile-tabpanel-2"
             />
             <Tab
-              icon={<LockIcon />}
-              label={t('forms.profile.sections.security')}
+              icon={<StatsIcon />}
+              label={t('forms.profile.sections.statistics')}
               id="profile-tab-3"
               aria-controls="profile-tabpanel-3"
             />
             <Tab
-              icon={<SettingsIcon />}
-              label={t('forms.profile.sections.settings')}
+              icon={<LockIcon />}
+              label={t('forms.profile.sections.security')}
               id="profile-tab-4"
               aria-controls="profile-tabpanel-4"
+            />
+            <Tab
+              icon={<SettingsIcon />}
+              label={t('forms.profile.sections.settings')}
+              id="profile-tab-5"
+              aria-controls="profile-tabpanel-5"
             />
             </Tabs>
           </Box>
@@ -698,14 +706,16 @@ const ClientProfilePage: React.FC = () => {
                           <strong>{t('forms.profile.cars.model')}:</strong> {car.model?.name || t('forms.profile.cars.notSpecified')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>{t('forms.profile.cars.year')}:</strong> {car.year}
+                          <strong>{t('forms.profile.cars.year')}:</strong> {car.year || t('forms.profile.cars.notSpecified')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <strong>{t('forms.profile.cars.licensePlate')}:</strong> {car.license_plate}
+                          <strong>{t('forms.profile.cars.licensePlate')}:</strong> {car.license_plate || t('forms.profile.cars.notSpecified')}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>{t('forms.profile.cars.carType')}:</strong> {car.car_type?.name || t('forms.profile.cars.notSpecified')}
-                        </Typography>
+                        {car.car_type && (
+                          <Typography variant="body2" color="text.secondary">
+                            <strong>{t('forms.profile.cars.carType')}:</strong> {car.car_type.name}
+                          </Typography>
+                        )}
                       </Box>
                     </Card>
                   </Grid>
@@ -714,8 +724,17 @@ const ClientProfilePage: React.FC = () => {
             )}
           </TabPanel>
 
-          {/* Вкладка t('client.profile.statistics') */}
+          {/* Вкладка любимых точек */}
           <TabPanel value={activeTab} index={2}>
+            <FavoritePointsTab 
+              onNotify={(message: string, type: 'success' | 'error') => 
+                setNotification({ open: true, message, severity: type })
+              }
+            />
+          </TabPanel>
+
+          {/* Вкладка t('client.profile.statistics') */}
+          <TabPanel value={activeTab} index={3}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
               {t('forms.profile.statistics.statisticsUsage')}
             </Typography>
@@ -779,7 +798,7 @@ const ClientProfilePage: React.FC = () => {
           </TabPanel>
 
           {/* Вкладка t('client.profile.security') */}
-          <TabPanel value={activeTab} index={3}>
+          <TabPanel value={activeTab} index={4}>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, color: 'text.primary' }}>
               <LockIcon />
               {t('forms.profile.security.securityAccount')}
@@ -839,7 +858,7 @@ const ClientProfilePage: React.FC = () => {
           </TabPanel>
 
           {/* Вкладка t('client.profile.settings') */}
-          <TabPanel value={activeTab} index={4}>
+          <TabPanel value={activeTab} index={5}>
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
               {t('forms.profile.settings.settingsNotifications')}
             </Typography>
