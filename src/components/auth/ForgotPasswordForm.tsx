@@ -28,6 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useForgotPasswordMutation } from '../../api/password.api';
 import { extractPhoneDigits } from '../../utils/phoneUtils';
+import { PhoneField } from '../ui/PhoneField/PhoneField';
 
 interface ForgotPasswordFormProps {
   onBack?: () => void;
@@ -186,80 +187,13 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                   sx={{ mb: 2 }}
                 />
               ) : (
-                <TextField
+                <PhoneField
                   fullWidth
                   label={t('forms.auth.forgot_password.step1.phone_label')}
                   value={login}
-                  onChange={(e) => {
-                    // Автоформатирование с визуальной маской
-                    let value = e.target.value;
-                    
-                    // Убираем все кроме цифр и +
-                    let digitsOnly = value.replace(/[^\d+]/g, '');
-                    
-                    // Обработка различных форматов ввода
-                    if (digitsOnly.startsWith('+')) {
-                      digitsOnly = digitsOnly.substring(1); // убираем +
-                    }
-                    
-                    // Автоматически добавляем 38 если начинается с 0
-                    if (digitsOnly.match(/^0/)) {
-                      digitsOnly = '38' + digitsOnly;
-                    }
-                    
-                    // Форматируем с маской +38 (0XX) XXX-XX-XX
-                    let formatted = '';
-                    if (digitsOnly.length >= 2 && digitsOnly.startsWith('38')) {
-                      formatted = '+38';
-                      const remaining = digitsOnly.substring(2);
-                      
-                      if (remaining.length > 0) {
-                        formatted += ' (';
-                        if (remaining.length <= 3) {
-                          formatted += remaining;
-                        } else {
-                          formatted += remaining.substring(0, 3) + ')';
-                          const rest = remaining.substring(3);
-                          
-                          if (rest.length > 0) {
-                            formatted += ' ';
-                            if (rest.length <= 3) {
-                              formatted += rest;
-                            } else {
-                              formatted += rest.substring(0, 3);
-                              if (rest.length > 3) {
-                                formatted += '-';
-                                if (rest.length <= 5) {
-                                  formatted += rest.substring(3);
-                                } else {
-                                  formatted += rest.substring(3, 5);
-                                  if (rest.length > 5) {
-                                    formatted += '-' + rest.substring(5, 7);
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    } else if (digitsOnly.length > 0) {
-                      // Для других форматов оставляем как есть с +
-                      formatted = '+' + digitsOnly;
-                    } else {
-                      formatted = value; // Пустое значение
-                    }
-                    
-                    setLogin(formatted);
-                  }}
+                  onChange={(value) => setLogin(value)}
                   placeholder={getLoginPlaceholder()}
                   disabled={isLoading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        {getLoginIcon()}
-                      </InputAdornment>
-                    ),
-                  }}
                   sx={{ mb: 2 }}
                 />
               )}

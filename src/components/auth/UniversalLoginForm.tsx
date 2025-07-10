@@ -35,6 +35,7 @@ import { useLoginMutation } from '../../api/auth.api';
 import { UserRole } from '../../types/user-role';
 import { extractPhoneDigits } from '../../utils/phoneUtils';
 import { useTranslation } from '../../hooks/useTranslation';
+import { PhoneField } from '../ui/PhoneField/PhoneField';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -322,21 +323,13 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
             sx={{ mb: 2 }}
           />
         ) : (
-          <TextField
+          <PhoneField
             fullWidth
             label={t('forms.auth.phone')}
-            type="tel"
             value={login}
-            onChange={(e) => setLogin(e.target.value)}
+            onChange={(value) => setLogin(value)}
             placeholder={getLoginPlaceholder()}
             disabled={isLoading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  {getLoginIcon()}
-                </InputAdornment>
-              ),
-            }}
             sx={{ mb: 2 }}
           />
         )}

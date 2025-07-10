@@ -40,11 +40,11 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
 }) => {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [internalValue, setInternalValue] = useState(value || '');
+  const [internalValue, setInternalValue] = useState(value || '+38 ');
   
   // Синхронизируем внутреннее состояние с внешним value
   useEffect(() => {
-    setInternalValue(value || '');
+    setInternalValue(value || '+38 ');
   }, [value]);
   
   // Функция для форматирования номера телефона
@@ -60,6 +60,11 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
     // Автоматически добавляем 38 если начинается с 0
     if (digitsOnly.match(/^0/)) {
       digitsOnly = '38' + digitsOnly;
+    }
+    
+    // Если поле пустое или только вводится, показываем +38
+    if (digitsOnly.length === 0) {
+      return '+38 ';
     }
     
     // Форматируем с маской +38 (0XX) XXX-XX-XX
@@ -121,6 +126,17 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
     onChange(formatted);
   };
 
+  // Обработчик фокуса - устанавливаем курсор после +38
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    if (input.value === '+38 ') {
+      // Устанавливаем курсор после "+38 "
+      setTimeout(() => {
+        input.setSelectionRange(4, 4);
+      }, 0);
+    }
+  };
+
   return (
     <TextField
       {...props}
@@ -132,6 +148,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
       placeholder={placeholder || t('phoneField.placeholder', '+38 (067) 123-45-67')}
       value={internalValue}
       onChange={handleChange}
+      onFocus={handleFocus}
       onBlur={onBlur}
       InputProps={{
         ...props.InputProps,

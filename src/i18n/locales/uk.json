@@ -997,6 +997,11 @@
     }
   },
   "forms": {
+    "loginType": {
+      "selectMethod": "Оберіть спосіб входу",
+      "email": "Email",
+      "phone": "Телефон"
+    },
     "partner": {
       "title": {
         "create": "Створення партнера",
@@ -1257,5 +1262,10 @@
     "message": "Ви впевнені?",
     "cancel": "Скасування",
     "confirm": "Підтвердити"
+  },
+  "phoneField": {
+    "label": "Телефон",
+    "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
+    "placeholder": "+38 (067) 123-45-67"
   }
 }

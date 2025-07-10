@@ -1007,6 +1007,11 @@
     }
   },
   "forms": {
+    "loginType": {
+      "selectMethod": "Выберите способ входа",
+      "email": "Email",
+      "phone": "Телефон"
+    },
     "partner": {
       "title": {
         "create": "Создание партнера",
@@ -1306,5 +1311,10 @@
     "message": "Вы уверены?",
     "cancel": "Отмена",
     "confirm": "Подтвердить"
+  },
+  "phoneField": {
+    "label": "Телефон",
+    "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
+    "placeholder": "+38 (067) 123-45-67"
   }
 }
