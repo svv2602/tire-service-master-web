@@ -18,8 +18,6 @@ import {
   ListItemIcon,
   Divider,
   Container,
-  Breadcrumbs,
-  Link,
   Collapse,
   Dialog,
   DialogTitle,
@@ -41,8 +39,6 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   CalendarToday as CalendarIcon,
-  NavigateNext as NavigateNextIcon,
-  Home as HomeIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -413,461 +409,388 @@ const ServicePointDetailPage: React.FC = () => {
   return (
     <ClientLayout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Хлебные крошки */}
-      <Breadcrumbs 
-        separator={<NavigateNextIcon fontSize="small" />} 
-        sx={{ mb: 3 }}
-        aria-label="breadcrumb"
-      >
-        <Link 
-          color="inherit" 
-          href="/client" 
-          sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-        >
-          <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-          {t('forms.clientPages.servicePointDetail.breadcrumbHome')}
-        </Link>
-        <Link 
-          color="inherit" 
-          href="/client/search"
-          sx={{ textDecoration: 'none' }}
-        >
-          {t('forms.clientPages.servicePointDetail.breadcrumbSearch')}
-        </Link>
-        <Typography color="text.primary">{servicePointData.name}</Typography>
-      </Breadcrumbs>
-
-      {/* Заголовок и кнопки */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Box>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-            {servicePointData.name}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <LocationIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-              <Typography variant="body1" color="text.secondary">
-                {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
-              </Typography>
+        {/* Заголовок и кнопки */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
+              {servicePointData.name}
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <LocationIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
+                <Typography variant="body1" color="text.secondary">
+                  {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
+                </Typography>
+              </Box>
+              <Chip 
+                label={servicePointData.work_status === 'working' ? t('forms.clientPages.servicePointDetail.workingStatus') : t('forms.clientPages.servicePointDetail.closedStatus')} 
+                color={servicePointData.work_status === 'working' ? 'success' : 'warning'}
+                size="small"
+              />
             </Box>
-            <Chip 
-              label={servicePointData.work_status === 'working' ? 'Работает' : 'Временно закрыто'} 
-              color={servicePointData.work_status === 'working' ? 'success' : 'warning'}
-              size="small"
-            />
+          </Box>
+          
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBack}
+            >
+              {t('forms.clientPages.servicePointDetail.backToSearch')}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<BookIcon />}
+              onClick={() => navigate(`/client/booking/new-with-availability?servicePointId=${id}`)}
+              sx={{
+                borderRadius: 3,
+                px: 4,
+                py: 1.5,
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 600,
+                boxShadow: theme.shadows[4],
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                },
+              }}
+            >
+              {t('forms.clientPages.servicePointDetail.bookNow')}
+            </Button>
           </Box>
         </Box>
-        
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleBack}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<BookIcon />}
-            onClick={handleBooking}
-            sx={{ 
-              bgcolor: theme.palette.primary.main,
-              '&:hover': { bgcolor: theme.palette.primary.dark }
-            }}
-          >
-            {t('client.servicePointDetail.bookNow')}
-          </Button>
-        </Box>
-      </Box>
 
-      <Grid container spacing={3}>
-        {/* Левая колонка - {t('client.servicePointDetail.photos')} и описание */}
-        <Grid item xs={12} lg={8}>
-          {/* Фотогалерея */}
-          <PhotoGallery 
-            photos={servicePointData.photos || []} 
-            servicePointName={servicePointData.name}
-          />
+        <Grid container spacing={3}>
+          {/* Левая колонка - Фотогалерея и описание */}
+          <Grid item xs={12} lg={8}>
+            {/* Фотогалерея */}
+            <PhotoGallery 
+              photos={servicePointData.photos || []} 
+              servicePointName={servicePointData.name}
+            />
 
-          {/* Описание */}
-          {servicePointData.description && (
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Описание
-                </Typography>
-              </Box>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap'
-                }}
-              >
-                {servicePointData.description}
-              </Typography>
-            </Paper>
-          )}
-
-          {/* Категории услуг */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                mb: 2
-              }}
-              onClick={() => setServicesExpanded(!servicesExpanded)}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <BuildIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Доступные категории услуг ({isLoadingServicesData ? '...' : serviceCategories.length})
-                </Typography>
-              </Box>
-              {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </Box>
-            
-            <Collapse in={servicesExpanded}>
-              {isLoadingServicesData ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : serviceCategories.length > 0 ? (
-                <List>
-                  {serviceCategories.map((category, categoryIndex) => (
-                    <React.Fragment key={category.id}>
-                      <ListItem sx={{ px: 0, flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
-                          <ListItemIcon sx={{ minWidth: 36 }}>
-                            <BuildIcon sx={{ color: 'primary.main' }} />
-                          </ListItemIcon>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
-                              {category.name}
-                            </Typography>
-                            {category.description && (
-                              <Typography variant="body2" color="text.secondary">
-                                {category.description}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Box>
-                        
-                        {/* Список услуг в категории */}
-                        <Box sx={{ width: 'calc(100% - 36px)', ml: 4.5, overflow: 'hidden' }}>
-                          {category.services.length > 0 ? (
-                            category.services.map((service: ServicePointService, serviceIndex: number) => (
-                              <Paper 
-                                key={service.id} 
-                                variant="outlined" 
-                                sx={{ 
-                                  p: 2, 
-                                  mb: serviceIndex < category.services.length - 1 ? 1 : 0,
-                                  bgcolor: 'action.hover',
-                                  maxWidth: '100%',
-                                  overflow: 'hidden'
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
-                                  <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                    <Typography 
-                                      variant="body2" 
-                                      sx={{ 
-                                        fontWeight: 500, 
-                                        mb: 0.5,
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
-                                      }}
-                                    >
-                                      {service.name}
-                                    </Typography>
-                                    {service.description && (
-                                      <Typography 
-                                        variant="caption" 
-                                        color="text.secondary" 
-                                        sx={{ 
-                                          display: 'block', 
-                                          mb: 1,
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap'
-                                        }}
-                                      >
-                                        {service.description}
-                                      </Typography>
-                                    )}
-                                    <Typography variant="caption" color="text.secondary">
-                                      Длительность: {service.duration} мин
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ flexShrink: 0 }}>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                                      {service.price} грн
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </Paper>
-                            ))
-                          ) : (
-                            <Paper 
-                              variant="outlined" 
-                              sx={{ 
-                                p: 2, 
-                                bgcolor: 'warning.light',
-                                border: '1px solid',
-                                borderColor: 'warning.main',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1
-                              }}
-                            >
-                              <PhoneIcon sx={{ color: 'warning.dark', fontSize: '1rem' }} />
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 500, color: 'warning.dark' }}>
-                                  {t('client.servicePointDetail.services')} в данной категории уточняйте по контактному телефону
-                                </Typography>
-                                {servicePointData.contact_phone && (
-                                  <Typography variant="caption" color="warning.dark">
-                                    {t('client.servicePointDetail.phone')}: {servicePointData.contact_phone}
-                                  </Typography>
-                                )}
-                              </Box>
-                            </Paper>
-                          )}
-                        </Box>
-                      </ListItem>
-                      {categoryIndex < serviceCategories.length - 1 && <Divider sx={{ my: 2 }} />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  {t('client.servicePointDetail.services')} не найдены
-                </Typography>
-              )}
-            </Collapse>
-          </Paper>
-        </Grid>
-
-        {/* Правая колонка - Контакты и расписание */}
-        <Grid item xs={12} lg={4}>
-          {/* Контактная информация */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-              Контактная информация
-            </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <LocationIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    {t('client.servicePointDetail.address')}
-                  </Typography>
-                  <Typography variant="body2">
-                    {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
+            {/* Описание */}
+            {servicePointData.description && (
+              <Paper sx={{ p: 3, mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <DescriptionIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t('forms.clientPages.servicePointDetail.description')}
                   </Typography>
                 </Box>
-              </Box>
-              
-              {servicePointData.contact_phone && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      {t('client.servicePointDetail.phone')}
-                    </Typography>
-                    <Typography variant="body2">
-                      <Link href={`tel:${servicePointData.contact_phone}`} color="primary">
-                        {servicePointData.contact_phone}
-                      </Link>
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-              
-              {servicePointData.partner?.company_name && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <BusinessIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Партнер
-                    </Typography>
-                    <Typography variant="body2">
-                      {servicePointData.partner.company_name}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-            </Box>
-          </Paper>
-
-          {/* Расписание работы */}
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                mb: 2
-              }}
-              onClick={() => setScheduleExpanded(!scheduleExpanded)}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Режим работы
-                </Typography>
-              </Box>
-              {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </Box>
-            
-            <Collapse in={scheduleExpanded}>
-              <List dense>
-                {schedule.map((scheduleItem, index) => (
-                  <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CalendarIcon 
-                        sx={{ 
-                          fontSize: '1rem', 
-                          color: scheduleItem.isWorkingDay ? theme.palette.success.main : 'text.secondary' 
-                        }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={scheduleItem.day}
-                      secondary={scheduleItem.time}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                      secondaryTypographyProps={{ 
-                        variant: 'caption',
-                        color: scheduleItem.isWorkingDay ? 'inherit' : 'error'
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Collapse>
-          </Paper>
-
-          {/* Кнопка записи */}
-          <Button
-            variant="contained"
-            fullWidth
-            size="large"
-            startIcon={<BookIcon />}
-            onClick={handleBooking}
-            sx={{ 
-              py: 1.5,
-              bgcolor: theme.palette.primary.main,
-              '&:hover': { bgcolor: theme.palette.primary.dark }
-            }}
-          >
-            {t('client.servicePointDetail.bookNow')} на обслуживание
-          </Button>
-        </Grid>
-      </Grid>
-
-      {/* Модальное окно выбора категории услуг */}
-      <Dialog
-        open={categoryModalOpen}
-        onClose={handleCloseModal}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            maxHeight: '80vh'
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          pb: 1
-        }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-            Выберите категорию услуг
-          </Typography>
-          <IconButton
-            aria-label="закрыть"
-            onClick={handleCloseModal}
-            sx={{ color: 'grey.500' }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        
-        <DialogContent sx={{ pt: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Пожалуйста, выберите категорию услуг для записи в {servicePointData?.name}
-          </Typography>
-          
-          <Grid container spacing={2}>
-            {serviceCategories.map((category) => (
-              <Grid item xs={12} sm={6} md={4} key={category.id}>
-                <Card 
+                <Typography 
+                  variant="body1" 
                   sx={{ 
-                    height: '100%',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: theme.shadows[4]
-                    }
+                    lineHeight: 1.6,
+                    whiteSpace: 'pre-wrap'
                   }}
                 >
-                  <CardActionArea 
-                    onClick={() => handleCategorySelect(category)}
-                    sx={{ height: '100%', p: 2 }}
-                  >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <BuildIcon sx={{ color: 'primary.main', mr: 1 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
-                          {category.name}
-                        </Typography>
-                      </Box>
-                      
-                      {category.description && (
-                        <Typography 
-                          variant="body2" 
-                          color="text.secondary" 
-                          sx={{ mb: 2, flex: 1 }}
-                        >
-                          {category.description}
-                        </Typography>
-                      )}
-                      
-                      <Box sx={{ mt: 'auto' }}>
-                        <Chip 
-                          label={`${category.services.length} ${category.services.length === 1 ? 'услуга' : 'услуги'}`}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      </Box>
-                    </Box>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
+                  {servicePointData.description}
+                </Typography>
+              </Paper>
+            )}
+
+            {/* Категории услуг */}
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  mb: 2
+                }}
+                onClick={() => setServicesExpanded(!servicesExpanded)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <BuildIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t('forms.clientPages.servicePointDetail.availableCategories')} ({isLoadingServicesData ? '...' : serviceCategories.length})
+                  </Typography>
+                </Box>
+                {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </Box>
+              
+              <Collapse in={servicesExpanded}>
+                {isLoadingServicesData ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : serviceCategories.length > 0 ? (
+                  <List>
+                    {serviceCategories.map((category, categoryIndex) => (
+                      <React.Fragment key={category.id}>
+                        <ListItem sx={{ px: 0, flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                              <BuildIcon sx={{ color: 'primary.main' }} />
+                            </ListItemIcon>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                {category.name}
+                              </Typography>
+                              {category.description && (
+                                <Typography variant="body2" color="text.secondary">
+                                  {category.description}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                          
+                          {/* Список услуг в категории */}
+                          {category.services.length > 0 ? (
+                            <Box sx={{ ml: 4, width: '100%' }}>
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                {t('forms.clientPages.servicePointDetail.servicesInCategory')}:
+                              </Typography>
+                              <List dense>
+                                {category.services.map((service: ServicePointService) => (
+                                  <ListItem key={service.id} sx={{ py: 0.5, px: 0 }}>
+                                    <ListItemText
+                                      primary={service.name}
+                                      secondary={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                          {service.price > 0 && (
+                                            <Typography variant="body2" color="primary.main" sx={{ fontWeight: 600 }}>
+                                              {service.price} грн
+                                            </Typography>
+                                          )}
+                                          {service.duration > 0 && (
+                                            <Typography variant="body2" color="text.secondary">
+                                              {service.duration} мин
+                                            </Typography>
+                                          )}
+                                        </Box>
+                                      }
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            </Box>
+                          ) : (
+                            <Box sx={{ ml: 4, width: '100%' }}>
+                              <Typography variant="body2" color="text.secondary">
+                                {t('forms.clientPages.servicePointDetail.servicesInCategory')}
+                              </Typography>
+                              <Typography variant="body2" color="primary.main">
+                                {t('forms.clientPages.servicePointDetail.phone')}: {servicePointData.contact_phone}
+                              </Typography>
+                            </Box>
+                          )}
+                        </ListItem>
+                        
+                        {categoryIndex < serviceCategories.length - 1 && <Divider sx={{ my: 2 }} />}
+                      </React.Fragment>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {t('clientPages.servicePointDetail.servicesNotFound')}
+                  </Typography>
+                )}
+              </Collapse>
+            </Paper>
           </Grid>
-        </DialogContent>
-        
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button onClick={handleCloseModal} variant="outlined">
-            Отмена
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+
+          {/* Контактная информация */}
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                {t('forms.clientPages.servicePointDetail.contactInfo')}
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <LocationIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {t('forms.clientPages.servicePointDetail.address')}
+                    </Typography>
+                    <Typography variant="body2">
+                      {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {servicePointData.contact_phone && (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t('forms.clientPages.servicePointDetail.phone')}
+                      </Typography>
+                      <Typography variant="body2">
+                        <a href={`tel:${servicePointData.contact_phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                          {servicePointData.contact_phone}
+                        </a>
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+
+                {servicePointData.partner?.company_name && (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <BusinessIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                    <Box>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t('forms.clientPages.servicePointDetail.partner')}
+                      </Typography>
+                      <Typography variant="body2">
+                        {servicePointData.partner.company_name}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            </Paper>
+
+            {/* Режим работы */}
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  mb: 2
+                }}
+                onClick={() => setScheduleExpanded(!scheduleExpanded)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <ScheduleIcon sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t('forms.clientPages.servicePointDetail.workingHours')}
+                  </Typography>
+                </Box>
+                {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </Box>
+              
+              <Collapse in={scheduleExpanded}>
+                <List dense>
+                  {schedule.map((item, index) => (
+                    <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
+                      <ListItemText
+                        primary={item.day}
+                        secondary={item.time}
+                        primaryTypographyProps={{
+                          variant: 'body2',
+                          color: item.isWorkingDay ? 'text.primary' : 'text.secondary'
+                        }}
+                        secondaryTypographyProps={{
+                          variant: 'body2',
+                          color: item.isWorkingDay ? 'text.secondary' : 'text.disabled'
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
+            </Paper>
+
+            {/* Кнопка записи */}
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<BookIcon />}
+              onClick={() => navigate(`/client/booking/new-with-availability?servicePointId=${id}`)}
+              sx={{
+                borderRadius: 3,
+                px: 4,
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                textTransform: 'none',
+                boxShadow: theme.shadows[4],
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                },
+              }}
+            >
+              {t('forms.clientPages.servicePointDetail.bookNow')} на обслуживание
+            </Button>
+          </Grid>
+        </Grid>
+
+        {/* Модальное окно выбора категории услуг */}
+        <Dialog
+          open={categoryModalOpen}
+          onClose={handleCloseModal}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              maxHeight: '80vh'
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            pb: 1
+          }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+              {t('forms.clientPages.servicePointDetail.selectCategory')}
+            </Typography>
+            <IconButton
+              aria-label={t('forms.clientPages.servicePointDetail.cancel')}
+              onClick={handleCloseModal}
+              sx={{ color: 'grey.500' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          
+          <DialogContent sx={{ pt: 1 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {t('forms.clientPages.servicePointDetail.selectCategoryDescription')} {servicePointData.name}
+            </Typography>
+            
+            <Grid container spacing={2}>
+              {serviceCategories.map((category) => (
+                <Grid item xs={12} sm={6} key={category.id}>
+                  <Card
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: theme.shadows[4]
+                      }
+                    }}
+                    onClick={() => handleCategorySelect(category)}
+                  >
+                    <CardActionArea>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <BuildIcon sx={{ mr: 1, color: 'primary.main' }} />
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {category.name}
+                          </Typography>
+                        </Box>
+                        
+                        {category.description && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            {category.description}
+                          </Typography>
+                        )}
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <CalendarIcon sx={{ fontSize: '1rem', color: 'text.secondary' }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {category.services.length} {category.services.length === 1 ? t('forms.clientPages.servicePointDetail.service') : t('forms.clientPages.servicePointDetail.services')}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </DialogContent>
+        </Dialog>
+      </Container>
     </ClientLayout>
   );
 };
