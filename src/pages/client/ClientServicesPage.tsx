@@ -69,7 +69,7 @@ import ClientLayout from '../../components/client/ClientLayout';
 
 // API импорты
 import { useGetServiceCategoriesQuery } from '../../api/services.api';
-import { useGetServicesQuery, useGetServicesByCategoryIdQuery } from '../../api/servicesList.api';
+import { useGetServicesQuery } from '../../api/servicesList.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import { useSearchServicePointsQuery, useGetRegionsWithServicePointsQuery, useGetCitiesWithServicePointsQuery } from '../../api/servicePoints.api';
@@ -137,9 +137,9 @@ const ClientServicesPage: React.FC = () => {
   const { 
     data: servicesResponse, 
     isLoading: servicesLoading 
-  } = useGetServicesByCategoryIdQuery({ 
-    categoryId: selectedCategory?.toString() || '',
-    params: { per_page: 100 }
+  } = useGetServicesQuery({ 
+    category_id: selectedCategory || undefined,
+    per_page: 100 
   }, {
     skip: !selectedCategory
   });

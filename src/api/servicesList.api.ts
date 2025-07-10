@@ -6,6 +6,7 @@ interface ServiceFilter extends PaginationFilter {
   query?: string;
   active?: boolean;
   sort?: string;
+  category_id?: number;
 }
 
 // Интерфейс для ответа API (как приходит с бэкенда)
