@@ -161,7 +161,7 @@ export const clientBookingsApi = baseApi.injectEndpoints({
     }>({
       query: ({ id, ...params }) => ({
         url: `/client_bookings/${id}/cancel`,
-        method: 'DELETE',
+        method: 'POST',
         body: params,
       }),
       invalidatesTags: (_result, _error, { id }) => [
