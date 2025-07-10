@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест фильтров услуг - Tire Service</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+        }
+        .test-button { 
+            background: #1976d2; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .test-button:hover { 
+            background: #1565c0; 
+        }
+        .result { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+        }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .info { background: #e3f2fd; color: #1976d2; }
+        .warning { background: #fff3e0; color: #f57c00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест фильтров услуг - ClientServicesPage</h1>
+        
+        <div class="test-section">
+            <h3>1. Тест API фильтров</h3>
+            <button class="test-button" onclick="testCategoryFilter()">Тест фильтра по категории</button>
+            <button class="test-button" onclick="testServiceFilter()">Тест фильтра по услуге</button>
+            <button class="test-button" onclick="testCombinedFilters()">Тест комбинированных фильтров</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Тест получения услуг по категории</h3>
+            <button class="test-button" onclick="testServicesApi()">Получить услуги категории 1</button>
+            <button class="test-button" onclick="testServicesApi2()">Получить услуги категории 2</button>
+            <div id="services-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Тест динамических регионов/городов</h3>
+            <button class="test-button" onclick="testRegionsWithCategory()">Регионы с категорией 1</button>
+            <button class="test-button" onclick="testCitiesWithCategory()">Города с категорией 1</button>
+            <div id="dynamic-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Навигация к странице</h3>
+            <button class="test-button" onclick="openServicesPage()">Открыть /client/services</button>
+            <button class="test-button" onclick="openServicesPageWithFilters()">Открыть с фильтрами</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `result ${type}`;
+            result.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(result);
+        }
+
+        async function testCategoryFilter() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search?category_id=1`);
+                const data = await response.json();
+                addResult('api-results', `✅ Фильтр по категории: найдено ${data.total} точек`, 'success');
+                console.log('Category filter response:', data);
+            } catch (error) {
+                addResult('api-results', `❌ Ошибка фильтра категории: ${error.message}`, 'error');
+            }
+        }
+
+        async function testServiceFilter() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search?service_id=1`);
+                const data = await response.json();
+                addResult('api-results', `✅ Фильтр по услуге: найдено ${data.total} точек`, 'success');
+                console.log('Service filter response:', data);
+            } catch (error) {
+                addResult('api-results', `❌ Ошибка фильтра услуги: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCombinedFilters() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search?category_id=1&service_id=1`);
+                const data = await response.json();
+                addResult('api-results', `✅ Комбинированные фильтры: найдено ${data.total} точек`, 'success');
+                console.log('Combined filters response:', data);
+            } catch (error) {
+                addResult('api-results', `❌ Ошибка комбинированных фильтров: ${error.message}`, 'error');
+            }
+        }
+
+        async function testServicesApi() {
+            try {
+                const response = await fetch(`${API_BASE}/service_categories/1/services`);
+                const data = await response.json();
+                addResult('services-results', `✅ Услуги категории 1: найдено ${data.data.length} услуг`, 'success');
+                console.log('Services API response:', data);
+            } catch (error) {
+                addResult('services-results', `❌ Ошибка API услуг: ${error.message}`, 'error');
+            }
+        }
+
+        async function testServicesApi2() {
+            try {
+                const response = await fetch(`${API_BASE}/service_categories/2/services`);
+                const data = await response.json();
+                addResult('services-results', `✅ Услуги категории 2: найдено ${data.data.length} услуг`, 'success');
+                console.log('Services API 2 response:', data);
+            } catch (error) {
+                addResult('services-results', `❌ Ошибка API услуг 2: ${error.message}`, 'error');
+            }
+        }
+
+        async function testRegionsWithCategory() {
+            try {
+                // Сначала получаем все точки с категорией 1
+                const pointsResponse = await fetch(`${API_BASE}/service_points/search?category_id=1`);
+                const pointsData = await pointsResponse.json();
+                
+                // Извлекаем уникальные регионы
+                const regions = [...new Set(pointsData.data.map(point => point.city?.region?.name).filter(Boolean))];
+                
+                addResult('dynamic-results', `✅ Регионы с категорией 1: ${regions.join(', ')}`, 'success');
+                console.log('Regions with category 1:', regions);
+            } catch (error) {
+                addResult('dynamic-results', `❌ Ошибка получения регионов: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCitiesWithCategory() {
+            try {
+                // Получаем все точки с категорией 1
+                const pointsResponse = await fetch(`${API_BASE}/service_points/search?category_id=1`);
+                const pointsData = await pointsResponse.json();
+                
+                // Извлекаем уникальные города
+                const cities = [...new Set(pointsData.data.map(point => point.city?.name).filter(Boolean))];
+                
+                addResult('dynamic-results', `✅ Города с категорией 1: ${cities.join(', ')}`, 'success');
+                console.log('Cities with category 1:', cities);
+            } catch (error) {
+                addResult('dynamic-results', `❌ Ошибка получения городов: ${error.message}`, 'error');
+            }
+        }
+
+        function openServicesPage() {
+            window.open('http://localhost:3008/client/services', '_blank');
+        }
+
+        function openServicesPageWithFilters() {
+            window.open('http://localhost:3008/client/services?category=1&service=1', '_blank');
+        }
+
+        // Автоматический тест при загрузке
+        window.onload = function() {
+            addResult('api-results', '🚀 Страница загружена. Запустите тесты для проверки фильтров.', 'info');
+        };
+    </script>
+</body>
+</html> 

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отладка страницы /client/services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4caf50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        .info { border-color: #2196f3; background-color: #e3f2fd; }
+        
+        button {
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #1565c0; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .category-name { font-weight: bold; }
+        .category-id { color: #666; font-size: 0.9em; }
+        
+        .test-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .step-result {
+            margin-top: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Отладка страницы /client/services</h1>
+        <p>Пошаговая проверка работы API и логики фронтенда</p>
+    </div>
+
+    <div class="container test-section info">
+        <h2>📋 Проблема</h2>
+        <p>Пользователь выбирает "Шиномонтаж" + "Балансування коліс", но получает неправильные результаты.</p>
+        <p><strong>Ожидаемый результат:</strong> Найти 1 сервисную точку в Днепре</p>
+        <p><strong>Фактический результат:</strong> Неправильные фильтры или отсутствие результатов</p>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 1: Проверка API категорий</h2>
+        <button onclick="testStep1()">Загрузить категории</button>
+        <div id="step1Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 2: Проверка API услуг для категории "Шиномонтаж"</h2>
+        <button onclick="testStep2()">Загрузить услуги категории ID=3</button>
+        <div id="step2Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 3: Проверка поиска с фильтрами</h2>
+        <button onclick="testStep3()">Тест category_id=3 + service_id=2</button>
+        <div id="step3Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 4: Проверка динамических регионов</h2>
+        <button onclick="testStep4()">Тест динамических регионов</button>
+        <div id="step4Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 5: Проверка динамических городов</h2>
+        <button onclick="testStep5()">Тест динамических городов</button>
+        <div id="step5Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 6: Симуляция пользовательского сценария</h2>
+        <button onclick="testStep6()">Полный сценарий пользователя</button>
+        <div id="step6Result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h2>Шаг 7: Проверка фронтенд логики</h2>
+        <button onclick="testStep7()">Тест сортировки категорий</button>
+        <div id="step7Result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        async function apiRequest(url) {
+            try {
+                console.log(`🔍 API Request: ${url}`);
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                console.log(`✅ API Response:`, data);
+                return data;
+            } catch (error) {
+                console.error('❌ API Error:', error);
+                throw error;
+            }
+        }
+
+        function showResult(elementId, content, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="test-result ${isSuccess ? 'success' : 'error'}">${content}</div>`;
+        }
+
+        async function testStep1() {
+            const resultDiv = document.getElementById('step1Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Загрузка категорий...</div></div>';
+            
+            try {
+                const data = await apiRequest(`${API_BASE}/service_categories?active=true&per_page=50`);
+                const categories = data.data || [];
+                
+                let html = '<div class="step success">';
+                html += '<div class="step-title">✅ Категории загружены</div>';
+                html += '<div class="step-result">';
+                html += `<strong>Количество:</strong> ${categories.length}<br>`;
+                html += '<strong>Порядок API:</strong><br>';
+                categories.forEach((category, index) => {
+                    html += `${index + 1}. ${category.name} (ID: ${category.id})<br>`;
+                });
+                html += '</div></div>';
+                
+                // Сохраняем для следующих шагов
+                window.testData = { categories };
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step1Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка загрузки категорий</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep2() {
+            const resultDiv = document.getElementById('step2Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Загрузка услуг...</div></div>';
+            
+            try {
+                const data = await apiRequest(`${API_BASE}/service_categories/3/services`);
+                const services = data.data || [];
+                
+                let html = '<div class="step success">';
+                html += '<div class="step-title">✅ Услуги категории "Шиномонтаж" загружены</div>';
+                html += '<div class="step-result">';
+                html += `<strong>Количество:</strong> ${services.length}<br>`;
+                html += '<strong>Список услуг:</strong><br>';
+                services.forEach((service, index) => {
+                    html += `${index + 1}. ${service.name} (ID: ${service.id})<br>`;
+                });
+                html += '</div></div>';
+                
+                // Сохраняем для следующих шагов
+                if (!window.testData) window.testData = {};
+                window.testData.services = services;
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step2Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка загрузки услуг</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep3() {
+            const resultDiv = document.getElementById('step3Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Поиск сервисных точек...</div></div>';
+            
+            try {
+                const data = await apiRequest(`${API_BASE}/service_points/search?category_id=3&service_id=2`);
+                const servicePoints = data.data || [];
+                
+                let html = '<div class="step success">';
+                html += '<div class="step-title">✅ Поиск выполнен</div>';
+                html += '<div class="step-result">';
+                html += `<strong>Фильтры:</strong> category_id=3 (Шиномонтаж) + service_id=2 (Балансування коліс)<br>`;
+                html += `<strong>Найдено:</strong> ${servicePoints.length} сервисных точек<br>`;
+                
+                if (servicePoints.length > 0) {
+                    html += '<strong>Результаты:</strong><br>';
+                    servicePoints.forEach((point, index) => {
+                        html += `${index + 1}. ${point.name} - ${point.city?.name || 'Неизвестный город'}<br>`;
+                    });
+                    
+                    // Проверяем Днепр
+                    const dniproPoint = servicePoints.find(p => p.city?.name === 'Дніпро');
+                    if (dniproPoint) {
+                        html += '<br><strong style="color: #4caf50;">✅ Сервисная точка в Днепре найдена!</strong>';
+                    } else {
+                        html += '<br><strong style="color: #ff9800;">⚠️ Сервисная точка в Днепре НЕ найдена</strong>';
+                    }
+                } else {
+                    html += '<br><strong style="color: #f44336;">❌ Сервисные точки не найдены</strong>';
+                }
+                
+                html += '</div></div>';
+                
+                // Сохраняем для следующих шагов
+                if (!window.testData) window.testData = {};
+                window.testData.servicePoints = servicePoints;
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step3Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка поиска</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep4() {
+            const resultDiv = document.getElementById('step4Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Загрузка динамических регионов...</div></div>';
+            
+            try {
+                const data = await apiRequest(`${API_BASE}/service_points/regions?category_id=3&service_id=2`);
+                const regions = data.data || [];
+                
+                let html = '<div class="step success">';
+                html += '<div class="step-title">✅ Динамические регионы загружены</div>';
+                html += '<div class="step-result">';
+                html += `<strong>Фильтры:</strong> category_id=3 + service_id=2<br>`;
+                html += `<strong>Найдено регионов:</strong> ${regions.length}<br>`;
+                
+                if (regions.length > 0) {
+                    html += '<strong>Список регионов:</strong><br>';
+                    regions.forEach((region, index) => {
+                        html += `${index + 1}. ${region.name} (ID: ${region.id})<br>`;
+                    });
+                    
+                    // Проверяем Днепропетровскую область
+                    const dniproRegion = regions.find(r => r.name.includes('Дніпропетровська'));
+                    if (dniproRegion) {
+                        html += '<br><strong style="color: #4caf50;">✅ Днепропетровская область найдена!</strong>';
+                    } else {
+                        html += '<br><strong style="color: #ff9800;">⚠️ Днепропетровская область НЕ найдена</strong>';
+                    }
+                } else {
+                    html += '<br><strong style="color: #f44336;">❌ Регионы не найдены</strong>';
+                }
+                
+                html += '</div></div>';
+                
+                // Сохраняем для следующих шагов
+                if (!window.testData) window.testData = {};
+                window.testData.regions = regions;
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step4Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка загрузки регионов</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep5() {
+            const resultDiv = document.getElementById('step5Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Загрузка динамических городов...</div></div>';
+            
+            try {
+                const data = await apiRequest(`${API_BASE}/service_points/cities?category_id=3&service_id=2`);
+                const cities = data.data || [];
+                
+                let html = '<div class="step success">';
+                html += '<div class="step-title">✅ Динамические города загружены</div>';
+                html += '<div class="step-result">';
+                html += `<strong>Фильтры:</strong> category_id=3 + service_id=2<br>`;
+                html += `<strong>Найдено городов:</strong> ${cities.length}<br>`;
+                
+                if (cities.length > 0) {
+                    html += '<strong>Список городов:</strong><br>';
+                    cities.forEach((city, index) => {
+                        html += `${index + 1}. ${city.name} (ID: ${city.id})<br>`;
+                    });
+                    
+                    // Проверяем Днепр
+                    const dniproCity = cities.find(c => c.name === 'Дніпро');
+                    if (dniproCity) {
+                        html += '<br><strong style="color: #4caf50;">✅ Днепр найден!</strong>';
+                    } else {
+                        html += '<br><strong style="color: #ff9800;">⚠️ Днепр НЕ найден</strong>';
+                    }
+                } else {
+                    html += '<br><strong style="color: #f44336;">❌ Города не найдены</strong>';
+                }
+                
+                html += '</div></div>';
+                
+                // Сохраняем для следующих шагов
+                if (!window.testData) window.testData = {};
+                window.testData.cities = cities;
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step5Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка загрузки городов</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep6() {
+            const resultDiv = document.getElementById('step6Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Симуляция пользовательского сценария...</div></div>';
+            
+            try {
+                let html = '<div class="step success">';
+                html += '<div class="step-title">🎯 Пользовательский сценарий</div>';
+                html += '<div class="step-result">';
+                
+                // Шаг 1: Пользователь выбирает категорию
+                html += '<strong>Шаг 1:</strong> Пользователь видит категории в селекте<br>';
+                if (window.testData && window.testData.categories) {
+                    const categories = window.testData.categories;
+                    html += `- Первая категория: ${categories[0]?.name} (ID: ${categories[0]?.id})<br>`;
+                    html += `- Вторая категория: ${categories[1]?.name} (ID: ${categories[1]?.id})<br>`;
+                    html += `- Третья категория: ${categories[2]?.name} (ID: ${categories[2]?.id})<br>`;
+                    
+                    // Проблема: пользователь думает что первая - это "Шиномонтаж"
+                    if (categories[0]?.name !== 'Шиномонтаж') {
+                        html += '<br><strong style="color: #f44336;">❌ ПРОБЛЕМА: Первая категория не "Шиномонтаж"!</strong><br>';
+                        html += `Пользователь думает что выбирает "Шиномонтаж", но выбирает "${categories[0]?.name}"<br>`;
+                    }
+                } else {
+                    html += '<em>Категории не загружены</em><br>';
+                }
+                
+                // Шаг 2: Что происходит при неправильном выборе
+                html += '<br><strong>Шаг 2:</strong> Если пользователь выбирает первую категорию<br>';
+                if (window.testData && window.testData.categories && window.testData.categories[0]) {
+                    const wrongCategory = window.testData.categories[0];
+                    html += `- Отправляется category_id=${wrongCategory.id} (${wrongCategory.name})<br>`;
+                    html += `- Но пользователь ожидает category_id=3 (Шиномонтаж)<br>`;
+                }
+                
+                // Шаг 3: Правильный выбор
+                html += '<br><strong>Шаг 3:</strong> Правильный выбор<br>';
+                html += '- Пользователь должен выбрать "Шиномонтаж" (ID=3)<br>';
+                html += '- Затем выбрать "Балансування коліс" (ID=2)<br>';
+                html += '- Тогда найдется сервисная точка в Днепре<br>';
+                
+                html += '</div></div>';
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step6Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка симуляции</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        async function testStep7() {
+            const resultDiv = document.getElementById('step7Result');
+            resultDiv.innerHTML = '<div class="step"><div class="step-title">Проверка фронтенд логики...</div></div>';
+            
+            try {
+                let html = '<div class="step success">';
+                html += '<div class="step-title">🔧 Фронтенд логика сортировки</div>';
+                html += '<div class="step-result">';
+                
+                if (window.testData && window.testData.categories) {
+                    const categories = window.testData.categories;
+                    
+                    // Применяем логику сортировки из фронтенда
+                    const categoryOrder = ['Шиномонтаж', 'Техническое обслуживание', 'Дополнительные услуги'];
+                    const sortedCategories = [...categories].sort((a, b) => {
+                        const indexA = categoryOrder.indexOf(a.name);
+                        const indexB = categoryOrder.indexOf(b.name);
+                        
+                        if (indexA === -1 && indexB === -1) return 0;
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
+                        
+                        return indexA - indexB;
+                    });
+                    
+                    html += '<strong>Оригинальный порядок API:</strong><br>';
+                    categories.forEach((category, index) => {
+                        html += `${index + 1}. ${category.name} (ID: ${category.id})<br>`;
+                    });
+                    
+                    html += '<br><strong>После сортировки во фронтенде:</strong><br>';
+                    sortedCategories.forEach((category, index) => {
+                        html += `${index + 1}. ${category.name} (ID: ${category.id})<br>`;
+                    });
+                    
+                    // Проверяем, что "Шиномонтаж" теперь первый
+                    if (sortedCategories[0]?.name === 'Шиномонтаж') {
+                        html += '<br><strong style="color: #4caf50;">✅ Сортировка работает! "Шиномонтаж" теперь первый!</strong><br>';
+                        html += 'Пользователь теперь правильно выберет category_id=3<br>';
+                    } else {
+                        html += '<br><strong style="color: #f44336;">❌ Сортировка не работает</strong><br>';
+                    }
+                } else {
+                    html += '<em>Категории не загружены для проверки</em><br>';
+                }
+                
+                html += '</div></div>';
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                showResult('step7Result', `<div class="step error">
+                    <div class="step-title">❌ Ошибка проверки логики</div>
+                    <div class="step-result">${error.message}</div>
+                </div>`, false);
+            }
+        }
+
+        // Автоматический запуск первого теста
+        window.addEventListener('load', () => {
+            testStep1();
+        });
+    </script>
+</body>
+</html> 

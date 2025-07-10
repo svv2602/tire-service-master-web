@@ -6,7 +6,9 @@ import type {
   ServicePointFormData,
   ServicePointStatus,
   ServicePost,
-  CategoryContact
+  CategoryContact,
+  Region,
+  City
 } from '../types/models';
 import { baseApi } from './baseApi';
 
@@ -48,6 +50,10 @@ export interface ServicePointSearchParams {
   query?: string;
   latitude?: number;
   longitude?: number;
+  category_id?: number; // Фильтр по категории услуг
+  service_id?: number;  // Фильтр по конкретной услуге
+  page?: number;        // Пагинация
+  per_page?: number;    // Количество элементов на странице
 }
 
 export interface ServicePointSearchResponse {
@@ -494,6 +500,23 @@ export const servicePointsApi = baseApi.injectEndpoints({
         { type: 'ServicePoint', id: 'LIST' }
       ],
     }),
+
+    // Динамические списки регионов и городов с учетом фильтров
+    getRegionsWithServicePoints: builder.query<ApiResponse<Region>, { category_id?: number; service_id?: number }>({
+      query: (params = {}) => ({
+        url: 'service_points/regions',
+        params: Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null))
+      }),
+      providesTags: ['ServicePoint', 'Region'],
+    }),
+
+    getCitiesWithServicePoints: builder.query<ApiResponse<City>, { category_id?: number; service_id?: number; region_id?: number }>({
+      query: (params = {}) => ({
+        url: 'service_points/cities', 
+        params: Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null))
+      }),
+      providesTags: ['ServicePoint', 'City'],
+    }),
   }),
   // Установка автоматического обновления при монтировании компонентов
   overrideExisting: false,
@@ -521,4 +544,6 @@ export const {
   useGetServicePointsByCategoryQuery,
   useGetPostsByCategoryQuery,
   useUpdateCategoryContactsMutation,
+  useGetRegionsWithServicePointsQuery,
+  useGetCitiesWithServicePointsQuery,
 } = servicePointsApi;
