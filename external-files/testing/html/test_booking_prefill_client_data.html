@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест предзаполнения данных клиента в форме бронирования</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .test-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .test-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        .status-info { background-color: #17a2b8; }
+        .user-data {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .field-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .field-comparison > div {
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .field-expected { background-color: #d4edda; }
+        .field-actual { background-color: #d1ecf1; }
+        .field-status { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест предзаполнения данных клиента в форме бронирования</h1>
+        <p><strong>Цель:</strong> Проверить, что для авторизованного клиента поля получателя услуг автоматически заполняются данными из профиля</p>
+        
+        <div class="test-section info">
+            <h3>📋 Тестовые данные</h3>
+            <div class="user-data">
+                <strong>Тестовый клиент:</strong><br>
+                Email: client@test.com<br>
+                Пароль: client123<br>
+                Имя: Тестовый<br>
+                Фамилия: Клиент<br>
+                Телефон: +380676660000
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Шаг 1: Авторизация</h3>
+            <button class="test-button" onclick="testLogin()">Авторизоваться как клиент</button>
+            <div id="loginResult" class="result-box" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>👤 Шаг 2: Получение данных пользователя</h3>
+            <button class="test-button" onclick="getCurrentUser()" disabled id="getUserBtn">Получить данные пользователя</button>
+            <div id="userResult" class="result-box" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Шаг 3: Открытие формы бронирования</h3>
+            <p>Откройте страницу бронирования в новой вкладке:</p>
+            <button class="test-button" onclick="openBookingForm()">Открыть /client/booking</button>
+            <div class="info" style="margin-top: 10px;">
+                <strong>Что проверить:</strong>
+                <ul>
+                    <li>Поля "Имя" и "Фамилия" должны быть заполнены: "Тестовый" и "Клиент"</li>
+                    <li>Поле "Телефон" должно быть заполнено: "+380676660000"</li>
+                    <li>Поле "Email" должно быть заполнено: "client@test.com"</li>
+                    <li>Должно показываться сообщение "Вы авторизованы как ..."</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Шаг 4: Проверка предзаполнения (симуляция)</h3>
+            <button class="test-button" onclick="simulatePrefill()" disabled id="simulateBtn">Симулировать предзаполнение</button>
+            <div id="prefillResult" class="result-box" style="display: none;"></div>
+            
+            <div id="fieldComparison" style="display: none;">
+                <h4>Сравнение полей:</h4>
+                <div class="field-comparison">
+                    <div class="field-expected"><strong>Ожидаемое</strong></div>
+                    <div class="field-actual"><strong>Фактическое</strong></div>
+                    <div class="field-status"><strong>Статус</strong></div>
+                </div>
+                <div id="fieldResults"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Результат теста</h3>
+            <div id="finalResult" class="result-box">
+                <span class="status-indicator status-info"></span>
+                Тест не запущен
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let authToken = null;
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        // Функция авторизации
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Авторизация...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'client@test.com',
+                            password: 'client123'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    currentUser = data.user;
+                    
+                    resultDiv.innerHTML = `✅ Авторизация успешна!\n\nДанные пользователя:\n${JSON.stringify(data.user, null, 2)}`;
+                    
+                    // Активируем следующие кнопки
+                    document.getElementById('getUserBtn').disabled = false;
+                    document.getElementById('simulateBtn').disabled = false;
+                    
+                    updateFinalResult('info', 'Авторизация пройдена, можно продолжать тест');
+                } else {
+                    resultDiv.innerHTML = `❌ Ошибка авторизации:\n${JSON.stringify(data, null, 2)}`;
+                    updateFinalResult('error', 'Ошибка авторизации');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Ошибка сети: ${error.message}`;
+                updateFinalResult('error', 'Ошибка сети при авторизации');
+            }
+        }
+
+        // Функция получения данных пользователя
+        async function getCurrentUser() {
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Получение данных пользователя...';
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentUser = data;
+                    resultDiv.innerHTML = `✅ Данные пользователя получены:\n\n${JSON.stringify(data, null, 2)}`;
+                    updateFinalResult('info', 'Данные пользователя получены');
+                } else {
+                    resultDiv.innerHTML = `❌ Ошибка получения данных:\n${JSON.stringify(data, null, 2)}`;
+                    updateFinalResult('warning', 'Ошибка получения данных пользователя');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Ошибка сети: ${error.message}`;
+                updateFinalResult('warning', 'Ошибка сети при получении данных пользователя');
+            }
+        }
+
+        // Функция открытия формы бронирования
+        function openBookingForm() {
+            if (!authToken) {
+                alert('Сначала авторизуйтесь!');
+                return;
+            }
+            
+            // Сохраняем токен в localStorage для frontend
+            localStorage.setItem('access_token', authToken);
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            // Открываем форму бронирования
+            window.open('http://localhost:3008/client/booking', '_blank');
+            
+            updateFinalResult('info', 'Форма бронирования открыта в новой вкладке');
+        }
+
+        // Функция симуляции предзаполнения
+        function simulatePrefill() {
+            if (!currentUser) {
+                alert('Сначала получите данные пользователя!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('prefillResult');
+            const comparisonDiv = document.getElementById('fieldComparison');
+            const fieldResultsDiv = document.getElementById('fieldResults');
+            
+            resultDiv.style.display = 'block';
+            comparisonDiv.style.display = 'block';
+            
+            // Ожидаемые данные
+            const expectedData = {
+                first_name: currentUser.first_name || '',
+                last_name: currentUser.last_name || '',
+                phone: currentUser.phone || '',
+                email: currentUser.email || ''
+            };
+
+            // Симулируем логику предзаполнения из NewBookingWithAvailabilityPage
+            const shouldPrefill = currentUser && currentUser.first_name && currentUser.phone;
+            
+            if (shouldPrefill) {
+                const prefilledData = {
+                    first_name: currentUser.first_name || '',
+                    last_name: currentUser.last_name || '',
+                    phone: currentUser.phone || '',
+                    email: currentUser.email || ''
+                };
+
+                resultDiv.innerHTML = `✅ Предзаполнение должно сработать!\n\nПредзаполненные данные:\n${JSON.stringify(prefilledData, null, 2)}`;
+
+                // Сравниваем поля
+                let allFieldsMatch = true;
+                let fieldHtml = '';
+                
+                Object.keys(expectedData).forEach(field => {
+                    const expected = expectedData[field];
+                    const actual = prefilledData[field];
+                    const matches = expected === actual;
+                    
+                    if (!matches) allFieldsMatch = false;
+                    
+                    fieldHtml += `
+                        <div class="field-comparison">
+                            <div class="field-expected">${field}: "${expected}"</div>
+                            <div class="field-actual">${field}: "${actual}"</div>
+                            <div class="field-status ${matches ? 'success' : 'error'}">
+                                ${matches ? '✅ Совпадает' : '❌ Не совпадает'}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                fieldResultsDiv.innerHTML = fieldHtml;
+                
+                if (allFieldsMatch) {
+                    updateFinalResult('success', 'Предзаполнение работает корректно!');
+                } else {
+                    updateFinalResult('warning', 'Предзаполнение работает, но есть несоответствия');
+                }
+            } else {
+                resultDiv.innerHTML = `❌ Предзаполнение не должно сработать!\n\nПричина: отсутствуют обязательные поля (first_name или phone)`;
+                updateFinalResult('error', 'Предзаполнение не работает - отсутствуют данные');
+            }
+        }
+
+        // Функция обновления финального результата
+        function updateFinalResult(status, message) {
+            const resultDiv = document.getElementById('finalResult');
+            const indicator = resultDiv.querySelector('.status-indicator');
+            
+            indicator.className = `status-indicator status-${status}`;
+            resultDiv.innerHTML = `<span class="status-indicator status-${status}"></span>${message}`;
+        }
+
+        // Проверяем, есть ли сохраненный токен
+        window.onload = function() {
+            const savedToken = localStorage.getItem('access_token');
+            const savedUser = localStorage.getItem('user');
+            
+            if (savedToken && savedUser) {
+                authToken = savedToken;
+                currentUser = JSON.parse(savedUser);
+                
+                document.getElementById('getUserBtn').disabled = false;
+                document.getElementById('simulateBtn').disabled = false;
+                
+                updateFinalResult('info', 'Найдены сохраненные данные авторизации');
+            }
+        };
+    </script>
+</body>
+</html> 

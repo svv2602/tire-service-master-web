@@ -80,8 +80,10 @@ export const authApi = baseApi.injectEndpoints({
           credentials: 'include', // Важно для получения куки
         };
       },
+      // Инвалидируем кеш пользователя после успешного входа
+      invalidatesTags: ['User'],
       // Логируем только успешный вход - данные пользователя управляются Redux
-      onQueryStarted: async (arg, { queryFulfilled }) => {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
         console.log('🚀 Auth API login: запрос отправлен с данными:', arg);
         try {
           const { data } = await queryFulfilled;
@@ -91,6 +93,8 @@ export const authApi = baseApi.injectEndpoints({
             hasAccessToken: !!data.access_token,
             accessTokenPreview: data.access_token ? `${data.access_token.substring(0, 20)}...` : 'отсутствует'
           });
+          // Принудительно инвалидируем кеш для получения свежих данных
+          dispatch(authApi.util.invalidateTags(['User']));
         } catch (error: any) {
           console.error('❌ Ошибка при входе:', {
             status: error.error?.status,
@@ -139,10 +143,13 @@ export const authApi = baseApi.injectEndpoints({
         credentials: 'include', // Важно для отправки куки
       }),
       // Очищаем данные при выходе
-      onQueryStarted: async (arg, { queryFulfilled }) => {
+      invalidatesTags: ['User'], // Инвалидируем кеш пользователя
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
         try {
           await queryFulfilled;
           console.log('✅ Успешный выход');
+          // Принудительно очищаем весь кеш RTK Query
+          dispatch(authApi.util.resetApiState());
         } catch (error) {
           console.error('❌ Ошибка при выходе:', error);
         }

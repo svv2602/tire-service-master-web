@@ -137,10 +137,11 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   });
   
   // API хуки для получения данных пользователя
-  const { data: authUser, isLoading: isLoadingCurrentUser, error: currentUserError } = useGetCurrentUserQuery(
+  const { data: authUser, isLoading: isLoadingCurrentUser, error: currentUserError, refetch: refetchCurrentUser } = useGetCurrentUserQuery(
     undefined,
     {
       skip: !isAuthenticated, // Пропускаем запрос если пользователь не аутентифицирован
+      refetchOnMountOrArgChange: true, // Принудительно обновляем данные при каждом посещении
     }
   );
 
@@ -190,11 +191,22 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // Эффект для предзаполнения данных пользователя
   useEffect(() => {
-    if (authUser && authUser.first_name && authUser.phone) {
+    console.log('🔍 Проверка предзаполнения данных:', {
+      isAuthenticated,
+      authUser,
+      hasFirstName: authUser?.first_name,
+      hasPhone: authUser?.phone,
+      currentRecipientData: formData.service_recipient
+    });
+    
+    if (isAuthenticated && authUser && authUser.first_name && authUser.phone) {
       // Проверяем, не заполнены ли уже данные получателя услуги
       const shouldPrefill = !formData.service_recipient.first_name && !formData.service_recipient.phone;
       
+      console.log('🔄 Решение о предзаполнении:', { shouldPrefill, authUser });
+      
       if (shouldPrefill) {
+        console.log('✅ Предзаполнение данных авторизованного пользователя:', authUser);
         setFormData(prev => ({
           ...prev,
           service_recipient: {
@@ -204,9 +216,21 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             email: authUser.email || '',
           }
         }));
+      } else {
+        console.log('⚠️ Предзаполнение пропущено - данные уже заполнены');
       }
+    } else {
+      console.log('❌ Условия для предзаполнения не выполнены');
     }
-  }, [isAuthenticated, authUser, formData]);
+  }, [isAuthenticated, authUser]); // Убираем formData из зависимостей
+  
+  // Эффект для принудительного обновления данных пользователя при монтировании
+  useEffect(() => {
+    if (isAuthenticated && refetchCurrentUser) {
+      console.log('🔄 Принудительное обновление данных пользователя...');
+      refetchCurrentUser();
+    }
+  }, []); // Выполняется только при монтировании компонента
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
