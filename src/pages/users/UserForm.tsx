@@ -51,9 +51,9 @@ import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePage
  * - Выбор типа входа: email или телефон
  * 
  * Разделы формы:
- * - t('forms.sections.loginType') (email или телефон)
- * - t('forms.sections.basicInfo') (имя, фамилия, отчество, email, телефон)
- * - t('forms.sections.roleAndStatus') (роль пользователя, активность)
+ * - t('forms.user.sections.loginType') (email или телефон)
+ * - t('forms.user.sections.basicInfo') (имя, фамилия, отчество, email, телефон)
+ * - t('forms.user.sections.roleAndStatus') (роль пользователя, активность)
  * - Пароль (обязательный при создании, опциональный при редактировании)
  */
 const UserForm: React.FC = () => {
@@ -350,7 +350,7 @@ const UserForm: React.FC = () => {
       <form onSubmit={formik.handleSubmit} autoComplete="off">
         <Paper sx={cardStyles}>
           <Grid container spacing={SIZES.spacing.lg}>
-            {/* t('forms.sections.loginType') - только для создания нового пользователя */}
+            {/* t('forms.user.sections.loginType') - только для создания нового пользователя */}
             {!isEdit && (
               <>
                 <Grid item xs={12}>
@@ -359,7 +359,7 @@ const UserForm: React.FC = () => {
                     gutterBottom 
                     sx={{ fontSize: SIZES.fontSize.lg }}
                   >
-                    {t('forms.sections.loginType')}
+                    {t('forms.user.sections.loginType')}
                   </Typography>
                   <Divider sx={{ mb: SIZES.spacing.md }} />
                 </Grid>
@@ -389,14 +389,14 @@ const UserForm: React.FC = () => {
               </>
             )}
 
-            {/* t('forms.sections.basicInfo') */}
+            {/* t('forms.user.sections.basicInfo') */}
             <Grid item xs={12}>
               <Typography 
                 variant="h6" 
                 gutterBottom 
                 sx={{ fontSize: SIZES.fontSize.lg }}
               >
-                {t('forms.sections.basicInfo')}
+                {t('forms.user.sections.basicInfo')}
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -477,7 +477,7 @@ const UserForm: React.FC = () => {
               />
             </Grid>
 
-            {/* t('forms.sections.roleAndStatus') */}
+            {/* t('forms.user.sections.roleAndStatus') */}
             <Grid item xs={12}>
               <Typography 
                 variant="h6" 
@@ -487,7 +487,7 @@ const UserForm: React.FC = () => {
                   fontSize: SIZES.fontSize.lg 
                 }}
               >
-                {t('forms.sections.roleAndStatus')}
+                {t('forms.user.sections.roleAndStatus')}
               </Typography>
               <Divider sx={{ mb: SIZES.spacing.md }} />
             </Grid>
@@ -587,7 +587,7 @@ const UserForm: React.FC = () => {
               )}
               
               {successMessage && (
-                <Alert severity="success" sx={{ mb: 2 }}>{t('forms.user.messages.success.' + (isEdit ? 'updated' : 'created'))}</Alert>
+                <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>
               )}
 
               {/* Уведомление о незаполненных обязательных полях */}
