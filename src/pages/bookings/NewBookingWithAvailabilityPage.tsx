@@ -191,29 +191,30 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // Эффект для предзаполнения данных пользователя
   useEffect(() => {
+    const userData = authUser?.user;
     console.log('🔍 Проверка предзаполнения данных:', {
       isAuthenticated,
       authUser,
-      hasFirstName: authUser?.first_name,
-      hasPhone: authUser?.phone,
+      hasFirstName: userData?.first_name,
+      hasPhone: userData?.phone,
       currentRecipientData: formData.service_recipient
     });
     
-    if (isAuthenticated && authUser && authUser.first_name && authUser.phone) {
+    if (isAuthenticated && userData && userData.first_name && userData.phone) {
       // Проверяем, не заполнены ли уже данные получателя услуги
       const shouldPrefill = !formData.service_recipient.first_name && !formData.service_recipient.phone;
       
-      console.log('🔄 Решение о предзаполнении:', { shouldPrefill, authUser });
+      console.log('🔄 Решение о предзаполнении:', { shouldPrefill, userData });
       
       if (shouldPrefill) {
-        console.log('✅ Предзаполнение данных авторизованного пользователя:', authUser);
+        console.log('✅ Предзаполнение данных авторизованного пользователя:', userData);
         setFormData(prev => ({
           ...prev,
           service_recipient: {
-            first_name: authUser.first_name || '',
-            last_name: authUser.last_name || '',
-            phone: authUser.phone || '',
-            email: authUser.email || '',
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            phone: userData.phone || '',
+            email: userData.email || '',
           }
         }));
       } else {

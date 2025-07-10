@@ -57,6 +57,21 @@ interface CurrentUserResponse {
   };
 }
 
+interface FullUserResponse {
+  user: CurrentUserResponse;
+  client?: {
+    id: number;
+    preferred_notification_method: string;
+    total_bookings: number;
+    completed_bookings: number;
+    average_rating_given: number;
+  };
+  admin_info?: {
+    role_permissions: string[];
+    last_login: string;
+  };
+}
+
 // Расширяем базовый API для работы с авторизацией
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -106,15 +121,15 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     // Получение текущего пользователя
-    getCurrentUser: builder.query<CurrentUserResponse, void>({
+    getCurrentUser: builder.query<FullUserResponse, void>({
       query: () => ({
         url: 'auth/me',
         method: 'GET',
         credentials: 'include', // Важно для отправки куки
       }),
-      transformResponse: (response: { user: CurrentUserResponse }) => {
+      transformResponse: (response: FullUserResponse) => {
         console.log('🔄 Трансформация ответа getCurrentUser:', response);
-        return response.user;
+        return response;
       },
       transformErrorResponse: (response: { status: number, data: any }) => {
         console.error('❌ Ошибка getCurrentUser:', response);

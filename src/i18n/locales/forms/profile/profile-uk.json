@@ -60,7 +60,8 @@
         "totalBookings": "Всього бронювань",
         "completedServices": "Виконаних послуг",
         "activeBookings": "Активних бронювань",
-        "statisticsUsage": "Статистика використання"
+        "statisticsUsage": "Статистика використання",
+        "clickToView": "Натисніть для перегляду"
       },
       "security": {
         "securityAccount": "Безпека акаунту",

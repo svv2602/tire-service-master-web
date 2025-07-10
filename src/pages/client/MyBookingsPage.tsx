@@ -128,7 +128,7 @@ const MyBookingsPage: React.FC = () => {
   });
 
   // Определяем client_id из API данных или из Redux
-  const clientId = clientFromApi?.client?.id || userFromApi?.client_id || currentUser?.client_id;
+  const clientId = clientFromApi?.client?.id || userFromApi?.user?.client_id || currentUser?.client_id;
   
   // Запрос на получение записей клиента
   const { data: bookingsData, isLoading, isError, error, refetch } = useGetBookingsByClientQuery(

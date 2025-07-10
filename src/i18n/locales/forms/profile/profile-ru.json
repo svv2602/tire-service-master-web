@@ -60,7 +60,8 @@
         "totalBookings": "Всего бронирований",
         "completedServices": "Выполненных услуг",
         "activeBookings": "Активных бронирований",
-        "statisticsUsage": "Статистика использования"
+        "statisticsUsage": "Статистика использования",
+        "clickToView": "Нажмите для просмотра"
       },
       "security": {
         "securityAccount": "Безопасность аккаунта",

@@ -50,7 +50,7 @@ import {
 
 // Типы
 import { RootState } from '../../store';
-import { useUpdateProfileMutation, useChangePasswordMutation } from '../../api/auth.api';
+import { useUpdateProfileMutation, useChangePasswordMutation, useGetCurrentUserQuery } from '../../api/auth.api';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/slices/authSlice';
 import { User } from '../../types/user';
@@ -143,9 +143,12 @@ const ClientProfilePage: React.FC = () => {
   const { user, isAuthenticated, isInitialized } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
-  // RTK Query мутации
+  // RTK Query мутации и запросы
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
   const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation();
+  
+  // Загружаем актуальные данные пользователя с API (включая статистику клиента)
+  const { data: currentUserData, isLoading: isLoadingUserData, error: userDataError } = useGetCurrentUserQuery();
 
   // API хуки для автомобилей
   const { data: cars = [], isLoading: carsLoading, refetch: refetchCars } = useGetMyClientCarsQuery();
@@ -716,38 +719,63 @@ const ClientProfilePage: React.FC = () => {
             <Typography variant="h6" sx={{ mb: 3, color: 'text.primary' }}>
               {t('forms.profile.statistics.statisticsUsage')}
             </Typography>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ color: 'primary.main', mb: 1 }}>
-                    0
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('forms.profile.statistics.totalBookings')}
-                  </Typography>
-                </Card>
+            {isLoadingUserData ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : userDataError ? (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                Ошибка загрузки статистики
+              </Alert>
+            ) : (
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ color: 'primary.main', mb: 1 }}>
+                      {currentUserData?.client?.total_bookings || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {t('forms.profile.statistics.totalBookings')}
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ p: 2, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ color: 'success.main', mb: 1 }}>
+                      {currentUserData?.client?.completed_bookings || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {t('forms.profile.statistics.completedServices')}
+                    </Typography>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Card 
+                    sx={{ 
+                      p: 2, 
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 3
+                      }
+                    }}
+                    onClick={() => navigate('/client/bookings')}
+                  >
+                    <Typography variant="h4" sx={{ color: 'info.main', mb: 1 }}>
+                      {currentUserData?.client ? (currentUserData.client.total_bookings - currentUserData.client.completed_bookings) : 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      {t('forms.profile.statistics.activeBookings')}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: 'info.main', mt: 1, display: 'block' }}>
+                      {t('forms.profile.statistics.clickToView')}
+                    </Typography>
+                  </Card>
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ color: 'success.main', mb: 1 }}>
-                    0
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('forms.profile.statistics.completedServices')}
-                  </Typography>
-                </Card>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Card sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ color: 'info.main', mb: 1 }}>
-                    0
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {t('forms.profile.statistics.activeBookings')}
-                  </Typography>
-                </Card>
-              </Grid>
-            </Grid>
+            )}
           </TabPanel>
 
           {/* Вкладка t('client.profile.security') */}
