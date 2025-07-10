@@ -434,33 +434,49 @@ const BookingsPage: React.FC = () => {
     {
       id: 'service_recipient',
       label: t('forms.bookings.columns.serviceRecipient'),
-      minWidth: 200,
+      minWidth: 160, // уменьшено с 200
       wrap: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
         <Box sx={tablePageStyles.avatarContainer}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
             {getClientInitials(booking)}
           </Avatar>
-          <Typography sx={{ wordBreak: 'break-word' }}>
-            {booking.service_recipient ? 
-              `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` : 
-              t('forms.bookings.dataNotAvailable')
-            }
-          </Typography>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="body2" sx={{ 
+              fontWeight: 500,
+              lineHeight: 1.3,
+              wordBreak: 'break-word',
+              hyphens: 'auto',
+              whiteSpace: 'normal',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              fontSize: '0.85rem',
+              maxWidth: '100%'
+            }}>
+              {booking.service_recipient ? 
+                `${booking.service_recipient.first_name} ${booking.service_recipient.last_name}` : 
+                t('forms.bookings.dataNotAvailable')
+              }
+            </Typography>
+          </Box>
         </Box>
       ),
     },
     {
       id: 'recipient_phone',
       label: t('forms.bookings.columns.phone'),
-      minWidth: 140,
+      minWidth: 110, // уменьшено с 140
       hideOnMobile: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <PhoneIcon fontSize="small" color="action" />
-          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          <Typography variant="body2" sx={{ 
+            wordBreak: 'break-all',
+            fontSize: '0.8rem',
+            lineHeight: 1.2
+          }}>
             {booking.service_recipient?.phone || '-'}
           </Typography>
         </Box>
@@ -469,13 +485,22 @@ const BookingsPage: React.FC = () => {
     {
       id: 'city',
       label: t('forms.bookings.columns.city'),
-      minWidth: 120,
+      minWidth: 80, // уменьшено с 90
       hideOnMobile: true,
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <LocationCityIcon fontSize="small" color="action" />
-          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          <Typography variant="body2" sx={{ 
+            wordBreak: 'break-word',
+            hyphens: 'auto',
+            whiteSpace: 'normal',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            fontSize: '0.8rem',
+            lineHeight: 1.3,
+            maxWidth: '100%'
+          }}>
             {booking.service_point?.city?.name || '-'}
           </Typography>
         </Box>
@@ -484,11 +509,21 @@ const BookingsPage: React.FC = () => {
     {
       id: 'service_point',
       label: t('forms.bookings.columns.servicePoint'),
-      minWidth: 180,
+      minWidth: 100, // уменьшено с 140
       hideOnMobile: true,
+      hideOnTablet: true, // скрываем на планшетах
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+        <Typography variant="body2" sx={{ 
+          wordBreak: 'break-word',
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          fontSize: '0.8rem',
+          lineHeight: 1.3,
+          maxWidth: '100%'
+        }}>
           {booking.service_point?.name || '-'}
         </Typography>
       ),
@@ -496,11 +531,21 @@ const BookingsPage: React.FC = () => {
     {
       id: 'service_category',
       label: t('forms.bookings.columns.serviceType'),
-      minWidth: 150,
+      minWidth: 90, // уменьшено с 120
       hideOnMobile: true,
+      hideOnTablet: true, // скрываем на планшетах
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+        <Typography variant="body2" sx={{ 
+          wordBreak: 'break-word',
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          fontSize: '0.8rem',
+          lineHeight: 1.3,
+          maxWidth: '100%'
+        }}>
           {booking.service_category?.name || '-'}
         </Typography>
       ),
@@ -508,16 +553,24 @@ const BookingsPage: React.FC = () => {
     {
       id: 'booking_datetime',
       label: t('forms.bookings.columns.dateTime'),
-      minWidth: 160,
+      minWidth: 130, // уменьшено с 160
       sortable: true,
       format: (value: any, booking: Booking) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <ScheduleIcon fontSize="small" color="action" />
-          <Box>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="body2" sx={{ 
+              fontWeight: 500,
+              fontSize: '0.8rem',
+              lineHeight: 1.1,
+              whiteSpace: 'nowrap'
+            }}>
               {booking.booking_date ? format(new Date(booking.booking_date), 'dd.MM.yyyy') : '-'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="text.secondary" sx={{
+              fontSize: '0.7rem',
+              lineHeight: 1.1
+            }}>
               {formatTime(booking.start_time)}
             </Typography>
           </Box>
@@ -527,7 +580,7 @@ const BookingsPage: React.FC = () => {
     {
       id: 'status',
       label: t('forms.bookings.columns.status'),
-      minWidth: 120,
+      minWidth: 100, // уменьшено с 120
       align: 'center',
       sortable: false,
       format: (value: any, booking: Booking) => (
@@ -545,7 +598,12 @@ const BookingsPage: React.FC = () => {
             color={getStatusChipColor(booking.status)}
             size="small"
             sx={{ 
-              minWidth: 100,
+              minWidth: 80, // уменьшено с 100
+              fontSize: '0.7rem',
+              '& .MuiChip-label': {
+                px: 1,
+                py: 0.25
+              }
             }}
           />
         </Box>
@@ -554,7 +612,7 @@ const BookingsPage: React.FC = () => {
     {
       id: 'actions',
       label: t('forms.bookings.columns.actions'),
-      minWidth: 120,
+      minWidth: 100, // уменьшено с 120
       align: 'center',
       sortable: false,
       format: (value: any, booking: Booking) => (
