@@ -196,14 +196,6 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
       tooltip: t('admin.regions.editRegion')
     },
     {
-      id: 'cities',
-      label: t('admin.cities.title'),
-      icon: <LocationCityIcon />,
-      onClick: (region: Region) => navigate(`/admin/regions/${region.id}/cities`),
-      color: 'info',
-      tooltip: t('admin.regions.manageCities')
-    },
-    {
       id: 'toggle',
       label: (region: Region) => region.is_active ? t('tables.actions.deactivate') : t('tables.actions.activate'),
       icon: (region: Region) => region.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
