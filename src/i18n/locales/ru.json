@@ -1174,6 +1174,45 @@
         "addFirst": "Добавьте первый город для начала работы"
       }
     },
+    "bookings": {
+      "form": {
+        "carBrand": "Марка автомобиля",
+        "carModel": "Модель автомобиля",
+        "licensePlate": "Государственный номер",
+        "selectCarBrand": "Выберите марку",
+        "selectCarModel": "Выберите модель",
+        "carData": "Данные автомобиля",
+        "serviceRecipientData": "Данные получателя услуги",
+        "guestBooking": "(гостевое бронирование)",
+        "firstName": "Имя",
+        "lastName": "Фамилия",
+        "phone": "Телефон",
+        "email": "Email",
+        "notes": "Примечания",
+        "selectDateTimeTitle": "Выбор даты и времени",
+        "validation": {
+          "servicePointRequired": "Выберите сервисную точку",
+          "carTypeRequired": "Выберите тип автомобиля",
+          "categoryRequired": "Выберите категорию услуг",
+          "dateRequired": "Выберите дату",
+          "startTimeRequired": "Выберите время начала",
+          "firstNameRequired": "Имя обязательно для заполнения",
+          "lastNameRequired": "Фамилия обязательна для заполнения",
+          "phoneRequired": "Телефон обязателен для заполнения"
+        },
+        "messages": {
+          "bookingCreatedSuccess": "Бронирование успешно создано",
+          "bookingUpdatedSuccess": "Бронирование успешно обновлено",
+          "bookingSaveError": "Ошибка при сохранении бронирования",
+          "bookingSaveErrorText": "Произошла ошибка при сохранении бронирования. Попробуйте еще раз.",
+          "selectServicePointError": "Сначала выберите сервисную точку",
+          "selectCategoryError": "Сначала выберите категорию услуг",
+          "invalidDateFormat": "Неверный формат даты:",
+          "timeParsingError": "Ошибка парсинга времени:",
+          "dateFormattingError": "Ошибка форматирования даты:"
+        }
+      }
+    },
     "service": {
       "title": {
         "create": "Создание категории услуг",

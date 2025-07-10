@@ -1164,6 +1164,45 @@
         "addFirst": "Додайте перше місто для початку роботи"
       }
     },
+    "bookings": {
+      "form": {
+        "carBrand": "Марка автомобіля",
+        "carModel": "Модель автомобіля",
+        "licensePlate": "Державний номер",
+        "selectCarBrand": "Оберіть марку",
+        "selectCarModel": "Оберіть модель",
+        "carData": "Дані автомобіля",
+        "serviceRecipientData": "Дані отримувача послуги",
+        "guestBooking": "(гостьове бронювання)",
+        "firstName": "Ім'я",
+        "lastName": "Прізвище",
+        "phone": "Телефон",
+        "email": "Email",
+        "notes": "Примітки",
+        "selectDateTimeTitle": "Вибір дати та часу",
+        "validation": {
+          "servicePointRequired": "Оберіть сервісну точку",
+          "carTypeRequired": "Оберіть тип автомобіля",
+          "categoryRequired": "Оберіть категорію послуг",
+          "dateRequired": "Оберіть дату",
+          "startTimeRequired": "Оберіть час початку",
+          "firstNameRequired": "Ім'я обов'язкове для заповнення",
+          "lastNameRequired": "Прізвище обов'язкове для заповнення",
+          "phoneRequired": "Телефон обов'язковий для заповнення"
+        },
+        "messages": {
+          "bookingCreatedSuccess": "Бронювання успішно створено",
+          "bookingUpdatedSuccess": "Бронювання успішно оновлено",
+          "bookingSaveError": "Помилка при збереженні бронювання",
+          "bookingSaveErrorText": "Сталася помилка при збереженні бронювання. Спробуйте ще раз.",
+          "selectServicePointError": "Спочатку оберіть сервісну точку",
+          "selectCategoryError": "Спочатку оберіть категорію послуг",
+          "invalidDateFormat": "Невірний формат дати:",
+          "timeParsingError": "Помилка парсингу часу:",
+          "dateFormattingError": "Помилка форматування дати:"
+        }
+      }
+    },
     "service": {
       "title": {
         "create": "Створення категорії послуг",

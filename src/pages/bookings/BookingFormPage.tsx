@@ -33,6 +33,7 @@ import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 import { useGetClientsQuery } from '../../api/clients.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
 import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
+import { useGetCarBrandsQuery, useGetCarModelsByBrandIdQuery } from '../../api';
 import { ServicePoint, ServiceCategory } from '../../types/models';
 import { Client } from '../../types/client';
 import { CarType } from '../../types/car';
@@ -137,6 +138,9 @@ const BookingFormPage: React.FC = () => {
   const [currentServicePointId, setCurrentServicePointId] = useState<number>(0);
   const [currentCategoryId, setCurrentCategoryId] = useState<number>(0);
   
+  // ✅ Состояние для работы с брендами и моделями автомобилей
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+  
   // RTK Query хуки
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({} as any);
   const { data: clientsData, isLoading: clientsLoading } = useGetClientsQuery({} as any);
@@ -145,7 +149,18 @@ const BookingFormPage: React.FC = () => {
   const { data: bookingData, isLoading: bookingLoading } = useGetBookingByIdQuery(id || '', { skip: !isEditMode });
   const { data: bookingStatusesData, isLoading: bookingStatusesLoading } = useGetBookingStatusesQuery();
   
-  const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || serviceCategoriesLoading || bookingStatusesLoading || (isEditMode && bookingLoading) || loading;
+  // ✅ API запросы для получения брендов и моделей автомобилей
+  const { data: carBrandsData, isLoading: carBrandsLoading } = useGetCarBrandsQuery({});
+  const { data: carModelsData, isLoading: carModelsLoading } = useGetCarModelsByBrandIdQuery(
+    { brandId: selectedBrandId?.toString() || '' },
+    { skip: !selectedBrandId }
+  );
+  
+  const isLoading = servicePointsLoading || clientsLoading || carTypesLoading || serviceCategoriesLoading || bookingStatusesLoading || (isEditMode && bookingLoading) || loading || carBrandsLoading;
+
+  // ✅ Вспомогательные переменные для работы с брендами и моделями
+  const carBrands = carBrandsData?.data || [];
+  const carModels = carModelsData?.car_models || [];
 
   // ✅ Функция для извлечения времени из полной даты
   const extractTimeFromDateTime = (dateTimeString: string): string => {
@@ -411,6 +426,14 @@ const BookingFormPage: React.FC = () => {
       formik.setFieldValue('car_model', booking.car_model || '');
       formik.setFieldValue('license_plate', booking.license_plate || '');
       
+      // ✅ Устанавливаем выбранный бренд для загрузки моделей
+      if (booking.car_brand && carBrands.length > 0) {
+        const brand = carBrands.find(b => b.name === booking.car_brand);
+        if (brand) {
+          setSelectedBrandId(brand.id);
+        }
+      }
+      
       // Загрузка услуг бронирования, если они есть
       if (booking.booking_services && booking.booking_services.length > 0) {
         const loadedServices = booking.booking_services.map((bs: any) => ({
@@ -422,7 +445,17 @@ const BookingFormPage: React.FC = () => {
         setServices(loadedServices);
       }
     }
-  }, [isEditMode, bookingData, formik.setFieldValue, setServices]);
+  }, [isEditMode, bookingData, formik.setFieldValue, setServices, carBrands]);
+
+  // ✅ Отдельный useEffect для синхронизации selectedBrandId с загруженными брендами
+  useEffect(() => {
+    if (formik.values.car_brand && carBrands.length > 0 && !selectedBrandId) {
+      const brand = carBrands.find(b => b.name === formik.values.car_brand);
+      if (brand) {
+        setSelectedBrandId(brand.id);
+      }
+    }
+  }, [formik.values.car_brand, carBrands, selectedBrandId]);
 
   // ✅ API для получения доступных временных слотов
   const { data: availabilityData, isLoading: isLoadingAvailability } = useGetSlotsForCategoryQuery(
@@ -481,6 +514,23 @@ const BookingFormPage: React.FC = () => {
   const handleStatusChange = useCallback((event: SelectChangeEvent<string>) => {
     formik.setFieldValue('status_id', event.target.value);
   }, [formik.setFieldValue]);
+
+  // ✅ Обработчики для полей автомобиля
+  const handleCarBrandChange = useCallback((event: SelectChangeEvent<string>) => {
+    const brandId = Number(event.target.value);
+    const selectedBrand = carBrands.find(b => b.id === brandId);
+    
+    setSelectedBrandId(brandId);
+    formik.setFieldValue('car_brand', selectedBrand?.name || '');
+    formik.setFieldValue('car_model', ''); // Сбрасываем модель при смене бренда
+  }, [carBrands, formik.setFieldValue]);
+
+  const handleCarModelChange = useCallback((event: SelectChangeEvent<string>) => {
+    const modelId = Number(event.target.value);
+    const selectedModel = carModels.find(m => m.id === modelId);
+    
+    formik.setFieldValue('car_model', selectedModel?.name || '');
+  }, [carModels, formik.setFieldValue]);
 
   // ✅ Обработчик изменения времени начала с автоматическим расчетом времени окончания
   const handleStartTimeChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -943,27 +993,60 @@ const BookingFormPage: React.FC = () => {
               </Grid>
               
               <Grid item xs={12} md={4}>
-                <TextField
+                <FormControl
                   fullWidth
-                  label={t('forms.bookings.form.carBrand')}
-                  value={formik.values.car_brand}
-                  onChange={(e) => formik.setFieldValue('car_brand', e.target.value)}
                   error={formik.touched.car_brand && Boolean(formik.errors.car_brand)}
-                  helperText={formik.touched.car_brand && formik.errors.car_brand}
                   sx={textFieldStyles}
-                />
+                >
+                  <InputLabel>{t('forms.bookings.form.carBrand')}</InputLabel>
+                  <Select
+                    value={selectedBrandId?.toString() || ''}
+                    onChange={handleCarBrandChange}
+                    label={t('forms.bookings.form.carBrand')}
+                    disabled={carBrandsLoading}
+                  >
+                    <MenuItem value="">
+                      <em>{t('forms.bookings.form.selectCarBrand')}</em>
+                    </MenuItem>
+                    {carBrands.map((brand) => (
+                      <MenuItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.car_brand && formik.errors.car_brand && (
+                    <FormHelperText>{formik.errors.car_brand}</FormHelperText>
+                  )}
+                </FormControl>
               </Grid>
               
               <Grid item xs={12} md={4}>
-                <TextField
+                <FormControl
                   fullWidth
-                  label={t('forms.bookings.form.carModel')}
-                  value={formik.values.car_model}
-                  onChange={(e) => formik.setFieldValue('car_model', e.target.value)}
                   error={formik.touched.car_model && Boolean(formik.errors.car_model)}
-                  helperText={formik.touched.car_model && formik.errors.car_model}
                   sx={textFieldStyles}
-                />
+                  disabled={!selectedBrandId || carModelsLoading}
+                >
+                  <InputLabel>{t('forms.bookings.form.carModel')}</InputLabel>
+                  <Select
+                    value={carModels.find(m => m.name === formik.values.car_model)?.id?.toString() || ''}
+                    onChange={handleCarModelChange}
+                    label={t('forms.bookings.form.carModel')}
+                    disabled={!selectedBrandId || carModelsLoading}
+                  >
+                    <MenuItem value="">
+                      <em>{t('forms.bookings.form.selectCarModel')}</em>
+                    </MenuItem>
+                    {carModels.map((model) => (
+                      <MenuItem key={model.id} value={model.id}>
+                        {model.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {formik.touched.car_model && formik.errors.car_model && (
+                    <FormHelperText>{formik.errors.car_model}</FormHelperText>
+                  )}
+                </FormControl>
               </Grid>
               
               <Grid item xs={12} md={4}>
