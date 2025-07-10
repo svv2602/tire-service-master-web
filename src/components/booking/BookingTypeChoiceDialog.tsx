@@ -16,6 +16,7 @@ import {
   AccountCircle as AccountIcon,
   CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { getButtonStyles } from '../../styles';
 
 export interface BookingTypeChoiceDialogProps {
@@ -35,6 +36,7 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
   onCreateWithAccount,
   onCreateWithoutAccount,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
@@ -50,7 +52,7 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
         <Box display="flex" alignItems="center" gap={2}>
           <CheckCircleIcon color="success" />
           <Typography variant="h6">
-            Создать бронирование
+            {t('bookingModals.bookingTypeChoice.title')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -58,7 +60,7 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
       <DialogContent>
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            Выберите, как вы хотите создать бронирование
+            {t('bookingModals.bookingTypeChoice.subtitle')}
           </Typography>
         </Alert>
 
@@ -83,24 +85,24 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
             <Box display="flex" alignItems="center" gap={2} mb={2}>
               <PersonAddIcon color="primary" fontSize="large" />
               <Typography variant="h6" color="primary">
-                Создать с личным кабинетом
+                {t('bookingModals.bookingTypeChoice.withAccount.title')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Рекомендуется для постоянных клиентов
+              {t('bookingModals.bookingTypeChoice.withAccount.subtitle')}
             </Typography>
             <Box component="ul" sx={{ pl: 2, mb: 0 }}>
               <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                Управление всеми бронированиями в одном месте
+                {t('bookingModals.bookingTypeChoice.withAccount.features.management')}
               </Typography>
               <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                Уведомления о записях и изменениях
+                {t('bookingModals.bookingTypeChoice.withAccount.features.notifications')}
               </Typography>
               <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                Быстрое повторное бронирование
+                {t('bookingModals.bookingTypeChoice.withAccount.features.rebooking')}
               </Typography>
               <Typography component="li" variant="body2">
-                Сохранение данных автомобилей
+                {t('bookingModals.bookingTypeChoice.withAccount.features.carData')}
               </Typography>
             </Box>
           </Box>
@@ -125,21 +127,21 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
             <Box display="flex" alignItems="center" gap={2} mb={2}>
               <GuestIcon color="action" fontSize="large" />
               <Typography variant="h6" color="text.primary">
-                Создать как гость
+                {t('bookingModals.bookingTypeChoice.asGuest.title')}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Быстрое создание без регистрации
+              {t('bookingModals.bookingTypeChoice.asGuest.subtitle')}
             </Typography>
             <Box component="ul" sx={{ pl: 2, mb: 0 }}>
               <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                Не требует создания аккаунта
+                {t('bookingModals.bookingTypeChoice.asGuest.features.noAccount')}
               </Typography>
               <Typography component="li" variant="body2" sx={{ mb: 0.5 }}>
-                Быстрое оформление
+                {t('bookingModals.bookingTypeChoice.asGuest.features.quickProcess')}
               </Typography>
               <Typography component="li" variant="body2">
-                Ограниченные возможности управления
+                {t('bookingModals.bookingTypeChoice.asGuest.features.limitations')}
               </Typography>
             </Box>
           </Box>
@@ -152,7 +154,7 @@ export const BookingTypeChoiceDialog: React.FC<BookingTypeChoiceDialogProps> = (
           variant="outlined"
           sx={secondaryButtonStyles}
         >
-          Отмена
+          {t('bookingModals.bookingTypeChoice.cancel')}
         </Button>
       </DialogActions>
     </Dialog>
