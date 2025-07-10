@@ -1056,12 +1056,12 @@
           "delete": "Удалить"
         }
       },
-      "operatorTable": {
+            "operatorTable": {
         "fullName": "ФИО",
         "dataNotLoaded": "Данные не загружены",
         "notSpecified": "Не указано"
       }
-    },
+  },
     "carBrand": {
       "title": {
         "create": "Создание бренда автомобиля",
@@ -1206,6 +1206,45 @@
         "back": "Назад к списку",
         "save": "Сохранить",
         "create": "Создать"
+      }
+    },
+    "settings": {
+      "title": "Настройки системы",
+      "tabs": {
+        "general": "Основные",
+        "notifications": "Уведомления",
+        "security": "Безопасность",
+        "integrations": "Интеграции"
+      },
+      "sections": {
+        "basic": "Основные настройки",
+        "display": "Отображение",
+        "notifications": "Настройки уведомлений",
+        "security": "Настройки безопасности"
+      },
+      "fields": {
+        "systemName": "Название системы",
+        "contactEmail": "Контактный email",
+        "supportPhone": "Телефон поддержки",
+        "defaultCity": "Город по умолчанию",
+        "dateFormat": "Формат даты",
+        "timeFormat": "Формат времени",
+        "emailNotifications": "Email уведомления",
+        "smsNotifications": "SMS уведомления"
+      },
+      "timeFormats": {
+        "24h": "24-часовой формат",
+        "12h": "12-часовой формат"
+      },
+      "buttons": {
+        "saveChanges": "Сохранить изменения"
+      },
+      "messages": {
+        "saveSuccess": "Настройки успешно сохранены",
+        "saveError": "Ошибка при сохранении настроек",
+        "securityComingSoon": "Настройки безопасности будут доступны в ближайшее время",
+        "integrationsTitle": "Интеграции",
+        "integrationsDescription": "Настройки интеграций с внешними сервисами будут доступны в ближайшее время"
       }
     },
     "common": {
