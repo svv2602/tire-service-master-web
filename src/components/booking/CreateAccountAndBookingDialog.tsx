@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useTranslation } from 'react-i18next';
 
 import { useRegisterClientMutation } from '../../api/clientAuth.api';
 import { useCreateClientBookingMutation, ClientBookingRequest } from '../../api/clientBookings.api';
@@ -42,6 +43,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   bookingData,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const dispatch = useDispatch();
   const buttonStyles = getButtonStyles(theme);
@@ -141,7 +143,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
       
     } catch (err: any) {
       console.error('❌ Ошибка создания аккаунта:', err);
-      setError(err?.data?.error || err?.data?.details?.join(', ') || 'Произошла ошибка при создании аккаунта');
+      setError(err?.data?.error || err?.data?.details?.join(', ') || t('bookingModals.createAccountAndBooking.errors.accountCreation'));
       setStep('creating');
     }
   };
@@ -254,7 +256,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
       if (err.data) {
         console.log('❌ Данные ошибки:', JSON.stringify(err.data, null, 2));
       }
-      setError(`Ошибка при создании бронирования: ${err.data?.error || err.message || 'Неизвестная ошибка'}`);
+      setError(`${t('bookingModals.createAccountAndBooking.errors.bookingCreation')}: ${err.data?.error || err.message || t('bookingModals.createAccountAndBooking.errors.unknown')}`);
       setStep('creating');
     }
   };
@@ -286,7 +288,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         return (
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
             <CircularProgress />
-            <Typography>Проверяем данные...</Typography>
+            <Typography>{t('bookingModals.createAccountAndBooking.steps.checking')}</Typography>
           </Box>
         );
       
@@ -294,9 +296,9 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         return (
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
             <CircularProgress />
-            <Typography>Создаем ваш личный кабинет...</Typography>
+            <Typography>{t('bookingModals.createAccountAndBooking.steps.creating')}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Пожалуйста, подождите
+              {t('bookingModals.createAccountAndBooking.steps.creatingSubtitle')}
             </Typography>
           </Box>
         );
@@ -305,7 +307,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         return (
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
             <CircularProgress />
-            <Typography>Создаем бронирование...</Typography>
+            <Typography>{t('bookingModals.createAccountAndBooking.steps.booking')}</Typography>
           </Box>
         );
       
@@ -313,9 +315,9 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         return (
           <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
             <CheckCircleIcon sx={{ fontSize: 48, color: 'success.main' }} />
-            <Typography variant="h6">Успешно!</Typography>
+            <Typography variant="h6">{t('bookingModals.createAccountAndBooking.steps.success')}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Личный кабинет создан и бронирование оформлено
+              {t('bookingModals.createAccountAndBooking.steps.successSubtitle')}
             </Typography>
           </Box>
         );
@@ -332,7 +334,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
           <Box display="flex" alignItems="center" gap={2}>
             <PersonAddIcon color="primary" />
             <Typography variant="h6">
-              Создание личного кабинета
+              {t('bookingModals.createAccountAndBooking.title')}
             </Typography>
           </Box>
         </DialogTitle>
@@ -361,7 +363,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
             disabled={step === 'creating' || step === 'booking'}
             sx={getButtonStyles(theme, 'secondary')}
           >
-            Отмена
+            {t('bookingModals.createAccountAndBooking.cancel')}
           </Button>
         </DialogActions>
       </Dialog>
