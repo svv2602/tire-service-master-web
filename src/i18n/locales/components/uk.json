@@ -316,7 +316,7 @@
   "timeSlotPicker": {
     "noSlots": "На вибрану дату немає доступних слотів.",
     "selectOtherDate": "Будь ласка, виберіть іншу дату.",
-    "postsAvailable": "{{available}} з {{total}} вільно",
+    "postsAvailable": "з {{total}} вільно",
     "selectedTime": "Вибраний час: {{time}}"
   },
   "dayDetailsPanel": {
