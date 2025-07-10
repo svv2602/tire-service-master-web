@@ -207,8 +207,14 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               {t('bookingModals.carData')}
             </Typography>
-            <Box sx={{ mb: 2 }}>
-              <Chip label={`${t('bookingModals.number')}: ${carData.license_plate}`} sx={{ mr: 1 }} />
+            <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              <Chip label={`${t('bookingModals.number')}: ${carData.license_plate}`} />
+              {carData.car_brand && (
+                <Chip label={`${t('bookingModals.brand')}: ${carData.car_brand}`} />
+              )}
+              {carData.car_model && (
+                <Chip label={`${t('bookingModals.model')}: ${carData.car_model}`} />
+              )}
               <Chip label={`${t('bookingModals.type')}: ${getCarTypeName(carData.car_type_id)}`} />
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
