@@ -38,14 +38,14 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
  * Проверяет обязательность полей и форматы данных
  */
 const createValidationSchema = (t: any) => Yup.object({
-  brand_id: Yup.number().required(t('admin.clients.cars.form.validation.required')),
-  model_id: Yup.number().required(t('admin.clients.cars.form.validation.required')),
+  brand_id: Yup.number().required(t('admin.clients.carsManagement.form.validation.required')),
+  model_id: Yup.number().required(t('admin.clients.carsManagement.form.validation.required')),
   year: Yup.number()
-    .min(1900, t('admin.clients.cars.form.validation.yearMin'))
-    .max(new Date().getFullYear(), t('admin.clients.cars.form.validation.yearMax'))
-    .required(t('admin.clients.cars.form.validation.required')),
+    .min(1900, t('admin.clients.carsManagement.form.validation.yearMin'))
+    .max(new Date().getFullYear(), t('admin.clients.carsManagement.form.validation.yearMax'))
+    .required(t('admin.clients.carsManagement.form.validation.required')),
   license_plate: Yup.string()
-    .required(t('admin.clients.cars.form.validation.required')),
+    .required(t('admin.clients.carsManagement.form.validation.required')),
   car_type_id: Yup.number().nullable(),
   is_primary: Yup.boolean(),
 });
@@ -136,15 +136,32 @@ const ClientCarFormPage: React.FC = () => {
       try {
         setSuccessMessage('');
         if (isEditMode && carId && clientId) {
-          await updateCar({ clientId, carId, data: values }).unwrap();
-          setSuccessMessage(t('admin.clients.cars.form.messages.carUpdated'));
+          console.log('Отправляем данные для обновления:', values);
+          await updateCar({ clientId, carId, data: { car: values } }).unwrap();
+          setSuccessMessage(t('admin.clients.carsManagement.form.messages.carUpdated'));
         } else if (clientId) {
+          console.log('Отправляем данные для создания:', values);
           await createCar({ clientId, data: { car: values } }).unwrap();
-          setSuccessMessage(t('admin.clients.cars.form.messages.carCreated'));
+          setSuccessMessage(t('admin.clients.carsManagement.form.messages.carCreated'));
         }
         setTimeout(() => navigate(`/admin/clients/${clientId}/cars`), 1000);
       } catch (error) {
         console.error('Ошибка при сохранении автомобиля:', error);
+        console.log('Детали ошибки:', JSON.stringify(error, null, 2));
+        
+        // Показываем сообщение об ошибке пользователю
+        let errorMessage = 'Произошла ошибка при сохранении автомобиля';
+        if (error && typeof error === 'object' && 'data' in error) {
+          const errorData = error.data as any;
+          if (errorData && errorData.errors) {
+            errorMessage = Object.values(errorData.errors).flat().join(', ');
+          } else if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        }
+        setSuccessMessage(''); // Очищаем сообщение об успехе
+        // Можно добавить состояние для ошибки или использовать alert
+        alert(`Ошибка: ${errorMessage}`);
       }
     },
   });
@@ -188,7 +205,7 @@ const ClientCarFormPage: React.FC = () => {
     return (
       <Box sx={{ p: SIZES.spacing.xl }}>
         <Alert severity="error">
-          {t('admin.clients.cars.form.messages.clientNotFound')}
+          {t('admin.clients.carsManagement.form.messages.clientNotFound')}
         </Alert>
       </Box>
     );
@@ -203,10 +220,10 @@ const ClientCarFormPage: React.FC = () => {
           onClick={handleCancel}
           sx={{ mr: 2 }}
         >
-          {t('admin.clients.cars.form.buttons.back')}
+          {t('admin.clients.carsManagement.form.buttons.back')}
         </Button>
         <Typography variant="h4">
-          {isEditMode ? t('admin.clients.cars.form.title.edit') : t('admin.clients.cars.form.title.create')}
+          {isEditMode ? t('admin.clients.carsManagement.form.title.edit') : t('admin.clients.carsManagement.form.title.create')}
         </Typography>
       </Box>
 
@@ -227,7 +244,7 @@ const ClientCarFormPage: React.FC = () => {
             mb: SIZES.spacing.lg 
           }}
         >
-          {isEditMode ? t('admin.clients.cars.form.title.editHeader') : t('admin.clients.cars.form.title.createHeader')}
+          {isEditMode ? t('admin.clients.carsManagement.form.title.editHeader') : t('admin.clients.carsManagement.form.title.createHeader')}
         </Typography>
 
         <form onSubmit={formik.handleSubmit}>
@@ -239,7 +256,7 @@ const ClientCarFormPage: React.FC = () => {
                 error={formik.touched.brand_id && Boolean(formik.errors.brand_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel>{t('admin.clients.cars.form.fields.brand')}</InputLabel>
+                <InputLabel>{t('admin.clients.carsManagement.form.fields.brand')}</InputLabel>
                 <Select
                   name="brand_id"
                   value={formik.values.brand_id || ''}
@@ -248,11 +265,11 @@ const ClientCarFormPage: React.FC = () => {
                     // Сбрасываем модель при смене марки
                     formik.setFieldValue('model_id', 0);
                   }}
-                  label={t('admin.clients.cars.form.fields.brand')}
+                  label={t('admin.clients.carsManagement.form.fields.brand')}
                   disabled={isLoadingBrands}
                 >
                   <MenuItem value="">
-                    <em>{t('admin.clients.cars.form.placeholders.selectBrand')}</em>
+                    <em>{t('admin.clients.carsManagement.form.placeholders.selectBrand')}</em>
                   </MenuItem>
                   {carBrands.map((brand) => (
                     <MenuItem key={brand.id} value={brand.id}>
@@ -276,16 +293,16 @@ const ClientCarFormPage: React.FC = () => {
                 sx={textFieldStyles}
                 disabled={!formik.values.brand_id || isLoadingModels}
               >
-                <InputLabel>{t('admin.clients.cars.form.fields.model')}</InputLabel>
+                <InputLabel>{t('admin.clients.carsManagement.form.fields.model')}</InputLabel>
                 <Select
                   name="model_id"
                   value={formik.values.model_id || ''}
                   onChange={(e) => formik.setFieldValue('model_id', Number(e.target.value))}
-                  label={t('admin.clients.cars.form.fields.model')}
+                  label={t('admin.clients.carsManagement.form.fields.model')}
                   disabled={!formik.values.brand_id || isLoadingModels}
                 >
                   <MenuItem value="">
-                    <em>{t('admin.clients.cars.form.placeholders.selectModel')}</em>
+                    <em>{t('admin.clients.carsManagement.form.placeholders.selectModel')}</em>
                   </MenuItem>
                   {carModels.map((model) => (
                     <MenuItem key={model.id} value={model.id}>
@@ -306,7 +323,7 @@ const ClientCarFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="year"
-                label={t('admin.clients.cars.form.fields.year')}
+                label={t('admin.clients.carsManagement.form.fields.year')}
                 type="number"
                 value={formik.values.year}
                 onChange={formik.handleChange}
@@ -321,7 +338,7 @@ const ClientCarFormPage: React.FC = () => {
               <TextField
                 fullWidth
                 name="license_plate"
-                label={t('admin.clients.cars.form.fields.licensePlate')}
+                label={t('admin.clients.carsManagement.form.fields.licensePlate')}
                 value={formik.values.license_plate}
                 onChange={formik.handleChange}
                 error={formik.touched.license_plate && Boolean(formik.errors.license_plate)}
@@ -337,16 +354,16 @@ const ClientCarFormPage: React.FC = () => {
                 error={formik.touched.car_type_id && Boolean(formik.errors.car_type_id)}
                 sx={textFieldStyles}
               >
-                <InputLabel>{t('admin.clients.cars.form.fields.carType')}</InputLabel>
+                <InputLabel>{t('admin.clients.carsManagement.form.fields.carType')}</InputLabel>
                 <Select
                   name="car_type_id"
                   value={formik.values.car_type_id || ''}
                   onChange={(e) => formik.setFieldValue('car_type_id', Number(e.target.value) || null)}
-                  label={t('admin.clients.cars.form.fields.carType')}
+                  label={t('admin.clients.carsManagement.form.fields.carType')}
                   disabled={isLoadingTypes}
                 >
                   <MenuItem value="">
-                    <em>{t('admin.clients.cars.form.placeholders.selectType')}</em>
+                    <em>{t('admin.clients.carsManagement.form.placeholders.selectType')}</em>
                   </MenuItem>
                   {carTypes.map((type) => (
                     <MenuItem key={type.id} value={type.id}>
@@ -372,7 +389,7 @@ const ClientCarFormPage: React.FC = () => {
                     onChange={formik.handleChange}
                   />
                 }
-                label={t('admin.clients.cars.form.fields.isPrimary')}
+                label={t('admin.clients.carsManagement.form.fields.isPrimary')}
               />
             </Grid>
 
@@ -389,7 +406,7 @@ const ClientCarFormPage: React.FC = () => {
                   onClick={handleCancel}
                   sx={secondaryButtonStyles}
                 >
-                  {t('admin.clients.cars.form.buttons.cancel')}
+                  {t('admin.clients.carsManagement.form.buttons.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -397,7 +414,7 @@ const ClientCarFormPage: React.FC = () => {
                   disabled={isLoading}
                   sx={primaryButtonStyles}
                 >
-                  {isEditMode ? t('admin.clients.cars.form.buttons.save') : t('admin.clients.cars.form.buttons.create')}
+                  {isEditMode ? t('admin.clients.carsManagement.form.buttons.save') : t('admin.clients.carsManagement.form.buttons.create')}
                 </Button>
               </Box>
             </Grid>

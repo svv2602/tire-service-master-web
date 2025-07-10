@@ -142,9 +142,9 @@ export const clientsApi = baseApi.injectEndpoints({
 
     updateClientCar: builder.mutation<
       ClientCar,
-      { clientId: string; carId: string; data: Partial<ClientCarFormData> }
+      { clientId: string; carId: string; data: { car: Partial<ClientCarFormData> } }
     >({
-      query: ({ clientId, carId, data }: { clientId: string; carId: string; data: Partial<ClientCarFormData> }) => ({
+      query: ({ clientId, carId, data }: { clientId: string; carId: string; data: { car: Partial<ClientCarFormData> } }) => ({
         url: `clients/${clientId}/cars/${carId}`,
         method: 'PATCH',
         body: data,
