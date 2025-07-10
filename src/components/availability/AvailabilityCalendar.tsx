@@ -140,6 +140,11 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
           shouldDisableDate={shouldDisableDate}
           minDate={minDate}
           maxDate={defaultMaxDate}
+          // Принудительно убираем выделение даты по умолчанию
+          defaultValue={null}
+          // Отключаем автоматическое выделение текущей даты
+          views={['day']}
+          openTo="day"
           sx={{
             width: '100%',
             '& .MuiPickersDay-root': {
@@ -153,23 +158,26 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
                 color: colors.textPrimary,
               },
             },
-            '& .MuiPickersDay-root.Mui-selected': {
-              backgroundColor: theme.palette.mode === 'dark' ? '#2196F3' : '#1976D2',
-              color: '#ffffff',
-              fontWeight: 700,
-              border: `2px solid ${theme.palette.mode === 'dark' ? '#42A5F5' : '#1565C0'}`,
-              boxShadow: theme.palette.mode === 'dark' 
-                ? '0 0 0 2px rgba(33, 150, 243, 0.3), 0 4px 12px rgba(33, 150, 243, 0.4)' 
-                : '0 0 0 2px rgba(25, 118, 210, 0.3), 0 4px 12px rgba(25, 118, 210, 0.4)',
-              '&:hover': {
-                backgroundColor: theme.palette.mode === 'dark' ? '#42A5F5' : '#1565C0',
+            // Стили для выбранного дня - только когда selectedDate не null
+            ...(selectedDate && {
+              '& .MuiPickersDay-root.Mui-selected': {
+                backgroundColor: theme.palette.mode === 'dark' ? '#2196F3' : '#1976D2',
                 color: '#ffffff',
-                transform: 'scale(1.05)',
+                fontWeight: 700,
+                border: `2px solid ${theme.palette.mode === 'dark' ? '#42A5F5' : '#1565C0'}`,
                 boxShadow: theme.palette.mode === 'dark' 
-                  ? '0 0 0 3px rgba(66, 165, 245, 0.4), 0 6px 16px rgba(66, 165, 245, 0.5)' 
-                  : '0 0 0 3px rgba(21, 101, 192, 0.4), 0 6px 16px rgba(21, 101, 192, 0.5)',
+                  ? '0 0 0 2px rgba(33, 150, 243, 0.3), 0 4px 12px rgba(33, 150, 243, 0.4)' 
+                  : '0 0 0 2px rgba(25, 118, 210, 0.3), 0 4px 12px rgba(25, 118, 210, 0.4)',
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'dark' ? '#42A5F5' : '#1565C0',
+                  color: '#ffffff',
+                  transform: 'scale(1.05)',
+                  boxShadow: theme.palette.mode === 'dark' 
+                    ? '0 0 0 3px rgba(66, 165, 245, 0.4), 0 6px 16px rgba(66, 165, 245, 0.5)' 
+                    : '0 0 0 3px rgba(21, 101, 192, 0.4), 0 6px 16px rgba(21, 101, 192, 0.5)',
+                },
               },
-            },
+            }),
             '& .MuiPickersDay-root.Mui-disabled': {
               color: colors.textSecondary,
               textDecoration: 'line-through',
@@ -180,34 +188,20 @@ export const AvailabilityCalendar: React.FC<AvailabilityCalendarProps> = ({
               },
             },
             '& .MuiPickersDay-today': {
-              border: `3px solid ${theme.palette.mode === 'dark' ? '#ffffff' : '#000000'}`,
-              backgroundColor: theme.palette.mode === 'dark' 
-                ? 'rgba(255, 255, 255, 0.15)' 
-                : 'rgba(0, 0, 0, 0.08)',
-              color: theme.palette.mode === 'dark' ? '#ffffff' : '#000000',
-              fontWeight: 700,
-              position: 'relative',
-              boxShadow: theme.palette.mode === 'dark' 
-                ? '0 0 0 1px rgba(255, 255, 255, 0.3)' 
-                : '0 0 0 1px rgba(0, 0, 0, 0.2)',
-              '&:not(.Mui-selected)': {
-                border: `3px solid ${theme.palette.mode === 'dark' ? '#ffffff' : '#000000'}`,
+              border: `1px solid ${theme.palette.mode === 'dark' ? '#ffffff' : '#000000'}`,
+              fontWeight: 600,
+              backgroundColor: 'transparent',
+              color: colors.textPrimary,
+              
+              '&:hover': {
                 backgroundColor: theme.palette.mode === 'dark' 
-                  ? 'rgba(255, 255, 255, 0.15)' 
-                  : 'rgba(0, 0, 0, 0.08)',
-                color: theme.palette.mode === 'dark' ? '#ffffff' : '#000000',
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' 
-                    ? 'rgba(255, 255, 255, 0.25)' 
-                    : 'rgba(0, 0, 0, 0.15)',
-                  color: theme.palette.mode === 'dark' ? '#ffffff' : '#000000',
-                  transform: 'scale(1.1)',
-                  boxShadow: theme.palette.mode === 'dark' 
-                    ? '0 4px 12px rgba(255, 255, 255, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.5)' 
-                    : '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(0, 0, 0, 0.3)',
-                  border: `3px solid ${theme.palette.mode === 'dark' ? '#ffffff' : '#000000'}`,
-                },
+                  ? 'rgba(255, 255, 255, 0.08)' 
+                  : 'rgba(0, 0, 0, 0.04)',
+                color: colors.textPrimary,
               },
+              
+              // Убираем автоматическое выделение для сегодняшнего дня
+              // Сегодняшний день будет только обведен рамкой, но не выделен синим
               '&.Mui-selected': {
                 backgroundColor: theme.palette.mode === 'dark' ? '#ffffff' : '#000000',
                 color: theme.palette.mode === 'dark' ? '#000000' : '#ffffff',

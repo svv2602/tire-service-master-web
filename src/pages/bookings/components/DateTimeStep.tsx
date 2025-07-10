@@ -98,15 +98,9 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       } catch (error) {
         console.error('Error parsing date:', error);
       }
-    } else {
-      // Если дата не выбрана, устанавливаем завтра по умолчанию
-      const tomorrow = addDays(new Date(), 1);
-      setSelectedDate(tomorrow);
-      setFormData((prev: any) => ({
-        ...prev,
-        booking_date: format(tomorrow, 'yyyy-MM-dd'),
-      }));
     }
+    // УБРАНА АВТОМАТИЧЕСКАЯ УСТАНОВКА ЗАВТРАШНЕЙ ДАТЫ
+    // Теперь дата выделяется только после клика пользователя
     
     if (formData.start_time) {
       setSelectedTimeSlot(formData.start_time);

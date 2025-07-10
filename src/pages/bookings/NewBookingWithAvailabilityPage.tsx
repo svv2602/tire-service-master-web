@@ -33,6 +33,7 @@ import { AddCarToProfileDialog } from '../../components/booking/AddCarToProfileD
 
 // Импорт шагов формы
 import {
+  QuickFavoritesStep,
   CityServicePointStep,
   DateTimeStep,
   ClientInfoStep,
@@ -49,6 +50,7 @@ import {
 } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useGetMyClientCarsQuery } from '../../api/clients.api';
+import { useGetFavoritePointsByCategoryQuery } from '../../api/favoritePoints.api';
 
 // Импорт утилит
 import { shouldOfferToAddCar, prepareCarDataForDialog } from '../../utils/carUtils';
@@ -110,6 +112,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
+  // Состояние для быстрого бронирования
+  const [showQuickFavorites, setShowQuickFavorites] = useState(false);
+  const [hasCheckedFavorites, setHasCheckedFavorites] = useState(false);
+  
   // Состояние модального окна успеха
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
@@ -149,6 +155,19 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const { data: clientCars = [], refetch: refetchClientCars } = useGetMyClientCarsQuery(undefined, {
     skip: !isAuthenticated, // Пропускаем если пользователь не авторизован
   });
+
+  // API хук для любимых точек (только для авторизованных пользователей)
+  const { 
+    data: favoritesData, 
+    isLoading: isLoadingFavorites,
+    error: favoritesError 
+  } = useGetFavoritePointsByCategoryQuery(
+    (authUser as any)?.client?.id || authUser?.user?.client_id || 0,
+    {
+      skip: !isAuthenticated || (!((authUser as any)?.client?.id) && !authUser?.user?.client_id),
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   // Мемоизированная конфигурация шагов с переводами
   const STEPS = useMemo(() => [
@@ -231,7 +250,35 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       console.log('🔄 Принудительное обновление данных пользователя...');
       refetchCurrentUser();
     }
-  }, []); // Выполняется только при монтировании компонента
+  }, []);
+
+  // ✅ Эффект для проверки любимых точек у авторизованного пользователя
+  useEffect(() => {
+    const clientId = (authUser as any)?.client?.id || authUser?.user?.client_id;
+    
+    if (isAuthenticated && clientId && !hasCheckedFavorites) {
+      console.log('🌟 Проверяем наличие любимых точек для пользователя:', clientId);
+      
+      if (!isLoadingFavorites && favoritesData) {
+        console.log('📊 Данные любимых точек получены:', favoritesData);
+        
+        if (favoritesData.has_favorites && favoritesData.categories_with_favorites.length > 0) {
+          console.log('✅ У пользователя есть любимые точки, показываем быстрое бронирование');
+          setShowQuickFavorites(true);
+          setActiveStep(-1); // Устанавливаем специальный шаг для быстрого бронирования
+        } else {
+          console.log('ℹ️ У пользователя нет любимых точек, используем обычный процесс');
+          setShowQuickFavorites(false);
+        }
+        
+        setHasCheckedFavorites(true);
+      }
+    } else if (!isAuthenticated) {
+      console.log('👤 Пользователь не авторизован, пропускаем проверку любимых точек');
+      setShowQuickFavorites(false);
+      setHasCheckedFavorites(true);
+    }
+  }, [isAuthenticated, authUser, isLoadingFavorites, favoritesData, hasCheckedFavorites]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
@@ -605,25 +652,61 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       car_model: '',
       car_type_id: undefined,
     });
-    // Показываем диалог успеха после закрытия диалога добавления автомобиля
     setSuccessDialogOpen(true);
   };
 
+  // Обработчик добавления автомобиля в профиль
   const handleCarAdded = (addedCar: any) => {
-    console.log('✅ Автомобиль добавлен в профиль:', addedCar);
+    console.log('🚗 Автомобиль добавлен в профиль:', addedCar);
+    refetchClientCars(); // Обновляем список автомобилей
     setAddCarDialogOpen(false);
-    setCarDataForDialog({
-      license_plate: '',
-      car_brand: '',
-      car_model: '',
-      car_type_id: undefined,
-    });
-    refetchClientCars(); // Обновляем список автомобилей клиента
-    setSuccessDialogOpen(true); // Показываем модальное окно успеха
+    setSuccessDialogOpen(true);
+  };
+
+  // ✅ Обработчики для быстрого бронирования
+  const handleQuickFavoritesSelect = (categoryId: number, servicePointId: number) => {
+    console.log('🌟 Выбор через быстрое бронирование:', { categoryId, servicePointId });
+    
+    // Устанавливаем выбранные значения в formData
+    setFormData(prev => ({
+      ...prev,
+      service_category_id: categoryId,
+      service_point_id: servicePointId,
+    }));
+    
+    // Переходим к шагу выбора даты и времени
+    setActiveStep(2);
+    setShowQuickFavorites(false);
+  };
+
+  const handleUseRegularSearch = () => {
+    console.log('🔍 Переход к обычному поиску');
+    setShowQuickFavorites(false);
+    setActiveStep(0); // Переходим к первому шагу (выбор категории)
   };
   
   // Рендер текущего шага
   const renderCurrentStep = () => {
+    // Специальный случай для быстрого бронирования через любимые точки
+    if (activeStep === -1 && showQuickFavorites) {
+      const clientId = (authUser as any)?.client?.id || authUser?.user?.client_id;
+      
+      if (!clientId) {
+        console.error('❌ Не удалось определить ID клиента для любимых точек');
+        setShowQuickFavorites(false);
+        setActiveStep(0);
+        return null;
+      }
+      
+      return (
+        <QuickFavoritesStep
+          clientId={clientId}
+          onCategoryAndServicePointSelect={handleQuickFavoritesSelect}
+          onUseRegularSearch={handleUseRegularSearch}
+        />
+      );
+    }
+    
     const CurrentStepComponent = STEPS[activeStep].component;
     
     // Для шага CarTypeStep передаем дополнительный проп onStepChange
@@ -664,17 +747,19 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           </Box>
           
           {/* Stepper */}
-          <Paper sx={{ ...getCardStyles(theme), mb: 3, p: 3 }}>
-            <Stepper
-              steps={STEPS.map(step => ({
-                label: step.label,
-                content: <div />
-              }))}
-              activeStep={activeStep}
-              onStepChange={handleStepClick}
-              orientation={isMobile ? 'vertical' : 'horizontal'}
-            />
-          </Paper>
+          {activeStep !== -1 && (
+            <Paper sx={{ ...getCardStyles(theme), mb: 3, p: 3 }}>
+              <Stepper
+                steps={STEPS.map(step => ({
+                  label: step.label,
+                  content: <div />
+                }))}
+                activeStep={activeStep}
+                onStepChange={handleStepClick}
+                orientation={isMobile ? 'vertical' : 'horizontal'}
+              />
+            </Paper>
+          )}
           
           {/* Контент шага */}
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
@@ -687,54 +772,56 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
               </Alert>
             )}
             
-            {/* Кнопки навигации */}
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              mt: 4,
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: 2
-            }}>
-              {/* Кнопка "Назад" */}
-              <Button
-                onClick={handleBack}
-                disabled={activeStep === 0}
-                startIcon={<ArrowBackIcon />}
-                variant="outlined"
-                size="large"
-                sx={{ ...secondaryButtonStyles, minWidth: isMobile ? '100%' : 120 }}
-              >
-                {t('booking.back')}
-              </Button>
-              
-              {/* Кнопка "Далее" или "Создать бронирование" */}
-              {activeStep === STEPS.length - 1 ? (
+            {/* Кнопки навигации - скрываем для быстрого бронирования */}
+            {activeStep !== -1 && (
+              <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mt: 4,
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: 2
+              }}>
+                {/* Кнопка "Назад" */}
                 <Button
-                  onClick={handleSubmit}
-                  disabled={!isCurrentStepValid || isSubmitting}
-                  endIcon={isSubmitting ? <CircularProgress size={20} /> : <CheckCircleIcon />}
-                  variant="contained"
+                  onClick={handleBack}
+                  disabled={activeStep === 0}
+                  startIcon={<ArrowBackIcon />}
+                  variant="outlined"
                   size="large"
-                  color="primary"
-                  sx={{ minWidth: isMobile ? '100%' : 200 }}
+                  sx={{ ...secondaryButtonStyles, minWidth: isMobile ? '100%' : 120 }}
                 >
-                  {isSubmitting ? t('booking.creating') : t('booking.createBooking')}
+                  {t('booking.back')}
                 </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  disabled={!isCurrentStepValid}
-                  endIcon={<ArrowForwardIcon />}
-                  variant="contained"
-                  size="large"
-                  color="primary"
-                  sx={{ minWidth: isMobile ? '100%' : 120 }}
-                >
-                  {t('booking.next')}
-                </Button>
-              )}
-            </Box>
+                
+                {/* Кнопка "Далее" или "Создать бронирование" */}
+                {activeStep === STEPS.length - 1 ? (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isCurrentStepValid || isSubmitting}
+                    endIcon={isSubmitting ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+                    variant="contained"
+                    size="large"
+                    color="primary"
+                    sx={{ minWidth: isMobile ? '100%' : 200 }}
+                  >
+                    {isSubmitting ? t('booking.creating') : t('booking.createBooking')}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    disabled={!isCurrentStepValid}
+                    endIcon={<ArrowForwardIcon />}
+                    variant="contained"
+                    size="large"
+                    color="primary"
+                    sx={{ minWidth: isMobile ? '100%' : 120 }}
+                  >
+                    {t('booking.next')}
+                  </Button>
+                )}
+              </Box>
+            )}
           </Paper>
         </Container>
       </Box>
