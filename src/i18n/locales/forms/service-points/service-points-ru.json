@@ -278,6 +278,25 @@
         "noActivePostsWarning": "В категории \"{{categoryName}}\" нет активных постов",
         "unknownCategory": "Неизвестная категория"
       },
+      "days": {
+        "sunday": "Воскресенье",
+        "monday": "Понедельник", 
+        "tuesday": "Вторник",
+        "wednesday": "Среда",
+        "thursday": "Четверг",
+        "friday": "Пятница",
+        "saturday": "Суббота"
+      },
+      "schedule": {
+        "atLeastOneWorkingDay": "Необходимо указать хотя бы один рабочий день",
+        "workingDay": "Рабочий день",
+        "startTime": "Начало работы",
+        "endTime": "Конец работы",
+        "quickActions": "Быстрые действия",
+        "standardSchedule": "Стандартный график (Пн-Пт 9:00-18:00)",
+        "dailySchedule": "Ежедневно (8:00-20:00)",
+        "clearAll": "Очистить все"
+      },
       "services": {
         "title": "Управление услугами",
         "description": "Выберите услуги, которые предоставляет данная сервисная точка",
