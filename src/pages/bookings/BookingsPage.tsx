@@ -273,7 +273,7 @@ const BookingsPage: React.FC = () => {
   }, [deleteBooking, refetchBookings, t]);
 
   const handleCreateBooking = useCallback(() => {
-    navigate('/client/booking/new-with-availability');
+    navigate('/client/booking');
   }, [navigate]);
 
   // Обработчик сортировки

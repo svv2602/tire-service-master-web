@@ -98,7 +98,7 @@ const FavoritePointsTab: React.FC<FavoritePointsTabProps> = ({ onNotify }) => {
   };
 
   const handleBookingClick = (servicePointId: number, categoryId: number) => {
-    navigate(`/client/booking/new-with-availability?service_point_id=${servicePointId}&category_id=${categoryId}`);
+    navigate(`/client/booking?service_point_id=${servicePointId}&category_id=${categoryId}`);
   };
 
   const handleOpenConfirmDialog = (pointId: number) => {

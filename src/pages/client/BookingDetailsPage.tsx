@@ -398,17 +398,17 @@ const BookingDetailsPage: React.FC = () => {
         </Box>
         
         {/* Получатель услуги - компактно */}
-        {booking.client && (
+        {booking.service_recipient && (
           <>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ mb: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                 <PersonIcon sx={{ mr: 1, color: colors.primary, fontSize: '1.2rem' }} />
                 <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
-                  {t('forms.clientPages.bookingDetails.client')}:
+                  {t('forms.clientPages.bookingDetails.serviceRecipient')}:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {booking.client.name || '—'}
+                  {booking.service_recipient.full_name || `${booking.service_recipient.first_name || ''} ${booking.service_recipient.last_name || ''}`.trim() || '—'}
                 </Typography>
               </Box>
               
@@ -417,9 +417,20 @@ const BookingDetailsPage: React.FC = () => {
                   {t('forms.clientPages.bookingDetails.phone')}:
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {booking.client.phone || '—'}
+                  {booking.service_recipient.phone || '—'}
                 </Typography>
               </Box>
+              
+              {booking.service_recipient.email && (
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 4 }}>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary, mr: 1 }}>
+                    {t('forms.clientPages.bookingDetails.email')}:
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    {booking.service_recipient.email}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </>
         )}
@@ -534,7 +545,7 @@ const BookingDetailsPage: React.FC = () => {
                   variant="contained" 
                   color="primary"
                   component={Link}
-                  to="/client/booking/new-with-availability"
+                  to="/client/booking"
                   sx={{ ...primaryButtonStyles, minWidth: 'auto' }}
                   size="small"
                 >

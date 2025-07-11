@@ -2,26 +2,13 @@ import { baseApi } from './baseApi';
 
 // Типы для клиентских бронирований
 export interface ClientBookingRequest {
-  client: {
-    first_name: string;
-    last_name: string;
-    phone: string;
-    email?: string;
-  };
-  car: {
-    license_plate: string;
-    car_brand?: string;
-    car_model?: string;
-    car_type_id?: number;
-    year?: number;
-  };
   booking: {
     service_point_id: number;
     service_category_id?: number;
     booking_date: string;
     start_time: string;
     notes?: string;
-    // Поля автомобиля (как ожидает backend)
+    // Поля автомобиля
     license_plate: string;
     car_brand?: string;
     car_model?: string;
@@ -59,6 +46,14 @@ export interface ClientBookingResponse {
     name: string;
     phone: string;
     email: string;
+  };
+  service_recipient?: {
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    phone: string;
+    email?: string;
+    is_self_service?: boolean;
   };
   car_info: {
     license_plate: string;

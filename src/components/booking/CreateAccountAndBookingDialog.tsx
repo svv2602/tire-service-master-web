@@ -206,25 +206,13 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
       
       // Формируем данные для бронирования согласно ClientBookingRequest
       const bookingRequestData: ClientBookingRequest = {
-        client: {
-          first_name: bookingData.service_recipient.first_name,
-          last_name: bookingData.service_recipient.last_name,
-          phone: bookingData.service_recipient.phone,
-          email: bookingData.service_recipient.email,
-        },
-        car: {
-          license_plate: bookingData.license_plate,
-          car_brand: bookingData.car_brand,
-          car_model: bookingData.car_model,
-          car_type_id: bookingData.car_type_id || undefined,
-        },
         booking: {
           service_point_id: bookingData.service_point_id!,
           service_category_id: bookingData.service_category_id,
           booking_date: bookingData.booking_date,
           start_time: bookingData.start_time,
           notes: bookingData.notes || '',
-          // Поля автомобиля в секции booking (как ожидает backend)
+          // Поля автомобиля
           license_plate: bookingData.license_plate,
           car_brand: bookingData.car_brand,
           car_model: bookingData.car_model,

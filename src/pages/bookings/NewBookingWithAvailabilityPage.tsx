@@ -275,8 +275,18 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, []);
 
-  // ✅ Эффект для проверки любимых точек у авторизованного пользователя
+  // ✅ Эффект для проверки любимых точек у авторизованного пользователя (только для клиентов)
   useEffect(() => {
+    // Для администраторов всегда используем обычный процесс бронирования
+    const isAdminUser = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'partner';
+    
+    if (isAdminUser) {
+      console.log('👨‍💼 Администратор/менеджер/партнер - используем обычный процесс бронирования');
+      setShowQuickFavorites(false);
+      setHasCheckedFavorites(true);
+      return;
+    }
+    
     if (isAuthenticated && clientId && clientId > 0 && !hasCheckedFavorites) {
       console.log('🌟 Проверяем наличие любимых точек для пользователя:', clientId);
       
@@ -299,7 +309,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setShowQuickFavorites(false);
       setHasCheckedFavorites(true);
     }
-  }, [isAuthenticated, clientId, isLoadingFavorites, favoritesData, hasCheckedFavorites]);
+  }, [isAuthenticated, clientId, isLoadingFavorites, favoritesData, hasCheckedFavorites, currentUser]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
@@ -384,6 +394,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const isCurrentStepValid = useMemo((): boolean => {
     const step = STEPS[activeStep];
     
+    if (!step) {
+      return false;
+    }
+    
     switch (step.id) {
       case 'category-selection':
         return formData.service_category_id > 0;
@@ -402,19 +416,22 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       
       case 'client-info':
         // Валидация данных получателя услуги (обязательно для всех)
-        const recipientPhone = formData.service_recipient.phone.replace(/[^\d]/g, '');
+        if (!formData.service_recipient) {
+          return false;
+        }
+        const recipientPhone = (formData.service_recipient.phone || '').replace(/[^\d]/g, '');
         const isRecipientPhoneValid = recipientPhone.length >= 10 && recipientPhone.length <= 15;
         const isRecipientEmailValid = !formData.service_recipient.email || Boolean(formData.service_recipient.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/));
         
         return (
-          formData.service_recipient.first_name.trim().length >= 2 &&
-          formData.service_recipient.last_name.trim().length >= 2 &&
+          (formData.service_recipient.first_name || '').trim().length >= 2 &&
+          (formData.service_recipient.last_name || '').trim().length >= 2 &&
           isRecipientPhoneValid &&
           isRecipientEmailValid
         );
       
       case 'car-type':
-        return formData.car_type_id !== null && formData.license_plate.trim().length > 0;
+        return formData.car_type_id !== null && (formData.license_plate || '').trim().length > 0;
       
       case 'services':
         return true; // Услуги опциональны
@@ -451,29 +468,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
       // Подготавливаем данные для отправки в формате, ожидаемом бэкендом
       const bookingData: any = {
-        // Данные бронирования (обязательно)
         booking: {
           service_point_id: formData.service_point_id,
           service_category_id: formData.service_category_id,
           booking_date: formData.booking_date,
           start_time: formData.start_time,
-          service_recipient_first_name: formData.service_recipient.first_name,
-          service_recipient_last_name: formData.service_recipient.last_name,
-          service_recipient_phone: formData.service_recipient.phone,
-          service_recipient_email: formData.service_recipient.email,
-          notes: formData.notes,
-        },
-        // Данные автомобиля
-        car: {
           car_type_id: formData.car_type_id,
           car_brand: formData.car_brand,
           car_model: formData.car_model,
           license_plate: formData.license_plate,
+          notes: formData.notes,
+          // Поля получателя услуги
+          service_recipient_first_name: formData.service_recipient.first_name,
+          service_recipient_last_name: formData.service_recipient.last_name,
+          service_recipient_phone: formData.service_recipient.phone,
+          service_recipient_email: formData.service_recipient.email,
         },
-        // Услуги (если есть)
-        services: formData.services,
-        // Длительность
-        duration_minutes: formData.duration_minutes || 30,
+        services: formData.services || [],
       };
 
       // Отладочная информация
@@ -515,18 +526,25 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     try {
       console.log('📝 Создание гостевого бронирования...');
       
+      // ✅ Формируем данные в правильном формате для бэкенда
       const bookingData = {
-        service_category_id: formData.service_category_id,
-        service_point_id: formData.service_point_id,
-        booking_date: formData.booking_date,
-        start_time: formData.start_time,
-        car_type_id: formData.car_type_id,
-        car_brand: formData.car_brand,
-        car_model: formData.car_model,
-        license_plate: formData.license_plate,
-        services: formData.services,
-        notes: formData.notes,
-        service_recipient: formData.service_recipient,
+        booking: {
+          service_point_id: formData.service_point_id,
+          service_category_id: formData.service_category_id,
+          booking_date: formData.booking_date,
+          start_time: formData.start_time,
+          car_type_id: formData.car_type_id,
+          car_brand: formData.car_brand,
+          car_model: formData.car_model,
+          license_plate: formData.license_plate,
+          notes: formData.notes,
+          // Поля получателя услуги
+          service_recipient_first_name: formData.service_recipient.first_name,
+          service_recipient_last_name: formData.service_recipient.last_name,
+          service_recipient_phone: formData.service_recipient.phone,
+          service_recipient_email: formData.service_recipient.email,
+        },
+        services: formData.services || [],
       };
 
       console.log('📋 Данные гостевого бронирования:', bookingData);
@@ -537,20 +555,20 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setCreatedBooking(result);
       setIsSubmitting(false);
       
-      // Проверяем, стоит ли предложить добавить машину в профиль
-      const carData = prepareCarDataForDialog(formData);
-      if (shouldOfferToAddCar(carData, clientCars)) {
-        setCarDataForDialog(carData);
-        setAddCarDialogOpen(true);
-      } else {
-        setSuccessDialogOpen(true);
-      }
+      // ✅ Для гостевых бронирований сразу показываем диалог успеха
+      // Не предлагаем добавить автомобиль в профиль, так как у пользователя нет аккаунта
+      setSuccessDialogOpen(true);
 
     } catch (error: any) {
       console.error('❌ Ошибка при создании гостевого бронирования:', error);
+      console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
+      console.error('❌ Данные ошибки:', error?.data);
+      console.error('❌ Сообщение ошибки:', error?.data?.message);
+      console.error('❌ Детали ошибки:', error?.data?.details);
       setIsSubmitting(false);
       setSubmitError(
         error?.data?.message || 
+        error?.data?.error ||
         t('forms.bookings.form.messages.bookingCreateError')
       );
     }
@@ -859,6 +877,23 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             ? t('bookingModals.success.messageAuth')
             : t('bookingModals.success.messageGuest')
         }
+        description={
+          !isAuthenticated 
+            ? t('bookingModals.success.guestDescription')
+            : undefined
+        }
+        bookingDetails={createdBooking ? {
+          id: createdBooking.id,
+          date: createdBooking.booking_date,
+          time: createdBooking.start_time,
+          servicePoint: createdBooking.service_point?.name,
+          servicePointAddress: createdBooking.service_point?.address,
+          servicePointPhone: createdBooking.service_point?.phone,
+          clientName: createdBooking.service_recipient?.full_name,
+          carInfo: createdBooking.car_info?.license_plate ? 
+            `${createdBooking.car_info.license_plate}${createdBooking.car_info.brand ? ` (${createdBooking.car_info.brand}${createdBooking.car_info.model ? ` ${createdBooking.car_info.model}` : ''})` : ''}` 
+            : undefined,
+        } : undefined}
         primaryButtonText={
           isAuthenticated 
             ? t('bookingModals.success.myBookings') 
