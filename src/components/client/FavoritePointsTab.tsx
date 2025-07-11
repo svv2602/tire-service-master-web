@@ -32,7 +32,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useGetFavoritePointsByCategoryQuery, useRemoveFavoritePointMutation, FavoritesByCategory } from '../../api/favoritePoints.api';
+import { useGetMyFavoritePointsByCategoryQuery, useRemoveFromMyFavoritesMutation, QuickBookingCategory, QuickBookingData } from '../../api/favoritePoints.api';
 import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 
@@ -53,7 +53,7 @@ interface ServicePointData {
 
 interface FavoritePointsResponse {
   has_favorites: boolean;
-  categories_with_favorites: FavoritesByCategory[];
+  categories_with_favorites: QuickBookingCategory[];
 }
 
 const FavoritePointsTab: React.FC<FavoritePointsTabProps> = ({ onNotify }) => {
@@ -72,24 +72,21 @@ const FavoritePointsTab: React.FC<FavoritePointsTabProps> = ({ onNotify }) => {
     data: favoritesData, 
     isLoading: favoritesLoading, 
     error: favoritesError 
-  } = useGetFavoritePointsByCategoryQuery(clientId || 0, {
+  } = useGetMyFavoritePointsByCategoryQuery(undefined, {
     skip: !clientId
   });
 
   // Исправляем вызов useGetServiceCategoriesQuery - добавляем параметры
   const { data: categoriesData } = useGetServiceCategoriesQuery({});
   
-  const [removeFavoritePoint, { isLoading: isRemoving }] = useRemoveFavoritePointMutation();
+  const [removeFavoritePoint, { isLoading: isRemoving }] = useRemoveFromMyFavoritesMutation();
 
   // Обработчики
   const handleRemoveFavorite = async () => {
     if (!pointToRemove || !clientId) return;
 
     try {
-      await removeFavoritePoint({
-        clientId,
-        favoritePointId: pointToRemove,
-      }).unwrap();
+      await removeFavoritePoint(pointToRemove).unwrap();
       
       setConfirmDialogOpen(false);
       setPointToRemove(null);
@@ -171,7 +168,7 @@ const FavoritePointsTab: React.FC<FavoritePointsTabProps> = ({ onNotify }) => {
       </Alert>
       
       {/* Группировка по категориям */}
-      {favoritesData.categories_with_favorites.map((category: FavoritesByCategory) => (
+      {favoritesData.categories_with_favorites.map((category: QuickBookingCategory) => (
         <Box key={category.category_id} sx={{ mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <CategoryIcon sx={{ mr: 1, color: 'primary.main' }} />

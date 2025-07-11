@@ -71,7 +71,7 @@ import { ClientCar, ClientCarFormData } from '../../types/client';
 import ClientLayout from '../../components/client/ClientLayout';
 import { PhoneField } from '../../components/ui/PhoneField';
 import Notification from '../../components/Notification';
-import FavoritePointsTab from '../../components/client/FavoritePointsTab';
+import FavoritePointsTab from '../../components/profile/FavoritePointsTab';
 
 // Валидация
 import { useFormik } from 'formik';
@@ -727,7 +727,7 @@ const ClientProfilePage: React.FC = () => {
           {/* Вкладка любимых точек */}
           <TabPanel value={activeTab} index={2}>
             <FavoritePointsTab 
-              onNotify={(message: string, type: 'success' | 'error') => 
+              onNotify={(message: string, type: 'success' | 'error' | 'warning' | 'info') => 
                 setNotification({ open: true, message, severity: type })
               }
             />

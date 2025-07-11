@@ -24,9 +24,8 @@ import {
   Cancel as CancelIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useGetFavoritePointsByCategoryQuery } from '../../../api/favoritePoints.api';
+import { useGetMyFavoritePointsByCategoryQuery, QuickBookingCategory, QuickBookingData } from '../../../api/favoritePoints.api';
 import { useGetServiceCategoriesQuery } from '../../../api/serviceCategories.api';
-import { FavoritesByCategory } from '../../../api/favoritePoints.api';
 
 interface QuickFavoritesStepProps {
   clientId: number;
@@ -51,7 +50,9 @@ const QuickFavoritesStep: React.FC<QuickFavoritesStepProps> = ({
     data: favoritesData, 
     isLoading: isLoadingFavorites,
     error: favoritesError 
-  } = useGetFavoritePointsByCategoryQuery(clientId);
+  } = useGetMyFavoritePointsByCategoryQuery(undefined, {
+    skip: !clientId
+  });
 
   const { 
     data: categoriesData,
@@ -144,7 +145,7 @@ const QuickFavoritesStep: React.FC<QuickFavoritesStepProps> = ({
             {t('components.favoritePoints.quick_booking.select_category')}
           </Typography>
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            {favoritesData.categories_with_favorites.map((category: FavoritesByCategory) => (
+            {favoritesData.categories_with_favorites.map((category: QuickBookingCategory) => (
               <Grid item xs={12} sm={6} md={4} key={category.category_id}>
                 <Card 
                   sx={{ 
