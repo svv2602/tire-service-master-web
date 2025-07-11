@@ -74,6 +74,8 @@ import { useGetServicesQuery } from '../../api/servicesList.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import { useSearchServicePointsQuery, useGetRegionsWithServicePointsQuery, useGetCitiesWithServicePointsQuery, useGetServicePointByIdQuery } from '../../api/servicePoints.api';
+import { useDispatch } from 'react-redux';
+import { baseApi } from '../../api/baseApi';
 
 // Импорт типов
 import type { ServicePoint, ServiceCategory, City, ServicePointService, Region, Service } from '../../types/models';
@@ -194,6 +196,7 @@ const ClientServicesPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const dispatch = useDispatch();
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
@@ -250,14 +253,28 @@ const ClientServicesPage: React.FC = () => {
   });
 
   // Запрос городов с учетом фильтров - выполняется всегда для получения доступных городов
-  const { 
-    data: citiesResponse, 
-    isLoading: citiesLoading 
-  } = useGetCitiesWithServicePointsQuery({ 
+  const citiesQueryParams = useMemo(() => ({
     category_id: selectedCategory || undefined,
     service_id: selectedService || undefined,
     region_id: selectedRegion || undefined
+  }), [selectedCategory, selectedService, selectedRegion]);
+
+  // Отладка параметров запроса городов
+  console.log('🏙️ Cities query params:', citiesQueryParams);
+  console.log('🏙️ Selected region:', selectedRegion);
+
+  const { 
+    data: citiesResponse, 
+    isLoading: citiesLoading,
+    refetch: refetchCities
+  } = useGetCitiesWithServicePointsQuery(citiesQueryParams, {
+    // Принудительно перезапрашиваем при изменении параметров
+    refetchOnMountOrArgChange: true,
   });
+
+  // Отладка ответа городов
+  console.log('🏙️ Cities response:', citiesResponse);
+  console.log('🏙️ Cities data:', citiesResponse?.data);
 
   // Параметры поиска сервисных точек
   const searchParams = useMemo(() => {
@@ -265,6 +282,11 @@ const ClientServicesPage: React.FC = () => {
       page: currentPage,
       per_page: itemsPerPage
     };
+    
+    // Добавляем фильтр по региону (приоритетный)
+    if (selectedRegion) {
+      params.region_id = selectedRegion;
+    }
     
     if (selectedCity) {
       params.city = selectedCity.name;
@@ -285,7 +307,7 @@ const ClientServicesPage: React.FC = () => {
     }
     
     return params;
-  }, [selectedCity, searchQuery, selectedService, selectedCategory, currentPage, itemsPerPage]);
+  }, [selectedRegion, selectedCity, searchQuery, selectedService, selectedCategory, currentPage, itemsPerPage]);
 
   // Запрос сервисных точек - выполняется всегда для отображения всех доступных сервисных точек
   const { 
@@ -371,9 +393,20 @@ const ClientServicesPage: React.FC = () => {
   };
 
   const handleRegionChange = (regionId: number | null) => {
+    console.log('🔄 Region change:', regionId);
+    console.log('🔄 Previous region:', selectedRegion);
+    
+    // Принудительно инвалидируем кэш городов
+    dispatch(baseApi.util.invalidateTags(['City']));
+    
     setSelectedRegion(regionId);
     setSelectedCity(null); // Сбрасываем выбранный город при смене региона
     resetPage();
+    
+    // Принудительно перезапрашиваем города после изменения состояния
+    setTimeout(() => {
+      refetchCities();
+    }, 100);
   };
 
   const handleSearchChange = (query: string) => {

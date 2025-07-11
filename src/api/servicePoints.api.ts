@@ -511,11 +511,30 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     getCitiesWithServicePoints: builder.query<ApiResponse<City>, { category_id?: number; service_id?: number; region_id?: number }>({
-      query: (params = {}) => ({
-        url: 'service_points/cities', 
-        params: Object.fromEntries(Object.entries(params).filter(([_, v]) => v != null))
-      }),
-      providesTags: ['ServicePoint', 'City'],
+      query: (params = {}) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params).filter(([_, v]) => v !== null && v !== undefined)
+        );
+        console.log('🔍 getCitiesWithServicePoints API params:', params);
+        console.log('🔍 getCitiesWithServicePoints filtered params:', filteredParams);
+        
+        const finalUrl = 'service_points/cities';
+        console.log('🔍 Final API URL:', finalUrl);
+        console.log('🔍 Final API params:', filteredParams);
+        
+        return {
+          url: finalUrl, 
+          params: filteredParams
+        };
+      },
+      // Создаем уникальный ключ кэша для каждой комбинации параметров
+      providesTags: (result, error, params) => [
+        'ServicePoint', 
+        'City',
+        { type: 'City', id: `cities-${params.region_id || 'all'}-${params.category_id || 'all'}-${params.service_id || 'all'}` }
+      ],
+      // Отключаем кэширование для отладки
+      keepUnusedDataFor: 0,
     }),
   }),
   // Установка автоматического обновления при монтировании компонентов
