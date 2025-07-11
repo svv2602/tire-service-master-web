@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправленной страницы /client/services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #4caf50;
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            color: #f44336;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #2196f3;
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .test-button {
+            background-color: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background-color: #1565c0;
+        }
+        .api-response {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .filter-test {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .filter-test select, .filter-test input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Тест исправленной страницы /client/services</h1>
+    <p><strong>Дата:</strong> <span id="currentDate"></span></p>
+
+    <div class="test-section">
+        <h2 class="test-title">1. Проверка API без фильтров</h2>
+        <p>Тест: Загрузка всех сервисных точек при заходе на страницу</p>
+        <button class="test-button" onclick="testAllServicePoints()">Загрузить все сервисные точки</button>
+        <div id="allServicePointsResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">2. Проверка фильтрации по категории</h2>
+        <p>Тест: Фильтрация сервисных точек по категории услуг</p>
+        <div class="filter-test">
+            <select id="categoryFilter">
+                <option value="">Выберите категорию</option>
+                <option value="1">Шиномонтаж</option>
+                <option value="2">Техническое обслуживание</option>
+                <option value="3">Дополнительные услуги</option>
+            </select>
+            <button class="test-button" onclick="testCategoryFilter()">Применить фильтр</button>
+        </div>
+        <div id="categoryFilterResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">3. Проверка фильтрации по городу</h2>
+        <p>Тест: Фильтрация сервисных точек по городу</p>
+        <div class="filter-test">
+            <select id="cityFilter">
+                <option value="">Выберите город</option>
+                <option value="Київ">Київ</option>
+                <option value="Одеса">Одеса</option>
+                <option value="Харків">Харків</option>
+                <option value="Дніпро">Дніпро</option>
+                <option value="Львів">Львів</option>
+            </select>
+            <button class="test-button" onclick="testCityFilter()">Применить фильтр</button>
+        </div>
+        <div id="cityFilterResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">4. Проверка комбинированной фильтрации</h2>
+        <p>Тест: Комбинация фильтров по категории и городу</p>
+        <div class="filter-test">
+            <select id="combinedCategoryFilter">
+                <option value="">Выберите категорию</option>
+                <option value="1">Шиномонтаж</option>
+                <option value="2">Техническое обслуживание</option>
+                <option value="3">Дополнительные услуги</option>
+            </select>
+            <select id="combinedCityFilter">
+                <option value="">Выберите город</option>
+                <option value="Київ">Київ</option>
+                <option value="Одеса">Одеса</option>
+                <option value="Харків">Харків</option>
+            </select>
+            <button class="test-button" onclick="testCombinedFilter()">Применить фильтры</button>
+        </div>
+        <div id="combinedFilterResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">5. Проверка динамических списков фильтров</h2>
+        <p>Тест: Обновление списков регионов и городов при выборе фильтров</p>
+        <div class="filter-test">
+            <button class="test-button" onclick="testDynamicRegions()">Загрузить регионы</button>
+            <button class="test-button" onclick="testDynamicCities()">Загрузить города</button>
+            <button class="test-button" onclick="testDynamicFilters()">Тест с фильтрами</button>
+        </div>
+        <div id="dynamicFiltersResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">6. Проверка страницы в браузере</h2>
+        <p>Тест: Прямая проверка страницы в браузере</p>
+        <a href="http://localhost:3008/client/services" target="_blank" class="test-button">Открыть /client/services</a>
+        <div class="info">
+            <strong>Ожидаемый результат:</strong>
+            <ul>
+                <li>При загрузке страницы должны отображаться все сервисные точки</li>
+                <li>Фильтры должны работать корректно</li>
+                <li>При выборе категории должны обновляться доступные города</li>
+                <li>При выборе города должны обновляться доступные регионы</li>
+                <li>Комбинация фильтров должна показывать правильные результаты</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Установка текущей даты
+        document.getElementById('currentDate').textContent = new Date().toLocaleString('ru-RU');
+
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        // Функция для отображения результатов
+        function displayResult(elementId, data, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            const resultClass = isSuccess ? 'success' : 'error';
+            const resultText = isSuccess ? 'Успешно' : 'Ошибка';
+            
+            element.innerHTML = `
+                <div class="${resultClass}">
+                    <strong>${resultText}:</strong> ${typeof data === 'string' ? data : ''}
+                </div>
+                <div class="api-response">${JSON.stringify(data, null, 2)}</div>
+            `;
+        }
+
+        // Тест 1: Загрузка всех сервисных точек
+        async function testAllServicePoints() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('allServicePointsResult', 
+                        `Загружено ${data.data.length} сервисных точек из ${data.total} общих`, true);
+                } else {
+                    displayResult('allServicePointsResult', data, false);
+                }
+            } catch (error) {
+                displayResult('allServicePointsResult', error.message, false);
+            }
+        }
+
+        // Тест 2: Фильтрация по категории
+        async function testCategoryFilter() {
+            const categoryId = document.getElementById('categoryFilter').value;
+            if (!categoryId) {
+                displayResult('categoryFilterResult', 'Выберите категорию', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search?category_id=${categoryId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('categoryFilterResult', 
+                        `Найдено ${data.data.length} сервисных точек для категории ${categoryId}`, true);
+                } else {
+                    displayResult('categoryFilterResult', data, false);
+                }
+            } catch (error) {
+                displayResult('categoryFilterResult', error.message, false);
+            }
+        }
+
+        // Тест 3: Фильтрация по городу
+        async function testCityFilter() {
+            const city = document.getElementById('cityFilter').value;
+            if (!city) {
+                displayResult('cityFilterResult', 'Выберите город', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/service_points/search?city=${encodeURIComponent(city)}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('cityFilterResult', 
+                        `Найдено ${data.data.length} сервисных точек в городе ${city}`, true);
+                } else {
+                    displayResult('cityFilterResult', data, false);
+                }
+            } catch (error) {
+                displayResult('cityFilterResult', error.message, false);
+            }
+        }
+
+        // Тест 4: Комбинированная фильтрация
+        async function testCombinedFilter() {
+            const categoryId = document.getElementById('combinedCategoryFilter').value;
+            const city = document.getElementById('combinedCityFilter').value;
+            
+            if (!categoryId && !city) {
+                displayResult('combinedFilterResult', 'Выберите хотя бы один фильтр', false);
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams();
+                if (categoryId) params.append('category_id', categoryId);
+                if (city) params.append('city', city);
+                
+                const response = await fetch(`${API_BASE}/service_points/search?${params.toString()}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('combinedFilterResult', 
+                        `Найдено ${data.data.length} сервисных точек с комбинированными фильтрами`, true);
+                } else {
+                    displayResult('combinedFilterResult', data, false);
+                }
+            } catch (error) {
+                displayResult('combinedFilterResult', error.message, false);
+            }
+        }
+
+        // Тест 5: Динамические списки фильтров
+        async function testDynamicRegions() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/regions`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('dynamicFiltersResult', 
+                        `Загружено ${data.data.length} регионов`, true);
+                } else {
+                    displayResult('dynamicFiltersResult', data, false);
+                }
+            } catch (error) {
+                displayResult('dynamicFiltersResult', error.message, false);
+            }
+        }
+
+        async function testDynamicCities() {
+            try {
+                const response = await fetch(`${API_BASE}/service_points/cities`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResult('dynamicFiltersResult', 
+                        `Загружено ${data.data.length} городов`, true);
+                } else {
+                    displayResult('dynamicFiltersResult', data, false);
+                }
+            } catch (error) {
+                displayResult('dynamicFiltersResult', error.message, false);
+            }
+        }
+
+        async function testDynamicFilters() {
+            try {
+                // Тест с фильтром по категории
+                const regionsResponse = await fetch(`${API_BASE}/service_points/regions?category_id=1`);
+                const regionsData = await regionsResponse.json();
+                
+                const citiesResponse = await fetch(`${API_BASE}/service_points/cities?category_id=1`);
+                const citiesData = await citiesResponse.json();
+                
+                if (regionsResponse.ok && citiesResponse.ok) {
+                    displayResult('dynamicFiltersResult', 
+                        `Для категории 1: ${regionsData.data.length} регионов, ${citiesData.data.length} городов`, true);
+                } else {
+                    displayResult('dynamicFiltersResult', 'Ошибка при загрузке динамических фильтров', false);
+                }
+            } catch (error) {
+                displayResult('dynamicFiltersResult', error.message, false);
+            }
+        }
+
+        // Автоматический запуск теста при загрузке страницы
+        window.addEventListener('load', () => {
+            testAllServicePoints();
+        });
+    </script>
+</body>
+</html> 

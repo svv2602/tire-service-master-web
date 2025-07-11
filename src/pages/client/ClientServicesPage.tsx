@@ -140,10 +140,9 @@ const ClientServicesPage: React.FC = () => {
   } = useGetServicesQuery({ 
     category_id: selectedCategory || undefined,
     per_page: 100 
-  }, {
-    skip: !selectedCategory
   });
 
+  // Запрос регионов с учетом фильтров - выполняется всегда для получения доступных регионов
   const { 
     data: regionsResponse, 
     isLoading: regionsLoading 
@@ -152,7 +151,7 @@ const ClientServicesPage: React.FC = () => {
     service_id: selectedService || undefined
   });
 
-  // Используем динамический API для городов с учетом фильтров
+  // Запрос городов с учетом фильтров - выполняется всегда для получения доступных городов
   const { 
     data: citiesResponse, 
     isLoading: citiesLoading 
@@ -190,14 +189,12 @@ const ClientServicesPage: React.FC = () => {
     return params;
   }, [selectedCity, searchQuery, selectedService, selectedCategory, currentPage, itemsPerPage]);
 
+  // Запрос сервисных точек - выполняется всегда для отображения всех доступных сервисных точек
   const { 
     data: servicePointsResponse,
     isLoading: servicePointsLoading,
     error: servicePointsError
-  } = useSearchServicePointsQuery(
-    searchParams
-    // Убираем skip - теперь запрос выполняется всегда
-  );
+  } = useSearchServicePointsQuery(searchParams);
 
   // Обработанные данные
   const categories = categoriesResponse?.data || [];
@@ -269,6 +266,9 @@ const ClientServicesPage: React.FC = () => {
   const handleCategoryChange = (categoryId: number | null) => {
     setSelectedCategory(categoryId);
     setSelectedService(null); // Сбрасываем выбранную услугу при смене категории
+    // При смене категории также сбрасываем регион и город, так как список может измениться
+    setSelectedRegion(null);
+    setSelectedCity(null);
     resetPage();
   };
 
@@ -285,6 +285,9 @@ const ClientServicesPage: React.FC = () => {
 
   const handleServiceChange = (serviceId: number | null) => {
     setSelectedService(serviceId);
+    // При смене услуги также сбрасываем регион и город, так как список может измениться
+    setSelectedRegion(null);
+    setSelectedCity(null);
     resetPage();
   };
 
@@ -561,6 +564,12 @@ const ClientServicesPage: React.FC = () => {
             <Alert severity="error" sx={{ mb: 4 }}>
               Ошибка при загрузке данных. Попробуйте обновить страницу.
             </Alert>
+          ) : !selectedCity && !searchQuery ? (
+            <Fade in timeout={700}>
+              <Alert severity="info" sx={{ mb: 4 }}>
+                Выберите город или введите поисковый запрос для поиска сервисных центров.
+              </Alert>
+            </Fade>
           ) : sortedServicePoints.length === 0 ? (
             <Fade in timeout={700}>
               <Alert severity="warning" sx={{ mb: 4 }}>
