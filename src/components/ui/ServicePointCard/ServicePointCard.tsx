@@ -38,6 +38,7 @@ import {
   ArrowBackIos as ArrowBackIosIcon,
   ArrowForwardIos as ArrowForwardIosIcon
 } from '@mui/icons-material';
+import { FavoriteButton } from '../FavoriteButton';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getCardStyles } from '../../../styles';
 
@@ -556,6 +557,7 @@ export interface ServicePointCardProps {
   showBookButton?: boolean;
   showSelectButton?: boolean;
   showDetailsLink?: boolean;
+  showFavoriteButton?: boolean;
   onViewDetails?: (servicePoint: ServicePointData) => void;
   services?: ServicePointService[];
   isLoadingServices?: boolean;
@@ -577,6 +579,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   showBookButton = false,
   showSelectButton = false,
   showDetailsLink = false,
+  showFavoriteButton = true,
   onViewDetails,
   services = [],
   isLoadingServices = false,
@@ -631,15 +634,42 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         boxShadow: theme.shadows[4]
       }
     }}>
-      {/* Фотогалерея сервисной точки */}
-      <PhotoGallery
-        photos={servicePoint.photos || []}
-        height={variant === 'compact' ? 160 : 200}
-        showCounter={true}
-        fallbackIcon="🚗"
-        servicePointName={servicePoint.name}
-        disableGalleryOpen={true}
-      />
+      {/* Фотогалерея сервисной точки с кнопкой избранного */}
+      <Box sx={{ position: 'relative' }}>
+        <PhotoGallery
+          photos={servicePoint.photos || []}
+          height={variant === 'compact' ? 160 : 200}
+          showCounter={true}
+          fallbackIcon="🚗"
+          servicePointName={servicePoint.name}
+          disableGalleryOpen={true}
+        />
+        
+        {/* Кнопка избранного в правом верхнем углу */}
+        {showFavoriteButton && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 2,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              borderRadius: '50%',
+              backdropFilter: 'blur(4px)',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              }
+            }}
+          >
+            <FavoriteButton
+              servicePointId={servicePoint.id}
+              servicePointName={servicePoint.name}
+              size="medium"
+              showTooltip={true}
+            />
+          </Box>
+        )}
+      </Box>
 
       <CardContent onClick={showSelectButton ? handleSelect : undefined} sx={{ cursor: showSelectButton ? 'pointer' : 'default' }}>
         {/* Основная информация */}
@@ -801,7 +831,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         </Collapse>
       </CardContent>
 
-      {/* CardActions: возвращаем кнопки 'Подробнее' и 'Обрати', но без 'Детальніше'/'Згорнути' */}
+      {/* CardActions: кнопки действий */}
       <CardActions sx={{ p: 2, pt: 0 }}>
         {/* Кнопка 'Подробнее' */}
         {showDetailsLink && (
@@ -813,7 +843,6 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               handleViewDetails();
             }}
             sx={{ 
-              ml: 1,
               borderColor: theme.palette.primary.main,
               color: theme.palette.primary.main,
               '&:hover': { 
@@ -826,7 +855,28 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             {t('components:servicePointCard.details')}
           </Button>
         )}
+        
+        {/* Кнопка 'Забронировать' */}
+        {showBookButton && (
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<BookIcon />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBook();
+            }}
+            sx={{ 
+              bgcolor: theme.palette.success.main,
+              '&:hover': { bgcolor: theme.palette.success.dark }
+            }}
+          >
+            {t('components:servicePointCard.book')}
+          </Button>
+        )}
+        
         <Box sx={{ flexGrow: 1 }} />
+        
         {/* Кнопка 'Выбрать' */}
         {showSelectButton && (
           <>

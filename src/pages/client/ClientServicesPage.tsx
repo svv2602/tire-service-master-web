@@ -181,6 +181,7 @@ const ServicePointCardWrapper: React.FC<{
         onBook={() => onBook(servicePointData)}
         showDetailsLink={true}
         showBookButton={true}
+        showFavoriteButton={true}
         categories={categories}
         isLoadingCategories={isLoading}
       />

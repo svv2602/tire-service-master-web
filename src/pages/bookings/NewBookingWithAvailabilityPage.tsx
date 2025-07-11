@@ -50,7 +50,7 @@ import {
 } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useGetMyClientCarsQuery } from '../../api/clients.api';
-import { useGetFavoritePointsByCategoryQuery } from '../../api/favoritePoints.api';
+import { useGetMyFavoritePointsByCategoryQuery } from '../../api/favoritePoints.api';
 
 // Импорт утилит
 import { shouldOfferToAddCar, prepareCarDataForDialog } from '../../utils/carUtils';
@@ -156,15 +156,21 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     skip: !isAuthenticated, // Пропускаем если пользователь не авторизован
   });
 
+  // Мемоизированное значение для ID клиента
+  const clientId = useMemo(() => {
+    if (!authUser) return 0;
+    return (authUser as any)?.client?.id || authUser?.user?.client_id || 0;
+  }, [authUser]);
+
   // API хук для любимых точек (только для авторизованных пользователей)
   const { 
     data: favoritesData, 
     isLoading: isLoadingFavorites,
     error: favoritesError 
-  } = useGetFavoritePointsByCategoryQuery(
-    (authUser as any)?.client?.id || authUser?.user?.client_id || 0,
+  } = useGetMyFavoritePointsByCategoryQuery(
+    undefined,
     {
-      skip: !isAuthenticated || (!((authUser as any)?.client?.id) && !authUser?.user?.client_id),
+      skip: !isAuthenticated || !clientId,
       refetchOnMountOrArgChange: true,
     }
   );
@@ -254,8 +260,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // ✅ Эффект для проверки любимых точек у авторизованного пользователя
   useEffect(() => {
-    const clientId = (authUser as any)?.client?.id || authUser?.user?.client_id;
-    
     if (isAuthenticated && clientId && !hasCheckedFavorites) {
       console.log('🌟 Проверяем наличие любимых точек для пользователя:', clientId);
       
@@ -278,7 +282,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setShowQuickFavorites(false);
       setHasCheckedFavorites(true);
     }
-  }, [isAuthenticated, authUser, isLoadingFavorites, favoritesData, hasCheckedFavorites]);
+  }, [isAuthenticated, clientId, isLoadingFavorites, favoritesData, hasCheckedFavorites]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
@@ -689,8 +693,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const renderCurrentStep = () => {
     // Специальный случай для быстрого бронирования через любимые точки
     if (activeStep === -1 && showQuickFavorites) {
-      const clientId = (authUser as any)?.client?.id || authUser?.user?.client_id;
-      
       if (!clientId) {
         console.error('❌ Не удалось определить ID клиента для любимых точек');
         setShowQuickFavorites(false);

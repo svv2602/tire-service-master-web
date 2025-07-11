@@ -42,6 +42,7 @@ import {
   ArrowBackIos as ArrowBackIosIcon,
   ArrowForwardIos as ArrowForwardIosIcon
 } from '@mui/icons-material';
+import { FavoriteButton } from '../../components/ui/FavoriteButton';
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
@@ -695,14 +696,39 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         boxShadow: theme.shadows[4]
       }
     }}>
-      {/* Фотогалерея сервисной точки */}
-      <PhotoGallery
-        photos={servicePoint.photos || []}
-        height={200}
-        showCounter={true}
-        fallbackIcon="🚗"
-        servicePointName={servicePoint.name}
-      />
+      {/* Фотогалерея сервисной точки с кнопкой избранного */}
+      <Box sx={{ position: 'relative' }}>
+        <PhotoGallery
+          photos={servicePoint.photos || []}
+          height={200}
+          showCounter={true}
+          fallbackIcon="🚗"
+          servicePointName={servicePoint.name}
+        />
+        
+        {/* Кнопка избранного в правом верхнем углу */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '50%',
+            backdropFilter: 'blur(4px)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            }
+          }}
+        >
+          <FavoriteButton
+            servicePointId={servicePoint.id}
+            servicePointName={servicePoint.name}
+            size="medium"
+            showTooltip={true}
+          />
+        </Box>
+      </Box>
 
       <CardContent>
         {/* Основная информация */}
