@@ -38,7 +38,7 @@ import {
 
 // Импорт API для работы с контентом
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
-import { useGetCitiesWithServicePointsQuery } from '../../api/cities.api';
+import { useGetCitiesWithServicePointsQuery } from '../../api/servicePoints.api';
 import { useMainPageArticles } from '../../hooks/useMainPageArticles';
 import ClientLayout from '../../components/client/ClientLayout';
 
@@ -67,7 +67,7 @@ const ClientMainPage: React.FC = () => {
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
     section: 'client_main'
   });
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery({});
   
   // Получаем статьи для главной страницы (приоритет рекомендованным)
   const { articles: mainPageArticles, isLoading: articlesLoading } = useMainPageArticles();

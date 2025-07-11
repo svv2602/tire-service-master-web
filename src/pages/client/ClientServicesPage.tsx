@@ -564,12 +564,6 @@ const ClientServicesPage: React.FC = () => {
             <Alert severity="error" sx={{ mb: 4 }}>
               Ошибка при загрузке данных. Попробуйте обновить страницу.
             </Alert>
-          ) : !selectedCity && !searchQuery ? (
-            <Fade in timeout={700}>
-              <Alert severity="info" sx={{ mb: 4 }}>
-                Выберите город или введите поисковый запрос для поиска сервисных центров.
-              </Alert>
-            </Fade>
           ) : sortedServicePoints.length === 0 ? (
             <Fade in timeout={700}>
               <Alert severity="warning" sx={{ mb: 4 }}>

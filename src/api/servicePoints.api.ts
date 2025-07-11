@@ -67,7 +67,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Поиск сервисных точек по городу (для клиентского интерфейса)
     searchServicePoints: builder.query<ServicePointSearchResponse, ServicePointSearchParams>({
       query: (params) => ({
-        url: '/service_points/search',
+        url: 'service_points/search',
         method: 'GET',
         params,
       }),
