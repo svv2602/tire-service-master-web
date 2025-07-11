@@ -35,7 +35,8 @@ import {
   Stack,
   Avatar,
   CardMedia,
-  Pagination
+  Pagination,
+  CircularProgress
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -72,10 +73,13 @@ import { useGetServiceCategoriesQuery } from '../../api/services.api';
 import { useGetServicesQuery } from '../../api/servicesList.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
-import { useSearchServicePointsQuery, useGetRegionsWithServicePointsQuery, useGetCitiesWithServicePointsQuery } from '../../api/servicePoints.api';
+import { useSearchServicePointsQuery, useGetRegionsWithServicePointsQuery, useGetCitiesWithServicePointsQuery, useGetServicePointByIdQuery } from '../../api/servicePoints.api';
 
 // Импорт типов
 import type { ServicePoint, ServiceCategory, City, ServicePointService, Region, Service } from '../../types/models';
+
+// Импорт компонентов
+import { ServicePointCard, ServicePointData } from '../../components/ui/ServicePointCard';
 
 // Расширенный интерфейс для сервисных точек из поиска
 interface ServicePointWithSearchData extends ServicePoint {
@@ -90,6 +94,99 @@ interface SortOption {
   value: string;
   label: string;
 }
+
+// Функция конвертации ServicePoint в ServicePointData
+const convertServicePointToServicePointData = (servicePoint: ServicePointWithSearchData): ServicePointData => {
+  return {
+    id: servicePoint.id,
+    name: servicePoint.name,
+    address: servicePoint.address || '',
+    description: servicePoint.description,
+    city: servicePoint.city ? {
+      id: servicePoint.city.id,
+      name: servicePoint.city.name,
+      region: servicePoint.city.region?.name
+    } : undefined,
+    partner: servicePoint.partner ? {
+      id: servicePoint.partner.id,
+      name: servicePoint.partner.company_name || servicePoint.partner.name || ''
+    } : undefined,
+    contact_phone: servicePoint.contact_phone || servicePoint.phone,
+    average_rating: servicePoint.average_rating,
+    reviews_count: servicePoint.reviews_count,
+    work_status: servicePoint.work_status,
+    is_active: servicePoint.is_active,
+    photos: servicePoint.photos?.map(photo => ({
+      id: photo.id,
+      url: photo.url || '',
+      description: photo.description,
+      is_main: photo.is_main || false,
+      sort_order: photo.sort_order || 0
+    })) || [],
+  };
+};
+
+// Обертка для ServicePointCard с загрузкой полных данных
+const ServicePointCardWrapper: React.FC<{
+  servicePoint: ServicePointWithSearchData;
+  onViewDetails: (servicePointData: ServicePointData) => void;
+  onBook: (servicePointData: ServicePointData) => void;
+}> = ({ servicePoint, onViewDetails, onBook }) => {
+  // Загружаем полные данные сервисной точки включая фотографии и service_posts
+  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery(servicePoint.id.toString());
+  
+  // Преобразуем данные в нужный формат
+  const servicePointData = convertServicePointToServicePointData(fullServicePointData || servicePoint);
+  
+  // Извлекаем уникальные категории из service_posts
+  const categories = useMemo(() => {
+    if (!fullServicePointData?.service_posts) return [];
+    
+    const uniqueCategories = new Map();
+    fullServicePointData.service_posts.forEach(post => {
+      if (post.service_category && !uniqueCategories.has(post.service_category.id)) {
+        uniqueCategories.set(post.service_category.id, {
+          id: post.service_category.id,
+          name: post.service_category.name,
+          description: post.service_category.description,
+          services_count: post.service_category.services_count || 0
+        });
+      }
+    });
+    
+    return Array.from(uniqueCategories.values());
+  }, [fullServicePointData?.service_posts]);
+
+  // Если данные загружаются, показываем скелетон
+  if (isLoading) {
+    return (
+      <Grid item xs={12} md={6} lg={4}>
+        <Card sx={{ height: '100%' }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+    );
+  }
+
+  return (
+    <Grid item xs={12} md={6} lg={4}>
+      <ServicePointCard
+        servicePoint={servicePointData}
+        variant="compact"
+        onViewDetails={() => onViewDetails(servicePointData)}
+        onBook={() => onBook(servicePointData)}
+        showDetailsLink={true}
+        showBookButton={true}
+        categories={categories}
+        isLoadingCategories={isLoading}
+      />
+    </Grid>
+  );
+};
 
 const ClientServicesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -307,14 +404,18 @@ const ClientServicesPage: React.FC = () => {
     window.scrollTo({ top: 400, behavior: 'smooth' });
   };
 
-  const handleBookService = (servicePoint: ServicePointWithSearchData, service?: any) => {
+  const handleBookService = (servicePointData: ServicePointData) => {
     const params = new URLSearchParams({
-      service_point_id: servicePoint.id.toString(),
-      ...(selectedCategory && { category_id: selectedCategory.toString() }),
-      ...(service && { service_id: service.id.toString() })
+      service_point_id: servicePointData.id.toString(),
+      ...(selectedCategory && { category_id: selectedCategory.toString() })
     });
     
     navigate(`/client/booking/new-with-availability?${params.toString()}`);
+  };
+
+  const handleViewDetails = (servicePointData: ServicePointData) => {
+    // Переход на детальную страницу сервисной точки
+    navigate(`/client/service-point/${servicePointData.id}`);
   };
 
   const toggleServicePointExpansion = (servicePointId: number) => {
@@ -611,123 +712,13 @@ const ClientServicesPage: React.FC = () => {
 
                 {/* Список сервисных центров */}
                 <Grid container spacing={3}>
-                  {sortedServicePoints.map((servicePoint, index) => (
-                    <Grid item xs={12} md={6} lg={4} key={servicePoint.id}>
-                      <Fade in timeout={800 + index * 100}>
-                        <Card sx={{ 
-                          ...cardStyles,
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          transition: ANIMATIONS.transition.medium,
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: theme.shadows[8]
-                          }
-                        }}>
-                          {/* Фото сервисного центра */}
-                          {servicePoint.photos && servicePoint.photos.length > 0 && (
-                            <CardMedia
-                              component="img"
-                              height="200"
-                              image={servicePoint.photos.find(p => p.is_main)?.url || servicePoint.photos[0]?.url}
-                              alt={servicePoint.name}
-                              sx={{ objectFit: 'cover' }}
-                            />
-                          )}
-
-                          <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                            {/* Заголовок */}
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                              <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary, lineHeight: 1.3 }}>
-                                {servicePoint.name}
-                              </Typography>
-                              {servicePoint.work_status === 'working' && (
-                                <Chip 
-                                  label="Работает"
-                                  size="small"
-                                  color="success"
-                                />
-                              )}
-                            </Box>
-
-                            {/* Рейтинг и отзывы */}
-                            {servicePoint.average_rating && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <Rating 
-                                  value={formatRating(servicePoint.average_rating)} 
-                                  readOnly 
-                                  size="small" 
-                                  sx={{ mr: 1 }} 
-                                />
-                                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                  {formatRating(servicePoint.average_rating).toFixed(1)}
-                                  {servicePoint.reviews_count && ` (${servicePoint.reviews_count} отзывов)`}
-                                </Typography>
-                              </Box>
-                            )}
-
-                            {/* Адрес */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                              <LocationIcon fontSize="small" sx={{ mr: 1, color: colors.textSecondary }} />
-                              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                {servicePoint.address}
-                              </Typography>
-                            </Box>
-
-                            {/* Партнер */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                              <BusinessIcon fontSize="small" sx={{ mr: 1, color: colors.textSecondary }} />
-                              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                {servicePoint.partner?.name || 'Партнер'}
-                              </Typography>
-                            </Box>
-
-                            {/* Телефон */}
-                            {servicePoint.contact_phone && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <PhoneIcon fontSize="small" sx={{ mr: 1, color: colors.textSecondary }} />
-                                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                  {servicePoint.contact_phone}
-                                </Typography>
-                              </Box>
-                            )}
-
-                            {/* Расстояние */}
-                            {servicePoint.distance && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <LocationIcon fontSize="small" sx={{ mr: 1, color: colors.textSecondary }} />
-                                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                  {servicePoint.distance.toFixed(1)} км от вас
-                                </Typography>
-                              </Box>
-                            )}
-
-                            {/* Количество постов */}
-                            {servicePoint.posts_count && (
-                              <Chip 
-                                label={`${servicePoint.posts_count} постов обслуживания`}
-                                size="small"
-                                variant="outlined"
-                                sx={{ mb: 2 }}
-                              />
-                            )}
-                          </CardContent>
-
-                          <CardActions sx={{ p: 3, pt: 0 }}>
-                            <Button
-                              fullWidth
-                              variant="contained"
-                              startIcon={<BookIcon />}
-                              onClick={() => handleBookService(servicePoint)}
-                              sx={buttonStyles}
-                            >
-                              Забронировать услугу
-                            </Button>
-                          </CardActions>
-                        </Card>
-                      </Fade>
-                    </Grid>
+                  {sortedServicePoints.map((servicePoint) => (
+                    <ServicePointCardWrapper
+                      key={servicePoint.id}
+                      servicePoint={servicePoint}
+                      onViewDetails={handleViewDetails}
+                      onBook={handleBookService}
+                    />
                   ))}
                 </Grid>
 
