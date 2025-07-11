@@ -195,6 +195,16 @@
     "phone": "Телефон",
     "active": "Активна"
   },
+  "categorySelection": {
+    "title": "Оберіть категорію послуг",
+    "subtitle": "Оберіть категорію послуг для запису в сервісну точку \"{{servicePointName}}\"",
+    "noCategories": "В даній сервісній точці немає доступних категорій послуг",
+    "servicesCount": "{{count}} послуг",
+    "servicesCount_one": "{{count}} послуга",
+    "servicesCount_few": "{{count}} послуги",
+    "servicesCount_many": "{{count}} послуг",
+    "availableForBooking": "Доступно для запису"
+  },
   "carModelsList": {
     "title": "Моделі автомобілів",
     "searchPlaceholder": "Пошук моделей",

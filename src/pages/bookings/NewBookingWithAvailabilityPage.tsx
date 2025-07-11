@@ -159,7 +159,24 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // Мемоизированное значение для ID клиента
   const clientId = useMemo(() => {
     if (!authUser) return 0;
-    return (authUser as any)?.client?.id || authUser?.user?.client_id || 0;
+    
+    try {
+      // Безопасное извлечение ID клиента из разных структур ответа API
+      const authData = authUser as any; // Принудительное приведение типа для избежания ошибок компиляции
+      
+      // Проверяем различные возможные структуры ответа
+      const clientFromUser = authData?.user?.client_id;
+      const clientFromDirect = authData?.client?.id;
+      const clientFromUserClient = authData?.user?.client?.id;
+      
+      const resultId = clientFromDirect || clientFromUser || clientFromUserClient || 0;
+      console.log('🔍 Извлечение clientId:', { clientFromUser, clientFromDirect, clientFromUserClient, resultId });
+      
+      return resultId;
+    } catch (error) {
+      console.error('❌ Ошибка при извлечении clientId:', error);
+      return 0;
+    }
   }, [authUser]);
 
   // API хук для любимых точек (только для авторизованных пользователей)
@@ -260,7 +277,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // ✅ Эффект для проверки любимых точек у авторизованного пользователя
   useEffect(() => {
-    if (isAuthenticated && clientId && !hasCheckedFavorites) {
+    if (isAuthenticated && clientId && clientId > 0 && !hasCheckedFavorites) {
       console.log('🌟 Проверяем наличие любимых точек для пользователя:', clientId);
       
       if (!isLoadingFavorites && favoritesData) {
@@ -277,8 +294,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         
         setHasCheckedFavorites(true);
       }
-    } else if (!isAuthenticated) {
-      console.log('👤 Пользователь не авторизован, пропускаем проверку любимых точек');
+    } else if (!isAuthenticated || clientId === 0) {
+      console.log('👤 Пользователь не авторизован или clientId=0, пропускаем проверку любимых точек');
       setShowQuickFavorites(false);
       setHasCheckedFavorites(true);
     }
@@ -320,7 +337,11 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       });
       
       // Определяем начальный шаг в зависимости от переданных данных
-      if (stateData.step1Completed || (stateData.cityId && stateData.servicePointId && stateData.service_category_id)) {
+      if (stateData.startFromDateTimeStep && stateData.cityId && stateData.servicePointId && stateData.service_category_id) {
+        // Если явно указан переход на шаг выбора даты и времени
+        setActiveStep(2);
+        console.log('⏭️ Прямой переход на шаг выбора даты и времени (шаг 2) через startFromDateTimeStep');
+      } else if (stateData.step1Completed || (stateData.cityId && stateData.servicePointId && stateData.service_category_id)) {
         // Если город, сервисная точка и категория уже выбраны, переходим к выбору даты и времени
         setActiveStep(2);
         console.log('⏭️ Переход на шаг выбора даты и времени (шаг 2)');

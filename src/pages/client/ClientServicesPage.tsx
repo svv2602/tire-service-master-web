@@ -406,12 +406,9 @@ const ClientServicesPage: React.FC = () => {
   };
 
   const handleBookService = (servicePointData: ServicePointData) => {
-    const params = new URLSearchParams({
-      service_point_id: servicePointData.id.toString(),
-      ...(selectedCategory && { category_id: selectedCategory.toString() })
-    });
-    
-    navigate(`/client/booking/new-with-availability?${params.toString()}`);
+    // Логика бронирования теперь обрабатывается в ServicePointCard через модальное окно
+    // Этот обработчик оставляем для совместимости, но основную работу выполняет компонент
+    console.log('🎯 Бронирование через ServicePointCard для:', servicePointData.name);
   };
 
   const handleViewDetails = (servicePointData: ServicePointData) => {

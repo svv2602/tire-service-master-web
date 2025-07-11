@@ -39,8 +39,10 @@ import {
   ArrowForwardIos as ArrowForwardIosIcon
 } from '@mui/icons-material';
 import { FavoriteButton } from '../FavoriteButton';
+import { CategorySelectionModal } from '../CategorySelectionModal';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getCardStyles } from '../../../styles';
+import { useCategorySelection } from '../../../hooks/useCategorySelection';
 
 // Интерфейсы
 export interface ServicePointPhoto {
@@ -597,6 +599,17 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const [servicesExpanded, setServicesExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
 
+  // Хук для выбора категории услуг
+  const {
+    isModalOpen,
+    selectedServicePoint,
+    availableCategories,
+    isLoadingCategories: isLoadingCategoriesFromHook,
+    openCategorySelection,
+    closeCategorySelection,
+    handleCategorySelect
+  } = useCategorySelection();
+
   // Заглушка для расписания (TODO: интегрировать с API расписания)
   const mockSchedule: WorkingSchedule[] = [
     { day: 'Понеділок - П\'ятниця', time: '09:00 - 18:00', isWorkingDay: true },
@@ -611,9 +624,15 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   };
 
   const handleBook = () => {
-    if (onBook) {
-      onBook(servicePoint);
-    }
+    // Используем новый хук для выбора категории
+    openCategorySelection({
+      id: servicePoint.id,
+      name: servicePoint.name,
+      city: servicePoint.city
+    });
+    
+    // Не вызываем старый обработчик, чтобы избежать конфликтов
+    // Новая логика модального окна полностью заменяет старую
   };
 
   const handleViewDetails = () => {
@@ -907,6 +926,16 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
           </>
         )}
       </CardActions>
+
+      {/* Модальное окно выбора категории услуг */}
+      <CategorySelectionModal
+        open={isModalOpen}
+        onClose={closeCategorySelection}
+        servicePointName={selectedServicePoint?.name || ''}
+        categories={availableCategories}
+        isLoading={isLoadingCategoriesFromHook}
+        onCategorySelect={handleCategorySelect}
+      />
     </Card>
   );
 };

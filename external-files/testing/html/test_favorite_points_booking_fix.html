@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Исправление логики бронирования из избранных точек</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #4CAF50;
+        }
+        .problem {
+            border-left-color: #f44336;
+        }
+        .solution {
+            border-left-color: #2196F3;
+        }
+        .test-case {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fff;
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+        }
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 12px;
+        }
+        .expected {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
+        .before {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+        .technical {
+            background: #e2e3e5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 Тест: Исправление логики бронирования из избранных точек</h1>
+        <p>Проверка корректной работы кнопки "Забронировать" в /client/profile</p>
+        <p><strong>Дата тестирования:</strong> <span id="testDate"></span></p>
+    </div>
+
+    <div class="test-section problem">
+        <h2>🚨 Проблема (ДО исправления)</h2>
+        <div class="before">
+            <strong>Симптом:</strong> При нажатии кнопки "Забронировать" в карточке сервисной точки в /client/profile 
+            показывалось сообщение "В данной сервисной точке нет доступных категорий услуг"
+        </div>
+        
+        <h3>Корневые причины:</h3>
+        <ul>
+            <li><strong>Неправильная валидация:</strong> Проверялись категории для модального окна (availableCategories), а не для конкретной карточки</li>
+            <li><strong>Логическая ошибка:</strong> Валидация блокировала переход к бронированию, даже если у точки есть активные посты</li>
+            <li><strong>Недостаточное время загрузки:</strong> 100мс было мало для загрузки данных о постах</li>
+        </ul>
+    </div>
+
+    <div class="test-section solution">
+        <h2>✅ Решение (ПОСЛЕ исправления)</h2>
+        
+        <h3>Изменения в логике:</h3>
+        <div class="technical">
+// БЫЛО (неправильно):
+if (availableCategories.length === 0) {
+    onNotify('В данной сервисной точке нет доступных категорий услуг', 'warning');
+    return;
+}
+
+// СТАЛО (правильно):
+if (availableCategories.length === 0) {
+    // Переходим к бронированию - пользователь выберет категорию на первом шаге
+    navigate('/client/booking/new-with-availability', {
+        state: {
+            servicePointId: servicePointData.id,
+            cityId: servicePointData.city?.id,
+            cityName: servicePointData.city?.name,
+            // Не передаем service_category_id
+        }
+    });
+    return;
+}
+        </div>
+
+        <h3>Дополнительные улучшения:</h3>
+        <ul>
+            <li>Увеличена задержка с 100мс до 200мс для надежной загрузки</li>
+            <li>Добавлена кнопка избранного в карточки (showFavoriteButton=true)</li>
+            <li>Улучшена логика предзаполнения данных для бронирования</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Сценарии тестирования</h2>
+        
+        <div class="test-case">
+            <h3>Тест-кейс 1: Точка без предзагруженных категорий</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>Перейдите на страницу /client/profile</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Найдите любую избранную сервисную точку</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Нажмите кнопку <span class="highlight">"Забронировать"</span></div>
+            </div>
+            <div class="expected">
+                <strong>Ожидаемый результат:</strong> Переход на страницу /client/booking/new-with-availability 
+                с предзаполненными данными точки и города, где пользователь может выбрать категорию на первом шаге
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Тест-кейс 2: Точка с одной доступной категорией</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>Перейдите на страницу /client/profile</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Найдите сервисную точку с одной категорией услуг</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Нажмите кнопку <span class="highlight">"Забронировать"</span></div>
+            </div>
+            <div class="expected">
+                <strong>Ожидаемый результат:</strong> Прямой переход на страницу бронирования с предзаполненной категорией
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Тест-кейс 3: Точка с несколькими категориями</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>Перейдите на страницу /client/profile</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Найдите сервисную точку с несколькими категориями</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Нажмите кнопку <span class="highlight">"Забронировать"</span></div>
+            </div>
+            <div class="expected">
+                <strong>Ожидаемый результат:</strong> Открытие модального окна выбора категории услуг
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Проверяемые аспекты</h2>
+        
+        <h3>Функциональность:</h3>
+        <ul>
+            <li><span class="emoji">✅</span> Кнопка "Забронировать" всегда работает</li>
+            <li><span class="emoji">✅</span> Корректное предзаполнение данных сервисной точки</li>
+            <li><span class="emoji">✅</span> Корректное предзаполнение города</li>
+            <li><span class="emoji">✅</span> Правильная обработка категорий услуг</li>
+        </ul>
+
+        <h3>UX:</h3>
+        <ul>
+            <li><span class="emoji">✅</span> Нет блокирующих сообщений об ошибках</li>
+            <li><span class="emoji">✅</span> Плавные переходы между страницами</li>
+            <li><span class="emoji">✅</span> Интуитивный выбор категорий</li>
+            <li><span class="emoji">✅</span> Сохранение контекста бронирования</li>
+        </ul>
+
+        <h3>Технические аспекты:</h3>
+        <ul>
+            <li><span class="emoji">✅</span> Корректная загрузка данных о постах</li>
+            <li><span class="emoji">✅</span> Правильное использование таймаутов</li>
+            <li><span class="emoji">✅</span> Обработка состояний загрузки</li>
+            <li><span class="emoji">✅</span> Правильная передача state в navigate()</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Результаты тестирования</h2>
+        
+        <div class="technical">
+Файлы изменений:
+- tire-service-master-web/src/components/profile/FavoritePointsTab.tsx
+  ✅ Создан компонент FavoritePointCard
+  ✅ Исправлена логика handleBookingWithCategorySelection  
+  ✅ Убрана блокирующая валидация
+  ✅ Добавлена кнопка избранного
+
+Коммит: deab29d - "🔧 Исправление логики бронирования из избранных сервисных точек"
+        </div>
+
+        <div class="expected">
+            <strong>Статус:</strong> ✅ Исправления внедрены и готовы к тестированию
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testDate').textContent = new Date().toLocaleString('ru-RU');
+    </script>
+</body>
+</html> 
