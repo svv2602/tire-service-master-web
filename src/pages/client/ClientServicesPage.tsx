@@ -215,10 +215,10 @@ const ClientServicesPage: React.FC = () => {
 
   // Опции сортировки
   const sortOptions: SortOption[] = [
-    { value: 'name', label: 'По названию' },
-    { value: 'rating', label: 'По рейтингу' },
-    { value: 'reviews_count', label: 'По количеству отзывов' },
-    { value: 'distance', label: 'По расстоянию' }
+    { value: 'name', label: t('forms.clientPages.clientServicesPage.sortOptions.name') },
+    { value: 'rating', label: t('forms.clientPages.clientServicesPage.sortOptions.rating') },
+    { value: 'reviews_count', label: t('forms.clientPages.clientServicesPage.sortOptions.reviewsCount') },
+    { value: 'distance', label: t('forms.clientPages.clientServicesPage.sortOptions.distance') }
   ];
 
   // API запросы
@@ -430,12 +430,12 @@ const ClientServicesPage: React.FC = () => {
 
   const getServiceIcon = (categoryName: string) => {
     const iconMap: { [key: string]: string } = {
-      'Шиномонтаж': '🔧',
-      'Балансировка': '⚖️',
-      'Ремонт дисков': '🛠️',
-      'Автомойка': '🚿',
-      'Диагностика': '🔍',
-      'default': '🔧'
+      'Шиномонтаж': t('forms.clientPages.clientServicesPage.serviceIcons.tireService'),
+      'Балансировка': t('forms.clientPages.clientServicesPage.serviceIcons.balancing'),
+      'Ремонт дисков': t('forms.clientPages.clientServicesPage.serviceIcons.wheelRepair'),
+      'Автомойка': t('forms.clientPages.clientServicesPage.serviceIcons.carWash'),
+      'Диагностика': t('forms.clientPages.clientServicesPage.serviceIcons.diagnostics'),
+      'default': t('forms.clientPages.clientServicesPage.serviceIcons.default')
     };
     return iconMap[categoryName] || iconMap.default;
   };
@@ -453,10 +453,10 @@ const ClientServicesPage: React.FC = () => {
           <Fade in timeout={300}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
               <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                Поиск сервисных центров
+                {t('forms.clientPages.clientServicesPage.title')}
               </Typography>
               <Typography variant="h6" sx={{ color: colors.textSecondary, maxWidth: 600, mx: 'auto' }}>
-                Найдите ближайший сервисный центр и забронируйте услугу онлайн
+                {t('forms.clientPages.clientServicesPage.subtitle')}
               </Typography>
             </Box>
           </Fade>
@@ -469,10 +469,10 @@ const ClientServicesPage: React.FC = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
-                    label="Поиск по названию"
+                    label={t('forms.clientPages.clientServicesPage.searchLabel')}
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Введите название сервиса..."
+                    placeholder={t('forms.clientPages.clientServicesPage.searchPlaceholder')}
                     sx={textFieldStyles}
                     InputProps={{
                       startAdornment: (
@@ -494,11 +494,11 @@ const ClientServicesPage: React.FC = () => {
                 {/* Сортировка */}
                 <Grid item xs={12} md={3}>
                   <FormControl fullWidth sx={textFieldStyles}>
-                    <InputLabel>Сортировать по</InputLabel>
+                    <InputLabel>{t('forms.clientPages.clientServicesPage.sortLabel')}</InputLabel>
                     <Select
                       value={sortBy}
                       onChange={(e) => handleSortChange(e.target.value)}
-                      label="Сортировать по"
+                      label={t('forms.clientPages.clientServicesPage.sortLabel')}
                       startAdornment={
                         <InputAdornment position="start">
                           <SortIcon />
@@ -524,7 +524,7 @@ const ClientServicesPage: React.FC = () => {
                     onClick={() => setShowFilters(!showFilters)}
                     sx={{ ...secondaryButtonStyles, height: '56px' }}
                   >
-                    Фильтры
+                    {t('forms.clientPages.clientServicesPage.filtersButton')}
                   </Button>
                 </Grid>
               </Grid>
@@ -536,18 +536,18 @@ const ClientServicesPage: React.FC = () => {
                     {/* Категория услуг */}
                     <Grid item xs={12} md={6} lg={3}>
                       <FormControl fullWidth sx={textFieldStyles}>
-                        <InputLabel>Категория услуг</InputLabel>
+                        <InputLabel>{t('forms.clientPages.clientServicesPage.categoryLabel')}</InputLabel>
                         <Select
                           value={selectedCategory || ''}
                           onChange={(e) => handleCategoryChange(e.target.value ? Number(e.target.value) : null)}
-                          label="Категория услуг"
+                          label={t('forms.clientPages.clientServicesPage.categoryLabel')}
                           startAdornment={
                             <InputAdornment position="start">
                               <CategoryIcon />
                             </InputAdornment>
                           }
                         >
-                          <MenuItem value="">Все категории</MenuItem>
+                          <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allCategories')}</MenuItem>
                           {sortedCategories.map((category) => (
                             <MenuItem key={category.id} value={category.id}>
                               {getServiceIcon(category.name)} {category.name}
@@ -560,18 +560,18 @@ const ClientServicesPage: React.FC = () => {
                     {/* Услуги */}
                     <Grid item xs={12} md={6} lg={3}>
                       <FormControl fullWidth sx={textFieldStyles} disabled={!selectedCategory}>
-                        <InputLabel>Услуга</InputLabel>
+                        <InputLabel>{t('forms.clientPages.clientServicesPage.serviceLabel')}</InputLabel>
                         <Select
                           value={selectedService || ''}
                           onChange={(e) => handleServiceChange(e.target.value ? Number(e.target.value) : null)}
-                          label="Услуга"
+                          label={t('forms.clientPages.clientServicesPage.serviceLabel')}
                           startAdornment={
                             <InputAdornment position="start">
                               <BuildIcon />
                             </InputAdornment>
                           }
                         >
-                          <MenuItem value="">Все услуги</MenuItem>
+                          <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allServices')}</MenuItem>
                           {services.map((service) => (
                             <MenuItem key={service.id} value={service.id}>
                               {service.name}
@@ -584,18 +584,18 @@ const ClientServicesPage: React.FC = () => {
                     {/* Регион */}
                     <Grid item xs={12} md={6} lg={3}>
                       <FormControl fullWidth sx={textFieldStyles}>
-                        <InputLabel>Регион</InputLabel>
+                        <InputLabel>{t('forms.clientPages.clientServicesPage.regionLabel')}</InputLabel>
                         <Select
                           value={selectedRegion || ''}
                           onChange={(e) => handleRegionChange(e.target.value ? Number(e.target.value) : null)}
-                          label="Регион"
+                          label={t('forms.clientPages.clientServicesPage.regionLabel')}
                           startAdornment={
                             <InputAdornment position="start">
                               <LocationIcon />
                             </InputAdornment>
                           }
                         >
-                          <MenuItem value="">Все регионы</MenuItem>
+                          <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allRegions')}</MenuItem>
                           {regions.map((region) => (
                             <MenuItem key={region.id} value={region.id}>
                               {region.name}
@@ -616,8 +616,8 @@ const ClientServicesPage: React.FC = () => {
                         renderInput={(params) => (
                           <TextField
                             {...params}
-                            label="Город"
-                            placeholder="Выберите город..."
+                            label={t('forms.clientPages.clientServicesPage.cityLabel')}
+                            placeholder={t('forms.clientPages.clientServicesPage.cityPlaceholder')}
                             sx={textFieldStyles}
                             InputProps={{
                               ...params.InputProps,
@@ -630,8 +630,8 @@ const ClientServicesPage: React.FC = () => {
                           />
                         )}
                         loading={citiesLoading}
-                        loadingText="Загрузка городов..."
-                        noOptionsText="Города не найдены"
+                        loadingText={t('forms.clientPages.clientServicesPage.loading.cities')}
+                        noOptionsText={t('forms.clientPages.clientServicesPage.noOptions.cities')}
                       />
                     </Grid>
                   </Grid>
@@ -644,7 +644,7 @@ const ClientServicesPage: React.FC = () => {
                       onClick={handleClearFilters}
                       sx={{ color: colors.textSecondary }}
                     >
-                      Очистить фильтры
+                      {t('forms.clientPages.clientServicesPage.clearFiltersButton')}
                     </Button>
                   </Box>
                 </Box>
@@ -663,14 +663,14 @@ const ClientServicesPage: React.FC = () => {
             </Grid>
           ) : servicePointsError ? (
             <Alert severity="error" sx={{ mb: 4 }}>
-              Ошибка при загрузке данных. Попробуйте обновить страницу.
+              {t('forms.clientPages.clientServicesPage.errors.loadingData')}
             </Alert>
           ) : sortedServicePoints.length === 0 ? (
             <Fade in timeout={700}>
               <Alert severity="warning" sx={{ mb: 4 }}>
-                Сервисные центры не найдены.
+                {t('forms.clientPages.clientServicesPage.results.noResults')}
                 {(searchQuery || selectedCity || selectedCategory || selectedService) && 
-                  ' Попробуйте изменить фильтры.'}
+                  t('forms.clientPages.clientServicesPage.results.tryChangeFilters')}
               </Alert>
             </Fade>
           ) : (
@@ -679,13 +679,19 @@ const ClientServicesPage: React.FC = () => {
                 {/* Информация о результатах */}
                 <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
                   <Typography variant="h6" sx={{ color: colors.textPrimary }}>
-                    Найдено {totalItems} сервисных центров
-                    {totalPages > 1 && ` (страница ${currentPage} из ${totalPages})`}
+                    {totalPages > 1 
+                      ? t('forms.clientPages.clientServicesPage.results.foundWithPagination', { 
+                          total: totalItems, 
+                          current: currentPage, 
+                          total_pages: totalPages 
+                        })
+                      : t('forms.clientPages.clientServicesPage.results.found', { count: totalItems })
+                    }
                   </Typography>
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {selectedCity && (
                       <Chip 
-                        label={`Город: ${selectedCity.name}`}
+                        label={t('forms.clientPages.clientServicesPage.chips.city', { name: selectedCity.name })}
                         onDelete={() => handleCityChange(null)}
                         color="primary"
                         size="small"
@@ -693,7 +699,9 @@ const ClientServicesPage: React.FC = () => {
                     )}
                     {selectedCategory && (
                       <Chip 
-                        label={`Категория: ${sortedCategories.find(c => c.id === selectedCategory)?.name}`}
+                        label={t('forms.clientPages.clientServicesPage.chips.category', { 
+                          name: sortedCategories.find(c => c.id === selectedCategory)?.name 
+                        })}
                         onDelete={() => handleCategoryChange(null)}
                         color="secondary"
                         size="small"
@@ -701,7 +709,9 @@ const ClientServicesPage: React.FC = () => {
                     )}
                     {selectedService && (
                       <Chip 
-                        label={`Услуга: ${services.find(s => s.id === selectedService)?.name}`}
+                        label={t('forms.clientPages.clientServicesPage.chips.service', { 
+                          name: services.find(s => s.id === selectedService)?.name 
+                        })}
                         onDelete={() => handleServiceChange(null)}
                         color="info"
                         size="small"
