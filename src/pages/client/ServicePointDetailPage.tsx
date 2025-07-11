@@ -441,7 +441,7 @@ const ServicePointDetailPage: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<BookIcon />}
-              onClick={() => navigate(`/client/booking/new-with-availability?servicePointId=${id}`)}
+              onClick={handleBooking}
               sx={{
                 borderRadius: 3,
                 px: 4,
@@ -692,7 +692,7 @@ const ServicePointDetailPage: React.FC = () => {
               variant="contained"
               size="large"
               startIcon={<BookIcon />}
-              onClick={() => navigate(`/client/booking/new-with-availability?servicePointId=${id}`)}
+              onClick={handleBooking}
               sx={{
                 borderRadius: 3,
                 px: 4,
