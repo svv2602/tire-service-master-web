@@ -875,7 +875,8 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
             }}
             sx={{ 
               bgcolor: theme.palette.success.main,
-              '&:hover': { bgcolor: theme.palette.success.dark }
+              '&:hover': { bgcolor: theme.palette.success.dark },
+              ml: 2 // Добавляем отступ слева
             }}
           >
             {t('components:servicePointCard.book')}
