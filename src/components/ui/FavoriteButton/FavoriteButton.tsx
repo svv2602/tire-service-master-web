@@ -125,14 +125,17 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({
       disabled={isLoading}
       size={size}
       sx={{
-        color: isFavorite ? theme.palette.error.main : theme.palette.action.active,
+        color: isFavorite ? theme.palette.error.main : theme.palette.grey[600],
         transition: 'all 0.2s ease',
+        filter: 'drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3))',
         '&:hover': {
           color: isFavorite ? theme.palette.error.dark : theme.palette.error.main,
           transform: 'scale(1.1)',
+          filter: 'drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.4))',
         },
         '&:disabled': {
           color: theme.palette.action.disabled,
+          filter: 'none',
         }
       }}
     >

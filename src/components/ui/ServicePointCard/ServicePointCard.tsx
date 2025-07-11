@@ -205,24 +205,7 @@ const PhotoGallery: React.FC<{
             </Box>
           )}
 
-          {/* Счетчик фотографий */}
-          {showCounter && hasPhotos && photos.length > 1 && (
-            <Chip
-              label={`${photos.length} ${t('components:servicePointCard.photos')}`}
-              size="small"
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                bgcolor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white',
-                fontSize: '0.75rem',
-                '& .MuiChip-label': {
-                  px: 1
-                }
-              }}
-            />
-          )}
+
 
           {/* Миниатюры под основным фото */}
           {hasPhotos && photos.length > 1 && (
@@ -672,11 +655,16 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
               top: 8,
               right: 8,
               zIndex: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
               borderRadius: '50%',
-              backdropFilter: 'blur(4px)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.2s ease',
               '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                transform: 'scale(1.05)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
               }
             }}
           >
