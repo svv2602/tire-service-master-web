@@ -276,7 +276,21 @@
         "dayOfWeekLabel": "День недели",
         "allCategories": "Все категории",
         "noActivePostsWarning": "В категории \"{{categoryName}}\" нет активных постов",
-        "unknownCategory": "Неизвестная категория"
+        "unknownCategory": "Неизвестная категория",
+        "categoryLabel": "Категория услуг",
+        "postAvailability": "Доступность постов",
+        "activePosts": "активных постов",
+        "filtered": "отфильтровано",
+        "category": "Категория",
+        "slotGenerationInfo": "Режим: {{previewMode}}",
+        "apiPreview": "API предпросмотр",
+        "localPreview": "Локальный предпросмотр",
+        "postDetailsHint": "Посты с индивидуальным расписанием отмечены цветом",
+        "livePreviewAutoUpdate": "Данные обновляются автоматически при изменении настроек",
+        "previewModeHint": "Данные формируются на основе настроек формы без сохранения",
+        "noActivePostsForCategory": "Нет активных постов для категории \"{{categoryName}}\"",
+        "weekend": "Выходной",
+        "selectWorkingDay": "Выберите рабочий день для просмотра расписания"
       },
       "days": {
         "sunday": "Воскресенье",

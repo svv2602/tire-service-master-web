@@ -292,7 +292,21 @@
         "dayOfWeekLabel": "День тижня",
         "allCategories": "Всі категорії",
         "noActivePostsWarning": "У категорії \"{{categoryName}}\" немає активних постів",
-        "unknownCategory": "Невідома категорія"
+        "unknownCategory": "Невідома категорія",
+        "categoryLabel": "Категорія послуг",
+        "postAvailability": "Доступність постів",
+        "activePosts": "активних постів",
+        "filtered": "відфільтровано",
+        "category": "Категорія",
+        "slotGenerationInfo": "Режим: {{previewMode}}",
+        "apiPreview": "API попередній перегляд",
+        "localPreview": "Локальний попередній перегляд",
+        "postDetailsHint": "Пости з індивідуальним розкладом відмічені кольором",
+        "livePreviewAutoUpdate": "Дані оновлюються автоматично при зміні налаштувань",
+        "previewModeHint": "Дані формуються на основі налаштувань форми без збереження",
+        "noActivePostsForCategory": "Немає активних постів для категорії \"{{categoryName}}\"",
+        "weekend": "Вихідний",
+        "selectWorkingDay": "Оберіть робочий день для перегляду розкладу"
       },
       "services": {
         "title": "Управління послугами",
