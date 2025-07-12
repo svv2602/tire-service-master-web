@@ -138,6 +138,15 @@ export const bookingConflictsApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // Предварительный просмотр конфликтов с данными формы
+    previewBookingConflictsWithFormData: builder.mutation<BookingConflictPreviewResponse & { preview_mode: boolean; form_data_applied: boolean }, { service_point_id: number; form_data: any }>({
+      query: (data) => ({
+        url: 'booking_conflicts/preview_with_form_data',
+        method: 'POST',
+        body: data,
+      }),
+    }),
+
     // Разрешение конфликта
     resolveBookingConflict: builder.mutation<{ message: string; booking_conflict: BookingConflict }, { id: number } & BookingConflictResolutionRequest>({
       query: ({ id, ...data }) => ({
@@ -185,6 +194,7 @@ export const {
   useGetBookingConflictStatisticsQuery,
   useAnalyzeBookingConflictsMutation,
   usePreviewBookingConflictsMutation,
+  usePreviewBookingConflictsWithFormDataMutation,
   useResolveBookingConflictMutation,
   useIgnoreBookingConflictMutation,
   useBulkResolveBookingConflictsMutation,

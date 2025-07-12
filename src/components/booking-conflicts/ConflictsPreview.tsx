@@ -22,13 +22,16 @@ import {
   ExpandLess as ExpandLessIcon,
   Preview as PreviewIcon,
 } from '@mui/icons-material';
-import { usePreviewBookingConflictsMutation, BookingConflict } from '../../api/bookingConflicts.api';
+import { usePreviewBookingConflictsMutation, usePreviewBookingConflictsWithFormDataMutation, BookingConflict } from '../../api/bookingConflicts.api';
 
 interface ConflictsPreviewProps {
   servicePointId?: number;
   seasonalScheduleId?: number;
   title?: string;
   description?: string;
+  // Новые пропсы для работы с данными формы
+  formData?: any;
+  useFormData?: boolean;
 }
 
 const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
@@ -36,6 +39,8 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
   seasonalScheduleId,
   title,
   description,
+  formData,
+  useFormData = false,
 }) => {
   const { t } = useTranslation('components');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,18 +48,33 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
   const [conflictsCount, setConflictsCount] = useState(0);
   const [hasAnalyzed, setHasAnalyzed] = useState(false);
 
-  const [previewConflicts, { isLoading }] = usePreviewBookingConflictsMutation();
+  const [previewConflicts, { isLoading: isLoadingStandard }] = usePreviewBookingConflictsMutation();
+  const [previewConflictsWithFormData, { isLoading: isLoadingWithFormData }] = usePreviewBookingConflictsWithFormDataMutation();
+
+  const isLoading = isLoadingStandard || isLoadingWithFormData;
 
   const displayTitle = title || t('conflictsPreview.defaultTitle');
   const displayDescription = description || t('conflictsPreview.defaultDescription');
 
   const handlePreview = async () => {
     try {
-      const params: any = {};
-      if (servicePointId) params.service_point_id = servicePointId;
-      if (seasonalScheduleId) params.seasonal_schedule_id = seasonalScheduleId;
+      let result;
+      
+      if (useFormData && formData && servicePointId) {
+        // Используем новый API с данными формы
+        result = await previewConflictsWithFormData({
+          service_point_id: servicePointId,
+          form_data: formData
+        }).unwrap();
+      } else {
+        // Используем стандартный API
+        const params: any = {};
+        if (servicePointId) params.service_point_id = servicePointId;
+        if (seasonalScheduleId) params.seasonal_schedule_id = seasonalScheduleId;
 
-      const result = await previewConflicts(params).unwrap();
+        result = await previewConflicts(params).unwrap();
+      }
+      
       setConflicts(result.conflicts);
       setConflictsCount(result.count);
       setHasAnalyzed(true);

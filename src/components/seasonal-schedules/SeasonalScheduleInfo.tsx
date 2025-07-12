@@ -15,6 +15,7 @@ import {
 } from '@mui/icons-material';
 import { format, isAfter, isBefore, isToday } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 
 import { useGetSeasonalSchedulesQuery } from '../../api/seasonalSchedules.api';
 import type { SeasonalSchedule } from '../../api/seasonalSchedules.api';
@@ -26,6 +27,7 @@ interface SeasonalScheduleInfoProps {
 const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
   servicePointId,
 }) => {
+  const { t } = useTranslation('components');
   const { data: schedulesData, isLoading, error } = useGetSeasonalSchedulesQuery({
     servicePointId,
     page: 1,
@@ -37,7 +39,7 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
       <Box display="flex" alignItems="center" gap={1}>
         <CircularProgress size={16} />
         <Typography variant="body2" color="text.secondary">
-          Загрузка сезонных расписаний...
+          {t('seasonalSchedules.loading')}
         </Typography>
       </Box>
     );
@@ -46,7 +48,7 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
   if (error) {
     return (
       <Alert severity="error" sx={{ mt: 1 }}>
-        Ошибка загрузки сезонных расписаний
+        {t('seasonalSchedules.info.loadingError')}
       </Alert>
     );
   }
@@ -115,13 +117,13 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case 'current':
-        return 'Активно';
+        return t('seasonalSchedules.info.active');
       case 'upcoming':
-        return 'Предстоящее';
+        return t('seasonalSchedules.info.upcoming');
       case 'past':
-        return 'Завершено';
+        return t('seasonalSchedules.info.past');
       default:
-        return 'Неизвестно';
+        return t('seasonalSchedules.info.unknown');
     }
   };
 
@@ -138,7 +140,7 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
         <Box display="flex" alignItems="center" gap={1}>
           <EventIcon color="disabled" />
           <Typography variant="body2" color="text.secondary">
-            Сезонные расписания не настроены
+            {t('seasonalSchedules.noSchedulesConfigured')}
           </Typography>
         </Box>
       </Paper>
@@ -159,10 +161,10 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
           <Box display="flex" alignItems="center" gap={1}>
             <CalendarIcon color="primary" />
             <Typography variant="body2" fontWeight="medium">
-              Сезонных расписаний: {schedules.length}
+              {t('seasonalSchedules.totalSchedules', { count: schedules.length })}
             </Typography>
             <Chip 
-              label={`${activeSchedules.length} активных`}
+              label={`${activeSchedules.length} ${t('seasonalSchedules.activeSchedules', { count: activeSchedules.length })}`}
               size="small"
               color={activeSchedules.length > 0 ? 'success' : 'default'}
               variant="outlined"
@@ -196,7 +198,7 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
             <Box display="flex" alignItems="center" gap={1}>
               <ScheduleIcon color="disabled" />
               <Typography variant="body2" color="text.secondary">
-                Нет предстоящих расписаний
+                {t('seasonalSchedules.noUpcomingSchedules')}
               </Typography>
             </Box>
           )}
