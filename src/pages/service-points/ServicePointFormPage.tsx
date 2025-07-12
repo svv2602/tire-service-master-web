@@ -37,6 +37,7 @@ import PostsStep from './components/PostsStep';
 import ServicesStep from './components/ServicesStep';
 import PhotosStep from './components/PhotosStep';
 import ScheduleStep from './components/ScheduleStep';
+import SeasonalSchedulesStep from './components/SeasonalSchedulesStep';
 
 // API хуки
 import {
@@ -60,6 +61,7 @@ const getFormSteps = (t: any) => [
   { id: 'location', label: t('forms.servicePoint.steps.location'), component: LocationStep },
   { id: 'contact', label: t('forms.servicePoint.steps.contact'), component: ContactStep },
   { id: 'schedule', label: t('forms.servicePoint.steps.schedule'), component: ScheduleStep },
+  { id: 'seasonal', label: 'Сезонные расписания', component: SeasonalSchedulesStep },
   { id: 'posts', label: t('forms.servicePoint.steps.posts'), component: PostsStep },
   { id: 'services', label: t('forms.servicePoint.steps.services'), component: ServicesStep },
   { id: 'photos', label: t('forms.servicePoint.steps.photos'), component: PhotosStep },
