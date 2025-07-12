@@ -601,5 +601,178 @@
       "select_category": "Выберите категорию",
       "use_regular_search": "Использовать обычный поиск"
     }
+  },
+  "bookingConflicts": {
+    "title": "Управление конфликтами бронирований",
+    "subtitle": "Анализ и разрешение конфликтов при изменении расписания",
+    "statistics": {
+      "title": "Статистика конфликтов",
+      "totalConflicts": "Всего конфликтов",
+      "pendingConflicts": "Ожидают решения",
+      "resolvedConflicts": "Разрешено",
+      "ignoredConflicts": "Игнорируется"
+    },
+    "filters": {
+      "title": "Фильтры",
+      "status": "Статус",
+      "conflictType": "Тип конфликта",
+      "servicePoint": "Сервисная точка",
+      "allStatuses": "Все статусы",
+      "allTypes": "Все типы",
+      "allServicePoints": "Все сервисные точки",
+      "clear": "Очистить",
+      "apply": "Применить"
+    },
+    "status": {
+      "pending": "Ожидает",
+      "resolved": "Разрешен",
+      "ignored": "Игнорируется"
+    },
+    "conflictType": {
+      "schedule_change": "Изменение расписания",
+      "service_point_status": "Статус сервисной точки",
+      "post_status": "Статус поста"
+    },
+    "conflictTypeHuman": {
+      "schedule_change": "Изменение расписания",
+      "service_point_status": "Изменение статуса сервисной точки",
+      "post_status": "Изменение статуса поста обслуживания"
+    },
+    "resolutionType": {
+      "auto_reschedule": "Автоперенос",
+      "manual_reschedule": "Ручной перенос",
+      "cancel": "Отмена",
+      "ignore": "Игнорировать"
+    },
+    "columns": {
+      "id": "ID",
+      "booking": "Бронирование",
+      "client": "Клиент",
+      "conflictType": "Тип конфликта",
+      "reason": "Причина",
+      "detectedAt": "Обнаружен",
+      "status": "Статус",
+      "actions": "Действия"
+    },
+    "actions": {
+      "resolve": "Разрешить",
+      "ignore": "Игнорировать",
+      "view": "Просмотр",
+      "analyze": "Анализировать",
+      "preview": "Предпросмотр",
+      "bulkResolve": "Массовое разрешение",
+      "selectAll": "Выбрать все",
+      "clearSelection": "Очистить выбор"
+    },
+    "buttons": {
+      "analyzeConflicts": "Анализировать конфликты",
+      "previewConflicts": "Предпросмотр конфликтов",
+      "resolveSelected": "Разрешить выбранные",
+      "refresh": "Обновить",
+      "close": "Закрыть",
+      "save": "Сохранить",
+      "cancel": "Отмена"
+    },
+    "dialogs": {
+      "resolve": {
+        "title": "Разрешение конфликта",
+        "singleTitle": "Разрешить конфликт",
+        "bulkTitle": "Массовое разрешение конфликтов",
+        "conflictInfo": "Информация о конфликте",
+        "resolutionType": "Способ разрешения",
+        "notes": "Примечания",
+        "newStartTime": "Новое время начала",
+        "notesPlaceholder": "Добавьте примечания к разрешению конфликта...",
+        "selectedCount": "Выбрано конфликтов: {{count}}"
+      },
+      "analysis": {
+        "title": "Анализ конфликтов",
+        "description": "Настройте параметры анализа конфликтов бронирований",
+        "servicePoint": "Сервисная точка",
+        "post": "Пост обслуживания",
+        "seasonalSchedule": "Сезонное расписание",
+        "selectServicePoint": "Выберите сервисную точку",
+        "selectPost": "Выберите пост",
+        "selectSchedule": "Выберите расписание",
+        "allServicePoints": "Все сервисные точки",
+        "allPosts": "Все посты",
+        "allSchedules": "Все расписания"
+      },
+      "preview": {
+        "title": "Предпросмотр конфликтов",
+        "description": "Предварительный просмотр потенциальных конфликтов"
+      }
+    },
+    "messages": {
+      "noConflicts": "Конфликты не найдены",
+      "noConflictsDescription": "В настоящее время нет конфликтов бронирований, требующих внимания.",
+      "loadingConflicts": "Загрузка конфликтов...",
+      "loadingStatistics": "Загрузка статистики...",
+      "analyzing": "Анализ конфликтов...",
+      "previewing": "Предпросмотр...",
+      "resolving": "Разрешение конфликта...",
+      "ignoring": "Игнорирование конфликта...",
+      "bulkResolving": "Массовое разрешение...",
+      "analysisComplete": "Анализ завершен",
+      "conflictResolved": "Конфликт разрешен",
+      "conflictIgnored": "Конфликт игнорирован",
+      "bulkResolutionComplete": "Массовое разрешение завершено",
+      "analysisError": "Ошибка при анализе конфликтов",
+      "previewError": "Ошибка при предварительном просмотре",
+      "resolveError": "Ошибка при разрешении конфликта",
+      "ignoreError": "Ошибка при игнорировании конфликта",
+      "bulkResolveError": "Ошибка при массовом разрешении конфликтов",
+      "noConflictsSelected": "Выберите конфликты для разрешения",
+      "selectResolutionType": "Выберите способ разрешения",
+      "conflictsFound": "Найдено {{count}} конфликтов",
+      "conflictsFoundPlural": "Найдено {{count}} конфликтов"
+    },
+    "bookingInfo": {
+      "id": "ID бронирования",
+      "date": "Дата",
+      "time": "Время",
+      "duration": "Длительность",
+      "servicePoint": "Сервисная точка",
+      "client": "Клиент",
+      "phone": "Телефон",
+      "email": "Email",
+      "service": "Услуга",
+      "status": "Статус бронирования"
+    },
+    "emptyState": {
+      "title": "Нет конфликтов",
+      "description": "В настоящее время нет конфликтов бронирований",
+      "actionButton": "Запустить анализ"
+    },
+    "pagination": {
+      "showing": "Показано {{from}}-{{to}} из {{total}}",
+      "page": "Страница",
+      "of": "из",
+      "rowsPerPage": "Строк на странице"
+    }
+  },
+  "conflictsPreview": {
+    "title": "Предварительный просмотр конфликтов",
+    "defaultTitle": "Предварительный просмотр конфликтов",
+    "description": "Проверьте потенциальные конфликты бронирований перед сохранением изменений",
+    "defaultDescription": "Проверьте потенциальные конфликты бронирований перед сохранением изменений",
+    "checkConflicts": "Проверить конфликты",
+    "analyzing": "Анализ...",
+    "noConflicts": "Конфликты не обнаружены. Изменения можно безопасно сохранить.",
+    "conflictsFound": "Обнаружено {{count}} потенциальных конфликтов бронирований.",
+    "conflictsFoundPlural": "Обнаружено {{count}} потенциальных конфликтов бронирований.",
+    "conflictDetails": "Детали конфликтов:",
+    "conflictInfo": {
+      "booking": "Бронирование:",
+      "client": "Клиент:",
+      "potential": "Потенциальный"
+    },
+    "recommendation": {
+      "title": "Рекомендация:",
+      "description": "Перед сохранением изменений рассмотрите возможность уведомления затронутых клиентов или переноса их бронирований на другое время."
+    },
+    "error": "Ошибка при предварительном просмотре конфликтов:",
+    "expand": "Развернуть",
+    "collapse": "Свернуть"
   }
 }

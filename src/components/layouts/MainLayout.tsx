@@ -383,6 +383,13 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.analyticsReports'),
           },
           {
+            text: 'Конфликты бронирований',
+            icon: <ReportIcon />,
+            path: '/admin/booking-conflicts',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: 'Управление конфликтами бронирований',
+          },
+          {
             text: t('navigation.myBookings'),
             icon: <EventNoteIcon />,
             path: '/admin/my-bookings',

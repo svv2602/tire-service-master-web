@@ -599,5 +599,178 @@
       "select_category": "Оберіть категорію",
       "use_regular_search": "Використати звичайний пошук"
     }
+  },
+  "bookingConflicts": {
+    "title": "Управління конфліктами бронювань",
+    "subtitle": "Аналіз та вирішення конфліктів при зміні розкладу",
+    "statistics": {
+      "title": "Статистика конфліктів",
+      "totalConflicts": "Всього конфліктів",
+      "pendingConflicts": "Очікують рішення",
+      "resolvedConflicts": "Вирішено",
+      "ignoredConflicts": "Ігнорується"
+    },
+    "filters": {
+      "title": "Фільтри",
+      "status": "Статус",
+      "conflictType": "Тип конфлікту",
+      "servicePoint": "Сервісна точка",
+      "allStatuses": "Всі статуси",
+      "allTypes": "Всі типи",
+      "allServicePoints": "Всі сервісні точки",
+      "clear": "Очистити",
+      "apply": "Застосувати"
+    },
+    "status": {
+      "pending": "Очікує",
+      "resolved": "Вирішено",
+      "ignored": "Ігнорується"
+    },
+    "conflictType": {
+      "schedule_change": "Зміна розкладу",
+      "service_point_status": "Статус сервісної точки",
+      "post_status": "Статус поста"
+    },
+    "conflictTypeHuman": {
+      "schedule_change": "Зміна розкладу",
+      "service_point_status": "Зміна статусу сервісної точки",
+      "post_status": "Зміна статусу поста обслуговування"
+    },
+    "resolutionType": {
+      "auto_reschedule": "Автоперенос",
+      "manual_reschedule": "Ручний перенос",
+      "cancel": "Скасування",
+      "ignore": "Ігнорувати"
+    },
+    "columns": {
+      "id": "ID",
+      "booking": "Бронювання",
+      "client": "Клієнт",
+      "conflictType": "Тип конфлікту",
+      "reason": "Причина",
+      "detectedAt": "Виявлено",
+      "status": "Статус",
+      "actions": "Дії"
+    },
+    "actions": {
+      "resolve": "Вирішити",
+      "ignore": "Ігнорувати",
+      "view": "Перегляд",
+      "analyze": "Аналізувати",
+      "preview": "Попередній перегляд",
+      "bulkResolve": "Масове вирішення",
+      "selectAll": "Обрати всі",
+      "clearSelection": "Очистити вибір"
+    },
+    "buttons": {
+      "analyzeConflicts": "Аналізувати конфлікти",
+      "previewConflicts": "Попередній перегляд конфліктів",
+      "resolveSelected": "Вирішити обрані",
+      "refresh": "Оновити",
+      "close": "Закрити",
+      "save": "Зберегти",
+      "cancel": "Скасувати"
+    },
+    "dialogs": {
+      "resolve": {
+        "title": "Вирішення конфлікту",
+        "singleTitle": "Вирішити конфлікт",
+        "bulkTitle": "Масове вирішення конфліктів",
+        "conflictInfo": "Інформація про конфлікт",
+        "resolutionType": "Спосіб вирішення",
+        "notes": "Примітки",
+        "newStartTime": "Новий час початку",
+        "notesPlaceholder": "Додайте примітки до вирішення конфлікту...",
+        "selectedCount": "Обрано конфліктів: {{count}}"
+      },
+      "analysis": {
+        "title": "Аналіз конфліктів",
+        "description": "Налаштуйте параметри аналізу конфліктів бронювань",
+        "servicePoint": "Сервісна точка",
+        "post": "Пост обслуговування",
+        "seasonalSchedule": "Сезонний розклад",
+        "selectServicePoint": "Оберіть сервісну точку",
+        "selectPost": "Оберіть пост",
+        "selectSchedule": "Оберіть розклад",
+        "allServicePoints": "Всі сервісні точки",
+        "allPosts": "Всі пости",
+        "allSchedules": "Всі розклади"
+      },
+      "preview": {
+        "title": "Попередній перегляд конфліктів",
+        "description": "Попередній перегляд потенційних конфліктів"
+      }
+    },
+    "messages": {
+      "noConflicts": "Конфлікти не знайдені",
+      "noConflictsDescription": "Наразі немає конфліктів бронювань, що потребують уваги.",
+      "loadingConflicts": "Завантаження конфліктів...",
+      "loadingStatistics": "Завантаження статистики...",
+      "analyzing": "Аналіз конфліктів...",
+      "previewing": "Попередній перегляд...",
+      "resolving": "Вирішення конфлікту...",
+      "ignoring": "Ігнорування конфлікту...",
+      "bulkResolving": "Масове вирішення...",
+      "analysisComplete": "Аналіз завершено",
+      "conflictResolved": "Конфлікт вирішено",
+      "conflictIgnored": "Конфлікт проігноровано",
+      "bulkResolutionComplete": "Масове вирішення завершено",
+      "analysisError": "Помилка при аналізі конфліктів",
+      "previewError": "Помилка при попередньому перегляді",
+      "resolveError": "Помилка при вирішенні конфлікту",
+      "ignoreError": "Помилка при ігноруванні конфлікту",
+      "bulkResolveError": "Помилка при масовому вирішенні конфліктів",
+      "noConflictsSelected": "Оберіть конфлікти для вирішення",
+      "selectResolutionType": "Оберіть спосіб вирішення",
+      "conflictsFound": "Знайдено {{count}} конфліктів",
+      "conflictsFoundPlural": "Знайдено {{count}} конфліктів"
+    },
+    "bookingInfo": {
+      "id": "ID бронювання",
+      "date": "Дата",
+      "time": "Час",
+      "duration": "Тривалість",
+      "servicePoint": "Сервісна точка",
+      "client": "Клієнт",
+      "phone": "Телефон",
+      "email": "Email",
+      "service": "Послуга",
+      "status": "Статус бронювання"
+    },
+    "emptyState": {
+      "title": "Немає конфліктів",
+      "description": "Наразі немає конфліктів бронювань",
+      "actionButton": "Запустити аналіз"
+    },
+    "pagination": {
+      "showing": "Показано {{from}}-{{to}} з {{total}}",
+      "page": "Сторінка",
+      "of": "з",
+      "rowsPerPage": "Рядків на сторінці"
+    }
+  },
+  "conflictsPreview": {
+    "title": "Попередній перегляд конфліктів",
+    "defaultTitle": "Попередній перегляд конфліктів",
+    "description": "Перевірте потенційні конфлікти бронювань перед збереженням змін",
+    "defaultDescription": "Перевірте потенційні конфлікти бронювань перед збереженням змін",
+    "checkConflicts": "Перевірити конфлікти",
+    "analyzing": "Аналіз...",
+    "noConflicts": "Конфлікти не виявлені. Зміни можна безпечно зберегти.",
+    "conflictsFound": "Виявлено {{count}} потенційних конфліктів бронювань.",
+    "conflictsFoundPlural": "Виявлено {{count}} потенційних конфліктів бронювань.",
+    "conflictDetails": "Деталі конфліктів:",
+    "conflictInfo": {
+      "booking": "Бронювання:",
+      "client": "Клієнт:",
+      "potential": "Потенційний"
+    },
+    "recommendation": {
+      "title": "Рекомендація:",
+      "description": "Перед збереженням змін розгляньте можливість сповіщення зачеплених клієнтів або перенесення їх бронювань на інший час."
+    },
+    "error": "Помилка при попередньому перегляді конфліктів:",
+    "expand": "Розгорнути",
+    "collapse": "Згорнути"
   }
 }
