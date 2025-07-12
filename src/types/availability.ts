@@ -54,6 +54,11 @@ export interface DayDetailsResponse {
     start_time: string;
     end_time: string;
   };
+  schedule_info?: {
+    schedule_type: string;
+    schedule_name?: string;
+    schedule_id?: number;
+  };
   summary?: {
     total_slots: number;
     occupied_slots: number;

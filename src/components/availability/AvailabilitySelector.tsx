@@ -178,6 +178,7 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
             servicePointPhone={servicePointPhone}
             isWorking={dayDetailsData?.is_working}
             workingMessage={dayDetailsData?.message}
+            scheduleInfo={dayDetailsData?.schedule_info}
           />
         </Paper>
       </Box>

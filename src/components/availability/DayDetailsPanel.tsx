@@ -32,6 +32,11 @@ interface DayDetailsPanelProps {
   servicePointPhone?: string;
   isWorking?: boolean;
   workingMessage?: string;
+  scheduleInfo?: {
+    schedule_type?: string;
+    schedule_name?: string;
+    schedule_id?: number;
+  };
 }
 
 export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
@@ -44,6 +49,7 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
   servicePointPhone,
   isWorking,
   workingMessage,
+  scheduleInfo,
 }) => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
@@ -134,6 +140,19 @@ export const DayDetailsPanel: React.FC<DayDetailsPanelProps> = ({
           ) : (
             <>
               <Divider sx={{ my: 2 }} />
+              
+              {/* Информация о типе расписания */}
+              {scheduleInfo && scheduleInfo.schedule_type === 'seasonal' && (
+                <Alert 
+                  severity="info" 
+                  sx={{ mb: 2 }}
+                  icon={<InfoIcon />}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    🎯 Действует сезонное расписание: {scheduleInfo.schedule_name}
+                  </Typography>
+                </Alert>
+              )}
               
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
