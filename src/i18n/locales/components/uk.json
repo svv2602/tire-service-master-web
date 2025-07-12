@@ -683,7 +683,10 @@
         "notes": "Примітки",
         "newStartTime": "Новий час початку",
         "notesPlaceholder": "Додайте примітки до вирішення конфлікту...",
-        "selectedCount": "Обрано конфліктів: {{count}}"
+        "selectedCount": "Обрано конфліктів: {{count}}",
+        "selectNewDateTime": "Оберіть нову дату та час",
+        "missingServicePointInfo": "Недостатньо інформації про сервісну точку для вибору часу",
+        "selectedDateTime": "Обрані дата та час"
       },
       "analysis": {
         "title": "Аналіз конфліктів",
