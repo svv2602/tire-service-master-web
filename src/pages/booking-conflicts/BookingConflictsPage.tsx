@@ -77,7 +77,6 @@ const BookingConflictsPage: React.FC = () => {
   const [newStartTime, setNewStartTime] = useState('');
   const [analysisParams, setAnalysisParams] = useState({
     service_point_id: '',
-    post_id: '',
     seasonal_schedule_id: '',
   });
 
@@ -133,7 +132,6 @@ const BookingConflictsPage: React.FC = () => {
     try {
       const params: any = {};
       if (analysisParams.service_point_id) params.service_point_id = parseInt(analysisParams.service_point_id);
-      if (analysisParams.post_id) params.post_id = parseInt(analysisParams.post_id);
       if (analysisParams.seasonal_schedule_id) params.seasonal_schedule_id = parseInt(analysisParams.seasonal_schedule_id);
 
       const result = await analyzeConflicts(params).unwrap();
@@ -149,7 +147,6 @@ const BookingConflictsPage: React.FC = () => {
     try {
       const params: any = {};
       if (analysisParams.service_point_id) params.service_point_id = parseInt(analysisParams.service_point_id);
-      if (analysisParams.post_id) params.post_id = parseInt(analysisParams.post_id);
       if (analysisParams.seasonal_schedule_id) params.seasonal_schedule_id = parseInt(analysisParams.seasonal_schedule_id);
 
       const result = await previewConflicts(params).unwrap();
@@ -295,7 +292,7 @@ const BookingConflictsPage: React.FC = () => {
       {/* Статистика */}
       {statisticsData && (
         <Grid container spacing={3} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="warning.main">
@@ -307,7 +304,7 @@ const BookingConflictsPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="error.main">
@@ -319,7 +316,7 @@ const BookingConflictsPage: React.FC = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <Card>
               <CardContent>
                 <Typography variant="h6" color="warning.main">
@@ -327,18 +324,6 @@ const BookingConflictsPage: React.FC = () => {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {t('bookingConflicts.conflictType.service_point_status')}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" color="info.main">
-                  {statisticsData.statistics.by_type.post_status || 0}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t('bookingConflicts.conflictType.post_status')}
                 </Typography>
               </CardContent>
             </Card>
@@ -376,7 +361,6 @@ const BookingConflictsPage: React.FC = () => {
                   <MenuItem value="">{t('bookingConflicts.filters.allTypes')}</MenuItem>
                   <MenuItem value="schedule_change">{t('bookingConflicts.conflictType.schedule_change')}</MenuItem>
                   <MenuItem value="service_point_status">{t('bookingConflicts.conflictType.service_point_status')}</MenuItem>
-                  <MenuItem value="post_status">{t('bookingConflicts.conflictType.post_status')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -599,16 +583,6 @@ const BookingConflictsPage: React.FC = () => {
                     fullWidth
                   />
                 )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label={t('bookingConflicts.dialogs.analysis.post')}
-                type="number"
-                value={analysisParams.post_id}
-                onChange={(e) => setAnalysisParams(prev => ({ ...prev, post_id: e.target.value }))}
-                helperText={t('bookingConflicts.dialogs.analysis.selectPost')}
               />
             </Grid>
             <Grid item xs={12}>

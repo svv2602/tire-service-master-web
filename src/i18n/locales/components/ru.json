@@ -630,13 +630,11 @@
     },
     "conflictType": {
       "schedule_change": "Изменение расписания",
-      "service_point_status": "Статус сервисной точки",
-      "post_status": "Статус поста"
+      "service_point_status": "Статус сервисной точки"
     },
     "conflictTypeHuman": {
       "schedule_change": "Изменение расписания",
-      "service_point_status": "Изменение статуса сервисной точки",
-      "post_status": "Изменение статуса поста обслуживания"
+      "service_point_status": "Изменение статуса сервисной точки"
     },
     "resolutionType": {
       "auto_reschedule": "Автоперенос",
@@ -689,13 +687,10 @@
         "title": "Анализ конфликтов",
         "description": "Настройте параметры анализа конфликтов бронирований",
         "servicePoint": "Сервисная точка",
-        "post": "Пост обслуживания",
         "seasonalSchedule": "Сезонное расписание",
         "selectServicePoint": "Выберите сервисную точку",
-        "selectPost": "Выберите пост",
         "selectSchedule": "Выберите расписание",
         "allServicePoints": "Все сервисные точки",
-        "allPosts": "Все посты",
         "allSchedules": "Все расписания"
       },
       "preview": {

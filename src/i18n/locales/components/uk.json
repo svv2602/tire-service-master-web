@@ -628,13 +628,11 @@
     },
     "conflictType": {
       "schedule_change": "Зміна розкладу",
-      "service_point_status": "Статус сервісної точки",
-      "post_status": "Статус поста"
+      "service_point_status": "Статус сервісної точки"
     },
     "conflictTypeHuman": {
       "schedule_change": "Зміна розкладу",
-      "service_point_status": "Зміна статусу сервісної точки",
-      "post_status": "Зміна статусу поста обслуговування"
+      "service_point_status": "Зміна статусу сервісної точки"
     },
     "resolutionType": {
       "auto_reschedule": "Автоперенос",
@@ -687,13 +685,10 @@
         "title": "Аналіз конфліктів",
         "description": "Налаштуйте параметри аналізу конфліктів бронювань",
         "servicePoint": "Сервісна точка",
-        "post": "Пост обслуговування",
         "seasonalSchedule": "Сезонний розклад",
         "selectServicePoint": "Оберіть сервісну точку",
-        "selectPost": "Оберіть пост",
         "selectSchedule": "Оберіть розклад",
         "allServicePoints": "Всі сервісні точки",
-        "allPosts": "Всі пости",
         "allSchedules": "Всі розклади"
       },
       "preview": {
