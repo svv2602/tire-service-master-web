@@ -8,6 +8,7 @@ interface ServiceCategoryFilter extends PaginationFilter {
   query?: string;
   active?: boolean;
   sort?: string;
+  with_active_posts?: boolean;
 }
 
 // Интерфейс для ответа API (как приходит с бэкенда)

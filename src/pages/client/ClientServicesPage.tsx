@@ -232,6 +232,7 @@ const ClientServicesPage: React.FC = () => {
     error: categoriesError 
   } = useGetServiceCategoriesQuery({ 
     active: true,
+    with_active_posts: true,
     per_page: 50 
   });
 

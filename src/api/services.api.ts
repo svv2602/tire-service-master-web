@@ -7,6 +7,7 @@ import { baseApi } from './baseApi';
 interface ServiceCategoryFilter extends PaginationFilter {
   query?: string;
   active?: boolean;
+  with_active_posts?: boolean;
 }
 
 // Расширяем baseApi вместо создания нового

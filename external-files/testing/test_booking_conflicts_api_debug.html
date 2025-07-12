@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диагностика API конфликтов бронирований</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196F3; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976D2; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Диагностика API конфликтов бронирований</h1>
+        <p>Этот инструмент поможет диагностировать проблемы с загрузкой конфликтов на странице /admin/booking-conflicts</p>
+        
+        <div class="section">
+            <h3>📊 Результаты тестирования</h3>
+            <div id="results"></div>
+        </div>
+        
+        <div class="section">
+            <h3>🎮 Управление</h3>
+            <button onclick="testAuth()">1. Проверить авторизацию</button>
+            <button onclick="testStatistics()">2. Тест API статистики</button>
+            <button onclick="testConflictsList()">3. Тест API списка конфликтов</button>
+            <button onclick="testAllAPIs()">4. Полный тест всех API</button>
+            <button onclick="clearResults()">🗑️ Очистить</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let resultDiv = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            resultDiv.appendChild(div);
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            resultDiv.innerHTML = '';
+        }
+
+        async function makeRequest(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                ...options
+            };
+
+            try {
+                log(`🌐 Запрос: ${url}`, 'info');
+                const response = await fetch(url, defaultOptions);
+                
+                log(`📡 Статус: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`❌ Ошибка: ${errorText}`, 'error');
+                    return { error: true, status: response.status, message: errorText };
+                }
+
+                const data = await response.json();
+                log(`✅ Данные получены: ${JSON.stringify(data, null, 2)}`, 'success');
+                return { error: false, data };
+            } catch (error) {
+                log(`💥 Исключение: ${error.message}`, 'error');
+                return { error: true, message: error.message };
+            }
+        }
+
+        async function testAuth() {
+            log('🔐 === ТЕСТ АВТОРИЗАЦИИ ===', 'info');
+            
+            const result = await makeRequest(`${API_BASE}/auth/me`);
+            
+            if (result.error) {
+                log('❌ Пользователь не авторизован', 'error');
+                log('💡 Рекомендация: войдите в систему как админ на http://localhost:3008/login', 'warning');
+                return false;
+            } else {
+                const user = result.data;
+                log(`✅ Авторизован как: ${user.email}`, 'success');
+                log(`👤 Роль: ${user.role?.name || 'не указана'}`, 'info');
+                log(`🔑 Админ: ${user.is_admin ? 'Да' : 'Нет'}`, user.is_admin ? 'success' : 'warning');
+                
+                if (!user.is_admin) {
+                    log('⚠️ Предупреждение: пользователь не является админом', 'warning');
+                    log('💡 Для доступа к конфликтам нужны права админа', 'warning');
+                }
+                return user.is_admin;
+            }
+        }
+
+        async function testStatistics() {
+            log('📊 === ТЕСТ API СТАТИСТИКИ ===', 'info');
+            
+            const result = await makeRequest(`${API_BASE}/booking_conflicts/statistics`);
+            
+            if (result.error) {
+                if (result.status === 401) {
+                    log('🔒 Ошибка 401: Требуется авторизация', 'error');
+                } else if (result.status === 403) {
+                    log('🚫 Ошибка 403: Доступ запрещен (нужны права админа)', 'error');
+                } else {
+                    log(`❌ Ошибка ${result.status}: ${result.message}`, 'error');
+                }
+                return false;
+            } else {
+                const stats = result.data.statistics;
+                log(`📈 Статистика получена:`, 'success');
+                log(`   • Всего pending: ${stats.total_pending}`, 'info');
+                log(`   • По типам: ${JSON.stringify(stats.by_type)}`, 'info');
+                log(`   • По статусам: ${JSON.stringify(stats.by_status)}`, 'info');
+                return true;
+            }
+        }
+
+        async function testConflictsList() {
+            log('📋 === ТЕСТ API СПИСКА КОНФЛИКТОВ ===', 'info');
+            
+            const result = await makeRequest(`${API_BASE}/booking_conflicts?page=1&per_page=10`);
+            
+            if (result.error) {
+                if (result.status === 401) {
+                    log('🔒 Ошибка 401: Требуется авторизация', 'error');
+                } else if (result.status === 403) {
+                    log('🚫 Ошибка 403: Доступ запрещен (нужны права админа)', 'error');
+                } else {
+                    log(`❌ Ошибка ${result.status}: ${result.message}`, 'error');
+                }
+                return false;
+            } else {
+                const response = result.data;
+                log(`📋 Список конфликтов получен:`, 'success');
+                log(`   • Всего конфликтов: ${response.booking_conflicts?.length || 0}`, 'info');
+                log(`   • Метаданные: ${JSON.stringify(response.meta)}`, 'info');
+                
+                if (response.booking_conflicts && response.booking_conflicts.length > 0) {
+                    log(`   • Первый конфликт:`, 'info');
+                    const first = response.booking_conflicts[0];
+                    log(`     - ID: ${first.id}`, 'info');
+                    log(`     - Тип: ${first.conflict_type_human}`, 'info');
+                    log(`     - Статус: ${first.status_human}`, 'info');
+                    log(`     - Причина: ${first.conflict_reason}`, 'info');
+                } else {
+                    log(`   ⚠️ Список пуст (нет конфликтов или проблема с фильтрацией)`, 'warning');
+                }
+                return true;
+            }
+        }
+
+        async function testAllAPIs() {
+            log('🚀 === ПОЛНЫЙ ТЕСТ ВСЕХ API ===', 'info');
+            
+            const authResult = await testAuth();
+            if (!authResult) {
+                log('❌ Тест остановлен: нет авторизации или прав админа', 'error');
+                return;
+            }
+            
+            log('⏳ Ожидание 1 секунда...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testStatistics();
+            
+            log('⏳ Ожидание 1 секунда...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testConflictsList();
+            
+            log('🎉 === ТЕСТИРОВАНИЕ ЗАВЕРШЕНО ===', 'success');
+        }
+
+        // Автоматический запуск при загрузке страницы
+        window.onload = function() {
+            log('🔄 Страница загружена, запуск автоматической диагностики...', 'info');
+            setTimeout(testAllAPIs, 1000);
+        };
+    </script>
+</body>
+</html> 

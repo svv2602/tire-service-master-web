@@ -630,11 +630,15 @@
     },
     "conflictType": {
       "schedule_change": "Изменение расписания",
-      "service_point_status": "Статус сервисной точки"
+      "service_point_status": "Статус сервисной точки",
+      "post_status": "Статус поста",
+      "capacity_overload": "Перегрузка постов"
     },
     "conflictTypeHuman": {
       "schedule_change": "Изменение расписания",
-      "service_point_status": "Изменение статуса сервисной точки"
+      "service_point_status": "Изменение статуса сервисной точки",
+      "post_status": "Изменение статуса поста",
+      "capacity_overload": "Перегрузка постов"
     },
     "resolutionType": {
       "auto_reschedule": "Автоперенос",

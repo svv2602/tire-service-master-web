@@ -628,11 +628,15 @@
     },
     "conflictType": {
       "schedule_change": "Зміна розкладу",
-      "service_point_status": "Статус сервісної точки"
+      "service_point_status": "Статус сервісної точки",
+      "post_status": "Статус поста",
+      "capacity_overload": "Перевантаження постів"
     },
     "conflictTypeHuman": {
       "schedule_change": "Зміна розкладу",
-      "service_point_status": "Зміна статусу сервісної точки"
+      "service_point_status": "Зміна статусу сервісної точки",
+      "post_status": "Зміна статусу поста",
+      "capacity_overload": "Перевантаження постів"
     },
     "resolutionType": {
       "auto_reschedule": "Автоперенос",
