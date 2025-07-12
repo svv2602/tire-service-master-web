@@ -72,7 +72,6 @@ interface BookingDetails {
   category_id: string;
   booking_date: string;
   start_time: string;
-  end_time: string;
   notes: string;
   status_id: string; // Теперь строка, а не число
   booking_services: BookingServiceDetails[];
@@ -187,13 +186,6 @@ const BookingFormPage: React.FC = () => {
     }
   };
 
-  // Функция для расчета времени окончания (по умолчанию +1 час)
-  const calculateEndTime = (startDate: Date): string => {
-    const endDate = new Date(startDate);
-    endDate.setHours(endDate.getHours() + 1); // Добавляем 1 час по умолчанию
-    return endDate.toTimeString().substring(0, 5); // Возвращаем в формате HH:mm
-  };
-
   // ✅ Функция форматирования даты в формат dd.mm.yyyy
   const formatDateForDisplay = (dateString: string): string => {
     if (!dateString) return '';
@@ -216,7 +208,6 @@ const BookingFormPage: React.FC = () => {
     category_id: '',
     booking_date: new Date().toISOString().split('T')[0],
     start_time: new Date().toTimeString().substring(0, 5),
-    end_time: calculateEndTime(new Date()),
     status_id: BOOKING_STATUSES.PENDING,
     notes: '',
     services: [] as BookingService[],
@@ -273,7 +264,6 @@ const BookingFormPage: React.FC = () => {
           service_category_id: Number(values.category_id), // ✅ Исправлено название поля
           booking_date: values.booking_date,
           start_time: values.start_time,
-          end_time: values.end_time,
           status: getStatusString(values.status_id), // ✅ Получение строкового статуса
           notes: values.notes || '',
           // ✅ Убираем services - они обрабатываются отдельно
@@ -341,30 +331,6 @@ const BookingFormPage: React.FC = () => {
       // ✅ Извлекаем время из полной даты
       const startTime = extractTimeFromDateTime(booking.start_time || '');
       formik.setFieldValue('start_time', startTime);
-      
-      // ✅ Автоматически пересчитываем время окончания на основе времени начала
-      if (startTime) {
-        try {
-          const [hours, minutes] = startTime.split(':').map(Number);
-          const endDate = new Date();
-          endDate.setHours(hours + 1, minutes); // +1 час по умолчанию
-          const calculatedEndTime = endDate.toTimeString().substring(0, 5);
-          formik.setFieldValue('end_time', calculatedEndTime);
-          
-          console.log('🕐 Пересчет времени окончания при загрузке:', {
-            originalStartTime: booking.start_time,
-            extractedStartTime: startTime,
-            calculatedEndTime: calculatedEndTime
-          });
-        } catch (error) {
-          console.error('Ошибка пересчета времени окончания:', error);
-          // Fallback - используем исходное время окончания
-          formik.setFieldValue('end_time', extractTimeFromDateTime(booking.end_time || ''));
-        }
-      } else {
-        // Если нет времени начала, используем исходное время окончания
-        formik.setFieldValue('end_time', extractTimeFromDateTime(booking.end_time || ''));
-      }
       
       // ✅ Установка статуса из данных бронирования
       // Используем строковые ключи статусов вместо числовых ID
@@ -604,30 +570,8 @@ const BookingFormPage: React.FC = () => {
     
     if (timeSlot) {
       formik.setFieldValue('start_time', timeSlot);
-      // ✅ Автоматически рассчитываем время окончания на основе длительности слота
-      if (slotData?.duration_minutes) {
-        const [hours, minutes] = timeSlot.split(':').map(Number);
-        const endDate = new Date();
-        endDate.setHours(hours, minutes + slotData.duration_minutes);
-        const endTime = endDate.toTimeString().substring(0, 5);
-        formik.setFieldValue('end_time', endTime);
-        
-        console.log('🕐 Автоматический расчет времени:', {
-          startTime: timeSlot,
-          durationMinutes: slotData.duration_minutes,
-          endTime: endTime
-        });
-      } else {
-        // Если нет данных о длительности, устанавливаем +1 час по умолчанию
-        const [hours, minutes] = timeSlot.split(':').map(Number);
-        const endDate = new Date();
-        endDate.setHours(hours + 1, minutes);
-        const endTime = endDate.toTimeString().substring(0, 5);
-        formik.setFieldValue('end_time', endTime);
-      }
     } else {
-      // Если время не выбрано, очищаем время окончания
-      formik.setFieldValue('end_time', '');
+      formik.setFieldValue('start_time', '');
     }
   }, [formik.setFieldValue]);
 
@@ -853,7 +797,7 @@ const BookingFormPage: React.FC = () => {
                         size="small"
                       />
                       <Chip
-                        label={`🕐 ${formik.values.start_time} - ${formik.values.end_time || t('forms.bookings.form.notSpecified')}`}
+                        label={`🕐 ${formik.values.start_time}`}
                         color="primary"
                         variant="outlined"
                         size="small"
@@ -875,7 +819,6 @@ const BookingFormPage: React.FC = () => {
                         onClick={() => {
                           formik.setFieldValue('booking_date', '');
                           formik.setFieldValue('start_time', '');
-                          formik.setFieldValue('end_time', '');
                           setSelectedDate(null);
                           setSelectedTimeSlot(null);
                         }}
