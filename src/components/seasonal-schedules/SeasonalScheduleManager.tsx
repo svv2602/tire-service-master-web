@@ -56,7 +56,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
   servicePointId,
   servicePointName,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation('components');
   const [formOpen, setFormOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<SeasonalSchedule | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -137,32 +137,12 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
 
   // Получение текста статуса
   const getStatusText = (status: SeasonalSchedule['status']) => {
-    switch (status) {
-      case 'current':
-        return 'Активно';
-      case 'upcoming':
-        return 'Предстоящее';
-      case 'past':
-        return 'Завершено';
-      case 'inactive':
-        return 'Неактивно';
-      default:
-        return 'Неизвестно';
-    }
+    return t(`seasonalSchedules.status.${status}`) || t('seasonalSchedules.status.unknown');
   };
 
-  // Получение дней недели на русском
+  // Получение дней недели
   const getDayName = (dayKey: string) => {
-    const dayNames: { [key: string]: string } = {
-      monday: 'Понедельник',
-      tuesday: 'Вторник',
-      wednesday: 'Среда',
-      thursday: 'Четверг',
-      friday: 'Пятница',
-      saturday: 'Суббота',
-      sunday: 'Воскресенье',
-    };
-    return dayNames[dayKey] || dayKey;
+    return t(`seasonalSchedules.days.${dayKey}`) || dayKey;
   };
 
   if (isLoading) {
@@ -176,7 +156,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
   if (error) {
     return (
       <Alert severity="error" sx={{ mb: 2 }}>
-        Ошибка при загрузке сезонных расписаний. Попробуйте обновить страницу.
+        {t('seasonalSchedules.loadingError')}
       </Alert>
     );
   }
@@ -192,7 +172,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
       >
         <Box>
           <Typography variant="h6" gutterBottom>
-            Сезонные расписания
+            {t('seasonalSchedules.title')}
           </Typography>
           {servicePointName && (
             <Typography variant="body2" color="text.secondary">
@@ -205,14 +185,14 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
           startIcon={<AddIcon />}
           onClick={handleCreateNew}
         >
-          Создать расписание
+          {t('seasonalSchedules.createButton')}
         </Button>
       </Box>
 
       {/* Список расписаний */}
       {schedules.length === 0 ? (
         <Alert severity="info">
-          Сезонные расписания не созданы. Нажмите "Создать расписание" для добавления первого расписания.
+          {t('seasonalSchedules.noSchedules')}
         </Alert>
       ) : (
         <Grid container spacing={2}>
@@ -251,7 +231,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                   <Box display="flex" alignItems="center" mb={1}>
                     <ScheduleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
-                      Рабочих дней: {schedule.working_days_count}
+                      {t('seasonalSchedules.workingDays')}: {schedule.working_days_count}
                     </Typography>
                   </Box>
 
@@ -259,7 +239,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                   <Box display="flex" alignItems="center" mb={2}>
                     <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
-                      Приоритет: {schedule.priority}
+                      {t('seasonalSchedules.priority')}: {schedule.priority}
                     </Typography>
                   </Box>
 
@@ -267,7 +247,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                   <Accordion>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                       <Typography variant="body2">
-                        Подробности расписания
+                        {t('seasonalSchedules.scheduleDetails')}
                       </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
@@ -286,7 +266,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                               secondary={
                                 daySchedule.is_working_day
                                   ? `${daySchedule.start} - ${daySchedule.end}`
-                                  : 'Выходной'
+                                  : t('seasonalSchedules.dayOff')
                               }
                             />
                           </ListItem>
@@ -302,7 +282,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                     startIcon={<EditIcon />}
                     onClick={() => handleEdit(schedule)}
                   >
-                    Редактировать
+                    {t('seasonalSchedules.editButton')}
                   </Button>
                   <Button
                     size="small"
@@ -310,7 +290,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                     startIcon={<DeleteIcon />}
                     onClick={() => handleDelete(schedule)}
                   >
-                    Удалить
+                    {t('seasonalSchedules.deleteButton')}
                   </Button>
                 </CardActions>
               </Card>
@@ -327,7 +307,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
         fullWidth
       >
         <DialogTitle>
-          {editingSchedule ? 'Редактирование расписания' : 'Создание нового расписания'}
+          {editingSchedule ? t('seasonalSchedules.form.editDialogTitle') : t('seasonalSchedules.form.createDialogTitle')}
         </DialogTitle>
         <DialogContent>
           <SeasonalScheduleForm
@@ -343,27 +323,31 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
       <Dialog
         open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
+        maxWidth="sm"
       >
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+        <DialogTitle>
+          {t('seasonalSchedules.deleteDialog.title')}
+        </DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить сезонное расписание "{scheduleToDelete?.name}"?
+            {t('seasonalSchedules.deleteDialog.message', { name: scheduleToDelete?.name || '' })}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Это действие нельзя отменить.
+            {t('seasonalSchedules.deleteDialog.description')}
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>
-            Отмена
+            {t('seasonalSchedules.deleteDialog.cancel')}
           </Button>
           <Button
             onClick={handleConfirmDelete}
             color="error"
             variant="contained"
             disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : null}
           >
-            {isDeleting ? <CircularProgress size={20} /> : 'Удалить'}
+            {isDeleting ? t('seasonalSchedules.deleteDialog.deleting') : t('seasonalSchedules.deleteDialog.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

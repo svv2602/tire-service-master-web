@@ -27,6 +27,7 @@ import { ru } from 'date-fns/locale';
 import { format, parse } from 'date-fns';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { useTranslation } from 'react-i18next';
 
 import {
   useCreateSeasonalScheduleMutation,
@@ -42,47 +43,48 @@ interface SeasonalScheduleFormProps {
   onCancel: () => void;
 }
 
-// Дни недели
-const DAYS_OF_WEEK = [
-  { key: 'monday', label: 'Понедельник' },
-  { key: 'tuesday', label: 'Вторник' },
-  { key: 'wednesday', label: 'Среда' },
-  { key: 'thursday', label: 'Четверг' },
-  { key: 'friday', label: 'Пятница' },
-  { key: 'saturday', label: 'Суббота' },
-  { key: 'sunday', label: 'Воскресенье' },
-];
-
-// Схема валидации
-const validationSchema = Yup.object({
-  name: Yup.string()
-    .required('Название обязательно')
-    .max(255, 'Название не должно превышать 255 символов'),
-  description: Yup.string()
-    .max(1000, 'Описание не должно превышать 1000 символов'),
-  start_date: Yup.date()
-    .required('Дата начала обязательна')
-    .min(new Date(), 'Дата начала не может быть в прошлом'),
-  end_date: Yup.date()
-    .required('Дата окончания обязательна')
-    .min(Yup.ref('start_date'), 'Дата окончания должна быть после даты начала'),
-  priority: Yup.number()
-    .required('Приоритет обязателен')
-    .min(0, 'Приоритет не может быть отрицательным')
-    .max(100, 'Приоритет не может быть больше 100'),
-});
-
 export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
   servicePointId,
   schedule,
   onSuccess,
   onCancel,
 }) => {
+  const { t } = useTranslation('components');
   const [createSchedule, { isLoading: isCreating }] = useCreateSeasonalScheduleMutation();
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateSeasonalScheduleMutation();
 
   const isEditing = !!schedule;
   const isLoading = isCreating || isUpdating;
+
+  // Дни недели с переводами
+  const DAYS_OF_WEEK = [
+    { key: 'monday', label: t('seasonalSchedules.days.monday') },
+    { key: 'tuesday', label: t('seasonalSchedules.days.tuesday') },
+    { key: 'wednesday', label: t('seasonalSchedules.days.wednesday') },
+    { key: 'thursday', label: t('seasonalSchedules.days.thursday') },
+    { key: 'friday', label: t('seasonalSchedules.days.friday') },
+    { key: 'saturday', label: t('seasonalSchedules.days.saturday') },
+    { key: 'sunday', label: t('seasonalSchedules.days.sunday') },
+  ];
+
+  // Схема валидации с переводами
+  const validationSchema = Yup.object({
+    name: Yup.string()
+      .required(t('seasonalSchedules.form.validation.nameRequired'))
+      .max(255, t('seasonalSchedules.form.validation.nameMaxLength')),
+    description: Yup.string()
+      .max(1000, t('seasonalSchedules.form.validation.descriptionMaxLength')),
+    start_date: Yup.date()
+      .required(t('seasonalSchedules.form.validation.startDateRequired'))
+      .min(new Date(), t('seasonalSchedules.form.validation.startDateFuture')),
+    end_date: Yup.date()
+      .required(t('seasonalSchedules.form.validation.endDateRequired'))
+      .min(Yup.ref('start_date'), t('seasonalSchedules.form.validation.endDateAfterStart')),
+    priority: Yup.number()
+      .required(t('seasonalSchedules.form.validation.priorityRequired'))
+      .min(0, t('seasonalSchedules.form.validation.priorityMin'))
+      .max(100, t('seasonalSchedules.form.validation.priorityMax')),
+  });
 
   // Инициализация формы
   const formik = useFormik<SeasonalScheduleFormData>({
@@ -125,48 +127,42 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
     },
   });
 
-  // Обработчики для изменения расписания дня
-  const handleDayWorkingChange = (dayKey: string, isWorking: boolean) => {
-    formik.setFieldValue(`working_hours.${dayKey}.is_working_day`, isWorking);
-  };
-
-  const handleDayTimeChange = (dayKey: string, timeType: 'start' | 'end', value: Date | null) => {
-    if (value) {
-      const timeString = format(value, 'HH:mm');
-      formik.setFieldValue(`working_hours.${dayKey}.${timeType}`, timeString);
-    }
-  };
-
-  // Функция для копирования расписания на все дни
-  const copyToAllDays = (sourceDayKey: string) => {
-    const sourceSchedule = formik.values.working_hours[sourceDayKey];
+  // Обработчики для быстрого заполнения рабочих дней
+  const setWorkingDaysPattern = (pattern: 'weekdays' | 'all' | 'none') => {
     const newWorkingHours = { ...formik.values.working_hours };
     
-    DAYS_OF_WEEK.forEach(day => {
-      if (day.key !== sourceDayKey) {
-        newWorkingHours[day.key] = { ...sourceSchedule };
+    Object.keys(newWorkingHours).forEach(day => {
+      switch (pattern) {
+        case 'weekdays':
+          newWorkingHours[day].is_working_day = !['saturday', 'sunday'].includes(day);
+          break;
+        case 'all':
+          newWorkingHours[day].is_working_day = true;
+          break;
+        case 'none':
+          newWorkingHours[day].is_working_day = false;
+          break;
       }
     });
     
     formik.setFieldValue('working_hours', newWorkingHours);
   };
 
-  // Функция для быстрого заполнения рабочих дней
-  const setWorkingDaysPattern = (pattern: 'weekdays' | 'all' | 'none') => {
+  // Обработчик изменения времени для дня
+  const handleDayTimeChange = (day: string, field: 'start' | 'end', time: Date | null) => {
+    if (time) {
+      const timeString = format(time, 'HH:mm');
+      formik.setFieldValue(`working_hours.${day}.${field}`, timeString);
+    }
+  };
+
+  // Копирование расписания дня на все дни
+  const copyToAllDays = (sourceDay: string) => {
+    const sourceSchedule = formik.values.working_hours[sourceDay];
     const newWorkingHours = { ...formik.values.working_hours };
     
-    DAYS_OF_WEEK.forEach(day => {
-      switch (pattern) {
-        case 'weekdays':
-          newWorkingHours[day.key].is_working_day = !['saturday', 'sunday'].includes(day.key);
-          break;
-        case 'all':
-          newWorkingHours[day.key].is_working_day = true;
-          break;
-        case 'none':
-          newWorkingHours[day.key].is_working_day = false;
-          break;
-      }
+    Object.keys(newWorkingHours).forEach(day => {
+      newWorkingHours[day] = { ...sourceSchedule };
     });
     
     formik.setFieldValue('working_hours', newWorkingHours);
@@ -177,19 +173,19 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
       <Box component="form" onSubmit={formik.handleSubmit} sx={{ mt: 2 }}>
         {/* Основная информация */}
         <Card sx={{ mb: 3 }}>
-          <CardHeader title="Основная информация" />
+          <CardHeader title={t('seasonalSchedules.form.basicInfo')} />
           <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Название расписания"
+                  label={t('seasonalSchedules.form.fields.name')}
                   name="name"
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
-                  placeholder="Например: Летнее расписание, Новогодние каникулы"
+                  placeholder={t('seasonalSchedules.form.fields.namePlaceholder')}
                 />
               </Grid>
               
@@ -198,19 +194,19 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
                   fullWidth
                   multiline
                   rows={3}
-                  label="Описание"
+                  label={t('seasonalSchedules.form.fields.description')}
                   name="description"
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   error={formik.touched.description && Boolean(formik.errors.description)}
                   helperText={formik.touched.description && formik.errors.description}
-                  placeholder="Дополнительная информация о расписании"
+                  placeholder={t('seasonalSchedules.form.fields.descriptionPlaceholder')}
                 />
               </Grid>
 
               <Grid item xs={12} md={6}>
                 <DatePicker
-                  label="Дата начала"
+                  label={t('seasonalSchedules.form.fields.startDate')}
                   value={formik.values.start_date ? new Date(formik.values.start_date) : null}
                   onChange={(date) => {
                     if (date) {
@@ -229,7 +225,7 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
 
               <Grid item xs={12} md={6}>
                 <DatePicker
-                  label="Дата окончания"
+                  label={t('seasonalSchedules.form.fields.endDate')}
                   value={formik.values.end_date ? new Date(formik.values.end_date) : null}
                   onChange={(date) => {
                     if (date) {
@@ -247,27 +243,17 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Box>
-                  <Typography gutterBottom>
-                    Приоритет: {formik.values.priority}
-                  </Typography>
-                  <Slider
-                    value={formik.values.priority}
-                    onChange={(_, value) => formik.setFieldValue('priority', value)}
-                    min={0}
-                    max={100}
-                    step={1}
-                    marks={[
-                      { value: 0, label: '0' },
-                      { value: 50, label: '50' },
-                      { value: 100, label: '100' },
-                    ]}
-                    valueLabelDisplay="auto"
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Чем выше приоритет, тем важнее расписание при пересечении периодов
-                  </Typography>
-                </Box>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label={t('seasonalSchedules.form.fields.priority')}
+                  name="priority"
+                  value={formik.values.priority}
+                  onChange={formik.handleChange}
+                  error={formik.touched.priority && Boolean(formik.errors.priority)}
+                  helperText={formik.touched.priority && formik.errors.priority || t('seasonalSchedules.form.fields.priorityHelp')}
+                  inputProps={{ min: 0, max: 100 }}
+                />
               </Grid>
 
               <Grid item xs={12} md={6}>
@@ -276,9 +262,10 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
                     <Switch
                       checked={formik.values.is_active}
                       onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                      name="is_active"
                     />
                   }
-                  label="Активное расписание"
+                  label={t('seasonalSchedules.form.fields.isActive')}
                 />
               </Grid>
             </Grid>
@@ -288,17 +275,17 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
         {/* Расписание работы */}
         <Card sx={{ mb: 3 }}>
           <CardHeader 
-            title="Расписание работы"
+            title={t('seasonalSchedules.form.workingHours')}
             action={
               <Box display="flex" gap={1}>
                 <Button size="small" onClick={() => setWorkingDaysPattern('weekdays')}>
-                  Пн-Пт
+                  {t('seasonalSchedules.form.workingDays.weekdays')}
                 </Button>
                 <Button size="small" onClick={() => setWorkingDaysPattern('all')}>
-                  Все дни
+                  {t('seasonalSchedules.form.workingDays.allDays')}
                 </Button>
                 <Button size="small" onClick={() => setWorkingDaysPattern('none')}>
-                  Выходные
+                  {t('seasonalSchedules.form.workingDays.weekends')}
                 </Button>
               </Box>
             }
@@ -307,90 +294,80 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
             {/* Информация о постах с индивидуальным расписанием */}
             <Alert severity="info" sx={{ mb: 3 }}>
               <Typography variant="subtitle2" gutterBottom>
-                Важная информация о постах обслуживания
+                {t('seasonalSchedules.form.workingDays.importantInfo')}
               </Typography>
               <Typography variant="body2">
-                Если у сервисной точки есть посты с индивидуальным расписанием, они будут продолжать работать по своему расписанию, 
-                игнорируя данное сезонное расписание. Сезонное расписание влияет только на посты, которые используют общее расписание точки.
+                {t('seasonalSchedules.form.workingDays.importantInfoText')}
               </Typography>
             </Alert>
+
             <Grid container spacing={2}>
               {DAYS_OF_WEEK.map((day) => {
                 const daySchedule = formik.values.working_hours[day.key];
                 return (
                   <Grid item xs={12} key={day.key}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        bgcolor: daySchedule.is_working_day 
-                          ? (theme) => theme.palette.mode === 'dark' 
-                            ? 'rgba(102, 187, 106, 0.15)' // Светло-зеленый с прозрачностью для темной темы
-                            : 'success.light'             // Обычный зеленый для светлой темы
-                          : (theme) => theme.palette.mode === 'dark'
-                            ? 'rgba(255, 255, 255, 0.05)' // Слабый белый для темной темы
-                            : 'grey.100',                  // Серый для светлой темы
-                        opacity: daySchedule.is_working_day ? 1 : 0.6,
-                        color: daySchedule.is_working_day
-                          ? (theme) => theme.palette.mode === 'dark'
-                            ? 'rgba(255, 255, 255, 0.87)' // Белый текст для темной темы
-                            : 'text.primary'               // Обычный текст для светлой темы
-                          : 'text.secondary',
-                      }}
-                    >
+                    <Box sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                       <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={12} md={3}>
+                        <Grid item xs={12} md={2}>
+                          <Typography variant="subtitle2">{day.label}</Typography>
+                        </Grid>
+                        
+                        <Grid item xs={12} md={2}>
                           <FormControlLabel
                             control={
                               <Switch
                                 checked={daySchedule.is_working_day}
-                                onChange={(e) => handleDayWorkingChange(day.key, e.target.checked)}
+                                onChange={(e) => {
+                                  formik.setFieldValue(
+                                    `working_hours.${day.key}.is_working_day`,
+                                    e.target.checked
+                                  );
+                                }}
+                                size="small"
                               />
                             }
-                            label={day.label}
+                            label={t('seasonalSchedules.form.workingDays.isWorkingDay')}
                           />
                         </Grid>
 
                         {daySchedule.is_working_day && (
                           <>
-                                                         <Grid item xs={12} md={3}>
-                               <TimePicker
-                                 label="Начало"
-                                 value={daySchedule.start ? parse(daySchedule.start, 'HH:mm', new Date()) : null}
-                                 onChange={(time) => handleDayTimeChange(day.key, 'start', time)}
-                                 slotProps={{
-                                   textField: {
-                                     fullWidth: true,
-                                     size: 'small',
-                                   },
-                                 }}
-                               />
-                             </Grid>
-
-                             <Grid item xs={12} md={3}>
-                               <TimePicker
-                                 label="Окончание"
-                                 value={daySchedule.end ? parse(daySchedule.end, 'HH:mm', new Date()) : null}
-                                 onChange={(time) => handleDayTimeChange(day.key, 'end', time)}
-                                 slotProps={{
-                                   textField: {
-                                     fullWidth: true,
-                                     size: 'small',
-                                   },
-                                 }}
-                               />
-                             </Grid>
+                            <Grid item xs={12} md={3}>
+                              <TimePicker
+                                label={t('seasonalSchedules.form.workingDays.startTime')}
+                                value={daySchedule.start ? parse(daySchedule.start, 'HH:mm', new Date()) : null}
+                                onChange={(time) => handleDayTimeChange(day.key, 'start', time)}
+                                slotProps={{
+                                  textField: {
+                                    fullWidth: true,
+                                    size: 'small',
+                                  },
+                                }}
+                              />
+                            </Grid>
 
                             <Grid item xs={12} md={3}>
+                              <TimePicker
+                                label={t('seasonalSchedules.form.workingDays.endTime')}
+                                value={daySchedule.end ? parse(daySchedule.end, 'HH:mm', new Date()) : null}
+                                onChange={(time) => handleDayTimeChange(day.key, 'end', time)}
+                                slotProps={{
+                                  textField: {
+                                    fullWidth: true,
+                                    size: 'small',
+                                  },
+                                }}
+                              />
+                            </Grid>
+
+                            <Grid item xs={12} md={2}>
                               <Button
                                 size="small"
                                 onClick={() => copyToAllDays(day.key)}
                                 variant="outlined"
                                 fullWidth
                               >
-                                Копировать на все дни
+                                {t('seasonalSchedules.form.workingDays.copyToAll')}
                               </Button>
                             </Grid>
                           </>
@@ -407,7 +384,7 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
         {/* Кнопки управления */}
         <Box display="flex" justifyContent="flex-end" gap={2}>
           <Button onClick={onCancel} disabled={isLoading}>
-            Отмена
+            {t('seasonalSchedules.form.buttons.cancel')}
           </Button>
           <Button
             type="submit"
@@ -415,21 +392,12 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
             disabled={isLoading}
             startIcon={isLoading ? <CircularProgress size={20} /> : null}
           >
-            {isEditing ? 'Сохранить изменения' : 'Создать расписание'}
+            {isLoading 
+              ? (isEditing ? t('seasonalSchedules.form.buttons.saving') : t('seasonalSchedules.form.buttons.creating'))
+              : (isEditing ? t('seasonalSchedules.form.buttons.save') : t('seasonalSchedules.form.buttons.create'))
+            }
           </Button>
         </Box>
-
-        {/* Ошибки формы */}
-        {formik.errors.start_date && formik.touched.start_date && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {formik.errors.start_date}
-          </Alert>
-        )}
-        {formik.errors.end_date && formik.touched.end_date && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {formik.errors.end_date}
-          </Alert>
-        )}
       </Box>
     </LocalizationProvider>
   );
