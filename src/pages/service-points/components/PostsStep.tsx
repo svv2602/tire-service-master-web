@@ -55,6 +55,9 @@ import { Table } from '../../../components/ui';
 import type { Column } from '../../../components/ui';
 import { useTranslation } from 'react-i18next';
 
+// Импорт компонента предварительного просмотра конфликтов
+import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
+
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
   isEditMode: boolean;
@@ -642,6 +645,17 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
           post={formik.values.service_posts![scheduleDialog.postIndex]}
           onSave={savePostSchedule}
         />
+      )}
+
+      {/* Предварительный просмотр конфликтов */}
+      {isEditMode && servicePoint?.id && (
+        <Box sx={{ mt: 4 }}>
+          <ConflictsPreview
+            servicePointId={servicePoint.id}
+            title="Предварительный просмотр конфликтов постов"
+            description="Проверьте потенциальные конфликты бронирований при изменении настроек постов обслуживания"
+          />
+        </Box>
       )}
     </Box>
   );

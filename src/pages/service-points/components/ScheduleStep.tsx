@@ -24,6 +24,9 @@ import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../../typ
 import { SeasonalScheduleManager } from '../../../components/seasonal-schedules/SeasonalScheduleManager';
 import SeasonalScheduleInfo from '../../../components/seasonal-schedules/SeasonalScheduleInfo';
 
+// Импорт компонента предварительного просмотра конфликтов
+import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
+
 interface ScheduleStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
   isEditMode: boolean;
@@ -312,6 +315,17 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
               />
             </AccordionDetails>
           </Accordion>
+        </Box>
+      )}
+
+      {/* Предварительный просмотр конфликтов */}
+      {isEditMode && servicePoint?.id && (
+        <Box sx={{ mt: 4 }}>
+          <ConflictsPreview
+            servicePointId={servicePoint.id}
+            title="Предварительный просмотр конфликтов расписания"
+            description="Проверьте потенциальные конфликты бронирований при изменении расписания работы сервисной точки"
+          />
         </Box>
       )}
 

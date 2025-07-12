@@ -26,7 +26,6 @@ import { usePreviewBookingConflictsMutation, BookingConflict } from '../../api/b
 
 interface ConflictsPreviewProps {
   servicePointId?: number;
-  postId?: number;
   seasonalScheduleId?: number;
   title?: string;
   description?: string;
@@ -34,7 +33,6 @@ interface ConflictsPreviewProps {
 
 const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
   servicePointId,
-  postId,
   seasonalScheduleId,
   title,
   description,
@@ -54,7 +52,6 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
     try {
       const params: any = {};
       if (servicePointId) params.service_point_id = servicePointId;
-      if (postId) params.post_id = postId;
       if (seasonalScheduleId) params.seasonal_schedule_id = seasonalScheduleId;
 
       const result = await previewConflicts(params).unwrap();
@@ -65,12 +62,12 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
       if (result.count > 0) {
         setIsExpanded(true);
       }
-          } catch (error) {
-        console.error(t('conflictsPreview.error'), error);
-        setConflicts([]);
-        setConflictsCount(0);
-        setHasAnalyzed(true);
-      }
+    } catch (error) {
+      console.error(t('conflictsPreview.error'), error);
+      setConflicts([]);
+      setConflictsCount(0);
+      setHasAnalyzed(true);
+    }
   };
 
   const getConflictTypeIcon = (type: string) => {
