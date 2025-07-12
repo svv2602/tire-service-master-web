@@ -24,6 +24,7 @@ import {
   CircularProgress,
   Checkbox,
   FormControlLabel,
+  Autocomplete,
 } from '@mui/material';
 import {
   Warning as WarningIcon,
@@ -50,6 +51,7 @@ import {
   BookingConflict,
   BookingConflictFilters,
 } from '../../api/bookingConflicts.api';
+import { useGetServicePointsQuery } from '../../api/servicePoints.api';
 
 const BookingConflictsPage: React.FC = () => {
   const theme = useTheme();
@@ -93,11 +95,22 @@ const BookingConflictsPage: React.FC = () => {
   // API хуки
   const { data: conflictsData, isLoading: conflictsLoading, refetch: refetchConflicts } = useGetBookingConflictsQuery(filters);
   const { data: statisticsData, isLoading: statisticsLoading } = useGetBookingConflictStatisticsQuery();
+  const { data: servicePointsData } = useGetServicePointsQuery({ per_page: 100 });
+  
   const [analyzeConflicts, { isLoading: analyzeLoading }] = useAnalyzeBookingConflictsMutation();
   const [previewConflicts, { isLoading: previewLoading }] = usePreviewBookingConflictsMutation();
   const [resolveConflict, { isLoading: resolveLoading }] = useResolveBookingConflictMutation();
   const [ignoreConflict, { isLoading: ignoreLoading }] = useIgnoreBookingConflictMutation();
   const [bulkResolveConflicts, { isLoading: bulkResolveLoading }] = useBulkResolveBookingConflictsMutation();
+
+  // Получение данных для селектов
+  const servicePoints = servicePointsData?.data || [];
+
+  // Функции для получения читаемых названий
+  const getServicePointName = (id: number) => {
+    const servicePoint = servicePoints.find(sp => sp.id === id);
+    return servicePoint ? servicePoint.name : `ID: ${id}`;
+  };
 
   // Обработчики
   const handleFilterChange = (key: keyof BookingConflictFilters, value: any) => {
@@ -124,7 +137,7 @@ const BookingConflictsPage: React.FC = () => {
       if (analysisParams.seasonal_schedule_id) params.seasonal_schedule_id = parseInt(analysisParams.seasonal_schedule_id);
 
       const result = await analyzeConflicts(params).unwrap();
-      showNotification(result.message, 'success');
+      showNotification(result.message || t('bookingConflicts.messages.analysisComplete'), 'success');
       setAnalysisDialogOpen(false);
       refetchConflicts();
     } catch (error: any) {
@@ -162,7 +175,7 @@ const BookingConflictsPage: React.FC = () => {
       }
 
       const result = await resolveConflict(params).unwrap();
-      showNotification(result.message, 'success');
+      showNotification(result.message || t('bookingConflicts.messages.conflictResolved'), 'success');
       setResolveDialogOpen(false);
       resetResolveDialog();
       refetchConflicts();
@@ -177,7 +190,7 @@ const BookingConflictsPage: React.FC = () => {
         id: conflict.id,
         notes: t('bookingConflicts.messages.ignoring'),
       }).unwrap();
-      showNotification(result.message, 'success');
+      showNotification(result.message || t('bookingConflicts.messages.conflictIgnored'), 'success');
       refetchConflicts();
     } catch (error: any) {
       showNotification(error.data?.error || t('bookingConflicts.messages.ignoreError'), 'error');
@@ -193,7 +206,7 @@ const BookingConflictsPage: React.FC = () => {
         resolution_type: resolutionType,
         notes: resolutionNotes,
       }).unwrap();
-      showNotification(result.message, 'success');
+      showNotification(result.message || t('bookingConflicts.messages.bulkResolutionComplete'), 'success');
       setSelectedConflicts([]);
       resetResolveDialog();
       refetchConflicts();
@@ -252,7 +265,7 @@ const BookingConflictsPage: React.FC = () => {
     <Box sx={tablePageStyles.pageContainer}>
       <Box sx={tablePageStyles.headerContainer}>
         <Typography variant="h4" sx={tablePageStyles.title}>
-          Конфликты бронирований
+          {t('bookingConflicts.title')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
@@ -260,21 +273,21 @@ const BookingConflictsPage: React.FC = () => {
             startIcon={<PreviewIcon />}
             onClick={() => setPreviewDialogOpen(true)}
           >
-            Предварительный просмотр
+            {t('bookingConflicts.buttons.previewConflicts')}
           </Button>
           <Button
             variant="outlined"
             startIcon={<PlayIcon />}
             onClick={() => setAnalysisDialogOpen(true)}
           >
-            Запустить анализ
+            {t('bookingConflicts.buttons.analyzeConflicts')}
           </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={() => refetchConflicts()}
           >
-            Обновить
+            {t('bookingConflicts.buttons.refresh')}
           </Button>
         </Box>
       </Box>
@@ -289,7 +302,7 @@ const BookingConflictsPage: React.FC = () => {
                   {statisticsData.statistics.total_pending}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Ожидают решения
+                  {t('bookingConflicts.statistics.pendingConflicts')}
                 </Typography>
               </CardContent>
             </Card>
@@ -301,7 +314,7 @@ const BookingConflictsPage: React.FC = () => {
                   {statisticsData.statistics.by_type.schedule_change || 0}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Изменения расписания
+                  {t('bookingConflicts.conflictType.schedule_change')}
                 </Typography>
               </CardContent>
             </Card>
@@ -313,7 +326,7 @@ const BookingConflictsPage: React.FC = () => {
                   {statisticsData.statistics.by_type.service_point_status || 0}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Статус точек
+                  {t('bookingConflicts.conflictType.service_point_status')}
                 </Typography>
               </CardContent>
             </Card>
@@ -325,7 +338,7 @@ const BookingConflictsPage: React.FC = () => {
                   {statisticsData.statistics.by_type.post_status || 0}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Статус постов
+                  {t('bookingConflicts.conflictType.post_status')}
                 </Typography>
               </CardContent>
             </Card>
@@ -339,41 +352,47 @@ const BookingConflictsPage: React.FC = () => {
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Статус</InputLabel>
+                <InputLabel>{t('bookingConflicts.filters.status')}</InputLabel>
                 <Select
                   value={filters.status || ''}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
-                  label="Статус"
+                  label={t('bookingConflicts.filters.status')}
                 >
-                  <MenuItem value="">Все</MenuItem>
-                  <MenuItem value="pending">Ожидает решения</MenuItem>
-                  <MenuItem value="resolved">Решен</MenuItem>
-                  <MenuItem value="ignored">Игнорируется</MenuItem>
+                  <MenuItem value="">{t('bookingConflicts.filters.allStatuses')}</MenuItem>
+                  <MenuItem value="pending">{t('bookingConflicts.status.pending')}</MenuItem>
+                  <MenuItem value="resolved">{t('bookingConflicts.status.resolved')}</MenuItem>
+                  <MenuItem value="ignored">{t('bookingConflicts.status.ignored')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel>Тип конфликта</InputLabel>
+                <InputLabel>{t('bookingConflicts.filters.conflictType')}</InputLabel>
                 <Select
                   value={filters.conflict_type || ''}
                   onChange={(e) => handleFilterChange('conflict_type', e.target.value)}
-                  label="Тип конфликта"
+                  label={t('bookingConflicts.filters.conflictType')}
                 >
-                  <MenuItem value="">Все</MenuItem>
-                  <MenuItem value="schedule_change">Изменение расписания</MenuItem>
-                  <MenuItem value="service_point_status">Статус сервисной точки</MenuItem>
-                  <MenuItem value="post_status">Статус поста</MenuItem>
+                  <MenuItem value="">{t('bookingConflicts.filters.allTypes')}</MenuItem>
+                  <MenuItem value="schedule_change">{t('bookingConflicts.conflictType.schedule_change')}</MenuItem>
+                  <MenuItem value="service_point_status">{t('bookingConflicts.conflictType.service_point_status')}</MenuItem>
+                  <MenuItem value="post_status">{t('bookingConflicts.conflictType.post_status')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
             <Grid item xs={12} md={2}>
-              <TextField
-                fullWidth
-                label="ID сервисной точки"
-                type="number"
-                value={filters.service_point_id || ''}
-                onChange={(e) => handleFilterChange('service_point_id', e.target.value ? parseInt(e.target.value) : undefined)}
+              <Autocomplete
+                options={servicePoints}
+                getOptionLabel={(option) => option.name}
+                value={servicePoints.find(sp => sp.id.toString() === filters.service_point_id?.toString()) || null}
+                onChange={(_, value) => handleFilterChange('service_point_id', value?.id)}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t('bookingConflicts.filters.servicePoint')}
+                    fullWidth
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={12} md={2}>
@@ -382,7 +401,7 @@ const BookingConflictsPage: React.FC = () => {
                 startIcon={<FilterIcon />}
                 onClick={() => setFilters({ status: '', conflict_type: '', page: 1, per_page: 20 })}
               >
-                Сбросить
+                {t('bookingConflicts.filters.clear')}
               </Button>
             </Grid>
             {selectedConflicts.length > 0 && (
@@ -392,7 +411,7 @@ const BookingConflictsPage: React.FC = () => {
                   color="primary"
                   onClick={() => setResolveDialogOpen(true)}
                 >
-                  Массовое действие ({selectedConflicts.length})
+                  {t('bookingConflicts.actions.bulkResolve')} ({selectedConflicts.length})
                 </Button>
               </Grid>
             )}
@@ -407,7 +426,7 @@ const BookingConflictsPage: React.FC = () => {
         </Box>
       ) : conflictsData?.booking_conflicts.length === 0 ? (
         <Alert severity="info">
-          Конфликты не найдены
+          {t('bookingConflicts.messages.noConflicts')}
         </Alert>
       ) : (
         <>
@@ -436,16 +455,16 @@ const BookingConflictsPage: React.FC = () => {
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2">Бронирование:</Typography>
+                        <Typography variant="subtitle2">{t('bookingConflicts.bookingInfo.id')}:</Typography>
                         <Typography variant="body2">
-                          ID: {conflict.booking.id}<br />
-                          Дата: {new Date(conflict.booking.start_time).toLocaleDateString('ru-RU')}<br />
-                          Время: {new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}<br />
-                          Сервисная точка: {conflict.booking.service_point.name}
+                          {t('bookingConflicts.bookingInfo.id')}: {conflict.booking.id}<br />
+                          {t('bookingConflicts.bookingInfo.date')}: {new Date(conflict.booking.start_time).toLocaleDateString('ru-RU')}<br />
+                          {t('bookingConflicts.bookingInfo.time')}: {new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}<br />
+                          {t('bookingConflicts.bookingInfo.servicePoint')}: {conflict.booking.service_point.name}
                         </Typography>
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <Typography variant="subtitle2">Клиент:</Typography>
+                        <Typography variant="subtitle2">{t('bookingConflicts.bookingInfo.client')}:</Typography>
                         <Typography variant="body2">
                           {conflict.booking.client.name}<br />
                           {conflict.booking.client.email}
@@ -455,7 +474,7 @@ const BookingConflictsPage: React.FC = () => {
                     {conflict.resolution_notes && (
                       <Alert severity="info" sx={{ mt: 2 }}>
                         <Typography variant="body2">
-                          <strong>Заметки:</strong> {conflict.resolution_notes}
+                          <strong>{t('bookingConflicts.dialogs.resolve.notes')}:</strong> {conflict.resolution_notes}
                         </Typography>
                       </Alert>
                     )}
@@ -463,7 +482,7 @@ const BookingConflictsPage: React.FC = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {conflict.status === 'pending' && (
                       <>
-                        <Tooltip title="Разрешить конфликт">
+                        <Tooltip title={t('bookingConflicts.actions.resolve')}>
                           <IconButton
                             color="primary"
                             onClick={() => openResolveDialog(conflict)}
@@ -471,7 +490,7 @@ const BookingConflictsPage: React.FC = () => {
                             <CheckCircleIcon />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Игнорировать конфликт">
+                        <Tooltip title={t('bookingConflicts.actions.ignore')}>
                           <IconButton
                             color="default"
                             onClick={() => handleIgnoreConflict(conflict)}
@@ -503,22 +522,22 @@ const BookingConflictsPage: React.FC = () => {
       {/* Диалог разрешения конфликта */}
       <Dialog open={resolveDialogOpen} onClose={() => setResolveDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          {selectedConflicts.length > 0 ? 'Массовое разрешение конфликтов' : 'Разрешение конфликта'}
+          {selectedConflicts.length > 0 ? t('bookingConflicts.dialogs.resolve.bulkTitle') : t('bookingConflicts.dialogs.resolve.singleTitle')}
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Тип разрешения</InputLabel>
+                <InputLabel>{t('bookingConflicts.dialogs.resolve.resolutionType')}</InputLabel>
                 <Select
                   value={resolutionType}
                   onChange={(e) => setResolutionType(e.target.value)}
-                  label="Тип разрешения"
+                  label={t('bookingConflicts.dialogs.resolve.resolutionType')}
                 >
-                  <MenuItem value="auto_reschedule">Автоматический перенос</MenuItem>
-                  <MenuItem value="manual_reschedule">Ручной перенос</MenuItem>
-                  <MenuItem value="cancel">Отмена бронирования</MenuItem>
-                  <MenuItem value="ignore">Игнорирование</MenuItem>
+                  <MenuItem value="auto_reschedule">{t('bookingConflicts.resolutionType.auto_reschedule')}</MenuItem>
+                  <MenuItem value="manual_reschedule">{t('bookingConflicts.resolutionType.manual_reschedule')}</MenuItem>
+                  <MenuItem value="cancel">{t('bookingConflicts.resolutionType.cancel')}</MenuItem>
+                  <MenuItem value="ignore">{t('bookingConflicts.resolutionType.ignore')}</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -526,7 +545,7 @@ const BookingConflictsPage: React.FC = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Новое время"
+                  label={t('bookingConflicts.dialogs.resolve.newStartTime')}
                   type="datetime-local"
                   value={newStartTime}
                   onChange={(e) => setNewStartTime(e.target.value)}
@@ -537,77 +556,88 @@ const BookingConflictsPage: React.FC = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Заметки"
+                label={t('bookingConflicts.dialogs.resolve.notes')}
                 multiline
                 rows={3}
                 value={resolutionNotes}
                 onChange={(e) => setResolutionNotes(e.target.value)}
-                placeholder="Комментарий к решению"
+                placeholder={t('bookingConflicts.dialogs.resolve.notesPlaceholder')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setResolveDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setResolveDialogOpen(false)}>{t('bookingConflicts.buttons.cancel')}</Button>
           <Button
             onClick={selectedConflicts.length > 0 ? handleBulkResolve : handleResolveConflict}
             variant="contained"
             disabled={!resolutionType || resolveLoading || bulkResolveLoading}
           >
-            {resolveLoading || bulkResolveLoading ? <CircularProgress size={20} /> : 'Применить'}
+            {resolveLoading || bulkResolveLoading ? <CircularProgress size={20} /> : t('bookingConflicts.buttons.save')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Диалог анализа */}
       <Dialog open={analysisDialogOpen} onClose={() => setAnalysisDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Анализ конфликтов</DialogTitle>
+        <DialogTitle>{t('bookingConflicts.dialogs.analysis.title')}</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('bookingConflicts.dialogs.analysis.description')}
+          </Typography>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="ID сервисной точки (опционально)"
-                type="number"
-                value={analysisParams.service_point_id}
-                onChange={(e) => setAnalysisParams(prev => ({ ...prev, service_point_id: e.target.value }))}
+              <Autocomplete
+                options={servicePoints}
+                getOptionLabel={(option) => option.name}
+                value={servicePoints.find(sp => sp.id.toString() === analysisParams.service_point_id) || null}
+                onChange={(_, value) => setAnalysisParams(prev => ({ ...prev, service_point_id: value?.id.toString() || '' }))}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t('bookingConflicts.dialogs.analysis.servicePoint')}
+                    fullWidth
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="ID поста (опционально)"
+                label={t('bookingConflicts.dialogs.analysis.post')}
                 type="number"
                 value={analysisParams.post_id}
                 onChange={(e) => setAnalysisParams(prev => ({ ...prev, post_id: e.target.value }))}
+                helperText={t('bookingConflicts.dialogs.analysis.selectPost')}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="ID сезонного расписания (опционально)"
+                label={t('bookingConflicts.dialogs.analysis.seasonalSchedule')}
                 type="number"
                 value={analysisParams.seasonal_schedule_id}
                 onChange={(e) => setAnalysisParams(prev => ({ ...prev, seasonal_schedule_id: e.target.value }))}
+                helperText={t('bookingConflicts.dialogs.analysis.selectSchedule')}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAnalysisDialogOpen(false)}>Отмена</Button>
+          <Button onClick={() => setAnalysisDialogOpen(false)}>{t('bookingConflicts.buttons.cancel')}</Button>
           <Button
             onClick={handlePreview}
             variant="outlined"
             disabled={previewLoading}
           >
-            {previewLoading ? <CircularProgress size={20} /> : 'Предварительный просмотр'}
+            {previewLoading ? <CircularProgress size={20} /> : t('bookingConflicts.buttons.previewConflicts')}
           </Button>
           <Button
             onClick={handleAnalyze}
             variant="contained"
             disabled={analyzeLoading}
           >
-            {analyzeLoading ? <CircularProgress size={20} /> : 'Запустить анализ'}
+            {analyzeLoading ? <CircularProgress size={20} /> : t('bookingConflicts.buttons.analyzeConflicts')}
           </Button>
         </DialogActions>
       </Dialog>
