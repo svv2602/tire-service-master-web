@@ -301,10 +301,10 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             >
               <Box>
                 <Typography variant="h6">
-                  Управление сезонными расписаниями
+                  {t('seasonalSchedules.title')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Создание, редактирование и удаление сезонных расписаний
+                  {t('seasonalSchedules.description')}
                 </Typography>
               </Box>
             </AccordionSummary>
@@ -323,8 +323,10 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
         <Box sx={{ mt: 4 }}>
           <ConflictsPreview
             servicePointId={servicePoint.id}
-            title="Предварительный просмотр конфликтов расписания"
-            description="Проверьте потенциальные конфликты бронирований при изменении расписания работы сервисной точки"
+            title={t('conflictsPreview.titles.schedule', { ns: 'components' })}
+            description={t('conflictsPreview.descriptions.schedule', { ns: 'components' })}
+            formData={formik.values}
+            useFormData={true}
           />
         </Box>
       )}
@@ -347,18 +349,17 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             <Box display="flex" alignItems="center" gap={1}>
               <EventIcon color="disabled" />
               <Typography variant="body2" color="text.secondary">
-                Сезонные расписания не настроены
+                {t('seasonalSchedules.notConfigured')}
               </Typography>
             </Box>
           </Paper>
           
           <Alert severity="info">
             <Typography variant="subtitle2" gutterBottom>
-              Сезонные расписания
+              {t('seasonalSchedules.infoTitle')}
             </Typography>
             <Typography variant="body2">
-              Сезонные расписания можно настроить после создания сервисной точки.
-              Сначала завершите создание точки обслуживания.
+              {t('seasonalSchedules.infoDescription')}
             </Typography>
           </Alert>
         </Box>

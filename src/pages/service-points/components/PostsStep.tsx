@@ -652,8 +652,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         <Box sx={{ mt: 4 }}>
           <ConflictsPreview
             servicePointId={servicePoint.id}
-            title="Предварительный просмотр конфликтов постов"
-            description="Проверьте потенциальные конфликты бронирований при изменении настроек постов обслуживания"
+            title={t('conflictsPreview.titles.posts', { ns: 'components' })}
+            description={t('conflictsPreview.descriptions.posts', { ns: 'components' })}
+            formData={formik.values}
+            useFormData={true}
           />
         </Box>
       )}
