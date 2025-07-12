@@ -21,7 +21,7 @@ export interface BookingConflict {
       id: number;
       name: string;
     };
-    category?: {
+    service_category?: {
       id: number;
       name: string;
     };

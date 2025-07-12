@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import {
@@ -51,6 +51,10 @@ import {
   BookingConflictFilters,
 } from '../../api/bookingConflicts.api';
 import { useGetServicePointsQuery } from '../../api/servicePoints.api';
+import { useGetSlotsForCategoryQuery } from '../../api/availability.api';
+import AvailabilitySelector from '../../components/availability/AvailabilitySelector';
+import { format, parseISO, addDays } from 'date-fns';
+import type { AvailableTimeSlot } from '../../types/availability';
 
 const BookingConflictsPage: React.FC = () => {
   const theme = useTheme();
@@ -65,19 +69,27 @@ const BookingConflictsPage: React.FC = () => {
     per_page: 20,
   });
 
-  // Состояние для диалогов
+  // Состояния для диалогов
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
-  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false);
-  const [selectedConflict, setSelectedConflict] = useState<BookingConflict | null>(null);
-  const [selectedConflicts, setSelectedConflicts] = useState<number[]>([]);
   const [resolutionType, setResolutionType] = useState('');
-  const [resolutionNotes, setResolutionNotes] = useState('');
   const [newStartTime, setNewStartTime] = useState('');
+  const [resolutionNotes, setResolutionNotes] = useState('');
+  const [selectedConflicts, setSelectedConflicts] = useState<number[]>([]);
+  const [currentConflict, setCurrentConflict] = useState<BookingConflict | null>(null);
+  
+  // Состояния для AvailabilitySelector
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [currentServicePointId, setCurrentServicePointId] = useState<number>(0);
+  const [currentCategoryId, setCurrentCategoryId] = useState<number>(0);
+  
+  // Состояния для анализа конфликтов
   const [analysisParams, setAnalysisParams] = useState({
     service_point_id: '',
     seasonal_schedule_id: '',
   });
+  const [selectedConflict, setSelectedConflict] = useState<BookingConflict | null>(null);
 
   // Состояние для уведомлений
   const [notification, setNotification] = useState<{
@@ -100,6 +112,35 @@ const BookingConflictsPage: React.FC = () => {
   const [resolveConflict, { isLoading: resolveLoading }] = useResolveBookingConflictMutation();
   const [ignoreConflict, { isLoading: ignoreLoading }] = useIgnoreBookingConflictMutation();
   const [bulkResolveConflicts, { isLoading: bulkResolveLoading }] = useBulkResolveBookingConflictsMutation();
+
+  // API для получения доступных временных слотов
+  const { data: availabilityData, isLoading: isLoadingAvailability } = useGetSlotsForCategoryQuery(
+    {
+      servicePointId: currentServicePointId,
+      categoryId: currentCategoryId,
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
+    },
+    { 
+      skip: !currentServicePointId || !currentCategoryId || !selectedDate || resolutionType !== 'manual_reschedule',
+      refetchOnMountOrArgChange: true
+    }
+  );
+
+  // Преобразование данных API в формат для AvailabilitySelector
+  const availableTimeSlots = useMemo(() => {
+    if (!availabilityData?.slots || availabilityData.slots.length === 0) {
+      return [];
+    }
+
+    return availabilityData.slots.map(slot => ({
+      time: slot.start_time,
+      available_posts: slot.available_posts || 0,
+      total_posts: slot.total_posts || 0,
+      bookings_count: slot.bookings_count || 0,
+      duration_minutes: slot.duration_minutes,
+      can_book: (slot.available_posts || 0) > 0
+    })).sort((a, b) => a.time.localeCompare(b.time));
+  }, [availabilityData]);
 
   // Получение данных для селектов
   const servicePoints = servicePointsData?.data || [];
@@ -166,8 +207,19 @@ const BookingConflictsPage: React.FC = () => {
         notes: resolutionNotes,
       };
 
-      if (resolutionType === 'manual_reschedule' && newStartTime) {
-        params.new_start_time = newStartTime;
+      if (resolutionType === 'manual_reschedule') {
+        if (selectedDate && selectedTimeSlot) {
+          // Формируем новое время в правильном формате
+          const newDateTime = new Date(selectedDate);
+          const [hours, minutes] = selectedTimeSlot.split(':').map(Number);
+          newDateTime.setHours(hours, minutes, 0, 0);
+          
+          params.new_booking_date = format(selectedDate, 'yyyy-MM-dd');
+          params.new_start_time = selectedTimeSlot;
+        } else {
+          showNotification('Выберите дату и время для переноса', 'warning');
+          return;
+        }
       }
 
       const result = await resolveConflict(params).unwrap();
@@ -213,14 +265,59 @@ const BookingConflictsPage: React.FC = () => {
 
   const resetResolveDialog = () => {
     setSelectedConflict(null);
+    setCurrentConflict(null);
     setResolutionType('');
     setResolutionNotes('');
     setNewStartTime('');
+    setSelectedDate(null);
+    setSelectedTimeSlot(null);
+    setCurrentServicePointId(0);
+    setCurrentCategoryId(0);
   };
 
   const openResolveDialog = (conflict: BookingConflict) => {
     setSelectedConflict(conflict);
+    setCurrentConflict(conflict);
     setResolveDialogOpen(true);
+    
+    // Отладочная информация
+    console.log('🔍 Данные конфликта для AvailabilitySelector:', {
+      conflict: conflict,
+      servicePoint: conflict.booking.service_point,
+      serviceCategory: conflict.booking.service_category
+    });
+    
+    // Инициализируем данные для AvailabilitySelector
+    if (conflict.booking.service_point?.id) {
+      const servicePointId = Number(conflict.booking.service_point.id);
+      console.log('✅ Установлен servicePointId:', servicePointId);
+      setCurrentServicePointId(servicePointId);
+    }
+    if (conflict.booking.service_category?.id) {
+      const categoryId = Number(conflict.booking.service_category.id);
+      console.log('✅ Установлен categoryId:', categoryId);
+      setCurrentCategoryId(categoryId);
+    }
+    // Устанавливаем завтра как дату по умолчанию для переноса
+    setSelectedDate(addDays(new Date(), 1));
+  };
+
+  // Обработчики для AvailabilitySelector
+  const handleDateChange = (date: Date | null) => {
+    setSelectedDate(date);
+    setSelectedTimeSlot(null); // Сбрасываем время при изменении даты
+  };
+
+  const handleTimeSlotChange = (timeSlot: string | null, slotData?: AvailableTimeSlot) => {
+    setSelectedTimeSlot(timeSlot);
+    
+    if (timeSlot && selectedDate) {
+      // Формируем datetime-local строку для newStartTime
+      const dateTimeString = `${format(selectedDate, 'yyyy-MM-dd')}T${timeSlot}`;
+      setNewStartTime(dateTimeString);
+    } else {
+      setNewStartTime('');
+    }
   };
 
   const toggleConflictSelection = (conflictId: number) => {
@@ -267,7 +364,7 @@ const BookingConflictsPage: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<PreviewIcon />}
-            onClick={() => setPreviewDialogOpen(true)}
+            onClick={() => setAnalysisDialogOpen(true)}
           >
             {t('bookingConflicts.buttons.previewConflicts')}
           </Button>
@@ -526,14 +623,35 @@ const BookingConflictsPage: React.FC = () => {
             </Grid>
             {resolutionType === 'manual_reschedule' && (
               <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label={t('bookingConflicts.dialogs.resolve.newStartTime')}
-                  type="datetime-local"
-                  value={newStartTime}
-                  onChange={(e) => setNewStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                />
+                <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                  {t('bookingConflicts.dialogs.resolve.selectNewDateTime')}
+                </Typography>
+                {currentServicePointId && currentCategoryId ? (
+                  <AvailabilitySelector
+                    servicePointId={currentServicePointId}
+                    categoryId={currentCategoryId}
+                    selectedDate={selectedDate}
+                    selectedTimeSlot={selectedTimeSlot}
+                    availableTimeSlots={availableTimeSlots}
+                    isLoading={isLoadingAvailability}
+                    onDateChange={handleDateChange}
+                    onTimeSlotChange={handleTimeSlotChange}
+                  />
+                ) : (
+                  <Alert severity="warning">
+                    {t('bookingConflicts.dialogs.resolve.missingServicePointInfo')}
+                  </Alert>
+                )}
+                
+                {/* Отображение выбранного времени */}
+                {selectedDate && selectedTimeSlot && (
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    <Typography variant="body2">
+                      <strong>{t('bookingConflicts.dialogs.resolve.selectedDateTime')}:</strong>{' '}
+                      {format(selectedDate, 'dd.MM.yyyy')} в {selectedTimeSlot}
+                    </Typography>
+                  </Alert>
+                )}
               </Grid>
             )}
             <Grid item xs={12}>
