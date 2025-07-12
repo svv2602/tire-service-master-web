@@ -304,6 +304,16 @@ export const SeasonalScheduleForm: React.FC<SeasonalScheduleFormProps> = ({
             }
           />
           <CardContent>
+            {/* Информация о постах с индивидуальным расписанием */}
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Важная информация о постах обслуживания
+              </Typography>
+              <Typography variant="body2">
+                Если у сервисной точки есть посты с индивидуальным расписанием, они будут продолжать работать по своему расписанию, 
+                игнорируя данное сезонное расписание. Сезонное расписание влияет только на посты, которые используют общее расписание точки.
+              </Typography>
+            </Alert>
             <Grid container spacing={2}>
               {DAYS_OF_WEEK.map((day) => {
                 const daySchedule = formik.values.working_hours[day.key];
