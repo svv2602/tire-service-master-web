@@ -8,12 +8,21 @@ import {
   Switch,
   Paper,
   Alert,
+  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
+import { ExpandMore as ExpandMoreIcon, Event as EventIcon } from '@mui/icons-material';
 import { FormikProps } from 'formik';
 import { useTranslation } from 'react-i18next';
 import type { ServicePointFormDataNew, ServicePoint } from '../../../types/models';
 import { DAYS_OF_WEEK, getDayName } from '../../../types/working-hours';
 import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../../types/working-hours';
+
+// Импорт компонентов сезонных расписаний
+import { SeasonalScheduleManager } from '../../../components/seasonal-schedules/SeasonalScheduleManager';
+import SeasonalScheduleInfo from '../../../components/seasonal-schedules/SeasonalScheduleInfo';
 
 interface ScheduleStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -270,6 +279,76 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
           {t('forms.servicePoint.schedule.clearAll')}
         </Typography>
       </Box>
+
+      {/* Сезонные расписания */}
+      {isEditMode && servicePoint?.id && (
+        <Box sx={{ mt: 4 }}>
+          <Divider sx={{ mb: 3 }} />
+          
+          {/* Информационная панель */}
+          <Box sx={{ mb: 3 }}>
+            <SeasonalScheduleInfo servicePointId={servicePoint.id.toString()} />
+          </Box>
+          
+          <Accordion defaultExpanded={false}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="seasonal-schedules-content"
+              id="seasonal-schedules-header"
+            >
+              <Box>
+                <Typography variant="h6">
+                  Управление сезонными расписаниями
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Создание, редактирование и удаление сезонных расписаний
+                </Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <SeasonalScheduleManager
+                servicePointId={servicePoint.id.toString()}
+                servicePointName={servicePoint.name}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+      )}
+
+      {/* Информация для новых сервисных точек */}
+      {(!isEditMode || !servicePoint?.id) && (
+        <Box sx={{ mt: 4 }}>
+          <Divider sx={{ mb: 3 }} />
+          
+          {/* Информационная панель для новых точек */}
+          <Paper 
+            sx={{ 
+              p: 2, 
+              border: '1px solid', 
+              borderColor: 'divider',
+              backgroundColor: 'background.default',
+              mb: 2,
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              <EventIcon color="disabled" />
+              <Typography variant="body2" color="text.secondary">
+                Сезонные расписания не настроены
+              </Typography>
+            </Box>
+          </Paper>
+          
+          <Alert severity="info">
+            <Typography variant="subtitle2" gutterBottom>
+              Сезонные расписания
+            </Typography>
+            <Typography variant="body2">
+              Сезонные расписания можно настроить после создания сервисной точки.
+              Сначала завершите создание точки обслуживания.
+            </Typography>
+          </Alert>
+        </Box>
+      )}
     </Box>
   );
 };
