@@ -441,8 +441,8 @@ const BookingConflictsPage: React.FC = () => {
                         <Typography variant="subtitle2">{t('bookingConflicts.bookingInfo.id')}:</Typography>
                         <Typography variant="body2">
                           {t('bookingConflicts.bookingInfo.id')}: {conflict.booking.id}<br />
-                          {t('bookingConflicts.bookingInfo.date')}: {new Date(conflict.booking.start_time).toLocaleDateString('ru-RU')}<br />
-                          {t('bookingConflicts.bookingInfo.time')}: {new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}<br />
+                          {t('bookingConflicts.bookingInfo.date')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleDateString('ru-RU') : 'Не указана'}<br />
+                          {t('bookingConflicts.bookingInfo.time')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'Не указано'}<br />
                           {t('bookingConflicts.bookingInfo.servicePoint')}: {conflict.booking.service_point.name}
                         </Typography>
                       </Grid>

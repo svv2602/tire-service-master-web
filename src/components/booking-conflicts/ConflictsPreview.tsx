@@ -171,8 +171,8 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
                               </Typography>
                               <Typography variant="body2">
                                 ID: {conflict.booking.id}<br />
-                                {t('bookingConflicts.bookingInfo.date')}: {new Date(conflict.booking.start_time).toLocaleDateString('ru-RU')}<br />
-                                {t('bookingConflicts.bookingInfo.time')}: {new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                                {t('bookingConflicts.bookingInfo.date')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleDateString('ru-RU') : 'Не указана'}<br />
+                                {t('bookingConflicts.bookingInfo.time')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'Не указано'}
                               </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
