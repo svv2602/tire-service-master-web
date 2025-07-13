@@ -202,6 +202,7 @@ export interface Booking {
   start_time: string;
   end_time: string;
   notes: string;
+  is_service_booking: boolean; // Добавляем поле для сервисных бронирований
   services: {
     service_id: number;
     quantity: number;

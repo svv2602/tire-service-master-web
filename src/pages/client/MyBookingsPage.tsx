@@ -35,6 +35,7 @@ const convertBooking = (modelBooking: ModelBooking): Booking => {
     start_time: modelBooking.start_time,
     end_time: modelBooking.end_time,
     notes: modelBooking.notes,
+    is_service_booking: modelBooking.is_service_booking || false, // Добавляем поле сервисного бронирования
     service_category: modelBooking.service_category,
     service_point: modelBooking.service_point ? {
       id: modelBooking.service_point.id,
