@@ -7,6 +7,8 @@ export interface AvailableTimeSlot {
   can_book: boolean;
   duration_minutes: number; // Длительность слота в минутах
   bookings_count?: number; // Количество фактических бронирований на это время
+  is_available?: boolean; // Доступность слота (для служебных ролей)
+  occupancy_status?: 'available' | 'full'; // Статус загруженности (для служебных ролей)
 }
 
 export interface AvailabilityResponse {

@@ -9,7 +9,13 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors } from '../../styles';
-import { AccessTime as TimeIcon, CheckCircle as CheckIcon, People as PeopleIcon } from '@mui/icons-material';
+import { 
+  AccessTime as TimeIcon, 
+  CheckCircle as CheckIcon, 
+  People as PeopleIcon,
+  Block as BlockIcon,
+  Warning as WarningIcon 
+} from '@mui/icons-material';
 import type { AvailableTimeSlot } from '../../types/availability';
 import { useTranslation } from 'react-i18next';
 
@@ -19,6 +25,7 @@ interface TimeSlotPickerProps {
   availableTimeSlots: AvailableTimeSlot[];
   isLoading?: boolean;
   hideSelectedChip?: boolean;
+  isServiceUser?: boolean; // Новый пропс для определения типа пользователя
 }
 
 export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
@@ -27,10 +34,79 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   availableTimeSlots,
   isLoading = false,
   hideSelectedChip = false,
+  isServiceUser = false, // По умолчанию обычный пользователь
 }) => {
   const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
+
+  // Функция для получения стиля кнопки в зависимости от статуса слота
+  const getSlotButtonStyle = (slot: AvailableTimeSlot, isSelected: boolean) => {
+    if (isSelected) {
+      return {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText,
+        borderColor: theme.palette.primary.main,
+      };
+    }
+
+    // Для служебных пользователей показываем все слоты с разными стилями
+    if (isServiceUser) {
+      if (slot.is_available === false || slot.occupancy_status === 'full') {
+        // Занятый слот - красный фон
+        return {
+          backgroundColor: theme.palette.error.light,
+          color: theme.palette.error.contrastText,
+          borderColor: theme.palette.error.main,
+          '&:hover': {
+            backgroundColor: theme.palette.error.main,
+          },
+        };
+      }
+    }
+
+    // Обычный доступный слот
+    return {
+      backgroundColor: 'transparent',
+      color: colors.textPrimary,
+      borderColor: colors.backgroundSecondary,
+      '&:hover': {
+        backgroundColor: colors.backgroundSecondary,
+      },
+    };
+  };
+
+  // Функция для получения иконки статуса слота
+  const getSlotStatusIcon = (slot: AvailableTimeSlot) => {
+    if (isServiceUser && (slot.is_available === false || slot.occupancy_status === 'full')) {
+      return <BlockIcon sx={{ fontSize: 14, color: 'inherit' }} />;
+    }
+    return <PeopleIcon sx={{ fontSize: 14 }} />;
+  };
+
+  // Функция для получения текста статуса слота
+  const getSlotStatusText = (slot: AvailableTimeSlot) => {
+    if (isServiceUser) {
+      if (slot.is_available === false || slot.occupancy_status === 'full') {
+        return t('timeSlotPicker.fullyBooked', { 
+          bookings: slot.bookings_count || 0, 
+          total: slot.total_posts 
+        });
+      }
+      // Показываем количество бронирований для служебных пользователей
+      return t('timeSlotPicker.postsAvailableWithBookings', { 
+        available: slot.available_posts, 
+        total: slot.total_posts,
+        bookings: slot.bookings_count || 0
+      });
+    }
+    
+    // Для обычных пользователей показываем только доступные посты
+    return t('timeSlotPicker.postsAvailable', { 
+      available: slot.available_posts, 
+      total: slot.total_posts 
+    });
+  };
 
   return (
     <Box>
@@ -46,7 +122,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
           textAlign: 'center', 
           bgcolor: colors.backgroundSecondary,
           borderRadius: 2
-        }}        >
+        }}>
           <Typography variant="body1" sx={{ color: colors.textSecondary }}>
             {t('timeSlotPicker.noSlots')}
           </Typography>
@@ -56,9 +132,32 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
         </Box>
       ) : (
         <Box sx={{ maxHeight: 400, overflowY: 'auto', pr: 1 }}>
+          {isServiceUser && (
+            <Box sx={{ mb: 2, p: 2, bgcolor: colors.backgroundSecondary, borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
+                <WarningIcon sx={{ fontSize: 16, mr: 1, verticalAlign: 'middle' }} />
+                {t('timeSlotPicker.serviceUserNote')}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Chip 
+                  size="small" 
+                  label={t('timeSlotPicker.availableSlot')} 
+                  sx={{ bgcolor: 'transparent', border: `1px solid ${colors.backgroundSecondary}` }}
+                />
+                <Chip 
+                  size="small" 
+                  label={t('timeSlotPicker.fullyBookedSlot')} 
+                  sx={{ bgcolor: theme.palette.error.light, color: theme.palette.error.contrastText }}
+                />
+              </Box>
+            </Box>
+          )}
+          
           <Grid container spacing={2}>
             {availableTimeSlots.map(slot => {
               const isSelected = slot.time === selectedTimeSlot;
+              const buttonStyle = getSlotButtonStyle(slot, isSelected);
+              
               return (
                 <Grid item xs={12} sm={6} md={4} key={slot.time}>
                   <Button
@@ -67,13 +166,7 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                     onClick={() => onTimeSlotChange(slot.time, slot)}
                     sx={{
                       p: 2,
-                      borderColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
-                      backgroundColor: isSelected ? theme.palette.primary.main : 'transparent',
-                      color: isSelected ? theme.palette.primary.contrastText : colors.textPrimary,
-                      '&:hover': {
-                        backgroundColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
-                        borderColor: isSelected ? theme.palette.primary.main : colors.backgroundSecondary,
-                      },
+                      ...buttonStyle,
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -86,9 +179,9 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                       {slot.time}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <PeopleIcon sx={{ fontSize: 14 }} />
+                      {getSlotStatusIcon(slot)}
                       <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
-                        {slot.available_posts} {t('timeSlotPicker.postsAvailable', { total: slot.total_posts })}
+                        {getSlotStatusText(slot)}
                       </Typography>
                     </Box>
                     {isSelected && (

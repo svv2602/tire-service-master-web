@@ -19,6 +19,7 @@ interface AvailabilitySelectorProps {
   servicePointPhone?: string;
   categoryId?: number; // Добавляем categoryId для фильтрации по категории услуг
   totalSlotsForDay?: number; // Добавляем общее количество слотов для правильного отображения загруженности
+  isServiceUser?: boolean; // Новый пропс для определения типа пользователя
 }
 
 export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
@@ -32,6 +33,7 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   servicePointPhone,
   categoryId,
   totalSlotsForDay,
+  isServiceUser = false, // По умолчанию обычный пользователь
 }) => {
   const theme = useTheme();
 
@@ -196,6 +198,7 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
           onTimeSlotChange={onTimeSlotChange}
           availableTimeSlots={availableTimeSlots}
           isLoading={isLoading}
+          isServiceUser={isServiceUser} // Передаем информацию о типе пользователя
         />
       </Paper>
     </Box>

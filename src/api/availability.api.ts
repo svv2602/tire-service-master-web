@@ -48,6 +48,8 @@ export interface TimeSlot {
   available_posts?: number;
   total_posts?: number;
   bookings_count?: number;
+  is_available?: boolean; // Доступность слота (для служебных ролей)
+  occupancy_status?: 'available' | 'full'; // Статус загруженности (для служебных ролей)
 }
 
 export interface CategorySlotsResponse {
@@ -57,6 +59,7 @@ export interface CategorySlotsResponse {
   slots: TimeSlot[];
   total_slots: number;
   total_posts_count?: number; // Общее количество постов для категории
+  is_service_user?: boolean; // Является ли пользователь служебным (admin/partner/manager/operator)
 }
 
 export const availabilityApi = baseApi.injectEndpoints({

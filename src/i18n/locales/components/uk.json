@@ -327,7 +327,12 @@
     "noSlots": "На вибрану дату немає доступних слотів.",
     "selectOtherDate": "Будь ласка, виберіть іншу дату.",
     "postsAvailable": "з {{total}} вільно",
-    "selectedTime": "Вибраний час: {{time}}"
+    "postsAvailableWithBookings": "{{available}} з {{total}} вільно ({{bookings}} бронювань)",
+    "fullyBooked": "Всі пости зайняті ({{bookings}} з {{total}})",
+    "selectedTime": "Вибраний час: {{time}}",
+    "serviceUserNote": "Службове бронювання: можна обрати будь-який слот, включаючи повністю зайняті",
+    "availableSlot": "Доступний",
+    "fullyBookedSlot": "Повністю зайнятий"
   },
   "dayDetailsPanel": {
     "information": "Інформація",

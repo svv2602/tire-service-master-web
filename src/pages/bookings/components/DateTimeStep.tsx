@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
 import {
   Box,
   Typography,
@@ -60,6 +62,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const calendarRef = useRef<HTMLDivElement>(null);
   const [expandedPanel, setExpandedPanel] = useState<'date' | 'time'>('date');
   
+  // Получаем информацию о текущем пользователе для определения служебной роли
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
+  
   // Эффект для фокуса на календаре при монтировании компонента
   useEffect(() => {
     // Небольшая задержка для плавности UX и ожидания рендера календаря
@@ -89,7 +95,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }, 500);
     
     return () => clearTimeout(timer);
-  }, []); // Срабатывает только при монтировании компонента
+  }, []);
   
   // Инициализация состояния из formData
   useEffect(() => {
@@ -126,72 +132,50 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           service_point_id: formData.service_point_id,
           service_category_id: formData.service_category_id,
           selectedDate: selectedDate
-        }
+        },
+        isServiceUser: isServiceUser // Добавляем информацию о типе пользователя
       });
     }
-  }, [formData.service_point_id, formData.service_category_id, selectedDate]);
+  }, [formData.service_point_id, formData.service_category_id, selectedDate, isServiceUser]);
 
-  // Загрузка доступных слотов для выбранной даты
+  // API запрос для получения слотов
   const { data: availabilityData, isLoading: isLoadingAvailability, error: availabilityError } = useGetSlotsForCategoryQuery(
     {
-      servicePointId: formData.service_point_id?.toString() || '0',
-      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
-      categoryId: formData.service_category_id?.toString() || '1'
+      servicePointId: formData.service_point_id || 0,
+      categoryId: formData.service_category_id || 0,
+      date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''
     },
-    { skip: !formData.service_point_id || !selectedDate || !formData.service_category_id }
+    { skip: !formData.service_point_id || !formData.service_category_id || !selectedDate }
   );
 
-  // Загрузка статистики дня для правильного отображения загруженности
+  // API запрос для получения деталей дня
   const { data: dayDetailsData, isLoading: isLoadingDayDetails, error: dayDetailsError } = useGetDayDetailsQuery(
     {
       servicePointId: formData.service_point_id?.toString() || '0',
       date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '',
-      categoryId: formData.service_category_id?.toString() || '1'
+      categoryId: formData.service_category_id
     },
-    { skip: !formData.service_point_id || !selectedDate || !formData.service_category_id }
+    { skip: !formData.service_point_id || !formData.service_category_id || !selectedDate }
   );
 
-  // Отладочная информация для API ответа
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 Данные доступности слотов:', {
-        availabilityData,
-        isLoadingAvailability,
-        availabilityError,
-        selectedDate: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : null
-      });
-    }
-  }, [availabilityData, isLoadingAvailability, availabilityError, selectedDate]);
-  
-  // Группировка доступных слотов по времени с подсчетом доступности
+  // Преобразование данных API в формат для компонентов
   const availableTimeSlots = useMemo(() => {
     if (!availabilityData?.slots || availabilityData.slots.length === 0) {
       return [];
     }
 
-    // Теперь API уже возвращает правильную группировку по времени
-    // Каждый слот содержит available_posts, total_posts, bookings_count
-    const processedSlots = availabilityData.slots.map(slot => ({
+    // Преобразуем слоты используя новые поля API
+    return availabilityData.slots.map(slot => ({
       time: slot.start_time,
-      available_posts: slot.available_posts || 1,
-      total_posts: slot.total_posts || 1,
-      can_book: (slot.available_posts || 0) > 0,
+      available_posts: slot.available_posts || 0,
+      total_posts: slot.total_posts || 0,
+      bookings_count: slot.bookings_count || 0,
       duration_minutes: slot.duration_minutes,
-      bookings_count: slot.bookings_count || 0
-    }));
-
-    // Отладочная информация для обработанных слотов
-    if (process.env.NODE_ENV === 'development') {
-      console.log('⏰ Обработанные временные слоты:', {
-        originalSlots: availabilityData?.slots?.length || 0,
-        processedSlots: processedSlots.length,
-        sampleSlots: processedSlots.slice(0, 3),
-        hasNewFields: processedSlots.length > 0 && processedSlots[0].available_posts !== undefined
-      });
-    }
-
-    return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
-  }, [availabilityData]);
+      can_book: isServiceUser ? true : (slot.available_posts || 0) > 0, // Служебные пользователи могут бронировать любой слот
+      is_available: slot.is_available,
+      occupancy_status: slot.occupancy_status
+    })).sort((a, b) => a.time.localeCompare(b.time));
+  }, [availabilityData, isServiceUser]);
   
   // Отладочная информация для диагностики данных
   useEffect(() => {
@@ -206,10 +190,14 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         availabilityData,
         availabilityError,
         isLoadingAvailability,
-        availableTimeSlotsLength: availableTimeSlots.length
+        availableTimeSlotsLength: availableTimeSlots.length,
+        isServiceUser: isServiceUser,
+        currentUser: currentUser,
+        userRole: currentUser?.role,
+        allSlots: availabilityData?.slots || []
       });
     }
-  }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots]);
+  }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots, isServiceUser]);
   
   // Обработчик выбора даты БЕЗ автоматического перехода к выбору времени
   const handleDateChange = (date: Date | null) => {
@@ -255,10 +243,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     return (
       <Box>
         <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-          {t('bookingSteps.dateTime.title')}
+          {t('forms.booking.dateTime.title')}
         </Typography>
         <Alert severity="warning">
-          {t('bookingSteps.dateTime.selectServicePointFirst')}
+                    {t('forms.booking.dateTime.selectServicePointFirst')}
         </Alert>
       </Box>
     );
@@ -266,8 +254,16 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   
   return (
     <Box>
-      <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
-        {t('bookingSteps.dateTime.title')}
+        <Typography variant="h5" component="h2" sx={{ mb: 3, fontWeight: 600 }}>
+          {t('forms.booking.dateTime.title')}
+        {isServiceUser && (
+          <Chip 
+            label={t('forms.booking.dateTime.serviceUserMode')} 
+            color="warning" 
+            size="small" 
+            sx={{ ml: 2 }}
+          />
+        )}
       </Typography>
       
       {/* Информация о выбранной точке обслуживания */}
@@ -276,24 +272,17 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <LocationIcon sx={{ color: 'primary.main', mt: 0.5 }} />
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {isLoadingServicePoint ? t('bookingSteps.dateTime.loadingServicePoint') : (servicePointData?.name || `${t('bookingSteps.dateTime.servicePoint')} #${formData.service_point_id}`)}
+              {isLoadingServicePoint ? t('forms.booking.dateTime.loadingServicePoint') : (servicePointData?.name || `${t('forms.booking.dateTime.servicePoint')} #${formData.service_point_id}`)}
             </Typography>
             {servicePointData && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {servicePointData.city?.name && `${t('bookingSteps.dateTime.city')} ${servicePointData.city.name}`}
+                {servicePointData.city?.name && `${t('forms.booking.dateTime.city')} ${servicePointData.city.name}`}
                 {servicePointData.address && `, ${servicePointData.address}`}
               </Typography>
             )}
           </Box>
         </Box>
       </Paper>
-      
-      {/* Ошибка загрузки доступности */}
-      {availabilityError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {t('bookingSteps.dateTime.errorLoadingSlots')}
-        </Alert>
-      )}
 
       {/* Аккордеон выбора даты */}
       <Accordion expanded={expandedPanel === 'date'} onChange={() => setExpandedPanel('date')}>
@@ -301,13 +290,18 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <Stack direction="row" alignItems="center" spacing={2}>
             <CalendarMonthIcon sx={{ color: 'primary.main' }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {t('bookingSteps.dateTime.selectDate')}
+              {t('forms.booking.dateTime.selectDate')}
             </Typography>
             {selectedDate && (
-              <Chip label={format(selectedDate, 'd MMMM yyyy', { locale: dateLocale })} color="success" size="small" />
+              <Chip 
+                label={format(selectedDate, 'dd.MM.yyyy')} 
+                color="success" 
+                size="small" 
+              />
             )}
           </Stack>
         </AccordionSummary>
+
         <AccordionDetails>
           <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
             <Box sx={{ flex: '1 1 300px', minWidth: 280 }}>
@@ -328,7 +322,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 availablePosts={(dayDetailsData?.summary?.total_slots || 0) - (dayDetailsData?.summary?.occupied_slots || 0)}
                 occupancyPercentage={dayDetailsData?.summary?.occupancy_percentage || 0}
                 servicePointPhone={servicePointData?.phone}
-                isWorking={dayDetailsData?.is_working || false}
+                isWorking={dayDetailsData?.is_working as boolean | undefined}
               />
             </Box>
           </Box>
@@ -347,7 +341,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
                 py: 1
               }}
             >
-              {t('bookingSteps.dateTime.proceedToTimeSelection')}
+              {t('forms.booking.dateTime.proceedToTimeSelection')}
             </Button>
           </Box>
         </AccordionDetails>
@@ -358,7 +352,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
           <Stack direction="row" alignItems="center" spacing={2}>
             <AccessTimeIcon sx={{ color: 'primary.main' }} />
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {t('bookingSteps.dateTime.selectTime')}
+              {t('forms.booking.dateTime.selectTime')}
             </Typography>
             {/* Отображаем только выбранное время */}
             {selectedTimeSlot && (
@@ -377,6 +371,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             availableTimeSlots={availableTimeSlots}
             isLoading={isLoadingAvailability}
             hideSelectedChip={true}
+            isServiceUser={isServiceUser || false} // Передаем информацию о типе пользователя
           />
         </AccordionDetails>
       </Accordion>
@@ -385,13 +380,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {/* Валидация */}
       {selectedDate && !selectedTimeSlot && (
         <FormHelperText error>
-                      {t('bookingSteps.dateTime.selectTime')}
+                      {t('forms.booking.dateTime.selectTime')}
         </FormHelperText>
       )}
       
       {!selectedDate && (
         <FormHelperText error>
-                      {t('bookingSteps.dateTime.selectDate')}
+                      {t('forms.booking.dateTime.selectDate')}
         </FormHelperText>
       )}
       
@@ -399,27 +394,24 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       {(!isValid) && (
         <Alert severity="warning" sx={{ mt: 3 }}>
           <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-            {t('bookingSteps.dateTime.requiredFieldsWarning')}:
+            {t('forms.booking.dateTime.fillRequiredFields')}
           </Typography>
           <Box component="ul" sx={{ pl: 2, mb: 0, mt: 1 }}>
-            {!formData.booking_date && (
-              <Typography variant="body2" component="li">
-                {t('bookingSteps.dateTime.dateRequired')}
-              </Typography>
+            {!selectedDate && (
+              <li>
+                <Typography variant="body2">
+                  {t('forms.booking.dateTime.selectDate')}
+                </Typography>
+              </li>
             )}
-            {!formData.start_time && (
-              <Typography variant="body2" component="li">
-                {t('bookingSteps.dateTime.timeRequired')}
-              </Typography>
+            {!selectedTimeSlot && (
+              <li>
+                <Typography variant="body2">
+                  {t('forms.booking.dateTime.selectTime')}
+                </Typography>
+              </li>
             )}
           </Box>
-        </Alert>
-      )}
-      
-      {/* Информационное сообщение */}
-      {isValid && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          {t('bookingSteps.dateTime.allRequiredFieldsFilled')}
         </Alert>
       )}
     </Box>

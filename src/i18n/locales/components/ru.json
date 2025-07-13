@@ -329,7 +329,12 @@
     "noSlots": "Нет доступных слотов на выбранную дату.",
     "selectOtherDate": "Пожалуйста, выберите другую дату.",
     "postsAvailable": "из {{total}} свободно",
-    "selectedTime": "Выбрано: {{time}}"
+    "postsAvailableWithBookings": "{{available}} из {{total}} свободно ({{bookings}} бронирований)",
+    "fullyBooked": "Все посты заняты ({{bookings}} из {{total}})",
+    "selectedTime": "Выбрано: {{time}}",
+    "serviceUserNote": "Служебное бронирование: можно выбрать любой слот, включая полностью занятые",
+    "availableSlot": "Доступен",
+    "fullyBookedSlot": "Полностью занят"
   },
   "dayDetailsPanel": {
     "information": "Информация",
