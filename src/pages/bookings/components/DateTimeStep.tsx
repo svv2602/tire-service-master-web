@@ -47,24 +47,30 @@ interface DateTimeStepProps {
   onNext: () => void;
   onBack: () => void;
   isValid: boolean;
+  isServiceUser?: boolean; // 🚀 НОВОЕ: информация о типе пользователя для фильтрации слотов
 }
 
 const DateTimeStep: React.FC<DateTimeStepProps> = ({
   formData,
   setFormData,
   isValid,
+  isServiceUser: isServiceUserProp, // 🚀 НОВОЕ: получаем информацию о типе пользователя из пропсов
 }) => {
-  const { t } = useTranslation();
-  const dateLocale = useDateLocale();
+  const { t } = useTranslation(['client', 'components']);
   const theme = useTheme();
+  const dateLocale = useDateLocale();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const [expandedPanel, setExpandedPanel] = useState<'date' | 'time'>('date');
   
-  // Получаем информацию о текущем пользователе для определения служебной роли
+  // Redux состояние для получения информации о пользователе
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
+  
+  // 🚀 ОБНОВЛЕННАЯ ЛОГИКА: Используем переданный проп или вычисляем локально
+  const isServiceUser = isServiceUserProp !== undefined 
+    ? isServiceUserProp 
+    : currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
   
   // Эффект для фокуса на календаре при монтировании компонента
   useEffect(() => {
@@ -172,7 +178,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     });
 
     // Преобразуем слоты используя новые поля API
-    const processedSlots = availabilityData.slots.map(slot => ({
+    let processedSlots = availabilityData.slots.map(slot => ({
       time: slot.start_time,
       available_posts: slot.available_posts || 0,
       total_posts: slot.total_posts || 0,
@@ -181,11 +187,22 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       can_book: isServiceUser ? true : (slot.available_posts || 0) > 0, // Служебные пользователи могут бронировать любой слот
       is_available: slot.is_available,
       occupancy_status: slot.occupancy_status
-    })).sort((a, b) => a.time.localeCompare(b.time));
+    }));
 
-    console.log('✅ availableTimeSlots: обработанные слоты:', processedSlots);
+    // 🚀 НОВАЯ ЛОГИКА: Для клиентов показываем только доступные слоты, для не-клиентов все слоты
+    if (!isServiceUser) {
+      // Для клиентов фильтруем только доступные слоты
+      processedSlots = processedSlots.filter(slot => (slot.available_posts || 0) > 0);
+      console.log('👤 Клиент: отфильтровано слотов с available_posts > 0:', processedSlots.length);
+    } else {
+      console.log('🔧 Служебный пользователь: показываем все слоты:', processedSlots.length);
+    }
+
+    const sortedSlots = processedSlots.sort((a, b) => a.time.localeCompare(b.time));
+
+    console.log('✅ availableTimeSlots: обработанные слоты:', sortedSlots);
     
-    return processedSlots;
+    return sortedSlots;
   }, [availabilityData, isServiceUser]);
   
   // Отладочная информация для диагностики данных

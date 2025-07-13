@@ -106,6 +106,16 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   
+  // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+  const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
+  
+  console.log('🔍 Тип пользователя:', {
+    isAuthenticated,
+    userRole: currentUser?.role,
+    isServiceUser,
+    shouldShowAllSlots: isServiceUser
+  });
+  
   // Состояние формы
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
@@ -751,9 +761,14 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     const CurrentStepComponent = STEPS[activeStep].component;
     
     // Для шага CarTypeStep передаем дополнительный проп onStepChange
-    const additionalProps = STEPS[activeStep].id === 'car-type' 
+    // 🚀 НОВАЯ ЛОГИКА: Для шага DateTimeStep передаем информацию о типе пользователя
+    const additionalProps: any = STEPS[activeStep].id === 'car-type' 
       ? { onStepChange: setActiveStep }
       : {};
+    
+    if (STEPS[activeStep].id === 'date-time') {
+      additionalProps.isServiceUser = isServiceUser;
+    }
     
     return (
       <CurrentStepComponent
