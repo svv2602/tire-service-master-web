@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import {
   Box,
   Paper,
@@ -114,6 +116,16 @@ const BookingFormPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const theme = useTheme(); // Инициализация темы для централизованных стилей
+  
+  // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isServiceUser = Boolean(currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role));
+
+  console.log('🔍 Тип пользователя в админке редактирования бронирования:', {
+    userRole: currentUser?.role,
+    isServiceUser,
+    shouldShowAllSlots: isServiceUser
+  });
   
   const [createBooking] = useCreateBookingMutation();
   const [updateBooking] = useUpdateBookingMutation();
@@ -443,15 +455,28 @@ const BookingFormPage: React.FC = () => {
     }
 
     // Преобразуем слоты используя новые поля API
-    return availabilityData.slots.map(slot => ({
+    let processedSlots = availabilityData.slots.map(slot => ({
       time: slot.start_time,
       available_posts: slot.available_posts || 0,
       total_posts: slot.total_posts || 0,
       bookings_count: slot.bookings_count || 0,
       duration_minutes: slot.duration_minutes,
-      can_book: (slot.available_posts || 0) > 0
-    })).sort((a, b) => a.time.localeCompare(b.time));
-  }, [availabilityData]);
+      can_book: isServiceUser ? true : (slot.available_posts || 0) > 0, // Служебные пользователи могут бронировать любой слот
+      is_available: slot.is_available !== null ? slot.is_available : undefined, // Обрабатываем null как undefined
+      occupancy_status: slot.occupancy_status || ((slot.available_posts || 0) === 0 ? 'full' : 'available') // Определяем статус на основе доступности
+    }));
+
+    // 🚀 НОВАЯ ЛОГИКА: Для клиентов показываем только доступные слоты, для не-клиентов все слоты
+    if (!isServiceUser) {
+      // Для клиентов фильтруем только доступные слоты
+      processedSlots = processedSlots.filter(slot => (slot.available_posts || 0) > 0);
+      console.log('👤 Клиент в админке редактирования: отфильтровано слотов с available_posts > 0:', processedSlots.length);
+    } else {
+      console.log('🔧 Служебный пользователь в админке редактирования: показываем все слоты:', processedSlots.length);
+    }
+
+    return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
+  }, [availabilityData, isServiceUser]);
 
   // Мемоизированные обработчики
   const handleServicePointChange = useCallback((event: SelectChangeEvent<string>) => {
@@ -1053,6 +1078,7 @@ const BookingFormPage: React.FC = () => {
             isLoading={isLoadingAvailability}
             onDateChange={handleDateChange}
             onTimeSlotChange={handleTimeSlotChange}
+            isServiceUser={isServiceUser}
           />
         </DialogContent>
         <DialogActions>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Container, Typography, Box, Paper, Button, CircularProgress,
   Alert, Divider, useTheme
 } from '@mui/material';
+import { RootState } from '../../store';
 import { useGetClientBookingQuery, useRescheduleClientBookingMutation } from '../../api/clientBookings.api';
 import { useGetSlotsForCategoryQuery } from '../../api/availability.api';
 import { useGetServicePointBasicInfoQuery } from '../../api/servicePoints.api';
@@ -26,6 +28,16 @@ const RescheduleBookingPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+
+  // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isServiceUser = Boolean(currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role));
+
+  console.log('🔍 Тип пользователя на странице переноса:', {
+    userRole: currentUser?.role,
+    isServiceUser,
+    shouldShowAllSlots: isServiceUser
+  });
 
   // Состояние для выбора даты и времени
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -59,19 +71,29 @@ const RescheduleBookingPage: React.FC = () => {
       return [];
     }
 
-    // Теперь API уже возвращает правильную группировку по времени
-    // Каждый слот содержит available_posts, total_posts, bookings_count
-    const processedSlots = availabilityData.slots.map(slot => ({
+    // Преобразуем слоты используя новые поля API
+    let processedSlots = availabilityData.slots.map(slot => ({
       time: slot.start_time,
-      available_posts: slot.available_posts || 1,
-      total_posts: slot.total_posts || 1,
-      can_book: (slot.available_posts || 0) > 0,
+      available_posts: slot.available_posts || 0,
+      total_posts: slot.total_posts || 0,
+      bookings_count: slot.bookings_count || 0,
       duration_minutes: slot.duration_minutes,
-      bookings_count: slot.bookings_count || 0
+      can_book: isServiceUser ? true : (slot.available_posts || 0) > 0, // Служебные пользователи могут бронировать любой слот
+      is_available: slot.is_available !== null ? slot.is_available : undefined, // Обрабатываем null как undefined
+      occupancy_status: slot.occupancy_status || ((slot.available_posts || 0) === 0 ? 'full' : 'available') // Определяем статус на основе доступности
     }));
 
+    // 🚀 НОВАЯ ЛОГИКА: Для клиентов показываем только доступные слоты, для не-клиентов все слоты
+    if (!isServiceUser) {
+      // Для клиентов фильтруем только доступные слоты
+      processedSlots = processedSlots.filter(slot => (slot.available_posts || 0) > 0);
+      console.log('👤 Клиент на странице переноса: отфильтровано слотов с available_posts > 0:', processedSlots.length);
+    } else {
+      console.log('🔧 Служебный пользователь на странице переноса: показываем все слоты:', processedSlots.length);
+    }
+
     return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
-  }, [availabilityData]);
+  }, [availabilityData, isServiceUser]);
 
   // Инициализация даты при загрузке данных о записи
   useEffect(() => {
@@ -295,6 +317,7 @@ const RescheduleBookingPage: React.FC = () => {
               servicePointPhone={servicePointData?.contact_phone || servicePointData?.phone}
               categoryId={booking.service_category?.id || 1}
               totalSlotsForDay={availabilityData?.total_slots}
+              isServiceUser={isServiceUser}
             />
           </Box>
 
