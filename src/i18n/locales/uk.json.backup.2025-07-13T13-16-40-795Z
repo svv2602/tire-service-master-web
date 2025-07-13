@@ -429,21 +429,5 @@
       "search": "Пошук...",
       "noResults": "Результатів не знайдено"
     }
-  },
-  "forms": {
-    "booking": {
-      "dateTime": {
-        "title": "Дата і час",
-        "selectServicePointFirst": "Спочатку необхідно вибрати сервісну точку на попередньому кроці",
-        "serviceUserMode": "Режим службового користувача",
-        "loadingServicePoint": "Завантаження...",
-        "servicePoint": "Сервісна точка",
-        "city": "м.",
-        "selectDate": "Виберіть дату",
-        "proceedToTimeSelection": "Далі до вибору часу",
-        "selectTime": "Виберіть час",
-        "fillRequiredFields": "Заповніть всі обов'язкові поля"
-      }
-    }
   }
 }

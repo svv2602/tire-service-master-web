@@ -1268,20 +1268,6 @@
     "common": {
       "back": "Назад",
       "update": "Обновить"
-    },
-    "booking": {
-      "dateTime": {
-        "title": "Дата и время",
-        "selectServicePointFirst": "Сначала необходимо выбрать сервисную точку на предыдущем шаге",
-        "serviceUserMode": "Режим служебного пользователя",
-        "loadingServicePoint": "Загрузка...",
-        "servicePoint": "Сервисная точка",
-        "city": "г.",
-        "selectDate": "Выберите дату",
-        "proceedToTimeSelection": "Далее к выбору времени",
-        "selectTime": "Выберите время",
-        "fillRequiredFields": "Заполните все обязательные поля"
-      }
     }
   },
   "locale": "ru",

@@ -56,7 +56,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   isValid,
   isServiceUser: isServiceUserProp, // 🚀 НОВОЕ: получаем информацию о типе пользователя из пропсов
 }) => {
-  const { t } = useTranslation(['client', 'components']);
+  const { t } = useTranslation();
   const theme = useTheme();
   const dateLocale = useDateLocale();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
