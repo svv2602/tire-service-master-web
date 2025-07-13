@@ -68,6 +68,7 @@ export interface Booking {
   end_time: string;
   notes: string;
   status: BookingStatus; // ✅ Теперь это строка, а не числовой ID
+  is_service_booking: boolean; // ✅ Новое поле для служебных бронирований
   service_category_id?: number;
   service_category?: {
     id: number;

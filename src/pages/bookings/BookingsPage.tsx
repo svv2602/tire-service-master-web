@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, Snackbar } from '@mui/material';
 import { format } from 'date-fns';
-import { Box, Typography, CircularProgress, Chip } from '../../components/ui';
+import { Box, Typography, CircularProgress, Chip, ServiceBookingBadge } from '../../components/ui';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -580,31 +580,37 @@ const BookingsPage: React.FC = () => {
     {
       id: 'status',
       label: t('forms.bookings.columns.status'),
-      minWidth: 100, // уменьшено с 120
+      minWidth: 120, // увеличено для размещения badge
       align: 'center',
       sortable: false,
       format: (value: any, booking: Booking) => (
-        <Box
-          sx={{ 
-            cursor: 'pointer',
-            '&:hover': {
-              opacity: 0.8,
-            },
-          }}
-          onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
-        >
-          <Chip
-            label={getStatusDisplayName(booking.status)}
-            color={getStatusChipColor(booking.status)}
-            size="small"
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Box
             sx={{ 
-              minWidth: 80, // уменьшено с 100
-              fontSize: '0.7rem',
-              '& .MuiChip-label': {
-                px: 1,
-                py: 0.25
-              }
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.8,
+              },
             }}
+            onClick={(event: React.MouseEvent<HTMLElement>) => handleStatusChipClick(event, booking)}
+          >
+            <Chip
+              label={getStatusDisplayName(booking.status)}
+              color={getStatusChipColor(booking.status)}
+              size="small"
+              sx={{ 
+                minWidth: 80,
+                fontSize: '0.7rem',
+                '& .MuiChip-label': {
+                  px: 1,
+                  py: 0.25
+                }
+              }}
+            />
+          </Box>
+          <ServiceBookingBadge 
+            isServiceBooking={booking.is_service_booking} 
+            size="small"
           />
         </Box>
       ),

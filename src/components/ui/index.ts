@@ -47,6 +47,7 @@ export * from './AutoComplete';
 export * from './Table';
 export * from './PhoneField';
 export * from './ActionsMenu';
+export { default as ServiceBookingBadge } from './ServiceBookingBadge/ServiceBookingBadge';
 
 // Экспорт Container из MUI (так как он не требует кастомизации)
 export { Container, Box, CircularProgress } from '@mui/material'; 
