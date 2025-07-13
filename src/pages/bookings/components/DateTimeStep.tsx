@@ -161,11 +161,18 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   // Преобразование данных API в формат для компонентов
   const availableTimeSlots = useMemo(() => {
     if (!availabilityData?.slots || availabilityData.slots.length === 0) {
+      console.log('⚠️ availableTimeSlots: нет данных слотов');
       return [];
     }
 
+    console.log('🔄 availableTimeSlots: обрабатываем слоты:', {
+      slotsCount: availabilityData.slots.length,
+      isServiceUser,
+      allSlotTimes: availabilityData.slots.map(s => s.start_time)
+    });
+
     // Преобразуем слоты используя новые поля API
-    return availabilityData.slots.map(slot => ({
+    const processedSlots = availabilityData.slots.map(slot => ({
       time: slot.start_time,
       available_posts: slot.available_posts || 0,
       total_posts: slot.total_posts || 0,
@@ -175,6 +182,10 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       is_available: slot.is_available,
       occupancy_status: slot.occupancy_status
     })).sort((a, b) => a.time.localeCompare(b.time));
+
+    console.log('✅ availableTimeSlots: обработанные слоты:', processedSlots);
+    
+    return processedSlots;
   }, [availabilityData, isServiceUser]);
   
   // Отладочная информация для диагностики данных
@@ -194,8 +205,28 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         isServiceUser: isServiceUser,
         currentUser: currentUser,
         userRole: currentUser?.role,
-        allSlots: availabilityData?.slots || []
+        allSlots: availabilityData?.slots || [],
+        slotsDetails: availabilityData?.slots?.map(slot => ({
+          time: slot.start_time,
+          available: slot.available_posts,
+          total: slot.total_posts,
+          bookings: slot.bookings_count,
+          is_available: slot.is_available
+        })) || [],
+        slot945Found: availabilityData?.slots?.find(s => s.start_time === '09:45') || null,
+        isServiceUserFromAPI: availabilityData?.is_service_user
       });
+      
+      // Специальная проверка для слота 9:45
+      if (availabilityData?.slots) {
+        const slot945 = availabilityData.slots.find(s => s.start_time === '09:45');
+        if (slot945) {
+          console.log('🎯 НАЙДЕН СЛОТ 9:45 в API ответе:', slot945);
+        } else {
+          console.log('❌ СЛОТ 9:45 НЕ НАЙДЕН в API ответе');
+          console.log('📋 Все доступные слоты:', availabilityData.slots.map(s => s.start_time));
+        }
+      }
     }
   }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots, isServiceUser]);
   
