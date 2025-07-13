@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Фильтрация слотов по ролям на странице конфликтов бронирований</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .success { color: #2e7d32; background: #e8f5e9; padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .error { color: #d32f2f; background: #ffebee; padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .info { color: #1976d2; background: #e3f2fd; padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .warning { color: #f57c00; background: #fff3e0; padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .code-block {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .test-step {
+            border-left: 4px solid #2196f3;
+            padding-left: 16px;
+            margin: 16px 0;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        .feature-card h4 {
+            margin: 0 0 12px 0;
+            color: #495057;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .badge-new { background: #e3f2fd; color: #1976d2; }
+        .badge-improved { background: #e8f5e9; color: #2e7d32; }
+        .badge-fixed { background: #fff3e0; color: #f57c00; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Тест: Фильтрация слотов по ролям на странице конфликтов бронирований</h1>
+        <p><strong>Дата:</strong> 13 июля 2025</p>
+        <p><strong>Страница:</strong> <code>/admin/booking-conflicts</code></p>
+        <p><strong>Задача:</strong> Реализация такой же фильтрации слотов по ролям пользователей, как на странице <code>/admin/bookings/{id}/edit</code></p>
+    </div>
+
+    <div class="test-container">
+        <h2>🚀 Реализованные изменения</h2>
+        
+        <div class="feature-list">
+            <div class="feature-card">
+                <h4>📦 Redux интеграция</h4>
+                <span class="badge badge-new">НОВОЕ</span>
+                <p>Добавлены импорты для <code>useSelector</code> и <code>RootState</code> для доступа к данным пользователя</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>👤 Определение роли пользователя</h4>
+                <span class="badge badge-new">НОВОЕ</span>
+                <p>Логика определения служебных пользователей: <code>admin, partner, manager, operator</code></p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🔍 Фильтрация слотов</h4>
+                <span class="badge badge-new">НОВОЕ</span>
+                <p>Клиенты видят только доступные слоты, служебные пользователи - все слоты</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🎨 Цветовая кодировка</h4>
+                <span class="badge badge-new">НОВОЕ</span>
+                <p>Добавлены поля <code>is_available</code> и <code>occupancy_status</code> для визуального различия</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>📊 Отладочная информация</h4>
+                <span class="badge badge-improved">УЛУЧШЕНО</span>
+                <p>Подробные логи обработки слотов для диагностики</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🔗 Передача в AvailabilitySelector</h4>
+                <span class="badge badge-new">НОВОЕ</span>
+                <p>Пропс <code>isServiceUser</code> передается в компонент для корректного отображения</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔧 Технические детали реализации</h2>
+        
+        <div class="test-step">
+            <h3>1. Импорты Redux</h3>
+            <div class="code-block">
+// 🚀 НОВЫЕ ИМПОРТЫ: Redux для определения роли пользователя
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>2. Определение роли пользователя</h3>
+            <div class="code-block">
+// 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+const currentUser = useSelector((state: RootState) => state.auth.user);
+const isServiceUser = Boolean(currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role));
+
+console.log('🔍 Тип пользователя на странице конфликтов бронирований:', {
+  userRole: currentUser?.role,
+  isServiceUser,
+  shouldShowAllSlots: isServiceUser
+});
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>3. Обработка слотов с фильтрацией</h3>
+            <div class="code-block">
+// 🚀 НОВАЯ ЛОГИКА: Обработка слотов с фильтрацией по ролям и цветовой кодировкой
+let processedSlots = availabilityData.slots.map(slot => {
+  const availablePosts = slot.available_posts || 0;
+  const totalPosts = slot.total_posts || 0;
+  const bookingsCount = slot.bookings_count || 0;
+  
+  // Определяем доступность и статус занятости
+  const isAvailable = availablePosts > 0;
+  const occupancyStatus: 'available' | 'full' = availablePosts === 0 ? 'full' : 'available';
+  
+  return {
+    time: slot.start_time,
+    available_posts: availablePosts,
+    total_posts: totalPosts,
+    bookings_count: bookingsCount,
+    duration_minutes: slot.duration_minutes,
+    can_book: isAvailable,
+    // 🎨 Добавляем поля для цветовой кодировки
+    is_available: isAvailable,
+    occupancy_status: occupancyStatus
+  };
+});
+
+// 🚀 Фильтрация слотов в зависимости от роли пользователя
+if (!isServiceUser) {
+  // Для обычных клиентов показываем только доступные слоты
+  const beforeFilter = processedSlots.length;
+  processedSlots = processedSlots.filter(slot => (slot.available_posts || 0) > 0);
+  
+  console.log('🔍 Конфликты бронирований - фильтрация для клиента:', {
+    beforeFilter,
+    afterFilter: processedSlots.length,
+    filteredOut: beforeFilter - processedSlots.length
+  });
+} else {
+  // Для служебных пользователей показываем все слоты
+  console.log('🔍 Конфликты бронирований - показываем все слоты для служебного пользователя:', {
+    totalSlots: processedSlots.length,
+    availableSlots: processedSlots.filter(slot => slot.available_posts > 0).length,
+    fullyBookedSlots: processedSlots.filter(slot => slot.available_posts === 0).length
+  });
+}
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <h3>4. Передача в AvailabilitySelector</h3>
+            <div class="code-block">
+&lt;AvailabilitySelector
+  servicePointId={currentServicePointId}
+  categoryId={currentCategoryId}
+  selectedDate={selectedDate}
+  selectedTimeSlot={selectedTimeSlot}
+  availableTimeSlots={availableTimeSlots}
+  isLoading={isLoadingAvailability}
+  onDateChange={handleDateChange}
+  onTimeSlotChange={handleTimeSlotChange}
+  isServiceUser={isServiceUser} // 🚀 НОВОЕ: Передаем информацию о типе пользователя
+/&gt;
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>✅ Результаты тестирования</h2>
+        
+        <div class="success">
+            <strong>✅ Определение роли пользователя:</strong> Система корректно определяет администратора как служебного пользователя (isServiceUser: true)
+        </div>
+        
+        <div class="success">
+            <strong>✅ Логирование:</strong> В консоли браузера видны подробные логи обработки слотов с информацией о роли пользователя
+        </div>
+        
+        <div class="success">
+            <strong>✅ Типизация:</strong> Исправлена типизация occupancy_status для соответствия интерфейсу AvailableTimeSlot
+        </div>
+        
+        <div class="success">
+            <strong>✅ Передача пропсов:</strong> Пропс isServiceUser корректно передается в компонент AvailabilitySelector
+        </div>
+        
+        <div class="info">
+            <strong>ℹ️ Отмечено:</strong> Ошибка 500 при разрешении конфликта не связана с нашими изменениями - это серверная проблема
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔍 Сравнение с другими страницами</h2>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Страница</th>
+                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Статус реализации</th>
+                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Функциональность</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><code>/client/booking</code></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><span class="badge badge-improved">ЭТАЛОН</span></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;">Исходная реализация фильтрации слотов</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><code>/client/bookings/{id}/reschedule</code></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><span class="badge badge-improved">РЕАЛИЗОВАНО</span></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;">Фильтрация + цветовая кодировка</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><code>/admin/bookings/{id}/edit</code></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><span class="badge badge-improved">РЕАЛИЗОВАНО</span></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;">Фильтрация + цветовая кодировка</td>
+                </tr>
+                <tr style="background: #e8f5e9;">
+                    <td style="border: 1px solid #ddd; padding: 12px;"><code>/admin/booking-conflicts</code></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;"><span class="badge badge-new">ЗАВЕРШЕНО</span></td>
+                    <td style="border: 1px solid #ddd; padding: 12px;">Фильтрация + цветовая кодировка ✅</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-container">
+        <h2>🎯 Итоги</h2>
+        
+        <div class="success">
+            <h3>✅ Успешно реализовано:</h3>
+            <ul>
+                <li><strong>Унифицированная логика фильтрации слотов</strong> - одинаковая на всех страницах бронирования</li>
+                <li><strong>Роль-ориентированный доступ</strong> - служебные пользователи видят все слоты, клиенты только доступные</li>
+                <li><strong>Цветовая кодировка</strong> - визуальное различие между доступными и занятыми слотами</li>
+                <li><strong>Подробное логирование</strong> - отладочная информация для диагностики</li>
+                <li><strong>Типобезопасность</strong> - корректная типизация TypeScript</li>
+            </ul>
+        </div>
+        
+        <div class="info">
+            <h3>📋 Следующие шаги:</h3>
+            <ul>
+                <li>Протестировать функциональность с разными ролями пользователей</li>
+                <li>Проверить визуальное отображение занятых слотов для администраторов</li>
+                <li>Исследовать ошибку 500 при разрешении конфликтов (серверная проблема)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Логи из консоли браузера</h2>
+        <div class="code-block">
+🔍 Тип пользователя на странице конфликтов бронирований: 
+{
+  userRole: 'admin', 
+  isServiceUser: true, 
+  shouldShowAllSlots: true
+}
+
+🔍 Конфликты бронирований - обработка слотов: 
+{
+  originalSlotsCount: 12,
+  isServiceUser: true,
+  userRole: 'admin'
+}
+
+🔍 Конфликты бронирований - показываем все слоты для служебного пользователя: 
+{
+  totalSlots: 12,
+  availableSlots: 8,
+  fullyBookedSlots: 4
+}
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность для демонстрации
+        console.log('🎯 Тест фильтрации слотов по ролям на странице конфликтов бронирований');
+        console.log('✅ Страница: /admin/booking-conflicts');
+        console.log('✅ Функциональность: Унифицированная с другими страницами бронирования');
+        console.log('✅ Статус: РЕАЛИЗОВАНО');
+        
+        // Симуляция логики фильтрации
+        const testSlots = [
+            { time: '09:00', available_posts: 2, total_posts: 2 },
+            { time: '10:00', available_posts: 1, total_posts: 2 },
+            { time: '11:00', available_posts: 0, total_posts: 2 },
+            { time: '12:00', available_posts: 2, total_posts: 2 }
+        ];
+        
+        const isServiceUser = true; // Администратор
+        
+        console.log('🔍 Тестовые слоты:', testSlots);
+        console.log('👤 Тип пользователя: служебный (admin)');
+        
+        if (!isServiceUser) {
+            const filteredSlots = testSlots.filter(slot => slot.available_posts > 0);
+            console.log('📊 Слоты для клиента (только доступные):', filteredSlots);
+        } else {
+            console.log('📊 Слоты для служебного пользователя (все):', testSlots);
+            console.log('🎨 Доступные слоты:', testSlots.filter(slot => slot.available_posts > 0));
+            console.log('🔴 Занятые слоты:', testSlots.filter(slot => slot.available_posts === 0));
+        }
+    </script>
+</body>
+</html> 

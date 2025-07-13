@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
+// 🚀 НОВЫЕ ИМПОРТЫ: Redux для определения роли пользователя
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import {
   Box,
   Typography,
@@ -60,6 +63,16 @@ const BookingConflictsPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation('components');
   const tablePageStyles = getTablePageStyles(theme);
+
+  // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+  const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isServiceUser = Boolean(currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role));
+
+  console.log('🔍 Тип пользователя на странице конфликтов бронирований:', {
+    userRole: currentUser?.role,
+    isServiceUser,
+    shouldShowAllSlots: isServiceUser
+  });
 
   // Состояние для фильтров
   const [filters, setFilters] = useState<BookingConflictFilters>({
@@ -132,15 +145,58 @@ const BookingConflictsPage: React.FC = () => {
       return [];
     }
 
-    return availabilityData.slots.map(slot => ({
-      time: slot.start_time,
-      available_posts: slot.available_posts || 0,
-      total_posts: slot.total_posts || 0,
-      bookings_count: slot.bookings_count || 0,
-      duration_minutes: slot.duration_minutes,
-      can_book: (slot.available_posts || 0) > 0
-    })).sort((a, b) => a.time.localeCompare(b.time));
-  }, [availabilityData]);
+    // 🚀 НОВАЯ ЛОГИКА: Обработка слотов с фильтрацией по ролям и цветовой кодировкой
+    let processedSlots = availabilityData.slots.map(slot => {
+      const availablePosts = slot.available_posts || 0;
+      const totalPosts = slot.total_posts || 0;
+      const bookingsCount = slot.bookings_count || 0;
+      
+      // Определяем доступность и статус занятости
+      const isAvailable = availablePosts > 0;
+      const occupancyStatus: 'available' | 'full' = availablePosts === 0 ? 'full' : 'available';
+      
+      return {
+        time: slot.start_time,
+        available_posts: availablePosts,
+        total_posts: totalPosts,
+        bookings_count: bookingsCount,
+        duration_minutes: slot.duration_minutes,
+        can_book: isAvailable,
+        // 🎨 Добавляем поля для цветовой кодировки
+        is_available: isAvailable,
+        occupancy_status: occupancyStatus
+      };
+    });
+
+    // 🔍 Отладочная информация
+    console.log('🔍 Конфликты бронирований - обработка слотов:', {
+      originalSlotsCount: availabilityData.slots.length,
+      isServiceUser,
+      userRole: currentUser?.role
+    });
+
+    // 🚀 Фильтрация слотов в зависимости от роли пользователя
+    if (!isServiceUser) {
+      // Для обычных клиентов показываем только доступные слоты
+      const beforeFilter = processedSlots.length;
+      processedSlots = processedSlots.filter(slot => (slot.available_posts || 0) > 0);
+      
+      console.log('🔍 Конфликты бронирований - фильтрация для клиента:', {
+        beforeFilter,
+        afterFilter: processedSlots.length,
+        filteredOut: beforeFilter - processedSlots.length
+      });
+    } else {
+      // Для служебных пользователей показываем все слоты
+      console.log('🔍 Конфликты бронирований - показываем все слоты для служебного пользователя:', {
+        totalSlots: processedSlots.length,
+        availableSlots: processedSlots.filter(slot => slot.available_posts > 0).length,
+        fullyBookedSlots: processedSlots.filter(slot => slot.available_posts === 0).length
+      });
+    }
+
+    return processedSlots.sort((a, b) => a.time.localeCompare(b.time));
+  }, [availabilityData, isServiceUser, currentUser?.role]);
 
   // Получение данных для селектов
   const servicePoints = servicePointsData?.data || [];
@@ -636,6 +692,7 @@ const BookingConflictsPage: React.FC = () => {
                     isLoading={isLoadingAvailability}
                     onDateChange={handleDateChange}
                     onTimeSlotChange={handleTimeSlotChange}
+                    isServiceUser={isServiceUser} // 🚀 НОВОЕ: Передаем информацию о типе пользователя
                   />
                 ) : (
                   <Alert severity="warning">
