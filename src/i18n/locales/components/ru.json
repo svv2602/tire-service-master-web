@@ -732,7 +732,10 @@
       "noConflictsSelected": "Выберите конфликты для разрешения",
       "selectResolutionType": "Выберите способ разрешения",
       "conflictsFound": "Найдено {{count}} конфликтов",
-      "conflictsFoundPlural": "Найдено {{count}} конфликтов"
+      "conflictsFoundPlural": "Найдено {{count}} конфликтов",
+      "noWorkingPosts": "Нет рабочих постов для категории '{{category}}' на {{date}}",
+      "availabilityCheckFailed": "Выбранный слот недоступен",
+      "testResolution": "Тестовое разрешение"
     },
     "bookingInfo": {
       "id": "ID бронирования",
@@ -744,7 +747,9 @@
       "phone": "Телефон",
       "email": "Email",
       "service": "Услуга",
-      "status": "Статус бронирования"
+      "status": "Статус бронирования",
+      "notSpecifiedDate": "Не указана",
+      "notSpecifiedTime": "Не указано"
     },
     "emptyState": {
       "title": "Нет конфликтов",

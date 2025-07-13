@@ -730,7 +730,10 @@
       "noConflictsSelected": "Оберіть конфлікти для вирішення",
       "selectResolutionType": "Оберіть спосіб вирішення",
       "conflictsFound": "Знайдено {{count}} конфліктів",
-      "conflictsFoundPlural": "Знайдено {{count}} конфліктів"
+      "conflictsFoundPlural": "Знайдено {{count}} конфліктів",
+      "noWorkingPosts": "Немає робочих постів для категорії '{{category}}' на {{date}}",
+      "availabilityCheckFailed": "Обраний слот недоступний",
+      "testResolution": "Тестове вирішення"
     },
     "bookingInfo": {
       "id": "ID бронювання",
@@ -742,7 +745,9 @@
       "phone": "Телефон",
       "email": "Email",
       "service": "Послуга",
-      "status": "Статус бронювання"
+      "status": "Статус бронювання",
+      "notSpecifiedDate": "Не вказана",
+      "notSpecifiedTime": "Не вказано"
     },
     "emptyState": {
       "title": "Немає конфліктів",

@@ -109,6 +109,23 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
     return 'error';
   };
 
+  // Функция для перевода причин конфликтов
+  const translateConflictReason = (reason: string) => {
+    // Проверяем паттерн "Нет рабочих постов для категории 'X' на Y"
+    const noWorkingPostsMatch = reason.match(/Нет рабочих постов для категории '(.+)' на (.+)/);
+    if (noWorkingPostsMatch) {
+      const [, category, date] = noWorkingPostsMatch;
+      return t('bookingConflicts.messages.noWorkingPosts', { category, date });
+    }
+    
+    // Проверяем другие стандартные сообщения
+    if (reason === 'Выбранный слот недоступен') {
+      return t('bookingConflicts.messages.availabilityCheckFailed');
+    }
+    
+    return reason;
+  };
+
   return (
     <Card sx={{ mt: 2, mb: 2 }}>
       <CardContent>
@@ -170,7 +187,7 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
                         <Box sx={{ flexGrow: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                              {conflict.conflict_type_human}
+                              {t(`bookingConflicts.conflictType.${conflict.conflict_type}`)}
                             </Typography>
                             <Chip 
                               label={t('conflictsPreview.conflictInfo.potential')}
@@ -181,7 +198,7 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
                           </Box>
                           
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            {conflict.conflict_reason}
+                            {translateConflictReason(conflict.conflict_reason)}
                           </Typography>
                           
                           <Grid container spacing={2}>
@@ -191,8 +208,8 @@ const ConflictsPreview: React.FC<ConflictsPreviewProps> = ({
                               </Typography>
                               <Typography variant="body2">
                                 ID: {conflict.booking.id}<br />
-                                {t('bookingConflicts.bookingInfo.date')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleDateString('ru-RU') : 'Не указана'}<br />
-                                {t('bookingConflicts.bookingInfo.time')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : 'Не указано'}
+                                {t('bookingConflicts.bookingInfo.date')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleDateString('ru-RU') : t('bookingConflicts.bookingInfo.notSpecifiedDate')}<br />
+                                {t('bookingConflicts.bookingInfo.time')}: {conflict.booking.start_time ? new Date(conflict.booking.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : t('bookingConflicts.bookingInfo.notSpecifiedTime')}
                               </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
