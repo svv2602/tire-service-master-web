@@ -115,16 +115,24 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
 
   // Получить текст статуса
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'current':
-        return t('seasonalSchedules.info.active');
-      case 'upcoming':
-        return t('seasonalSchedules.info.upcoming');
-      case 'past':
-        return t('seasonalSchedules.info.past');
-      default:
-        return t('seasonalSchedules.info.unknown');
+    const key = `seasonalSchedules.info.${status}`;
+    const translated = t(key);
+    
+    // Если перевод не найден (возвращается ключ), используем fallback
+    if (translated === key) {
+      switch (status) {
+        case 'current':
+          return 'Активно';
+        case 'upcoming':
+          return 'Предстоящее';
+        case 'past':
+          return 'Завершено';
+        default:
+          return 'Неизвестно';
+      }
     }
+    
+    return translated;
   };
 
   if (schedules.length === 0) {
