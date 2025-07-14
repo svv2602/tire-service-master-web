@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import {
   Box,
   Typography,
@@ -117,6 +118,16 @@ const FavoritePointCard: React.FC<{
   );
 };
 
+// Функция локализации названий вне React компонента
+const getLocalizedCityName = (city: any) => {
+  const language = localStorage.getItem('i18nextLng') || 'ru';
+  if (language === 'uk') {
+    return city.name_uk || city.name_ru || city.name || '';
+  } else {
+    return city.name_ru || city.name_uk || city.name || '';
+  }
+};
+
 // Функция конвертации данных API в формат ServicePointData
 const convertToServicePointData = (favoritePoint: any): ServicePointData => {
   const servicePoint = favoritePoint.service_point || favoritePoint;
@@ -128,7 +139,7 @@ const convertToServicePointData = (favoritePoint: any): ServicePointData => {
     description: servicePoint.description || '',
     city: servicePoint.city ? {
       id: servicePoint.city.id,
-      name: servicePoint.city.name,
+      name: getLocalizedCityName(servicePoint.city),
       region: servicePoint.city.region
     } : undefined,
     partner: servicePoint.partner ? {

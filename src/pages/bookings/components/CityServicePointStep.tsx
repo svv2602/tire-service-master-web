@@ -28,6 +28,7 @@ import { useGetServicePointByIdQuery } from '../../../api/servicePoints.api';
 // Импорт типов
 import { City, ServicePoint } from '../../../types/models';
 import { ServicePointCard, ServicePointData } from '../../../components/ui/ServicePointCard';
+import { useLocalizedName } from '../../../utils/localizationHelpers';
 
 interface CityServicePointStepProps {
   formData: any; // Используем any для совместимости с разными структурами BookingFormData
@@ -139,6 +140,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
+  const localizedName = useLocalizedName();
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [autoFilledData, setAutoFilledData] = useState(false);
   
@@ -280,7 +282,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
             value={selectedCity}
             onChange={(_, newValue) => handleCityChange(newValue)}
             options={cities}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => localizedName(option)}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             loading={isLoadingCities}
             renderInput={(params) => (
@@ -305,7 +307,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
               return (
                 <Box component="li" key={key} {...otherProps}>
                   <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  {option.name}
+                  {localizedName(option)}
                 </Box>
               );
             }}
@@ -322,7 +324,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         {selectedCity && (
           <Grid item xs={12}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              {t('bookingSteps.cityServicePoint.availableServicePoints', { cityName: selectedCity.name })}
+              {t('bookingSteps.cityServicePoint.availableServicePoints', { cityName: localizedName(selectedCity) })}
             </Typography>
             
             {isLoadingServicePoints ? (

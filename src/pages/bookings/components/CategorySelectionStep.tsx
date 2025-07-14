@@ -16,6 +16,7 @@ import { LocationOn as LocationOnIcon } from '@mui/icons-material';
 import { useGetServiceCategoriesByCityIdQuery } from '../../../api/serviceCategories.api';
 import { useGetCityByIdQuery, useGetCitiesWithServicePointsQuery } from '../../../api/cities.api';
 import { BookingFormData } from '../../../types/booking';
+import { useLocalizedName } from '../../../utils/localizationHelpers';
 
 interface CategorySelectionStepProps {
   formData: BookingFormData;
@@ -32,6 +33,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   isValid
 }) => {
   const { t } = useTranslation();
+  const localizedName = useLocalizedName();
   // Загружаем категории услуг по выбранному городу
   const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesByCityIdQuery(
     formData.city_id!,
@@ -122,7 +124,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
           value={selectedCity || null}
           onChange={(event, newValue) => handleCityChange(newValue)}
           options={cities}
-          getOptionLabel={(option) => option.name}
+          getOptionLabel={(option) => localizedName(option)}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           loading={citiesLoading || isCityLoading}
           renderOption={(props, option) => {
@@ -131,10 +133,10 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
               <Box component="li" key={key} {...otherProps}>
                 <LocationOnIcon sx={{ mr: 1, color: 'text.secondary' }} />
                 <Box>
-                  <Typography variant="body1">{option.name}</Typography>
+                  <Typography variant="body1">{localizedName(option)}</Typography>
                   {option.region && (
                     <Typography variant="caption" color="text.secondary">
-                      {option.region.name}
+                      {localizedName(option.region)}
                     </Typography>
                   )}
                 </Box>
@@ -165,7 +167,7 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
       
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {selectedCity 
-          ? `${t('bookingSteps.categorySelection.availableCategories')} ${selectedCity.name} (${categories.length})`
+          ? `${t('bookingSteps.categorySelection.availableCategories')} ${localizedName(selectedCity)} (${categories.length})`
           : t('bookingSteps.categorySelection.selectCityFirst')
         }
       </Typography>

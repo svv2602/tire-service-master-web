@@ -46,6 +46,7 @@ import {
 import { ServicePoint } from '../../types/models';
 import { Partner } from '../../types/models';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 const getDayName = (day: number, t: any): string => {
   return t(`forms.servicePoints.getDayName.${day}`);
@@ -54,6 +55,7 @@ const getDayName = (day: number, t: any): string => {
 const ServicePointDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  const getLocalizedName = useLocalizedName();
 
   const { data: basicInfo } = useGetServicePointBasicInfoQuery(id || '', {
     skip: !id
@@ -132,7 +134,7 @@ const ServicePointDetailsPage = () => {
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
             {region && (
               <Chip
-                label={region.name}
+                label={getLocalizedName(region)}
                 color="primary"
                 variant="outlined"
               />

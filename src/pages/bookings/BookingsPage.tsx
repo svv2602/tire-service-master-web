@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import { 
   useGetBookingsQuery,
   useDeleteBookingMutation,
@@ -48,6 +49,7 @@ import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingSta
 
 const BookingsPage: React.FC = () => {
   const { t } = useTranslation();
+  const localizedName = useLocalizedName();
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
@@ -346,7 +348,7 @@ const BookingsPage: React.FC = () => {
         { value: '', label: t('forms.bookings.filters.allCities') },
         ...cities.map(city => ({
           value: city.id,
-          label: city.name
+          label: localizedName(city)
         }))
       ],
       loading: citiesLoading,
@@ -502,7 +504,7 @@ const BookingsPage: React.FC = () => {
             lineHeight: 1.3,
             maxWidth: '100%'
           }}>
-            {booking.service_point?.city?.name || '-'}
+            {booking.service_point?.city ? localizedName(booking.service_point.city) : '-'}
           </Typography>
         </Box>
       ),
@@ -613,7 +615,7 @@ const BookingsPage: React.FC = () => {
             <Chip
               icon={<BuildIcon />}
               label="Служебное"
-              size="small"
+            size="small"
               color="warning"
               variant="filled"
               sx={{ 
@@ -622,7 +624,7 @@ const BookingsPage: React.FC = () => {
                   color: 'inherit'
                 }
               }}
-            />
+          />
           )}
         </Box>
       ),

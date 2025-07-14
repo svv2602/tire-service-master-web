@@ -44,6 +44,7 @@ import {
   BrokenImage as BrokenImageIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import { 
   useGetPartnerByIdQuery, 
   useCreatePartnerMutation, 
@@ -242,6 +243,9 @@ const PartnerFormPage: React.FC = () => {
   const isEdit = Boolean(id);
   const [selectedRegionId, setSelectedRegionId] = useState<number | undefined>();
   const [activeTab, setActiveTab] = useState<number>(0);
+  
+  // Хук для локализации названий
+  const getLocalizedName = useLocalizedName();
   
   // Централизованная система стилей
   const theme = useTheme();
@@ -767,7 +771,7 @@ const PartnerFormPage: React.FC = () => {
       label: t('tables.columns.city'),
       format: (value, row: ServicePoint) => {
         // Проверяем, что city существует и имеет свойство name
-        return typeof row.city === 'object' && row.city ? row.city.name : '-';
+        return typeof row.city === 'object' && row.city ? getLocalizedName(row.city) : '-';
       },
       minWidth: 120,
     },
@@ -1271,7 +1275,7 @@ const PartnerFormPage: React.FC = () => {
                     <MenuItem value="">{t('forms.partner.placeholders.selectRegion')}</MenuItem>
                     {regionsData?.data.map((region) => (
                       <MenuItem key={region.id} value={region.id}>
-                        {region.name}
+                        {getLocalizedName(region)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -1303,7 +1307,7 @@ const PartnerFormPage: React.FC = () => {
                     <MenuItem value="">{t('forms.partner.placeholders.selectCity')}</MenuItem>
                     {citiesData?.data.map((city) => (
                       <MenuItem key={city.id} value={city.id}>
-                        {city.name}
+                        {getLocalizedName(city)}
                       </MenuItem>
                     ))}
                   </Select>

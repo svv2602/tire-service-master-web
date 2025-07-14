@@ -39,6 +39,7 @@ import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
+import { useLocalizedName } from '../../../utils/localizationHelpers';
 
 // Импорт типов - используем локальный тип
 interface DateTimeStepProps {
@@ -59,6 +60,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const dateLocale = useDateLocale();
+  const localizedName = useLocalizedName();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -324,7 +326,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
             </Typography>
             {servicePointData && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {servicePointData.city?.name && `${t('forms.booking.dateTime.city')} ${servicePointData.city.name}`}
+                {servicePointData.city && `${t('forms.booking.dateTime.city')} ${localizedName(servicePointData.city)}`}
                 {servicePointData.address && `, ${servicePointData.address}`}
               </Typography>
             )}

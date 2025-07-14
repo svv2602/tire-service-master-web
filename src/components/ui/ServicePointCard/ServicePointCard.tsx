@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedName } from '../../../utils/localizationHelpers';
 import {
   Box,
   Typography,
@@ -576,6 +577,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
   const { t } = useTranslation(['components']);
+  const getLocalizedName = useLocalizedName();
   
   const [showDetails, setShowDetails] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -688,7 +690,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <LocationIcon sx={{ color: colors.textSecondary, fontSize: '1.2rem' }} />
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {servicePoint.address}{servicePoint.city?.name ? `, ${servicePoint.city.name}` : ''}
+              {servicePoint.address}{servicePoint.city?.name ? `, ${getLocalizedName(servicePoint.city)}` : ''}
             </Typography>
           </Box>
 

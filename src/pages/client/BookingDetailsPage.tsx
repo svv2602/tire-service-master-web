@@ -40,6 +40,7 @@ import { getThemeColors, getButtonStyles } from '../../styles';
 import { useTheme } from '@mui/material/styles';
 import BookingStatusBadge from '../../components/bookings/BookingStatusBadge';
 import ClientLayout from '../../components/client/ClientLayout';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Интерфейс для полных данных бронирования
 interface DetailedBooking {
@@ -117,6 +118,7 @@ const BookingDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const dangerButtonStyles = getButtonStyles(theme, 'error');
@@ -209,7 +211,7 @@ const BookingDetailsPage: React.FC = () => {
       // Пытаемся использовать данные из адреса если название не информативно
       if (servicePoint.address) {
         const parts = [servicePoint.address];
-        if (servicePoint.city?.name) parts.push(`г. ${servicePoint.city.name}`);
+        if (servicePoint.city) parts.push(`г. ${localizedName(servicePoint.city)}`);
         return parts.join(', ');
       }
     }
@@ -227,8 +229,8 @@ const BookingDetailsPage: React.FC = () => {
     }
     
     // Добавляем город
-    if (servicePoint.city?.name) {
-      parts.push(`г. ${servicePoint.city.name}`);
+    if (servicePoint.city) {
+      parts.push(`г. ${localizedName(servicePoint.city)}`);
     }
     
     return parts.join(', ') || t('forms.clientPages.bookingDetails.servicePoint');

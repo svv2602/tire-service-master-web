@@ -20,6 +20,8 @@ import {
   ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Импорты UI компонентов
 import { PageTable } from '../../components/common/PageTable';
@@ -42,6 +44,8 @@ const RegionsManagementPageNew: React.FC<RegionsManagementPageNewProps> = () => 
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const { t } = useTranslation();
+  const getLocalizedName = useLocalizedName();
   
   // Состояние для фильтров и поиска
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,7 +112,7 @@ const RegionsManagementPageNew: React.FC<RegionsManagementPageNewProps> = () => 
   const handleDelete = useCallback(async (region: Region) => {
     try {
       await deleteRegion(region.id).unwrap();
-      showNotification(`Регион "${region.name}" успешно удален`, 'success');
+      showNotification(`Регион "${getLocalizedName(region)}" успешно удален`, 'success');
     } catch (error: any) {
       let errorMessage = 'Ошибка при удалении региона';
       if (error.data?.message) {
@@ -128,7 +132,7 @@ const RegionsManagementPageNew: React.FC<RegionsManagementPageNewProps> = () => 
         region: { is_active: !region.is_active }
       }).unwrap();
       showNotification(
-        `Статус региона "${region.name}" успешно ${!region.is_active ? 'активирован' : 'деактивирован'}`,
+        `Статус региона "${getLocalizedName(region)}" успешно ${!region.is_active ? 'активирован' : 'деактивирован'}`,
         'success'
       );
     } catch (error: any) {
@@ -198,7 +202,7 @@ const RegionsManagementPageNew: React.FC<RegionsManagementPageNewProps> = () => 
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {region.name}
+              {getLocalizedName(region)}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
               <LocationCityIcon sx={{ fontSize: 14, color: 'text.secondary' }} />

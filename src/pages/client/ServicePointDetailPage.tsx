@@ -53,6 +53,7 @@ import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
 import { ServicePost } from '../../types/models';
 import { getThemeColors } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Интерфейсы
 interface ServicePointService {
@@ -190,6 +191,7 @@ const ServicePointDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   const [servicesExpanded, setServicesExpanded] = useState(true);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -349,7 +351,7 @@ const ServicePointDetailPage: React.FC = () => {
     const navigationData = { 
       servicePointId: parseInt(id || '0'),
       cityId: servicePointData?.city?.id,
-      cityName: servicePointData?.city?.name,
+      cityName: servicePointData?.city ? localizedName(servicePointData.city) : '',
       service_category_id: category.id,
       step1Completed: true // Указываем что первый шаг уже завершен
     };
@@ -419,7 +421,7 @@ const ServicePointDetailPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LocationIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
                 <Typography variant="body1" color="text.secondary">
-                  {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
+                  {cityData?.data ? `${localizedName(cityData.data)}, ${servicePointData.address}` : servicePointData.address}
                 </Typography>
               </Box>
               <Chip 
@@ -607,7 +609,7 @@ const ServicePointDetailPage: React.FC = () => {
                       {t('forms.clientPages.servicePointDetail.address')}
                     </Typography>
                     <Typography variant="body2">
-                      {cityData?.data?.name ? `${cityData.data.name}, ${servicePointData.address}` : servicePointData.address}
+                      {cityData?.data ? `${localizedName(cityData.data)}, ${servicePointData.address}` : servicePointData.address}
                     </Typography>
                   </Box>
                 </Box>

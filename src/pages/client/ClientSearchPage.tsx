@@ -45,6 +45,7 @@ import {
 import { FavoriteButton } from '../../components/ui/FavoriteButton';
 import { getButtonStyles, getThemeColors, getCardStyles } from '../../styles';
 import { useTheme } from '@mui/material';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
 import { useGetServiceCategoriesByCityQuery } from '../../api/services.api';
 
@@ -634,8 +635,22 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
   const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   const cardStyles = getCardStyles(theme, 'primary');
   const navigate = useNavigate();
+  
+  // Функция для получения локализованного названия города из интерфейса SearchServicePoint
+  const getLocalizedCityName = (city: SearchServicePoint['city']) => {
+    const currentLocale = localStorage.getItem('i18nextLng') || 'ru';
+    // Поскольку интерфейс SearchServicePoint имеет только поле name,
+    // нам нужно проверить есть ли поля локализации в реальных данных
+    const cityObj = city as any;
+    
+    if (currentLocale === 'uk') {
+      return cityObj.name_uk || cityObj.name_ru || city.name || '';
+    }
+    return cityObj.name_ru || cityObj.name_uk || city.name || '';
+  };
   
   const [showDetails, setShowDetails] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -740,7 +755,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <LocationIcon sx={{ color: colors.textSecondary, fontSize: '1.2rem' }} />
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {servicePoint.address}, {servicePoint.city.name}
+              {servicePoint.address}, {getLocalizedCityName(servicePoint.city)}
             </Typography>
           </Box>
 
@@ -967,6 +982,7 @@ const ClientSearchPage: React.FC = () => {
   const { t } = useTranslation('components');
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);

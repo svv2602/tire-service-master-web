@@ -21,6 +21,7 @@ import {
   Devices as DevicesIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import { useGetSettingsQuery, useUpdateSettingsMutation } from '../../api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import {
@@ -55,6 +56,7 @@ interface SystemSettings {
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
+  const getLocalizedName = useLocalizedName();
   
   // Получение темы и централизованных стилей
   const theme = useTheme();
@@ -271,7 +273,7 @@ const SettingsPage: React.FC = () => {
                       displayEmpty
                     >
                       {Array.isArray(cities) ? cities.map(city => (
-                        <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>
+                        <MenuItem key={city.id} value={city.id}>{getLocalizedName(city)}</MenuItem>
                       )) : null}
                     </Select>
                   </FormControl>
