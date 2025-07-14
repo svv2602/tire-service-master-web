@@ -1,24 +1,19 @@
 import { ArticlesResponse } from '../types/models';
-import { Article, ArticleFormData, CreateArticleRequest, ArticleCategory, ARTICLE_CATEGORIES } from '../types/articles';
+import { Article, ArticleFormData, CreateArticleRequest, ArticleCategory, ARTICLE_CATEGORIES, ArticlesFilters } from '../types/articles';
 import { baseApi } from './baseApi';
 
 // API
 export const articlesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getArticles: builder.query<ArticlesResponse, {
-      page?: number;
-      per_page?: number;
-      category?: string;
-      status?: string;
+    getArticles: builder.query<ArticlesResponse, ArticlesFilters & {
       published?: boolean;
-      featured?: boolean;
-      query?: string;
     }>({
       query: (params = {}) => ({
         url: '/articles',
         params: {
           page: params.page || 1,
           per_page: params.per_page || 20,
+          locale: params.locale || localStorage.getItem('i18nextLng') || 'ru',
           ...(params.category && { category: params.category }),
           ...(params.status && { status: params.status }),
           ...(params.published !== undefined && { published: params.published }),
@@ -29,13 +24,23 @@ export const articlesApi = baseApi.injectEndpoints({
       providesTags: ['Article'],
     }),
     getArticleById: builder.query<Article, number>({
-      query: (id) => `/articles/${id}`,
+      query: (id) => ({
+        url: `/articles/${id}`,
+        params: {
+          locale: localStorage.getItem('i18nextLng') || 'ru'
+        }
+      }),
       providesTags: (result, error, id) => [{ type: 'Article', id }],
     }),
     getFeaturedArticles: builder.query<ArticlesResponse, void>({
       query: () => ({
         url: '/articles',
-        params: { featured: true, status: 'published', per_page: 6 },
+        params: { 
+          featured: true, 
+          status: 'published', 
+          per_page: 6,
+          locale: localStorage.getItem('i18nextLng') || 'ru'
+        },
       }),
       providesTags: ['Article'],
     }),
@@ -47,6 +52,7 @@ export const articlesApi = baseApi.injectEndpoints({
           status: 'published',
           per_page: 4,
           exclude_id: articleId,
+          locale: localStorage.getItem('i18nextLng') || 'ru'
         },
       }),
       providesTags: ['Article'],

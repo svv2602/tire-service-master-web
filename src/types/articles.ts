@@ -129,6 +129,7 @@ export interface ArticlesFilters {
   query?: string;
   page?: number;
   per_page?: number;
+  locale?: string;
 }
 
 export interface ArticlesResponse {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -16,6 +17,10 @@ import {
 } from '@mui/icons-material';
 import { ArticleSummary } from '../../types/articles';
 import { getThemeColors, getCardStyles } from '../../styles';
+import { 
+  getLocalizedArticleTitle, 
+  getLocalizedArticleExcerpt 
+} from '../../utils/articleLocalizationHelpers';
 
 interface ArticleCardProps {
   article: ArticleSummary;
@@ -23,9 +28,14 @@ interface ArticleCardProps {
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
+
+  // Получаем локализованные значения
+  const localizedTitle = getLocalizedArticleTitle(article);
+  const localizedExcerpt = getLocalizedArticleExcerpt(article);
 
   // Форматирование даты
   const formatDate = (dateString: string | null) => {
@@ -85,7 +95,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
             <Box
               component="img"
               src={article.featured_image}
-              alt={article.title}
+              alt={localizedTitle}
               sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : (
@@ -109,13 +119,13 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
               WebkitBoxOrient: 'vertical'
             }}
           >
-            {article.title}
+            {localizedTitle}
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ScheduleIcon sx={{ fontSize: 14, color: colors.textSecondary }} />
-            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-              {article.reading_time || 5} мин
-            </Typography>
+                          <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                {article.reading_time || 5} {t('forms.articles.meta.readingTime')}
+              </Typography>
             <VisibilityIcon sx={{ fontSize: 14, color: colors.textSecondary, ml: 1 }} />
             <Typography variant="caption" sx={{ color: colors.textSecondary }}>
               {article.views_count || 0}
@@ -164,7 +174,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
           <Box
             component="img"
             src={article.featured_image}
-            alt={article.title}
+            alt={localizedTitle}
             sx={{ 
               width: '100%', 
               height: '100%', 
@@ -185,7 +195,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
         {article.featured && (
           <Chip
             icon={<StarIcon />}
-            label="Рекомендуется"
+            label={t('forms.articles.meta.featured')}
             color="warning"
             size="small"
             sx={{
@@ -229,10 +239,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
             minHeight: variant === 'featured' ? 56 : 48
           }}
         >
-          {article.title}
+          {localizedTitle}
         </Typography>
         
-        {article.excerpt && (
+        {localizedExcerpt && (
           <Typography 
             variant="body2" 
             sx={{ 
@@ -246,7 +256,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
               WebkitBoxOrient: 'vertical'
             }}
           >
-            {article.excerpt}
+            {localizedExcerpt}
           </Typography>
         )}
 
@@ -261,7 +271,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <ScheduleIcon sx={{ fontSize: 16, color: colors.textSecondary }} />
               <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-                {article.reading_time || 5} мин
+                {article.reading_time || 5} {t('forms.articles.meta.readingTime')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

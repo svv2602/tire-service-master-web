@@ -41,6 +41,10 @@ import { useGetPageContentsQuery } from '../../api/pageContent.api';
 import { useGetCitiesWithServicePointsQuery } from '../../api/servicePoints.api';
 import { useMainPageArticles } from '../../hooks/useMainPageArticles';
 import { useLocalizedName } from '../../utils/localizationHelpers';
+import { 
+  getLocalizedArticleTitle, 
+  getLocalizedArticleExcerpt 
+} from '../../utils/articleLocalizationHelpers';
 import ClientLayout from '../../components/client/ClientLayout';
 
 // Импорт типа City для правильной типизации с локализацией
@@ -304,10 +308,10 @@ const ClientMainPage: React.FC = () => {
                       </Box>
                       <CardContent>
                         <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
-                          {article.title}
+                          {getLocalizedArticleTitle(article)}
                         </Typography>
                         <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                          {article.excerpt}
+                          {getLocalizedArticleExcerpt(article)}
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="caption" sx={{ color: colors.textSecondary }}>

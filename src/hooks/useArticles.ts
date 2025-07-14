@@ -21,7 +21,12 @@ import {
 
 // Хук для получения списка статей с фильтрацией и пагинацией
 export const useArticles = (filters: ArticlesFilters = {}) => {
-  const { data, error, isLoading, refetch } = useGetPublishedArticlesQuery(filters);
+  const { i18n } = useTranslation();
+  const filtersWithLocale = {
+    ...filters,
+    locale: i18n.language || 'ru'
+  };
+  const { data, error, isLoading, refetch } = useGetPublishedArticlesQuery(filtersWithLocale);
   
   return {
     articles: data?.data || [],
@@ -113,6 +118,7 @@ export const useArticleActions = () => {
 
 // Хук для получения популярных статей
 export const usePopularArticles = (limit: number = 5) => {
+  const { i18n } = useTranslation();
   const { data, error, isLoading } = useGetPopularArticlesQuery();
   
   return {
@@ -124,6 +130,7 @@ export const usePopularArticles = (limit: number = 5) => {
 
 // Хук для получения связанных статей
 export const useRelatedArticles = (articleId: number | null, limit: number = 3) => {
+  const { i18n } = useTranslation();
   const { data, error, isLoading } = useGetRelatedArticlesQuery(
     { articleId: articleId! },
     { skip: !articleId }

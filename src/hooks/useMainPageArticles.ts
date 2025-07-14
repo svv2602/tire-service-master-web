@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetFeaturedArticlesQuery, useGetArticlesQuery } from '../api/articles.api';
 import { Article } from '../types/articles';
 
@@ -7,6 +8,8 @@ import { Article } from '../types/articles';
  * Логика: 3 последние рекомендованные статьи, если их меньше - дополняем последними по времени создания
  */
 export const useMainPageArticles = () => {
+  const { i18n } = useTranslation();
+  
   // Получаем рекомендованные статьи
   const { 
     data: featuredData, 
@@ -23,6 +26,7 @@ export const useMainPageArticles = () => {
     status: 'published',
     featured: false,
     per_page: 10, // Берем больше, чтобы иметь запас для фильтрации
+    locale: i18n.language || 'ru'
   });
 
   // Обрабатываем данные

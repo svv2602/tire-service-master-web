@@ -26,6 +26,11 @@ import {
 import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
 import ArticleCard from '../../components/knowledge-base/ArticleCard';
 import { getThemeColors, getButtonStyles, getCardStyles } from '../../styles';
+import { 
+  getLocalizedArticleTitle, 
+  getLocalizedArticleContent,
+  getLocalizedArticleExcerpt 
+} from '../../utils/articleLocalizationHelpers';
 import ClientLayout from '../../components/client/ClientLayout';
 
 const ArticleDetailPage: React.FC = () => {
@@ -143,7 +148,7 @@ const ArticleDetailPage: React.FC = () => {
                           lineHeight: 1.2
                         }}
                       >
-                        {article.title}
+                        {getLocalizedArticleTitle(article)}
                       </Typography>
 
                       {/* Метаинформация */}
@@ -314,7 +319,7 @@ const ArticleDetailPage: React.FC = () => {
                           }
                         }
                       }}
-                      dangerouslySetInnerHTML={{ __html: article.content }}
+                      dangerouslySetInnerHTML={{ __html: getLocalizedArticleContent(article) }}
                     />
                   </Paper>
                 </Grid>
