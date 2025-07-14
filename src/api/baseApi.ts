@@ -71,6 +71,16 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     
     if (refreshResult.data) {
       console.log('✅ Токен успешно обновлен');
+      
+      // Извлекаем новый токен из ответа
+      const newToken = (refreshResult.data as any)?.access_token || (refreshResult.data as any)?.tokens?.access;
+      
+      if (newToken) {
+        // Обновляем токен в Redux store
+        api.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
+        console.log('🔄 Токен обновлен в Redux store');
+      }
+      
       // Повторяем исходный запрос
       result = await baseQuery(args, api, extraOptions);
     } else {
