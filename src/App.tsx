@@ -56,8 +56,8 @@ const BookingsPage = lazy(() => import('./pages/bookings/BookingsPage'));
 const BookingFormPage = lazy(() => import('./pages/bookings/BookingFormPage'));
 const BookingFormPageWithAvailability = lazy(() => import('./pages/bookings/BookingFormPageWithAvailability'));
 const NewBookingWithAvailabilityPage = lazy(() => import('./pages/bookings/NewBookingWithAvailabilityPage'));
-// Временно закомментирован из-за отсутствующих зависимостей
-// const BookingConflictsPage = lazy(() => import('./pages/booking-conflicts/BookingConflictsPage'));
+// Страница конфликтов бронирований
+const BookingConflictsPage = lazy(() => import('./pages/booking-conflicts/BookingConflictsPage'));
 
 // Ленивая загрузка страниц настроек
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
@@ -270,8 +270,8 @@ const App: React.FC = () => {
                       <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
                       <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
                       
-                      {/* Маршрут для конфликтов бронирований - временно отключен */}
-                      {/* <Route path="booking-conflicts" element={<BookingConflictsPage />} /> */}
+                      {/* Маршрут для конфликтов бронирований */}
+                      <Route path="booking-conflicts" element={<BookingConflictsPage />} />
                       {/* Маршруты для отзывов */}
                       <Route path="reviews" element={<ReviewsPage />} />
                       <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />

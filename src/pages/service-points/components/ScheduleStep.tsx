@@ -20,12 +20,12 @@ import type { ServicePointFormDataNew, ServicePoint } from '../../../types/model
 import { DAYS_OF_WEEK, getDayName } from '../../../types/working-hours';
 import type { DayOfWeek, WorkingHoursSchedule, WorkingHours } from '../../../types/working-hours';
 
-// Импорт компонентов сезонных расписаний - временно отключен
-// import { SeasonalScheduleManager } from '../../../components/seasonal-schedules/SeasonalScheduleManager';
-// import SeasonalScheduleInfo from '../../../components/seasonal-schedules/SeasonalScheduleInfo';
+// Импорт компонентов сезонных расписаний
+import { SeasonalScheduleManager } from '../../../components/seasonal-schedules/SeasonalScheduleManager';
+import SeasonalScheduleInfo from '../../../components/seasonal-schedules/SeasonalScheduleInfo';
 
-// Импорт компонента предварительного просмотра конфликтов - временно отключен
-// import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
+// Импорт компонента предварительного просмотра конфликтов
+import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
 
 interface ScheduleStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -283,13 +283,13 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
         </Typography>
       </Box>
 
-      {/* Сезонные расписания - временно отключены */}
-      {/* {isEditMode && servicePoint?.id && (
+      {/* Сезонные расписания */}
+      {isEditMode && servicePoint?.id && (
         <Box sx={{ mt: 4 }}>
           <Divider sx={{ mb: 3 }} />
           
           {/* Информационная панель */}
-          {/* <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 3 }}>
             <SeasonalScheduleInfo servicePointId={servicePoint.id.toString()} />
           </Box>
           
@@ -316,10 +316,10 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             </AccordionDetails>
           </Accordion>
         </Box>
-      )} */}
+      )}
 
-      {/* Предварительный просмотр конфликтов - временно отключен */}
-      {/* {isEditMode && servicePoint?.id && (
+      {/* Предварительный просмотр конфликтов */}
+      {isEditMode && servicePoint?.id && (
         <Box sx={{ mt: 4 }}>
           <ConflictsPreview
             servicePointId={servicePoint.id}
@@ -329,7 +329,7 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
             useFormData={true}
           />
         </Box>
-      )} */}
+      )}
 
       {/* Информация для новых сервисных точек */}
       {(!isEditMode || !servicePoint?.id) && (
