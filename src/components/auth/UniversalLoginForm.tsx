@@ -15,8 +15,7 @@ import {
   FormLabel,
   RadioGroup,
   FormControlLabel,
-  Radio,
-  Chip
+  Radio
 } from '@mui/material';
 
 import {
@@ -260,106 +259,183 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 4, maxWidth: 400, mx: 'auto' }}>
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: 3, 
+        maxWidth: 420, 
+        mx: 'auto',
+        borderRadius: 2
+      }}
+    >
       <Box component="form" onSubmit={handleLogin} noValidate>
         {/* Заголовок */}
-        <Typography variant="h4" component="h1" gutterBottom textAlign="center">
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          gutterBottom 
+          textAlign="center"
+          sx={{ 
+            mb: 3,
+            fontWeight: 600,
+            fontSize: { xs: '1.5rem', sm: '1.75rem' }
+          }}
+        >
           {title || t('forms.auth.login')}
         </Typography>
         
         {/* Выбор типа логина */}
         <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-          <FormLabel component="legend">
-            <Typography variant="subtitle2" color="textSecondary">
-              {t('forms.auth.loginWith')}
-            </Typography>
+          <FormLabel 
+            component="legend"
+            sx={{ 
+              fontSize: '0.95rem',
+              fontWeight: 500,
+              mb: 1.5
+            }}
+          >
+            {t('forms.auth.loginWith')}
           </FormLabel>
           <RadioGroup
             row
             value={loginType}
             onChange={handleLoginTypeChange}
-            sx={{ justifyContent: 'center', mt: 1 }}
+            sx={{ 
+              justifyContent: 'center',
+              gap: 2,
+              '& .MuiFormControlLabel-root': {
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                px: 2,
+                py: 0.5,
+                m: 0,
+                minWidth: '110px', // Фиксированная минимальная ширина для одинакового размера
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  backgroundColor: 'action.hover'
+                }
+              },
+              '& .MuiFormControlLabel-root:has(.Mui-checked)': {
+                borderColor: 'primary.main',
+                backgroundColor: 'primary.50'
+              }
+            }}
           >
             <FormControlLabel
               value="email"
-              control={<Radio />}
+              control={<Radio size="small" sx={{ display: 'none' }} />}
               label={
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Email fontSize="small" />
-                  <span>{t('forms.auth.email')}</span>
+                  <Email fontSize="small" color={loginType === 'email' ? 'primary' : 'inherit'} />
+                  <Typography variant="body2">
+                    {t('forms.auth.email')}
+                  </Typography>
                 </Box>
               }
             />
             <FormControlLabel
               value="phone"
-              control={<Radio />}
+              control={<Radio size="small" sx={{ display: 'none' }} />}
               label={
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Phone fontSize="small" />
-                  <span>{t('forms.auth.phone')}</span>
+                  <Phone fontSize="small" color={loginType === 'phone' ? 'primary' : 'inherit'} />
+                  <Typography variant="body2">
+                    {t('forms.auth.phone')}
+                  </Typography>
                 </Box>
               }
             />
           </RadioGroup>
         </FormControl>
 
-        {/* Поле логина */}
-        {loginType === 'email' ? (
+        {/* Поля ввода */}
+        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+          {/* Поле логина */}
+          {loginType === 'email' ? (
+            <TextField
+              fullWidth
+              label={t('forms.auth.email')}
+              type="email"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+              placeholder={getLoginPlaceholder()}
+              disabled={isLoading}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {getLoginIcon()}
+                  </InputAdornment>
+                ),
+                sx: { height: '48px' }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                  minHeight: '48px' // Фиксированная высота
+                }
+              }}
+            />
+          ) : (
+            <PhoneField
+              fullWidth
+              label={t('forms.auth.phone')}
+              value={login}
+              onChange={(value) => setLogin(value)}
+              placeholder={getLoginPlaceholder()}
+              disabled={isLoading}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                  height: '48px', // Фиксированная высота такая же как у email
+                  minHeight: '48px'
+                }
+              }}
+            />
+          )}
+
+          {/* Поле пароля */}
           <TextField
             fullWidth
-            label={t('forms.auth.email')}
-            type="email"
-            value={login}
-            onChange={(e) => setLogin(e.target.value)}
-            placeholder={getLoginPlaceholder()}
+            label={t('forms.auth.password')}
+            type={showPassword ? 'text' : 'password'}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  {getLoginIcon()}
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    size="small"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
                 </InputAdornment>
               ),
+              sx: { height: '48px' }
             }}
-            sx={{ mb: 2 }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 1.5,
+                minHeight: '48px' // Фиксированная высота
+              }
+            }}
           />
-        ) : (
-          <PhoneField
-            fullWidth
-            label={t('forms.auth.phone')}
-            value={login}
-            onChange={(value) => setLogin(value)}
-            placeholder={getLoginPlaceholder()}
-            disabled={isLoading}
-            sx={{ mb: 2 }}
-          />
-        )}
-
-        {/* Поле пароля */}
-        <TextField
-          fullWidth
-          label={t('forms.auth.password')}
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={isLoading}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
-        />
+        </Box>
 
         {/* Ошибки */}
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: 1.5
+            }}
+          >
             {error}
           </Alert>
         )}
@@ -370,8 +446,15 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           fullWidth
           variant="contained"
           disabled={isLoading}
-          startIcon={isLoading ? <CircularProgress size={20} /> : <LoginIcon />}
-          sx={{ mb: 2 }}
+          size="large"
+          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
+          sx={{ 
+            mb: 2,
+            py: 1.5,
+            borderRadius: 1.5,
+            fontSize: '1rem',
+            fontWeight: 600
+          }}
         >
           {isLoading ? t('forms.auth.loggingIn') : t('forms.auth.loginButton')}
         </Button>
@@ -382,42 +465,58 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
             component="button"
             variant="body2"
             onClick={() => window.location.href = '/forgot-password'}
-            sx={{ textDecoration: 'none' }}
+            sx={{ 
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline'
+              }
+            }}
           >
             {t('forms.auth.forgotPassword')}
           </Link>
         </Box>
 
-        {/* Разделитель */}
-        <Divider sx={{ my: 2 }}>{t('forms.auth.orContinueWith')}</Divider>
-
         {/* Ссылка на регистрацию */}
         {showRegisterLink && (
-          <Box textAlign="center" sx={{ mb: 2 }}>
-            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              {t('forms.auth.dontHaveAccount')}
-            </Typography>
+          <Box textAlign="center" sx={{ mb: showSkipButton ? 2 : 0 }}>
             <Button
               variant="outlined"
               fullWidth
+              size="large"
               startIcon={<PersonAdd />}
               onClick={onSwitchToRegister}
+              sx={{ 
+                py: 1.5,
+                borderRadius: 1.5,
+                fontSize: '0.95rem'
+              }}
             >
               {t('forms.auth.registerButton')}
             </Button>
           </Box>
         )}
 
-        {/* Кнопка пропуска */}
+        {/* Кнопка отмены */}
         {showSkipButton && (
           <Box textAlign="center">
             <Button
-              variant="text"
+              variant="outlined"
+              fullWidth
               onClick={onSkip}
               startIcon={<CloseIcon />}
-              sx={{ color: 'text.secondary' }}
+              sx={{ 
+                py: 1.5,
+                borderRadius: 1.5,
+                fontSize: '0.95rem',
+                borderColor: 'grey.400',
+                color: 'text.secondary',
+                '&:hover': {
+                  borderColor: 'grey.600',
+                  backgroundColor: 'action.hover'
+                }
+              }}
             >
-              {t('forms.auth.skipLogin')}
+              Отмена
             </Button>
           </Box>
         )}
