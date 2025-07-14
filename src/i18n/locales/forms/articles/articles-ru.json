@@ -37,18 +37,25 @@
           "noArticles": "Статьи пока не добавлены",
           "clearFilters": "Сбросить фильтры"
         },
-        "infoBlocks": {
-          "expertAdvice": {
-            "title": "Экспертные советы",
-            "description": "Профессиональные рекомендации от опытных мастеров шиномонтажа"
-          },
-          "detailedGuides": {
-            "title": "Подробные гиды", 
-            "description": "Пошаговые инструкции по выбору, установке и обслуживанию шин"
-          },
-          "allVehicles": {
-            "title": "Для всех авто",
-            "description": "Материалы для владельцев легковых автомобилей, внедорожников и коммерческого транспорта"
+        "categories": {
+          "all": "Все категории",
+          "selection": "Выбор шин",
+          "maintenance": "Обслуживание",
+          "seasonal": "Сезонность",
+          "safety": "Безопасность",
+          "tips": "Советы",
+          "reviews": "Обзоры",
+          "news": "Новости"
+        },
+        "filters": {
+          "category": "Категория",
+          "search": "Поиск",
+          "sort": "Сортировка",
+          "sortOptions": {
+            "newest": "Сначала новые",
+            "oldest": "Сначала старые",
+            "popular": "Популярные",
+            "featured": "Рекомендуемые"
           }
         }
       },
@@ -56,13 +63,17 @@
         "notFound": "Статья не найдена",
         "notFoundDescription": "Запрашиваемая статья не существует или была удалена",
         "backToKnowledgeBase": "Вернуться к базе знаний",
-        "backToArticles": "Назад к базе знаний",
+        "backToArticles": "Вернуться к статьям",
+        "aboutArticle": "О статье",
         "relatedArticles": "Похожие статьи",
+        "views": "Просмотры",
+        "updated": "Обновлено",
         "needHelp": "Нужна помощь?",
-        "helpDescription": "Закажите профессиональный шиномонтаж у наших мастеров",
-        "bookService": "Записаться на шиномонтаж",
+        "helpDescription": "Обратитесь к специалистам нашего сервиса",
+        "bookService": "Записаться на сервис",
         "readingTime": {
-          "lessThanMinute": "Менее минуты",
+          "title": "Время чтения",
+          "lessThanMinute": "менее минуты",
           "oneMinute": "1 минута",
           "fewMinutes": "{{count}} минуты",
           "manyMinutes": "{{count}} минут",
@@ -298,139 +309,106 @@
       }
     },
     "richTextEditor": {
-      "modals": {
-        "link": {
-          "title": "Ссылка",
-          "fields": {
-            "linkText": "Текст ссылки",
-            "linkUrl": "Адрес ссылки",
-            "linkTitle": "Всплывающая подсказка",
-            "cssClass": "CSS класс",
-            "relAttribute": "Атрибут Rel",
-            "identifier": "Идентификатор (id)"
-          },
-          "placeholders": {
-            "linkText": "Текст ссылки",
-            "linkUrl": "https://example.com",
-            "linkTitle": "Всплывающая подсказка",
-            "cssClass": "CSS класс",
-            "relAttribute": "Атрибут Rel",
-            "identifier": "Идентификатор (id)"
-          },
-          "additionalParams": "Дополнительные параметры",
-          "openLinkIn": "Открыть ссылку в",
-          "targetOptions": {
-            "self": "этом окне (_self)",
-            "blank": "новом окне (_blank)",
-            "parent": "родительском окне (_parent)",
-            "top": "верхнем окне (_top)"
-          },
-          "noFollow": "Не учитывать ссылку поисковиками (nofollow, noindex)",
-          "buttons": {
-            "cancel": "Отмена",
-            "insert": "Вставить"
-          }
-        },
-        "image": {
-          "title": "Вставить изображение",
-          "fields": {
-            "imageUrl": "URL изображения",
-            "altText": "Альтернативный текст (alt)",
-            "title": "Заголовок (title)",
-            "width": "Ширина (px или %)",
-            "height": "Высота (px или auto)",
-            "alignment": "Выравнивание",
-            "float": "Обтекание"
-          },
-          "placeholders": {
-            "imageUrl": "https://example.com/image.jpg",
-            "altText": "Описание изображения для SEO и доступности",
-            "title": "Заголовок при наведении",
-            "width": "например: 500px или 100%",
-            "height": "например: 300px или auto"
-          },
-          "helperTexts": {
-            "altText": "Важно для SEO и доступности",
-            "title": "Отображается при наведении на изображение"
-          },
-          "alignmentOptions": {
-            "none": "Нет",
-            "left": "По левому краю",
-            "center": "По центру",
-            "right": "По правому краю"
-          },
-          "floatOptions": {
-            "none": "Нет",
-            "left": "Слева",
-            "right": "Справа"
-          },
-          "buttons": {
-            "cancel": "Отмена",
-            "insert": "Вставить"
-          }
-        },
-        "video": {
-          "title": "Вставить видео",
-          "fields": {
-            "videoUrl": "URL видео",
-            "title": "Заголовок (title)",
-            "width": "Ширина (px или %)",
-            "height": "Высота (px)",
-            "alignment": "Выравнивание"
-          },
-          "placeholders": {
-            "videoUrl": "https://www.youtube.com/watch?v=XXXXXXXXXXX",
-            "title": "Заголовок видео для SEO",
-            "width": "например: 640",
-            "height": "например: 360"
-          },
-          "helperTexts": {
-            "videoUrl": "Поддерживаются ссылки YouTube, Vimeo и другие",
-            "title": "Важно для SEO и доступности"
-          },
-          "alignmentOptions": {
-            "none": "Нет",
-            "left": "По левому краю",
-            "center": "По центру",
-            "right": "По правому краю"
-          },
-          "buttons": {
-            "cancel": "Отмена",
-            "insert": "Вставить"
-          }
-        },
-        "table": {
-          "title": "Вставить таблицу",
-          "fields": {
-            "rows": "Строки",
-            "columns": "Столбцы"
-          },
-          "buttons": {
-            "cancel": "Отмена",
-            "insert": "Вставить"
-          }
-        }
-      },
       "toolbar": {
-        "modes": {
-          "visual": "Визуальный редактор",
-          "html": "HTML",
-          "text": "Текст"
-        },
-        "buttons": {
-          "undo": "Отменить",
-          "redo": "Повторить",
-          "preview": "Предпросмотр"
-        },
-        "labels": {
-          "htmlEditor": "HTML-редактор",
-          "textEditor": "Текстовый редактор"
+        "bold": "Жирный",
+        "italic": "Курсив",
+        "underline": "Подчеркнутый",
+        "strikethrough": "Зачеркнутый",
+        "blockquote": "Цитата",
+        "bulletList": "Маркированный список",
+        "orderedList": "Нумерованный список",
+        "alignLeft": "Выровнять по левому краю",
+        "alignCenter": "Выровнять по центру",
+        "alignRight": "Выровнять по правому краю",
+        "alignJustify": "Выровнять по ширине",
+        "undo": "Отменить",
+        "redo": "Повторить",
+        "link": "Ссылка",
+        "image": "Изображение",
+        "table": "Таблица",
+        "code": "Код",
+        "codeBlock": "Блок кода",
+        "horizontalRule": "Горизонтальная линия",
+        "clearFormat": "Очистить форматирование",
+        "heading1": "Заголовок 1",
+        "heading2": "Заголовок 2",
+        "heading3": "Заголовок 3",
+        "heading4": "Заголовок 4",
+        "heading5": "Заголовок 5",
+        "heading6": "Заголовок 6",
+        "paragraph": "Абзац"
+      },
+      "link": {
+        "title": "Добавить ссылку",
+        "fields": {
+          "url": "URL",
+          "text": "Текст ссылки",
+          "title": "Заголовок (title)",
+          "target": "Открыть в новом окне"
         },
         "placeholders": {
-          "htmlCode": "Введите HTML код...",
-          "textContent": "Введите текст..."
+          "url": "https://example.com",
+          "text": "Текст ссылки",
+          "title": "Заголовок при наведении"
+        },
+        "buttons": {
+          "cancel": "Отмена",
+          "insert": "Вставить"
         }
-      }
+      },
+      "image": {
+        "title": "Вставить изображение",
+        "fields": {
+          "imageUrl": "URL изображения",
+          "altText": "Альтернативный текст (alt)",
+          "title": "Заголовок (title)",
+          "width": "Ширина (px или %)",
+          "height": "Высота (px или auto)",
+          "alignment": "Выравнивание",
+          "float": "Обтекание"
+        },
+        "placeholders": {
+          "imageUrl": "https://example.com/image.jpg",
+          "altText": "Описание изображения для SEO и доступности",
+          "title": "Заголовок при наведении",
+          "width": "например: 500px или 100%",
+          "height": "например: 300px или auto"
+        },
+        "helperTexts": {
+          "altText": "Важно для SEO и доступности",
+          "title": "Отображается при наведении на изображение"
+        },
+        "alignmentOptions": {
+          "none": "Нет",
+          "left": "По левому краю",
+          "center": "По центру",
+          "right": "По правому краю"
+        },
+        "floatOptions": {
+          "none": "Нет",
+          "left": "Слева",
+          "right": "Справа"
+        },
+        "buttons": {
+          "cancel": "Отмена",
+          "insert": "Вставить"
+        }
+      },
+      "table": {
+        "title": "Вставить таблицу",
+        "fields": {
+          "rows": "Строки",
+          "columns": "Столбцы",
+          "withHeader": "С заголовком"
+        },
+        "buttons": {
+          "cancel": "Отмена",
+          "insert": "Вставить"
+        }
+      },
+      "placeholder": "Начните писать здесь...",
+      "wordCount": "Слов: {{count}}",
+      "characterCount": "Символов: {{count}}"
     }
   }
 } 
