@@ -147,16 +147,29 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'ru',
+    lng: localStorage.getItem('i18nextLng') || 'ru', // Используем сохраненный язык или русский по умолчанию
     fallbackLng: 'ru',
     debug: false,
     interpolation: {
       escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // ТОЛЬКО localStorage для определения языка
+      order: ['localStorage'],
       caches: ['localStorage'],
+      lookupLocalStorage: 'i18nextLng',
     },
+    // Белый список поддерживаемых языков
+    supportedLngs: ['ru', 'uk'],
+    // Не загружать язык из кода страны
+    load: 'languageOnly',
+    // Проверяем поддерживаемые языки
+    nonExplicitSupportedLngs: false,
   });
+
+// Устанавливаем русский язык по умолчанию только если localStorage пуст
+if (!localStorage.getItem('i18nextLng')) {
+  localStorage.setItem('i18nextLng', 'ru');
+}
 
 export default i18n; 

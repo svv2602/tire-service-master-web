@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест переводов главной страницы</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .language-switcher { margin-bottom: 30px; }
+        button { margin-right: 10px; padding: 8px 16px; }
+        .translation-test { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+        .key { font-weight: bold; color: #0066cc; }
+        .value { margin-left: 20px; }
+        .missing { color: red; }
+        .found { color: green; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🌐 Тест переводов главной страницы ClientMainPage</h1>
+    
+    <div class="language-switcher">
+        <button onclick="setLanguage('ru')">🇷🇺 Русский</button>
+        <button onclick="setLanguage('uk')">🇺🇦 Українська</button>
+        <button onclick="clearStorage()">🗑️ Очистить localStorage</button>
+    </div>
+
+    <div id="current-language"></div>
+    <div id="translation-results"></div>
+
+    <script>
+        // Тестовые ключи переводов из ClientMainPage
+        const testKeys = [
+            'forms.clientPages.mainPage.title',
+            'forms.clientPages.mainPage.subtitle', 
+            'forms.clientPages.mainPage.searchButton',
+            'forms.clientPages.mainPage.searchPlaceholder',
+            'forms.clientPages.mainPage.cityPlaceholder',
+            'forms.clientPages.mainPage.bookOnlineButton',
+            'forms.clientPages.mainPage.personalCabinetButton',
+            'forms.clientPages.mainPage.servicesTitle',
+            'forms.clientPages.mainPage.articlesTitle',
+            'forms.clientPages.mainPage.footerTitle',
+            'forms.clientPages.mainPage.readyToBook',
+            'forms.clientPages.mainPage.chooseTimeAndService',
+            'forms.clientPages.mainPage.loading',
+            'forms.clientPages.mainPage.services.tireChange',
+            'forms.clientPages.mainPage.services.balancing',
+            'forms.clientPages.mainPage.services.repair'
+        ];
+
+        function setLanguage(lang) {
+            localStorage.setItem('i18nextLng', lang);
+            location.reload();
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function getCurrentLanguage() {
+            return localStorage.getItem('i18nextLng') || 'ru';
+        }
+
+        function testTranslations() {
+            const currentLang = getCurrentLanguage();
+            document.getElementById('current-language').innerHTML = 
+                `<h2>Текущий язык: ${currentLang}</h2>`;
+
+            // Проверяем каждый ключ перевода
+            let results = '<h2>Результаты тестирования переводов:</h2>';
+            
+            testKeys.forEach(key => {
+                // Симуляция получения перевода (в реальности это будет через i18n)
+                const value = getTranslationValue(key, currentLang);
+                const status = value.includes('forms.clientPages') ? 'missing' : 'found';
+                
+                results += `
+                    <div class="translation-test">
+                        <div class="key">${key}</div>
+                        <div class="value ${status}">${value}</div>
+                    </div>
+                `;
+            });
+
+            results += `
+                <h3>Инструкции для тестирования:</h3>
+                <ol>
+                    <li>Откройте <a href="http://localhost:3008/client" target="_blank">главную страницу</a></li>
+                    <li>Переключите язык на русский через селектор языка</li>
+                    <li>Проверьте, что все тексты отображаются на русском языке</li>
+                    <li>Если видите украинские тексты - значит проблема с загрузкой переводов</li>
+                </ol>
+                
+                <h3>Ожидаемые значения на русском:</h3>
+                <pre>
+title: "Найдите лучший автосервис рядом с вами"
+subtitle: "Быстрое бронирование, проверенные мастера, гарантия качества"
+searchButton: "Найти"
+bookOnlineButton: "Записаться онлайн"
+personalCabinetButton: "Личный кабинет"
+                </pre>
+
+                <h3>Ожидаемые значения на украинском:</h3>
+                <pre>
+title: "Знайдіть найкращий автосервіс поруч з вами"
+subtitle: "Швидке бронювання, перевірені майстри, гарантія якості"
+searchButton: "Знайти"
+bookOnlineButton: "Записатися онлайн"
+personalCabinetButton: "Особистий кабінет"
+                </pre>
+            `;
+
+            document.getElementById('translation-results').innerHTML = results;
+        }
+
+        function getTranslationValue(key, lang) {
+            // Эмуляция получения переводов
+            const translations = {
+                'ru': {
+                    'forms.clientPages.mainPage.title': 'Найдите лучший автосервис рядом с вами',
+                    'forms.clientPages.mainPage.subtitle': 'Быстрое бронирование, проверенные мастера, гарантия качества',
+                    'forms.clientPages.mainPage.searchButton': 'Найти',
+                    'forms.clientPages.mainPage.bookOnlineButton': 'Записаться онлайн',
+                    'forms.clientPages.mainPage.personalCabinetButton': 'Личный кабинет'
+                },
+                'uk': {
+                    'forms.clientPages.mainPage.title': 'Знайдіть найкращий автосервіс поруч з вами',
+                    'forms.clientPages.mainPage.subtitle': 'Швидке бронювання, перевірені майстри, гарантія якості',
+                    'forms.clientPages.mainPage.searchButton': 'Знайти',
+                    'forms.clientPages.mainPage.bookOnlineButton': 'Записатися онлайн',
+                    'forms.clientPages.mainPage.personalCabinetButton': 'Особистий кабінет'
+                }
+            };
+
+            return translations[lang]?.[key] || `❌ ${key} (не найден)`;
+        }
+
+        // Инициализация при загрузке страницы
+        testTranslations();
+    </script>
+</body>
+</html> 
