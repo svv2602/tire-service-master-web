@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useCreateMyClientCarMutation, useCreateClientCarMutation } from '../../api/clients.api';
 import { useGetCarBrandsQuery } from '../../api/carBrands.api';
+import { useGetCarModelsByBrandIdQuery } from '../../api/carModels.api';
 import { useGetCarTypesQuery } from '../../api/carTypes.api';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrentUser } from '../../store/slices/authSlice';
@@ -62,6 +63,18 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
   // Получаем текущего пользователя из Redux
   const currentUser = useSelector(selectCurrentUser);
 
+  // Находим бренд по названию для получения его ID
+  const foundBrand = carData.car_brand && carBrandsData?.data ? 
+    carBrandsData.data.find(brand => 
+      brand.name.toLowerCase() === carData.car_brand!.toLowerCase()
+    ) : null;
+
+  // Получаем модели для найденного бренда
+  const { data: carModelsData } = useGetCarModelsByBrandIdQuery(
+    foundBrand ? { brandId: foundBrand.id.toString() } : { brandId: '0' },
+    { skip: !foundBrand }
+  );
+
   // Проверяем, что carData передан
   if (!carData) {
     return null;
@@ -82,20 +95,52 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       console.log('🔍 Client ID пользователя:', currentUser?.client_id);
 
       // Ищем бренд по названию
-      let brandId = 1; // Дефолтный бренд
-      if (carData.car_brand && carBrandsData?.data) {
-        const foundBrand = carBrandsData.data.find(brand => 
-          brand.name.toLowerCase() === carData.car_brand!.toLowerCase()
+      let brandId: number;
+      if (foundBrand) {
+        brandId = foundBrand.id;
+        console.log('✅ Найден бренд:', foundBrand.name, 'ID:', brandId);
+      } else {
+        // Если бренд не найден, используем первый доступный
+        if (carBrandsData?.data && carBrandsData.data.length > 0) {
+          brandId = carBrandsData.data[0].id;
+          console.log('⚠️ Бренд не найден, используем первый доступный:', carBrandsData.data[0].name, 'ID:', brandId);
+        } else {
+          throw new Error('Не удалось найти доступные бренды автомобилей');
+        }
+      }
+
+      // Ищем модель по названию в найденном бренде
+      let modelId: number;
+      if (carData.car_model && carModelsData?.car_models) {
+        const foundModel = carModelsData.car_models.find(model => 
+          model.name.toLowerCase() === carData.car_model!.toLowerCase()
         );
-        if (foundBrand) {
-          brandId = foundBrand.id;
+        if (foundModel) {
+          modelId = foundModel.id;
+          console.log('✅ Найдена модель:', foundModel.name, 'ID:', modelId);
+        } else {
+          // Если модель не найдена, используем первую доступную для данного бренда
+          if (carModelsData.car_models.length > 0) {
+            modelId = carModelsData.car_models[0].id;
+            console.log('⚠️ Модель не найдена, используем первую доступную для бренда:', carModelsData.car_models[0].name, 'ID:', modelId);
+          } else {
+            throw new Error(`Не удалось найти модели для бренда ${foundBrand?.name || 'выбранного бренда'}`);
+          }
+        }
+      } else {
+        // Если название модели не указано, используем первую доступную для бренда
+        if (carModelsData?.car_models && carModelsData.car_models.length > 0) {
+          modelId = carModelsData.car_models[0].id;
+          console.log('ℹ️ Название модели не указано, используем первую доступную:', carModelsData.car_models[0].name, 'ID:', modelId);
+        } else {
+          throw new Error(`Не удалось найти модели для бренда ${foundBrand?.name || 'выбранного бренда'}`);
         }
       }
 
       // Подготавливаем данные для создания автомобиля
       const carFormData: ClientCarFormData = {
         brand_id: brandId,
-        model_id: 1, // Базовая модель (пока нет поиска по названию)
+        model_id: modelId,
         year: new Date().getFullYear(), // Текущий год по умолчанию
         license_plate: carData.license_plate,
         car_type_id: carData.car_type_id || undefined,
@@ -175,15 +220,9 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose}
-      maxWidth="sm"
-      fullWidth
-      disableEscapeKeyDown={isAdding}
-    >
-      <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ pb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CarIcon color="primary" />
           <Typography variant="h6">
             {t('bookingModals.addCarTitle')}
@@ -194,8 +233,11 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       <DialogContent>
         {success ? (
           <Alert severity="success" sx={{ mb: 2 }}>
-            <Typography variant="body1">
-              {t('bookingModals.add') + ' ' + t('bookingModals.afterAdd')}
+            <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+              ✅ Автомобиль успешно добавлен в профиль!
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Теперь вы можете быстро выбирать этот автомобиль при создании новых бронирований.
             </Typography>
           </Alert>
         ) : (
@@ -203,42 +245,90 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t('bookingModals.addCarDescription')}
             </Typography>
-            <Divider sx={{ mb: 2 }} />
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              {t('bookingModals.carData')}
-            </Typography>
-            <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              <Chip label={`${t('bookingModals.number')}: ${carData.license_plate}`} />
-              {carData.car_brand && (
-                <Chip label={`${t('bookingModals.brand')}: ${carData.car_brand}`} />
-              )}
-              {carData.car_model && (
-                <Chip label={`${t('bookingModals.model')}: ${carData.car_model}`} />
-              )}
-              <Chip label={`${t('bookingModals.type')}: ${getCarTypeName(carData.car_type_id)}`} />
-            </Box>
+
+            <Card sx={{ mb: 2 }}>
+              <CardContent sx={{ pb: '16px !important' }}>
+                <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  {t('bookingModals.carData')}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('bookingModals.number')}:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                      {carData.license_plate}
+                    </Typography>
+                  </Box>
+                  
+                  {carData.car_brand && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('bookingModals.brand')}:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                        {carData.car_brand}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {carData.car_model && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        {t('bookingModals.model')}:
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                        {carData.car_model}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('bookingModals.type')}:
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                      {getCarTypeName(carData.car_type_id)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {t('bookingModals.afterAdd')}
             </Typography>
+
             {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
             )}
           </>
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={isAdding}>
-          {t('bookingModals.skip')}
-        </Button>
-        <Button
-          onClick={handleAddCar}
-          color="primary"
-          variant="contained"
-          startIcon={<AddIcon />}
-          disabled={isAdding || success}
-        >
-          {isAdding ? <CircularProgress size={20} /> : t('bookingModals.add')}
-        </Button>
+
+      <DialogActions sx={{ p: 3, pt: 1 }}>
+        {success ? (
+          <Button onClick={handleClose} color="primary" variant="contained">
+            Закрыть
+          </Button>
+        ) : (
+          <>
+            <Button onClick={handleClose} disabled={isAdding}>
+              {t('bookingModals.skip')}
+            </Button>
+            <Button
+              onClick={handleAddCar}
+              disabled={isAdding}
+              variant="contained"
+              startIcon={isAdding ? <CircularProgress size={20} /> : <AddIcon />}
+            >
+              {isAdding ? 'Добавление...' : t('bookingModals.add')}
+            </Button>
+          </>
+        )}
       </DialogActions>
     </Dialog>
   );
