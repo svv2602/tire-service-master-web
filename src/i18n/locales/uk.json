@@ -490,7 +490,12 @@
       "section": "Секція",
       "type": "Тип",
       "regionCity": "Область / Місто",
-      "workingHours": "Графік роботи"
+      "workingHours": "Графік роботи",
+      "category": "Категорія",
+      "service": "Послуга",
+      "serviceCategory": "Категорія послуг",
+      "servicesCount": "Кількість послуг",
+      "sortOrder": "Порядок сортування"
     },
     "actions": {
       "view": "Переглянути",
@@ -502,7 +507,24 @@
       "reject": "Відхилити",
       "publish": "Опублікувати",
       "unpublish": "Зняти з публікації",
-      "reply": "Відповісти"
+      "reply": "Відповісти",
+      "toggleActive": "Переключити статус"
+    },
+    "search": {
+      "placeholder": "Пошук...",
+      "clear": "Очистити",
+      "serviceCategories": "Пошук за назвою категорії...",
+      "services": "Пошук за назвою послуги..."
+    },
+    "filters": {
+      "all": "Всі",
+      "active": "Активні",
+      "inactive": "Неактивні",
+      "statusOptions": {
+        "all": "Всі",
+        "active": "Активні",
+        "inactive": "Неактивні"
+      }
     }
   },
   "statuses": {

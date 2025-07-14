@@ -128,21 +128,30 @@ export interface ServicePoint {
 // Модель категории услуг
 export interface ServiceCategory extends BaseModel {
   name: string;
+  name_uk?: string;
   description?: string;
+  description_uk?: string;
   is_active: boolean;
+  sort_order?: number;
   services_count?: number;
+  localized_name?: string;
+  localized_description?: string;
 }
 
 // Модель услуги
 export interface Service extends BaseModel {
   name: string;
+  name_uk?: string;
   description?: string;
+  description_uk?: string;
   price: number;
   duration: number;
   category_id: number;
   is_active: boolean;
   category?: ServiceCategory;
   sort_order?: number; // Добавляем поле для сортировки
+  localized_name?: string;
+  localized_description?: string;
 }
 
 // Бренд автомобиля

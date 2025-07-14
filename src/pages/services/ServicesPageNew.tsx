@@ -19,6 +19,7 @@ import {
   CalendarToday as CalendarTodayIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   useGetServiceCategoriesQuery,
   useDeleteServiceCategoryMutation,
@@ -41,9 +42,14 @@ import Notification from '../../components/Notification';
 // Импорт централизованных стилей
 import { getTablePageStyles } from '../../styles';
 
+// Импорт хелперов локализации
+import { useLocalizedName } from '../../utils/localizationHelpers';
+
 const ServicesPageNew: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { t } = useTranslation();
+  const localizedName = useLocalizedName();
   const tablePageStyles = getTablePageStyles(theme);
 
   // Состояние для поиска, фильтрации и пагинации
@@ -71,8 +77,9 @@ const ServicesPageNew: React.FC = () => {
   } = useGetServiceCategoriesQuery({
     query: search || undefined,
     active: activeFilter !== '' ? activeFilter === 'true' : undefined,
-    page: page,
+    page: page + 1,
     per_page: PER_PAGE,
+    locale: localStorage.getItem('i18nextLng') || 'ru', // Передаем текущий язык
   });
 
   const [deleteCategory] = useDeleteServiceCategoryMutation();
@@ -99,34 +106,34 @@ const ServicesPageNew: React.FC = () => {
       }).unwrap();
       setNotification({
         open: true,
-        message: 'Статус категории успешно изменен',
+        message: t('admin.services.messages.statusSuccess'),
         severity: 'success'
       });
     } catch (error: any) {
       setNotification({
         open: true,
-        message: 'Ошибка при изменении статуса',
+        message: t('admin.services.messages.statusError'),
         severity: 'error'
       });
     }
-  }, [toggleActive]);
+  }, [toggleActive, t]);
 
   const handleDelete = useCallback(async (category: ServiceCategoryData) => {
     try {
       await deleteCategory(category.id.toString()).unwrap();
       setNotification({
         open: true,
-        message: `Категория "${category.name}" успешно удалена`,
+        message: t('admin.services.messages.deleteSuccess', { name: localizedName(category) }),
         severity: 'success'
       });
     } catch (error: any) {
       setNotification({
         open: true,
-        message: 'Ошибка при удалении категории',
+        message: t('admin.services.messages.deleteError'),
         severity: 'error'
       });
     }
-  }, [deleteCategory]);
+  }, [deleteCategory, t, localizedName]);
 
   const handleCloseNotification = useCallback(() => {
     setNotification(prev => ({ ...prev, open: false }));
@@ -134,55 +141,55 @@ const ServicesPageNew: React.FC = () => {
 
   // Конфигурация PageTable
   const headerConfig: PageHeaderConfig = useMemo(() => ({
-    title: 'Категории услуг (PageTable)',
+    title: t('admin.services.title'),
     actions: [
       {
         id: 'add',
-        label: 'Добавить категорию',
+        label: t('admin.services.createCategory'),
         icon: <AddIcon />,
         onClick: () => navigate('/admin/services/new'),
         variant: 'contained'
       }
     ]
-  }), [navigate]);
+  }), [navigate, t]);
 
   const searchConfig: SearchConfig = useMemo(() => ({
-    placeholder: 'Поиск по названию категории...',
+    placeholder: t('tables.search.serviceCategories'),
     value: search,
     onChange: handleSearchChange
-  }), [search, handleSearchChange]);
+  }), [search, handleSearchChange, t]);
 
   const filtersConfig: FilterConfig[] = useMemo(() => [
     {
       id: 'status',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       type: 'select',
       value: activeFilter,
       options: [
-        { value: '', label: 'Все' },
-        { value: 'true', label: 'Активные' },
-        { value: 'false', label: 'Неактивные' }
+        { value: '', label: t('tables.filters.statusOptions.all') },
+        { value: 'true', label: t('tables.filters.statusOptions.active') },
+        { value: 'false', label: t('tables.filters.statusOptions.inactive') }
       ],
       onChange: (value: any) => {
         setActiveFilter(value as string);
         setPage(0);
       }
     }
-  ], [activeFilter]);
+  ], [activeFilter, t]);
 
   const columns: Column[] = useMemo(() => [
     {
       id: 'name',
-      label: 'Категория',
+      label: t('tables.columns.serviceCategory'),
       sortable: true,
       render: (category: ServiceCategoryData) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CategoryIcon sx={{ color: theme.palette.primary.main, fontSize: '20px' }} />
           <Box>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {category.name}
+              {localizedName(category)}
             </Typography>
-            {category.description && (
+            {(category.localized_description || category.description) && (
               <Typography 
                 variant="caption" 
                 sx={{ 
@@ -194,7 +201,7 @@ const ServicesPageNew: React.FC = () => {
                   maxWidth: '300px'
                 }}
               >
-                {category.description}
+                {category.localized_description || category.description}
               </Typography>
             )}
           </Box>
@@ -203,7 +210,7 @@ const ServicesPageNew: React.FC = () => {
     },
     {
       id: 'services_count',
-      label: 'Услуги',
+      label: t('tables.columns.servicesCount'),
       align: 'center',
       hideOnMobile: true,
       render: (category: ServiceCategoryData) => (
@@ -218,63 +225,63 @@ const ServicesPageNew: React.FC = () => {
     },
     {
       id: 'is_active',
-      label: 'Статус',
+      label: t('tables.columns.status'),
       align: 'center',
       render: (category: ServiceCategoryData) => (
         <Chip
-          label={category.is_active ? 'Активна' : 'Неактивна'}
+          label={category.is_active ? t('tables.columns.active') : t('tables.columns.inactive')}
           color={category.is_active ? 'success' : 'default'}
           size="small"
+          variant="outlined"
         />
       )
     },
     {
       id: 'created_at',
-      label: 'Дата создания',
+      label: t('tables.columns.createdAt'),
       align: 'center',
       hideOnMobile: true,
-      render: (category: ServiceCategoryData) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <CalendarTodayIcon sx={{ fontSize: '16px', color: theme.palette.text.secondary }} />
-          <Typography variant="body2">
-            {category.created_at ? new Date(category.created_at).toLocaleDateString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            }) : '-'}
-          </Typography>
-        </Box>
-      )
+              render: (category: ServiceCategoryData) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CalendarTodayIcon sx={{ fontSize: '16px', color: theme.palette.text.secondary }} />
+            <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+              {category.created_at ? new Date(category.created_at).toLocaleDateString() : '-'}
+            </Typography>
+          </Box>
+        )
     }
-  ], [theme.palette]);
+  ], [theme, localizedName, t]);
 
   const actionsConfig: ActionConfig<ServiceCategoryData>[] = useMemo(() => [
     {
-      label: 'Редактировать',
+      id: 'edit',
+      label: t('tables.actions.edit'),
       icon: <EditIcon />,
       onClick: (category: ServiceCategoryData) => navigate(`/admin/services/${category.id}/edit`),
       color: 'primary'
     },
     {
-      label: 'Переключить статус',
-      icon: <ToggleOnIcon />,
-      onClick: (category: ServiceCategoryData) => handleToggleActive(category),
+      id: 'toggle',
+      label: t('tables.actions.toggleActive'),
+      icon: (category: ServiceCategoryData) => category.is_active ? <ToggleOffIcon /> : <ToggleOnIcon />,
+      onClick: handleToggleActive,
       color: 'warning'
     },
     {
-      label: 'Удалить',
+      id: 'delete',
+      label: t('tables.actions.delete'),
       icon: <DeleteIcon />,
-      onClick: (category: ServiceCategoryData) => handleDelete(category),
+      onClick: handleDelete,
       color: 'error',
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтверждение удаления',
-        message: 'Вы действительно хотите удалить эту категорию? Это действие нельзя будет отменить.',
-        confirmLabel: 'Удалить',
-        cancelLabel: 'Отмена',
+        title: t('admin.services.confirmDelete.title'),
+        message: t('admin.services.confirmDelete.message', { name: '' }),
+        confirmLabel: t('tables.actions.delete'),
+        cancelLabel: t('common.cancel')
       }
     }
-  ], [navigate, handleToggleActive, handleDelete]);
+  ], [navigate, handleToggleActive, handleDelete, t]);
 
   return (
     <Box sx={tablePageStyles.container}>
@@ -295,12 +302,12 @@ const ServicesPageNew: React.FC = () => {
         empty={
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6">
-              {search || activeFilter !== '' ? 'Категории не найдены' : 'Нет категорий услуг'}
+              {search || activeFilter !== '' ? t('admin.services.categoriesNotFound') : t('admin.services.noCategories')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {search || activeFilter !== '' 
-                ? 'Попробуйте изменить критерии поиска'
-                : 'Создайте первую категорию услуг для начала работы'
+                ? t('admin.services.changeCriteria')
+                : t('admin.services.createFirstCategory')
               }
             </Typography>
           </Box>

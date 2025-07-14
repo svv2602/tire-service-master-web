@@ -490,7 +490,12 @@
       "section": "Секция",
       "type": "Тип",
       "regionCity": "Область / Город",
-      "workingHours": "График работы"
+      "workingHours": "График работы",
+      "category": "Категория",
+      "service": "Услуга",
+      "serviceCategory": "Категория услуг",
+      "servicesCount": "Количество услуг",
+      "sortOrder": "Порядок сортировки"
     },
     "actions": {
       "view": "Просмотреть",
@@ -501,7 +506,24 @@
       "approve": "Одобрить",
       "reject": "Отклонить",
       "publish": "Опубликовать",
-      "unpublish": "Снять с публикации"
+      "unpublish": "Снять с публикации",
+      "toggleActive": "Переключить статус"
+    },
+    "search": {
+      "placeholder": "Поиск...",
+      "clear": "Очистить",
+      "serviceCategories": "Поиск по названию категории...",
+      "services": "Поиск по названию услуги..."
+    },
+    "filters": {
+      "all": "Все",
+      "active": "Активные",
+      "inactive": "Неактивные",
+      "statusOptions": {
+        "all": "Все",
+        "active": "Активные",
+        "inactive": "Неактивные"
+      }
     }
   },
   "statuses": {
