@@ -9,6 +9,7 @@ export const citiesApi = baseApi.injectEndpoints({
       page?: number;
       per_page?: number;
       query?: string;
+      locale?: string;
     }>({
       query: (params = {}) => ({
         url: 'cities',
@@ -17,6 +18,8 @@ export const citiesApi = baseApi.injectEndpoints({
           per_page: params.per_page || 20,
           ...(params.region_id && { region_id: params.region_id }),
           ...(params.query && { query: params.query }),
+          // Автоматически добавляем текущий язык если не указан
+          locale: params.locale || localStorage.getItem('i18nextLng') || 'ru'
         },
       }),
       providesTags: ['City'],

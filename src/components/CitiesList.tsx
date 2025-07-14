@@ -44,6 +44,12 @@ const createValidationSchema = (t: any) => Yup.object({
     .required(t('forms.city.validation.nameRequired'))
     .min(2, t('forms.city.validation.nameMin'))
     .max(100, t('forms.city.validation.nameMax')),
+  name_ru: Yup.string()
+    .min(2, t('forms.city.validation.nameRuMin'))
+    .max(100, t('forms.city.validation.nameRuMax')),
+  name_uk: Yup.string()
+    .min(2, t('forms.city.validation.nameUkMin'))
+    .max(100, t('forms.city.validation.nameUkMax')),
   is_active: Yup.boolean(),
   region_id: Yup.number().required(t('forms.city.validation.regionRequired')),
 });
@@ -83,6 +89,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const formik = useFormik<CityFormData>({
     initialValues: {
       name: '',
+      name_ru: '',
+      name_uk: '',
       is_active: true,
       region_id: typeof regionId === 'string' ? parseInt(regionId) : regionId,
     },
@@ -111,6 +119,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       setSelectedCity(city);
       formik.setValues({
         name: city.name,
+        name_ru: city.name_ru || '',
+        name_uk: city.name_uk || '',
         is_active: city.is_active,
         region_id: city.region_id,
       });
@@ -118,6 +128,8 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       setSelectedCity(null);
       formik.setValues({
         name: '',
+        name_ru: '',
+        name_uk: '',
         is_active: true,
         region_id: typeof regionId === 'string' ? parseInt(regionId) : regionId,
       });
@@ -388,6 +400,38 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
             helperText={formik.touched.name && formik.errors.name}
             sx={{ mb: SIZES.spacing.md }}
           />
+          
+          {/* Поля переводов */}
+          <Typography variant="subtitle2" sx={{ mb: 1, color: 'primary.main', fontWeight: 'bold' }}>
+            {t('forms.city.sections.translations')}
+          </Typography>
+          
+          <TextField
+            fullWidth
+            id="name_ru"
+            name="name_ru"
+            label={t('forms.city.fields.nameRu')}
+            value={formik.values.name_ru}
+            onChange={formik.handleChange}
+            error={formik.touched.name_ru && Boolean(formik.errors.name_ru)}
+            helperText={formik.touched.name_ru && formik.errors.name_ru}
+            placeholder={t('forms.city.placeholders.nameRu')}
+            sx={{ mb: SIZES.spacing.md }}
+          />
+          
+          <TextField
+            fullWidth
+            id="name_uk"
+            name="name_uk"
+            label={t('forms.city.fields.nameUk')}
+            value={formik.values.name_uk}
+            onChange={formik.handleChange}
+            error={formik.touched.name_uk && Boolean(formik.errors.name_uk)}
+            helperText={formik.touched.name_uk && formik.errors.name_uk}
+            placeholder={t('forms.city.placeholders.nameUk')}
+            sx={{ mb: SIZES.spacing.md }}
+          />
+          
           <Switch
             label={t('forms.city.fields.isActive')}
             checked={formik.values.is_active}

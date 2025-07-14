@@ -171,6 +171,8 @@ export interface CarModel extends BaseModel {
 export interface Region {
   id: number;
   name: string;
+  name_ru: string;
+  name_uk: string;
   code: string;
   is_active: boolean;
   cities_count: number;
@@ -182,6 +184,8 @@ export interface Region {
 export interface City {
   id: number;
   name: string;
+  name_ru: string;
+  name_uk: string;
   region_id: number;
   region?: Region;
   is_active: boolean;
@@ -268,12 +272,16 @@ export interface PartnerFormData {
 
 export interface CityFormData {
   name: string;
+  name_ru: string;
+  name_uk: string;
   region_id: number;
   is_active: boolean;
 }
 
 export interface RegionFormData {
   name: string;
+  name_ru: string;
+  name_uk: string;
   code: string;
   is_active: boolean;
 }

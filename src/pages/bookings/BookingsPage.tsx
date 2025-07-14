@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTheme, Avatar, Alert, Menu, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Button, Snackbar } from '@mui/material';
 import { format } from 'date-fns';
-import { Box, Typography, CircularProgress, Chip, ServiceBookingBadge } from '../../components/ui';
+import { Box, Typography, CircularProgress, Chip } from '../../components/ui';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -14,6 +14,7 @@ import {
   Sort as SortIcon,
   ArrowUpward as ArrowUpwardIcon,
   ArrowDownward as ArrowDownwardIcon,
+  Build as BuildIcon,
 } from '@mui/icons-material';
 import { getTablePageStyles } from '../../styles';
 import { useNavigate } from 'react-router-dom';
@@ -608,10 +609,21 @@ const BookingsPage: React.FC = () => {
               }}
             />
           </Box>
-          <ServiceBookingBadge 
-            isServiceBooking={booking.is_service_booking} 
-            size="small"
-          />
+          {booking.is_service_booking && (
+            <Chip
+              icon={<BuildIcon />}
+              label="Служебное"
+              size="small"
+              color="warning"
+              variant="filled"
+              sx={{ 
+                fontWeight: 'bold',
+                '& .MuiChip-icon': {
+                  color: 'inherit'
+                }
+              }}
+            />
+          )}
         </Box>
       ),
     },

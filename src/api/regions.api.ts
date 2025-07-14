@@ -9,11 +9,15 @@ type RegionTag = { type: 'Region'; id: number | 'LIST' };
 export const regionsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение списка регионов
-    getRegions: builder.query<ApiResponse<Region>, RegionFilter>({
+    getRegions: builder.query<ApiResponse<Region>, RegionFilter & { locale?: string }>({
       query: (params) => ({
         url: 'regions',
         method: 'GET',
-        params,
+        params: {
+          ...params,
+          // Автоматически добавляем текущий язык если не указан
+          locale: params.locale || localStorage.getItem('i18nextLng') || 'ru'
+        },
       }),
       providesTags: ['Region'],
     }),

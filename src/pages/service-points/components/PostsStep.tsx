@@ -55,8 +55,8 @@ import { Table } from '../../../components/ui';
 import type { Column } from '../../../components/ui';
 import { useTranslation } from 'react-i18next';
 
-// Импорт компонента предварительного просмотра конфликтов
-import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
+// Импорт компонента предварительного просмотра конфликтов - временно отключен
+// import ConflictsPreview from '../../../components/booking-conflicts/ConflictsPreview';
 
 interface PostsStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -647,8 +647,8 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
         />
       )}
 
-      {/* Предварительный просмотр конфликтов */}
-      {isEditMode && servicePoint?.id && (
+      {/* Предварительный просмотр конфликтов - временно отключен */}
+      {/* {isEditMode && servicePoint?.id && (
         <Box sx={{ mt: 4 }}>
           <ConflictsPreview
             servicePointId={servicePoint.id}
@@ -658,7 +658,7 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
             useFormData={true}
           />
         </Box>
-      )}
+      )} */}
     </Box>
   );
 };

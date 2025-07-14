@@ -49,6 +49,12 @@ const createValidationSchema = (t: any) => Yup.object({
     .required(t('forms.region.validation.nameRequired'))
     .min(2, t('forms.region.validation.nameMin'))
     .max(100, t('forms.region.validation.nameMax')),
+  name_ru: Yup.string()
+    .min(2, t('forms.region.validation.nameRuMin'))
+    .max(100, t('forms.region.validation.nameRuMax')),
+  name_uk: Yup.string()
+    .min(2, t('forms.region.validation.nameUkMin'))
+    .max(100, t('forms.region.validation.nameUkMax')),
   code: Yup.string()
     .required(t('forms.region.validation.codeRequired'))
     .min(2, t('forms.region.validation.codeMin'))
@@ -85,6 +91,8 @@ export const RegionFormPage: React.FC = () => {
   const formik = useFormik<RegionFormData>({
     initialValues: {
       name: regionData?.name || '',
+      name_ru: regionData?.name_ru || '',
+      name_uk: regionData?.name_uk || '',
       code: regionData?.code || '',
       is_active: regionData?.is_active ?? true,
     },
@@ -190,6 +198,37 @@ export const RegionFormPage: React.FC = () => {
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
                 sx={formStyles.field}
+              />
+
+              {/* Поля ввода переводов названия */}
+              <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, color: 'primary.main' }}>
+                {t('forms.region.sections.translations')}
+              </Typography>
+              
+              <TextField
+                fullWidth
+                name="name_ru"
+                label={t('forms.region.fields.nameRu')}
+                value={formik.values.name_ru}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name_ru && Boolean(formik.errors.name_ru)}
+                helperText={formik.touched.name_ru && formik.errors.name_ru}
+                sx={formStyles.field}
+                placeholder={t('forms.region.placeholders.nameRu')}
+              />
+
+              <TextField
+                fullWidth
+                name="name_uk"
+                label={t('forms.region.fields.nameUk')}
+                value={formik.values.name_uk}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name_uk && Boolean(formik.errors.name_uk)}
+                helperText={formik.touched.name_uk && formik.errors.name_uk}
+                sx={formStyles.field}
+                placeholder={t('forms.region.placeholders.nameUk')}
               />
 
               {/* Поле ввода кода региона */}
