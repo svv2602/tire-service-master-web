@@ -81,18 +81,26 @@
         "backButton": "Назад",
         "tabs": {
           "basic": "Основне",
+          "russian": "Російська",
+          "ukrainian": "Українська",
           "seoMedia": "SEO та медіа",
           "settings": "Налаштування"
         },
         "fields": {
           "title": "Заголовок статті *",
+          "titleRu": "Заголовок (RU) *",
+          "titleUk": "Заголовок (UK) *",
           "titlePlaceholder": "Введіть заголовок статті",
           "category": "Категорія",
           "status": "Статус",
           "excerpt": "Короткий опис *",
+          "excerptRu": "Короткий опис (RU) *",
+          "excerptUk": "Короткий опис (UK) *",
           "excerptPlaceholder": "Напишіть короткий опис статті",
           "excerptMaxLength": "160 символів",
           "content": "Зміст статті *",
+          "contentRu": "Зміст (RU) *",
+          "contentUk": "Зміст (UK) *",
           "contentPlaceholder": "Напишіть повний текст статті...",
           "tags": "Теги",
           "addTag": "Додати тег",
@@ -101,9 +109,13 @@
           "featuredImage": "URL зображення",
           "featuredImagePlaceholder": "https://example.com/image.jpg",
           "metaTitle": "SEO заголовок",
+          "metaTitleRu": "SEO заголовок (RU)",
+          "metaTitleUk": "SEO заголовок (UK)",
           "metaTitlePlaceholder": "SEO заголовок для пошукових систем",
           "metaTitleMaxLength": "60 символів",
           "metaDescription": "SEO опис",
+          "metaDescriptionRu": "SEO опис (RU)",
+          "metaDescriptionUk": "SEO опис (UK)",
           "metaDescriptionPlaceholder": "SEO опис для пошукових систем",
           "metaDescriptionMaxLength": "160 символів",
           "featured": "Рекомендована стаття",
@@ -117,6 +129,13 @@
         "statusOptions": {
           "draft": "Чернетка",
           "published": "Опубліковано"
+        },
+        "categories": {
+          "selection": "Вибір шин",
+          "maintenance": "Обслуговування",
+          "seasonal": "Сезонність",
+          "safety": "Безпека",
+          "tips": "Поради"
         },
         "messages": {
           "publishSuccess": "Статтю опубліковано!",
@@ -276,6 +295,141 @@
         "bookingOrServicePoint": "Бронювання або сервісна точка",
         "rating": "Оцінка",
         "reviewText": "Текст відгуку"
+      }
+    },
+    "richTextEditor": {
+      "modals": {
+        "link": {
+          "title": "Посилання",
+          "fields": {
+            "linkText": "Текст посилання",
+            "linkUrl": "Адреса посилання",
+            "linkTitle": "Спливаюча підказка",
+            "cssClass": "CSS клас",
+            "relAttribute": "Атрибут Rel",
+            "identifier": "Ідентифікатор (id)"
+          },
+          "placeholders": {
+            "linkText": "Текст посилання",
+            "linkUrl": "https://example.com",
+            "linkTitle": "Спливаюча підказка",
+            "cssClass": "CSS клас",
+            "relAttribute": "Атрибут Rel",
+            "identifier": "Ідентифікатор (id)"
+          },
+          "additionalParams": "Додаткові параметри",
+          "openLinkIn": "Відкрити посилання в",
+          "targetOptions": {
+            "self": "цьому вікні (_self)",
+            "blank": "новому вікні (_blank)",
+            "parent": "батьківському вікні (_parent)",
+            "top": "верхньому вікні (_top)"
+          },
+          "noFollow": "Не враховувати посилання пошуковиками (nofollow, noindex)",
+          "buttons": {
+            "cancel": "Скасувати",
+            "insert": "Вставити"
+          }
+        },
+        "image": {
+          "title": "Вставити зображення",
+          "fields": {
+            "imageUrl": "URL зображення",
+            "altText": "Альтернативний текст (alt)",
+            "title": "Заголовок (title)",
+            "width": "Ширина (px або %)",
+            "height": "Висота (px або auto)",
+            "alignment": "Вирівнювання",
+            "float": "Обтікання"
+          },
+          "placeholders": {
+            "imageUrl": "https://example.com/image.jpg",
+            "altText": "Опис зображення для SEO та доступності",
+            "title": "Заголовок при наведенні",
+            "width": "наприклад: 500px або 100%",
+            "height": "наприклад: 300px або auto"
+          },
+          "helperTexts": {
+            "altText": "Важливо для SEO та доступності",
+            "title": "Відображається при наведенні на зображення"
+          },
+          "alignmentOptions": {
+            "none": "Немає",
+            "left": "По лівому краю",
+            "center": "По центру",
+            "right": "По правому краю"
+          },
+          "floatOptions": {
+            "none": "Немає",
+            "left": "Зліва",
+            "right": "Справа"
+          },
+          "buttons": {
+            "cancel": "Скасувати",
+            "insert": "Вставити"
+          }
+        },
+        "video": {
+          "title": "Вставити відео",
+          "fields": {
+            "videoUrl": "URL відео",
+            "title": "Заголовок (title)",
+            "width": "Ширина (px або %)",
+            "height": "Висота (px)",
+            "alignment": "Вирівнювання"
+          },
+          "placeholders": {
+            "videoUrl": "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+            "title": "Заголовок відео для SEO",
+            "width": "наприклад: 640",
+            "height": "наприклад: 360"
+          },
+          "helperTexts": {
+            "videoUrl": "Підтримуються посилання YouTube, Vimeo та інші",
+            "title": "Важливо для SEO та доступності"
+          },
+          "alignmentOptions": {
+            "none": "Немає",
+            "left": "По лівому краю",
+            "center": "По центру",
+            "right": "По правому краю"
+          },
+          "buttons": {
+            "cancel": "Скасувати",
+            "insert": "Вставити"
+          }
+        },
+        "table": {
+          "title": "Вставити таблицю",
+          "fields": {
+            "rows": "Рядки",
+            "columns": "Стовпці"
+          },
+          "buttons": {
+            "cancel": "Скасувати",
+            "insert": "Вставити"
+          }
+        }
+      },
+      "toolbar": {
+        "modes": {
+          "visual": "Візуальний редактор",
+          "html": "HTML",
+          "text": "Текст"
+        },
+        "buttons": {
+          "undo": "Скасувати",
+          "redo": "Повторити",
+          "preview": "Попередній перегляд"
+        },
+        "labels": {
+          "htmlEditor": "HTML-редактор",
+          "textEditor": "Текстовий редактор"
+        },
+        "placeholders": {
+          "htmlCode": "Введіть HTML код...",
+          "textContent": "Введіть текст..."
+        }
       }
     }
   }

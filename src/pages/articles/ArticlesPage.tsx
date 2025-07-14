@@ -44,6 +44,7 @@ import { SIZES } from '../../styles/theme';
 import { 
   getCardStyles
 } from '../../styles/components';
+import { useLocalizedArticleTitle, useLocalizedArticleExcerpt } from '../../utils/articleLocalizationHelpers';
 
 // Status constants
 const ArticlesPage: React.FC = () => {
@@ -51,6 +52,10 @@ const ArticlesPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const cardStyles = getCardStyles(theme);
+  
+  // Хуки для локализации
+  const localizedTitle = useLocalizedArticleTitle();
+  const localizedExcerpt = useLocalizedArticleExcerpt();
   
   // Redux state
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -179,7 +184,7 @@ const ArticlesPage: React.FC = () => {
               }}
               onClick={() => navigate(`/admin/articles/${row.id}`)}
             >
-              {row.title}
+              {localizedTitle(row)}
               {row.featured && (
                 <Chip
                   icon={<StarIcon />}
@@ -202,7 +207,7 @@ const ArticlesPage: React.FC = () => {
                 overflow: 'hidden'
               }}
             >
-              {row.excerpt}
+              {localizedExcerpt(row)}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

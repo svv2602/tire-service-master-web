@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   useGetPublishedArticlesQuery,
   useGetArticleQuery,
@@ -14,7 +15,8 @@ import {
   ArticleSummary, 
   ArticlesFilters, 
   ArticleCategory,
-  CreateArticleRequest 
+  CreateArticleRequest,
+  getLocalizedArticleCategories
 } from '../types/articles';
 
 // Хук для получения списка статей с фильтрацией и пагинацией
@@ -50,12 +52,12 @@ export const useArticle = (id: string | number | null) => {
 
 // Хук для получения категорий статей
 export const useArticleCategories = () => {
-  const { data, error, isLoading } = useGetCategoriesQuery();
+  const { t } = useTranslation();
   
   return {
-    categories: data || [],
-    loading: isLoading,
-    error: error ? (error as any)?.data?.message || 'Ошибка загрузки категорий' : null,
+    categories: getLocalizedArticleCategories(t),
+    loading: false,
+    error: null,
   };
 };
 

@@ -42,6 +42,7 @@ import { useGetArticlesQuery, useGetCategoriesQuery } from '../../api/articles.a
 import { useArticleActions } from '../../hooks/useArticles';
 import { ArticleSummary } from '../../types/articles';
 import { getTablePageStyles, getCardStyles } from '../../styles/components';
+import { useLocalizedArticleTitle, useLocalizedArticleExcerpt } from '../../utils/articleLocalizationHelpers';
 
 const ArticlesPageNew: React.FC = () => {
   const theme = useTheme();
@@ -49,6 +50,10 @@ const ArticlesPageNew: React.FC = () => {
   const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
   const cardStyles = getCardStyles(theme);
+  
+  // Хуки для локализации
+  const localizedTitle = useLocalizedArticleTitle();
+  const localizedExcerpt = useLocalizedArticleExcerpt();
   
   // Состояние для поиска, фильтрации и пагинации
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,7 +119,7 @@ const ArticlesPageNew: React.FC = () => {
       if (result.success) {
         setNotification({
           open: true,
-          message: t('forms.articles.messages.deleteSuccess', { title: article.title }),
+          message: t('forms.articles.messages.deleteSuccess', { title: localizedTitle(article) }),
           severity: 'success'
         });
         refetch();
@@ -232,7 +237,7 @@ const ArticlesPageNew: React.FC = () => {
               }}
               onClick={() => navigate(`/admin/articles/${article.id}`)}
             >
-              {article.title}
+              {localizedTitle(article)}
               {article.featured && (
                 <Chip
                   icon={<StarIcon />}
@@ -254,7 +259,7 @@ const ArticlesPageNew: React.FC = () => {
                 overflow: 'hidden'
               }}
             >
-              {article.excerpt || 'Без описания'}
+              {localizedExcerpt(article) || 'Без описания'}
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
               <PersonIcon sx={{ fontSize: 14, color: theme.palette.text.secondary }} />

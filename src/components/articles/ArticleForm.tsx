@@ -104,11 +104,21 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
     category: '',
     status: ARTICLE_STATUSES.DRAFT,
     featured: false,
-    meta_title: '',
-    meta_description: '',
     featured_image_url: '',
     allow_comments: true,
     tags: [],
+    // Русские поля
+    title_ru: '',
+    content_ru: '',
+    excerpt_ru: '',
+    meta_title_ru: '',
+    meta_description_ru: '',
+    // Украинские поля
+    title_uk: '',
+    content_uk: '',
+    excerpt_uk: '',
+    meta_title_uk: '',
+    meta_description_uk: '',
   });
 
   // Состояние UI
@@ -125,27 +135,37 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
         category: article.category,
         status: article.status === 'archived' ? 'draft' : article.status,
         featured: article.featured,
-        meta_title: (article as Article).meta_title || '',
-        meta_description: (article as Article).meta_description || '',
         featured_image_url: article.featured_image || '',
         allow_comments: (article as Article).allow_comments ?? true,
         tags: (article as Article).tags || [],
+        // Русские поля
+        title_ru: (article as Article).title_ru || '',
+        content_ru: (article as Article).content_ru || '',
+        excerpt_ru: (article as Article).excerpt_ru || '',
+        meta_title_ru: (article as Article).meta_title_ru || '',
+        meta_description_ru: (article as Article).meta_description_ru || '',
+        // Украинские поля
+        title_uk: (article as Article).title_uk || '',
+        content_uk: (article as Article).content_uk || '',
+        excerpt_uk: (article as Article).excerpt_uk || '',
+        meta_title_uk: (article as Article).meta_title_uk || '',
+        meta_description_uk: (article as Article).meta_description_uk || '',
       });
     }
   }, [mode, article]);
 
   // Автоматическое заполнение SEO полей
   useEffect(() => {
-    if (formData.title && !formData.meta_title) {
+    if (formData.title && !formData.meta_title_ru) {
       setFormData(prev => ({
         ...prev,
-        meta_title: prev.title.slice(0, 60),
+        meta_title_ru: prev.title.slice(0, 60),
       }));
     }
-    if (formData.excerpt && !formData.meta_description) {
+    if (formData.excerpt && !formData.meta_description_ru) {
       setFormData(prev => ({
         ...prev,
-        meta_description: prev.excerpt.slice(0, 160),
+        meta_description_ru: prev.excerpt.slice(0, 160),
       }));
     }
   }, [formData.title, formData.excerpt]);
@@ -202,11 +222,21 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
       category: formData.category,
       status: publishStatus as any,
       featured: formData.featured,
-      meta_title: formData.meta_title || undefined,
-      meta_description: formData.meta_description || undefined,
       featured_image_url: formData.featured_image_url || undefined,
       allow_comments: formData.allow_comments,
       tags: formData.tags.length > 0 ? formData.tags : undefined,
+      // Русские поля
+      title_ru: formData.title_ru,
+      content_ru: formData.content_ru,
+      excerpt_ru: formData.excerpt_ru,
+      meta_title_ru: formData.meta_title_ru || undefined,
+      meta_description_ru: formData.meta_description_ru || undefined,
+      // Украинские поля
+      title_uk: formData.title_uk,
+      content_uk: formData.content_uk,
+      excerpt_uk: formData.excerpt_uk,
+      meta_title_uk: formData.meta_title_uk || undefined,
+      meta_description_uk: formData.meta_description_uk || undefined,
     };
 
     let result;
@@ -326,7 +356,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 variant="contained"
                 startIcon={<SaveIcon />}
                 onClick={() => handleSubmit(ARTICLE_STATUSES.DRAFT)}
-                disabled={loading || !formData.title || !formData.content}
+                disabled={loading || !formData.title || !formData.content || !formData.title_uk || !formData.content_uk}
                 sx={buttonStyles}
               >
                 {loading ? <CircularProgress size={20} /> : t('forms.articles.form.saveButton')}
@@ -335,7 +365,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 variant="contained"
                 startIcon={<PublishIcon />}
                 onClick={() => handleSubmit(ARTICLE_STATUSES.PUBLISHED)}
-                disabled={loading || !formData.title || !formData.content || !formData.excerpt}
+                disabled={loading || !formData.title || !formData.content || !formData.excerpt || !formData.title_uk || !formData.content_uk || !formData.excerpt_uk}
                 sx={getButtonStyles(theme, 'success')}
               >
                 {t('forms.articles.form.publishButton')}
@@ -365,27 +395,28 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
       ) : (
         <Fade in timeout={300}>
           <Box sx={cardStyles}>
-            {/* Табы */}
+            {/* Табы для языков и настроек */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs 
                 value={activeTab} 
                 onChange={(value) => setActiveTab(typeof value === 'string' ? parseInt(value) : value)}
-                tabs={[
-                  { label: t('forms.articles.form.tabs.basic'), value: 0, icon: <EditIcon /> },
-                  { label: t('forms.articles.form.tabs.seoMedia'), value: 1, icon: <SearchIcon /> },
-                  { label: t('forms.articles.form.tabs.settings'), value: 2, icon: <SettingsIcon /> }
-                ]}
+                                  tabs={[
+                    { label: t('forms.articles.form.tabs.russian'), value: 0, icon: <EditIcon /> },
+                    { label: t('forms.articles.form.tabs.ukrainian'), value: 1, icon: <EditIcon /> },
+                    { label: t('forms.articles.form.tabs.seoMedia'), value: 2, icon: <SearchIcon /> },
+                    { label: t('forms.articles.form.tabs.settings'), value: 3, icon: <SettingsIcon /> }
+                  ]}
               />
             </Box>
 
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-              {/* Основная информация */}
+              {/* Русский язык */}
               <TabPanel value={activeTab} index={0}>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label={t('forms.articles.form.fields.title')}
+                      label={t('forms.articles.form.fields.titleRu')}
                       value={formData.title}
                       onChange={handleInputChange('title')}
                       placeholder={t('forms.articles.form.fields.titlePlaceholder')}
@@ -394,6 +425,134 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                     />
                   </Grid>
 
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.excerptRu')}
+                      value={formData.excerpt}
+                      onChange={handleInputChange('excerpt')}
+                      placeholder={t('forms.articles.form.fields.excerptPlaceholder')}
+                      multiline
+                      rows={3}
+                      sx={textFieldStyles}
+                      required
+                      helperText={`${formData.excerpt.length}/160 ${t('forms.articles.form.fields.excerptMaxLength')}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ mb: 2, color: colors.textPrimary }}>
+                      {t('forms.articles.form.fields.contentRu')}
+                    </Typography>
+                    <RichTextEditor
+                      value={formData.content}
+                      onChange={handleInputChange('content')}
+                      placeholder={t('forms.articles.form.fields.contentPlaceholder')}
+                      height={400}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.metaTitleRu')}
+                      value={formData.meta_title_ru || ''}
+                      onChange={handleInputChange('meta_title_ru')}
+                      placeholder={t('forms.articles.form.fields.metaTitlePlaceholder')}
+                      sx={textFieldStyles}
+                      helperText={`${(formData.meta_title_ru || '').length}/60 ${t('forms.articles.form.fields.metaTitleMaxLength')}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.metaDescriptionRu')}
+                      value={formData.meta_description_ru || ''}
+                      onChange={handleInputChange('meta_description_ru')}
+                      placeholder={t('forms.articles.form.fields.metaDescriptionPlaceholder')}
+                      multiline
+                      rows={3}
+                      sx={textFieldStyles}
+                      helperText={`${(formData.meta_description_ru || '').length}/160 ${t('forms.articles.form.fields.metaDescriptionMaxLength')}`}
+                    />
+                  </Grid>
+                </Grid>
+              </TabPanel>
+
+              {/* Украинский язык */}
+              <TabPanel value={activeTab} index={1}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.titleUk')}
+                      value={formData.title_uk}
+                      onChange={handleInputChange('title_uk')}
+                      placeholder={t('forms.articles.form.fields.titlePlaceholder')}
+                      sx={textFieldStyles}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.excerptUk')}
+                      value={formData.excerpt_uk}
+                      onChange={handleInputChange('excerpt_uk')}
+                      placeholder={t('forms.articles.form.fields.excerptPlaceholder')}
+                      multiline
+                      rows={3}
+                      sx={textFieldStyles}
+                      required
+                      helperText={`${(formData.excerpt_uk || '').length}/160 ${t('forms.articles.form.fields.excerptMaxLength')}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="h6" sx={{ mb: 2, color: colors.textPrimary }}>
+                      {t('forms.articles.form.fields.contentUk')}
+                    </Typography>
+                    <RichTextEditor
+                      value={formData.content_uk || ''}
+                      onChange={handleInputChange('content_uk')}
+                      placeholder={t('forms.articles.form.fields.contentPlaceholder')}
+                      height={400}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.metaTitleUk')}
+                      value={formData.meta_title_uk}
+                      onChange={handleInputChange('meta_title_uk')}
+                      placeholder={t('forms.articles.form.fields.metaTitlePlaceholder')}
+                      sx={textFieldStyles}
+                      helperText={`${(formData.meta_title_uk || '').length}/60 ${t('forms.articles.form.fields.metaTitleMaxLength')}`}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label={t('forms.articles.form.fields.metaDescriptionUk')}
+                      value={formData.meta_description_uk}
+                      onChange={handleInputChange('meta_description_uk')}
+                      placeholder={t('forms.articles.form.fields.metaDescriptionPlaceholder')}
+                      multiline
+                      rows={3}
+                      sx={textFieldStyles}
+                      helperText={`${(formData.meta_description_uk || '').length}/160 ${t('forms.articles.form.fields.metaDescriptionMaxLength')}`}
+                    />
+                  </Grid>
+                </Grid>
+              </TabPanel>
+
+              {/* SEO и медиа */}
+              <TabPanel value={activeTab} index={2}>
+                <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <Select
                       fullWidth
@@ -424,27 +583,14 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label={t('forms.articles.form.fields.excerpt')}
-                      value={formData.excerpt}
-                      onChange={handleInputChange('excerpt')}
-                      placeholder={t('forms.articles.form.fields.excerptPlaceholder')}
-                      multiline
-                      rows={3}
+                      label={t('forms.articles.form.fields.featuredImage')}
+                      value={formData.featured_image_url}
+                      onChange={handleInputChange('featured_image_url')}
+                      placeholder={t('forms.articles.form.fields.featuredImagePlaceholder')}
                       sx={textFieldStyles}
-                      required
-                      helperText={`${formData.excerpt.length}/160 ${t('forms.articles.form.fields.excerptMaxLength')}`}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Typography variant="h6" sx={{ mb: 2, color: colors.textPrimary }}>
-                      {t('forms.articles.form.fields.content')}
-                    </Typography>
-                    <RichTextEditor
-                      value={formData.content}
-                      onChange={handleInputChange('content')}
-                      placeholder={t('forms.articles.form.fields.contentPlaceholder')}
-                      height={500}
+                      InputProps={{
+                        startAdornment: <ImageIcon sx={{ mr: 1, color: colors.textSecondary }} />
+                      }}
                     />
                   </Grid>
 
@@ -479,53 +625,8 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                 </Grid>
               </TabPanel>
 
-              {/* SEO и медиа */}
-              <TabPanel value={activeTab} index={1}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label={t('forms.articles.form.fields.featuredImage')}
-                      value={formData.featured_image_url}
-                      onChange={handleInputChange('featured_image_url')}
-                      placeholder={t('forms.articles.form.fields.featuredImagePlaceholder')}
-                      sx={textFieldStyles}
-                      InputProps={{
-                        startAdornment: <ImageIcon sx={{ mr: 1, color: colors.textSecondary }} />
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label={t('forms.articles.form.fields.metaTitle')}
-                      value={formData.meta_title}
-                      onChange={handleInputChange('meta_title')}
-                      placeholder={t('forms.articles.form.fields.metaTitlePlaceholder')}
-                      sx={textFieldStyles}
-                      helperText={`${formData.meta_title.length}/60 ${t('forms.articles.form.fields.metaTitleMaxLength')}`}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label={t('forms.articles.form.fields.metaDescription')}
-                      value={formData.meta_description}
-                      onChange={handleInputChange('meta_description')}
-                      placeholder={t('forms.articles.form.fields.metaDescriptionPlaceholder')}
-                      multiline
-                      rows={3}
-                      sx={textFieldStyles}
-                      helperText={`${formData.meta_description.length}/160 ${t('forms.articles.form.fields.metaDescriptionMaxLength')}`}
-                    />
-                  </Grid>
-                </Grid>
-              </TabPanel>
-
               {/* Настройки */}
-              <TabPanel value={activeTab} index={2}>
+              <TabPanel value={activeTab} index={3}>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
                     <Switch

@@ -17,6 +17,18 @@ export interface ArticleSummary {
   published_at?: string;
   created_at: string;
   updated_at: string;
+  
+  // Поля для локализации
+  title_ru?: string;
+  content_ru?: string;
+  excerpt_ru?: string;
+  meta_title_ru?: string;
+  meta_description_ru?: string;
+  title_uk?: string;
+  content_uk?: string;
+  excerpt_uk?: string;
+  meta_title_uk?: string;
+  meta_description_uk?: string;
 }
 
 export interface Article {
@@ -36,14 +48,24 @@ export interface Article {
   author?: {
     id: number;
     name: string;
-    email: string;
+    email?: string;
   };
   published_at?: string;
   created_at: string;
   updated_at: string;
-  meta_title?: string;
-  meta_description?: string;
-  allow_comments?: boolean;
+  allow_comments: boolean;
+  
+  // Поля для локализации
+  title_ru?: string;
+  content_ru?: string;
+  excerpt_ru?: string;
+  meta_title_ru?: string;
+  meta_description_ru?: string;
+  title_uk?: string;
+  content_uk?: string;
+  excerpt_uk?: string;
+  meta_title_uk?: string;
+  meta_description_uk?: string;
 }
 
 export interface ArticleFormData {
@@ -51,37 +73,47 @@ export interface ArticleFormData {
   content: string;
   excerpt: string;
   category: string;
-  status: string;
+  status: 'draft' | 'published';
   featured: boolean;
-  meta_title: string;
-  meta_description: string;
   featured_image_url: string;
-  allow_comments: boolean;
   tags: string[];
+  allow_comments: boolean;
+  
+  // Поля для локализации
+  title_ru?: string;
+  content_ru?: string;
+  excerpt_ru?: string;
+  meta_title_ru?: string;
+  meta_description_ru?: string;
+  title_uk?: string;
+  content_uk?: string;
+  excerpt_uk?: string;
+  meta_title_uk?: string;
+  meta_description_uk?: string;
 }
 
 export interface CreateArticleRequest {
   title: string;
   content: string;
-  excerpt: string;
+  excerpt?: string;
   category: string;
-  status: string;
-  featured: boolean;
-  meta_title?: string;
-  meta_description?: string;
-  featured_image_url?: string;
-  allow_comments: boolean;
-  tags?: string[];
-}
-
-export interface ArticlesFilters {
-  category?: string;
+  status: 'draft' | 'published';
   featured?: boolean;
-  search?: string;
-  page?: number;
-  per_page?: number;
-  status?: string;
-  published?: boolean;
+  featured_image_url?: string;
+  tags?: string[];
+  allow_comments?: boolean;
+  
+  // Поля для локализации
+  title_ru?: string;
+  content_ru?: string;
+  excerpt_ru?: string;
+  meta_title_ru?: string;
+  meta_description_ru?: string;
+  title_uk?: string;
+  content_uk?: string;
+  excerpt_uk?: string;
+  meta_title_uk?: string;
+  meta_description_uk?: string;
 }
 
 export interface ArticleCategory {
@@ -90,18 +122,48 @@ export interface ArticleCategory {
   icon: string;
 }
 
-export const ARTICLE_STATUS_LABELS = {
-  draft: 'Черновик',
-  published: 'Опубликовано',
-  archived: 'Архив'
-} as const;
+export interface ArticlesFilters {
+  category?: string;
+  status?: string;
+  featured?: boolean;
+  query?: string;
+  page?: number;
+  per_page?: number;
+}
 
+export interface ArticlesResponse {
+  data: Article[];
+  meta: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_count: number;
+  };
+}
+
+// Константы статусов
 export const ARTICLE_STATUSES = {
   DRAFT: 'draft',
   PUBLISHED: 'published',
   ARCHIVED: 'archived'
 } as const;
 
+export const ARTICLE_STATUS_LABELS = {
+  draft: 'Черновик',
+  published: 'Опубликовано',
+  archived: 'Архив'
+} as const;
+
+// Функция для получения локализованных категорий
+export const getLocalizedArticleCategories = (t: any): ArticleCategory[] => [
+  { key: 'selection', name: t('forms.articles.form.categories.selection'), icon: '🔍' },
+  { key: 'maintenance', name: t('forms.articles.form.categories.maintenance'), icon: '🔧' },
+  { key: 'seasonal', name: t('forms.articles.form.categories.seasonal'), icon: '🌦️' },
+  { key: 'safety', name: t('forms.articles.form.categories.safety'), icon: '🛡️' },
+  { key: 'tips', name: t('forms.articles.form.categories.tips'), icon: '💡' }
+];
+
+// Устаревшая константа - оставляем для совместимости
 export const ARTICLE_CATEGORIES: ArticleCategory[] = [
   { key: 'selection', name: 'Выбор шин', icon: '🔍' },
   { key: 'maintenance', name: 'Обслуживание', icon: '🔧' },

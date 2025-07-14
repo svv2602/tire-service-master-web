@@ -3,6 +3,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { Box, useTheme, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Grid, FormControl, InputLabel, Select, MenuItem, Typography, Checkbox, FormControlLabel, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
@@ -242,6 +243,7 @@ const StyledEditorContainer = styled(Box, {
 
 // Компонент модального окна для ссылок
 const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
@@ -268,16 +270,16 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Ссылка</DialogTitle>
+      <DialogTitle>{t('forms.richTextEditor.modals.link.title')}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Текст ссылки"
+              label={t('forms.richTextEditor.modals.link.fields.linkText')}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Текст ссылки"
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.linkText')}
               size="small"
             />
           </Grid>
@@ -285,10 +287,10 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Адрес ссылки"
+              label={t('forms.richTextEditor.modals.link.fields.linkUrl')}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.linkUrl')}
               size="small"
               required
             />
@@ -296,16 +298,17 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
           
           <Grid item xs={12}>
             <Typography variant="subtitle2" sx={{ mt: 1, mb: 1, fontSize: '0.9rem', color: 'text.secondary' }}>
-              Дополнительные параметры
+              {t('forms.richTextEditor.modals.link.additionalParams')}
             </Typography>
           </Grid>
           
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Всплывающая подсказка"
+              label={t('forms.richTextEditor.modals.link.fields.linkTitle')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.linkTitle')}
               size="small"
             />
           </Grid>
@@ -313,25 +316,26 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="CSS класс"
+              label={t('forms.richTextEditor.modals.link.fields.cssClass')}
               value={cssClass}
               onChange={(e) => setCssClass(e.target.value)}
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.cssClass')}
               size="small"
             />
           </Grid>
           
           <Grid item xs={12} md={6}>
             <FormControl fullWidth size="small">
-              <InputLabel>Открыть ссылку в</InputLabel>
+              <InputLabel>{t('forms.richTextEditor.modals.link.openLinkIn')}</InputLabel>
               <Select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                label="Открыть ссылку в"
+                label={t('forms.richTextEditor.modals.link.openLinkIn')}
               >
-                <MenuItem value="_self">этом окне (_self)</MenuItem>
-                <MenuItem value="_blank">новом окне (_blank)</MenuItem>
-                <MenuItem value="_parent">родительском окне (_parent)</MenuItem>
-                <MenuItem value="_top">верхнем окне (_top)</MenuItem>
+                <MenuItem value="_self">{t('forms.richTextEditor.modals.link.targetOptions.self')}</MenuItem>
+                <MenuItem value="_blank">{t('forms.richTextEditor.modals.link.targetOptions.blank')}</MenuItem>
+                <MenuItem value="_parent">{t('forms.richTextEditor.modals.link.targetOptions.parent')}</MenuItem>
+                <MenuItem value="_top">{t('forms.richTextEditor.modals.link.targetOptions.top')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -339,9 +343,10 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Атрибут Rel"
+              label={t('forms.richTextEditor.modals.link.fields.relAttribute')}
               value={rel}
               onChange={(e) => setRel(e.target.value)}
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.relAttribute')}
               size="small"
             />
           </Grid>
@@ -349,9 +354,10 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
           <Grid item xs={12} md={6}>
             <TextField
               fullWidth
-              label="Идентификатор (id)"
+              label={t('forms.richTextEditor.modals.link.fields.identifier')}
               value={id}
               onChange={(e) => setId(e.target.value)}
+              placeholder={t('forms.richTextEditor.modals.link.placeholders.identifier')}
               size="small"
             />
           </Grid>
@@ -367,7 +373,7 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
               }
               label={
                 <Typography variant="body2">
-                  Не учитывать ссылку поисковиками (nofollow, noindex)
+                  {t('forms.richTextEditor.modals.link.noFollow')}
                 </Typography>
               }
             />
@@ -375,9 +381,9 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} size="small">Отменить</Button>
+        <Button onClick={onClose} size="small">{t('forms.richTextEditor.modals.link.buttons.cancel')}</Button>
         <Button onClick={handleInsert} variant="contained" color="primary" size="small">
-          Сохранить
+          {t('forms.richTextEditor.modals.link.buttons.insert')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -386,6 +392,7 @@ const LinkDialog: React.FC<LinkDialogProps> = ({ open, onClose, onInsert }) => {
 
 // Компоненты модальных окон для расширенных функций
 const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) => {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [alt, setAlt] = useState('');
   const [title, setTitle] = useState('');
@@ -410,91 +417,91 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) =>
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Вставить изображение</DialogTitle>
+      <DialogTitle>{t('forms.richTextEditor.modals.image.title')}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="URL изображения"
+              label={t('forms.richTextEditor.modals.image.fields.imageUrl')}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
+              placeholder={t('forms.richTextEditor.modals.image.placeholders.imageUrl')}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Альтернативный текст (alt)"
+              label={t('forms.richTextEditor.modals.image.fields.altText')}
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
-              placeholder="Описание изображения для SEO и доступности"
-              helperText="Важно для SEO и доступности"
+              placeholder={t('forms.richTextEditor.modals.image.placeholders.altText')}
+              helperText={t('forms.richTextEditor.modals.image.helperTexts.altText')}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Заголовок (title)"
+              label={t('forms.richTextEditor.modals.image.fields.title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Заголовок при наведении"
-              helperText="Отображается при наведении на изображение"
+              placeholder={t('forms.richTextEditor.modals.image.placeholders.title')}
+              helperText={t('forms.richTextEditor.modals.image.helperTexts.title')}
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
               fullWidth
-              label="Ширина (px или %)"
+              label={t('forms.richTextEditor.modals.image.fields.width')}
               value={width}
               onChange={(e) => setWidth(e.target.value)}
-              placeholder="например: 500px или 100%"
+              placeholder={t('forms.richTextEditor.modals.image.placeholders.width')}
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
               fullWidth
-              label="Высота (px или auto)"
+              label={t('forms.richTextEditor.modals.image.fields.height')}
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              placeholder="например: 300px или auto"
+              placeholder={t('forms.richTextEditor.modals.image.placeholders.height')}
             />
           </Grid>
           <Grid item xs={6}>
             <FormControl fullWidth>
-              <InputLabel>Выравнивание</InputLabel>
+              <InputLabel>{t('forms.richTextEditor.modals.image.fields.alignment')}</InputLabel>
               <Select
                 value={alignment}
                 onChange={(e) => setAlignment(e.target.value)}
-                label="Выравнивание"
+                label={t('forms.richTextEditor.modals.image.fields.alignment')}
               >
-                <MenuItem value="">Нет</MenuItem>
-                <MenuItem value="left">По левому краю</MenuItem>
-                <MenuItem value="center">По центру</MenuItem>
-                <MenuItem value="right">По правому краю</MenuItem>
+                <MenuItem value="">{t('forms.richTextEditor.modals.image.alignmentOptions.none')}</MenuItem>
+                <MenuItem value="left">{t('forms.richTextEditor.modals.image.alignmentOptions.left')}</MenuItem>
+                <MenuItem value="center">{t('forms.richTextEditor.modals.image.alignmentOptions.center')}</MenuItem>
+                <MenuItem value="right">{t('forms.richTextEditor.modals.image.alignmentOptions.right')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           <Grid item xs={6}>
             <FormControl fullWidth>
-              <InputLabel>Обтекание</InputLabel>
+              <InputLabel>{t('forms.richTextEditor.modals.image.fields.float')}</InputLabel>
               <Select
                 value={float}
                 onChange={(e) => setFloat(e.target.value)}
-                label="Обтекание"
+                label={t('forms.richTextEditor.modals.image.fields.float')}
               >
-                <MenuItem value="">Нет</MenuItem>
-                <MenuItem value="left">Слева</MenuItem>
-                <MenuItem value="right">Справа</MenuItem>
+                <MenuItem value="">{t('forms.richTextEditor.modals.image.floatOptions.none')}</MenuItem>
+                <MenuItem value="left">{t('forms.richTextEditor.modals.image.floatOptions.left')}</MenuItem>
+                <MenuItem value="right">{t('forms.richTextEditor.modals.image.floatOptions.right')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={onClose}>{t('forms.richTextEditor.modals.image.buttons.cancel')}</Button>
         <Button onClick={handleInsert} variant="contained" color="primary">
-          Вставить
+          {t('forms.richTextEditor.modals.image.buttons.insert')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -502,6 +509,7 @@ const ImageDialog: React.FC<ImageDialogProps> = ({ open, onClose, onInsert }) =>
 };
 
 const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) => {
+  const { t } = useTranslation();
   const [rows, setRows] = useState(2);
   const [cols, setCols] = useState(2);
 
@@ -514,14 +522,14 @@ const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) =>
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Вставить таблицу</DialogTitle>
+      <DialogTitle>{t('forms.richTextEditor.modals.table.title')}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={6}>
             <TextField
               fullWidth
               type="number"
-              label="Строки"
+              label={t('forms.richTextEditor.modals.table.fields.rows')}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
               inputProps={{ min: 1, max: 10 }}
@@ -531,7 +539,7 @@ const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) =>
             <TextField
               fullWidth
               type="number"
-              label="Столбцы"
+              label={t('forms.richTextEditor.modals.table.fields.columns')}
               value={cols}
               onChange={(e) => setCols(Number(e.target.value))}
               inputProps={{ min: 1, max: 10 }}
@@ -540,9 +548,9 @@ const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) =>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={onClose}>{t('forms.richTextEditor.modals.table.buttons.cancel')}</Button>
         <Button onClick={handleInsert} variant="contained" color="primary">
-          Вставить
+          {t('forms.richTextEditor.modals.table.buttons.insert')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -550,6 +558,7 @@ const TableDialog: React.FC<TableDialogProps> = ({ open, onClose, onInsert }) =>
 };
 
 const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) => {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [width, setWidth] = useState('640');
@@ -570,68 +579,68 @@ const VideoDialog: React.FC<VideoDialogProps> = ({ open, onClose, onInsert }) =>
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Вставить видео</DialogTitle>
+      <DialogTitle>{t('forms.richTextEditor.modals.video.title')}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="URL видео"
+              label={t('forms.richTextEditor.modals.video.fields.videoUrl')}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX"
-              helperText="Поддерживаются ссылки YouTube, Vimeo и другие"
+              placeholder={t('forms.richTextEditor.modals.video.placeholders.videoUrl')}
+              helperText={t('forms.richTextEditor.modals.video.helperTexts.videoUrl')}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Заголовок (title)"
+              label={t('forms.richTextEditor.modals.video.fields.title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Заголовок видео для SEO"
-              helperText="Важно для SEO и доступности"
+              placeholder={t('forms.richTextEditor.modals.video.placeholders.title')}
+              helperText={t('forms.richTextEditor.modals.video.helperTexts.title')}
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
               fullWidth
-              label="Ширина (px или %)"
+              label={t('forms.richTextEditor.modals.video.fields.width')}
               value={width}
               onChange={(e) => setWidth(e.target.value)}
-              placeholder="например: 640"
+              placeholder={t('forms.richTextEditor.modals.video.placeholders.width')}
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
               fullWidth
-              label="Высота (px)"
+              label={t('forms.richTextEditor.modals.video.fields.height')}
               value={height}
               onChange={(e) => setHeight(e.target.value)}
-              placeholder="например: 360"
+              placeholder={t('forms.richTextEditor.modals.video.placeholders.height')}
             />
           </Grid>
           <Grid item xs={6}>
             <FormControl fullWidth>
-              <InputLabel>Выравнивание</InputLabel>
+              <InputLabel>{t('forms.richTextEditor.modals.video.fields.alignment')}</InputLabel>
               <Select
                 value={alignment}
                 onChange={(e) => setAlignment(e.target.value)}
-                label="Выравнивание"
+                label={t('forms.richTextEditor.modals.video.fields.alignment')}
               >
-                <MenuItem value="">Нет</MenuItem>
-                <MenuItem value="left">По левому краю</MenuItem>
-                <MenuItem value="center">По центру</MenuItem>
-                <MenuItem value="right">По правому краю</MenuItem>
+                <MenuItem value="">{t('forms.richTextEditor.modals.video.alignmentOptions.none')}</MenuItem>
+                <MenuItem value="left">{t('forms.richTextEditor.modals.video.alignmentOptions.left')}</MenuItem>
+                <MenuItem value="center">{t('forms.richTextEditor.modals.video.alignmentOptions.center')}</MenuItem>
+                <MenuItem value="right">{t('forms.richTextEditor.modals.video.alignmentOptions.right')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Отмена</Button>
+        <Button onClick={onClose}>{t('forms.richTextEditor.modals.video.buttons.cancel')}</Button>
         <Button onClick={handleInsert} variant="contained" color="primary">
-          Вставить
+          {t('forms.richTextEditor.modals.video.buttons.insert')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -645,7 +654,8 @@ const RichTextEditor = ({
   height = 400,
   error = false,
   disabled = false,
-}: RichTextEditorProps): React.ReactElement => {
+  }: RichTextEditorProps): React.ReactElement => {
+  const { t } = useTranslation();
   const theme = useTheme();
   
   // Состояние для модальных окон
@@ -1119,19 +1129,19 @@ const RichTextEditor = ({
             <ToggleButton value="visual" aria-label="визуальный режим">
               <VisibilityIcon fontSize="small" />
               <Typography variant="caption" sx={{ ml: 0.5 }}>
-                Визуальный редактор
+                {t('forms.richTextEditor.toolbar.modes.visual')}
               </Typography>
             </ToggleButton>
             <ToggleButton value="html" aria-label="HTML режим">
               <CodeIcon fontSize="small" />
               <Typography variant="caption" sx={{ ml: 0.5 }}>
-                HTML
+                {t('forms.richTextEditor.toolbar.modes.html')}
               </Typography>
             </ToggleButton>
             <ToggleButton value="text" aria-label="текстовый режим">
               <TextFormatIcon fontSize="small" />
               <Typography variant="caption" sx={{ ml: 0.5 }}>
-                Текст
+                {t('forms.richTextEditor.toolbar.modes.text')}
               </Typography>
             </ToggleButton>
           </ToggleButtonGroup>
@@ -1199,7 +1209,7 @@ const RichTextEditor = ({
                 height: '36px'
               }}>
                 <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                  HTML-редактор
+                  {t('forms.richTextEditor.toolbar.labels.htmlEditor')}
                 </Typography>
                 <Box>
                   <Button 
@@ -1239,14 +1249,14 @@ const RichTextEditor = ({
                       }
                     }}
                   >
-                    Предпросмотр
+                    {t('forms.richTextEditor.toolbar.buttons.preview')}
                   </Button>
                 </Box>
               </Box>
               <textarea 
                 value={htmlContent}
                 onChange={(e) => setHtmlContent(e.target.value)}
-                placeholder="Введите HTML код..."
+                placeholder={t('forms.richTextEditor.toolbar.placeholders.htmlCode')}
                 style={{
                   width: '100%',
                   height: 'calc(100% - 36px)',
@@ -1283,13 +1293,13 @@ const RichTextEditor = ({
                 height: '36px'
               }}>
                 <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                  Текстовый редактор
+                  {t('forms.richTextEditor.toolbar.labels.textEditor')}
                 </Typography>
               </Box>
               <textarea 
                 value={textContent}
                 onChange={(e) => setTextContent(e.target.value)}
-                placeholder="Введите простой текст..."
+                placeholder={t('forms.richTextEditor.toolbar.placeholders.textContent')}
                 style={{
                   width: '100%',
                   height: 'calc(100% - 36px)',

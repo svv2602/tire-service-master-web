@@ -38,6 +38,7 @@ import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles } from '../../styles/components';
 import { getThemeColors } from '../../styles/theme';
+import { useLocalizedArticleTitle, useLocalizedArticleExcerpt } from '../../utils/articleLocalizationHelpers';
 
 const ArticleViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,6 +46,10 @@ const ArticleViewPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const colors = getThemeColors(theme);
+  
+  // Хуки для локализации
+  const localizedTitle = useLocalizedArticleTitle();
+  const localizedExcerpt = useLocalizedArticleExcerpt();
   
   const { article, loading, error } = useArticle(id || null);
   const { articles: relatedArticles } = useRelatedArticles(article?.id || null);
@@ -191,18 +196,18 @@ const ArticleViewPage: React.FC = () => {
                   lineHeight: 1.2,
                   mb: 2
                 }}>
-                  {article.title}
+                  {localizedTitle(article)}
                 </Typography>
 
                 {/* Описание */}
-                {article.excerpt && (
+                {localizedExcerpt(article) && (
                   <Typography variant="h6" sx={{
                     color: colors.textSecondary,
                     fontWeight: 400,
                     lineHeight: 1.5,
                     mb: 3
                   }}>
-                    {article.excerpt}
+                    {localizedExcerpt(article)}
                   </Typography>
                 )}
 
@@ -410,13 +415,13 @@ const ArticleViewPage: React.FC = () => {
                             component="img"
                             height="100"
                             image={relatedArticle.image_url}
-                            alt={relatedArticle.title}
+                            alt={localizedTitle(relatedArticle)}
                             sx={{ objectFit: 'cover' }}
                           />
                         )}
                         <CardContent sx={{ p: 2 }}>
                           <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                            {relatedArticle.title}
+                            {localizedTitle(relatedArticle)}
                           </Typography>
                           {relatedArticle.excerpt && (
                             <Typography

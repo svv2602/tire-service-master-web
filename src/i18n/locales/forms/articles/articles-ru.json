@@ -81,18 +81,26 @@
         "backButton": "Назад",
         "tabs": {
           "basic": "Основное",
+          "russian": "Русский",
+          "ukrainian": "Украинский",
           "seoMedia": "SEO и медиа",
           "settings": "Настройки"
         },
         "fields": {
           "title": "Заголовок статьи *",
+          "titleRu": "Заголовок (RU) *",
+          "titleUk": "Заголовок (UK) *",
           "titlePlaceholder": "Введите заголовок статьи",
           "category": "Категория",
           "status": "Статус",
           "excerpt": "Краткое описание *",
+          "excerptRu": "Краткое описание (RU) *",
+          "excerptUk": "Краткое описание (UK) *",
           "excerptPlaceholder": "Напишите краткое описание статьи",
           "excerptMaxLength": "160 символов",
           "content": "Содержимое статьи *",
+          "contentRu": "Содержимое (RU) *",
+          "contentUk": "Содержимое (UK) *",
           "contentPlaceholder": "Напишите полный текст статьи...",
           "tags": "Теги",
           "addTag": "Добавить тег",
@@ -101,9 +109,13 @@
           "featuredImage": "URL изображения",
           "featuredImagePlaceholder": "https://example.com/image.jpg",
           "metaTitle": "SEO заголовок",
+          "metaTitleRu": "SEO заголовок (RU)",
+          "metaTitleUk": "SEO заголовок (UK)",
           "metaTitlePlaceholder": "SEO заголовок для поисковых систем",
           "metaTitleMaxLength": "60 символов",
           "metaDescription": "SEO описание",
+          "metaDescriptionRu": "SEO описание (RU)",
+          "metaDescriptionUk": "SEO описание (UK)",
           "metaDescriptionPlaceholder": "SEO описание для поисковых систем",
           "metaDescriptionMaxLength": "160 символов",
           "featured": "Рекомендуемая статья",
@@ -117,6 +129,13 @@
         "statusOptions": {
           "draft": "Черновик",
           "published": "Опубликовано"
+        },
+        "categories": {
+          "selection": "Выбор шин",
+          "maintenance": "Обслуживание",
+          "seasonal": "Сезонность",
+          "safety": "Безопасность",
+          "tips": "Советы"
         },
         "messages": {
           "publishSuccess": "Статья опубликована!",
@@ -276,6 +295,141 @@
         "bookingOrServicePoint": "Бронирование или сервисная точка",
         "rating": "Оценка",
         "reviewText": "Текст отзыва"
+      }
+    },
+    "richTextEditor": {
+      "modals": {
+        "link": {
+          "title": "Ссылка",
+          "fields": {
+            "linkText": "Текст ссылки",
+            "linkUrl": "Адрес ссылки",
+            "linkTitle": "Всплывающая подсказка",
+            "cssClass": "CSS класс",
+            "relAttribute": "Атрибут Rel",
+            "identifier": "Идентификатор (id)"
+          },
+          "placeholders": {
+            "linkText": "Текст ссылки",
+            "linkUrl": "https://example.com",
+            "linkTitle": "Всплывающая подсказка",
+            "cssClass": "CSS класс",
+            "relAttribute": "Атрибут Rel",
+            "identifier": "Идентификатор (id)"
+          },
+          "additionalParams": "Дополнительные параметры",
+          "openLinkIn": "Открыть ссылку в",
+          "targetOptions": {
+            "self": "этом окне (_self)",
+            "blank": "новом окне (_blank)",
+            "parent": "родительском окне (_parent)",
+            "top": "верхнем окне (_top)"
+          },
+          "noFollow": "Не учитывать ссылку поисковиками (nofollow, noindex)",
+          "buttons": {
+            "cancel": "Отмена",
+            "insert": "Вставить"
+          }
+        },
+        "image": {
+          "title": "Вставить изображение",
+          "fields": {
+            "imageUrl": "URL изображения",
+            "altText": "Альтернативный текст (alt)",
+            "title": "Заголовок (title)",
+            "width": "Ширина (px или %)",
+            "height": "Высота (px или auto)",
+            "alignment": "Выравнивание",
+            "float": "Обтекание"
+          },
+          "placeholders": {
+            "imageUrl": "https://example.com/image.jpg",
+            "altText": "Описание изображения для SEO и доступности",
+            "title": "Заголовок при наведении",
+            "width": "например: 500px или 100%",
+            "height": "например: 300px или auto"
+          },
+          "helperTexts": {
+            "altText": "Важно для SEO и доступности",
+            "title": "Отображается при наведении на изображение"
+          },
+          "alignmentOptions": {
+            "none": "Нет",
+            "left": "По левому краю",
+            "center": "По центру",
+            "right": "По правому краю"
+          },
+          "floatOptions": {
+            "none": "Нет",
+            "left": "Слева",
+            "right": "Справа"
+          },
+          "buttons": {
+            "cancel": "Отмена",
+            "insert": "Вставить"
+          }
+        },
+        "video": {
+          "title": "Вставить видео",
+          "fields": {
+            "videoUrl": "URL видео",
+            "title": "Заголовок (title)",
+            "width": "Ширина (px или %)",
+            "height": "Высота (px)",
+            "alignment": "Выравнивание"
+          },
+          "placeholders": {
+            "videoUrl": "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+            "title": "Заголовок видео для SEO",
+            "width": "например: 640",
+            "height": "например: 360"
+          },
+          "helperTexts": {
+            "videoUrl": "Поддерживаются ссылки YouTube, Vimeo и другие",
+            "title": "Важно для SEO и доступности"
+          },
+          "alignmentOptions": {
+            "none": "Нет",
+            "left": "По левому краю",
+            "center": "По центру",
+            "right": "По правому краю"
+          },
+          "buttons": {
+            "cancel": "Отмена",
+            "insert": "Вставить"
+          }
+        },
+        "table": {
+          "title": "Вставить таблицу",
+          "fields": {
+            "rows": "Строки",
+            "columns": "Столбцы"
+          },
+          "buttons": {
+            "cancel": "Отмена",
+            "insert": "Вставить"
+          }
+        }
+      },
+      "toolbar": {
+        "modes": {
+          "visual": "Визуальный редактор",
+          "html": "HTML",
+          "text": "Текст"
+        },
+        "buttons": {
+          "undo": "Отменить",
+          "redo": "Повторить",
+          "preview": "Предпросмотр"
+        },
+        "labels": {
+          "htmlEditor": "HTML-редактор",
+          "textEditor": "Текстовый редактор"
+        },
+        "placeholders": {
+          "htmlCode": "Введите HTML код...",
+          "textContent": "Введите текст..."
+        }
       }
     }
   }
