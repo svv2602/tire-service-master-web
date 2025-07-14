@@ -12,13 +12,20 @@ import config from '../../config';
  */
 const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user, loading, isInitialized, isAuthenticated, accessToken } = useSelector((state: RootState) => state.auth);
+  const { user, loading, isInitialized, isAuthenticated, accessToken, hasLoggedOut } = useSelector((state: RootState) => state.auth);
   const initializationStarted = useRef(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
       if (!initializationStarted.current && !isInitialized) {
         initializationStarted.current = true;
+
+        // Если пользователь явно вышел из системы, не пытаемся восстановить сессию
+        if (hasLoggedOut) {
+          console.log('AuthInitializer: Пользователь явно вышел из системы, пропускаем восстановление сессии');
+          dispatch(setInitialized());
+          return;
+        }
 
         // Если нет accessToken и пользователь не залогинен, пробуем восстановить сессию
         if (!accessToken && !user) {
@@ -89,7 +96,7 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
       }
     };
     initializeAuth();
-  }, [dispatch, user, loading, isInitialized, isAuthenticated, accessToken]);
+  }, [dispatch, user, loading, isInitialized, isAuthenticated, accessToken, hasLoggedOut]);
 
   if (!isInitialized || loading) {
     return <LoadingScreen />;

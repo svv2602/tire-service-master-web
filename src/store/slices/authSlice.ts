@@ -21,6 +21,7 @@ const initialState: AuthState = {
   loading: false,
   error: null,
   isInitialized: false,
+  hasLoggedOut: localStorage.getItem('hasLoggedOut') === 'true', // Читаем из localStorage
 };
 
 // Функция для преобразования строки роли в enum UserRole
@@ -51,6 +52,8 @@ const authSlice = createSlice({
       state.user = user;
       state.isAuthenticated = true;
       state.isInitialized = true;
+      state.hasLoggedOut = false; // Сбрасываем флаг выхода при входе
+      localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
     },
     logout: (state) => {
       state.accessToken = null;
@@ -59,9 +62,15 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
+      state.hasLoggedOut = true; // Устанавливаем флаг явного выхода
+      localStorage.setItem('hasLoggedOut', 'true'); // Сохраняем в localStorage
     },
     setInitialized: (state) => {
       state.isInitialized = true;
+    },
+    clearLogoutFlag: (state) => {
+      state.hasLoggedOut = false; // Новый action для сброса флага
+      localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
     },
     updateAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
@@ -88,6 +97,8 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.error = null;
         state.isInitialized = true;
+        state.hasLoggedOut = false; // Сбрасываем флаг выхода при входе
+        localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
         
         console.log('Auth: login.fulfilled - state updated:', {
           isAuthenticated: state.isAuthenticated,
@@ -111,6 +122,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
         state.isInitialized = true;
+        state.hasLoggedOut = true; // Устанавливаем флаг явного выхода
+        localStorage.setItem('hasLoggedOut', 'true'); // Сохраняем в localStorage
       })
       
       // Обработка refreshAuthTokens
@@ -222,7 +235,12 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
     
     console.log('DEBUG: Logout successful');
     return;
-  } catch (error) {
+  } catch (error: any) {
+    // Игнорируем ошибки 401 - пользователь уже не авторизован
+    if (error.response?.status === 401) {
+      console.log('DEBUG: User already logged out (401), proceeding with local logout');
+      return;
+    }
     console.error('Logout error:', error);
     return;
   }
@@ -279,7 +297,7 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
-export const { setCredentials, logout, setInitialized, updateAccessToken } = authSlice.actions;
+export const { setCredentials, logout, setInitialized, updateAccessToken, clearLogoutFlag } = authSlice.actions;
 
 // Селектор для получения текущего пользователя
 export const selectCurrentUser = (state: { auth: AuthState }) => state.auth.user;

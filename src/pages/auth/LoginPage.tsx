@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
+import { clearLogoutFlag } from '../../store/slices/authSlice';
 import { useTheme } from '@mui/material';
 import {
   Container
@@ -15,12 +16,18 @@ import UniversalLoginForm from '../../components/auth/UniversalLoginForm';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isNavigatingRef = useRef(false);
   
   const theme = useTheme();
   const containerStyles = getContainerStyles(theme);
   
+  // Сбрасываем флаг выхода при загрузке страницы входа
+  useEffect(() => {
+    dispatch(clearLogoutFlag());
+  }, [dispatch]);
+
   // Отключаем форму, если пользователь уже аутентифицирован  
   useEffect(() => {
     if (isAuthenticated && !isNavigatingRef.current) {

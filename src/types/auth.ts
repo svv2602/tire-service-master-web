@@ -58,4 +58,5 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
   isInitialized: boolean;
+  hasLoggedOut: boolean; // Флаг для отслеживания явного выхода пользователя
 } 
