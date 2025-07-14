@@ -46,6 +46,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     isAdminPanel: false,
     onLogout: async () => {
       await dispatch(logoutUser());
+      navigate('/client');
     },
     t: t as any, // Временный workaround для типов
   });
