@@ -550,7 +550,9 @@ export interface ServicePointCardProps {
   categories?: Array<{
     id: number;
     name: string;
+    localized_name?: string;
     description?: string;
+    localized_description?: string;
     services_count?: number;
   }>;
   isLoadingCategories?: boolean;
@@ -772,8 +774,8 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
                         <BuildIcon sx={{ fontSize: '1rem', color: colors.textSecondary }} />
                       </ListItemIcon>
                       <ListItemText
-                        primary={category.name}
-                        secondary={`${category.description || t('components:servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('components:servicePointCard.services')}`}
+                        primary={category.localized_name || category.name}
+                        secondary={`${category.localized_description || category.description || t('components:servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('components:servicePointCard.services')}`}
                         primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
                         secondaryTypographyProps={{ variant: 'caption' }}
                       />

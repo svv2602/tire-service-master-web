@@ -118,8 +118,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Загружаем список всех доступных услуг
-  const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({});
+  // Загружаем список всех доступных услуг с учетом текущего языка
+  const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   
   // Мемоизируем availableServices для оптимизации
   const availableServices = useMemo(() => {
@@ -150,7 +152,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       }
     });
 
-    return Array.from(categoriesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(categoriesMap.values()).sort((a, b) => (a.localized_name || a.name).localeCompare(b.localized_name || b.name));
   }, [formik.values.service_posts, availableServices]);
 
   // Группируем услуги по категориям
@@ -160,7 +162,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
     categoriesFromPosts.forEach(category => {
       grouped[category.id] = availableServices.filter(service => 
         service.category?.id === category.id &&
-        (!searchQuery || service.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        (!searchQuery || 
+          (service.localized_name || service.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (service.localized_description || service.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+        )
       );
     });
     
@@ -342,7 +347,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                     <CategoryIcon fontSize="small" />
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 'inherit' }}>
-                        {category.name}
+                        {category.localized_name || category.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {selectedCount} {t('forms.servicePoint.services.selectedFromAvailable', { count: availableCount })}
@@ -371,11 +376,11 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
               {/* Заголовок категории */}
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
-                  {category.name}
+                  {category.localized_name || category.name}
                 </Typography>
-                {category.description && (
+                {(category.localized_description || category.description) && (
                   <Typography variant="body2" color="text.secondary">
-                    {category.description}
+                    {category.localized_description || category.description}
                   </Typography>
                 )}
               </Box>
@@ -397,7 +402,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                             <CardContent>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                 <Typography variant="h6" sx={{ color: 'primary.main' }}>
-                                  {serviceInfo?.name || `${t('forms.servicePoint.services.service')} #${service.service_id}`}
+                                  {serviceInfo?.localized_name || serviceInfo?.name || `${t('forms.servicePoint.services.service')} #${service.service_id}`}
                                 </Typography>
                                 <IconButton
                                   onClick={() => removeService(globalIndex)}
@@ -479,7 +484,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                             <CardContent>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                 <Typography variant="h6" sx={{ flex: 1 }}>
-                                  {service.name}
+                                  {service.localized_name || service.name}
                                 </Typography>
                                 <IconButton
                                   onClick={() => addServiceById(service.id)}
@@ -491,9 +496,9 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                                 </IconButton>
                               </Box>
 
-                              {service.description && (
+                              {(service.localized_description || service.description) && (
                                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                  {service.description}
+                                  {service.localized_description || service.description}
                                 </Typography>
                               )}
 
@@ -523,8 +528,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                 ) : (
                   <Alert severity="info">
                     {searchQuery 
-                      ? t('forms.servicePoint.services.noServicesFound', { category: category.name, query: searchQuery })
-                      : t('forms.servicePoint.services.noServicesAvailable', { category: category.name })
+                      ? t('forms.servicePoint.services.noServicesFound', { category: category.localized_name || category.name, query: searchQuery })
+                      : t('forms.servicePoint.services.noServicesAvailable', { category: category.localized_name || category.name })
                     }
                   </Alert>
                 )}

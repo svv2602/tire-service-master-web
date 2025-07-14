@@ -75,7 +75,10 @@ const ServicePointCardWrapper: React.FC<{
   onViewDetails: (servicePointData: ServicePointData) => void;
 }> = ({ servicePoint, isSelected, onSelect, onViewDetails }) => {
   // Загружаем полные данные сервисной точки включая фотографии и service_posts
-  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery(servicePoint.id.toString());
+  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery({
+    id: servicePoint.id.toString(),
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   
   // Преобразуем данные в нужный формат
   const servicePointData = convertServicePointToServicePointData(fullServicePointData || servicePoint);
@@ -86,12 +89,15 @@ const ServicePointCardWrapper: React.FC<{
     
     const uniqueCategories = new Map();
     fullServicePointData.service_posts.forEach(post => {
-      if (post.service_category && !uniqueCategories.has(post.service_category.id)) {
-        uniqueCategories.set(post.service_category.id, {
-          id: post.service_category.id,
-          name: post.service_category.name,
-          description: post.service_category.description,
-          services_count: post.service_category.services_count || 0
+      // Используем service_category_id и category_name из API ответа (как в ClientServicesPage)
+      if (post.service_category_id && post.category_name && !uniqueCategories.has(post.service_category_id)) {
+        uniqueCategories.set(post.service_category_id, {
+          id: post.service_category_id,
+          name: post.category_name,
+          localized_name: post.category_name, // Используем category_name как локализованное название
+          description: post.description || 'Доступные услуги',
+          localized_description: post.description || 'Доступные услуги',
+          services_count: 1 // Пока не знаем точное количество услуг
         });
       }
     });
@@ -146,7 +152,10 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   
   // Загрузка информации о выбранной категории
   const { data: selectedCategory } = useGetServiceCategoryByIdQuery(
-    formData.service_category_id?.toString() || '',
+    { 
+      id: formData.service_category_id?.toString() || '',
+      locale: localStorage.getItem('i18nextLng') || 'ru'
+    },
     { skip: !formData.service_category_id }
   );
   
@@ -249,11 +258,11 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
           sx={{ mb: 3 }}
         >
           <Typography variant="body2">
-            <strong>{t('bookingSteps.cityServicePoint.selectedCategory')}</strong> {selectedCategory.name}
+            <strong>{t('bookingSteps.cityServicePoint.selectedCategory')}</strong> {selectedCategory.localized_name || selectedCategory.name}
           </Typography>
-          {selectedCategory.description && (
+          {(selectedCategory.localized_description || selectedCategory.description) && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {selectedCategory.description}
+              {selectedCategory.localized_description || selectedCategory.description}
             </Typography>
           )}
         </Alert>

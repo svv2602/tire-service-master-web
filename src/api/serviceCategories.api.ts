@@ -58,9 +58,12 @@ export const serviceCategoriesApi = baseApi.injectEndpoints({
           : ['ServiceCategory'],
     }),
 
-    getServiceCategoryById: build.query<ServiceCategoryData, string>({
-      query: (id) => `service_categories/${id}`,
-      providesTags: (_result, _err, id) => [{ type: 'ServiceCategory' as const, id }],
+    getServiceCategoryById: build.query<ServiceCategoryData, { id: string; locale?: string }>({
+      query: ({ id, locale }) => ({
+        url: `service_categories/${id}`,
+        params: locale ? { locale } : {}
+      }),
+      providesTags: (_result, _err, { id }) => [{ type: 'ServiceCategory' as const, id }],
     }),
 
     // Получение категорий услуг по городу
@@ -70,12 +73,11 @@ export const serviceCategoriesApi = baseApi.injectEndpoints({
     }),
 
     // Получение категорий услуг по ID города
-    getServiceCategoriesByCityId: build.query<ServiceCategoriesByCityResponse, number>({
-      query: (cityId) => {
-        // Сначала получаем название города по ID через другой API endpoint
-        // Но для упрощения можно использовать прямой запрос
-        return `service_categories/by_city_id/${cityId}`;
-      },
+    getServiceCategoriesByCityId: build.query<ServiceCategoriesByCityResponse, { cityId: number; locale?: string }>({
+      query: ({ cityId, locale }) => ({
+        url: `service_categories/by_city_id/${cityId}`,
+        params: locale ? { locale } : {}
+      }),
       providesTags: ['ServiceCategory'],
     }),
 

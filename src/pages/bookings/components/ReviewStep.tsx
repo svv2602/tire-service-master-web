@@ -38,7 +38,7 @@ import { getCardStyles } from '../../../styles/components';
 import { useGetCityByIdQuery } from '../../../api/cities.api';
 import { useGetServicePointBasicInfoQuery } from '../../../api/servicePoints.api';
 import { useGetCarTypeByIdQuery } from '../../../api/carTypes.api';
-import { useGetServiceByIdQuery } from '../../../api/services.api';
+// import { useGetServiceByIdQuery } from '../../../api/services.api'; // Не потрібно - використовуємо service.name
 
 interface ReviewStepProps {
   formData: any; // Используем any для совместимости с локальным BookingFormData
@@ -148,11 +148,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   
   // Компонент для отображения услуги
   const ServiceItem: React.FC<{ service: any }> = ({ service }) => {
-    const { data: serviceData, isLoading } = useGetServiceByIdQuery(service.service_id, {
-      skip: !service.service_id
-    });
-
-    const serviceName = serviceData?.name || `${t('bookingSteps.review.services')} #${service.service_id}`;
+    // Используем name из service объекта, который уже содержит правильный перевод
+    const serviceName = service.name || `${t('bookingSteps.review.services')} #${service.service_id}`;
     
     return (
       <ListItem key={service.service_id}>
@@ -160,7 +157,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           <ServiceIcon color="action" />
         </ListItemIcon>
         <ListItemText
-          primary={isLoading ? t('bookingSteps.review.loadingService') : serviceName}
+          primary={serviceName}
           secondary={`${service.price} ${t('bookingSteps.review.currency')} × ${service.quantity} = ${service.price * service.quantity} ${t('bookingSteps.review.currency')}`}
         />
       </ListItem>

@@ -36,7 +36,10 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   const localizedName = useLocalizedName();
   // Загружаем категории услуг по выбранному городу
   const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesByCityIdQuery(
-    formData.city_id!,
+    { 
+      cityId: formData.city_id!,
+      locale: localStorage.getItem('i18nextLng') || 'ru'
+    },
     { skip: !formData.city_id }
   );
 
@@ -205,11 +208,11 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
                   >
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        {category.name}
+                        {category.localized_name || category.name}
                       </Typography>
-                      {category.description && (
+                      {(category.localized_description || category.description) && (
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          {category.description}
+                          {category.localized_description || category.description}
                         </Typography>
                       )}
                       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>

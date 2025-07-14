@@ -81,7 +81,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     isLoading: isLoadingServices, 
     error: servicesError 
   } = useGetServicePointServicesQuery(
-    formData.service_point_id?.toString() || '',
+    {
+      servicePointId: formData.service_point_id?.toString() || '',
+      locale: localStorage.getItem('i18nextLng') || 'ru'
+    },
     {
       skip: !formData.service_point_id,
       // Добавляем параметр category_id для фильтрации по выбранной категории

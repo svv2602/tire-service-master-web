@@ -67,7 +67,9 @@ const FavoritePointCard: React.FC<{
   );
   
   // Загружаем все категории для получения названий
-  const { data: categoriesResponse } = useGetServiceCategoriesQuery({});
+  const { data: categoriesResponse } = useGetServiceCategoriesQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
 
   // Получаем доступные категории на основе активных постов
   const availableCategories = useMemo(() => {
@@ -94,7 +96,9 @@ const FavoritePointCard: React.FC<{
         categoriesMap.set(categoryId, {
           id: categoryId,
           name: categoryInfo.name,
+          localized_name: categoryInfo.localized_name || categoryInfo.name,
           description: categoryInfo.description,
+          localized_description: categoryInfo.localized_description || categoryInfo.description,
           services_count: postsCount // Используем количество постов вместо услуг
         });
       }

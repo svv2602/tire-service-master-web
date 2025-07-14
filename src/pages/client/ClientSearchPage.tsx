@@ -661,7 +661,10 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
   const { 
     data: servicesData, 
     isLoading: servicesLoading 
-  } = useGetServicePointServicesQuery(servicePoint.id.toString(), {
+  } = useGetServicePointServicesQuery({
+    servicePointId: servicePoint.id.toString(),
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  }, {
     skip: !showDetails // Загружаем только при развертывании деталей
   });
 

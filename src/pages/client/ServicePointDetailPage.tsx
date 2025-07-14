@@ -207,7 +207,10 @@ const ServicePointDetailPage: React.FC = () => {
   });
 
   // Загружаем услуги сервисной точки
-  const { data: servicesData, isLoading: isLoadingServicesData } = useGetServicePointServicesQuery(id || '', {
+  const { data: servicesData, isLoading: isLoadingServicesData } = useGetServicePointServicesQuery({
+    servicePointId: id || '',
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  }, {
     skip: !id
   });
 

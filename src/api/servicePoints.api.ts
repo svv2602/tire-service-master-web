@@ -145,18 +145,35 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Получение сервисной точки по ID
-    getServicePointById: builder.query<ServicePoint, { partner_id: number; id: string } | string>({
+    getServicePointById: builder.query<ServicePoint, { partner_id: number; id: string; locale?: string } | string | { id: string; locale?: string }>({
       query: (arg) => {
         // Если передана строка, используем ее как ID
         if (typeof arg === 'string') {
           return {
             url: `/service_points/${arg}`,
+            params: {
+              locale: localStorage.getItem('i18nextLng') || 'ru'
+            }
           };
         }
+        
+        // Если объект с только id и locale
+        if ('id' in arg && !('partner_id' in arg)) {
+          return {
+            url: `/service_points/${arg.id}`,
+            params: {
+              locale: arg.locale || localStorage.getItem('i18nextLng') || 'ru'
+            }
+          };
+        }
+        
         // Иначе используем объект с partner_id и id
-        const { partner_id, id } = arg;
+        const { partner_id, id, locale } = arg as { partner_id: number; id: string; locale?: string };
         return {
           url: `/partners/${partner_id}/service_points/${id}`,
+          params: {
+            locale: locale || localStorage.getItem('i18nextLng') || 'ru'
+          }
         };
       },
       providesTags: (_result, _error, arg) => {
@@ -388,12 +405,13 @@ export const servicePointsApi = baseApi.injectEndpoints({
     }),
 
     // Новый endpoint для получения услуг сервисной точки
-    getServicePointServices: builder.query<any[], string>({
-      query: (servicePointId) => ({
+    getServicePointServices: builder.query<any[], { servicePointId: string; locale?: string }>({
+      query: ({ servicePointId, locale }) => ({
         url: `/service_points/${servicePointId}/services`,
         method: 'GET',
+        params: locale ? { locale } : {}
       }),
-      providesTags: (result, error, servicePointId) =>
+      providesTags: (result, error, { servicePointId }) =>
         result
           ? [
               ...result.map((_, index) => ({ type: 'ServicePointService' as const, id: `${servicePointId}_${index}` })),

@@ -69,8 +69,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
   // Хук темы для использования централизованных стилей
   const theme = useTheme();
   
-  // Получаем категории услуг
-  const { data: categoriesData, isLoading: categoriesLoading } = useGetServiceCategoriesQuery({});
+  // Получаем категории услуг с учетом текущего языка
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetServiceCategoriesQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   const categories = categoriesData?.data || [];
   
   // Получаем стили из централизованной системы
@@ -464,10 +466,10 @@ const PostsStep: React.FC<PostsStepProps> = ({ formik, isEditMode, servicePoint 
                         ) : (
                           categories.map((category) => (
                             <MenuItem key={category.id} value={category.id}>
-                              {category.name}
-                              {category.description && (
+                              {category.localized_name || category.name}
+                              {(category.localized_description || category.description) && (
                                 <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                  - {category.description}
+                                  - {category.localized_description || category.description}
                                 </Typography>
                               )}
                             </MenuItem>
@@ -1162,10 +1164,10 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
               </MenuItem>
               {categories.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
-                  {category.name}
-                  {category.description && (
+                  {category.localized_name || category.name}
+                  {(category.localized_description || category.description) && (
                     <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                      - {category.description}
+                      - {category.localized_description || category.description}
                     </Typography>
                   )}
                 </MenuItem>
@@ -1178,7 +1180,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
         {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0 ? (
           <Alert severity="warning">
             <Typography variant="body2">
-              {t('forms.servicePoint.posts.noActivePostsWarning', { categoryName: categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })}
+                              {t('forms.servicePoint.posts.noActivePostsWarning', { categoryName: categories.find(c => c.id === selectedCategoryId)?.localized_name || categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })}
             </Typography>
           </Alert>
         ) : timeSlots.length > 0 ? (
@@ -1238,7 +1240,7 @@ const SlotSchedulePreview: React.FC<SlotSchedulePreviewProps> = ({
           <Alert severity="warning">
             <Typography variant="body2">
               {selectedCategoryId && filteredPosts.filter(p => p.is_active).length === 0
-                ? t('forms.servicePoint.posts.noActivePostsForCategory', { categoryName: categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })
+                ? t('forms.servicePoint.posts.noActivePostsForCategory', { categoryName: categories.find(c => c.id === selectedCategoryId)?.localized_name || categories.find(c => c.id === selectedCategoryId)?.name || t('forms.servicePoint.posts.unknownCategory') })
                 : `${selectedDayInfo?.name} - ${t('forms.servicePoint.posts.weekend')}. ${t('forms.servicePoint.posts.selectWorkingDay')}`
               }
             </Typography>

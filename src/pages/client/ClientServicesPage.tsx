@@ -146,7 +146,10 @@ const ServicePointCardWrapper: React.FC<{
   onBook: (servicePointData: ServicePointData) => void;
 }> = ({ servicePoint, onViewDetails, onBook }) => {
   // Загружаем полные данные сервисной точки включая фотографии и service_posts
-  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery(servicePoint.id.toString());
+  const { data: fullServicePointData, isLoading } = useGetServicePointByIdQuery({
+    id: servicePoint.id.toString(),
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   
   // Преобразуем данные в нужный формат
   const servicePointData = convertServicePointToServicePointData(fullServicePointData || servicePoint);
@@ -157,12 +160,15 @@ const ServicePointCardWrapper: React.FC<{
     
     const uniqueCategories = new Map();
     fullServicePointData.service_posts.forEach(post => {
-      if (post.service_category && !uniqueCategories.has(post.service_category.id)) {
-        uniqueCategories.set(post.service_category.id, {
-          id: post.service_category.id,
-          name: post.service_category.name,
-          description: post.service_category.description,
-          services_count: post.service_category.services_count || 0
+      // Используем service_category_id и category_name из API ответа
+      if (post.service_category_id && post.category_name && !uniqueCategories.has(post.service_category_id)) {
+        uniqueCategories.set(post.service_category_id, {
+          id: post.service_category_id,
+          name: post.category_name,
+          localized_name: post.category_name, // Используем category_name как локализованное название
+          description: post.description || 'Доступные услуги',
+          localized_description: post.description || 'Доступные услуги',
+          services_count: 1 // Пока не знаем точное количество услуг
         });
       }
     });
@@ -245,7 +251,8 @@ const ClientServicesPage: React.FC = () => {
   } = useGetServiceCategoriesQuery({ 
     active: true,
     with_active_posts: true,
-    per_page: 50 
+    per_page: 50,
+    locale: localStorage.getItem('i18nextLng') || 'ru'
   });
 
   const { 
@@ -253,7 +260,8 @@ const ClientServicesPage: React.FC = () => {
     isLoading: servicesLoading 
   } = useGetServicesQuery({ 
     category_id: selectedCategory || undefined,
-    per_page: 100 
+    per_page: 100,
+    locale: localStorage.getItem('i18nextLng') || 'ru'
   });
 
   // Запрос регионов с учетом фильтров - выполняется всегда для получения доступных регионов
@@ -340,11 +348,15 @@ const ClientServicesPage: React.FC = () => {
   const sortedCategories = useMemo(() => {
     const categoryOrder = ['Шиномонтаж', 'Техническое обслуживание', 'Дополнительные услуги'];
     return [...categories].sort((a, b) => {
-      const indexA = categoryOrder.indexOf(a.name);
-      const indexB = categoryOrder.indexOf(b.name);
+      // Используем локализованные названия для сортировки
+      const nameA = a.localized_name || a.name;
+      const nameB = b.localized_name || b.name;
+      
+      const indexA = categoryOrder.indexOf(nameA);
+      const indexB = categoryOrder.indexOf(nameB);
       
       // Если категория не найдена в списке приоритетов, помещаем её в конец
-      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1 && indexB === -1) return nameA.localeCompare(nameB);
       if (indexA === -1) return 1;
       if (indexB === -1) return -1;
       
@@ -594,7 +606,7 @@ const ClientServicesPage: React.FC = () => {
                           <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allCategories')}</MenuItem>
                           {sortedCategories.map((category) => (
                             <MenuItem key={category.id} value={category.id}>
-                              {getServiceIcon(category.name)} {category.name}
+                              {getServiceIcon(category.localized_name || category.name)} {category.localized_name || category.name}
                             </MenuItem>
                           ))}
                         </Select>
@@ -618,7 +630,7 @@ const ClientServicesPage: React.FC = () => {
                           <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allServices')}</MenuItem>
                           {services.map((service) => (
                             <MenuItem key={service.id} value={service.id}>
-                              {service.name}
+                              {service.localized_name || service.name}
                             </MenuItem>
                           ))}
                         </Select>
@@ -744,7 +756,7 @@ const ClientServicesPage: React.FC = () => {
                     {selectedCategory && (
                       <Chip 
                         label={t('forms.clientPages.clientServicesPage.chips.category', { 
-                          name: sortedCategories.find(c => c.id === selectedCategory)?.name 
+                          name: sortedCategories.find(c => c.id === selectedCategory)?.localized_name || sortedCategories.find(c => c.id === selectedCategory)?.name 
                         })}
                         onDelete={() => handleCategoryChange(null)}
                         color="secondary"
@@ -754,7 +766,7 @@ const ClientServicesPage: React.FC = () => {
                     {selectedService && (
                       <Chip 
                         label={t('forms.clientPages.clientServicesPage.chips.service', { 
-                          name: services.find(s => s.id === selectedService)?.name 
+                          name: services.find(s => s.id === selectedService)?.localized_name || services.find(s => s.id === selectedService)?.name 
                         })}
                         onDelete={() => handleServiceChange(null)}
                         color="info"

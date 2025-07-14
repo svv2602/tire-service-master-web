@@ -71,7 +71,10 @@ const ServicePointDetailsPage = () => {
     }
   );
 
-  const { data: servicePointServices, isLoading: servicesLoading } = useGetServicePointServicesQuery(id || '');
+  const { data: servicePointServices, isLoading: servicesLoading } = useGetServicePointServicesQuery({
+    servicePointId: id || '',
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
 
   const { data: allServices } = useGetServicesQuery({});
 

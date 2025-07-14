@@ -8,6 +8,7 @@ interface ServiceCategoryFilter extends PaginationFilter {
   query?: string;
   active?: boolean;
   with_active_posts?: boolean;
+  locale?: string;
 }
 
 // Расширяем baseApi вместо создания нового

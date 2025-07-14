@@ -78,7 +78,10 @@ export const ServiceFormPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   // RTK Query хуки для работы с API категорий услуг
-  const { data: category, isLoading } = useGetServiceCategoryByIdQuery(id!, {
+  const { data: category, isLoading } = useGetServiceCategoryByIdQuery({
+    id: id!,
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  }, {
     skip: !isEditing,
   });
 

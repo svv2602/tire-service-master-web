@@ -533,6 +533,9 @@ export interface ServicePost {
   // ОБЯЗАТЕЛЬНОЕ поле категории услуг (убираем ?)
   service_category_id: number;
   service_category?: ServiceCategory;
+  category_name?: string; // Добавляем поле для локализованного названия категории из API
+  display_name?: string; // Отображаемое название поста из API
+  slot_duration_in_seconds?: number; // Длительность слота в секундах из API
   _destroy?: boolean;
   created_at?: string; // Для обратной совместимости
   updated_at?: string; // Для обратной совместимости
