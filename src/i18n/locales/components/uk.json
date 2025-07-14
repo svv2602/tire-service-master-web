@@ -807,14 +807,31 @@
     "loadingError": "Помилка при завантаженні сезонних розкладів. Спробуйте оновити сторінку.",
     "loading": "Завантаження сезонних розкладів...",
     "scheduleDetails": "Подробиці розкладу",
+    "workingDays": "Робочих днів",
     "workingDaysCount": "Робочих днів: {{count}}",
-    "priority": "Пріоритет: {{priority}}",
-    "weekday": "Вихідний",
+    "priority": "Пріоритет",
+    "priorityValue": "Пріоритет: {{priority}}",
+    "dayOff": "Вихідний",
+    "noSchedulesConfigured": "Сезонні розклади не налаштовані",
+    "totalSchedules": "Всього розкладів: {{count}}",
+    "activeSchedules": "активних",
+    "activeSchedulesCount": "{{count}} активних",
+    "currentSchedule": "Поточний розклад",
+    "nextSchedule": "Наступний розклад",
+    "noUpcomingSchedules": "Немає майбутніх розкладів",
     "status": {
       "current": "Активний",
       "upcoming": "Майбутній",
       "past": "Завершений",
-      "inactive": "Неактивний"
+      "inactive": "Неактивний",
+      "unknown": "Невідомо"
+    },
+    "info": {
+      "active": "Активний",
+      "upcoming": "Майбутній",
+      "past": "Завершений",
+      "unknown": "Невідомо",
+      "loadingError": "Помилка при завантаженні сезонних розкладів"
     },
     "days": {
       "monday": "Понеділок",

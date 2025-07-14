@@ -809,14 +809,31 @@
     "loadingError": "Ошибка при загрузке сезонных расписаний. Попробуйте обновить страницу.",
     "loading": "Загрузка сезонных расписаний...",
     "scheduleDetails": "Подробности расписания",
+    "workingDays": "Рабочих дней",
     "workingDaysCount": "Рабочих дней: {{count}}",
-    "priority": "Приоритет: {{priority}}",
-    "weekday": "Выходной",
+    "priority": "Приоритет",
+    "priorityValue": "Приоритет: {{priority}}",
+    "dayOff": "Выходной",
+    "noSchedulesConfigured": "Сезонные расписания не настроены",
+    "totalSchedules": "Всего расписаний: {{count}}",
+    "activeSchedules": "активных",
+    "activeSchedulesCount": "{{count}} активных",
+    "currentSchedule": "Текущее расписание",
+    "nextSchedule": "Следующее расписание",
+    "noUpcomingSchedules": "Нет предстоящих расписаний",
     "status": {
       "current": "Активно",
       "upcoming": "Предстоящее",
       "past": "Завершено",
-      "inactive": "Неактивно"
+      "inactive": "Неактивно",
+      "unknown": "Неизвестно"
+    },
+    "info": {
+      "active": "Активно",
+      "upcoming": "Предстоящее",
+      "past": "Завершено",
+      "unknown": "Неизвестно",
+      "loadingError": "Ошибка при загрузке сезонных расписаний"
     },
     "days": {
       "monday": "Понедельник",

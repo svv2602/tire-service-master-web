@@ -231,7 +231,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                   <Box display="flex" alignItems="center" mb={1}>
                     <ScheduleIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
-                      {t('seasonalSchedules.workingDays')}: {schedule.working_days_count}
+                      {t('seasonalSchedules.workingDaysCount', { count: schedule.working_days_count })}
                     </Typography>
                   </Box>
 
@@ -239,7 +239,7 @@ export const SeasonalScheduleManager: React.FC<SeasonalScheduleManagerProps> = (
                   <Box display="flex" alignItems="center" mb={2}>
                     <EventIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                     <Typography variant="body2">
-                      {t('seasonalSchedules.priority')}: {schedule.priority}
+                      {t('seasonalSchedules.priorityValue', { priority: schedule.priority })}
                     </Typography>
                   </Box>
 

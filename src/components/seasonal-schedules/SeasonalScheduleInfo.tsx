@@ -164,7 +164,7 @@ const SeasonalScheduleInfo: React.FC<SeasonalScheduleInfoProps> = ({
               {t('seasonalSchedules.totalSchedules', { count: schedules.length })}
             </Typography>
             <Chip 
-              label={`${activeSchedules.length} ${t('seasonalSchedules.activeSchedules', { count: activeSchedules.length })}`}
+              label={t('seasonalSchedules.activeSchedulesCount', { count: activeSchedules.length })}
               size="small"
               color={activeSchedules.length > 0 ? 'success' : 'default'}
               variant="outlined"
