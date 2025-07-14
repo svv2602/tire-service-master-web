@@ -24,6 +24,8 @@ import {
   Alert,
   CircularProgress,
   useTheme,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +35,7 @@ import {
   useUpdateServiceCategoryMutation,
 } from '../../api/serviceCategories.api';
 import { ServiceCategoryFormData } from '../../types/service';
-import { Button } from '../../components/ui';
+import { Button, TabPanel } from '../../components/ui';
 import ServicesList from '../../components/ServicesList';
 import { getFormStyles, SIZES } from '../../styles';
 
@@ -46,7 +48,12 @@ const createValidationSchema = (t: any) => Yup.object({
     .required(t('forms.service.validation.nameRequired'))
     .min(2, t('forms.service.validation.nameMin'))
     .max(100, t('forms.service.validation.nameMax')),
+  name_uk: Yup.string()
+    .min(2, t('forms.service.validation.nameMin'))
+    .max(100, t('forms.service.validation.nameMax')),
   description: Yup.string()
+    .max(500, t('forms.service.validation.descriptionMax')),
+  description_uk: Yup.string()
     .max(500, t('forms.service.validation.descriptionMax')),
   is_active: Yup.boolean(),
   sort_order: Yup.number()
@@ -68,6 +75,7 @@ export const ServiceFormPage: React.FC = () => {
   const isEditing = Boolean(id);
   const [submitError, setSubmitError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
+  const [activeTab, setActiveTab] = useState(0);
 
   // RTK Query хуки для работы с API категорий услуг
   const { data: category, isLoading } = useGetServiceCategoryByIdQuery(id!, {
@@ -84,7 +92,9 @@ export const ServiceFormPage: React.FC = () => {
   const formik = useFormik<ServiceCategoryFormData>({
     initialValues: {
       name: category?.name || '',
+      name_uk: category?.name_uk || '',
       description: category?.description || '',
+      description_uk: category?.description_uk || '',
       is_active: category?.is_active ?? true,
       sort_order: category?.sort_order || 0,
     },
@@ -113,6 +123,13 @@ export const ServiceFormPage: React.FC = () => {
    */
   const handleBack = () => {
     navigate('/admin/services');
+  };
+
+  /**
+   * Обработчик смены вкладки
+   */
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   // Состояние загрузки для режима редактирования
@@ -164,61 +181,102 @@ export const ServiceFormPage: React.FC = () => {
               {t('forms.service.sections.categoryInfo')}
             </Typography>
 
+            {/* Вкладки для языков */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: theme.spacing(SIZES.spacing.lg) }}>
+              <Tabs value={activeTab} onChange={handleTabChange} aria-label="language tabs">
+                <Tab label="Русский" />
+                <Tab label="Українська" />
+                <Tab label="Настройки" />
+              </Tabs>
+            </Box>
+
             <Box component="form" onSubmit={formik.handleSubmit}>
-              {/* Поле ввода названия категории */}
-              <TextField
-                fullWidth
-                name="name"
-                label={t("forms.service.fields.name")}
-                value={formik.values.name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-                sx={formStyles.field}
-              />
+              {/* Вкладка русского языка */}
+              <TabPanel value={activeTab} index={0}>
+                <TextField
+                  fullWidth
+                  name="name"
+                  label={t("forms.service.fields.name")}
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.name && Boolean(formik.errors.name)}
+                  helperText={formik.touched.name && formik.errors.name}
+                  sx={formStyles.field}
+                  required
+                />
 
-              {/* Поле ввода описания категории */}
-              <TextField
-                fullWidth
-                name="description"
-                label={t("forms.service.fields.description")}
-                multiline
-                rows={3}
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-                sx={formStyles.field}
-              />
+                <TextField
+                  fullWidth
+                  name="description"
+                  label={t("forms.service.fields.description")}
+                  multiline
+                  rows={4}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.description && Boolean(formik.errors.description)}
+                  helperText={formik.touched.description && formik.errors.description}
+                  sx={formStyles.field}
+                />
+              </TabPanel>
 
-              {/* Поле ввода порядка сортировки */}
-              <TextField
-                fullWidth
-                name="sort_order"
-                label={t("forms.service.fields.sortOrder")}
-                type="number"
-                value={formik.values.sort_order}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
-                helperText={formik.touched.sort_order && formik.errors.sort_order}
-                sx={formStyles.field}
-              />
+              {/* Вкладка украинского языка */}
+              <TabPanel value={activeTab} index={1}>
+                <TextField
+                  fullWidth
+                  name="name_uk"
+                  label="Назва категорії (укр)"
+                  value={formik.values.name_uk}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.name_uk && Boolean(formik.errors.name_uk)}
+                  helperText={formik.touched.name_uk && formik.errors.name_uk}
+                  sx={formStyles.field}
+                />
 
-              {/* Переключатель активности категории */}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.is_active}
-                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                    name="is_active"
-                  />
-                }
-                label={t("forms.service.fields.isActive")}
-                sx={formStyles.switchField}
-              />
+                <TextField
+                  fullWidth
+                  name="description_uk"
+                  label="Опис категорії (укр)"
+                  multiline
+                  rows={4}
+                  value={formik.values.description_uk}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.description_uk && Boolean(formik.errors.description_uk)}
+                  helperText={formik.touched.description_uk && formik.errors.description_uk}
+                  sx={formStyles.field}
+                />
+              </TabPanel>
+
+              {/* Вкладка настроек */}
+              <TabPanel value={activeTab} index={2}>
+                <TextField
+                  fullWidth
+                  name="sort_order"
+                  label={t("forms.service.fields.sortOrder")}
+                  type="number"
+                  value={formik.values.sort_order}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
+                  helperText={formik.touched.sort_order && formik.errors.sort_order}
+                  sx={formStyles.field}
+                />
+
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formik.values.is_active}
+                      onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                      name="is_active"
+                    />
+                  }
+                  label={t("forms.service.fields.isActive")}
+                  sx={formStyles.switchField}
+                />
+              </TabPanel>
 
               {/* Кнопка сохранения формы */}
               <Box sx={formStyles.actionsContainer}>

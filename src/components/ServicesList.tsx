@@ -17,6 +17,8 @@ import {
   Chip,
   Tooltip,
   useTheme,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { SIZES } from '../styles/theme';
 import { 
@@ -24,7 +26,7 @@ import {
 } from '../styles/components';
 // UI компоненты
 import { Table, Column } from './ui/Table';
-import { Pagination as UIPagination } from './ui';
+import { Pagination as UIPagination, TabPanel } from './ui';
 import {
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -69,6 +71,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState(0);
   const PER_PAGE = 10;
 
   const { data: response, isLoading } = useGetServicesByCategoryIdQuery({
@@ -91,7 +94,12 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       .required(t('servicesList.validation.nameRequired'))
       .min(2, t('servicesList.validation.nameMinLength'))
       .max(100, t('servicesList.validation.nameMaxLength')),
+    name_uk: Yup.string()
+      .min(2, t('servicesList.validation.nameMinLength'))
+      .max(100, t('servicesList.validation.nameMaxLength')),
     description: Yup.string()
+      .max(500, t('servicesList.validation.descriptionMaxLength')),
+    description_uk: Yup.string()
       .max(500, t('servicesList.validation.descriptionMaxLength')),
     is_active: Yup.boolean(),
     sort_order: Yup.number().min(0, t('servicesList.validation.sortOrderMinValue')),
@@ -100,7 +108,9 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const formik = useFormik<ServiceFormData>({
     initialValues: {
       name: '',
+      name_uk: '',
       description: '',
+      description_uk: '',
       is_active: true,
       sort_order: 0,
     },
@@ -145,7 +155,9 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       setSelectedService(service);
       formik.setValues({
         name: service.name,
+        name_uk: service.name_uk || '',
         description: service.description || '',
+        description_uk: service.description_uk || '',
         is_active: service.is_active,
         sort_order: service.sort_order || 0,
       });
@@ -154,6 +166,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       formik.resetForm();
     }
     setIsDialogOpen(true);
+    setActiveTab(0);
     setError(null);
   };
 
@@ -222,6 +235,10 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
     setPage(1);
+  };
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
   };
 
   /**
@@ -401,7 +418,7 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
       <Dialog
         open={isDialogOpen}
         onClose={handleCloseDialog}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: tablePageStyles.dialogPaper
@@ -420,54 +437,99 @@ export const ServicesList: React.FC<ServicesListProps> = ({ categoryId }) => {
               {error}
             </Alert>
           )}
-          <Box component="form" onSubmit={formik.handleSubmit}>
-            <TextField
-              fullWidth
-              name="name"
-              label={t('servicesList.form.serviceName')}
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name && formik.errors.name}
-              sx={{ mb: SIZES.spacing.md }}
-            />
-            <TextField
-              fullWidth
-              name="description"
-              label={t('servicesList.form.description')}
-              multiline
-              rows={3}
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.description && Boolean(formik.errors.description)}
-              helperText={formik.touched.description && formik.errors.description}
-              sx={{ mb: SIZES.spacing.md }}
-            />
+          
+          {/* Вкладки для языков */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: SIZES.spacing.lg }}>
+            <Tabs value={activeTab} onChange={handleTabChange} aria-label="language tabs">
+              <Tab label="Русский" />
+              <Tab label="Українська" />
+              <Tab label="Настройки" />
+            </Tabs>
+          </Box>
 
-            <TextField
-              fullWidth
-              name="sort_order"
-              label={t('servicesList.form.sortOrder')}
-              type="number"
-              value={formik.values.sort_order}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
-              helperText={formik.touched.sort_order && formik.errors.sort_order}
-              sx={{ mb: SIZES.spacing.md }}
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formik.values.is_active}
-                  onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
-                  name="is_active"
-                />
-              }
-              label={t('servicesList.form.activeService')}
-            />
+          <Box component="form" onSubmit={formik.handleSubmit}>
+            {/* Вкладка русского языка */}
+            <TabPanel value={activeTab} index={0}>
+              <TextField
+                fullWidth
+                name="name"
+                label={t('servicesList.form.serviceName')}
+                value={formik.values.name}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name && Boolean(formik.errors.name)}
+                helperText={formik.touched.name && formik.errors.name}
+                sx={{ mb: SIZES.spacing.md }}
+                required
+              />
+              <TextField
+                fullWidth
+                name="description"
+                label={t('servicesList.form.description')}
+                multiline
+                rows={4}
+                value={formik.values.description}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.description && Boolean(formik.errors.description)}
+                helperText={formik.touched.description && formik.errors.description}
+                sx={{ mb: SIZES.spacing.md }}
+              />
+            </TabPanel>
+
+            {/* Вкладка украинского языка */}
+            <TabPanel value={activeTab} index={1}>
+              <TextField
+                fullWidth
+                name="name_uk"
+                label="Назва послуги (укр)"
+                value={formik.values.name_uk}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.name_uk && Boolean(formik.errors.name_uk)}
+                helperText={formik.touched.name_uk && formik.errors.name_uk}
+                sx={{ mb: SIZES.spacing.md }}
+              />
+              <TextField
+                fullWidth
+                name="description_uk"
+                label="Опис послуги (укр)"
+                multiline
+                rows={4}
+                value={formik.values.description_uk}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.description_uk && Boolean(formik.errors.description_uk)}
+                helperText={formik.touched.description_uk && formik.errors.description_uk}
+                sx={{ mb: SIZES.spacing.md }}
+              />
+            </TabPanel>
+
+            {/* Вкладка настроек */}
+            <TabPanel value={activeTab} index={2}>
+              <TextField
+                fullWidth
+                name="sort_order"
+                label={t('servicesList.form.sortOrder')}
+                type="number"
+                value={formik.values.sort_order}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={formik.touched.sort_order && Boolean(formik.errors.sort_order)}
+                helperText={formik.touched.sort_order && formik.errors.sort_order}
+                sx={{ mb: SIZES.spacing.md }}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formik.values.is_active}
+                    onChange={(e) => formik.setFieldValue('is_active', e.target.checked)}
+                    name="is_active"
+                  />
+                }
+                label={t('servicesList.form.activeService')}
+              />
+            </TabPanel>
           </Box>
         </DialogContent>
         <DialogActions sx={tablePageStyles.dialogActions}>
