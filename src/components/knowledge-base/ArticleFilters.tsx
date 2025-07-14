@@ -15,6 +15,7 @@ import {
   FilterList as FilterListIcon,
   Clear as ClearIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { ArticleCategory } from '../../types/articles';
 import { getThemeColors, getCardStyles } from '../../styles';
 
@@ -37,6 +38,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
   onClearFilters,
   loading = false,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
@@ -49,7 +51,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <FilterListIcon sx={{ mr: 1, color: colors.primary }} />
         <Typography variant="h6" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
-          Поиск и фильтры
+          {t('forms.articles.knowledgeBase.filters.search')}
         </Typography>
       </Box>
 
@@ -58,7 +60,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
         <TextField
           fullWidth
           variant="outlined"
-          placeholder="Поиск статей..."
+          placeholder={t('forms.articles.knowledgeBase.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           InputProps={{
@@ -90,13 +92,13 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
       {/* Категории */}
       <Box sx={{ mb: hasActiveFilters ? 2 : 0 }}>
         <Typography variant="subtitle2" sx={{ color: colors.textPrimary, mb: 2, fontWeight: 600 }}>
-          Категории
+          {t('forms.articles.knowledgeBase.filters.category')}
         </Typography>
         
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {/* Кнопка "Все" */}
           <Chip
-            label="Все"
+            label={t('forms.articles.knowledgeBase.categories.all')}
             variant={!selectedCategory ? 'filled' : 'outlined'}
             onClick={() => onCategoryChange('')}
             sx={{
@@ -142,7 +144,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              Активные фильтры:
+              {t('forms.articles.knowledgeBase.filters.activeFilters')}:
             </Typography>
             {searchQuery && (
               <Chip
@@ -174,7 +176,7 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
               },
             }}
           >
-            Очистить фильтры
+            {t('forms.articles.knowledgeBase.emptyStates.clearFilters')}
           </Button>
         </Box>
       )}
