@@ -151,7 +151,9 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   );
   
   // Загрузка городов с точками обслуживания
-  const { data: citiesData, isLoading: isLoadingCities, error: citiesError } = useGetCitiesWithServicePointsQuery();
+  const { data: citiesData, isLoading: isLoadingCities, error: citiesError } = useGetCitiesWithServicePointsQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   
   // Загрузка точек обслуживания для выбранного города и категории
   const { data: servicePointsData, isLoading: isLoadingServicePoints, error: servicePointsError } = useGetServicePointsByCategoryQuery(

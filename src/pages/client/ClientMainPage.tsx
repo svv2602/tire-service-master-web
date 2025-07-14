@@ -64,7 +64,10 @@ const ClientMainPage: React.FC = () => {
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
     section: 'client_main'
   });
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery({});
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery({
+    // Передаем текущий язык для правильной локализации
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   
   // Получаем статьи для главной страницы (приоритет рекомендованным)
   const { articles: mainPageArticles, isLoading: articlesLoading } = useMainPageArticles();
@@ -91,7 +94,7 @@ const ClientMainPage: React.FC = () => {
       navigate('/client/booking', {
         state: {
           cityId: selectedCity.id,
-          cityName: selectedCity.name,
+          cityName: localizedName(selectedCity),
           step1Completed: false // Указываем, что первый шаг еще не завершен
         }
       });

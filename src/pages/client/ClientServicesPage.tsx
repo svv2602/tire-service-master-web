@@ -98,6 +98,16 @@ interface SortOption {
   label: string;
 }
 
+// Функция локализации названий вне React компонента
+const getLocalizedCityName = (city: any) => {
+  const language = localStorage.getItem('i18nextLng') || 'ru';
+  if (language === 'uk') {
+    return city.name_uk || city.name_ru || city.name || '';
+  } else {
+    return city.name_ru || city.name_uk || city.name || '';
+  }
+};
+
 // Функция конвертации ServicePoint в ServicePointData
 const convertServicePointToServicePointData = (servicePoint: ServicePointWithSearchData): ServicePointData => {
   return {
@@ -107,8 +117,8 @@ const convertServicePointToServicePointData = (servicePoint: ServicePointWithSea
     description: servicePoint.description,
     city: servicePoint.city ? {
       id: servicePoint.city.id,
-      name: servicePoint.city.name,
-      region: servicePoint.city.region?.name
+      name: getLocalizedCityName(servicePoint.city),
+      region: servicePoint.city.region ? getLocalizedCityName(servicePoint.city.region) : undefined
     } : undefined,
     partner: servicePoint.partner ? {
       id: servicePoint.partner.id,
@@ -292,7 +302,7 @@ const ClientServicesPage: React.FC = () => {
     }
     
     if (selectedCity) {
-      params.city = selectedCity.name;
+      params.city = getLocalizedCityName(selectedCity);
     }
     
     if (searchQuery) {
@@ -725,7 +735,7 @@ const ClientServicesPage: React.FC = () => {
                   <Stack direction="row" spacing={1} flexWrap="wrap">
                     {selectedCity && (
                       <Chip 
-                        label={t('forms.clientPages.clientServicesPage.chips.city', { name: selectedCity.name })}
+                        label={t('forms.clientPages.clientServicesPage.chips.city', { name: localizedName(selectedCity) })}
                         onDelete={() => handleCityChange(null)}
                         color="primary"
                         size="small"

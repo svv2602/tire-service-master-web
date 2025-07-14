@@ -123,7 +123,9 @@ const BookingsPage: React.FC = () => {
     refetch: refetchBookings
   } = useGetBookingsQuery(queryParams);
 
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
   const { data: servicePointsData, isLoading: servicePointsLoading } = useGetServicePointsQuery({});
   const { data: serviceCategoriesData, isLoading: serviceCategoriesLoading } = useGetServiceCategoriesQuery({});
   const { data: bookingStatusesData, isLoading: bookingStatusesLoading } = useGetBookingStatusesQuery();

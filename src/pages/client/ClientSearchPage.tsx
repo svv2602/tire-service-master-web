@@ -689,7 +689,7 @@ const ServicePointCard: React.FC<{ servicePoint: SearchServicePoint }> = ({ serv
         servicePointId: servicePoint.id,
         servicePointName: servicePoint.name,
         cityId: servicePoint.city.id,
-        cityName: servicePoint.city.name,
+        cityName: getLocalizedCityName(servicePoint.city),
         partnerId: servicePoint.partner.id,
         partnerName: servicePoint.partner.name,
         step1Completed: true // Указываем, что данные для шага 1 уже заполнены
@@ -987,6 +987,16 @@ const ClientSearchPage: React.FC = () => {
   const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
+  // Функция локализации для преобразования данных API
+  const getLocalizedNameForAPI = (item: any) => {
+    const language = localStorage.getItem('i18nextLng') || 'ru';
+    if (language === 'uk') {
+      return item.name_uk || item.name_ru || item.name || '';
+    } else {
+      return item.name_ru || item.name_uk || item.name || '';
+    }
+  };
+
   // Получаем параметры поиска из URL
   const searchParams = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -1028,8 +1038,8 @@ const ClientSearchPage: React.FC = () => {
       description: (point as any).description,
       city: {
         id: point.city?.id || 0,
-        name: point.city?.name || '',
-        region: point.city?.region?.name || ''
+        name: getLocalizedNameForAPI(point.city) || '',
+        region: getLocalizedNameForAPI(point.city?.region) || point.city?.region?.name || ''
       },
       partner: {
         id: point.partner?.id || 0,

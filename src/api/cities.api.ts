@@ -24,8 +24,16 @@ export const citiesApi = baseApi.injectEndpoints({
       }),
       providesTags: ['City'],
     }),
-    getCitiesWithServicePoints: builder.query<CitiesResponse, void>({
-      query: () => 'cities/with_service_points',
+    getCitiesWithServicePoints: builder.query<CitiesResponse, {
+      locale?: string;
+    }>({
+      query: (params = {}) => ({
+        url: 'cities/with_service_points',
+        params: {
+          // Автоматически добавляем текущий язык если не указан
+          locale: params.locale || localStorage.getItem('i18nextLng') || 'ru'
+        },
+      }),
       providesTags: ['City'],
     }),
     getCityById: builder.query<{ data: City }, number>({

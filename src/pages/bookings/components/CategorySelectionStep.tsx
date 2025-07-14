@@ -43,7 +43,9 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
   const categories = categoriesResponse?.data || [];
 
   // Загружаем список городов с сервисными точками для селекта
-  const { data: citiesResponse, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery();
+  const { data: citiesResponse, isLoading: citiesLoading } = useGetCitiesWithServicePointsQuery({
+    locale: localStorage.getItem('i18nextLng') || 'ru'
+  });
 
   // Загружаем информацию о выбранном городе
   const { data: cityResponse, isLoading: isCityLoading } = useGetCityByIdQuery(

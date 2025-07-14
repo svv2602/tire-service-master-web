@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест локализации городов</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { 
+            border: 1px solid #ccc; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+        }
+        .result { 
+            font-weight: bold; 
+            color: #333; 
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🌍 Тест локализации городов</h1>
+    
+    <div class="test-case">
+        <h3>Тестовые данные города</h3>
+        <div id="city-data"></div>
+    </div>
+    
+    <div class="test-case">
+        <h3>Текущий язык из localStorage</h3>
+        <div id="current-language"></div>
+    </div>
+    
+    <div class="test-case">
+        <h3>Результат локализации для русского языка</h3>
+        <div id="ru-result"></div>
+    </div>
+    
+    <div class="test-case">
+        <h3>Результат локализации для украинского языка</h3>
+        <div id="uk-result"></div>
+    </div>
+    
+    <div class="test-case">
+        <h3>Тест смены языка</h3>
+        <button onclick="setLanguage('ru')">Установить русский</button>
+        <button onclick="setLanguage('uk')">Установить украинский</button>
+        <button onclick="testLocalization()">Перетестировать</button>
+    </div>
+
+    <script>
+        // Тестовые данные города (как приходят из API)
+        const testCity = {
+            id: 67,
+            name: "Київ",
+            name_ru: "Киев", 
+            name_uk: "Київ"
+        };
+
+        // Логика локализации (копия из localizationHelpers.ts)
+        const getLocalizedName = (item, locale) => {
+            const currentLocale = locale || localStorage.getItem('i18nextLng') || 'ru';
+            
+            console.log('🔍 getLocalizedName called with:', {
+                item: item,
+                locale: locale,
+                currentLocale: currentLocale,
+                localStorage_i18nextLng: localStorage.getItem('i18nextLng')
+            });
+            
+            // Приоритет для украинского языка
+            if (currentLocale === 'uk') {
+                const result = item.name_uk || item.name_ru || item.name || '';
+                console.log('🇺🇦 Ukrainian priority result:', result);
+                return result;
+            }
+            
+            // Приоритет для русского языка (по умолчанию)
+            const result = item.name_ru || item.name_uk || item.name || '';
+            console.log('🇷🇺 Russian priority result:', result);
+            return result;
+        };
+
+        function setLanguage(lang) {
+            localStorage.setItem('i18nextLng', lang);
+            console.log(`🔄 Language set to: ${lang}`);
+            testLocalization();
+        }
+
+        function testLocalization() {
+            // Отображаем тестовые данные
+            document.getElementById('city-data').innerHTML = `
+                <div class="info">ID: ${testCity.id}</div>
+                <div class="info">name: "${testCity.name}"</div>
+                <div class="info">name_ru: "${testCity.name_ru}"</div>
+                <div class="info">name_uk: "${testCity.name_uk}"</div>
+            `;
+
+            // Текущий язык
+            const currentLang = localStorage.getItem('i18nextLng') || 'не установлен';
+            document.getElementById('current-language').innerHTML = `
+                <div class="result">localStorage.getItem('i18nextLng'): "${currentLang}"</div>
+            `;
+
+            // Тест для русского
+            const ruResult = getLocalizedName(testCity, 'ru');
+            const ruExpected = 'Киев';
+            document.getElementById('ru-result').innerHTML = `
+                <div class="result">Результат: "${ruResult}"</div>
+                <div class="result">Ожидаемый: "${ruExpected}"</div>
+                <div class="${ruResult === ruExpected ? 'success' : 'error'}">
+                    ${ruResult === ruExpected ? '✅ ПРАВИЛЬНО' : '❌ ОШИБКА'}
+                </div>
+            `;
+
+            // Тест для украинского
+            const ukResult = getLocalizedName(testCity, 'uk');
+            const ukExpected = 'Київ';
+            document.getElementById('uk-result').innerHTML = `
+                <div class="result">Результат: "${ukResult}"</div>
+                <div class="result">Ожидаемый: "${ukExpected}"</div>
+                <div class="${ukResult === ukExpected ? 'success' : 'error'}">
+                    ${ukResult === ukExpected ? '✅ ПРАВИЛЬНО' : '❌ ОШИБКА'}
+                </div>
+            `;
+        }
+
+        // Запускаем тест при загрузке
+        window.onload = function() {
+            console.log('🚀 Starting localization test...');
+            testLocalization();
+        };
+    </script>
+</body>
+</html> 

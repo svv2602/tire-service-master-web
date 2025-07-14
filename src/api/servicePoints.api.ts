@@ -510,7 +510,7 @@ export const servicePointsApi = baseApi.injectEndpoints({
       providesTags: ['ServicePoint', 'Region'],
     }),
 
-    getCitiesWithServicePoints: builder.query<ApiResponse<City>, { category_id?: number; service_id?: number; region_id?: number }>({
+    getCitiesWithServicePoints: builder.query<ApiResponse<City>, { category_id?: number; service_id?: number; region_id?: number; locale?: string }>({
       query: (params = {}) => {
         const filteredParams = Object.fromEntries(
           Object.entries(params).filter(([_, v]) => v !== null && v !== undefined)
