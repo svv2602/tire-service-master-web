@@ -55,6 +55,18 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   
+  // Для локализации названий на уровне компонента
+  const getLocalizedCityName = (cityData: any) => {
+    if (!cityData) return '';
+    const city = cityData.data || cityData;
+    const currentLocale = localStorage.getItem('i18nextLng') || 'ru';
+    
+    if (currentLocale === 'uk') {
+      return city.name_uk || city.name_ru || city.name || '';
+    }
+    return city.name_ru || city.name_uk || city.name || '';
+  };
+  
   // API запросы для получения названий
   const { data: cityData, isLoading: cityLoading, error: cityError } = useGetCityByIdQuery(formData.city_id || 0, {
     skip: !formData.city_id
@@ -85,7 +97,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
   const getServicePointAddress = () => {
     if (servicePointData && cityData) {
       // API возвращает данные в формате { data: City }
-      const cityName = cityData.data?.name || (cityData as any).name;
+      const cityName = getLocalizedCityName(cityData);
       return `${cityName}, ${servicePointData.address}`;
     }
     return servicePointData?.address || '';
@@ -104,7 +116,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     }
     if (cityData) {
       // API возвращает данные в формате { data: City }
-      return cityData.data?.name || (cityData as any).name || `${t('bookingSteps.review.city')} #${formData.city_id}`;
+      return getLocalizedCityName(cityData) || `${t('bookingSteps.review.city')} #${formData.city_id}`;
     }
     return `${t('bookingSteps.review.city')} #${formData.city_id}`;
   };

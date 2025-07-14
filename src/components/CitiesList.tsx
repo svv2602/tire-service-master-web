@@ -28,6 +28,7 @@ import {
   useDeleteCityMutation,
 } from '../api/cities.api';
 import { City, CityFormData } from '../types/models';
+import { useLocalizedName } from '../utils/localizationHelpers';
 
 // Импорты UI компонентов
 import { Button } from '../components/ui/Button';
@@ -62,6 +63,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const localizedName = useLocalizedName();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -229,7 +231,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
       label: t('forms.city.table.columns.name'),
       minWidth: 200,
       wrap: true,
-      format: (value: string) => (
+      format: (value: string, row: City) => (
         <Typography 
           variant="body2" 
           sx={{ 
@@ -237,7 +239,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
             color: theme.palette.text.primary
           }}
         >
-          {value}
+          {localizedName(row)}
         </Typography>
       )
     },
@@ -460,7 +462,7 @@ const CitiesList: React.FC<CitiesListProps> = ({ regionId }) => {
         }
       >
         <Typography sx={{ fontSize: SIZES.fontSize.md }}>
-          {t('forms.city.dialogs.delete.message', { name: cityToDelete?.name })}
+          {t('forms.city.dialogs.delete.message', { name: cityToDelete ? localizedName(cityToDelete) : '' })}
         </Typography>
       </Modal>
     </Box>

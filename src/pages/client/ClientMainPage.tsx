@@ -40,28 +40,25 @@ import {
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
 import { useGetCitiesWithServicePointsQuery } from '../../api/servicePoints.api';
 import { useMainPageArticles } from '../../hooks/useMainPageArticles';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 import ClientLayout from '../../components/client/ClientLayout';
 
-// Интерфейс для города с сервисными точками
-interface CityWithServicePoints {
-  id: number;
-  name: string;
-  region_name?: string;
-  service_points_count?: number;
-}
+// Импорт типа City для правильной типизации с локализацией
+import type { City } from '../../types/models';
 
 const ClientMainPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   
   // Состояние для поиска
-  const [selectedCity, setSelectedCity] = useState<CityWithServicePoints | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
   
   // API запросы для контента
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
@@ -76,7 +73,7 @@ const ClientMainPage: React.FC = () => {
   const pageContent = pageContentData?.data || [];
   
   // Получаем города с сервисными точками
-  const cities: CityWithServicePoints[] = citiesData?.data || [];
+  const cities: City[] = citiesData?.data || [];
   
   // Получаем контент по типам
   const heroContent = pageContent.find(item => item.content_type === 'hero');
@@ -208,17 +205,17 @@ const ClientMainPage: React.FC = () => {
                             value={selectedCity}
                             onChange={(event, newValue) => setSelectedCity(newValue)}
                             options={cities}
-                            getOptionLabel={(option) => option.name}
+                            getOptionLabel={(option) => localizedName(option)}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             renderOption={(props, option) => {
                               const { key, ...otherProps } = props;
                               return (
                                 <Box component="li" key={key} {...otherProps}>
                                   <Box>
-                                    <Typography variant="body1">{option.name}</Typography>
-                                    {option.region_name && (
+                                    <Typography variant="body1">{localizedName(option)}</Typography>
+                                    {option.region && (
                                       <Typography variant="caption" color="text.secondary">
-                                        {option.region_name}
+                                        {localizedName(option.region)}
                                       </Typography>
                                     )}
                                   </Box>

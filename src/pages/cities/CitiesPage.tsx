@@ -5,11 +5,13 @@ import { useGetRegionsQuery } from '../../api/regions.api';
 import { getTablePageStyles } from '../../styles/components';
 import CitiesList from '../../components/CitiesList';
 import { Region } from '../../types/models';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 const CitiesPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const localizedName = useLocalizedName();
   
   const [selectedRegionId, setSelectedRegionId] = useState<string>('');
   
@@ -44,7 +46,7 @@ const CitiesPage: React.FC = () => {
             </MenuItem>
             {regions.map((region: Region) => (
               <MenuItem key={region.id} value={region.id}>
-                {region.name}
+                {localizedName(region)}
               </MenuItem>
             ))}
           </Select>

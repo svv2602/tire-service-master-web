@@ -24,6 +24,7 @@ import { PageTable } from '../../components/common/PageTable';
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import Notification from '../../components/Notification';
 import { getTablePageStyles } from '../../styles';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Импорты API
 import {
@@ -42,6 +43,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const localizedName = useLocalizedName();
   
   // Состояние для фильтров и поиска
   const [searchQuery, setSearchQuery] = useState('');
@@ -237,7 +239,7 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {region.name}
+              {localizedName(region)}
             </Typography>
             {region.code && (
               <Chip 

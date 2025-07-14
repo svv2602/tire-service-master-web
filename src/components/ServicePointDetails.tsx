@@ -28,6 +28,7 @@ import type { ServicePoint } from '../types/models';
 import type { WorkingHoursSchedule, WorkingHours } from '../types/working-hours';
 import { FlexBox } from '../components/styled/CommonComponents';
 import { useTranslation } from 'react-i18next';
+import { useLocalizedItemName } from '../utils/localizationHelpers';
 
 interface ServicePointDetailsProps {
   servicePoint: ServicePoint;
@@ -66,6 +67,9 @@ const formatDate = (date: string): string => {
 
 const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint }) => {
   const { t } = useTranslation('components');
+  
+  // Получаем локализованное название города (хук вызывается всегда)
+  const cityName = useLocalizedItemName(servicePoint.city || { name: '', name_ru: '', name_uk: '' });
 
   return (
     <Box sx={{ p: 3 }}>
@@ -79,9 +83,9 @@ const ServicePointDetails: React.FC<ServicePointDetailsProps> = ({ servicePoint 
           <Grid item xs={12} md={6}>
             <FlexBox alignItems="center" gap={1} my={2}>
               <LocationIcon color="action" />
-              <Typography>
+              <Typography variant="body2" color="text.secondary">
                 {servicePoint.address}
-                {servicePoint.city && `, ${servicePoint.city.name}`}
+                {servicePoint.city && `, ${cityName}`}
               </Typography>
             </FlexBox>
             

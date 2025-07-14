@@ -79,6 +79,7 @@ import { baseApi } from '../../api/baseApi';
 
 // Импорт типов
 import type { ServicePoint, ServiceCategory, City, ServicePointService, Region, Service } from '../../types/models';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Импорт компонентов
 import { ServicePointCard, ServicePointData } from '../../components/ui/ServicePointCard';
@@ -196,6 +197,7 @@ const ClientServicesPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const colors = getThemeColors(theme);
+  const localizedName = useLocalizedName();
   const dispatch = useDispatch();
   
   const cardStyles = getCardStyles(theme, 'primary');
@@ -630,7 +632,7 @@ const ClientServicesPage: React.FC = () => {
                           <MenuItem value="">{t('forms.clientPages.clientServicesPage.filters.allRegions')}</MenuItem>
                           {regions.map((region) => (
                             <MenuItem key={region.id} value={region.id}>
-                              {region.name}
+                              {localizedName(region)}
                             </MenuItem>
                           ))}
                         </Select>
@@ -641,7 +643,7 @@ const ClientServicesPage: React.FC = () => {
                     <Grid item xs={12} md={6} lg={3}>
                       <Autocomplete
                         options={cities}
-                        getOptionLabel={(city) => city.name}
+                        getOptionLabel={(city) => localizedName(city)}
                         value={selectedCity}
                         onChange={(_, newValue) => handleCityChange(newValue)}
                         // Теперь фильтрация происходит на сервере

@@ -15,6 +15,7 @@ import {
 } from '../../api/cities.api';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { City, Region } from '../../types/models';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Импорты UI компонентов
 import { Box, Typography, CircularProgress, Alert } from '../../components/ui';
@@ -39,6 +40,7 @@ import { getTablePageStyles } from '../../styles/components';
 const CitiesPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const localizedName = useLocalizedName();
   
   // Инициализация централизованных стилей
   const tablePageStyles = getTablePageStyles(theme);
@@ -174,7 +176,7 @@ const CitiesPage: React.FC = () => {
         { value: '', label: 'Все регионы' },
         ...(regions.map((region: Region) => ({
           value: region.id.toString(),
-          label: region.name
+          label: localizedName(region)
         })))
       ],
     },
@@ -217,7 +219,7 @@ const CitiesPage: React.FC = () => {
         return (
           <Box sx={tablePageStyles.avatarContainer}>
             <LocationCityIcon color="action" />
-            <Typography>{city.name}</Typography>
+            <Typography>{localizedName(city)}</Typography>
           </Box>
         );
       }
@@ -232,7 +234,10 @@ const CitiesPage: React.FC = () => {
           <Box sx={tablePageStyles.avatarContainer}>
             <LocationOnIcon color="action" />
             <Typography>
-              {regions.find(r => r.id.toString() === city.region_id.toString())?.name}
+              {regions.find(r => r.id.toString() === city.region_id.toString()) ? 
+                localizedName(regions.find(r => r.id.toString() === city.region_id.toString())!) : 
+                '—'
+              }
             </Typography>
           </Box>
         );

@@ -23,6 +23,7 @@ import { PageTable } from '../../components/common/PageTable';
 import Notification from '../../components/Notification';
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import { getTablePageStyles } from '../../styles';
+import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Импорты API
 import {
@@ -47,6 +48,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const { id: partnerId } = useParams<{ id: string }>();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  const localizedName = useLocalizedName();
   
   // Состояние для фильтров и поиска
   const [searchQuery, setSearchQuery] = useState('');
@@ -268,7 +270,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       onChange: handleRegionFilterChange,
       options: [
         { value: 'all', label: t('admin.servicePoints.filters.allRegions') },
-        ...(regionsData?.data || []).map(region => ({ value: region.id.toString(), label: region.name }))
+        ...(regionsData?.data || []).map(region => ({ value: region.id.toString(), label: localizedName(region) }))
       ]
     },
     {
@@ -279,7 +281,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       onChange: handleCityFilterChange,
       options: [
         { value: 'all', label: t('admin.servicePoints.filters.allCities') },
-        ...(citiesData?.data || []).map(city => ({ value: city.id.toString(), label: city.name }))
+        ...(citiesData?.data || []).map(city => ({ value: city.id.toString(), label: localizedName(city) }))
       ]
     },
     {

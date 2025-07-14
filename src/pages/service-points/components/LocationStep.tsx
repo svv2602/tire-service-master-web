@@ -17,6 +17,7 @@ import { useGetRegionsQuery } from '../../../api/regions.api';
 import { useGetCitiesQuery } from '../../../api/cities.api';
 import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Region, City, ServicePoint } from '../../../types/models';
+import { useLocalizedName } from '../../../utils/localizationHelpers';
 
 interface LocationStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -30,6 +31,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
   const textFieldStyles = getTextFieldStyles(theme);
+  const localizedName = useLocalizedName();
 
   const { data: regions, isLoading: regionsLoading } = useGetRegionsQuery({});
   
@@ -132,7 +134,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               </MenuItem>
               {regionsData.map((region: Region) => (
                 <MenuItem key={region.id} value={region.id.toString()}>
-                  {region.name}
+                  {localizedName(region)}
                 </MenuItem>
               ))}
             </Select>
@@ -169,7 +171,7 @@ const LocationStep: React.FC<LocationStepProps> = ({ formik, isEditMode, service
               </MenuItem>
               {citiesData.map((city: City) => (
                 <MenuItem key={city.id} value={city.id.toString()}>
-                  {city.name}
+                  {localizedName(city)}
                 </MenuItem>
               ))}
             </Select>
