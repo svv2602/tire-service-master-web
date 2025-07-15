@@ -1,15 +1,24 @@
 import React from 'react';
 import { Container, Paper, Typography, Box, Link } from '@mui/material';
 import { ForgotPasswordForm } from '../../components/auth/ForgotPasswordForm';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useTranslation();
 
+  const fromParam = searchParams.get('from');
+
   const handleBackToLogin = () => {
-    navigate('/login');
+    if (fromParam === 'booking') {
+      // Если пришли из процесса бронирования, закрываем вкладку
+      window.close();
+    } else {
+      // Иначе идем на страницу логина
+      navigate('/login');
+    }
   };
 
   return (
@@ -23,7 +32,7 @@ const ForgotPasswordPage: React.FC = () => {
           {t('forms.auth.forgotPasswordDescription')}
         </Typography>
         
-        <ForgotPasswordForm onBack={handleBackToLogin} />
+        <ForgotPasswordForm onBack={handleBackToLogin} from={fromParam || undefined} />
         
         <Box textAlign="center" mt={2}>
           <Link 

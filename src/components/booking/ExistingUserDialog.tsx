@@ -74,8 +74,8 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
   };
 
   const handleForgotPassword = () => {
-    // Открываем страницу восстановления пароля в новой вкладке
-    window.open('/forgot-password', '_blank');
+    // Открываем страницу восстановления пароля в новой вкладке с параметром источника
+    window.open('/forgot-password?from=booking', '_blank');
   };
 
   return (

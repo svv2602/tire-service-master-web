@@ -464,7 +464,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           <Link
             component="button"
             variant="body2"
-            onClick={() => window.location.href = '/forgot-password'}
+            onClick={() => window.location.href = '/forgot-password?from=login'}
             sx={{ 
               textDecoration: 'none',
               '&:hover': {

@@ -32,10 +32,12 @@ import { PhoneField } from '../ui/PhoneField/PhoneField';
 
 interface ForgotPasswordFormProps {
   onBack?: () => void;
+  from?: string;
 }
 
 export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
-  onBack
+  onBack,
+  from
 }) => {
   const { t } = useTranslation();
   const [activeStep, setActiveStep] = useState(0);
@@ -257,10 +259,16 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => window.location.href = '/login'}
+                  onClick={() => {
+                    if (from === 'booking') {
+                      window.close();
+                    } else {
+                      window.location.href = '/login';
+                    }
+                  }}
                   startIcon={<Check />}
                 >
-                  {t('forms.auth.forgot_password.step2.return_to_login')}
+                  {from === 'booking' ? t('forms.auth.forgot_password.step2.close_and_return') : t('forms.auth.forgot_password.step2.return_to_login')}
                 </Button>
               </Box>
             </Box>
