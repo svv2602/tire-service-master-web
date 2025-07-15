@@ -54,21 +54,21 @@ const StyledEditorContainer = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'error' && prop !== 'editorHeight'
 })<{ error?: boolean; editorHeight?: number }>(({ theme, error, editorHeight = 300 }) => ({
   position: 'relative',
-  minHeight: `${editorHeight}px`,
+  minHeight: `${editorHeight + 16}px`, // Добавляем место для полосы изменения размера
+  border: error ? `2px solid ${theme.palette.error.main}` : `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  overflow: 'hidden',
   '& .ql-container': {
     minHeight: `${editorHeight - 84}px`, // Вычитаем высоту тулбара
     fontSize: '16px',
     fontFamily: theme.typography.body1.fontFamily,
-    border: error ? `2px solid ${theme.palette.error.main}` : `1px solid ${theme.palette.divider}`,
-    borderTop: 'none',
-    borderBottomLeftRadius: theme.shape.borderRadius,
-    borderBottomRightRadius: theme.shape.borderRadius,
+    border: 'none',
+    borderRadius: 0,
   },
   '& .ql-toolbar': {
-    border: error ? `2px solid ${theme.palette.error.main}` : `1px solid ${theme.palette.divider}`,
-    borderTopLeftRadius: theme.shape.borderRadius,
-    borderTopRightRadius: theme.shape.borderRadius,
-    borderBottom: 'none',
+    border: 'none',
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    borderRadius: 0,
     backgroundColor: theme.palette.background.paper,
     padding: '12px 8px',
     '& button': {
@@ -1328,37 +1328,42 @@ const RichTextEditor = ({
               }}
             />
           )}
+          {/* Полоса изменения размера как часть редактора */}
+          <Box 
+            sx={{
+              height: '16px',
+              cursor: 'ns-resize',
+              backgroundColor: theme.palette.mode === 'dark' ? '#424242' : '#f0f0f0',
+              borderTop: `1px solid ${theme.palette.divider}`,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+              '&:hover': {
+                backgroundColor: theme.palette.mode === 'dark' ? '#525252' : '#e0e0e0',
+              },
+              '&:active': {
+                backgroundColor: theme.palette.mode === 'dark' ? '#616161' : '#d0d0d0',
+              }
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleResizeStart(e);
+            }}
+          >
+            <Box sx={{ 
+              width: '40px', 
+              height: '4px', 
+              backgroundColor: theme.palette.mode === 'dark' ? '#9e9e9e' : '#bdbdbd', 
+              borderRadius: '2px' 
+            }} />
+          </Box>
         </StyledEditorContainer>
-        
-        {/* Добавляем элемент для изменения размера с повышенным z-index */}
-        <Box 
-          sx={{
-            height: '16px',
-            cursor: 'ns-resize',
-            backgroundColor: '#f0f0f0',
-            borderBottomLeftRadius: '4px',
-            borderBottomRightRadius: '4px',
-            borderTop: '1px solid #ddd',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            position: 'relative',
-            zIndex: 10,
-            '&:hover': {
-              backgroundColor: '#e0e0e0',
-            },
-            '&:active': {
-              backgroundColor: '#d0d0d0',
-            }
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            handleResizeStart(e);
-          }}
-        >
-          <Box sx={{ width: '40px', height: '4px', backgroundColor: '#bdbdbd', borderRadius: '2px' }} />
-        </Box>
       </Box>
       
       {/* Модальные окна для расширенных функций */}
