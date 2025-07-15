@@ -129,7 +129,7 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
         />
 
         {/* Кнопка "Забыли пароль" */}
-        <Box textAlign="center" sx={{ mb: 2 }}>
+        <Box textAlign="left" sx={{ mb: 2 }}>
           <Link
             component="button"
             variant="body2"
