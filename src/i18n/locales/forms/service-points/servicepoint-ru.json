@@ -1,0 +1,49 @@
+{
+  "forms": {
+    "servicePoint": {
+      "localization": {
+        "title": "Локализация",
+        "russian": "Русский",
+        "ukrainian": "Украинский",
+        "name": "Название",
+        "description": "Описание",
+        "address": "Адрес",
+        "fields": {
+          "name": "Название",
+          "description": "Описание",
+          "address": "Адрес"
+        },
+        "placeholders": {
+          "name": "Введите название сервисной точки",
+          "description": "Введите описание сервисной точки",
+          "address": "Введите адрес сервисной точки"
+        }
+      },
+      "fields": {
+        "name": "Название",
+        "description": "Описание",
+        "address": "Адрес",
+        "partner": "Партнер",
+        "region": "Регион",
+        "city": "Город",
+        "latitude": "Широта",
+        "longitude": "Долгота",
+        "contactPhone": "Контактный телефон",
+        "descriptionPlaceholder": "Введите описание сервисной точки",
+        "addressPlaceholder": "Введите адрес сервисной точки"
+      },
+      "steps": {
+        "basic": "Основная информация",
+        "location": "Местоположение"
+      },
+      "messages": {
+        "loading": "Загрузка...",
+        "selectRegionFirst": "Сначала выберите регион",
+        "partnerCannotBeChanged": "Партнер не может быть изменен при редактировании"
+      },
+      "selectPartner": "Выберите партнера",
+      "selectRegion": "Выберите регион",
+      "selectCity": "Выберите город"
+    }
+  }
+} 

@@ -19,12 +19,38 @@
         "photos": "Фотографії",
         "serviceParameters": "Параметри обслуговування"
       },
+      "localization": {
+        "title": "Локалізація",
+        "russian": "Російська",
+        "ukrainian": "Українська",
+        "name": "Назва",
+        "description": "Опис",
+        "address": "Адреса",
+        "fields": {
+          "name": "Назва",
+          "description": "Опис",
+          "address": "Адреса"
+        },
+        "placeholders": {
+          "name": "Введіть назву сервісної точки",
+          "description": "Введіть опис сервісної точки",
+          "address": "Введіть адресу сервісної точки"
+        }
+      },
       "fields": {
         "address": "Адреса",
         "contactPhone": "Контактний телефон",
         "partner": "Партнер",
         "postCount": "Кількість постів",
-        "defaultSlotDuration": "Тривалість слоту за замовчуванням"
+        "defaultSlotDuration": "Тривалість слоту за замовчуванням",
+        "name": "Назва",
+        "description": "Опис",
+        "descriptionPlaceholder": "Введіть опис сервісної точки",
+        "addressPlaceholder": "Введіть адресу сервісної точки",
+        "region": "Регіон",
+        "city": "Місто",
+        "latitude": "Широта",
+        "longitude": "Довгота"
       },
       "messages": {
         "notFound": "Сервісна точка не знайдена",
@@ -38,16 +64,85 @@
         "photosAbsent": "Фотографії відсутні",
         "photoAlt": "Фото",
         "createSuccess": "Точка обслуговування успішно створена",
-        "updateSuccess": "Точка обслуговування успішно оновлена", 
+        "updateSuccess": "Точка обслуговування успішно оновлена",
         "saveError": "Помилка при збереженні точки обслуговування",
-        "defaultPostName": "Пост 1"
+        "defaultPostName": "Пост 1",
+        "loading": "Завантаження...",
+        "partnerCannotBeChanged": "Партнер не може бути змінений при редагуванні",
+        "selectRegionFirst": "Спочатку оберіть регіон"
+      },
+      "selectPartner": "Оберіть партнера",
+      "selectRegion": "Оберіть регіон",
+      "selectCity": "Оберіть місто",
+      "steps": {
+        "basic": "Основна інформація",
+        "contact": "Контактна інформація"
+      },
+      "validation": {
+        "nameRuRequired": "Назва російською мовою обов'язкова",
+        "nameUkRequired": "Назва українською мовою обов'язкова",
+        "addressRuRequired": "Адреса російською мовою обов'язкова",
+        "addressUkRequired": "Адреса українською мовою обов'язкова",
+        "partnerRequired": "Партнер обов'язковий",
+        "regionRequired": "Регіон обов'язковий",
+        "cityRequired": "Місто обов'язкове",
+        "phoneRequired": "Телефон обов'язковий",
+        "workStatusRequired": "Статус роботи обов'язковий"
       },
       "schedule": {
-        "dayOfWeek": "День тижня",
-        "workingHours": "Час роботи",
-        "status": "Статус",
+        "atLeastOneWorkingDay": "Необхідно вказати хоча б один робочий день",
         "workingDay": "Робочий день",
-        "dayOff": "Вихідний"
+        "startTime": "Початок роботи",
+        "endTime": "Кінець роботи",
+        "quickActions": "Швидкі дії",
+        "standardSchedule": "Стандартний графік (Пн-Пт 9:00-18:00)",
+        "dailySchedule": "Щоденно (8:00-20:00)",
+        "clearAll": "Очистити все"
+      },
+      "scheduleDialog": {
+        "title": "Налаштування індивідуального розкладу",
+        "info": "Налаштуйте індивідуальний розклад для цього поста. Якщо опція відключена, буде використовуватися загальний розклад сервісної точки.",
+        "useCustomSchedule": "Використовувати індивідуальний розклад",
+        "customScheduleActive": "Індивідуальний розклад активний",
+        "mainScheduleActive": "Використовується основний розклад",
+        "workingDaysTitle": "Робочі дні",
+        "workingDaysCount": "днів обрано",
+        "monday": "Понеділок",
+        "tuesday": "Вівторок",
+        "wednesday": "Середа",
+        "thursday": "Четвер",
+        "friday": "П'ятниця",
+        "saturday": "Субота",
+        "sunday": "Неділя",
+        "mondayShort": "Пн",
+        "tuesdayShort": "Вт",
+        "wednesdayShort": "Ср",
+        "thursdayShort": "Чт",
+        "fridayShort": "Пт",
+        "saturdayShort": "Сб",
+        "sundayShort": "Нд",
+        "selectWorkingDayWarning": "Оберіть хоча б один робочий день",
+        "workingHoursTitle": "Робочі години",
+        "startTimeLabel": "Час початку",
+        "endTimeLabel": "Час закінчення",
+        "startTimeAfterEndError": "Час початку не може бути пізніше часу закінчення",
+        "previewTitle": "Попередній перегляд",
+        "workingDays": "Робочі дні",
+        "workingHours": "Робочі години",
+        "noDaysSelected": "Дні не обрані",
+        "cancelButton": "Скасувати",
+        "saveButton": "Зберегти",
+        "confirmation": {
+          "warning": "⚠️ Увага! Ви відключаєте індивідуальний розклад.",
+          "mainScheduleWarning": "Для цього поста буде використовуватися основний розклад сервісної точки.",
+          "explanation": {
+            "point": "Це означає, що:",
+            "point1": "Індивідуальні робочі дні та години будуть видалені",
+            "point2": "Пост буде працювати згідно загального розкладу",
+            "point3": "Всі налаштування індивідуального розкладу будуть скинуті"
+          },
+          "confirmQuestion": "Ви впевнені, що хочете продовжити?"
+        }
       },
       "services": {
         "title": "Послуги",
@@ -73,7 +168,7 @@
       "days": {
         "sunday": "Неділя",
         "monday": "Понеділок",
-        "tuesday": "Вівторок", 
+        "tuesday": "Вівторок",
         "wednesday": "Середа",
         "thursday": "Четвер",
         "friday": "П'ятниця",
@@ -82,7 +177,7 @@
       "getDayName": {
         "0": "Неділя",
         "1": "Понеділок",
-        "2": "Вівторок", 
+        "2": "Вівторок",
         "3": "Середа",
         "4": "Четвер",
         "5": "П'ятниця",
@@ -190,7 +285,7 @@
       },
       "days": {
         "sunday": "Неділя",
-        "monday": "Понеділок", 
+        "monday": "Понеділок",
         "tuesday": "Вівторок",
         "wednesday": "Середа",
         "thursday": "Четвер",

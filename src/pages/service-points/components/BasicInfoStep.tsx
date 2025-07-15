@@ -11,6 +11,9 @@ import {
   FormHelperText,
   useTheme,
   Divider,
+  Tabs,
+  Tab,
+  Paper,
 } from '@mui/material';
 import { FormikProps } from 'formik';
 import { useTranslation } from 'react-i18next';
@@ -27,9 +30,37 @@ interface BasicInfoStepProps {
   servicePoint?: ServicePoint;
 }
 
+// Компонент для отображения вкладок языков
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`localization-tabpanel-${index}`}
+      aria-labelledby={`localization-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ py: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
 const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const { t } = useTranslation();
   const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+  const [localizationTab, setLocalizationTab] = useState(0); // 0 - русский, 1 - украинский
   const theme = useTheme();
   const formStyles = getFormStyles(theme);
   const textFieldStyles = getTextFieldStyles(theme);
@@ -88,6 +119,10 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
     }
   };
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setLocalizationTab(newValue);
+  };
+
   return (
     <Box sx={{ ...formStyles.container, padding: SIZES.spacing.lg }}>
       <Typography 
@@ -104,28 +139,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>
-        {/* Основная информация */}
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            id="name"
-            name="name"
-            label={t('forms.servicePoint.fields.name')}
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.name && Boolean(formik.errors.name)}
-            helperText={formik.touched.name && formik.errors.name}
-            required
-            sx={{
-              ...textFieldStyles,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm,
-              },
-            }}
-          />
-        </Grid>
-
+        {/* Селект партнера */}
         <Grid item xs={12} md={6}>
           <FormControl 
             fullWidth 
@@ -171,27 +185,185 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
           </FormControl>
         </Grid>
 
+        {/* Локализованные поля */}
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            id="description"
-            name="description"
-            label={t('forms.servicePoint.fields.description')}
-            multiline
-            rows={4}
-            value={formik.values.description}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.description && Boolean(formik.errors.description)}
-            helperText={formik.touched.description && formik.errors.description}
-            placeholder={t('forms.servicePoint.fields.descriptionPlaceholder')}
-            sx={{
-              ...textFieldStyles,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm,
-              },
+          <Paper 
+            sx={{ 
+              p: 3,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: SIZES.borderRadius.md,
             }}
-          />
+          >
+            <Typography variant="h6" gutterBottom>
+              {t('forms.servicePoint.localization.title')}
+            </Typography>
+            
+            <Tabs 
+              value={localizationTab} 
+              onChange={handleTabChange}
+              sx={{ 
+                borderBottom: 1, 
+                borderColor: 'divider',
+                mb: 2,
+              }}
+            >
+              <Tab 
+                label={t('forms.servicePoint.localization.russian')} 
+                id="localization-tab-0"
+                aria-controls="localization-tabpanel-0"
+              />
+              <Tab 
+                label={t('forms.servicePoint.localization.ukrainian')} 
+                id="localization-tab-1"
+                aria-controls="localization-tabpanel-1"
+              />
+            </Tabs>
+
+            {/* Русская локализация */}
+            <TabPanel value={localizationTab} index={0}>
+              <Grid container spacing={SIZES.spacing.md}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="name_ru"
+                    name="name_ru"
+                    label={t('forms.servicePoint.localization.fields.name')}
+                    value={formik.values.name_ru || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.name_ru && Boolean(formik.errors.name_ru)}
+                    helperText={formik.touched.name_ru && formik.errors.name_ru}
+                    placeholder={t('forms.servicePoint.localization.placeholders.name')}
+                    required
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="description_ru"
+                    name="description_ru"
+                    label={t('forms.servicePoint.localization.fields.description')}
+                    multiline
+                    rows={4}
+                    value={formik.values.description_ru || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.description_ru && Boolean(formik.errors.description_ru)}
+                    helperText={formik.touched.description_ru && formik.errors.description_ru}
+                    placeholder={t('forms.servicePoint.localization.placeholders.description')}
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="address_ru"
+                    name="address_ru"
+                    label={t('forms.servicePoint.localization.fields.address')}
+                    value={formik.values.address_ru || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.address_ru && Boolean(formik.errors.address_ru)}
+                    helperText={formik.touched.address_ru && formik.errors.address_ru}
+                    placeholder={t('forms.servicePoint.localization.placeholders.address')}
+                    required
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
+
+            {/* Украинская локализация */}
+            <TabPanel value={localizationTab} index={1}>
+              <Grid container spacing={SIZES.spacing.md}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="name_uk"
+                    name="name_uk"
+                    label={t('forms.servicePoint.localization.fields.name')}
+                    value={formik.values.name_uk || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.name_uk && Boolean(formik.errors.name_uk)}
+                    helperText={formik.touched.name_uk && formik.errors.name_uk}
+                    placeholder={t('forms.servicePoint.localization.placeholders.name')}
+                    required
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="description_uk"
+                    name="description_uk"
+                    label={t('forms.servicePoint.localization.fields.description')}
+                    multiline
+                    rows={4}
+                    value={formik.values.description_uk || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.description_uk && Boolean(formik.errors.description_uk)}
+                    helperText={formik.touched.description_uk && formik.errors.description_uk}
+                    placeholder={t('forms.servicePoint.localization.placeholders.description')}
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    id="address_uk"
+                    name="address_uk"
+                    label={t('forms.servicePoint.localization.fields.address')}
+                    value={formik.values.address_uk || ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    error={formik.touched.address_uk && Boolean(formik.errors.address_uk)}
+                    helperText={formik.touched.address_uk && formik.errors.address_uk}
+                    placeholder={t('forms.servicePoint.localization.placeholders.address')}
+                    required
+                    sx={{
+                      ...textFieldStyles,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: SIZES.borderRadius.sm,
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </TabPanel>
+          </Paper>
         </Grid>
 
         {/* Разделитель */}
@@ -279,28 +451,6 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
               <FormHelperText>{t('forms.servicePoint.messages.selectRegionFirst')}</FormHelperText>
             )}
           </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            id="address"
-            name="address"
-            label={t('forms.servicePoint.fields.address')}
-            value={formik.values.address}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            error={formik.touched.address && Boolean(formik.errors.address)}
-            helperText={formik.touched.address && formik.errors.address}
-            placeholder={t('forms.servicePoint.fields.addressPlaceholder')}
-            required
-            sx={{
-              ...textFieldStyles,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm,
-              },
-            }}
-          />
         </Grid>
 
         <Grid item xs={12} md={6}>

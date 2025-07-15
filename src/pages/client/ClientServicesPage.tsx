@@ -115,6 +115,10 @@ const convertServicePointToServicePointData = (servicePoint: ServicePointWithSea
     name: servicePoint.name,
     address: servicePoint.address || '',
     description: servicePoint.description,
+    // Локализованные поля
+    localized_name: servicePoint.localized_name,
+    localized_address: servicePoint.localized_address,
+    localized_description: servicePoint.localized_description,
     city: servicePoint.city ? {
       id: servicePoint.city.id,
       name: getLocalizedCityName(servicePoint.city),

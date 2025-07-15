@@ -5,6 +5,12 @@ export interface LocalizableItem {
   name?: string;
   name_ru?: string;
   name_uk?: string;
+  description?: string;
+  description_ru?: string;
+  description_uk?: string;
+  address?: string;
+  address_ru?: string;
+  address_uk?: string;
 }
 
 /**
@@ -36,6 +42,68 @@ export const useLocalizedName = () => {
   const { currentLanguage } = useTranslation();
   
   return (item: LocalizableItem) => getLocalizedName(item, currentLanguage);
+};
+
+/**
+ * Получение локализованного описания для объекта
+ * @param item - объект с локализованными полями
+ * @param locale - язык (ru/uk), если не указан - берется из localStorage
+ * @returns локализованное описание с fallback логикой
+ */
+export const getLocalizedDescription = (
+  item: LocalizableItem,
+  locale?: string
+): string => {
+  const currentLocale = locale || localStorage.getItem('i18nextLng') || 'ru';
+  
+  // Приоритет для украинского языка
+  if (currentLocale === 'uk') {
+    return item.description_uk || item.description_ru || item.description || '';
+  }
+  
+  // Приоритет для русского языка (по умолчанию)
+  return item.description_ru || item.description_uk || item.description || '';
+};
+
+/**
+ * Получение локализованного адреса для объекта
+ * @param item - объект с локализованными полями
+ * @param locale - язык (ru/uk), если не указан - берется из localStorage
+ * @returns локализованный адрес с fallback логикой
+ */
+export const getLocalizedAddress = (
+  item: LocalizableItem,
+  locale?: string
+): string => {
+  const currentLocale = locale || localStorage.getItem('i18nextLng') || 'ru';
+  
+  // Приоритет для украинского языка
+  if (currentLocale === 'uk') {
+    return item.address_uk || item.address_ru || item.address || '';
+  }
+  
+  // Приоритет для русского языка (по умолчанию)
+  return item.address_ru || item.address_uk || item.address || '';
+};
+
+/**
+ * Хук для получения функции локализации описаний
+ * Автоматически использует текущий язык из системы переводов
+ */
+export const useLocalizedDescription = () => {
+  const { currentLanguage } = useTranslation();
+  
+  return (item: LocalizableItem) => getLocalizedDescription(item, currentLanguage);
+};
+
+/**
+ * Хук для получения функции локализации адресов
+ * Автоматически использует текущий язык из системы переводов
+ */
+export const useLocalizedAddress = () => {
+  const { currentLanguage } = useTranslation();
+  
+  return (item: LocalizableItem) => getLocalizedAddress(item, currentLanguage);
 };
 
 /**

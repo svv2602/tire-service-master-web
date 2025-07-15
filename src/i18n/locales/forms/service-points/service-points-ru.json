@@ -19,12 +19,38 @@
         "photos": "Фотографии",
         "serviceParameters": "Параметры обслуживания"
       },
+      "localization": {
+        "title": "Локализация",
+        "russian": "Русский",
+        "ukrainian": "Украинский",
+        "name": "Название",
+        "description": "Описание",
+        "address": "Адрес",
+        "fields": {
+          "name": "Название",
+          "description": "Описание",
+          "address": "Адрес"
+        },
+        "placeholders": {
+          "name": "Введите название сервисной точки",
+          "description": "Введите описание сервисной точки",
+          "address": "Введите адрес сервисной точки"
+        }
+      },
       "fields": {
         "address": "Адрес",
         "contactPhone": "Контактный телефон",
         "partner": "Партнер",
         "postCount": "Количество постов",
-        "defaultSlotDuration": "Длительность слота по умолчанию"
+        "defaultSlotDuration": "Длительность слота по умолчанию",
+        "name": "Название",
+        "description": "Описание",
+        "descriptionPlaceholder": "Введите описание сервисной точки",
+        "addressPlaceholder": "Введите адрес сервисной точки",
+        "region": "Регион",
+        "city": "Город",
+        "latitude": "Широта",
+        "longitude": "Долгота"
       },
       "messages": {
         "notFound": "Сервисная точка не найдена",
@@ -40,7 +66,28 @@
         "createSuccess": "Точка обслуживания успешно создана",
         "updateSuccess": "Точка обслуживания успешно обновлена",
         "saveError": "Ошибка при сохранении точки обслуживания",
-        "defaultPostName": "Пост 1"
+        "defaultPostName": "Пост 1",
+        "loading": "Загрузка...",
+        "partnerCannotBeChanged": "Партнер не может быть изменен при редактировании",
+        "selectRegionFirst": "Сначала выберите регион"
+      },
+      "selectPartner": "Выберите партнера",
+      "selectRegion": "Выберите регион",
+      "selectCity": "Выберите город",
+      "steps": {
+        "basic": "Основная информация",
+        "contact": "Контактная информация"
+      },
+      "validation": {
+        "nameRuRequired": "Название на русском языке обязательно",
+        "nameUkRequired": "Название на украинском языке обязательно",
+        "addressRuRequired": "Адрес на русском языке обязателен",
+        "addressUkRequired": "Адрес на украинском языке обязателен",
+        "partnerRequired": "Партнер обязателен",
+        "regionRequired": "Регион обязателен",
+        "cityRequired": "Город обязателен",
+        "phoneRequired": "Телефон обязателен",
+        "workStatusRequired": "Статус работы обязателен"
       },
       "schedule": {
         "atLeastOneWorkingDay": "Необходимо указать хотя бы один рабочий день",

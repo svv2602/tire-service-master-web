@@ -89,11 +89,20 @@ const emptyWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHours
 
 // Схема валидации
 const createValidationSchema = (t: any) => yup.object({
-  name: yup.string().required(t('forms.servicePoint.validation.nameRequired')),
+  // Локализованные поля - русский язык обязателен
+  name_ru: yup.string().required(t('forms.servicePoint.validation.nameRuRequired')),
+  description_ru: yup.string().nullable(),
+  address_ru: yup.string().required(t('forms.servicePoint.validation.addressRuRequired')),
+  
+  // Локализованные поля - украинский язык обязателен
+  name_uk: yup.string().required(t('forms.servicePoint.validation.nameUkRequired')),
+  description_uk: yup.string().nullable(),
+  address_uk: yup.string().required(t('forms.servicePoint.validation.addressUkRequired')),
+  
+  // Остальные поля
   partner_id: yup.number().required(t('forms.servicePoint.validation.partnerRequired')).min(1, t('forms.servicePoint.selectPartner')),
   region_id: yup.number().required(t('forms.servicePoint.validation.regionRequired')).min(1, t('forms.servicePoint.selectRegion')),
   city_id: yup.number().required(t('forms.servicePoint.validation.cityRequired')).min(1, t('forms.servicePoint.selectCity')),
-  address: yup.string().required(t('forms.servicePoint.validation.addressRequired')),
   contact_phone: yup.string().required(t('forms.servicePoint.validation.phoneRequired')),
   is_active: yup.boolean().required(),
   work_status: yup.string().required(t('forms.servicePoint.validation.workStatusRequired')),
@@ -186,8 +195,8 @@ const ServicePointFormPage: React.FC = () => {
   
   // API хуки
   const { data: servicePoint, isLoading } = useGetServicePointByIdQuery(
-    { partner_id: Number(partnerId) || 0, id: id ?? '' },
-    { skip: !isEditMode || !id || !partnerId }
+    isEditMode && id ? (partnerId ? { partner_id: Number(partnerId), id } : id) : '',
+    { skip: !isEditMode || !id }
   );
   
   const [createServicePoint, { isLoading: isCreating }] = useCreateServicePointMutation();
@@ -255,7 +264,10 @@ const ServicePointFormPage: React.FC = () => {
 
   // Проверяем корректность данных и права доступа
   useEffect(() => {
-    if (isEditMode && !partnerId) {
+    const userRole = currentUser?.role;
+    
+    // Для администраторов разрешаем редактирование без partnerId в URL
+    if (isEditMode && !partnerId && userRole !== 'admin') {
       console.error('ERROR: Editing service point without partnerId in URL');
       alert(t('errors.invalidEditUrl'));
       navigate('/service-points');
@@ -341,13 +353,19 @@ const ServicePointFormPage: React.FC = () => {
     }
     
     return {
-      name: servicePoint?.name || '',
+      // Локализованные поля
+      name_ru: servicePoint?.name_ru || '',
+      name_uk: servicePoint?.name_uk || '',
+      description_ru: servicePoint?.description_ru || '',
+      description_uk: servicePoint?.description_uk || '',
+      address_ru: servicePoint?.address_ru || '',
+      address_uk: servicePoint?.address_uk || '',
+      
+      // Остальные поля
       partner_id: servicePoint?.partner_id || partnerIdNumber,
       city_id: servicePoint?.city?.id || 0,
       region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
-      address: servicePoint?.address || '',
       contact_phone: servicePoint?.contact_phone || '',
-      description: servicePoint?.description || '',
       latitude: servicePoint?.latitude || null,
       longitude: servicePoint?.longitude || null,
       is_active: servicePoint?.is_active ?? true,
@@ -387,12 +405,18 @@ const ServicePointFormPage: React.FC = () => {
       try {
         // Подготавливаем данные для отправки
         const servicePointData = {
-          name: values.name,
+          // Локализованные поля
+          name_ru: values.name_ru,
+          name_uk: values.name_uk,
+          description_ru: values.description_ru,
+          description_uk: values.description_uk,
+          address_ru: values.address_ru,
+          address_uk: values.address_uk,
+          
+          // Остальные поля
           partner_id: values.partner_id,
           city_id: values.city_id,
-          address: values.address,
           contact_phone: values.contact_phone,
-          description: values.description,
           latitude: values.latitude,
           longitude: values.longitude,
           is_active: values.is_active,
@@ -702,13 +726,19 @@ const ServicePointFormPage: React.FC = () => {
       
       // Обновляем все поля формы
       formik.setValues({
-        name: servicePoint?.name || '',
+        // Локализованные поля
+        name_ru: servicePoint?.name_ru || '',
+        name_uk: servicePoint?.name_uk || '',
+        description_ru: servicePoint?.description_ru || '',
+        description_uk: servicePoint?.description_uk || '',
+        address_ru: servicePoint?.address_ru || '',
+        address_uk: servicePoint?.address_uk || '',
+        
+        // Остальные поля
         partner_id: servicePoint?.partner_id || (partnerId ? Number(partnerId) : 0),
         city_id: servicePoint?.city?.id || 0,
         region_id: servicePoint?.city?.region_id || 0, // Добавляем region_id
-        address: servicePoint?.address || '',
         contact_phone: servicePoint?.contact_phone || '',
-        description: servicePoint?.description || '',
         latitude: servicePoint?.latitude || null,
         longitude: servicePoint?.longitude || null,
         is_active: servicePoint?.is_active ?? true,
@@ -768,13 +798,15 @@ const ServicePointFormPage: React.FC = () => {
 
   // Функции для проверки заполненности разделов
   const isBasicInfoComplete = () => {
-    return formik.values.name.trim().length > 0 && 
+    return formik.values.name_ru.trim().length > 0 && 
+           formik.values.name_uk.trim().length > 0 && 
            formik.values.partner_id > 0;
   };
 
   const isLocationComplete = () => {
     return formik.values.city_id > 0 && 
-           formik.values.address.trim().length > 0;
+           formik.values.address_ru.trim().length > 0 && 
+           formik.values.address_uk.trim().length > 0;
   };
 
   const isContactComplete = () => {

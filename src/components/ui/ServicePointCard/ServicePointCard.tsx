@@ -69,6 +69,10 @@ export interface ServicePointData {
   name: string;
   address: string;
   description?: string;
+  // Локализованные поля
+  localized_name?: string;
+  localized_address?: string;
+  localized_description?: string;
   city?: {
     id: number;
     name: string;
@@ -686,13 +690,13 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         {/* Основная информация */}
         <Box sx={{ mb: 2 }}>
           <Typography variant={variant === 'compact' ? 'h6' : 'h5'} sx={{ fontWeight: 700, mb: 1, color: colors.textPrimary }}>
-            {servicePoint.name}
+            {servicePoint.localized_name || servicePoint.name}
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <LocationIcon sx={{ color: colors.textSecondary, fontSize: '1.2rem' }} />
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {servicePoint.address}{servicePoint.city?.name ? `, ${getLocalizedName(servicePoint.city)}` : ''}
+              {servicePoint.localized_address || servicePoint.address}{servicePoint.city?.name ? `, ${getLocalizedName(servicePoint.city)}` : ''}
             </Typography>
           </Box>
 

@@ -75,12 +75,36 @@ export interface Partner {
   updated_at: string;
 }
 
+// Базовый интерфейс для локализуемых объектов
+export interface LocalizableItem {
+  name?: string;
+  name_ru?: string;
+  name_uk?: string;
+  description?: string;
+  description_ru?: string;
+  description_uk?: string;
+  address?: string;
+  address_ru?: string;
+  address_uk?: string;
+}
+
 // Модель сервисной точки
-export interface ServicePoint {
+export interface ServicePoint extends LocalizableItem {
   id: number;
   name: string;
   description?: string;
   address: string;
+  // Локализованные поля
+  name_ru?: string;
+  name_uk?: string;
+  description_ru?: string;
+  description_uk?: string;
+  address_ru?: string;
+  address_uk?: string;
+  localized_name?: string;
+  localized_description?: string;
+  localized_address?: string;
+  
   city_id: number;
   partner_id: number;
   latitude?: number | null;
@@ -559,9 +583,14 @@ export interface ServicePost {
 
 // Расширенный интерфейс для новой формы сервисной точки
 export interface ServicePointFormDataNew {
-  name: string;
-  description?: string;
-  address: string;
+  // Локализованные поля (обязательные)
+  name_ru: string;
+  name_uk: string;
+  description_ru?: string;
+  description_uk?: string;
+  address_ru: string;
+  address_uk: string;
+  
   city_id: number;
   region_id?: number; // Добавляем поле region_id для каскадной загрузки
   partner_id: number;

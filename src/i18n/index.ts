@@ -39,6 +39,8 @@ import dashboardRuTranslations from './locales/forms/dashboard/dashboard-ru.json
 import dashboardUkTranslations from './locales/forms/dashboard/dashboard-uk.json';
 import servicePointsRuTranslations from './locales/forms/service-points/service-points-ru.json';
 import servicePointsUkTranslations from './locales/forms/service-points/service-points-uk.json';
+import servicePointRuTranslations from './locales/forms/service-points/servicepoint-ru.json';
+import servicePointUkTranslations from './locales/forms/service-points/servicepoint-uk.json';
 import regionsRuTranslations from './locales/forms/regions/region-ru.json';
 import regionsUkTranslations from './locales/forms/regions/region-uk.json';
 import reviewsRuTranslations from './locales/forms/reviews/reviews-ru.json';
@@ -97,6 +99,7 @@ const ukTranslationModules = [
   bookingsUkTranslations,
   dashboardUkTranslations,
   servicePointsUkTranslations,
+  servicePointUkTranslations,
   regionsUkTranslations,
   reviewsUkTranslations,
   reviewUkTranslations,
@@ -123,6 +126,7 @@ const ruTranslationModules = [
   bookingsRuTranslations,
   dashboardRuTranslations,
   servicePointsRuTranslations,
+  servicePointRuTranslations,
   regionsRuTranslations,
   reviewsRuTranslations,
   reviewRuTranslations,

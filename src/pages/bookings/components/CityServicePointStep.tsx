@@ -45,6 +45,10 @@ const convertServicePointToServicePointData = (servicePoint: ServicePoint): Serv
     name: servicePoint.name,
     address: servicePoint.address || '',
     description: servicePoint.description,
+    // Локализованные поля
+    localized_name: servicePoint.localized_name,
+    localized_address: servicePoint.localized_address,
+    localized_description: servicePoint.localized_description,
     city: servicePoint.city ? {
       id: servicePoint.city.id,
       name: servicePoint.city.name,
@@ -168,7 +172,8 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   const { data: servicePointsData, isLoading: isLoadingServicePoints, error: servicePointsError } = useGetServicePointsByCategoryQuery(
     { 
       categoryId: formData.service_category_id,
-      cityId: selectedCity?.id
+      cityId: selectedCity?.id,
+      locale: localStorage.getItem('i18nextLng') || 'ru'
     },
     { skip: !formData.service_category_id || !selectedCity }
   );

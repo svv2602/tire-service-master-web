@@ -471,15 +471,16 @@ export const servicePointsApi = baseApi.injectEndpoints({
     // Получение сервисных точек по категории
     getServicePointsByCategory: builder.query<
       { data: ServicePoint[]; total_count: number }, 
-      { categoryId: number; cityId?: number; page?: number; per_page?: number }
+      { categoryId: number; cityId?: number; page?: number; per_page?: number; locale?: string }
     >({
-      query: ({ categoryId, cityId, page = 1, per_page = 10 }) => ({
+      query: ({ categoryId, cityId, page = 1, per_page = 10, locale = 'ru' }) => ({
         url: 'service_points/by_category',
         params: { 
           category_id: categoryId, 
           city_id: cityId,
           page,
-          per_page
+          per_page,
+          locale
         }
       }),
       providesTags: ['ServicePoint'],

@@ -92,7 +92,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     page: 1,
     per_page: 100
   });
-  const { data: servicePointsData, isLoading } = useGetServicePointsQuery(queryParams);
+  const { data: servicePointsData, isLoading, refetch } = useGetServicePointsQuery(queryParams);
   const [deleteServicePoint] = useDeleteServicePointMutation();
 
   // Эффект для автоматической установки фильтра партнера при наличии partnerId в URL
@@ -195,6 +195,16 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       onClick: (servicePoint: ServicePoint) => {
         // Всегда используем partner_id из сервисной точки для формирования корректного URL
         const partnerIdToUse = partnerId || servicePoint.partner_id;
+        
+        // Проверяем что partner_id существует
+        if (!partnerIdToUse) {
+          console.error('ServicePoint partner_id is missing:', servicePoint);
+          showNotification('Ошибка: У сервисной точки отсутствует ID партнера. Перезагружаем данные...', 'error');
+          // Временное решение: попробуем перезагрузить данные
+          refetch();
+          return;
+        }
+        
         navigate(`/admin/partners/${partnerIdToUse}/service-points/${servicePoint.id}/edit`, {
           state: { from: partnerId ? `/admin/partners/${partnerId}/service-points` : '/admin/service-points' }
         });
