@@ -30,7 +30,6 @@ import { phoneValidation } from '../../utils/validation';
 
 // Компоненты шагов
 import BasicInfoStep from './components/BasicInfoStep';
-import LocationStep from './components/LocationStep';
 import ContactStep from './components/ContactStep';
 import SettingsStep from './components/SettingsStep';
 import PostsStep from './components/PostsStep';
@@ -58,7 +57,6 @@ import type { WorkingHoursSchedule, WorkingHours } from '../../types/working-hou
 // Шаги формы
 const getFormSteps = (t: any) => [
   { id: 'basic', label: t('forms.servicePoint.steps.basic'), component: BasicInfoStep },
-  { id: 'location', label: t('forms.servicePoint.steps.location'), component: LocationStep },
   { id: 'contact', label: t('forms.servicePoint.steps.contact'), component: ContactStep },
   { id: 'schedule', label: t('forms.servicePoint.steps.schedule'), component: ScheduleStep },
   { id: 'posts', label: t('forms.servicePoint.steps.posts'), component: PostsStep },
