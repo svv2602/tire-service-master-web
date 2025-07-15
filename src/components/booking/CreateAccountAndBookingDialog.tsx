@@ -62,7 +62,10 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   
   // Проверяем существование пользователя при открытии диалога
   const { data: userExistsData, isLoading: isCheckingUser } = useCheckUserExistsQuery(
-    { phone: extractPhoneDigits(bookingData.service_recipient.phone) },
+    { 
+      phone: extractPhoneDigits(bookingData.service_recipient.phone),
+      email: bookingData.service_recipient.email
+    },
     { skip: !open }
   );
 
