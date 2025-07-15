@@ -325,6 +325,22 @@
     },
     "richTextEditor": {
       "toolbar": {
+        "modes": {
+          "visual": "Визуальный",
+          "html": "HTML",
+          "text": "Текст"
+        },
+        "labels": {
+          "htmlEditor": "HTML редактор",
+          "textEditor": "Текстовый редактор"
+        },
+        "buttons": {
+          "preview": "Предпросмотр"
+        },
+        "placeholders": {
+          "htmlCode": "Введите HTML код...",
+          "textContent": "Введите текст..."
+        },
         "bold": "Жирный",
         "italic": "Курсив",
         "underline": "Подчеркнутый",

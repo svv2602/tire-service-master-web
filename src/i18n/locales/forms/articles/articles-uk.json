@@ -325,6 +325,22 @@
     },
     "richTextEditor": {
       "toolbar": {
+        "modes": {
+          "visual": "Візуальний",
+          "html": "HTML",
+          "text": "Текст"
+        },
+        "labels": {
+          "htmlEditor": "HTML редактор",
+          "textEditor": "Текстовий редактор"
+        },
+        "buttons": {
+          "preview": "Попередній перегляд"
+        },
+        "placeholders": {
+          "htmlCode": "Введіть HTML код...",
+          "textContent": "Введіть текст..."
+        },
         "bold": "Жирний",
         "italic": "Курсив",
         "underline": "Підкреслений",
