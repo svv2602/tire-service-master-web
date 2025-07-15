@@ -9,15 +9,22 @@ import {
   InputAdornment,
   Alert,
   Divider,
+  Paper,
+  FormControlLabel,
+  Checkbox,
+  Chip,
 } from '@mui/material';
 import {
   Person as PersonIcon,
   Phone as PhoneIcon,
   Email as EmailIcon,
   ContactPage as ContactPageIcon,
+  AccountCircle as AccountCircleIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
+import { useTheme } from '@mui/material/styles';
 
 // Импорт UI компонентов
 import TextField from '../../../components/ui/TextField';
@@ -25,6 +32,9 @@ import PhoneField from '../../../components/ui/PhoneField';
 
 // Импорт типов
 import { BookingFormData } from '../../../types/booking';
+
+// Импорт стилей
+import { getCardStyles } from '../../../styles/components';
 
 interface ClientInfoStepProps {
   formData: BookingFormData;
@@ -40,7 +50,11 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   isValid,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  
+  // Состояние для чекбокса "Я получатель услуг"
+  const [isUserRecipient, setIsUserRecipient] = useState(false);
   
   const [errors, setErrors] = useState({
     first_name: '',
@@ -113,6 +127,44 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       [field]: error,
     }));
   };
+
+  // Обработчик чекбокса "Я получатель услуг"
+  const handleUserRecipientChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    setIsUserRecipient(checked);
+    
+    if (checked && user) {
+      // Копируем данные пользователя в поля получателя
+      setFormData((prev: BookingFormData) => ({
+        ...prev,
+        service_recipient: {
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          phone: user.phone || '',
+          email: user.email || '',
+        }
+      }));
+      
+      // Сбрасываем ошибки
+      setErrors({
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+      });
+    } else {
+      // Очищаем поля получателя
+      setFormData((prev: BookingFormData) => ({
+        ...prev,
+        service_recipient: {
+          first_name: '',
+          last_name: '',
+          phone: '',
+          email: '',
+        }
+      }));
+    }
+  };
   
   // Проверяем все поля на валидность для отображения ошибок
   const getRequiredFieldErrors = () => {
@@ -161,88 +213,249 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Alert>
       )}
 
-      {/* Форма контактной информации */}
-      <Grid container spacing={3}>
-        {/* {t('bookingSteps.clientInfo.firstName')} */}
-        <Grid item xs={12} md={6}>
-          <TextField
-            label={t('bookingSteps.clientInfo.firstName')}
-            value={formData.service_recipient.first_name}
-            onChange={(e) => handleFieldChange('first_name')(e.target.value)}
-            error={!!errors.first_name}
-            helperText={errors.first_name}
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
+      {/* Секция для авторизованного пользователя */}
+      {isAuthenticated && user && (
+        <>
+          {/* Данные заказчика (только для чтения) */}
+          <Paper sx={{ ...getCardStyles(theme), p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AccountCircleIcon color="primary" />
+              Данные заказчика
+            </Typography>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <PersonIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            placeholder={t('bookingSteps.clientInfo.placeholders.firstName')}
-          />
-        </Grid>
-
-        {/* {t('bookingSteps.clientInfo.lastName')} */}
-        <Grid item xs={12} md={6}>
-          <TextField
-            label={t('bookingSteps.clientInfo.lastName')}
-            value={formData.service_recipient.last_name}
-            onChange={(e) => handleFieldChange('last_name')(e.target.value)}
-            error={!!errors.last_name}
-            helperText={errors.last_name}
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            placeholder={t('bookingSteps.clientInfo.placeholders.lastName')}
-          />
-        </Grid>
-
-        {/* Телефон */}
-        <Grid item xs={12} md={6}>
-          <PhoneField
-            label={t('bookingSteps.clientInfo.phone')}
-            value={formData.service_recipient.phone}
-            onChange={handleFieldChange('phone')}
-            error={!!errors.phone}
-            helperText={errors.phone || t('bookingSteps.clientInfo.helperText.phoneFormat')}
-            placeholder={t('bookingSteps.clientInfo.placeholders.phone', '+38 (067) 123-45-67')}
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
+                  <Typography variant="body2" color="text.secondary">
+                    Имя и фамилия
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={`${user.first_name} ${user.last_name}`}
+                  variant="outlined"
+                  sx={{ mb: 1 }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                   <PhoneIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Grid>
+                  <Typography variant="body2" color="text.secondary">
+                    Телефон
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={user.phone}
+                  variant="outlined"
+                  sx={{ mb: 1 }}
+                />
+              </Grid>
+              
+              {user.email && (
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <EmailIcon color="action" />
+                    <Typography variant="body2" color="text.secondary">
+                      Email
+                    </Typography>
+                  </Box>
+                  <Chip 
+                    label={user.email}
+                    variant="outlined"
+                    sx={{ mb: 1 }}
+                  />
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
 
-        {/* Email */}
-        <Grid item xs={12} md={6}>
-          <TextField
-            label={t('bookingSteps.clientInfo.email')}
-            type="email"
-            value={formData.service_recipient.email || ''}
-            onChange={(e) => handleFieldChange('email')(e.target.value)}
-            error={!!errors.email}
-            helperText={errors.email || t('bookingSteps.clientInfo.helperText.email')}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            placeholder={t('bookingSteps.clientInfo.placeholders.email')}
-          />
+          {/* Получатель услуг */}
+          <Paper sx={{ ...getCardStyles(theme), p: 3, mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PersonAddIcon color="primary" />
+              Получатель услуг
+            </Typography>
+            
+            {/* Чекбокс "Я получатель услуг" */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={isUserRecipient}
+                  onChange={handleUserRecipientChange}
+                  color="primary"
+                />
+              }
+              label="Я получатель услуг"
+              sx={{ mb: 2 }}
+            />
+            
+            {/* Поля получателя услуг */}
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label={t('bookingSteps.clientInfo.firstName')}
+                  value={formData.service_recipient.first_name}
+                  onChange={(e) => handleFieldChange('first_name')(e.target.value)}
+                  error={!!errors.first_name}
+                  helperText={errors.first_name}
+                  required
+                  disabled={isUserRecipient}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder={t('bookingSteps.clientInfo.placeholders.firstName')}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label={t('bookingSteps.clientInfo.lastName')}
+                  value={formData.service_recipient.last_name}
+                  onChange={(e) => handleFieldChange('last_name')(e.target.value)}
+                  error={!!errors.last_name}
+                  helperText={errors.last_name}
+                  required
+                  disabled={isUserRecipient}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder={t('bookingSteps.clientInfo.placeholders.lastName')}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <PhoneField
+                  label={t('bookingSteps.clientInfo.phone')}
+                  value={formData.service_recipient.phone}
+                  onChange={handleFieldChange('phone')}
+                  error={!!errors.phone}
+                  helperText={errors.phone || t('bookingSteps.clientInfo.helperText.phoneFormat')}
+                  placeholder={t('bookingSteps.clientInfo.placeholders.phone', '+38 (067) 123-45-67')}
+                  required
+                  disabled={isUserRecipient}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label={t('bookingSteps.clientInfo.email')}
+                  type="email"
+                  value={formData.service_recipient.email || ''}
+                  onChange={(e) => handleFieldChange('email')(e.target.value)}
+                  error={!!errors.email}
+                  helperText={errors.email || t('bookingSteps.clientInfo.helperText.email')}
+                  disabled={isUserRecipient}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EmailIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  placeholder={t('bookingSteps.clientInfo.placeholders.email')}
+                />
+              </Grid>
+            </Grid>
+          </Paper>
+        </>
+      )}
+
+      {/* Секция для неавторизованного пользователя (как было раньше) */}
+      {!isAuthenticated && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              label={t('bookingSteps.clientInfo.firstName')}
+              value={formData.service_recipient.first_name}
+              onChange={(e) => handleFieldChange('first_name')(e.target.value)}
+              error={!!errors.first_name}
+              helperText={errors.first_name}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder={t('bookingSteps.clientInfo.placeholders.firstName')}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              label={t('bookingSteps.clientInfo.lastName')}
+              value={formData.service_recipient.last_name}
+              onChange={(e) => handleFieldChange('last_name')(e.target.value)}
+              error={!!errors.last_name}
+              helperText={errors.last_name}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder={t('bookingSteps.clientInfo.placeholders.lastName')}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <PhoneField
+              label={t('bookingSteps.clientInfo.phone')}
+              value={formData.service_recipient.phone}
+              onChange={handleFieldChange('phone')}
+              error={!!errors.phone}
+              helperText={errors.phone || t('bookingSteps.clientInfo.helperText.phoneFormat')}
+              placeholder={t('bookingSteps.clientInfo.placeholders.phone', '+38 (067) 123-45-67')}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PhoneIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <TextField
+              label={t('bookingSteps.clientInfo.email')}
+              type="email"
+              value={formData.service_recipient.email || ''}
+              onChange={(e) => handleFieldChange('email')(e.target.value)}
+              error={!!errors.email}
+              helperText={errors.email || t('bookingSteps.clientInfo.helperText.email')}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EmailIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+              placeholder={t('bookingSteps.clientInfo.placeholders.email')}
+            />
+          </Grid>
         </Grid>
-      </Grid>
+      )}
 
       {/* Информация о конфиденциальности */}
       <Divider sx={{ my: 3 }} />
