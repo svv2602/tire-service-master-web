@@ -281,7 +281,8 @@ const ClientServicesPage: React.FC = () => {
   const citiesQueryParams = useMemo(() => ({
     category_id: selectedCategory || undefined,
     service_id: selectedService || undefined,
-    region_id: selectedRegion || undefined
+    // region_id добавляем только если выбран регион, иначе не передаём
+    ...(selectedRegion ? { region_id: selectedRegion } : {})
   }), [selectedCategory, selectedService, selectedRegion]);
 
   // Отладка параметров запроса городов
@@ -313,8 +314,9 @@ const ClientServicesPage: React.FC = () => {
       params.region_id = selectedRegion;
     }
     
+    // Исправлено: фильтрация по id города, а не по имени
     if (selectedCity) {
-      params.city = getLocalizedCityName(selectedCity);
+      params.city_id = selectedCity.id;
     }
     
     if (searchQuery) {
