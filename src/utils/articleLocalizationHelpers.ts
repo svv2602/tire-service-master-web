@@ -1,4 +1,5 @@
 import { Article, ArticleSummary } from '../types/articles';
+import { useTranslation } from 'react-i18next';
 
 // Интерфейс для локализуемых статей
 export interface LocalizableArticle {
@@ -129,7 +130,8 @@ export const getLocalizedArticleMetaDescription = (
  * @returns функция для получения локализованного названия
  */
 export const useLocalizedArticleTitle = () => {
-  const currentLanguage = localStorage.getItem('i18nextLng') || 'ru';
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language || 'ru';
   return (article: LocalizableArticle) => getLocalizedArticleTitle(article, currentLanguage);
 };
 
@@ -138,7 +140,8 @@ export const useLocalizedArticleTitle = () => {
  * @returns функция для получения локализованного содержимого
  */
 export const useLocalizedArticleContent = () => {
-  const currentLanguage = localStorage.getItem('i18nextLng') || 'ru';
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language || 'ru';
   return (article: LocalizableArticle) => getLocalizedArticleContent(article, currentLanguage);
 };
 
@@ -147,7 +150,8 @@ export const useLocalizedArticleContent = () => {
  * @returns функция для получения локализованного краткого описания
  */
 export const useLocalizedArticleExcerpt = () => {
-  const currentLanguage = localStorage.getItem('i18nextLng') || 'ru';
+  const { i18n } = useTranslation();
+  const currentLanguage = i18n.language || 'ru';
   return (article: LocalizableArticle) => getLocalizedArticleExcerpt(article, currentLanguage);
 };
 
