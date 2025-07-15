@@ -614,9 +614,27 @@ const ArticleForm: React.FC<ArticleFormProps> = ({ article, mode }) => {
                           <Chip
                             key={index}
                             label={tag}
+                            deletable={true}
                             onDelete={() => removeTag(tag)}
-                            color="primary"
+                            variant="filled"
                             size="small"
+                            sx={{
+                              backgroundColor: '#1976d2 !important',
+                              color: '#ffffff !important',
+                              '&:hover': {
+                                backgroundColor: '#1565c0 !important',
+                              },
+                              '& .MuiChip-deleteIcon': {
+                                color: '#ffffff !important',
+                                '&:hover': {
+                                  color: '#ffffff !important',
+                                  opacity: 0.8,
+                                },
+                              },
+                              '& .MuiChip-label': {
+                                color: '#ffffff !important',
+                              },
+                            }}
                           />
                         ))}
                       </Box>
