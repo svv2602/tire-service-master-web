@@ -8,6 +8,7 @@ import {
   Box,
   Alert,
   CircularProgress,
+  Link,
 } from '@mui/material';
 import { Person as PersonIcon, AccountCircle as AccountCircleIcon } from '@mui/icons-material';
 import { Button, TextField } from '../ui';
@@ -72,6 +73,11 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
     onClose();
   };
 
+  const handleForgotPassword = () => {
+    // Открываем страницу восстановления пароля в новой вкладке
+    window.open('/forgot-password', '_blank');
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
@@ -121,6 +127,23 @@ const ExistingUserDialog: React.FC<ExistingUserDialogProps> = ({
             }
           }}
         />
+
+        {/* Кнопка "Забыли пароль" */}
+        <Box textAlign="center" sx={{ mb: 2 }}>
+          <Link
+            component="button"
+            variant="body2"
+            onClick={handleForgotPassword}
+            sx={{ 
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline'
+              }
+            }}
+          >
+            {t('existingUserDialog.buttons.forgotPassword')}
+          </Link>
+        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>

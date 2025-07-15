@@ -282,7 +282,8 @@
     "buttons": {
       "login": "Увійти та забронювати",
       "continueAsGuest": "Продовжити як гість",
-      "loggingIn": "Вхід..."
+      "loggingIn": "Вхід...",
+      "forgotPassword": "Забули пароль?"
     }
   },
   "clientSearchPage": {

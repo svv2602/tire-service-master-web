@@ -280,7 +280,8 @@
     "buttons": {
       "continueAsGuest": "Продолжить как гость",
       "login": "Войти и забронировать",
-      "loggingIn": "Вход..."
+      "loggingIn": "Вход...",
+      "forgotPassword": "Забыли пароль?"
     },
     "validation": {
       "passwordRequired": "Введите пароль",
