@@ -81,6 +81,8 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
   
   // Рефы для управления фокусом
   const licensePlateRef = useRef<HTMLInputElement>(null);
+  const myCarAccordionRef = useRef<HTMLDivElement>(null);
+  const typeAccordionRef = useRef<HTMLDivElement>(null);
   
   // Загрузка данных с учетом текущей локали
   const { data: carTypesData, isLoading: isLoadingCarTypes, error: carTypesError } = useGetCarTypesQuery({ 
@@ -120,6 +122,33 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
       }
     }
   }, [formData.car_type_id, carTypes.length, isAuthenticated, clientCars]);
+
+  // Автоматический фокус на блок при переходе на шаг
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Если есть автомобили пользователя, фокусируемся на блоке "Мои автомобили"
+      if (isAuthenticated && clientCars && clientCars.length > 0) {
+        if (myCarAccordionRef.current) {
+          myCarAccordionRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          myCarAccordionRef.current.focus();
+        }
+      } else {
+        // Иначе фокусируемся на блоке "Тип автомобиля"
+        if (typeAccordionRef.current) {
+          typeAccordionRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          typeAccordionRef.current.focus();
+        }
+      }
+    }, 300); // Небольшая задержка для завершения анимации перехода
+
+    return () => clearTimeout(timer);
+  }, []); // Выполняется только при монтировании компонента
   
   // Устанавливаем фокус на номер авто после выбора типа
   useEffect(() => {
@@ -376,6 +405,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
         {isAuthenticated && (
           <Grid item xs={12}>
             <Accordion 
+              ref={myCarAccordionRef}
               expanded={myCarAccordionOpen} 
               onChange={(_, expanded) => setMyCarAccordionOpen(expanded)}
               sx={{ 
@@ -454,7 +484,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
         
         {/* 1. Тип автомобиля */}
         <Grid item xs={12}>
-          <Accordion expanded={typeAccordionOpen} onChange={(_, expanded) => setTypeAccordionOpen(expanded)}>
+          <Accordion ref={typeAccordionRef} expanded={typeAccordionOpen} onChange={(_, expanded) => setTypeAccordionOpen(expanded)}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 1. {t('bookingSteps.carType.carType')} *
