@@ -217,7 +217,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
       {isAuthenticated && user && (
         <>
           {/* Данные заказчика (только для чтения) */}
-          <Paper sx={{ ...getCardStyles(theme), p: 3, mb: 3 }}>
+          <Paper sx={{ ...getCardStyles(theme), p: 2, mb: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <AccountCircleIcon color="primary" />
               Данные заказчика
@@ -225,45 +225,54 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
             
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <PersonIcon color="action" />
-                  <Typography variant="body2" color="text.secondary">
-                    Имя и фамилия
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={`${user.first_name} ${user.last_name}`}
-                  variant="outlined"
-                  sx={{ mb: 1 }}
+                <TextField
+                  label="Имя и фамилия"
+                  value={`${user.first_name} ${user.last_name}`}
+                  disabled
+                  fullWidth
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               
               <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <PhoneIcon color="action" />
-                  <Typography variant="body2" color="text.secondary">
-                    Телефон
-                  </Typography>
-                </Box>
-                <Chip 
-                  label={user.phone}
-                  variant="outlined"
-                  sx={{ mb: 1 }}
+                <TextField
+                  label="Телефон"
+                  value={user.phone}
+                  disabled
+                  fullWidth
+                  size="small"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PhoneIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </Grid>
               
               {user.email && (
                 <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <EmailIcon color="action" />
-                    <Typography variant="body2" color="text.secondary">
-                      Email
-                    </Typography>
-                  </Box>
-                  <Chip 
-                    label={user.email}
-                    variant="outlined"
-                    sx={{ mb: 1 }}
+                  <TextField
+                    label="Email"
+                    value={user.email}
+                    disabled
+                    fullWidth
+                    size="small"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <EmailIcon color="action" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
                 </Grid>
               )}
@@ -271,7 +280,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
           </Paper>
 
           {/* Получатель услуг */}
-          <Paper sx={{ ...getCardStyles(theme), p: 3, mb: 3 }}>
+          <Paper sx={{ ...getCardStyles(theme), p: 2, mb: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
               <PersonAddIcon color="primary" />
               Получатель услуг
