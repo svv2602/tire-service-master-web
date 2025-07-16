@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useRef, useEffect } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Box,
@@ -41,12 +41,54 @@ const ArticleDetailPage: React.FC = () => {
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const location = useLocation();
+
+  // Реф для кнопки "Вернуться к базе знаний"
+  const backButtonRef = useRef<HTMLAnchorElement>(null);
 
   const { article, loading, error } = useArticle(id || null);
   const { articles: relatedArticles, loading: relatedLoading } = useRelatedArticles(
     id ? Number(id) : null, 
     3
   );
+
+  // Эффект для автофокуса на кнопку "Вернуться к базе знаний" при навигации к статье
+  useEffect(() => {
+    if (article && backButtonRef.current) {
+      // Небольшая задержка для завершения рендеринга
+      const timer = setTimeout(() => {
+        if (backButtonRef.current) {
+          // Устанавливаем фокус на кнопку
+          backButtonRef.current.focus();
+          
+          // Плавно скроллим к началу страницы
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }
+      }, 300); // Увеличена задержка для стабильности
+
+      return () => clearTimeout(timer);
+    }
+  }, [article, id]); // Срабатывает при изменении статьи или ID
+
+  // Дополнительный эффект для обработки изменения URL (при клике на похожие статьи)
+  useEffect(() => {
+    if (location.pathname.includes('/knowledge-base/') && article && backButtonRef.current) {
+      const timer = setTimeout(() => {
+        if (backButtonRef.current) {
+          backButtonRef.current.focus();
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }
+      }, 500); // Больше времени для загрузки новой статьи
+
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, article]); // Срабатывает при изменении пути
 
   if (loading) {
     return (
@@ -131,6 +173,7 @@ const ArticleDetailPage: React.FC = () => {
               {/* Навигация */}
               <Box sx={{ mb: 4 }}>
                 <Button
+                  ref={backButtonRef}
                   component={Link}
                   to="/knowledge-base"
                   variant="outlined"
@@ -149,12 +192,20 @@ const ArticleDetailPage: React.FC = () => {
                     <Box sx={{ p: 4, pb: 2 }}>
                       <Typography 
                         variant="h3" 
-                        component="h1" 
+                        component="h1"
                         sx={{ 
                           color: colors.textPrimary, 
                           fontWeight: 700, 
                           mb: 3,
-                          lineHeight: 1.2
+                          lineHeight: 1.2,
+                          outline: 'none', // Убираем стандартный outline при фокусе
+                          '&:focus': {
+                            // Добавляем кастомный стиль при фокусе для accessibility
+                            textDecoration: 'underline',
+                            textDecorationColor: colors.primary,
+                            textDecorationThickness: '2px',
+                            textUnderlineOffset: '4px'
+                          }
                         }}
                       >
                         {getLocalizedArticleTitle(article)}

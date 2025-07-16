@@ -61,12 +61,29 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
     return icons[category as keyof typeof icons] || '📄';
   };
 
+  // Обработчик клика для автофокуса на кнопку "Вернуться к базе знаний"
+  const handleClick = () => {
+    // Небольшая задержка для завершения навигации
+    setTimeout(() => {
+      // Ищем кнопку по тексту или aria-label
+      const backButton = document.querySelector('a[href="/knowledge-base"]') as HTMLElement;
+      if (backButton) {
+        backButton.focus();
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    }, 400);
+  };
+
   // Компактный вариант для боковой панели
   if (variant === 'compact') {
     return (
       <Card 
         component={Link}
         to={`/knowledge-base/${article.id}`}
+        onClick={handleClick}
         sx={{
           ...cardStyles,
           display: 'flex',
@@ -144,6 +161,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
     <Card 
       component={Link}
       to={`/knowledge-base/${article.id}`}
+      onClick={handleClick}
       sx={{
         ...cardStyles,
         height: cardHeight,
