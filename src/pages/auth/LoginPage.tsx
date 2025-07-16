@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { clearLogoutFlag } from '../../store/slices/authSlice';
-import { useTheme } from '@mui/material';
+import { useTheme, Divider } from '@mui/material';
 import {
-  Container
+  Container,
+  Box,
+  Typography
 } from '../../components/ui';
 import {
   getContainerStyles
@@ -13,6 +15,7 @@ import {
 import ClientLayout from '../../components/client/ClientLayout';
 import { UserRole } from '../../types';
 import UniversalLoginForm from '../../components/auth/UniversalLoginForm';
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -70,12 +73,29 @@ const LoginPage: React.FC = () => {
         maxWidth="sm" 
         sx={containerStyles.centerContent}
       >
-        <UniversalLoginForm 
-          showRegisterLink={true}
-          onSwitchToRegister={() => navigate('/auth/register')}
-          showSkipButton={true}
-          onSkip={handleSkipLogin}
-        />
+        <Box sx={{ width: '100%', maxWidth: 400, mx: 'auto' }}>
+          <UniversalLoginForm 
+            showRegisterLink={true}
+            onSwitchToRegister={() => navigate('/auth/register')}
+            showSkipButton={true}
+            onSkip={handleSkipLogin}
+          />
+          
+          {/* Разделитель */}
+          <Box sx={{ my: 3, display: 'flex', alignItems: 'center' }}>
+            <Divider sx={{ flex: 1 }} />
+            <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
+              или
+            </Typography>
+            <Divider sx={{ flex: 1 }} />
+          </Box>
+          
+          {/* Google OAuth кнопка */}
+          <GoogleLoginButton 
+            variant="signin" 
+            fullWidth 
+          />
+        </Box>
       </Container>
     </ClientLayout>
   );

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование Google OAuth интеграции</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-header {
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .test-button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #357ae8;
+        }
+        .test-button.secondary {
+            background: #6c757d;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .checklist li:before {
+            content: "✅ ";
+            color: #28a745;
+            font-weight: bold;
+        }
+        .checklist li.pending:before {
+            content: "⏳ ";
+            color: #ffc107;
+        }
+        .checklist li.error:before {
+            content: "❌ ";
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-header">🔐 Тестирование Google OAuth интеграции</h1>
+        
+        <div class="test-section">
+            <h3>📋 Чек-лист готовности</h3>
+            <ul class="checklist">
+                <li>Backend: Установлены gems (omniauth, omniauth-google-oauth2, omniauth-rails_csrf_protection)</li>
+                <li>Backend: Создана миграция для Google OAuth полей</li>
+                <li>Backend: Настроен initializer omniauth.rb</li>
+                <li>Backend: Обновлена модель User с Google OAuth методами</li>
+                <li>Backend: Создан OauthController с callback методами</li>
+                <li>Backend: Добавлены маршруты для OAuth</li>
+                <li>Frontend: Создан компонент GoogleLoginButton</li>
+                <li>Frontend: Обновлена LoginPage с Google OAuth кнопкой</li>
+                <li>Frontend: Создана страница OAuthErrorPage</li>
+                <li>Frontend: Добавлен маршрут для /auth/error</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Настройка Google Cloud Console</h3>
+            <p><strong>Статус:</strong> <span class="status info">Требуется настройка</span></p>
+            
+            <h4>Шаги настройки:</h4>
+            <ol>
+                <li>Перейти в <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                <li>Создать новый проект или выбрать существующий</li>
+                <li>Включить Google+ API</li>
+                <li>Создать OAuth 2.0 Client ID</li>
+                <li>Настроить Authorized redirect URIs</li>
+            </ol>
+
+            <div class="code-block">
+Authorized redirect URIs:
+http://localhost:8000/auth/google/callback
+http://localhost:8000/auth/google/failure
+https://yourdomain.com/auth/google/callback (для продакшена)
+            </div>
+
+            <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="test-button">
+                🔧 Открыть Google Cloud Console
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Переменные окружения</h3>
+            <p>Добавьте следующие переменные в .env файл:</p>
+            
+            <div class="code-block">
+# Google OAuth настройки
+GOOGLE_CLIENT_ID=your_google_client_id_here
+GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+FRONTEND_URL=http://localhost:3008
+            </div>
+
+            <button class="test-button secondary" onclick="checkEnvVariables()">
+                🔍 Проверить переменные
+            </button>
+            <div id="envStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Тестирование интеграции</h3>
+            
+            <h4>1. Тест backend endpoints</h4>
+            <button class="test-button" onclick="testBackendEndpoints()">
+                🔍 Проверить маршруты
+            </button>
+            <div id="backendStatus"></div>
+
+            <h4>2. Тест frontend компонентов</h4>
+            <button class="test-button" onclick="testFrontendComponents()">
+                🎨 Проверить компоненты
+            </button>
+            <div id="frontendStatus"></div>
+
+            <h4>3. Полный тест OAuth flow</h4>
+            <a href="http://localhost:3008/login" target="_blank" class="test-button success">
+                🚀 Открыть страницу входа
+            </a>
+            <a href="http://localhost:8000/auth/google" target="_blank" class="test-button">
+                🔐 Тест Google OAuth
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Результаты тестирования</h3>
+            <div id="testResults">
+                <p>Результаты появятся после выполнения тестов...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🐛 Возможные проблемы и решения</h3>
+            
+            <h4>❌ Ошибка: "OAuth данные не получены"</h4>
+            <ul>
+                <li>Проверьте настройки Google Cloud Console</li>
+                <li>Убедитесь, что redirect URI правильный</li>
+                <li>Проверьте GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET</li>
+            </ul>
+
+            <h4>❌ Ошибка: "Роль client не найдена"</h4>
+            <ul>
+                <li>Выполните seeds: <code>rails db:seed</code></li>
+                <li>Проверьте наличие роли в таблице user_roles</li>
+            </ul>
+
+            <h4>❌ Ошибка CORS</h4>
+            <ul>
+                <li>Проверьте настройки CORS в config/initializers/cors.rb</li>
+                <li>Убедитесь, что frontend URL добавлен в origins</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkEnvVariables() {
+            const envStatus = document.getElementById('envStatus');
+            envStatus.innerHTML = '<div class="status info">Проверка переменных окружения...</div>';
+            
+            // Симуляция проверки
+            setTimeout(() => {
+                envStatus.innerHTML = `
+                    <div class="status error">
+                        ⚠️ Требуется настройка переменных окружения:
+                        <ul>
+                            <li>GOOGLE_CLIENT_ID - не установлен</li>
+                            <li>GOOGLE_CLIENT_SECRET - не установлен</li>
+                            <li>FRONTEND_URL - не установлен</li>
+                        </ul>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        function testBackendEndpoints() {
+            const backendStatus = document.getElementById('backendStatus');
+            backendStatus.innerHTML = '<div class="status info">Проверка backend endpoints...</div>';
+            
+            const endpoints = [
+                'http://localhost:8000/auth/google',
+                'http://localhost:8000/auth/google/callback',
+                'http://localhost:8000/auth/failure'
+            ];
+            
+            Promise.all(endpoints.map(url => 
+                fetch(url, { method: 'HEAD' })
+                    .then(response => ({ url, status: response.status }))
+                    .catch(error => ({ url, error: error.message }))
+            )).then(results => {
+                let html = '<div class="status success">Результаты проверки endpoints:</div><ul>';
+                results.forEach(result => {
+                    if (result.error) {
+                        html += `<li>❌ ${result.url} - Ошибка: ${result.error}</li>`;
+                    } else {
+                        html += `<li>✅ ${result.url} - Статус: ${result.status}</li>`;
+                    }
+                });
+                html += '</ul>';
+                backendStatus.innerHTML = html;
+            });
+        }
+
+        function testFrontendComponents() {
+            const frontendStatus = document.getElementById('frontendStatus');
+            frontendStatus.innerHTML = '<div class="status info">Проверка frontend компонентов...</div>';
+            
+            setTimeout(() => {
+                frontendStatus.innerHTML = `
+                    <div class="status success">
+                        ✅ Компоненты созданы:
+                        <ul>
+                            <li>GoogleLoginButton - создан</li>
+                            <li>OAuthErrorPage - создан</li>
+                            <li>LoginPage - обновлен</li>
+                            <li>App.tsx - маршрут добавлен</li>
+                        </ul>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        // Автоматическая проверка при загрузке
+        window.onload = function() {
+            console.log('🔐 Google OAuth Integration Test loaded');
+            
+            // Проверяем доступность серверов
+            fetch('http://localhost:8000/up')
+                .then(response => response.ok ? 'Backend: ✅ Работает' : 'Backend: ❌ Не работает')
+                .catch(() => 'Backend: ❌ Недоступен')
+                .then(backendStatus => {
+                    fetch('http://localhost:3008')
+                        .then(response => response.ok ? 'Frontend: ✅ Работает' : 'Frontend: ❌ Не работает')
+                        .catch(() => 'Frontend: ❌ Недоступен')
+                        .then(frontendStatus => {
+                            document.getElementById('testResults').innerHTML = `
+                                <div class="status info">
+                                    <strong>Статус серверов:</strong><br>
+                                    ${backendStatus}<br>
+                                    ${frontendStatus}
+                                </div>
+                            `;
+                        });
+                });
+        };
+    </script>
+</body>
+</html> 

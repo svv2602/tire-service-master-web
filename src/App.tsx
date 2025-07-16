@@ -26,6 +26,7 @@ const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const OAuthErrorPage = lazy(() => import('./pages/auth/OAuthErrorPage'));
 
 // Ленивая загрузка страниц панели управления
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
@@ -198,6 +199,7 @@ const App: React.FC = () => {
                     {/* Публичные маршруты */}
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/auth/register" element={<RegisterPage />} />
+                    <Route path="/auth/error" element={<OAuthErrorPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
 
