@@ -51,6 +51,12 @@ interface CurrentUserResponse {
   created_at: string;
   updated_at: string;
   client_id?: number; // ID клиента, если пользователь является клиентом
+  preferred_locale?: string;
+  // Google OAuth поля
+  google_id?: string;
+  google_email?: string;
+  provider?: string;
+  uid?: string;
   profile?: {
     position?: string;
     access_level: number;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Box, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 
 const GoogleButton = styled(Button)(({ theme }) => ({
   backgroundColor: '#fff',
@@ -65,14 +66,16 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   fullWidth = false,
   variant = 'signin'
 }) => {
+  const { t } = useTranslation();
+  
   const getButtonText = () => {
     switch (variant) {
       case 'signup':
-        return 'Зарегистрироваться через Google';
+        return t('auth.google.signUp');
       case 'continue':
-        return 'Продолжить с Google';
+        return t('auth.google.continue');
       default:
-        return 'Войти через Google';
+        return t('auth.google.signIn');
     }
   };
 
@@ -109,7 +112,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
             }}
           />
           <Typography variant="body2" color="text.secondary">
-            Загрузка...
+            {t('common.loading')}
           </Typography>
         </Box>
       ) : (

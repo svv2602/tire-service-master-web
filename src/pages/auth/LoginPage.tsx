@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { clearLogoutFlag } from '../../store/slices/authSlice';
 import { useTheme, Divider } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -24,6 +25,7 @@ const LoginPage: React.FC = () => {
   const isNavigatingRef = useRef(false);
   
   const theme = useTheme();
+  const { t } = useTranslation();
   const containerStyles = getContainerStyles(theme);
   
   // Сбрасываем флаг выхода при загрузке страницы входа
@@ -85,7 +87,7 @@ const LoginPage: React.FC = () => {
           <Box sx={{ my: 3, display: 'flex', alignItems: 'center' }}>
             <Divider sx={{ flex: 1 }} />
             <Typography variant="body2" color="text.secondary" sx={{ mx: 2 }}>
-              или
+              {t('auth.google.or')}
             </Typography>
             <Divider sx={{ flex: 1 }} />
           </Box>

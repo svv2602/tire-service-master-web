@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTheme, Paper } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Container,
   Box,
@@ -19,6 +20,7 @@ const OAuthErrorPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   
   const theme = useTheme();
+  const { t } = useTranslation();
   const containerStyles = getContainerStyles(theme);
 
   useEffect(() => {

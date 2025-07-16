@@ -172,6 +172,31 @@
       "invalidEditUrl": "Помилка: Некоректний URL для редагування сервісної точки",
       "partnerRequiredForCreation": "Помилка: Для створення сервісної точки необхідно вказати партнера в URL. Перейдіть в розділ \"Партнери\" і створіть сервісну точку звідти.",
       "noPermissionForPartner": "Помилка: У вас немає прав для роботи з сервісними точками цього партнера"
+    },
+    "google": {
+      "signIn": "Увійти через Google",
+      "signUp": "Зареєструватися через Google",
+      "continue": "Продовжити з Google",
+      "linking": "Прив'язка...",
+      "unlinking": "Відв'язка...",
+      "linkAccount": "Прив'язати Google акаунт",
+      "unlinkAccount": "Відв'язати Google акаунт",
+      "linkSuccess": "Google акаунт успішно прив'язано!",
+      "unlinkSuccess": "Google акаунт успішно відв'язано",
+      "linkError": "Помилка при прив'язці Google акаунта",
+      "unlinkError": "Помилка при відв'язці Google акаунта",
+      "alreadyLinked": "Google акаунт уже прив'язаний до іншого користувача",
+      "notLinked": "Google акаунт не прив'язаний",
+      "authError": "Помилка авторизації через Google",
+      "secureAuth": "Безпечна авторизація через Google OAuth 2.0",
+      "or": "або",
+      "accountLinked": "Ваш акаунт успішно прив'язано до Google",
+      "accountUnlinked": "Ваш акаунт відв'язано від Google",
+      "linkDescription": "Прив'яжіть Google акаунт для швидкого входу в систему",
+      "linkBenefit": "Після прив'язки ви зможете входити в систему одним кліком, використовуючи ваш Google акаунт. Ваш основний email залишиться без змін.",
+      "unlinkConfirm": "Ви впевнені, що хочете відв'язати Google акаунт? Цю дію не можна скасувати.",
+      "passwordChangeDisabled": "Оскільки ви використовуєте Google акаунт, зміна пароля недоступна.",
+      "passwordChangeEnabled": "Для зміни пароля використовуйте функцію відновлення пароля."
     }
   },
   "language": {
@@ -1327,5 +1352,45 @@
     "label": "Телефон",
     "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
     "placeholder": "+38 (067) 123-45-67"
+  },
+  "profile": {
+    "settings": {
+      "title": "Налаштування профілю",
+      "basicInfo": "Основна інформація",
+      "security": "Безпека та авторизація",
+      "notifications": "Налаштування сповіщень",
+      "language": "Мова інтерфейсу",
+      "role": "Роль",
+      "saveChanges": "Зберегти зміни",
+      "changePassword": "Змінити пароль",
+      "googleAccount": "Google акаунт",
+      "notificationsComingSoon": "Налаштування сповіщень будуть доступні в наступних оновленнях",
+      "loadingUserData": "Завантаження даних користувача...",
+      "failedToLoadUser": "Не вдалося завантажити дані користувача"
+    }
+  },
+  "oauth": {
+    "errors": {
+      "title": "Помилка авторизації",
+      "subtitle": "Сталася помилка при вході через Google",
+      "oauth_error": "Помилка OAuth",
+      "oauth_failure": "Помилка авторизації",
+      "user_not_found": "Користувача не знайдено",
+      "google_already_linked": "Google акаунт уже прив'язаний",
+      "user_creation_failed": "Не вдалося створити користувача",
+      "access_denied": "Доступ відхилено. Будь ласка, надайте дозволи для входу.",
+      "invalid_credentials": "Неправильні облікові дані. Перевірте налаштування програми.",
+      "generic_error": "Сталася помилка при вході через Google. Спробуйте ще раз.",
+      "troubleshooting": "Можливі рішення:",
+      "tryAgain": "Спробувати ще раз",
+      "backToLogin": "Повернутися до входу",
+      "contactSupport": "Зв'язатися з підтримкою",
+      "solutions": {
+        "checkConnection": "Перевірте підключення до інтернету",
+        "clearCache": "Очистіть кеш браузера",
+        "tryAnotherBrowser": "Спробуйте інший браузер",
+        "checkGoogleAccount": "Переконайтеся, що Google акаунт активний"
+      }
+    }
   }
 }
