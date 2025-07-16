@@ -129,6 +129,9 @@ const PageContentManagement = lazy(() => import('./pages/admin/PageContentManage
 const BookingCalendarPage = lazy(() => import('./pages/admin/BookingCalendarPage'));
 const BookingAnalyticsPage = lazy(() => import('./pages/admin/BookingAnalyticsPage'));
 
+// Ленивая загрузка страницы push-уведомлений
+const PushNotificationsPage = lazy(() => import('./pages/admin/PushNotificationsPage'));
+
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
@@ -303,6 +306,8 @@ const App: React.FC = () => {
                       <Route path="analytics" element={<BookingAnalyticsPage />} />
                       <Route path="calendar" element={<BookingCalendarPage />} />
                       <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
+                      {/* Маршрут для push-уведомлений */}
+                      <Route path="push-notifications" element={<PushNotificationsPage />} />
                       {/* Маршрут для пользователей */}
                       <Route path="users" element={<UsersPage />} />
                       <Route path="users/new" element={<UserForm />} />

@@ -24,6 +24,7 @@ import { useTheme } from '@mui/material/styles';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LinkGoogleAccount } from '../../components/auth/LinkGoogleAccount';
+import { PushNotificationToggle } from '../../components/notifications/PushNotificationToggle/PushNotificationToggle';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useUnlinkGoogleMutation } from '../../api/oauth.api';
 import Notification from '../../components/Notification';
@@ -212,9 +213,23 @@ export const ProfileSettingsPage: React.FC = () => {
               {t('profile.settings.notifications')}
             </Typography>
             
-            <Alert severity="info">
-              {t('profile.settings.notificationsComingSoon')}
-            </Alert>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <PushNotificationToggle
+                  variant="card"
+                  showDetails={true}
+                  onSubscriptionChange={(isSubscribed) => {
+                    setNotification({
+                      open: true,
+                      message: isSubscribed 
+                        ? 'Push-уведомления включены' 
+                        : 'Push-уведомления отключены',
+                      severity: 'success'
+                    });
+                  }}
+                />
+              </Grid>
+            </Grid>
           </Paper>
         </Grid>
       </Grid>

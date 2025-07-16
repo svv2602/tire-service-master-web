@@ -62,6 +62,7 @@ import {
   ChevronRight as ChevronRightIcon,
   UnfoldLess as CollapseIcon,
   UnfoldMore as ExpandIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -381,6 +382,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/analytics',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
             description: t('navigation.descriptions.analyticsReports'),
+          },
+          {
+            text: 'Push-уведомления',
+            icon: <NotificationsIcon />,
+            path: '/admin/push-notifications',
+            roles: [UserRole.ADMIN],
+            description: 'Управление push-уведомлениями',
           },
           {
             text: 'Конфликты бронирований',
