@@ -25,6 +25,7 @@ import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LinkGoogleAccount } from '../../components/auth/LinkGoogleAccount';
 import { PushNotificationToggle } from '../../components/notifications/PushNotificationToggle/PushNotificationToggle';
+import TelegramIntegration from '../../components/telegram/TelegramIntegration';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useUnlinkGoogleMutation } from '../../api/oauth.api';
 import Notification from '../../components/Notification';
@@ -187,7 +188,7 @@ export const ProfileSettingsPage: React.FC = () => {
             <Divider sx={{ my: 3 }} />
 
             <Box>
-                            <Typography variant="subtitle1" gutterBottom>
+              <Typography variant="subtitle1" gutterBottom>
                 {t('profile.settings.changePassword')}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -225,6 +226,27 @@ export const ProfileSettingsPage: React.FC = () => {
                         ? 'Push-уведомления включены' 
                         : 'Push-уведомления отключены',
                       severity: 'success'
+                    });
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TelegramIntegration
+                  user={currentUser?.user}
+                  variant="card"
+                  showQRCode={true}
+                  onConnectionSuccess={(subscription) => {
+                    setNotification({
+                      open: true,
+                      message: `Telegram подключен: @${subscription.username || subscription.first_name}`,
+                      severity: 'success'
+                    });
+                  }}
+                  onConnectionError={(error) => {
+                    setNotification({
+                      open: true,
+                      message: `Ошибка подключения Telegram: ${error}`,
+                      severity: 'error'
                     });
                   }}
                 />

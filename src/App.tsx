@@ -132,6 +132,9 @@ const BookingAnalyticsPage = lazy(() => import('./pages/admin/BookingAnalyticsPa
 // Ленивая загрузка страницы push-уведомлений
 const PushNotificationsPage = lazy(() => import('./pages/admin/PushNotificationsPage'));
 
+// Ленивая загрузка страницы Telegram уведомлений
+const TelegramNotificationsPage = lazy(() => import('./pages/admin/TelegramNotificationsPage'));
+
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
@@ -308,6 +311,8 @@ const App: React.FC = () => {
                       <Route path="trip-history" element={<div>История поездок (в разработке)</div>} />
                       {/* Маршрут для push-уведомлений */}
                       <Route path="push-notifications" element={<PushNotificationsPage />} />
+                      {/* Маршрут для Telegram уведомлений */}
+                      <Route path="telegram-notifications" element={<TelegramNotificationsPage />} />
                       {/* Маршрут для пользователей */}
                       <Route path="users" element={<UsersPage />} />
                       <Route path="users/new" element={<UserForm />} />

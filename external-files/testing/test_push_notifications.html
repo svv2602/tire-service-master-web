@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Push-уведомлений - Tire Service</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #1976d2;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .status.info {
+            background: #2196f3;
+            color: white;
+        }
+        
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #1565c0;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .test-result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background: #f5f5f5;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .error {
+            color: #f44336;
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        
+        .success {
+            color: #4caf50;
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        
+        .info {
+            color: #2196f3;
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin-top: 15px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+        }
+        
+        .log-timestamp {
+            color: #888;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Тест Push-уведомлений</h1>
+        
+        <!-- Статус поддержки -->
+        <div class="test-section">
+            <h2>📱 Поддержка браузера</h2>
+            <div id="supportStatus">Проверка поддержки...</div>
+            <button onclick="checkSupport()">Проверить поддержку</button>
+        </div>
+        
+        <!-- Разрешения -->
+        <div class="test-section">
+            <h2>🔐 Разрешения</h2>
+            <div id="permissionStatus">Проверка разрешений...</div>
+            <button onclick="requestPermission()">Запросить разрешение</button>
+        </div>
+        
+        <!-- Service Worker -->
+        <div class="test-section">
+            <h2>⚙️ Service Worker</h2>
+            <div id="swStatus">Проверка Service Worker...</div>
+            <button onclick="registerServiceWorker()">Зарегистрировать SW</button>
+            <button onclick="unregisterServiceWorker()">Отменить регистрацию</button>
+        </div>
+        
+        <!-- Подписка -->
+        <div class="test-section">
+            <h2>📝 Подписка</h2>
+            <div id="subscriptionStatus">Проверка подписки...</div>
+            <button onclick="subscribe()">Подписаться</button>
+            <button onclick="unsubscribe()">Отписаться</button>
+            <button onclick="checkSubscription()">Проверить подписку</button>
+        </div>
+        
+        <!-- Отправка уведомлений -->
+        <div class="test-section">
+            <h2>📤 Отправка уведомлений</h2>
+            <div class="form-group">
+                <label for="notificationTitle">Заголовок:</label>
+                <input type="text" id="notificationTitle" value="Tire Service" placeholder="Заголовок уведомления">
+            </div>
+            <div class="form-group">
+                <label for="notificationBody">Сообщение:</label>
+                <textarea id="notificationBody" placeholder="Текст уведомления">Тестовое push-уведомление от Tire Service</textarea>
+            </div>
+            <div class="form-group">
+                <label for="notificationUrl">URL (необязательно):</label>
+                <input type="text" id="notificationUrl" placeholder="/admin/push-notifications">
+            </div>
+            <div class="form-group">
+                <label for="notificationType">Тип уведомления:</label>
+                <select id="notificationType">
+                    <option value="general">Общее</option>
+                    <option value="booking">Бронирование</option>
+                    <option value="promotion">Реклама</option>
+                    <option value="reminder">Напоминание</option>
+                </select>
+            </div>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="requireInteraction">
+                    Требовать взаимодействие
+                </label>
+                <label>
+                    <input type="checkbox" id="silent">
+                    Тихое уведомление
+                </label>
+            </div>
+            <button onclick="sendTestNotification()">Отправить тестовое уведомление</button>
+            <button onclick="sendServerNotification()">Отправить через сервер</button>
+        </div>
+        
+        <!-- Статистика -->
+        <div class="test-section">
+            <h2>📊 Статистика</h2>
+            <button onclick="getStats()">Получить статистику</button>
+            <div id="statsContainer"></div>
+        </div>
+        
+        <!-- Логи -->
+        <div class="test-section">
+            <h2>📋 Логи</h2>
+            <button onclick="clearLogs()">Очистить логи</button>
+            <div id="logs" class="log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        let registration = null;
+        let subscription = null;
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        // Логирование
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            document.getElementById('logs').appendChild(logEntry);
+            document.getElementById('logs').scrollTop = document.getElementById('logs').scrollHeight;
+            console.log(`[${type}] ${message}`);
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Проверка поддержки
+        function checkSupport() {
+            const hasServiceWorker = 'serviceWorker' in navigator;
+            const hasPushManager = 'PushManager' in window;
+            const hasNotifications = 'Notification' in window;
+            
+            let status = '';
+            let statusClass = 'success';
+            
+            if (hasServiceWorker && hasPushManager && hasNotifications) {
+                status = '<span class="status success">✅ Полная поддержка</span>';
+                log('✅ Браузер полностью поддерживает push-уведомления', 'success');
+            } else {
+                status = '<span class="status error">❌ Не поддерживается</span>';
+                statusClass = 'error';
+                log('❌ Браузер не поддерживает push-уведомления', 'error');
+            }
+            
+            status += `<br>
+                Service Worker: ${hasServiceWorker ? '✅' : '❌'}<br>
+                Push Manager: ${hasPushManager ? '✅' : '❌'}<br>
+                Notifications: ${hasNotifications ? '✅' : '❌'}
+            `;
+            
+            document.getElementById('supportStatus').innerHTML = status;
+        }
+        
+        // Разрешения
+        function requestPermission() {
+            if (!('Notification' in window)) {
+                log('❌ Уведомления не поддерживаются', 'error');
+                return;
+            }
+            
+            Notification.requestPermission().then(permission => {
+                updatePermissionStatus(permission);
+                log(`🔐 Разрешение: ${permission}`, permission === 'granted' ? 'success' : 'error');
+            });
+        }
+        
+        function updatePermissionStatus(permission = Notification.permission) {
+            let status = '';
+            let statusClass = '';
+            
+            switch (permission) {
+                case 'granted':
+                    status = '<span class="status success">✅ Разрешено</span>';
+                    statusClass = 'success';
+                    break;
+                case 'denied':
+                    status = '<span class="status error">❌ Запрещено</span>';
+                    statusClass = 'error';
+                    break;
+                default:
+                    status = '<span class="status warning">⚠️ Не запрошено</span>';
+                    statusClass = 'warning';
+            }
+            
+            document.getElementById('permissionStatus').innerHTML = status;
+        }
+        
+        // Service Worker
+        async function registerServiceWorker() {
+            try {
+                registration = await navigator.serviceWorker.register('/sw.js');
+                log('✅ Service Worker зарегистрирован', 'success');
+                updateSWStatus();
+            } catch (error) {
+                log(`❌ Ошибка регистрации SW: ${error.message}`, 'error');
+            }
+        }
+        
+        async function unregisterServiceWorker() {
+            try {
+                if (registration) {
+                    await registration.unregister();
+                    registration = null;
+                    log('✅ Service Worker отменен', 'success');
+                    updateSWStatus();
+                }
+            } catch (error) {
+                log(`❌ Ошибка отмены SW: ${error.message}`, 'error');
+            }
+        }
+        
+        async function updateSWStatus() {
+            try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                let status = '';
+                
+                if (reg) {
+                    status = '<span class="status success">✅ Активен</span>';
+                    status += `<br>Scope: ${reg.scope}`;
+                    status += `<br>State: ${reg.active ? reg.active.state : 'unknown'}`;
+                    registration = reg;
+                } else {
+                    status = '<span class="status error">❌ Не зарегистрирован</span>';
+                }
+                
+                document.getElementById('swStatus').innerHTML = status;
+            } catch (error) {
+                log(`❌ Ошибка проверки SW: ${error.message}`, 'error');
+            }
+        }
+        
+        // Подписка
+        async function subscribe() {
+            try {
+                if (!registration) {
+                    await registerServiceWorker();
+                }
+                
+                // Получаем VAPID ключ
+                const vapidResponse = await fetch(`${API_BASE}/push_subscriptions/vapid_public_key`, {
+                    credentials: 'include'
+                });
+                const vapidData = await vapidResponse.json();
+                
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(vapidData.public_key)
+                });
+                
+                // Отправляем подписку на сервер
+                const subscriptionData = {
+                    subscription: {
+                        endpoint: subscription.endpoint,
+                        keys: {
+                            p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
+                            auth: arrayBufferToBase64(subscription.getKey('auth'))
+                        }
+                    },
+                    user_agent: navigator.userAgent
+                };
+                
+                const response = await fetch(`${API_BASE}/push_subscriptions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(subscriptionData)
+                });
+                
+                if (response.ok) {
+                    log('✅ Подписка создана', 'success');
+                    updateSubscriptionStatus();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка подписки: ${error.message}`, 'error');
+            }
+        }
+        
+        async function unsubscribe() {
+            try {
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    subscription = null;
+                    log('✅ Подписка отменена', 'success');
+                    updateSubscriptionStatus();
+                }
+            } catch (error) {
+                log(`❌ Ошибка отписки: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkSubscription() {
+            try {
+                if (!registration) {
+                    await updateSWStatus();
+                }
+                
+                if (registration) {
+                    subscription = await registration.pushManager.getSubscription();
+                    updateSubscriptionStatus();
+                }
+            } catch (error) {
+                log(`❌ Ошибка проверки подписки: ${error.message}`, 'error');
+            }
+        }
+        
+        function updateSubscriptionStatus() {
+            let status = '';
+            
+            if (subscription) {
+                status = '<span class="status success">✅ Активна</span>';
+                status += `<br>Endpoint: ${subscription.endpoint.substring(0, 50)}...`;
+            } else {
+                status = '<span class="status error">❌ Неактивна</span>';
+            }
+            
+            document.getElementById('subscriptionStatus').innerHTML = status;
+        }
+        
+        // Отправка уведомлений
+        async function sendTestNotification() {
+            const title = document.getElementById('notificationTitle').value;
+            const body = document.getElementById('notificationBody').value;
+            const url = document.getElementById('notificationUrl').value;
+            const requireInteraction = document.getElementById('requireInteraction').checked;
+            const silent = document.getElementById('silent').checked;
+            
+            try {
+                const notification = new Notification(title, {
+                    body: body,
+                    icon: '/image/logo-192x192.png',
+                    badge: '/image/logo-72x72.png',
+                    data: { url: url },
+                    requireInteraction: requireInteraction,
+                    silent: silent,
+                    tag: 'test-notification'
+                });
+                
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    if (url) {
+                        window.open(url, '_blank');
+                    }
+                    notification.close();
+                };
+                
+                log('✅ Тестовое уведомление отправлено', 'success');
+            } catch (error) {
+                log(`❌ Ошибка отправки: ${error.message}`, 'error');
+            }
+        }
+        
+        async function sendServerNotification() {
+            const title = document.getElementById('notificationTitle').value;
+            const body = document.getElementById('notificationBody').value;
+            const url = document.getElementById('notificationUrl').value;
+            const notificationType = document.getElementById('notificationType').value;
+            const requireInteraction = document.getElementById('requireInteraction').checked;
+            const silent = document.getElementById('silent').checked;
+            
+            try {
+                const response = await fetch(`${API_BASE}/push_notifications/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        title: title,
+                        body: body,
+                        url: url,
+                        notification_type: notificationType,
+                        require_interaction: requireInteraction,
+                        silent: silent
+                    })
+                });
+                
+                if (response.ok) {
+                    log('✅ Уведомление отправлено через сервер', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Ошибка отправки через сервер: ${error.message}`, 'error');
+            }
+        }
+        
+        // Статистика
+        async function getStats() {
+            try {
+                const response = await fetch(`${API_BASE}/push_notifications/stats`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    displayStats(stats);
+                    log('✅ Статистика получена', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ Ошибка получения статистики: ${error.message}`, 'error');
+            }
+        }
+        
+        function displayStats(stats) {
+            const container = document.getElementById('statsContainer');
+            container.innerHTML = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_notifications}</div>
+                        <div class="stat-label">Всего уведомлений</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.active_subscriptions}</div>
+                        <div class="stat-label">Активных подписок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_subscriptions}</div>
+                        <div class="stat-label">Всего подписок</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.success_rate.toFixed(1)}%</div>
+                        <div class="stat-label">Успешность</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Утилитарные функции
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+        
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Тест push-уведомлений запущен', 'info');
+            checkSupport();
+            updatePermissionStatus();
+            updateSWStatus();
+            checkSubscription();
+        });
+        
+        // Слушаем сообщения от service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
+                    log(`🖱️ Уведомление кликнуто: ${JSON.stringify(event.data.data)}`, 'info');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 
