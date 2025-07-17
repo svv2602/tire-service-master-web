@@ -37,7 +37,7 @@ import {
   Send as SendIcon,
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
-  Retry as RetryIcon,
+  Refresh as RetryIcon,
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
   Notifications as NotificationsIcon,
@@ -454,12 +454,17 @@ const TelegramNotificationManager: React.FC = () => {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Chip
-                    label={notification.status}
-                    color={getNotificationStatusColor(notification.status)}
-                    size="small"
-                    icon={getNotificationStatusIcon(notification.status)}
-                  />
+                  {(() => {
+                    const statusIcon = getNotificationStatusIcon(notification.status);
+                    return (
+                      <Chip
+                        label={notification.status}
+                        color={getNotificationStatusColor(notification.status)}
+                        size="small"
+                        {...(statusIcon && { icon: statusIcon })}
+                      />
+                    );
+                  })()}
                 </TableCell>
                 <TableCell>{notification.retry_count}</TableCell>
                 <TableCell>

@@ -33,7 +33,7 @@ import {
   People as PeopleIcon,
   TrendingUp as TrendingUpIcon,
   Refresh as RefreshIcon,
-  TestTube as TestTubeIcon,
+  Science as TestTubeIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';

@@ -142,7 +142,7 @@ const TelegramIntegration: React.FC<TelegramIntegrationProps> = ({
   };
 
   const handleDeleteSubscription = async (subscription: TelegramSubscription) => {
-    if (!confirm('Вы уверены, что хотите удалить подписку Telegram?')) return;
+    if (!window.confirm('Вы уверены, что хотите удалить подписку Telegram?')) return;
 
     try {
       await deleteSubscription(subscription.id).unwrap();
@@ -493,12 +493,17 @@ const TelegramIntegration: React.FC<TelegramIntegrationProps> = ({
                           @{subscription.username || subscription.first_name}
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1} mt={1}>
-                          <Chip
-                            size="small"
-                            label={getStatusText(subscription.status)}
-                            color={getStatusColor(subscription.status)}
-                            icon={getStatusIcon(subscription.status)}
-                          />
+                          {(() => {
+                            const statusIcon = getStatusIcon(subscription.status);
+                            return (
+                              <Chip
+                                size="small"
+                                label={getStatusText(subscription.status)}
+                                color={getStatusColor(subscription.status)}
+                                {...(statusIcon && { icon: statusIcon })}
+                              />
+                            );
+                          })()}
                           {subscription.language_code && (
                             <Chip
                               size="small"
