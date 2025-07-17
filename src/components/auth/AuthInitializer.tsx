@@ -30,7 +30,7 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
         // Если нет accessToken и пользователь не залогинен, пробуем восстановить сессию
         if (!accessToken && !user) {
           try {
-            console.log('AuthInitializer: Пробуем восстановить access token через refresh');
+            console.log('AuthInitializer: Восстановление сессии...');
             const API_URL = `${config.API_URL}${config.API_PREFIX}`;
             
             // Сначала пробуем refresh

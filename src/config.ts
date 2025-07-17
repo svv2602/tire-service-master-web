@@ -28,13 +28,14 @@ const getApiUrl = (): string => {
 const API_URL = getApiUrl();
 const API_PREFIX = '/api/v1';
 
-// Отладочная информация в режиме разработки
-if (process.env.NODE_ENV === 'development') {
+// Отладочная информация только при первой загрузке
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !(window as any).configLogged) {
   console.log('🔧 API Configuration:', {
     API_URL,
-    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+    hostname: window.location.hostname,
     REACT_APP_API_URL: process.env.REACT_APP_API_URL
   });
+  (window as any).configLogged = true;
 }
 
 // Экспортируем конфигурацию

@@ -27,14 +27,9 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Отладочное логирование только в режиме разработки
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔐 ApiClient запрос:', {
-      url: config.url,
-      hasAccessToken: !!token,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует',
-      withCredentials: config.withCredentials
-    });
+  // Минимальное логирование только для критических запросов
+  if (process.env.NODE_ENV === 'development' && config.url?.includes('/auth/')) {
+    console.log('🔐 Auth запрос:', config.url, !!token ? 'с токеном' : 'без токена');
   }
 
   return config;

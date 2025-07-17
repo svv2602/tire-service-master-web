@@ -11,23 +11,14 @@ const baseQuery = fetchBaseQuery({
     const token = state.auth.accessToken;
     const user = state.auth.user;
     
-    // 🔍 ПОДРОБНОЕ ЛОГИРОВАНИЕ
-    console.log('🔍 BaseAPI prepareHeaders:', {
-      hasAccessToken: !!token,
-      isAuthenticated: state.auth.isAuthenticated,
-      hasUser: !!user,
-      userRole: user?.role,
-      tokenPreview: token ? `${token.substring(0, 20)}...` : 'отсутствует (используются cookies)',
-      baseUrl: `${config.API_URL}${config.API_PREFIX}/`,
-      headersCount: headers.entries ? Array.from(headers.entries()).length : 'unknown'
-    });
+    // Краткое логирование только при необходимости
+    if (process.env.NODE_ENV === 'development' && !token && !state.auth.isAuthenticated) {
+      console.log('🔍 BaseAPI: Запрос без токена, используются cookies');
+    }
     
     // Добавляем токен в заголовки, если он есть
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
-      console.log('✅ Добавлен Authorization header с токеном');
-    } else {
-      console.log('ℹ️ Токен отсутствует, полагаемся на cookies');
     }
     
     return headers;
@@ -36,29 +27,25 @@ const baseQuery = fetchBaseQuery({
 
 // Обертка для обработки ошибок авторизации
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
-  // 🔍 ЛОГИРОВАНИЕ ЗАПРОСА
-  console.log('🚀 BaseAPI запрос:', {
-    url: typeof args === 'string' ? args : args.url,
-    method: typeof args === 'string' ? 'GET' : args.method || 'GET',
-    body: typeof args === 'string' ? undefined : args.body,
-    fullUrl: `${config.API_URL}${config.API_PREFIX}/${typeof args === 'string' ? args : args.url}`,
-    timestamp: new Date().toISOString()
-  });
+  // Минимальное логирование только для auth запросов
+  if (process.env.NODE_ENV === 'development') {
+    const url = typeof args === 'string' ? args : args.url;
+    if (url?.includes('auth/')) {
+      console.log('🔐 Auth API запрос:', url);
+    }
+  }
   
   let result = await baseQuery(args, api, extraOptions);
   
-  // 🔍 ЛОГИРОВАНИЕ ОТВЕТА
-  console.log('📥 BaseAPI ответ:', {
-    status: result.error?.status || 'success',
-    hasError: !!result.error,
-    hasData: !!result.data,
-    errorData: result.error?.data,
-    timestamp: new Date().toISOString()
-  });
+  // Логирование только ошибок auth запросов
+  if (process.env.NODE_ENV === 'development' && result.error) {
+    const url = typeof args === 'string' ? args : args.url;
+    if (url?.includes('auth/')) {
+      console.log('❌ Auth API ошибка:', result.error.status, url);
+    }
+  }
   
   if (result.error && result.error.status === 401) {
-    console.log('🔄 Получена 401 ошибка, пытаемся обновить токен...');
-    
     // Пытаемся обновить токен
     const refreshResult = await baseQuery(
       {
@@ -70,22 +57,16 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
     );
     
     if (refreshResult.data) {
-      console.log('✅ Токен успешно обновлен');
-      
       // Извлекаем новый токен из ответа
       const newToken = (refreshResult.data as any)?.access_token || (refreshResult.data as any)?.tokens?.access;
       
       if (newToken) {
         // Обновляем токен в Redux store
         api.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
-        console.log('🔄 Токен обновлен в Redux store');
       }
       
       // Повторяем исходный запрос
       result = await baseQuery(args, api, extraOptions);
-    } else {
-      console.log('❌ Не удалось обновить токен');
-      // Можно добавить логику для перенаправления на страницу входа
     }
   }
   
