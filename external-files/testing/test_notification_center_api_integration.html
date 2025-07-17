@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔔 Тест API інтеграції Notification Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            background: #fafafa;
+        }
+
+        .test-section h2 {
+            color: #1976d2;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(25, 118, 210, 0.3);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .result {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .success-result {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+
+        .error-result {
+            border-color: #f44336;
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .notification-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            margin-top: 5px;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .notification-message {
+            color: #666;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .notification-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .chip.priority-urgent {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .chip.priority-high {
+            background: #fff3e0;
+            color: #ff9800;
+        }
+
+        .chip.priority-normal {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+        .chip.priority-low {
+            background: #e8f5e8;
+            color: #4caf50;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            min-width: auto;
+        }
+
+        .action-btn:hover {
+            background: #f5f5f5;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background: #4caf50;
+        }
+
+        .status-error {
+            background: #f44336;
+        }
+
+        .status-warning {
+            background: #ff9800;
+        }
+
+        .status-info {
+            background: #2196f3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-top-color: #1976d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #999;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: auto;
+        }
+
+        .page-btn.active {
+            background: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+
+        .page-btn:disabled {
+            background: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .filter-group {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔔 Notification Center API Integration Test</h1>
+            <p>Тестування повної інтеграції з бекендом системи сповіщень</p>
+        </div>
+
+        <div class="content">
+            <!-- Секція авторизації -->
+            <div class="test-section">
+                <h2>🔐 Авторизація</h2>
+                <div class="button-group">
+                    <button onclick="loginAsAdmin()">Увійти як Адміністратор</button>
+                    <button onclick="loginAsClient()">Увійти як Клієнт</button>
+                    <button onclick="checkAuthStatus()">Перевірити статус</button>
+                    <button onclick="logout()" class="warning">Вийти</button>
+                </div>
+                <div id="auth-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Секція статистики -->
+            <div class="test-section">
+                <h2>📊 Статистика сповіщень</h2>
+                <div class="button-group">
+                    <button onclick="loadNotificationStats()">Завантажити статистику</button>
+                    <button onclick="getUnreadCount()">Кількість непрочитаних</button>
+                </div>
+                <div id="stats-container">
+                    <div class="stats-grid" id="stats-grid" style="display: none;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-count">-</div>
+                            <div class="stat-label">Всього</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="unread-count">-</div>
+                            <div class="stat-label">Непрочитані</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="read-count">-</div>
+                            <div class="stat-label">Прочитані</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="today-count">-</div>
+                            <div class="stat-label">Сьогодні</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="stats-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Секція фільтрів -->
+            <div class="test-section">
+                <h2>🔍 Фільтри та пошук</h2>
+                <div class="filter-group">
+                    <input type="text" id="search-input" class="filter-input" placeholder="Пошук по тексту...">
+                    <select id="category-filter" class="filter-input">
+                        <option value="">Всі категорії</option>
+                        <option value="booking">Бронювання</option>
+                        <option value="system">Система</option>
+                        <option value="promotion">Акція</option>
+                        <option value="reminder">Нагадування</option>
+                        <option value="general">Загальне</option>
+                        <option value="security">Безпека</option>
+                    </select>
+                    <select id="priority-filter" class="filter-input">
+                        <option value="">Всі пріоритети</option>
+                        <option value="urgent">Терміново</option>
+                        <option value="high">Високий</option>
+                        <option value="normal">Звичайний</option>
+                        <option value="low">Низький</option>
+                    </select>
+                    <select id="read-filter" class="filter-input">
+                        <option value="">Всі сповіщення</option>
+                        <option value="false">Непрочитані</option>
+                        <option value="true">Прочитані</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button onclick="applyFilters()">Застосувати фільтри</button>
+                    <button onclick="clearFilters()" class="warning">Очистити фільтри</button>
+                </div>
+            </div>
+
+            <!-- Секція списку уведомлений -->
+            <div class="test-section">
+                <h2>📋 Список сповіщень</h2>
+                <div class="button-group">
+                    <button onclick="loadNotifications()">Завантажити сповіщення</button>
+                    <button onclick="loadNotifications(1)">Сторінка 1</button>
+                    <button onclick="loadNotifications(2)">Сторінка 2</button>
+                    <button onclick="refreshNotifications()" class="success">Оновити</button>
+                </div>
+                <div id="notifications-container">
+                    <div id="notifications-list"></div>
+                    <div id="pagination-container"></div>
+                </div>
+                <div id="notifications-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Секція действий -->
+            <div class="test-section">
+                <h2>⚡ Дії з сповіщеннями</h2>
+                <div class="button-group">
+                    <button onclick="markAllAsRead()" class="success">Позначити всі як прочитані</button>
+                    <button onclick="clearReadNotifications()" class="warning">Очистити прочитані</button>
+                    <button onclick="testNotificationActions()" class="success">Тест дій</button>
+                </div>
+                <div id="actions-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Секція тестирования производительности -->
+            <div class="test-section">
+                <h2>⚡ Тест продуктивності</h2>
+                <div class="button-group">
+                    <button onclick="performanceTest()">Запустити тест швидкості</button>
+                    <button onclick="stressTest()">Стрес-тест API</button>
+                    <button onclick="cacheTest()">Тест кешування</button>
+                </div>
+                <div id="performance-result" class="result" style="display: none;"></div>
+            </div>
+
+            <!-- Секция результатов -->
+            <div class="test-section">
+                <h2>📈 Результати тестування</h2>
+                <div id="test-summary" class="stats-grid" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-tests">0</div>
+                        <div class="stat-label">Всього тестів</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="passed-tests">0</div>
+                        <div class="stat-label">Пройдено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="failed-tests">0</div>
+                        <div class="stat-label">Провалено</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="success-rate">0%</div>
+                        <div class="stat-label">Успішність</div>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button onclick="generateReport()" class="success">Згенерувати звіт</button>
+                    <button onclick="exportResults()" class="success">Експорт результатів</button>
+                    <button onclick="resetTests()" class="warning">Скинути тести</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация API
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+        let currentUser = null;
+        let currentFilters = {};
+        let testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            details: []
+        };
+
+        // Утилиты для логирования
+        function logResult(elementId, message, isSuccess = true) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${isSuccess ? 'success-result' : 'error-result'}`;
+            element.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            
+            // Обновляем статистику тестов
+            testResults.total++;
+            if (isSuccess) {
+                testResults.passed++;
+            } else {
+                testResults.failed++;
+            }
+            updateTestSummary();
+        }
+
+        function updateTestSummary() {
+            document.getElementById('test-summary').style.display = 'grid';
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('passed-tests').textContent = testResults.passed;
+            document.getElementById('failed-tests').textContent = testResults.failed;
+            const successRate = testResults.total > 0 ? Math.round((testResults.passed / testResults.total) * 100) : 0;
+            document.getElementById('success-rate').textContent = successRate + '%';
+        }
+
+        // API запросы
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                },
+                ...options
+            };
+
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.error || data.message || 'Unknown error'}`);
+                }
+                
+                return { success: true, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message, status: 0 };
+            }
+        }
+
+        // Авторизация
+        async function loginAsAdmin() {
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'admin@test.com',
+                    password: 'admin123'
+                })
+            });
+
+            if (result.success) {
+                authToken = result.data.auth_token;
+                currentUser = result.data.user;
+                logResult('auth-result', `✅ Успешная авторизация как администратор:\n${JSON.stringify(result.data.user, null, 2)}`);
+            } else {
+                logResult('auth-result', `❌ Ошибка авторизации: ${result.error}`, false);
+            }
+        }
+
+        async function loginAsClient() {
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'client@test.com',
+                    password: 'client123'
+                })
+            });
+
+            if (result.success) {
+                authToken = result.data.auth_token;
+                currentUser = result.data.user;
+                logResult('auth-result', `✅ Успешная авторизация как клиент:\n${JSON.stringify(result.data.user, null, 2)}`);
+            } else {
+                logResult('auth-result', `❌ Ошибка авторизации: ${result.error}`, false);
+            }
+        }
+
+        async function checkAuthStatus() {
+            if (!authToken) {
+                logResult('auth-result', '❌ Токен авторизации отсутствует', false);
+                return;
+            }
+
+            const result = await apiRequest('/auth/me');
+            
+            if (result.success) {
+                currentUser = result.data;
+                logResult('auth-result', `✅ Авторизация действительна:\n${JSON.stringify(result.data, null, 2)}`);
+            } else {
+                authToken = null;
+                currentUser = null;
+                logResult('auth-result', `❌ Токен недействителен: ${result.error}`, false);
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            logResult('auth-result', '✅ Выход выполнен успешно');
+        }
+
+        // Статистика уведомлений
+        async function loadNotificationStats() {
+            if (!authToken) {
+                logResult('stats-result', '❌ Необходима авторизация', false);
+                return;
+            }
+
+            const result = await apiRequest('/notifications/stats');
+            
+            if (result.success) {
+                const stats = result.data;
+                
+                // Обновляем карточки статистики
+                document.getElementById('stats-grid').style.display = 'grid';
+                document.getElementById('total-count').textContent = stats.total || 0;
+                document.getElementById('unread-count').textContent = stats.unread || 0;
+                document.getElementById('read-count').textContent = stats.read || 0;
+                document.getElementById('today-count').textContent = stats.today || 0;
+                
+                logResult('stats-result', `✅ Статистика загружена:\n${JSON.stringify(stats, null, 2)}`);
+            } else {
+                logResult('stats-result', `❌ Ошибка загрузки статистики: ${result.error}`, false);
+            }
+        }
+
+        async function getUnreadCount() {
+            if (!authToken) {
+                logResult('stats-result', '❌ Необходима авторизация', false);
+                return;
+            }
+
+            const result = await apiRequest('/notifications/unread_count');
+            
+            if (result.success) {
+                document.getElementById('unread-count').textContent = result.data.unread_count;
+                logResult('stats-result', `✅ Количество непрочитанных: ${result.data.unread_count}`);
+            } else {
+                logResult('stats-result', `❌ Ошибка получения количества: ${result.error}`, false);
+            }
+        }
+
+        // Загрузка уведомлений
+        async function loadNotifications(page = 1) {
+            if (!authToken) {
+                logResult('notifications-result', '❌ Необходима авторизация', false);
+                return;
+            }
+
+            const params = new URLSearchParams({
+                page: page.toString(),
+                per_page: '5',
+                ...currentFilters
+            });
+
+            const result = await apiRequest(`/notifications?${params}`);
+            
+            if (result.success) {
+                displayNotifications(result.data);
+                logResult('notifications-result', `✅ Загружено ${result.data.notifications.length} уведомлений`);
+            } else {
+                logResult('notifications-result', `❌ Ошибка загрузки: ${result.error}`, false);
+            }
+        }
+
+        function displayNotifications(data) {
+            const container = document.getElementById('notifications-list');
+            const { notifications, pagination } = data;
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 Сповіщення відсутні</h3>
+                        <p>Немає сповіщень, що відповідають заданим критеріям</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => `
+                <div class="notification-item">
+                    <div class="notification-icon">${getNotificationIcon(notification.category)}</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-meta">
+                            <span class="chip">${getCategoryText(notification.category)}</span>
+                            <span class="chip priority-${notification.priority}">${getPriorityText(notification.priority)}</span>
+                            <span class="chip">${notification.is_read ? 'Прочитано' : 'Непрочитано'}</span>
+                            <span class="chip">${new Date(notification.created_at).toLocaleDateString('uk-UA')}</span>
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <button class="action-btn" onclick="toggleNotificationRead(${notification.id}, ${notification.is_read})">
+                            ${notification.is_read ? '📖' : '✅'}
+                        </button>
+                        <button class="action-btn" onclick="deleteNotification(${notification.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Пагинация
+            if (pagination.total_pages > 1) {
+                displayPagination(pagination);
+            }
+        }
+
+        function displayPagination(pagination) {
+            const container = document.getElementById('pagination-container');
+            const { current_page, total_pages } = pagination;
+            
+            let paginationHTML = '<div class="pagination">';
+            
+            // Предыдущая страница
+            if (current_page > 1) {
+                paginationHTML += `<button class="page-btn" onclick="loadNotifications(${current_page - 1})">‹</button>`;
+            }
+            
+            // Номера страниц
+            for (let i = 1; i <= Math.min(total_pages, 5); i++) {
+                const isActive = i === current_page ? 'active' : '';
+                paginationHTML += `<button class="page-btn ${isActive}" onclick="loadNotifications(${i})">${i}</button>`;
+            }
+            
+            // Следующая страница
+            if (current_page < total_pages) {
+                paginationHTML += `<button class="page-btn" onclick="loadNotifications(${current_page + 1})">›</button>`;
+            }
+            
+            paginationHTML += '</div>';
+            container.innerHTML = paginationHTML;
+        }
+
+        // Фильтры
+        function applyFilters() {
+            const search = document.getElementById('search-input').value.trim();
+            const category = document.getElementById('category-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+            const read = document.getElementById('read-filter').value;
+
+            currentFilters = {};
+            if (search) currentFilters.search = search;
+            if (category) currentFilters.category = category;
+            if (priority) currentFilters.priority = priority;
+            if (read) currentFilters.read = read;
+
+            loadNotifications(1);
+        }
+
+        function clearFilters() {
+            currentFilters = {};
+            document.getElementById('search-input').value = '';
+            document.getElementById('category-filter').value = '';
+            document.getElementById('priority-filter').value = '';
+            document.getElementById('read-filter').value = '';
+            loadNotifications(1);
+        }
+
+        // Действия с уведомлениями
+        async function toggleNotificationRead(id, isRead) {
+            const result = await apiRequest(`/notifications/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_read: !isRead })
+            });
+
+            if (result.success) {
+                logResult('actions-result', `✅ Статус уведомления ${id} изменен`);
+                refreshNotifications();
+            } else {
+                logResult('actions-result', `❌ Ошибка изменения статуса: ${result.error}`, false);
+            }
+        }
+
+        async function deleteNotification(id) {
+            if (!confirm('Вы уверены, что хотите удалить это уведомление?')) return;
+
+            const result = await apiRequest(`/notifications/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (result.success) {
+                logResult('actions-result', `✅ Уведомление ${id} удалено`);
+                refreshNotifications();
+            } else {
+                logResult('actions-result', `❌ Ошибка удаления: ${result.error}`, false);
+            }
+        }
+
+        async function markAllAsRead() {
+            const result = await apiRequest('/notifications/mark_all_as_read', {
+                method: 'POST'
+            });
+
+            if (result.success) {
+                logResult('actions-result', `✅ ${result.data.message}. Отмечено: ${result.data.count}`);
+                refreshNotifications();
+                loadNotificationStats();
+            } else {
+                logResult('actions-result', `❌ Ошибка отметки: ${result.error}`, false);
+            }
+        }
+
+        async function clearReadNotifications() {
+            if (!confirm('Вы уверены, что хотите удалить все прочитанные уведомления?')) return;
+
+            const result = await apiRequest('/notifications/clear_read', {
+                method: 'DELETE'
+            });
+
+            if (result.success) {
+                logResult('actions-result', `✅ ${result.data.message}. Удалено: ${result.data.count}`);
+                refreshNotifications();
+                loadNotificationStats();
+            } else {
+                logResult('actions-result', `❌ Ошибка очистки: ${result.error}`, false);
+            }
+        }
+
+        function refreshNotifications() {
+            loadNotifications(1);
+            loadNotificationStats();
+        }
+
+        async function testNotificationActions() {
+            logResult('actions-result', '🧪 Запуск теста действий с уведомлениями...');
+            
+            let testsPassed = 0;
+            let testsTotal = 0;
+
+            // Тест 1: Загрузка уведомлений
+            testsTotal++;
+            const loadResult = await apiRequest('/notifications?per_page=1');
+            if (loadResult.success) {
+                testsPassed++;
+                logResult('actions-result', `✅ Тест 1/4: Загрузка уведомлений - ПРОЙДЕН`);
+            } else {
+                logResult('actions-result', `❌ Тест 1/4: Загрузка уведомлений - ПРОВАЛЕН: ${loadResult.error}`, false);
+            }
+
+            // Тест 2: Получение статистики
+            testsTotal++;
+            const statsResult = await apiRequest('/notifications/stats');
+            if (statsResult.success) {
+                testsPassed++;
+                logResult('actions-result', `✅ Тест 2/4: Статистика - ПРОЙДЕН`);
+            } else {
+                logResult('actions-result', `❌ Тест 2/4: Статистика - ПРОВАЛЕН: ${statsResult.error}`, false);
+            }
+
+            // Тест 3: Количество непрочитанных
+            testsTotal++;
+            const unreadResult = await apiRequest('/notifications/unread_count');
+            if (unreadResult.success) {
+                testsPassed++;
+                logResult('actions-result', `✅ Тест 3/4: Количество непрочитанных - ПРОЙДЕН`);
+            } else {
+                logResult('actions-result', `❌ Тест 3/4: Количество непрочитанных - ПРОВАЛЕН: ${unreadResult.error}`, false);
+            }
+
+            // Тест 4: Фильтрация
+            testsTotal++;
+            const filterResult = await apiRequest('/notifications?category=system&priority=normal');
+            if (filterResult.success) {
+                testsPassed++;
+                logResult('actions-result', `✅ Тест 4/4: Фильтрация - ПРОЙДЕН`);
+            } else {
+                logResult('actions-result', `❌ Тест 4/4: Фильтрация - ПРОВАЛЕН: ${filterResult.error}`, false);
+            }
+
+            const successRate = Math.round((testsPassed / testsTotal) * 100);
+            logResult('actions-result', `\n🎯 РЕЗУЛЬТАТ ТЕСТИРОВАНИЯ:\n✅ Пройдено: ${testsPassed}/${testsTotal}\n📊 Успешность: ${successRate}%`);
+        }
+
+        // Тесты производительности
+        async function performanceTest() {
+            logResult('performance-result', '⚡ Запуск теста производительности...');
+            
+            const tests = [
+                { name: 'Загрузка уведомлений', endpoint: '/notifications?per_page=10' },
+                { name: 'Статистика', endpoint: '/notifications/stats' },
+                { name: 'Количество непрочитанных', endpoint: '/notifications/unread_count' },
+                { name: 'Фильтрация по категории', endpoint: '/notifications?category=system' },
+                { name: 'Поиск по тексту', endpoint: '/notifications?search=test' }
+            ];
+
+            let results = [];
+
+            for (const test of tests) {
+                const startTime = performance.now();
+                const result = await apiRequest(test.endpoint);
+                const endTime = performance.now();
+                const duration = Math.round(endTime - startTime);
+
+                results.push({
+                    name: test.name,
+                    duration,
+                    success: result.success
+                });
+            }
+
+            const avgTime = Math.round(results.reduce((sum, r) => sum + r.duration, 0) / results.length);
+            const successCount = results.filter(r => r.success).length;
+
+            let reportText = '📊 РЕЗУЛЬТАТЫ ТЕСТА ПРОИЗВОДИТЕЛЬНОСТИ:\n\n';
+            results.forEach(r => {
+                const status = r.success ? '✅' : '❌';
+                reportText += `${status} ${r.name}: ${r.duration}мс\n`;
+            });
+            reportText += `\n📈 Среднее время: ${avgTime}мс`;
+            reportText += `\n✅ Успешных запросов: ${successCount}/${results.length}`;
+
+            logResult('performance-result', reportText);
+        }
+
+        async function stressTest() {
+            logResult('performance-result', '🔥 Запуск стрес-теста...');
+            
+            const concurrentRequests = 10;
+            const requests = [];
+            
+            const startTime = performance.now();
+            
+            for (let i = 0; i < concurrentRequests; i++) {
+                requests.push(apiRequest('/notifications/stats'));
+            }
+            
+            try {
+                const results = await Promise.all(requests);
+                const endTime = performance.now();
+                const totalTime = Math.round(endTime - startTime);
+                const successCount = results.filter(r => r.success).length;
+                
+                logResult('performance-result', 
+                    `🔥 СТРЕС-ТЕСТ ЗАВЕРШЕН:\n` +
+                    `📊 Одновременных запросов: ${concurrentRequests}\n` +
+                    `⏱️ Общее время: ${totalTime}мс\n` +
+                    `✅ Успешных: ${successCount}/${concurrentRequests}\n` +
+                    `📈 Среднее время на запрос: ${Math.round(totalTime / concurrentRequests)}мс`
+                );
+            } catch (error) {
+                logResult('performance-result', `❌ Ошибка стрес-теста: ${error.message}`, false);
+            }
+        }
+
+        async function cacheTest() {
+            logResult('performance-result', '🗄️ Тест кэширования...');
+            
+            // Первый запрос
+            const start1 = performance.now();
+            const result1 = await apiRequest('/notifications/stats');
+            const time1 = Math.round(performance.now() - start1);
+            
+            // Второй запрос (должен быть быстрее из-за кэша)
+            const start2 = performance.now();
+            const result2 = await apiRequest('/notifications/stats');
+            const time2 = Math.round(performance.now() - start2);
+            
+            const improvement = time1 > time2 ? Math.round(((time1 - time2) / time1) * 100) : 0;
+            
+            logResult('performance-result', 
+                `🗄️ ТЕСТ КЭШИРОВАНИЯ:\n` +
+                `📊 Первый запрос: ${time1}мс\n` +
+                `📊 Второй запрос: ${time2}мс\n` +
+                `📈 Улучшение: ${improvement}%\n` +
+                `${improvement > 0 ? '✅ Кэширование работает' : '⚠️ Кэширование не обнаружено'}`
+            );
+        }
+
+        // Утилиты для отображения
+        function getNotificationIcon(category) {
+            const icons = {
+                booking: '📅',
+                system: '⚙️',
+                promotion: '🎉',
+                reminder: '⏰',
+                general: '📢',
+                security: '🔒'
+            };
+            return icons[category] || '📢';
+        }
+
+        function getCategoryText(category) {
+            const texts = {
+                booking: 'Бронювання',
+                system: 'Система',
+                promotion: 'Акція',
+                reminder: 'Нагадування',
+                general: 'Загальне',
+                security: 'Безпека'
+            };
+            return texts[category] || 'Загальне';
+        }
+
+        function getPriorityText(priority) {
+            const texts = {
+                urgent: 'Терміново',
+                high: 'Високий',
+                normal: 'Звичайний',
+                low: 'Низький'
+            };
+            return texts[priority] || 'Звичайний';
+        }
+
+        // Отчеты
+        function generateReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                user: currentUser,
+                testResults: testResults,
+                summary: {
+                    totalTests: testResults.total,
+                    passedTests: testResults.passed,
+                    failedTests: testResults.failed,
+                    successRate: testResults.total > 0 ? Math.round((testResults.passed / testResults.total) * 100) : 0
+                }
+            };
+
+            const reportText = `
+🔔 ОТЧЕТ ТЕСТИРОВАНИЯ NOTIFICATION CENTER API
+============================================
+
+📅 Дата: ${new Date().toLocaleString('uk-UA')}
+👤 Пользователь: ${currentUser?.email || 'Не авторизован'}
+🏷️ Роль: ${currentUser?.role || 'Неизвестно'}
+
+📊 СТАТИСТИКА ТЕСТИРОВАНИЯ:
+- Всего тестов: ${report.summary.totalTests}
+- Пройдено: ${report.summary.passedTests}
+- Провалено: ${report.summary.failedTests}
+- Успешность: ${report.summary.successRate}%
+
+✅ ВЫВОДЫ:
+${report.summary.successRate >= 80 ? 
+    '🎉 API работает стабильно, готово к продакшену!' : 
+    '⚠️ Обнаружены проблемы, требуется доработка.'}
+
+============================================
+Сгенерировано автоматически
+            `.trim();
+
+            logResult('actions-result', reportText);
+        }
+
+        function exportResults() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                user: currentUser,
+                testResults: testResults
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `notification-center-test-results-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            logResult('actions-result', '✅ Результаты экспортированы в JSON файл');
+        }
+
+        function resetTests() {
+            testResults = { total: 0, passed: 0, failed: 0, details: [] };
+            updateTestSummary();
+            document.getElementById('test-summary').style.display = 'none';
+            
+            // Очищаем все результаты
+            const resultElements = document.querySelectorAll('.result');
+            resultElements.forEach(el => el.style.display = 'none');
+            
+            logResult('actions-result', '🔄 Тесты сброшены, можно начинать заново');
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔔 Notification Center API Integration Test загружен');
+            console.log('📝 Для начала тестирования войдите в систему как администратор или клиент');
+        });
+    </script>
+</body>
+</html> 
