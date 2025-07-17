@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -134,6 +134,9 @@ const PushNotificationsPage = lazy(() => import('./pages/admin/PushNotifications
 
 // Ленивая загрузка страницы Telegram уведомлений
 const TelegramNotificationsPage = lazy(() => import('./pages/admin/TelegramNotificationsPage'));
+
+// Ленивая загрузка Центра уведомлений
+const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
 
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
@@ -313,6 +316,8 @@ const App: React.FC = () => {
                       <Route path="push-notifications" element={<PushNotificationsPage />} />
                       {/* Маршрут для Telegram уведомлений */}
                       <Route path="telegram-notifications" element={<TelegramNotificationsPage />} />
+                      {/* Маршрут для Центра уведомлений */}
+                      <Route path="notifications" element={<NotificationCenterPage />} />
                       {/* Маршрут для пользователей */}
                       <Route path="users" element={<UsersPage />} />
                       <Route path="users/new" element={<UserForm />} />
