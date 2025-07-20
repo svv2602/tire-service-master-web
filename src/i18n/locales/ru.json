@@ -120,6 +120,64 @@
     "tireCalculator": "Калькулятор шин"
   },
   "auth": {
+    "errors": {
+      "email_required": "Email обязателен для заполнения",
+      "invalid_email": "Неверный формат email",
+      "password_required": "Пароль обязателен для заполнения",
+      "password_min_length": "Пароль должен содержать минимум 6 символов",
+      "passwords_not_match": "Пароли не совпадают",
+      "reset_password_error": "Ошибка сброса пароля"
+    },
+    "google": {
+      "signIn": "Войти через Google",
+      "signUp": "Зарегистрироваться через Google",
+      "continue": "Продолжить с Google",
+      "linking": "Привязка...",
+      "unlinking": "Отвязка...",
+      "linkAccount": "Привязать Google аккаунт",
+      "unlinkAccount": "Отвязать Google аккаунт",
+      "linkSuccess": "Google аккаунт успешно привязан!",
+      "unlinkSuccess": "Google аккаунт успешно отвязан",
+      "linkError": "Ошибка при привязке Google аккаунта",
+      "unlinkError": "Ошибка при отвязке Google аккаунта",
+      "alreadyLinked": "Google аккаунт уже привязан к другому пользователю",
+      "notLinked": "Google аккаунт не привязан",
+      "authError": "Ошибка авторизации через Google",
+      "secureAuth": "Безопасная авторизация через Google OAuth 2.0",
+      "or": "или",
+      "accountLinked": "Ваш аккаунт успешно привязан к Google",
+      "accountUnlinked": "Ваш аккаунт отвязан от Google",
+      "linkDescription": "Привяжите Google аккаунт для быстрого входа в систему",
+      "linkBenefit": "После привязки вы сможете входить в систему одним кликом, используя ваш Google аккаунт. Ваш основной email останется без изменений.",
+      "unlinkConfirm": "Вы уверены, что хотите отвязать Google аккаунт? Это действие нельзя отменить.",
+      "passwordChangeDisabled": "Поскольку вы используете Google аккаунт, изменение пароля недоступно.",
+      "passwordChangeEnabled": "Для изменения пароля используйте функцию восстановления пароля."
+    }
+  },
+  "profile": {
+    "settings": {
+      "googleAccount": "Google аккаунт",
+      "notSpecified": "Не указано"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "Установить приложение",
+      "description": "Получите лучший опыт использования Tire Service, установив наше приложение на устройство",
+      "mobileFeatures": "Быстрый доступ с главного экрана",
+      "desktopFeatures": "Работает без браузера",
+      "benefits": {
+        "title": "Преимущества:",
+        "offline": "Работа без интернета",
+        "fast": "Быстрая загрузка",
+        "notifications": "Push уведомления",
+        "homescreen": "Значок на главном экране"
+      },
+      "install": "Установить",
+      "remindLater": "Напомнить позже"
+    }
+  },
+  "auth": {
     "login": "Вход",
     "register": "Регистрация",
     "email": "Email",

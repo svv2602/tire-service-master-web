@@ -120,6 +120,64 @@
     "tireCalculator": "Калькулятор шин"
   },
   "auth": {
+    "errors": {
+      "email_required": "Email обов'язковий для заповнення",
+      "invalid_email": "Невірний формат email",
+      "password_required": "Пароль обов'язковий для заповнення",
+      "password_min_length": "Пароль повинен містити мінімум 6 символів",
+      "passwords_not_match": "Паролі не співпадають",
+      "reset_password_error": "Помилка скидання пароля"
+    },
+    "google": {
+      "signIn": "Увійти через Google",
+      "signUp": "Зареєструватися через Google",
+      "continue": "Продовжити з Google",
+      "linking": "Прив'язка...",
+      "unlinking": "Відв'язка...",
+      "linkAccount": "Прив'язати Google аккаунт",
+      "unlinkAccount": "Відв'язати Google аккаунт",
+      "linkSuccess": "Google аккаунт успішно прив'язано!",
+      "unlinkSuccess": "Google аккаунт успішно відв'язано",
+      "linkError": "Помилка при прив'язці Google аккаунта",
+      "unlinkError": "Помилка при відв'язці Google аккаунта",
+      "alreadyLinked": "Google аккаунт вже прив'язаний до іншого користувача",
+      "notLinked": "Google аккаунт не прив'язаний",
+      "authError": "Помилка авторизації через Google",
+      "secureAuth": "Безпечна авторизація через Google OAuth 2.0",
+      "or": "або",
+      "accountLinked": "Ваш аккаунт успішно прив'язано до Google",
+      "accountUnlinked": "Ваш аккаунт відв'язано від Google",
+      "linkDescription": "Прив'яжіть Google аккаунт для швидкого входу в систему",
+      "linkBenefit": "Після прив'язки ви зможете входити в систему одним кліком, використовуючи ваш Google аккаунт. Ваш основний email залишиться без змін.",
+      "unlinkConfirm": "Ви впевнені, що хочете відв'язати Google аккаунт? Цю дію неможливо скасувати.",
+      "passwordChangeDisabled": "Оскільки ви використовуєте Google аккаунт, зміна пароля недоступна.",
+      "passwordChangeEnabled": "Для зміни пароля використовуйте функцію відновлення пароля."
+    }
+  },
+  "profile": {
+    "settings": {
+      "googleAccount": "Google аккаунт",
+      "notSpecified": "Не вказано"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "Встановити додаток",
+      "description": "Отримайте кращий досвід використання Tire Service, встановивши наш додаток на пристрій",
+      "mobileFeatures": "Швидкий доступ з головного екрана",
+      "desktopFeatures": "Працює без браузера",
+      "benefits": {
+        "title": "Переваги:",
+        "offline": "Робота без інтернету",
+        "fast": "Швидке завантаження",
+        "notifications": "Push сповіщення",
+        "homescreen": "Значок на головному екрані"
+      },
+      "install": "Встановити",
+      "remindLater": "Нагадати пізніше"
+    }
+  },
+  "auth": {
     "login": "Вхід",
     "register": "Реєстрація",
     "email": "Email",
