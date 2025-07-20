@@ -48,6 +48,9 @@ const ServiceFormPage = lazy(() => import('./pages/services/ServiceFormPage'));
 // Ленивая загрузка страниц клиентов
 const ClientsPage = lazy(() => import('./pages/clients/ClientsPage'));
 const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
+
+// Ленивая загрузка страниц уведомлений
+const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
 
@@ -275,6 +278,9 @@ const App: React.FC = () => {
                       {/* Маршруты для отзывов */}
                       <Route path="reviews" element={<ReviewsPage />} />
                       <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
+                      
+                      {/* Маршруты для уведомлений */}
+                      <Route path="notifications" element={<NotificationCenterPage />} />
                       <Route path="reviews/new" element={<ReviewFormPage />} />
                       <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
                       <Route path="my-reviews" element={<MyReviewsPage />} />

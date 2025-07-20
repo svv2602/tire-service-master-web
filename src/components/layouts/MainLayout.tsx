@@ -62,6 +62,7 @@ import {
   ChevronRight as ChevronRightIcon,
   UnfoldLess as CollapseIcon,
   UnfoldMore as ExpandIcon,
+  Notifications as NotificationsIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -439,6 +440,13 @@ const MainLayout: React.FC = () => {
       {
         title: t('navigation.sections.settings'),
         items: [
+          {
+            text: t('navigation.notifications'),
+            icon: <NotificationsIcon />,
+            path: '/admin/notifications',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER, UserRole.CLIENT],
+            description: t('navigation.descriptions.notifications'),
+          },
           {
             text: t('navigation.profile'),
             icon: <SettingsIcon />,
