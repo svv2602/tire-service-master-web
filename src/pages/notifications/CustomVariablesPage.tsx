@@ -46,6 +46,16 @@ interface CustomVariableFormData {
   category: string;
 }
 
+// Системные переменные (нельзя перезаписывать)
+const SYSTEM_VARIABLES = [
+  'client_name', 'client_email', 'client_phone', 'client_first_name', 'client_last_name',
+  'booking_id', 'booking_date', 'booking_time', 'booking_status', 'service_name', 'service_duration',
+  'service_point_name', 'service_point_address', 'service_point_phone', 'service_point_email',
+  'car_brand', 'car_model', 'license_plate',
+  'company_name', 'support_email', 'support_phone', 'website_url',
+  'current_date', 'current_time',
+];
+
 const VARIABLE_CATEGORIES = [
   { value: 'client', label: 'Клиент', color: 'primary' },
   { value: 'booking', label: 'Бронирование', color: 'secondary' },
@@ -126,6 +136,16 @@ const CustomVariablesPage: React.FC = () => {
         open: true,
         message: 'Название должно содержать только английские буквы, цифры и подчеркивания',
         severity: 'warning'
+      });
+      return;
+    }
+
+    // Проверка на системные переменные
+    if (SYSTEM_VARIABLES.includes(formData.name.toLowerCase())) {
+      setNotification({
+        open: true,
+        message: `"${formData.name}" является системной переменной и не может быть переопределена`,
+        severity: 'error'
       });
       return;
     }
@@ -321,15 +341,32 @@ const CustomVariablesPage: React.FC = () => {
           {editingVariable ? 'Редактировать переменную' : 'Создать переменную'}
         </DialogTitle>
         <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              <strong>Системные переменные уже доступны в шаблонах:</strong><br/>
+              {SYSTEM_VARIABLES.slice(0, 8).join(', ')} и другие...
+            </Typography>
+          </Alert>
+          
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
             <TextField
               label="Название переменной *"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="client_name"
-              helperText="Только английские буквы, цифры и подчеркивания"
+              placeholder="my_custom_variable"
+              helperText="Только английские буквы, цифры и подчеркивания. Нельзя использовать системные имена."
               fullWidth
+              error={SYSTEM_VARIABLES.includes(formData.name.toLowerCase())}
             />
+            
+            {SYSTEM_VARIABLES.includes(formData.name.toLowerCase()) && (
+              <Alert severity="error" sx={{ mt: 1 }}>
+                <Typography variant="body2">
+                  <strong>"{formData.name}"</strong> является системной переменной!<br/>
+                  Выберите другое название, например: <code>custom_{formData.name}</code>
+                </Typography>
+              </Alert>
+            )}
 
             <FormControl fullWidth>
               <InputLabel>Категория</InputLabel>
