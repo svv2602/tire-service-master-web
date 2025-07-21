@@ -35,7 +35,7 @@ import {
   NotificationsActive as PushIcon,
   Telegram as TelegramIcon,
   Schedule as ScheduleIcon,
-  Priority as PriorityIcon,
+  TrendingUp as PriorityIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
   ExpandMore as ExpandMoreIcon,
