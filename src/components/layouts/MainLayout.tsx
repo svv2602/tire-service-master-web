@@ -64,6 +64,7 @@ import {
   UnfoldMore as ExpandIcon,
   Notifications as NotificationsIcon,
   Email as EmailIcon,
+  Code as CodeIcon,
   NotificationImportant as PushIcon,
   Telegram as TelegramIcon,
   SmartToy as BotIcon,
@@ -424,6 +425,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/notifications/email-templates',
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.emailTemplates'),
+          },
+          {
+            text: t('navigation.customVariables'),
+            icon: <CodeIcon />,
+            path: '/admin/notifications/custom-variables',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.customVariables'),
           },
           {
             text: t('navigation.pushNotifications'),

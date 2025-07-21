@@ -57,6 +57,7 @@ import {
 } from '../../api/emailTemplates.api';
 
 import {
+  useGetCustomVariablesQuery,
   useGetVariablesByCategoryQuery,
   useGetVariableCategoriesQuery,
   useAddVariableToTemplateMutation,
@@ -106,17 +107,7 @@ const EmailTemplateFormPage: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [variableDialog, setVariableDialog] = useState<{ open: boolean; variable: string }>({ open: false, variable: '' });
   
-  // Состояния для кастомных переменных
-  const [customVariables, setCustomVariables] = useState<CustomVariable[]>([]);
-  const [variableFormDialog, setVariableFormDialog] = useState<{
-    open: boolean;
-    editingVariable: CustomVariable | null;
-  }>({ open: false, editingVariable: null });
-  const [variableForm, setVariableForm] = useState({
-    name: '',
-    description: '',
-    example_value: ''
-  });
+  // Состояния для кастомных переменных убраны - управление на отдельной странице
 
   // API хуки
   const { data: templateData, isLoading: templateLoading } = useGetEmailTemplateQuery(
@@ -124,10 +115,12 @@ const EmailTemplateFormPage: React.FC = () => {
     { skip: !isEditMode }
   );
   const { data: templateTypesData } = useGetTemplateTypesQuery();
+  const { data: customVariablesData } = useGetCustomVariablesQuery({});
   const [createTemplate] = useCreateEmailTemplateMutation();
   const [updateTemplate] = useUpdateEmailTemplateMutation();
 
   const templateTypes = templateTypesData?.data || [];
+  const customVariables = customVariablesData?.data || [];
 
   // Валидация
   const validationSchema = Yup.object({
@@ -247,103 +240,7 @@ const EmailTemplateFormPage: React.FC = () => {
     }
   };
 
-  // Функции для кастомных переменных
-  const handleAddCustomVariable = () => {
-    setVariableForm({ name: '', description: '', example_value: '' });
-    setVariableFormDialog({ open: true, editingVariable: null });
-  };
-
-  const handleEditCustomVariable = (variable: CustomVariable) => {
-    setVariableForm({
-      name: variable.name,
-      description: variable.description,
-      example_value: variable.example_value
-    });
-    setVariableFormDialog({ open: true, editingVariable: variable });
-  };
-
-  const handleDeleteCustomVariable = (variableId: string) => {
-    setCustomVariables(prev => prev.filter(v => v.id !== variableId));
-    // Также удаляем из переменных шаблона
-    const variableToDelete = customVariables.find(v => v.id === variableId);
-    if (variableToDelete) {
-      formik.setFieldValue(
-        'variables',
-        formik.values.variables.filter(v => v !== variableToDelete.name)
-      );
-    }
-  };
-
-  const handleSaveCustomVariable = () => {
-    if (!variableForm.name.trim()) {
-      setNotification({
-        open: true,
-        message: 'Название переменной обязательно',
-        severity: 'warning'
-      });
-      return;
-    }
-
-    // Проверка на валидность названия (только английские буквы и подчеркивания)
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variableForm.name)) {
-      setNotification({
-        open: true,
-        message: 'Название должно содержать только английские буквы, цифры и подчеркивания',
-        severity: 'warning'
-      });
-      return;
-    }
-
-    const isEditing = variableFormDialog.editingVariable !== null;
-    
-    if (isEditing) {
-      // Редактирование существующей переменной
-      setCustomVariables(prev => prev.map(v => 
-        v.id === variableFormDialog.editingVariable!.id 
-          ? { ...v, ...variableForm }
-          : v
-      ));
-      
-      // Обновляем в переменных шаблона, если название изменилось
-      if (variableFormDialog.editingVariable!.name !== variableForm.name) {
-        const updatedVariables = formik.values.variables.map(v => 
-          v === variableFormDialog.editingVariable!.name ? variableForm.name : v
-        );
-        formik.setFieldValue('variables', updatedVariables);
-      }
-    } else {
-      // Проверка на дублирование
-      if (customVariables.some(v => v.name === variableForm.name)) {
-        setNotification({
-          open: true,
-          message: 'Переменная с таким названием уже существует',
-          severity: 'warning'
-        });
-        return;
-      }
-      
-      // Добавление новой переменной
-      const newCustomVariable: CustomVariable = {
-        id: Date.now().toString(),
-        ...variableForm
-      };
-      setCustomVariables(prev => [...prev, newCustomVariable]);
-    }
-
-    setVariableFormDialog({ open: false, editingVariable: null });
-    setNotification({
-      open: true,
-      message: isEditing ? 'Переменная обновлена' : 'Переменная добавлена',
-      severity: 'success'
-    });
-  };
-
-  const handleUseCustomVariable = (variable: CustomVariable) => {
-    if (!formik.values.variables.includes(variable.name)) {
-      formik.setFieldValue('variables', [...formik.values.variables, variable.name]);
-    }
-    handleVariableClick(variable.name);
-  };
+  // Функции для кастомных переменных убраны - теперь управление на отдельной странице
 
   const handlePreview = () => {
     if (!formik.values.subject || !formik.values.body) {
@@ -628,138 +525,11 @@ const EmailTemplateFormPage: React.FC = () => {
                 <Typography variant="h6" gutterBottom>
                   Переменные
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Переменные заключаются в фигурные скобки: {'{client_name}'}
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2">
-                    <strong>Как использовать переменные:</strong><br/>
-                    • Кликните на чип переменной ниже, чтобы скопировать её в буфер обмена<br/>
-                    • Вставьте переменную в тему или тело письма (формат: <code>{'{client_name}'}</code>)<br/>
-                    • Или добавьте свою переменную в поле ниже<br/>
-                    • При отправке письма переменные заменятся на реальные данные
-                  </Typography>
-                </Alert>
 
-                                {/* Таблица кастомных переменных */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Ваши переменные:</strong>
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<AddIcon />}
-                    onClick={handleAddCustomVariable}
-                  >
-                    Добавить переменную
-                  </Button>
-                </Box>
-                
-                {customVariables.length > 0 ? (
-                  <TableContainer component={Paper} sx={{ mb: 2, maxHeight: 300 }}>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Название</TableCell>
-                          <TableCell>Описание</TableCell>
-                          <TableCell>Пример значения</TableCell>
-                          <TableCell align="center" sx={{ width: 120 }}>Действия</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {customVariables.map((variable) => (
-                          <TableRow key={variable.id} hover>
-                            <TableCell>
-                              <Typography 
-                                variant="body2" 
-                                component="code" 
-                                sx={{ 
-                                  fontFamily: 'monospace',
-                                  bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
-                                  px: 1,
-                                  py: 0.5,
-                                  borderRadius: 1,
-                                  fontSize: '0.75rem'
-                                }}
-                              >
-                                {`{${variable.name}}`}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" color="text.secondary">
-                                {variable.description || 'Без описания'}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" sx={{ fontStyle: 'italic', color: theme.palette.success.main }}>
-                                "{variable.example_value || 'Не указано'}"
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                <Tooltip title="Использовать в шаблоне">
-                                  <IconButton 
-                                    size="small" 
-                                    color="primary"
-                                    onClick={() => handleUseCustomVariable(variable)}
-                                  >
-                                    <CopyIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Редактировать">
-                                  <IconButton 
-                                    size="small"
-                                    onClick={() => handleEditCustomVariable(variable)}
-                                  >
-                                    <EditIcon />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Удалить">
-                                  <IconButton 
-                                    size="small" 
-                                    color="error"
-                                    onClick={() => handleDeleteCustomVariable(variable.id)}
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                ) : (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    <Typography variant="body2">
-                      У вас пока нет своих переменных. Нажмите "Добавить переменную" чтобы создать первую.
-                    </Typography>
-                  </Alert>
-                )}
 
-                {/* Список переменных */}
-                {formik.values.variables.length > 0 && (
-                  <>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Переменные в шаблоне:
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {formik.values.variables.map((variable, index) => (
-                        <Chip
-                          key={index}
-                          label={variable}
-                          onDelete={() => handleRemoveVariable(variable)}
-                          deleteIcon={<DeleteIcon />}
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </>
-                )}
+
+
+
 
                 {/* Популярные переменные */}
                 <Divider sx={{ my: 2 }} />
@@ -893,6 +663,29 @@ const EmailTemplateFormPage: React.FC = () => {
                       ))}
                     </Box>
                   </Box>
+
+                  {/* Ваши переменные */}
+                  {customVariables.length > 0 && (
+                    <Box sx={{ mb: 1 }}>
+                      <Typography variant="caption" color="error" sx={{ fontWeight: 'bold', mb: 1, display: 'block' }}>
+                        Ваши переменные:
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {customVariables.map((variable) => (
+                          <Chip
+                            key={variable.id}
+                            label={variable.name}
+                            size="small"
+                            clickable
+                            variant="outlined"
+                            color="error"
+                            sx={{ cursor: 'pointer' }}
+                            onClick={() => handleVariableClick(variable.name)}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -1087,87 +880,7 @@ const EmailTemplateFormPage: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Диалог создания/редактирования переменной */}
-      <Dialog
-        open={variableFormDialog.open}
-        onClose={() => setVariableFormDialog({ open: false, editingVariable: null })}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {variableFormDialog.editingVariable ? 'Редактировать переменную' : 'Добавить переменную'}
-        </DialogTitle>
-        <DialogContent>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body2">
-              <strong>Правила создания переменных:</strong><br/>
-              • Используйте только английские буквы, цифры и подчеркивания<br/>
-              • Название должно начинаться с буквы<br/>
-              • Пример: <code>weather_warning</code>, <code>current_promotion</code>
-            </Typography>
-          </Alert>
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
-            <TextField
-              label="Название переменной"
-              value={variableForm.name}
-              onChange={(e) => setVariableForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="weather_warning"
-              helperText="Только английские буквы, цифры и подчеркивания"
-              fullWidth
-              required
-            />
-            
-            <TextField
-              label="Описание"
-              value={variableForm.description}
-              onChange={(e) => setVariableForm(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Предупреждение о погодных условиях"
-              helperText="Краткое описание назначения переменной"
-              fullWidth
-            />
-            
-            <TextField
-              label="Пример значения"
-              value={variableForm.example_value}
-              onChange={(e) => setVariableForm(prev => ({ ...prev, example_value: e.target.value }))}
-              placeholder="Увага! Завтра очікується дощ. Рекомендуємо зимові шини."
-              helperText="Пример того, что будет отображаться вместо переменной"
-              fullWidth
-              multiline
-              rows={2}
-            />
-          </Box>
-          
-          {variableForm.name && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Переменная будет выглядеть так:
-              </Typography>
-              <Paper sx={{ p: 1, bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100' }}>
-                <Typography component="code" sx={{ fontFamily: 'monospace', color: theme.palette.primary.main }}>
-                  {`{${variableForm.name}}`}
-                </Typography>
-              </Paper>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => setVariableFormDialog({ open: false, editingVariable: null })}
-            color="inherit"
-          >
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleSaveCustomVariable}
-            variant="contained"
-            disabled={!variableForm.name.trim()}
-          >
-            {variableFormDialog.editingVariable ? 'Сохранить' : 'Добавить'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Диалог для переменных убран - управление на отдельной странице */}
 
       <Notification
         open={notification.open}

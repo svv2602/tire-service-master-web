@@ -89,6 +89,7 @@
     "profile": "Профіль",
     "systemSettings": "Системні налаштування",
     "emailTemplates": "Email шаблони",
+    "customVariables": "Змінні",
     "pushNotifications": "Push сповіщення",
     "telegramIntegration": "Telegram інтеграція",
     "channelSettings": "Налаштування каналів",
@@ -119,6 +120,7 @@
       "profile": "Налаштування профілю",
       "systemSettings": "Загальні налаштування системи",
       "emailTemplates": "Управління шаблонами email сповіщень для різних подій",
+      "customVariables": "Створення та управління кастомними змінними для email шаблонів",
       "pushNotifications": "Налаштування push сповіщень через Firebase та Service Worker",
       "telegramIntegration": "Управління Telegram ботом та інтеграцією з системою",
       "channelSettings": "Загальні налаштування каналів доставки сповіщень"
