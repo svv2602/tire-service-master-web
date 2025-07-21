@@ -188,9 +188,11 @@ const NotificationCenter: React.FC = () => {
             </IconButton>
           </Tooltip>
           <Tooltip title="Отметить все как прочитанные">
-            <IconButton onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
-              <MarkAllReadIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
+                <MarkAllReadIcon />
+              </IconButton>
+            </span>
           </Tooltip>
           <Tooltip title="Показать/скрыть фильтры">
             <IconButton onClick={() => setShowFilters(!showFilters)}>
@@ -351,40 +353,34 @@ const NotificationCenter: React.FC = () => {
                 </ListItemIcon>
                 
                 <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight={notification.is_read ? 'normal' : 'bold'}
-                      >
-                        {notification.title}
-                      </Typography>
-                      <Chip
-                        label={getPriorityText(notification.priority)}
-                        size="small"
-                        sx={{
-                          bgcolor: getNotificationColor(notification.priority),
-                          color: 'white',
-                        }}
-                      />
-                      <Chip
-                        label={getCategoryText(notification.category)}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Box>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {notification.message}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(notification.created_at).toLocaleString('ru-RU')}
-                      </Typography>
-                    </Box>
-                  }
+                  primary={notification.title}
+                  secondary={`${notification.message} • ${new Date(notification.created_at).toLocaleString('ru-RU')}`}
+                  primaryTypographyProps={{
+                    variant: "subtitle1",
+                    fontWeight: notification.is_read ? 'normal' : 'bold',
+                  }}
+                  secondaryTypographyProps={{
+                    variant: "body2",
+                    color: "text.secondary",
+                  }}
                 />
+                
+                {/* Чипы приоритета и категории */}
+                <Box display="flex" gap={1} alignItems="center" sx={{ mr: 2 }}>
+                  <Chip
+                    label={getPriorityText(notification.priority)}
+                    size="small"
+                    sx={{
+                      bgcolor: getNotificationColor(notification.priority),
+                      color: 'white',
+                    }}
+                  />
+                  <Chip
+                    label={getCategoryText(notification.category)}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
                 
                 <ListItemSecondaryAction>
                   <Box display="flex" gap={1}>
