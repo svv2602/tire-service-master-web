@@ -33,7 +33,6 @@ import { AddCarToProfileDialog } from '../../components/booking/AddCarToProfileD
 
 // Импорт шагов формы
 import {
-  QuickFavoritesStep,
   CityServicePointStep,
   DateTimeStep,
   ClientInfoStep,
@@ -50,7 +49,6 @@ import {
 } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useGetMyClientCarsQuery } from '../../api/clients.api';
-import { useGetMyFavoritePointsByCategoryQuery } from '../../api/favoritePoints.api';
 
 // Импорт утилит
 import { shouldOfferToAddCar, prepareCarDataForDialog } from '../../utils/carUtils';
@@ -122,10 +120,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
-  // Состояние для быстрого бронирования
-  const [showQuickFavorites, setShowQuickFavorites] = useState(false);
-  const [hasCheckedFavorites, setHasCheckedFavorites] = useState(false);
-  
   // Состояние модального окна успеха
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
@@ -189,19 +183,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     }
   }, [authUser]);
 
-  // API хук для любимых точек (только для авторизованных пользователей)
-  const { 
-    data: favoritesData, 
-    isLoading: isLoadingFavorites,
-    error: favoritesError 
-  } = useGetMyFavoritePointsByCategoryQuery(
-    undefined,
-    {
-      skip: !isAuthenticated || !clientId,
-      refetchOnMountOrArgChange: true,
-    }
-  );
-
   // Мемоизированная конфигурация шагов с переводами
   const STEPS = useMemo(() => [
     {
@@ -241,7 +222,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     },
   ], [t]);
 
-  // Эффект для предзаполнения данных пользователя (убрано автоматическое предзаполнение)
+  // ✅ Эффект для предзаполнения данных пользователя (убрано автоматическое предзаполнение)
   // Теперь предзаполнение происходит только при нажатии чекбокса "Я получатель услуг" в ClientInfoStep
   useEffect(() => {
     const userData = authUser?.user;
@@ -263,50 +244,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       refetchCurrentUser();
     }
   }, []);
-
-  // ✅ Эффект для проверки любимых точек у авторизованного пользователя (только для клиентов)
-  useEffect(() => {
-    // ОТКЛЮЧАЕМ логику быстрого бронирования - всегда используем обычный процесс
-    console.log('⚠️ Логика быстрого бронирования отключена - используем обычный процесс');
-    setShowQuickFavorites(false);
-    setHasCheckedFavorites(true);
-    
-    // Закомментированная старая логика:
-    /*
-    // Для администраторов всегда используем обычный процесс бронирования
-    const isAdminUser = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'partner';
-    
-    if (isAdminUser) {
-      console.log('👨‍💼 Администратор/менеджер/партнер - используем обычный процесс бронирования');
-      setShowQuickFavorites(false);
-      setHasCheckedFavorites(true);
-      return;
-    }
-    
-    if (isAuthenticated && clientId && clientId > 0 && !hasCheckedFavorites) {
-      console.log('🌟 Проверяем наличие любимых точек для пользователя:', clientId);
-      
-      if (!isLoadingFavorites && favoritesData) {
-        console.log('📊 Данные любимых точек получены:', favoritesData);
-        
-        if (favoritesData.has_favorites && favoritesData.categories_with_favorites.length > 0) {
-          console.log('✅ У пользователя есть любимые точки, показываем быстрое бронирование');
-          setShowQuickFavorites(true);
-          setActiveStep(-1); // Устанавливаем специальный шаг для быстрого бронирования
-        } else {
-          console.log('ℹ️ У пользователя нет любимых точек, используем обычный процесс');
-          setShowQuickFavorites(false);
-        }
-        
-        setHasCheckedFavorites(true);
-      }
-    } else if (!isAuthenticated || clientId === 0) {
-      console.log('👤 Пользователь не авторизован или clientId=0, пропускаем проверку любимых точек');
-      setShowQuickFavorites(false);
-      setHasCheckedFavorites(true);
-    }
-    */
-  }, [isAuthenticated, clientId, isLoadingFavorites, favoritesData, hasCheckedFavorites, currentUser]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)
   useEffect(() => {
@@ -703,48 +640,9 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     setSuccessDialogOpen(true);
   };
 
-  // ✅ Обработчики для быстрого бронирования
-  const handleQuickFavoritesSelect = (categoryId: number, servicePointId: number) => {
-    console.log('🌟 Выбор через быстрое бронирование:', { categoryId, servicePointId });
-    
-    // Устанавливаем выбранные значения в formData
-    setFormData(prev => ({
-      ...prev,
-      service_category_id: categoryId,
-      service_point_id: servicePointId,
-    }));
-    
-    // Переходим к шагу выбора даты и времени
-    setActiveStep(2);
-    setShowQuickFavorites(false);
-  };
-
-  const handleUseRegularSearch = () => {
-    console.log('🔍 Переход к обычному поиску');
-    setShowQuickFavorites(false);
-    setActiveStep(0); // Переходим к первому шагу (выбор категории)
-  };
-  
   // Рендер текущего шага
   const renderCurrentStep = () => {
-    // Специальный случай для быстрого бронирования через любимые точки
-    if (activeStep === -1 && showQuickFavorites) {
-      if (!clientId) {
-        console.error('❌ Не удалось определить ID клиента для любимых точек');
-        setShowQuickFavorites(false);
-        setActiveStep(0);
-        return null;
-      }
-      
-      return (
-        <QuickFavoritesStep
-          clientId={clientId}
-          onCategoryAndServicePointSelect={handleQuickFavoritesSelect}
-          onUseRegularSearch={handleUseRegularSearch}
-        />
-      );
-    }
-    
+    // Быстрое бронирование отключено - всегда используем обычные шаги
     const CurrentStepComponent = STEPS[activeStep].component;
     
     // Для шага CarTypeStep передаем дополнительный проп onStepChange
