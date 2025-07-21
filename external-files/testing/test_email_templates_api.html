@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Email Templates API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header {
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .result {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+        .error {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        .template-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #fafafa;
+        }
+        .template-name {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+        }
+        .template-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .template-subject {
+            background: white;
+            padding: 8px;
+            border-radius: 3px;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        .status-active {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .status-inactive {
+            color: #f44336;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">🧪 Тест Email Templates API</h1>
+        <p>Эта страница тестирует интеграцию с Email Templates API</p>
+        
+        <!-- Токен авторизации -->
+        <div class="test-section">
+            <div class="test-title">🔑 Токен авторизации</div>
+            <input type="text" id="authToken" placeholder="Вставьте токен авторизации" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <button onclick="setDefaultToken()">Использовать тестовый токен</button>
+            <div id="tokenResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Тест 1: Получение списка шаблонов -->
+        <div class="test-section">
+            <div class="test-title">📋 Тест 1: Получение списка шаблонов</div>
+            <button onclick="getEmailTemplates()">Получить все шаблоны</button>
+            <button onclick="getEmailTemplates('?active=true')">Только активные</button>
+            <button onclick="getEmailTemplates('?language=uk')">Только украинские</button>
+            <button onclick="getEmailTemplates('?search=бронювання')">Поиск "бронювання"</button>
+            <div id="templatesResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Тест 2: Получение типов шаблонов -->
+        <div class="test-section">
+            <div class="test-title">🏷️ Тест 2: Получение типов шаблонов</div>
+            <button onclick="getTemplateTypes()">Получить типы шаблонов</button>
+            <div id="typesResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Тест 3: Получение конкретного шаблона -->
+        <div class="test-section">
+            <div class="test-title">📄 Тест 3: Получение конкретного шаблона</div>
+            <input type="number" id="templateId" placeholder="ID шаблона" value="1" style="padding: 8px; margin-right: 10px;">
+            <button onclick="getEmailTemplate()">Получить шаблон</button>
+            <div id="templateResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Тест 4: Предварительный просмотр -->
+        <div class="test-section">
+            <div class="test-title">👁️ Тест 4: Предварительный просмотр шаблона</div>
+            <input type="number" id="previewTemplateId" placeholder="ID шаблона" value="2" style="padding: 8px; margin-right: 10px;">
+            <button onclick="previewTemplate()">Предпросмотр с тестовыми данными</button>
+            <div id="previewResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Тест 5: Создание нового шаблона -->
+        <div class="test-section">
+            <div class="test-title">➕ Тест 5: Создание нового шаблона</div>
+            <button onclick="createTestTemplate()">Создать тестовый шаблон</button>
+            <div id="createResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+        let authToken = '';
+
+        function setDefaultToken() {
+            authToken = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoyLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUzMDk4MDIwfQ.3QqeGaoUbIgdapcbsESmz49r5kxyACkTbCE-VpzwElo';
+            document.getElementById('authToken').value = authToken;
+            showResult('tokenResult', '✅ Тестовый токен установлен', 'success');
+        }
+
+        function showResult(elementId, content, type = '') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.textContent = content;
+            element.className = `result ${type}`;
+        }
+
+        async function makeApiRequest(url, options = {}) {
+            const token = document.getElementById('authToken').value || authToken;
+            
+            if (!token) {
+                return { error: 'Токен авторизации не установлен. Используйте кнопку "Использовать тестовый токен"' };
+            }
+
+            try {
+                const response = await fetch(API_BASE_URL + url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        ...options.headers
+                    },
+                    ...options
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        async function getEmailTemplates(params = '') {
+            const data = await makeApiRequest(`/email_templates${params}`);
+            
+            if (data.error) {
+                showResult('templatesResult', `❌ Ошибка: ${data.error}`, 'error');
+                return;
+            }
+
+            let result = `✅ Получено шаблонов: ${data.data.length}\n`;
+            result += `📊 Пагинация: страница ${data.pagination.current_page} из ${data.pagination.total_pages}, всего ${data.pagination.total_count}\n\n`;
+            
+            data.data.forEach((template, index) => {
+                result += `${index + 1}. ${template.name}\n`;
+                result += `   Тип: ${template.template_type_name}\n`;
+                result += `   Язык: ${template.language}\n`;
+                result += `   Статус: ${template.status_text}\n`;
+                result += `   Тема: ${template.subject}\n`;
+                result += `   Переменные: [${template.variables_array.join(', ')}]\n`;
+                result += `   Создан: ${new Date(template.created_at).toLocaleString('ru-RU')}\n\n`;
+            });
+
+            showResult('templatesResult', result, 'success');
+        }
+
+        async function getTemplateTypes() {
+            const data = await makeApiRequest('/email_templates/template_types');
+            
+            if (data.error) {
+                showResult('typesResult', `❌ Ошибка: ${data.error}`, 'error');
+                return;
+            }
+
+            let result = `✅ Доступные типы шаблонов:\n\n`;
+            data.data.forEach((type, index) => {
+                result += `${index + 1}. ${type.label} (${type.value})\n`;
+            });
+
+            showResult('typesResult', result, 'success');
+        }
+
+        async function getEmailTemplate() {
+            const templateId = document.getElementById('templateId').value;
+            
+            if (!templateId) {
+                showResult('templateResult', '❌ Введите ID шаблона', 'error');
+                return;
+            }
+
+            const data = await makeApiRequest(`/email_templates/${templateId}`);
+            
+            if (data.error) {
+                showResult('templateResult', `❌ Ошибка: ${data.error}`, 'error');
+                return;
+            }
+
+            let result = `✅ Шаблон "${data.name}"\n\n`;
+            result += `ID: ${data.id}\n`;
+            result += `Тип: ${data.template_type_name} (${data.template_type})\n`;
+            result += `Язык: ${data.language}\n`;
+            result += `Статус: ${data.status_text}\n`;
+            result += `Тема: ${data.subject}\n`;
+            result += `Описание: ${data.description || 'Нет описания'}\n`;
+            result += `Переменные: [${data.variables_array.join(', ')}]\n`;
+            result += `Создан: ${new Date(data.created_at).toLocaleString('ru-RU')}\n`;
+            result += `Обновлен: ${new Date(data.updated_at).toLocaleString('ru-RU')}\n\n`;
+            result += `Содержимое:\n${data.body}`;
+
+            showResult('templateResult', result, 'success');
+        }
+
+        async function previewTemplate() {
+            const templateId = document.getElementById('previewTemplateId').value;
+            
+            if (!templateId) {
+                showResult('previewResult', '❌ Введите ID шаблона', 'error');
+                return;
+            }
+
+            const testVariables = {
+                client_name: 'Олександр Петренко',
+                service_name: 'Заміна шин',
+                booking_date: '25.07.2025',
+                booking_time: '14:30',
+                service_point_name: 'СТО Автосервіс Київ'
+            };
+
+            const data = await makeApiRequest(`/email_templates/${templateId}/preview`, {
+                method: 'POST',
+                body: JSON.stringify({ variables: testVariables })
+            });
+            
+            if (data.error) {
+                showResult('previewResult', `❌ Ошибка: ${data.error}`, 'error');
+                return;
+            }
+
+            let result = `✅ Предварительный просмотр шаблона\n\n`;
+            result += `📧 Тема письма:\n${data.subject}\n\n`;
+            result += `📝 Содержимое:\n${data.body}\n\n`;
+            result += `🏷️ Доступные переменные: [${data.variables.join(', ')}]`;
+
+            showResult('previewResult', result, 'success');
+        }
+
+        async function createTestTemplate() {
+            const templateData = {
+                name: 'Тестовый шаблон API',
+                subject: 'Тест API - {service_name}',
+                body: 'Шановний(а) {client_name}!\n\nЦе тестове повідомлення створене через API.\n\nДеталі:\n📅 Дата: {booking_date}\n🕒 Час: {booking_time}\n\nДякуємо за використання нашого сервісу!',
+                template_type: 'user_welcome',
+                language: 'uk',
+                is_active: true,
+                variables: ['client_name', 'service_name', 'booking_date', 'booking_time'],
+                description: 'Тестовый шаблон, созданный через API для проверки функциональности'
+            };
+
+            const data = await makeApiRequest('/email_templates', {
+                method: 'POST',
+                body: JSON.stringify({ email_template: templateData })
+            });
+            
+            if (data.error) {
+                showResult('createResult', `❌ Ошибка: ${data.error}`, 'error');
+                return;
+            }
+
+            let result = `✅ Шаблон успешно создан!\n\n`;
+            result += `ID: ${data.id}\n`;
+            result += `Название: ${data.name}\n`;
+            result += `Тип: ${data.template_type_name}\n`;
+            result += `Статус: ${data.status_text}\n`;
+            result += `Создан: ${new Date(data.created_at).toLocaleString('ru-RU')}`;
+
+            showResult('createResult', result, 'success');
+        }
+
+        // Автоматически устанавливаем тестовый токен при загрузке
+        window.onload = function() {
+            setDefaultToken();
+        };
+    </script>
+</body>
+</html> 

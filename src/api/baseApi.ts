@@ -95,7 +95,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics'],
+  tagTypes: ['User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics', 'EmailTemplate'],
   endpoints: () => ({}),
 });
 

@@ -51,7 +51,7 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
 
 // Ленивая загрузка страниц уведомлений
 const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
-const EmailTemplatesPage = lazy(() => import('./pages/notifications/EmailTemplatesPage'));
+const EmailTemplatesPage = lazy(() => import('./pages/notifications/EmailTemplatesPageSimple'));
 const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
 const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
 const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
