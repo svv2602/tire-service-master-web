@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -106,6 +106,7 @@ const EmailTemplateFormPage: React.FC = () => {
   const [previewData, setPreviewData] = useState<any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [variableDialog, setVariableDialog] = useState<{ open: boolean; variable: string }>({ open: false, variable: '' });
+  const previewRef = useRef<HTMLDivElement>(null);
   
   // Состояния для кастомных переменных убраны - управление на отдельной странице
 
@@ -252,113 +253,64 @@ const EmailTemplateFormPage: React.FC = () => {
       return;
     }
 
-    const mockVariables: Record<string, string> = {};
-    
-    // Добавляем значения кастомных переменных
-    customVariables.forEach(customVar => {
-      mockVariables[customVar.name] = customVar.example_value || `[${customVar.name}]`;
-    });
-    
-    formik.values.variables.forEach(variable => {
-      // Если переменная уже есть в кастомных, пропускаем
-      if (mockVariables[variable]) return;
+    // Системные переменные
+    const systemVariables: Record<string, string> = {
+      // Клиент
+      'client_name': 'Іван Петренко',
+      'client_email': 'ivan.petrenko@example.com', 
+      'client_phone': '+38 (067) 123-45-67',
+      'client_first_name': 'Іван',
+      'client_last_name': 'Петренко',
       
-      switch (variable) {
-        // Клиент
-        case 'client_name':
-          mockVariables[variable] = 'Іван Петренко';
-          break;
-        case 'client_email':
-          mockVariables[variable] = 'ivan.petrenko@example.com';
-          break;
-        case 'client_phone':
-          mockVariables[variable] = '+38 (067) 123-45-67';
-          break;
-        
-        // Бронирование
-        case 'booking_id':
-          mockVariables[variable] = '#12345';
-          break;
-        case 'booking_date':
-          mockVariables[variable] = '25.07.2025';
-          break;
-        case 'booking_time':
-          mockVariables[variable] = '14:30';
-          break;
-        case 'booking_status':
-          mockVariables[variable] = 'Підтверджено';
-          break;
-        case 'booking_notes':
-          mockVariables[variable] = 'Додаткові побажання клієнта';
-          break;
-        
-        // Сервисная точка
-        case 'service_point_name':
-          mockVariables[variable] = 'СТО Центральний';
-          break;
-        case 'service_point_address':
-          mockVariables[variable] = 'вул. Хрещатик, 1, Київ';
-          break;
-        case 'service_point_phone':
-          mockVariables[variable] = '+38 (044) 123-45-67';
-          break;
-        case 'service_point_city':
-          mockVariables[variable] = 'Київ';
-          break;
-        
-        // Услуги
-        case 'service_name':
-          mockVariables[variable] = 'Заміна шин';
-          break;
-        case 'service_category':
-          mockVariables[variable] = 'Шиномонтаж';
-          break;
-        case 'service_price':
-          mockVariables[variable] = '1200 грн';
-          break;
-        case 'service_duration':
-          mockVariables[variable] = '60 хвилин';
-          break;
-        
-        // Автомобиль
-        case 'car_brand':
-          mockVariables[variable] = 'Toyota';
-          break;
-        case 'car_model':
-          mockVariables[variable] = 'Camry';
-          break;
-        case 'car_year':
-          mockVariables[variable] = '2020';
-          break;
-        case 'license_plate':
-          mockVariables[variable] = 'АА1234ВВ';
-          break;
-        
-        // Система
-        case 'company_name':
-          mockVariables[variable] = 'Tire Service Master';
-          break;
-        case 'support_email':
-          mockVariables[variable] = 'support@tireservice.ua';
-          break;
-        case 'support_phone':
-          mockVariables[variable] = '+38 (044) 111-22-33';
-          break;
-        case 'website_url':
-          mockVariables[variable] = 'https://tireservice.ua';
-          break;
-        
-        default:
-          mockVariables[variable] = `[${variable}]`;
-      }
+      // Бронирование
+      'booking_id': '#12345',
+      'booking_date': '25.07.2025',
+      'booking_time': '14:30',
+      'booking_status': 'Підтверджено',
+      'booking_notes': 'Додаткові побажання клієнта',
+      
+      // Сервисная точка
+      'service_point_name': 'СТО Центральний',
+      'service_point_address': 'вул. Хрещатик, 1, Київ',
+      'service_point_phone': '+38 (044) 555-12-34',
+      'service_point_city': 'Київ',
+      
+      // Услуги
+      'service_name': 'Заміна шин',
+      'service_category': 'Шиномонтаж',
+      'service_price': '1200 грн',
+      'service_duration': '60 хвилин',
+      
+      // Автомобиль
+      'car_brand': 'Toyota',
+      'car_model': 'Camry',
+      'car_year': '2020',
+      'license_plate': 'АА1234ВВ',
+      
+      // Система
+      'company_name': 'Tire Service Master',
+      'support_email': 'support@tireservice.ua',
+      'support_phone': '+38 (044) 111-22-33',
+      'website_url': 'https://tireservice.ua',
+      'current_date': new Date().toLocaleDateString('uk-UA'),
+      'current_time': new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    // Кастомные переменные
+    const customVariablesMap: Record<string, string> = {};
+    customVariables.forEach(customVar => {
+      customVariablesMap[customVar.name] = customVar.example_value || `[${customVar.name}]`;
     });
+    
+    // Объединяем все переменные (кастомные могут перезаписать системные)
+    const allVariables = { ...systemVariables, ...customVariablesMap };
 
     // Локальная замена переменных
     let previewSubject = formik.values.subject;
     let previewBody = formik.values.body;
 
     // Заменяем переменные в фигурных скобках
-    Object.entries(mockVariables).forEach(([key, value]) => {
+    Object.entries(allVariables).forEach(([key, value]) => {
       const placeholder = `{${key}}`;
       previewSubject = previewSubject.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
       previewBody = previewBody.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
@@ -370,6 +322,17 @@ const EmailTemplateFormPage: React.FC = () => {
       variables: formik.values.variables,
     });
     setPreviewOpen(true);
+    
+    // Автоматический скролл к окну предварительного просмотра
+    setTimeout(() => {
+      if (previewRef.current) {
+        previewRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+        previewRef.current.focus();
+      }
+    }, 100); // Небольшая задержка для завершения рендеринга
   };
 
   if (templateLoading) {
@@ -717,7 +680,17 @@ const EmailTemplateFormPage: React.FC = () => {
 
       {/* Предварительный просмотр */}
       {previewOpen && previewData && (
-        <Card sx={{ mt: 3 }}>
+        <Card 
+          ref={previewRef}
+          tabIndex={-1}
+          sx={{ 
+            mt: 3,
+            outline: 'none',
+            '&:focus': {
+              boxShadow: theme => `0 0 0 2px ${theme.palette.primary.main}`,
+            }
+          }}
+        >
           <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">
@@ -824,8 +797,34 @@ const EmailTemplateFormPage: React.FC = () => {
               {`{${variableDialog.variable}}`}
             </Typography>
             
-            {/* Показываем пример значения для популярных переменных */}
+            {/* Показываем пример значения для переменных */}
             {(() => {
+              // Сначала проверяем кастомные переменные
+              const customVariable = customVariables.find(cv => cv.name === variableDialog.variable);
+              if (customVariable && customVariable.example_value) {
+                return (
+                  <>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+                      Пример значения:
+                    </Typography>
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        fontStyle: 'italic',
+                        color: theme.palette.error.main, // Красный цвет для кастомных переменных
+                        fontWeight: 500
+                      }}
+                    >
+                      "{customVariable.example_value}"
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      {customVariable.description}
+                    </Typography>
+                  </>
+                );
+              }
+              
+              // Если не кастомная, проверяем системные переменные
               const exampleValues: Record<string, string> = {
                 client_name: 'Іван Петренко',
                 client_email: 'ivan.petrenko@example.com',
