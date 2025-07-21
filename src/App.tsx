@@ -49,12 +49,13 @@ const ServiceFormPage = lazy(() => import('./pages/services/ServiceFormPage'));
 const ClientsPage = lazy(() => import('./pages/clients/ClientsPage'));
 const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
 
-// Ленивая загрузка страниц уведомлений
-const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
-const EmailTemplatesPage = lazy(() => import('./pages/notifications/EmailTemplatesPageSimple'));
-const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
-const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
-const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
+  // Ленивая загрузка страниц уведомлений
+  const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
+  const EmailTemplatesPage = lazy(() => import('./pages/notifications/EmailTemplatesPageSimple'));
+  const EmailTemplateFormPage = lazy(() => import('./pages/notifications/EmailTemplateFormPage'));
+  const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
+  const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
+  const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
 
@@ -286,6 +287,8 @@ const App: React.FC = () => {
                       {/* Маршруты для уведомлений */}
                       <Route path="notifications" element={<NotificationCenterPage />} />
                       <Route path="notifications/email-templates" element={<EmailTemplatesPage />} />
+                      <Route path="notifications/email-templates/new" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/email-templates/:id/edit" element={<EmailTemplateFormPage />} />
                       <Route path="notifications/push-settings" element={<PushSettingsPage />} />
                       <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
                       <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
