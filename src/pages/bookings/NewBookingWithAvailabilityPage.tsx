@@ -266,6 +266,13 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
   // ✅ Эффект для проверки любимых точек у авторизованного пользователя (только для клиентов)
   useEffect(() => {
+    // ОТКЛЮЧАЕМ логику быстрого бронирования - всегда используем обычный процесс
+    console.log('⚠️ Логика быстрого бронирования отключена - используем обычный процесс');
+    setShowQuickFavorites(false);
+    setHasCheckedFavorites(true);
+    
+    // Закомментированная старая логика:
+    /*
     // Для администраторов всегда используем обычный процесс бронирования
     const isAdminUser = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'partner';
     
@@ -298,6 +305,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       setShowQuickFavorites(false);
       setHasCheckedFavorites(true);
     }
+    */
   }, [isAuthenticated, clientId, isLoadingFavorites, favoritesData, hasCheckedFavorites, currentUser]);
   
   // ✅ Предзаполнение данных из location.state (город с главной страницы)

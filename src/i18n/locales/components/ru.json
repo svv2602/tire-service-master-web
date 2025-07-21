@@ -604,8 +604,12 @@
     "quick_booking": {
       "title": "Быстрое бронирование",
       "subtitle": "Выберите категорию услуг для быстрого бронирования",
-      "select_category": "Выберите категорию",
-      "use_regular_search": "Использовать обычный поиск"
+      "select_category": "Выберите категорию услуг",
+      "select_service_point": "Выберите сервисную точку",
+      "use_regular_search": "Использовать обычный поиск",
+      "continue_to_datetime": "Продолжить к выбору даты",
+      "no_favorites": "У вас нет любимых сервисных точек",
+      "add_favorites_suggestion": "Добавьте сервисные точки в избранное для быстрого бронирования"
     }
   },
   "bookingConflicts": {

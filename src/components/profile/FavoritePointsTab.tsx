@@ -196,9 +196,10 @@ const FavoritePointsTab: React.FC<FavoritePointsTabProps> = ({ onNotify }) => {
   };
 
   const handleBookService = (servicePointData: ServicePointData) => {
-    // Теперь логика выбора категории встроена в ServicePointCard
-    // Этот обработчик больше не нужен, но оставляем для совместимости
-    console.log('🎯 Бронирование через ServicePointCard для:', servicePointData.name);
+    // Прямая навигация на /client/booking без модального окна
+    // Передаем только service_point_id, пользователь сам выберет категорию в процессе бронирования
+    console.log('🎯 Прямое бронирование для сервисной точки:', servicePointData.name);
+    navigate(`/client/booking?service_point_id=${servicePointData.id}`);
   };
 
 

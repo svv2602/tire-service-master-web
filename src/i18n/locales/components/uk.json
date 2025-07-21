@@ -602,8 +602,12 @@
     "quick_booking": {
       "title": "Швидке бронювання",
       "subtitle": "Оберіть категорію послуг для швидкого бронювання",
-      "select_category": "Оберіть категорію",
-      "use_regular_search": "Використати звичайний пошук"
+      "select_category": "Оберіть категорію послуг",
+      "select_service_point": "Оберіть сервісну точку",
+      "use_regular_search": "Використати звичайний пошук",
+      "continue_to_datetime": "Продовжити до вибору дати",
+      "no_favorites": "У вас немає улюблених сервісних точок",
+      "add_favorites_suggestion": "Додайте сервісні точки до вибраного для швидкого бронювання"
     }
   },
   "bookingConflicts": {
