@@ -13,6 +13,11 @@ import {
   FormControlLabel,
   Checkbox,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -22,9 +27,11 @@ import {
   AccountCircle as AccountCircleIcon,
   PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
 import { useTheme } from '@mui/material/styles';
+import { useUpdateProfileMutation } from '../../../api/auth.api';
+import { setCredentials } from '../../../store/slices/authSlice';
 
 // Импорт UI компонентов
 import TextField from '../../../components/ui/TextField';
@@ -32,6 +39,7 @@ import PhoneField from '../../../components/ui/PhoneField';
 
 // Импорт типов
 import { BookingFormData } from '../../../types/booking';
+import { UserRole } from '../../../types';
 
 // Импорт стилей
 import { getCardStyles } from '../../../styles/components';
@@ -51,10 +59,15 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user, accessToken } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const [updateProfile] = useUpdateProfileMutation();
   
   // Состояние для чекбокса "Я получатель услуг"
   const [isUserRecipient, setIsUserRecipient] = useState(false);
+  const [showPhoneUpdateDialog, setShowPhoneUpdateDialog] = useState(false);
+  const [newPhone, setNewPhone] = useState('');
+  const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
   
   const [errors, setErrors] = useState({
     first_name: '',
@@ -62,6 +75,30 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
     phone: '',
     email: '',
   });
+
+  // ✅ Автоматическое заполнение данных авторизованного пользователя
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Автоматически заполняем данные пользователя
+      setFormData((prev: BookingFormData) => ({
+        ...prev,
+        service_recipient: {
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          phone: user.phone || '',
+          email: user.email || '',
+        }
+      }));
+      
+      // Устанавливаем чекбокс "Я получатель услуг" по умолчанию
+      setIsUserRecipient(true);
+      
+      // Если у пользователя нет телефона, показываем диалог для его добавления
+      if (!user.phone) {
+        setShowPhoneUpdateDialog(true);
+      }
+    }
+  }, [isAuthenticated, user, setFormData]);
   
   // Валидация полей
   const validateField = (field: string, value: string | undefined): string => {
@@ -188,6 +225,58 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
   };
   
   const requiredFieldErrors = getRequiredFieldErrors();
+
+  // ✅ Функция обновления телефона пользователя
+  const handleUpdateUserPhone = async () => {
+    if (!newPhone.trim() || !user) return;
+    
+    try {
+      setIsUpdatingPhone(true);
+      
+      // Вызываем API для обновления профиля
+      await updateProfile({
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        phone: newPhone,
+      }).unwrap();
+      
+      // ✅ ИСПРАВЛЕНИЕ: обновляем только телефон в существующем объекте пользователя
+      const updatedUserData = {
+        ...user, // Сохраняем все существующие данные пользователя (включая правильный тип role)
+        phone: newPhone, // Обновляем только телефон
+      };
+      
+      // Обновляем Redux состояние только с новым телефоном
+      dispatch(setCredentials({
+        user: updatedUserData,
+        accessToken: accessToken // Сохраняем существующий токен из Redux state
+      }));
+      
+      // Обновляем данные в форме
+      setFormData((prev: BookingFormData) => ({
+        ...prev,
+        service_recipient: {
+          ...prev.service_recipient,
+          phone: newPhone,
+        }
+      }));
+      
+      setShowPhoneUpdateDialog(false);
+      setNewPhone('');
+      
+    } catch (error) {
+      console.error('Ошибка обновления телефона:', error);
+    } finally {
+      setIsUpdatingPhone(false);
+    }
+  };
+
+  // ✅ Функция пропуска обновления телефона
+  const handleSkipPhoneUpdate = () => {
+    setShowPhoneUpdateDialog(false);
+    setNewPhone('');
+  };
   
   return (
     <Box>
@@ -494,6 +583,58 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
           {t('bookingSteps.clientInfo.allRequiredFieldsFilled')}
         </Alert>
       )}
+
+      {/* ✅ Диалог для добавления телефона в профиль */}
+      <Dialog 
+        open={showPhoneUpdateDialog} 
+        onClose={handleSkipPhoneUpdate}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PhoneIcon color="primary" />
+            Добавить телефон в профиль
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
+            В вашем профиле не указан номер телефона. Добавьте его для удобного бронирования и получения уведомлений.
+          </Typography>
+          
+          <PhoneField
+            label="Номер телефона"
+            value={newPhone}
+            onChange={setNewPhone}
+            placeholder="+38 (067) 123-45-67"
+            fullWidth
+            autoFocus
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PhoneIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleSkipPhoneUpdate}
+            color="inherit"
+          >
+            Пропустить
+          </Button>
+          <Button 
+            onClick={handleUpdateUserPhone}
+            variant="contained"
+            disabled={!newPhone.trim() || isUpdatingPhone}
+            sx={{ ml: 1 }}
+          >
+            {isUpdatingPhone ? 'Сохранение...' : 'Сохранить'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

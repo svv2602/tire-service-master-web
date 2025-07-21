@@ -120,3 +120,38 @@ export const useInvalidateCache = () => {
     invalidateList
   };
 };
+
+// ✅ Функция для полной очистки кэша с инвалидацией всех тегов
+export const clearAllCacheData = (dispatch: any) => {
+  console.log('🧹 Начинаем полную очистку кэша RTK Query...');
+  
+  // Все возможные теги в приложении
+  const allTags = [
+    'User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 
+    'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 
+    'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 
+    'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 
+    'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 
+    'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics'
+  ] as const;
+  
+  // Инвалидируем каждый тег по отдельности
+  allTags.forEach(tag => {
+    try {
+      dispatch(baseApi.util.invalidateTags([{ type: tag }]));
+      console.log(`✅ Инвалидирован тег: ${tag}`);
+    } catch (error) {
+      console.warn(`⚠️ Ошибка инвалидации тега ${tag}:`, error);
+    }
+  });
+  
+  // Полный сброс состояния API
+  try {
+    dispatch(baseApi.util.resetApiState());
+    console.log('✅ Полный сброс состояния API выполнен');
+  } catch (error) {
+    console.error('❌ Ошибка полного сброса состояния API:', error);
+  }
+  
+  console.log('🧹 Полная очистка кэша RTK Query завершена');
+};

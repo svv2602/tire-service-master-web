@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Button, CircularProgress, Alert, Box } from '@mui/material';
 import { Google as GoogleIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
+import { clearAllCacheData } from '../../api/baseApi';
 import { UserRole } from '../../types/user-role';
 
 interface GoogleLoginButtonProps {
@@ -93,6 +95,10 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       }
 
       console.log('✅ Google OAuth success:', data);
+
+      // ✅ Очищаем кэш RTK Query при Google OAuth чтобы убрать данные предыдущего пользователя
+      clearAllCacheData(dispatch);
+      console.log('🧹 Кэш RTK Query очищен при Google OAuth');
 
       // Сохраняем данные пользователя в Redux
       dispatch(setCredentials({

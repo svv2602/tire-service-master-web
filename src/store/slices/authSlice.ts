@@ -5,6 +5,7 @@ import { AuthState, LoginResponse } from '../../types/auth';
 import { UserRole } from '../../types';
 import axios from 'axios';
 import config from '../../config';
+import { clearAllCacheData } from '../../api/baseApi';
 
 /**
  * authSlice для cookie-based аутентификации
@@ -181,7 +182,7 @@ const authSlice = createSlice({
 // Создаем асинхронные thunks
 export const login = createAsyncThunk<LoginResponse, { login: string; password: string }>(
   'auth/login',
-  async ({ login, password }) => {
+  async ({ login, password }, { dispatch }) => {
     try {
       const requestData = { auth: { login, password } };
       console.log('DEBUG: Login request data:', JSON.stringify(requestData, null, 2));
@@ -204,6 +205,9 @@ export const login = createAsyncThunk<LoginResponse, { login: string; password: 
       
       const { tokens, user } = response.data;
       
+      // ✅ Очищаем кэш RTK Query при входе чтобы убрать данные предыдущего пользователя
+      clearAllCacheData(dispatch);
+      
       return {
         tokens,
         user: {
@@ -218,7 +222,7 @@ export const login = createAsyncThunk<LoginResponse, { login: string; password: 
   }
 );
 
-export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
+export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { dispatch }) => {
   try {
     console.log('DEBUG: Sending logout request with cookies support');
     const API_URL = `${config.API_URL}${config.API_PREFIX}`;
@@ -234,11 +238,17 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
     );
     
     console.log('DEBUG: Logout successful');
+    
+    // ✅ Очищаем кэш RTK Query после успешного выхода
+    clearAllCacheData(dispatch);
+    
     return;
   } catch (error: any) {
     // Игнорируем ошибки 401 - пользователь уже не авторизован
     if (error.response?.status === 401) {
       console.log('DEBUG: User already logged out (401), proceeding with local logout');
+      // Все равно очищаем кэш даже при ошибке 401
+      clearAllCacheData(dispatch);
       return;
     }
     console.error('Logout error:', error);

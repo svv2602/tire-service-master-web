@@ -28,7 +28,8 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../store';
 import { setCredentials } from '../../store/slices/authSlice';
 import { useLoginMutation } from '../../api/auth.api';
 import { UserRole } from '../../types/user-role';
@@ -36,6 +37,8 @@ import { extractPhoneDigits } from '../../utils/phoneUtils';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PhoneField } from '../ui/PhoneField/PhoneField';
 import GoogleLoginButton from './GoogleLoginButton';
+import { baseApi } from '../../api/baseApi';
+import { clearAllCacheData } from '../../api/baseApi';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -190,6 +193,10 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         hasAccessToken: !!result.access_token,
         timestamp: new Date().toISOString()
       });
+
+      // ✅ Очищаем кэш RTK Query при входе чтобы убрать данные предыдущего пользователя
+      clearAllCacheData(dispatch);
+      console.log('🧹 Кэш RTK Query очищен при входе через форму');
 
       // Сохраняем данные пользователя в Redux
       dispatch(setCredentials({
