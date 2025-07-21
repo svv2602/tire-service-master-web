@@ -60,6 +60,7 @@
       "content": "Контент",
       "bookings": "Бронирования",
       "reviews": "Отзывы",
+      "notificationManagement": "Управление уведомлениями",
       "references": "Справочники",
       "settings": "Настройки"
     },
@@ -87,6 +88,13 @@
     "vehicles": "Автомобили",
     "profile": "Профиль",
     "systemSettings": "Системные настройки",
+    "services": "Управление услугами",
+    "emailTemplates": "Email шаблоны",
+    "pushSettings": "Push уведомления",
+    "telegramIntegration": "Telegram интеграция",
+    "channelsSettings": "Настройки каналов",
+    "pushNotifications": "Push уведомления",
+    "channelSettings": "Настройки каналов",
     "descriptions": {
       "dashboard": "Общая статистика и показатели",
       "homepage": "Ваша персональная панель",
@@ -112,7 +120,13 @@
       "vehicles": "Управление марками и моделями автомобилей",
       "services": "Управление категориями услуг",
       "profile": "Настройки профиля",
-      "systemSettings": "Общие настройки системы"
+      "systemSettings": "Общие настройки системы",
+      "emailTemplates": "Управление шаблонами email уведомлений для различных событий",
+      "pushSettings": "Настройка push уведомлений через Firebase и Service Worker",
+      "telegramIntegration": "Управление Telegram ботом и интеграцией с системой",
+      "channelsSettings": "Общие настройки каналов доставки уведомлений",
+      "pushNotifications": "Настройка push уведомлений через Firebase и Service Worker",
+      "channelSettings": "Общие настройки каналов доставки уведомлений"
     },
     "knowledgeBase": "База знаний",
     "services": "Услуги",

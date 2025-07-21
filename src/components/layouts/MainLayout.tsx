@@ -63,6 +63,10 @@ import {
   UnfoldLess as CollapseIcon,
   UnfoldMore as ExpandIcon,
   Notifications as NotificationsIcon,
+  Email as EmailIcon,
+  NotificationImportant as PushIcon,
+  Telegram as TelegramIcon,
+  SmartToy as BotIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -408,6 +412,39 @@ const MainLayout: React.FC = () => {
             path: '/admin/reviews',
             roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
             description: t('navigation.descriptions.allReviews'),
+          },
+        ],
+      },
+      {
+        title: t('navigation.sections.notificationManagement'),
+        items: [
+          {
+            text: t('navigation.emailTemplates'),
+            icon: <EmailIcon />,
+            path: '/admin/notifications/email-templates',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.emailTemplates'),
+          },
+          {
+            text: t('navigation.pushNotifications'),
+            icon: <PushIcon />,
+            path: '/admin/notifications/push-settings',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.pushNotifications'),
+          },
+          {
+            text: t('navigation.telegramIntegration'),
+            icon: <TelegramIcon />,
+            path: '/admin/notifications/telegram',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.telegramIntegration'),
+          },
+          {
+            text: t('navigation.channelSettings'),
+            icon: <BotIcon />,
+            path: '/admin/notifications/channels',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.channelSettings'),
           },
         ],
       },
