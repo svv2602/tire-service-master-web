@@ -15,7 +15,8 @@ import {
   FormLabel,
   RadioGroup,
   FormControlLabel,
-  Radio
+  Radio,
+  useTheme
 } from '@mui/material';
 
 import {
@@ -39,6 +40,7 @@ import { PhoneField } from '../ui/PhoneField/PhoneField';
 import GoogleLoginButton from './GoogleLoginButton';
 import { baseApi } from '../../api/baseApi';
 import { clearAllCacheData } from '../../api/baseApi';
+import { spacing } from '../../styles/theme/tokens';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -58,6 +60,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   onSkip
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
@@ -267,15 +270,14 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={3} 
-      sx={{ 
-        p: 3, 
-        maxWidth: 420, 
-        mx: 'auto',
-        borderRadius: 2
-      }}
-    >
+    <Box sx={{
+      width: '100%',
+      maxWidth: '500px',
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: spacing.md,
+      padding: spacing.xl,
+      boxShadow: theme.shadows[3],
+    }}>
       <Box component="form" onSubmit={handleLogin} noValidate>
         {/* Заголовок */}
         <Typography 
@@ -293,74 +295,42 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         </Typography>
         
         {/* Выбор типа логина */}
-        <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-          <FormLabel 
-            component="legend"
-            sx={{ 
-              fontSize: '0.95rem',
-              fontWeight: 500,
-              mb: 1.5
-            }}
-          >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3, justifyContent: 'space-between' }}>
+          <Typography variant="subtitle2" color="textSecondary" sx={{ minWidth: 'fit-content' }}>
             {t('forms.auth.loginWith')}
-          </FormLabel>
+          </Typography>
+          
           <RadioGroup
             row
             value={loginType}
             onChange={handleLoginTypeChange}
-            sx={{ 
-              justifyContent: 'center',
-              gap: 2,
-              '& .MuiFormControlLabel-root': {
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                px: 2,
-                py: 0.5,
-                m: 0,
-                minWidth: '110px', // Фиксированная минимальная ширина для одинакового размера
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: 'action.hover'
-                }
-              },
-              '& .MuiFormControlLabel-root:has(.Mui-checked)': {
-                borderColor: 'primary.main',
-                backgroundColor: 'primary.50'
-              }
-            }}
+            sx={{ flex: 1, justifyContent: 'flex-end' }}
           >
             <FormControlLabel
               value="email"
-              control={<Radio size="small" sx={{ display: 'none' }} />}
+              control={<Radio size="small" />}
               label={
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Email fontSize="small" color={loginType === 'email' ? 'primary' : 'inherit'} />
-                  <Typography variant="body2">
-                    {t('forms.auth.email')}
-                  </Typography>
+                  <Email fontSize="small" />
+                  <span>{t('forms.auth.email')}</span>
                 </Box>
               }
             />
             <FormControlLabel
               value="phone"
-              control={<Radio size="small" sx={{ display: 'none' }} />}
+              control={<Radio size="small" />}
               label={
                 <Box display="flex" alignItems="center" gap={1}>
-                  <Phone fontSize="small" color={loginType === 'phone' ? 'primary' : 'inherit'} />
-                  <Typography variant="body2">
-                    {t('forms.auth.phone')}
-                  </Typography>
+                  <Phone fontSize="small" />
+                  <span>{t('forms.auth.phone')}</span>
                 </Box>
               }
             />
           </RadioGroup>
-        </FormControl>
+        </Box>
 
         {/* Поля ввода */}
-        <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+        <Box sx={{ mb: 3 }}>
           {/* Поле логина */}
           {loginType === 'email' ? (
             <TextField
@@ -376,15 +346,9 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
                   <InputAdornment position="start">
                     {getLoginIcon()}
                   </InputAdornment>
-                ),
-                sx: { height: '48px' }
+                )
               }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1.5,
-                  minHeight: '48px' // Фиксированная высота
-                }
-              }}
+              sx={{ marginBottom: spacing.md }}
             />
           ) : (
             <PhoneField
@@ -394,13 +358,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
               onChange={(value) => setLogin(value)}
               placeholder={getLoginPlaceholder()}
               disabled={isLoading}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 1.5,
-                  height: '48px', // Фиксированная высота такая же как у email
-                  minHeight: '48px'
-                }
-              }}
+              sx={{ marginBottom: spacing.md }}
             />
           )}
 
@@ -423,15 +381,9 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
                     {showPassword ? <VisibilityOff /> : <Visibility />}
                   </IconButton>
                 </InputAdornment>
-              ),
-              sx: { height: '48px' }
+              )
             }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                borderRadius: 1.5,
-                minHeight: '48px' // Фиксированная высота
-              }
-            }}
+            sx={{ marginBottom: spacing.md }}
           />
         </Box>
 
@@ -439,10 +391,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         {error && (
           <Alert 
             severity="error" 
-            sx={{ 
-              mb: 3,
-              borderRadius: 1.5
-            }}
+            sx={{ marginBottom: spacing.lg }}
           >
             {error}
           </Alert>
@@ -454,17 +403,22 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           fullWidth
           variant="contained"
           disabled={isLoading}
-          size="large"
-          startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
           sx={{ 
-            mb: 2,
+            marginBottom: spacing.md,
             py: 1.5,
             borderRadius: 1.5,
             fontSize: '1rem',
             fontWeight: 600
           }}
         >
-          {isLoading ? t('forms.auth.loggingIn') : t('forms.auth.loginButton')}
+          {isLoading ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CircularProgress size={20} color="inherit" />
+              {t('forms.auth.loggingIn')}
+            </Box>
+          ) : (
+            t('forms.auth.loginButton')
+          )}
         </Button>
 
         {/* Разделитель */}
@@ -502,52 +456,52 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
           </Link>
         </Box>
 
-        {/* Ссылка на регистрацию */}
-        {showRegisterLink && (
-          <Box textAlign="center" sx={{ mb: showSkipButton ? 2 : 0 }}>
-            <Button
-              variant="outlined"
-              fullWidth
-              size="large"
-              startIcon={<PersonAdd />}
-              onClick={onSwitchToRegister}
-              sx={{ 
-                py: 1.5,
-                borderRadius: 1.5,
-                fontSize: '0.95rem'
-              }}
-            >
-              {t('forms.auth.registerButton')}
-            </Button>
-          </Box>
-        )}
+        {/* Кнопки регистрации и отмены */}
+        {(showRegisterLink || showSkipButton) && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            {showSkipButton && (
+              <Button
+                variant="outlined"
+                onClick={onSkip}
+                sx={{ 
+                  flex: 1,
+                  py: 1.5,
+                  borderRadius: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  borderColor: 'grey.400',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    borderColor: 'grey.600',
+                    backgroundColor: 'action.hover'
+                  }
+                }}
+              >
+                {t('forms.auth.cancel')}
+              </Button>
+            )}
 
-        {/* Кнопка отмены */}
-        {showSkipButton && (
-          <Box textAlign="center">
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={onSkip}
-              startIcon={<CloseIcon />}
-              sx={{ 
-                py: 1.5,
-                borderRadius: 1.5,
-                fontSize: '0.95rem',
-                borderColor: 'grey.400',
-                color: 'text.secondary',
-                '&:hover': {
-                  borderColor: 'grey.600',
-                  backgroundColor: 'action.hover'
-                }
-              }}
-            >
-              Отмена
-            </Button>
+            {showRegisterLink && (
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={onSwitchToRegister}
+                sx={{ 
+                  flex: 1,
+                  py: 1.5,
+                  borderRadius: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
+              >
+                {t('forms.auth.registerButton')}
+              </Button>
+            )}
           </Box>
         )}
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

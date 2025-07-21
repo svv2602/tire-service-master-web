@@ -9,6 +9,7 @@ import {
   Web as WebIcon,
   Logout as LogoutIcon,
   Login as LoginIcon,
+  PersonAdd as RegisterIcon,
 } from '@mui/icons-material';
 import { NavigateFunction } from 'react-router-dom';
 
@@ -35,6 +36,11 @@ export function getProfileActions({
         label: t('userMenu.login'),
         icon: LoginIcon,
         onClick: () => navigate('/login'),
+      },
+      {
+        label: t('userMenu.register'),
+        icon: RegisterIcon,
+        onClick: () => navigate('/auth/register'),
       },
     ];
   }

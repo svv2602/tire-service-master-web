@@ -21,6 +21,7 @@
       "passwordMismatch": "Пароли не совпадают",
       "loggingIn": "Вход...",
       "registering": "Регистрация...",
+      "cancel": "Отмена",
       "verifyingToken": "Проверка токена восстановления...",
       "passwordChanged": "Пароль изменён!",
       "passwordChangedMessage": "Ваш пароль успешно изменён. Вы будете перенаправлены на страницу входа.",
@@ -119,6 +120,33 @@
         "first_name_min_length": "Имя должно быть не менее 2 символов",
         "last_name_min_length": "Фамилия должна быть не менее 2 символов"
       }
+    }
+  },
+  "auth": {
+    "google": {
+      "signIn": "Войти через Google",
+      "signUp": "Зарегистрироваться через Google",
+      "continue": "Продолжить с Google",
+      "linking": "Привязка...",
+      "unlinking": "Отвязка...",
+      "linkAccount": "Привязать Google аккаунт",
+      "unlinkAccount": "Отвязать Google аккаунт",
+      "linkSuccess": "Google аккаунт успешно привязан!",
+      "unlinkSuccess": "Google аккаунт успешно отвязан",
+      "linkError": "Ошибка при привязке Google аккаунта",
+      "unlinkError": "Ошибка при отвязке Google аккаунта",
+      "alreadyLinked": "Google аккаунт уже привязан к другому пользователю",
+      "notLinked": "Google аккаунт не привязан",
+      "authError": "Ошибка авторизации через Google",
+      "secureAuth": "Безопасная авторизация через Google OAuth 2.0",
+      "or": "или",
+      "accountLinked": "Ваш аккаунт успешно привязан к Google",
+      "accountUnlinked": "Ваш аккаунт отвязан от Google",
+      "linkDescription": "Привяжите Google аккаунт для быстрого входа в систему",
+      "linkBenefit": "После привязки вы сможете входить в систему одним кликом, используя ваш Google аккаунт. Ваш основной email останется без изменений.",
+      "unlinkConfirm": "Вы уверены, что хотите отвязать Google аккаунт? Это действие нельзя отменить.",
+      "passwordChangeDisabled": "Поскольку вы используете Google аккаунт, изменение пароля недоступно.",
+      "passwordChangeEnabled": "Для изменения пароля используйте функцию восстановления пароля."
     }
   }
 } 

@@ -1376,7 +1376,8 @@
     "toWebsite": "На сайт",
     "adminPanel": "Адмін-панель",
     "logout": "Вийти",
-    "login": "Увійти"
+    "login": "Увійти",
+    "register": "Реєстрація"
   },
   "confirmDialog": {
     "title": "Підтвердження",

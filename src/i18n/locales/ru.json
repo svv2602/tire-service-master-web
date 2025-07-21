@@ -1438,7 +1438,8 @@
     "toWebsite": "На сайт",
     "adminPanel": "Админ-панель",
     "logout": "Выйти",
-    "login": "Войти"
+    "login": "Войти",
+    "register": "Регистрация"
   },
   "confirmDialog": {
     "title": "Подтверждение",

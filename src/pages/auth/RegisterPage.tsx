@@ -15,7 +15,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  InputAdornment
+  InputAdornment,
+  Divider
 } from '@mui/material';
 import { Button, TextField, PhoneField } from '../../components/ui';
 import { useRegisterClientMutation } from '../../api/clientAuth.api';
@@ -27,6 +28,7 @@ import {
   Email,
   Phone
 } from '@mui/icons-material';
+import GoogleLoginButton from '../../components/auth/GoogleLoginButton';
 
 const getValidationSchema = (registrationType: 'email' | 'phone', t: any) => {
   const baseSchema = {
@@ -118,11 +120,13 @@ const RegisterPage: React.FC = () => {
     const newType = event.target.value as 'email' | 'phone';
     setRegistrationType(newType);
     
-    // Очищаем ошибки при смене типа
+    // Очищаем ошибки и значения неиспользуемых полей при смене типа
     if (newType === 'email') {
       formik.setFieldError('phone', undefined);
+      formik.setFieldValue('phone', '');
     } else {
       formik.setFieldError('email', undefined);
+      formik.setFieldValue('email', '');
     }
   };
 
@@ -181,23 +185,40 @@ const RegisterPage: React.FC = () => {
             </Alert>
           )}
 
+          {/* Google OAuth кнопка */}
+          <GoogleLoginButton 
+            onSuccess={() => navigate('/client')}
+            onError={(error) => console.error('Google OAuth error:', error)}
+            disabled={isLoading}
+            variant="outlined"
+            fullWidth
+          />
+
+          {/* Разделитель */}
+          <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+            <Divider sx={{ flex: 1 }} />
+            <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+              {t('auth.google.or')}
+            </Typography>
+            <Divider sx={{ flex: 1 }} />
+          </Box>
+
           <form onSubmit={formik.handleSubmit}>
             {/* Выбор типа регистрации */}
-            <FormControl component="fieldset" fullWidth sx={{ mb: 3 }}>
-              <FormLabel component="legend">
-                <Typography variant="subtitle2" color="textSecondary">
-                  {t('forms.auth.registrationMethod')}
-                </Typography>
-              </FormLabel>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3, justifyContent: 'space-between' }}>
+              <Typography variant="subtitle2" color="textSecondary" sx={{ minWidth: 'fit-content' }}>
+                {t('forms.auth.registrationMethod')}
+              </Typography>
+              
               <RadioGroup
                 row
                 value={registrationType}
                 onChange={handleRegistrationTypeChange}
-                sx={{ justifyContent: 'center', mt: 1 }}
+                sx={{ flex: 1, justifyContent: 'flex-end' }}
               >
                 <FormControlLabel
                   value="email"
-                  control={<Radio />}
+                  control={<Radio size="small" />}
                   label={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Email fontSize="small" />
@@ -207,7 +228,7 @@ const RegisterPage: React.FC = () => {
                 />
                 <FormControlLabel
                   value="phone"
-                  control={<Radio />}
+                  control={<Radio size="small" />}
                   label={
                     <Box display="flex" alignItems="center" gap={1}>
                       <Phone fontSize="small" />
@@ -216,7 +237,7 @@ const RegisterPage: React.FC = () => {
                   }
                 />
               </RadioGroup>
-            </FormControl>
+            </Box>
 
             <TextField
               fullWidth
@@ -275,84 +296,64 @@ const RegisterPage: React.FC = () => {
               />
             )}
 
-            {/* Дополнительное поле (необязательное) */}
-            {registrationType === 'email' ? (
-              <PhoneField
-                fullWidth
-                label={t('forms.auth.phoneOptional')}
-                value={formik.values.phone}
-                onChange={(value) => formik.setFieldValue('phone', value)}
-                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                helperText={formik.touched.phone && formik.errors.phone}
-                sx={{ marginBottom: spacing.md }}
-              />
-            ) : (
+
+
+            {/* Поля пароля на одной строке */}
+            <Box sx={{ display: 'flex', gap: 2, marginBottom: spacing.lg }}>
               <TextField
                 fullWidth
-                id="email"
-                name="email"
-                label={t('forms.auth.emailOptional')}
-                type="email"
-                value={formik.values.email}
+                id="password"
+                name="password"
+                label={t('forms.auth.password')}
+                type="password"
+                value={formik.values.password}
                 onChange={formik.handleChange}
-                error={formik.touched.email && Boolean(formik.errors.email)}
-                helperText={formik.touched.email && formik.errors.email}
-                placeholder="example@email.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ marginBottom: spacing.md }}
+                error={formik.touched.password && Boolean(formik.errors.password)}
+                helperText={formik.touched.password && formik.errors.password}
               />
-            )}
 
-            <TextField
-              fullWidth
-              id="password"
-              name="password"
-              label={t('forms.auth.password')}
-              type="password"
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              error={formik.touched.password && Boolean(formik.errors.password)}
-              helperText={formik.touched.password && formik.errors.password}
-              sx={{ marginBottom: spacing.md }}
-            />
-
-            <TextField
-              fullWidth
-              id="password_confirmation"
-              name="password_confirmation"
-              label={t('forms.auth.confirmPassword')}
-              type="password"
-              value={formik.values.password_confirmation}
-              onChange={formik.handleChange}
-              error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
-              helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
-              sx={{ marginBottom: spacing.lg }}
-            />
-
-            <Box sx={authStyles.authActions}>
-              <Button
-                type="submit"
-                variant="contained"
+              <TextField
                 fullWidth
-                disabled={isLoading}
-                sx={authStyles.authSubmit}
+                id="password_confirmation"
+                name="password_confirmation"
+                label={t('forms.auth.confirmPassword')}
+                type="password"
+                value={formik.values.password_confirmation}
+                onChange={formik.handleChange}
+                error={formik.touched.password_confirmation && Boolean(formik.errors.password_confirmation)}
+                helperText={formik.touched.password_confirmation && formik.errors.password_confirmation}
+              />
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={handleSkipRegistration}
+                sx={{ 
+                  flex: 1,
+                  py: 1.5,
+                  borderRadius: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
               >
-                {isLoading ? t('forms.auth.registering') : t('forms.auth.registerButton')}
+                {t('forms.auth.cancel')}
               </Button>
 
               <Button
-                variant="text"
-                fullWidth
-                onClick={handleSkipRegistration}
-                sx={authStyles.skipButton}
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                sx={{ 
+                  flex: 1,
+                  py: 1.5,
+                  borderRadius: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
               >
-                {t('forms.auth.skipRegistration')}
+                {isLoading ? t('forms.auth.registering') : t('forms.auth.registerButton')}
               </Button>
             </Box>
           </form>
