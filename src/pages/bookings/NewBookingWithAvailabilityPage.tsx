@@ -37,7 +37,6 @@ import {
   DateTimeStep,
   ClientInfoStep,
   CarTypeStep,
-  ServicesStep,
   ReviewStep,
   CategorySelectionStep,
 } from './components';
@@ -79,7 +78,6 @@ const initialFormData: BookingFormData = {
   car_brand: '',
   car_model: '',
   license_plate: '',
-  services: [],
   notes: '',
 };
 
@@ -209,11 +207,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       id: 'car-type',
       label: t('booking.steps.carType'),
       component: CarTypeStep,
-    },
-    {
-      id: 'services',
-      label: t('booking.steps.services'),
-      component: ServicesStep,
     },
     {
       id: 'review',
@@ -367,9 +360,6 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
       case 'car-type':
         return formData.car_type_id !== null && (formData.license_plate || '').trim().length > 0;
       
-      case 'services':
-        return true; // Услуги опциональны
-      
       case 'review':
         return true; // Комментарий опционален
       
@@ -418,7 +408,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           service_recipient_phone: formData.service_recipient.phone,
           service_recipient_email: formData.service_recipient.email,
         },
-        services: formData.services || [],
+        services: [], // Убираем выбор конкретных услуг - передаем пустой массив
       };
 
       // Отладочная информация
@@ -478,7 +468,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
           service_recipient_phone: formData.service_recipient.phone,
           service_recipient_email: formData.service_recipient.email,
         },
-        services: formData.services || [],
+        services: [], // Убираем выбор конкретных услуг - передаем пустой массив
       };
 
       console.log('📋 Данные гостевого бронирования:', bookingData);

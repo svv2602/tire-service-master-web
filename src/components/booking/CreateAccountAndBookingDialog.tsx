@@ -226,7 +226,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
           service_recipient_phone: bookingData.service_recipient.phone,
           service_recipient_email: bookingData.service_recipient.email,
         },
-        services: bookingData.services || [],
+        services: [], // Услуги больше не выбираются - передаем пустой массив
       };
       
       console.log('🚀 Создание бронирования:', bookingRequestData);

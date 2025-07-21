@@ -126,7 +126,7 @@ export interface BookingFormData {
   start_time: string;
   duration_minutes?: number; // Длительность выбранного слота
   
-  // Получатель услуги (обязательно)
+  // Шаг 3: Получатель услуги (обязательно)
   service_recipient: {
     first_name: string;
     last_name: string;
@@ -140,14 +140,7 @@ export interface BookingFormData {
   car_model: string;
   license_plate: string;
   
-  // Шаг 5: Услуги (опционально)
-  services: Array<{
-    service_id: number;
-    quantity: number;
-    price: number;
-  }>;
-  
-  // Шаг 6: Комментарий (опционально)
+  // Шаг 5: Комментарий (опционально) - ПЕРЕНЕСЕН В ПОДТВЕРЖДЕНИЕ
   notes: string;
   
   // Дополнительные поля для API совместимости

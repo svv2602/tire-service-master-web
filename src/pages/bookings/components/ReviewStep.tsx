@@ -7,8 +7,6 @@ import {
   Typography,
   Grid,
   Paper,
-  Divider,
-  Chip,
   List,
   ListItem,
   ListItemIcon,
@@ -16,6 +14,7 @@ import {
   Alert,
   FormControlLabel,
   Checkbox,
+  TextField,
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -24,7 +23,6 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
   DirectionsCar as CarIcon,
-  Build as ServiceIcon,
   Comment as CommentIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -50,10 +48,19 @@ interface ReviewStepProps {
 
 const ReviewStep: React.FC<ReviewStepProps> = ({
   formData,
+  setFormData,
   isValid,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  
+  // Обработчик изменения комментария
+  const handleNotesChange = (value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      notes: value,
+    }));
+  };
   
   // Для локализации названий на уровне компонента
   const getLocalizedCityName = (cityData: any) => {
@@ -128,13 +135,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     return `${t('bookingSteps.review.carType')} #${formData.car_type_id}`;
   };
   
-  // Подсчет общей стоимости услуг
-  const calculateTotalPrice = () => {
-    return formData.services.reduce((total: number, service: any) => {
-      return total + (service.price * service.quantity);
-    }, 0);
-  };
-  
   // Форматирование даты
   const formatBookingDate = () => {
     if (!formData.booking_date) return '';
@@ -144,24 +144,6 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     } catch (error) {
       return formData.booking_date;
     }
-  };
-  
-  // Компонент для отображения услуги
-  const ServiceItem: React.FC<{ service: any }> = ({ service }) => {
-    // Используем name из service объекта, который уже содержит правильный перевод
-    const serviceName = service.name || `${t('bookingSteps.review.services')} #${service.service_id}`;
-    
-    return (
-      <ListItem key={service.service_id}>
-        <ListItemIcon>
-          <ServiceIcon color="action" />
-        </ListItemIcon>
-        <ListItemText
-          primary={serviceName}
-          secondary={`${service.price} ${t('bookingSteps.review.currency')} × ${service.quantity} = ${service.price * service.quantity} ${t('bookingSteps.review.currency')}`}
-        />
-      </ListItem>
-    );
   };
   
   return (
@@ -395,59 +377,27 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
           </Paper>
         </Grid>
         
-        {/* Услуги */}
+        {/* Комментарий к записи */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
             <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ServiceIcon color="primary" />
-              {t('bookingSteps.review.services')}
+              <CommentIcon color="primary" />
+              {t('bookingSteps.review.comments')}
             </Typography>
             
-            {formData.services.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                {t('bookingSteps.review.services')} {t('bookingSteps.review.noServicesSelected')}
-              </Typography>
-            ) : (
-              <Box>
-                <List dense>
-                  {formData.services.map((service: any) => (
-                    <ServiceItem key={service.service_id} service={service} />
-                  ))}
-                </List>
-                
-                <Divider sx={{ my: 2 }} />
-                
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {t('bookingSteps.review.total')}:
-                  </Typography>
-                  <Chip
-                    label={`${calculateTotalPrice()} ${t('bookingSteps.review.currency')}`}
-                    color="primary"
-                    variant="filled"
-                    sx={{ fontWeight: 600 }}
-                  />
-                </Box>
-              </Box>
-            )}
+            <TextField
+              multiline
+              rows={4}
+              value={formData.notes || ''}
+              onChange={(e) => handleNotesChange(e.target.value)}
+              placeholder={t('bookingSteps.services.commentPlaceholder')}
+              variant="outlined"
+              fullWidth
+              label={t('bookingSteps.services.commentLabel')}
+              helperText={t('bookingSteps.review.commentsHelperText')}
+            />
           </Paper>
         </Grid>
-        
-        {/* Комментарий */}
-        {formData.notes && (
-          <Grid item xs={12}>
-            <Paper sx={{ ...getCardStyles(theme), p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CommentIcon color="primary" />
-                {t('bookingSteps.review.comments')}
-              </Typography>
-              
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                {formData.notes}
-              </Typography>
-            </Paper>
-          </Grid>
-        )}
       </Grid>
       
       {/* Настройки уведомлений */}
