@@ -71,7 +71,14 @@
     "confirmed": "Подтверждено",
     "inProgress": "В процессе",
     "completed": "Завершено",
-    "cancelled": "Отменено"
+    "cancelled": "Отменено",
+    "cancelled_by_client": "Отменено клиентом",
+    "cancelled_by_partner": "Отменено партнером",
+    "cancelled_by_admin": "Отменено администратором",
+    "no_show": "Неявка",
+    "in_service": "В обслуживании",
+    "rescheduled": "Перенесено",
+    "expired": "Просрочено"
   },
   "contactService": {
     "title": "Контактная информация",

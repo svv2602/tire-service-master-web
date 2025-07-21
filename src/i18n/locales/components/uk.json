@@ -67,11 +67,18 @@
     }
   },
   "bookingStatusBadge": {
-    "pending": "Очікує",
+    "pending": "В очікуванні",
     "confirmed": "Підтверджено",
     "inProgress": "В процесі",
     "completed": "Завершено",
-    "cancelled": "Скасовано"
+    "cancelled": "Скасовано",
+    "cancelled_by_client": "Скасовано клієнтом",
+    "cancelled_by_partner": "Скасовано партнером",
+    "cancelled_by_admin": "Скасовано адміністратором",
+    "no_show": "Неявка",
+    "in_service": "В обслуговуванні",
+    "rescheduled": "Перенесено",
+    "expired": "Прострочено"
   },
   "contactService": {
     "title": "Контактна інформація",
