@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления Google OAuth</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .log { background: #f9f9f9; padding: 10px; border-left: 3px solid #007bff; margin: 10px 0; font-family: monospace; }
+        .error { border-left-color: #dc3545; background: #ffebee; }
+        .success { border-left-color: #28a745; background: #e8f5e9; }
+        .warning { border-left-color: #ffc107; background: #fff8e1; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: black; }
+        #googleButton { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления Google OAuth</h1>
+        <p><strong>Тестируем:</strong> правильную обработку Google OAuth с Redux обновлением</p>
+        
+        <div class="test-section">
+            <h2>1. Проверка состояния перед тестом</h2>
+            <button class="btn-warning" onclick="checkCurrentState()">Проверить текущее состояние</button>
+            <button class="btn-warning" onclick="logout()">Выйти из системы</button>
+            <div id="currentState"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Google OAuth тест</h2>
+            <p><strong>Google Client ID:</strong> <span id="clientId">Загружается...</span></p>
+            <button class="btn-primary" onclick="initGoogleOAuth()">Инициализировать Google OAuth</button>
+            <div id="googleButton"></div>
+            <div id="googleStatus"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Логи</h2>
+            <button class="btn-success" onclick="clearLogs()">Очистить логи</button>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_CLIENT_ID = 'ЗДЕСЬ_ДОЛЖЕН_БЫТЬ_ВАШ_GOOGLE_CLIENT_ID';
+        let logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ message: logEntry, type });
+            console.log(logEntry);
+            updateLogsDisplay();
+        }
+
+        function updateLogsDisplay() {
+            const logsContainer = document.getElementById('logs');
+            logsContainer.innerHTML = logs.map(entry => 
+                `<div class="log ${entry.type}">${entry.message}</div>`
+            ).join('');
+        }
+
+        function clearLogs() {
+            logs = [];
+            updateLogsDisplay();
+        }
+
+        // Проверка текущего состояния авторизации
+        async function checkCurrentState() {
+            try {
+                log('🔍 Проверяем текущее состояние авторизации...', 'info');
+                
+                const response = await fetch('/api/v1/auth/me', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Пользователь авторизован: ${data.user.email} (${data.user.role})`, 'success');
+                    document.getElementById('currentState').innerHTML = `
+                        <div class="log success">
+                            <strong>Авторизован:</strong><br>
+                            Email: ${data.user.email}<br>
+                            Имя: ${data.user.first_name} ${data.user.last_name}<br>
+                            Роль: ${data.user.role}<br>
+                            Client ID: ${data.user.client_id || 'не указан'}
+                        </div>
+                    `;
+                } else {
+                    log('❌ Пользователь не авторизован', 'warning');
+                    document.getElementById('currentState').innerHTML = `
+                        <div class="log warning">Пользователь не авторизован</div>
+                    `;
+                }
+            } catch (error) {
+                log(`❌ Ошибка проверки состояния: ${error.message}`, 'error');
+            }
+        }
+
+        // Выход из системы
+        async function logout() {
+            try {
+                log('🚪 Выходим из системы...', 'info');
+                
+                const response = await fetch('/api/v1/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    log('✅ Успешно вышли из системы', 'success');
+                    checkCurrentState();
+                } else {
+                    log('⚠️ Ошибка при выходе, но продолжаем', 'warning');
+                }
+            } catch (error) {
+                log(`❌ Ошибка выхода: ${error.message}`, 'error');
+            }
+        }
+
+        // Инициализация Google OAuth
+        function initGoogleOAuth() {
+            if (!window.google) {
+                log('❌ Google SDK не загружен', 'error');
+                return;
+            }
+
+            log('🔧 Инициализируем Google OAuth...', 'info');
+            document.getElementById('clientId').textContent = GOOGLE_CLIENT_ID;
+
+            try {
+                window.google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleGoogleCallback,
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    use_fedcm_for_prompt: true
+                });
+
+                log('✅ Google OAuth инициализирован', 'success');
+                
+                // Показываем кнопку Google
+                window.google.accounts.id.renderButton(
+                    document.getElementById('googleButton'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'continue_with',
+                        locale: 'ru'
+                    }
+                );
+
+                document.getElementById('googleButton').style.display = 'block';
+                document.getElementById('googleStatus').innerHTML = `
+                    <div class="log success">Google кнопка готова к использованию</div>
+                `;
+
+            } catch (error) {
+                log(`❌ Ошибка инициализации Google: ${error.message}`, 'error');
+            }
+        }
+
+        // Обработка Google OAuth callback
+        async function handleGoogleCallback(response) {
+            log('🎯 Google OAuth callback получен', 'info');
+            log(`📄 Google credential: ${response.credential ? 'получен' : 'отсутствует'}`, 'info');
+            
+            try {
+                // Декодируем JWT для отладки
+                if (response.credential) {
+                    const base64Payload = response.credential.split('.')[1];
+                    const decodedPayload = JSON.parse(atob(base64Payload));
+                    log(`👤 Google пользователь: ${decodedPayload.email} (${decodedPayload.name})`, 'info');
+                    
+                    const userInfo = {
+                        provider_user_id: decodedPayload.sub,
+                        email: decodedPayload.email,
+                        first_name: decodedPayload.given_name || decodedPayload.name?.split(' ')[0] || '',
+                        last_name: decodedPayload.family_name || decodedPayload.name?.split(' ').slice(1).join(' ') || ''
+                    };
+
+                    const requestData = {
+                        provider: 'google',
+                        token: response.credential,
+                        ...userInfo
+                    };
+
+                    log('📤 Отправляем данные на backend...', 'info');
+                    log(`📤 Данные: ${JSON.stringify(requestData, null, 2)}`, 'info');
+
+                    // Отправляем на backend
+                    const apiResponse = await fetch('/api/v1/clients/social_auth', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(requestData),
+                    });
+
+                    log(`📥 Ответ сервера: ${apiResponse.status}`, 'info');
+                    const data = await apiResponse.json();
+                    log(`📥 Данные ответа: ${JSON.stringify(data, null, 2)}`, 'info');
+
+                    if (apiResponse.ok) {
+                        log('✅ Google OAuth успешен!', 'success');
+                        log(`✅ Пользователь: ${data.user.email} (ID: ${data.user.id})`, 'success');
+                        
+                        // Проверяем состояние через секунду
+                        setTimeout(() => {
+                            log('🔄 Проверяем состояние после авторизации...', 'info');
+                            checkCurrentState();
+                        }, 1000);
+                        
+                    } else {
+                        log(`❌ Ошибка авторизации: ${data.error}`, 'error');
+                        if (data.details) {
+                            log(`📋 Детали: ${data.details}`, 'error');
+                        }
+                    }
+                }
+            } catch (error) {
+                log(`❌ Ошибка обработки Google callback: ${error.message}`, 'error');
+            }
+        }
+
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            log('🚀 Страница загружена', 'info');
+            checkCurrentState();
+        });
+    </script>
+</body>
+</html> 

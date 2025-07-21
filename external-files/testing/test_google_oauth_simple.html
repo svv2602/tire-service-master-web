@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Простой тест Google OAuth</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { background: #ffebee; padding: 15px; border-radius: 5px; margin: 10px 0; color: #c62828; }
+        .success { background: #e8f5e9; padding: 15px; border-radius: 5px; margin: 10px 0; color: #2e7d32; }
+        button { padding: 10px 20px; margin: 5px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #1565c0; }
+        code { background: #f5f5f5; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Диагностика Google OAuth</h1>
+        
+        <div class="info">
+            <h3>Текущие настройки:</h3>
+            <p><strong>Домен:</strong> <span id="currentDomain"></span></p>
+            <p><strong>URL:</strong> <span id="currentUrl"></span></p>
+            <p><strong>Google Client ID:</strong> <code id="clientId">58596894866-lr2c548esilum4eeosploiifascl912a.apps.googleusercontent.com</code></p>
+        </div>
+
+        <div class="info">
+            <h3>Требования для работы Google OAuth:</h3>
+            <ol>
+                <li>В Google Cloud Console добавить <code>http://localhost:3008</code> в "Authorized JavaScript origins"</li>
+                <li>В Google Cloud Console добавить <code>http://localhost:3008/login</code> в "Authorized redirect URIs"</li>
+                <li>Проверить что Client ID правильный и активный</li>
+                <li>Убедиться что OAuth consent screen настроен</li>
+            </ol>
+        </div>
+
+        <button onclick="testBasicGoogleOAuth()">🧪 Тест базового Google OAuth</button>
+        <button onclick="testGooglePopup()">🪟 Тест Google Popup</button>
+        <button onclick="openGoogleConsole()">⚙️ Открыть Google Cloud Console</button>
+        
+        <div id="googleButtonContainer" style="margin: 20px 0;"></div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const CLIENT_ID = '58596894866-lr2c548esilum4eeosploiifascl912a.apps.googleusercontent.com';
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `
+                <div class="${className}">
+                    <strong>[${timestamp}]</strong> ${message}
+                </div>
+            `;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateDomainInfo() {
+            document.getElementById('currentDomain').textContent = window.location.hostname;
+            document.getElementById('currentUrl').textContent = window.location.href;
+        }
+
+        function testBasicGoogleOAuth() {
+            log('🔧 Начинаем тест базового Google OAuth...', 'info');
+            
+            if (!window.google) {
+                log('❌ Google SDK не загружен. Проверьте подключение к интернету.', 'error');
+                return;
+            }
+
+            try {
+                log('✅ Google SDK загружен', 'success');
+                
+                window.google.accounts.id.initialize({
+                    client_id: CLIENT_ID,
+                    callback: handleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: true,
+                    use_fedcm_for_prompt: false
+                });
+
+                log('✅ Google OAuth инициализирован', 'success');
+                
+                // Пробуем показать One Tap
+                window.google.accounts.id.prompt((notification) => {
+                    if (notification.isNotDisplayed()) {
+                        log('⚠️ Google One Tap не показан. Возможные причины:', 'error');
+                        log('• Домен не добавлен в Google Cloud Console', 'error');
+                        log('• Блокировщик рекламы/popup', 'error');
+                        log('• Неправильный Client ID', 'error');
+                        log('• Пользователь уже авторизован', 'error');
+                        
+                        // Пробуем показать кнопку вместо One Tap
+                        renderGoogleButton();
+                    } else if (notification.isSkippedMoment()) {
+                        log('⚠️ Google One Tap пропущен пользователем', 'info');
+                        renderGoogleButton();
+                    } else if (notification.isDismissedMoment()) {
+                        log('⚠️ Google One Tap закрыт пользователем', 'info');
+                        renderGoogleButton();
+                    } else if (notification.isDisplayed()) {
+                        log('✅ Google One Tap показан!', 'success');
+                    }
+                });
+
+            } catch (error) {
+                log(`❌ Ошибка инициализации: ${error.message}`, 'error');
+            }
+        }
+
+        function renderGoogleButton() {
+            log('🖲️ Создаем Google кнопку как альтернативу...', 'info');
+            
+            const container = document.getElementById('googleButtonContainer');
+            container.innerHTML = '<p>Google кнопка:</p>';
+            
+            window.google.accounts.id.renderButton(container, {
+                theme: 'outline',
+                size: 'large',
+                type: 'standard',
+                text: 'continue_with',
+                locale: 'ru'
+            });
+            
+            log('✅ Google кнопка создана', 'success');
+        }
+
+        function handleCredentialResponse(response) {
+            log('🎉 Google OAuth успешен!', 'success');
+            log(`📄 Credential получен: ${response.credential ? 'Да' : 'Нет'}`, 'info');
+            
+            if (response.credential) {
+                try {
+                    // Декодируем JWT для просмотра данных
+                    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                    log(`👤 Пользователь: ${payload.email} (${payload.name})`, 'success');
+                    log(`🆔 Google ID: ${payload.sub}`, 'info');
+                    log(`🖼️ Аватар: ${payload.picture || 'нет'}`, 'info');
+                } catch (error) {
+                    log(`❌ Ошибка декодирования токена: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        function testGooglePopup() {
+            log('🪟 Тестируем Google popup авторизацию...', 'info');
+            
+            const authUrl = `https://accounts.google.com/oauth/v2/auth?` +
+                `client_id=${encodeURIComponent(CLIENT_ID)}&` +
+                `redirect_uri=${encodeURIComponent(window.location.origin + '/login')}&` +
+                `scope=${encodeURIComponent('openid email profile')}&` +
+                `response_type=code&` +
+                `access_type=offline&` +
+                `prompt=consent`;
+
+            log(`🔗 URL авторизации: ${authUrl}`, 'info');
+            
+            // Открываем в новой вкладке для тестирования
+            const popup = window.open(authUrl, 'googleAuth', 'width=500,height=600');
+            
+            if (popup) {
+                log('✅ Popup открыт. Проверьте авторизацию в новом окне.', 'success');
+            } else {
+                log('❌ Popup заблокирован. Разрешите popup для этого сайта.', 'error');
+            }
+        }
+
+        function openGoogleConsole() {
+            const consoleUrl = 'https://console.cloud.google.com/apis/credentials';
+            window.open(consoleUrl, '_blank');
+            log('🔗 Открыт Google Cloud Console. Проверьте настройки OAuth 2.0.', 'info');
+        }
+
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            updateDomainInfo();
+            log('🚀 Страница диагностики загружена', 'info');
+            log('💡 Нажмите "Тест базового Google OAuth" для начала диагностики', 'info');
+        });
+    </script>
+</body>
+</html> 

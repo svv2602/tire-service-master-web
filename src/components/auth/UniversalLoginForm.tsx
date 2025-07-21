@@ -35,6 +35,7 @@ import { UserRole } from '../../types/user-role';
 import { extractPhoneDigits } from '../../utils/phoneUtils';
 import { useTranslation } from '../../hooks/useTranslation';
 import { PhoneField } from '../ui/PhoneField/PhoneField';
+import GoogleLoginButton from './GoogleLoginButton';
 
 interface UniversalLoginFormProps {
   onSuccess?: () => void;
@@ -458,6 +459,24 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
         >
           {isLoading ? t('forms.auth.loggingIn') : t('forms.auth.loginButton')}
         </Button>
+
+        {/* Разделитель */}
+        <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+          <Divider sx={{ flex: 1 }} />
+          <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+            {t('auth.google.or')}
+          </Typography>
+          <Divider sx={{ flex: 1 }} />
+        </Box>
+
+        {/* Google OAuth кнопка */}
+        <GoogleLoginButton 
+          onSuccess={onSuccess}
+          onError={(error) => setError(error)}
+          disabled={isLoading}
+          variant="outlined"
+          fullWidth
+        />
 
         {/* Забыли пароль */}
         <Box textAlign="center" sx={{ mb: 2 }}>
