@@ -187,8 +187,8 @@ const App: React.FC = () => {
       <ThemeProvider>
         <SnackbarProvider>
           <DateLocalizationWrapper>
-            <CssBaseline />
-            <GlobalUIStyles />
+      <CssBaseline />
+      <GlobalUIStyles />
             <AuthInitializer>
               <Router 
                 future={{
@@ -197,12 +197,12 @@ const App: React.FC = () => {
                 }}
               >
                 <Suspense fallback={<LoadingSpinner fullScreen />}>
-                  <Routes>
-                    {/* Публичные маршруты */}
-                    <Route path="/login" element={<LoginPage />} />
+      <Routes>
+        {/* Публичные маршруты */}
+        <Route path="/login" element={<LoginPage />} />
                     <Route path="/auth/register" element={<RegisterPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                     {/* Главная страница для клиентов (без авторизации) */}
                     <Route path="/client" element={
@@ -210,53 +210,53 @@ const App: React.FC = () => {
                     } />
                     
                     {/* Клиентские маршруты */}
-                    <Route path="/client/services" element={<ClientServicesPage />} />
-                    <Route path="/client/search" element={<ClientSearchPage />} />
-                    <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
+        <Route path="/client/services" element={<ClientServicesPage />} />
+        <Route path="/client/search" element={<ClientSearchPage />} />
+        <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
                     <Route path="/client/tire-calculator" element={<TireCalculatorPage />} />
                     <Route path="/client/booking" element={<NewBookingWithAvailabilityPage />} />
                     <Route path="/client/booking/success" element={<BookingSuccessPage />} />
-                    <Route path="/client/profile" element={<ClientProfilePage />} />
+        <Route path="/client/profile" element={<ClientProfilePage />} />
                     
                     {/* Новые маршруты для управления записями клиента */}
-                    <Route path="/client/bookings" element={<MyBookingsPage />} />
+        <Route path="/client/bookings" element={<MyBookingsPage />} />
                     <Route path="/client/bookings/:id" element={<BookingDetailsPage />} />
                     <Route path="/client/bookings/:id/reschedule" element={<RescheduleBookingPage />} />
                     
                     {/* Новые маршруты для отзывов клиента */}
-                    <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
+        <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
                     <Route path="/client/reviews/new" element={<ClientReviewFormPage />} />
                     <Route path="/client/reviews/new/:servicePointId" element={<ClientReviewFormPage />} />
-                    
+        
                     {/* Публичная база знаний (без авторизации) */}
-                    <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
+        <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
                     <Route path="/knowledge-base/:id" element={<ArticleDetailPage />} />
-                    
+        
                     {/* Корневой маршрут перенаправляет на клиентскую часть */}
                     <Route path="/" element={<Navigate to="/client" replace />} />
-                    
+        
                     {/* Защищенные маршруты в главном лейауте */}
-                    <Route path="/admin" element={
-                      <ProtectedRoute>
-                        <MainLayout />
-                      </ProtectedRoute>
-                    }>
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
                       <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                      <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
                       {/* Маршруты для партнеров */}
-                      <Route path="partners" element={<PartnersPage />} />
+          <Route path="partners" element={<PartnersPage />} />
                       <Route path="partners/new" element={<PartnerFormPage />} />
-                      <Route path="partners/:id/edit" element={<PartnerFormPage />} />
-
+          <Route path="partners/:id/edit" element={<PartnerFormPage />} />
+          
                       <Route path="partners/:id/service-points" element={<ServicePointsPage />} />
                       <Route path="partners/:partnerId/service-points/new" element={<ServicePointFormPage />} />
                       <Route path="partners/:partnerId/service-points/:id/edit" element={<ServicePointFormPage />} />
                       {/* Маршруты для сервисных точек */}
-                      <Route path="service-points" element={<ServicePointsPage />} />
+          <Route path="service-points" element={<ServicePointsPage />} />
                       <Route path="service-points/:id" element={<ServicePointDetailPage />} />
-                                              <Route path="service-points/:id/edit" element={<ServicePointFormPage />} />
+          <Route path="service-points/:id/edit" element={<ServicePointFormPage />} />
                       <Route path="service-points/:id/photos" element={<ServicePointPhotosPage />} />
-                      <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
+          <Route path="service-points/:id/services" element={<ServicePointServicesPage />} />
                       {/* Маршруты для клиентов */}
                       <Route path="clients" element={<ClientsPage />} />
                       <Route path="clients/new" element={<ClientFormPage />} />
@@ -265,20 +265,20 @@ const App: React.FC = () => {
                       <Route path="clients/:clientId/cars/new" element={<ClientCarFormPage />} />
                       <Route path="clients/:clientId/cars/:carId/edit" element={<ClientCarFormPage />} />
                       {/* Маршруты для бронирований */}
-                      <Route path="bookings" element={<BookingsPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
                       <Route path="bookings/new" element={<BookingFormPage />} />
                       <Route path="bookings/new-with-availability" element={<BookingFormPageWithAvailability />} />
                       <Route path="bookings/new-multi-step" element={<NewBookingWithAvailabilityPage />} />
-                      <Route path="bookings/:id/edit" element={<BookingFormPage />} />
+          <Route path="bookings/:id/edit" element={<BookingFormPage />} />
                       <Route path="bookings/:id/edit-with-availability" element={<BookingFormPageWithAvailability />} />
                       <Route path="bookings/:id" element={<div>Детали бронирования (в разработке)</div>} />
                       
                       {/* Маршрут для конфликтов бронирований */}
-                      <Route path="booking-conflicts" element={<BookingConflictsPage />} />
+          <Route path="booking-conflicts" element={<BookingConflictsPage />} />
                       {/* Маршруты для отзывов */}
-                      <Route path="reviews" element={<ReviewsPage />} />
-                      <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
-                      
+          <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="reviews/:id/reply" element={<ReviewReplyPage />} />
+          
                       {/* Маршруты для уведомлений */}
                       <Route path="notifications" element={<NotificationCenterPage />} />
                       <Route path="reviews/new" element={<ReviewFormPage />} />
@@ -311,8 +311,8 @@ const App: React.FC = () => {
                       <Route path="users/:id/edit" element={<UserForm />} />
                       <Route path="users/:id" element={<div>Информация о пользователе (в разработке)</div>} />
                       {/* Другие маршруты */}
-                      <Route path="settings" element={<SettingsPage />} />
-                      <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
                       <Route path="seo" element={<div>SEO настройки (в разработке)</div>} />
                       {/* Справочники */}
                       <Route path="regions" element={<RegionsPage />} />
@@ -335,11 +335,11 @@ const App: React.FC = () => {
                       <Route path="testing/word-wrap" element={<WordWrapTestPage />} />
                       <Route path="testing/table-unification" element={<TableUnificationTest />} />
                       <Route path="testing/page-table" element={<PageTableTest />} />
-                    </Route>
-                    
+        </Route>
+        
                     {/* Маршрут по умолчанию */}
                     <Route path="*" element={<Navigate to="/client" replace />} />
-                  </Routes>
+      </Routes>
                 </Suspense>
               </Router>
             </AuthInitializer>
