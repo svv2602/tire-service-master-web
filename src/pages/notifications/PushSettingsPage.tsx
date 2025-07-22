@@ -61,6 +61,8 @@ export const PushSettingsPage: React.FC = () => {
   // Локальное состояние
   const [settings, setSettings] = useState<Partial<PushSettings>>({
     enabled: false,
+    vapid_public_key: '',
+    vapid_private_key: '',
     firebase_api_key: '',
     firebase_project_id: '',
     firebase_app_id: '',
@@ -79,6 +81,8 @@ export const PushSettingsPage: React.FC = () => {
       const apiSettings = settingsData.push_settings;
       setSettings({
         enabled: apiSettings.enabled,
+        vapid_public_key: apiSettings.vapid_public_key,
+        vapid_private_key: apiSettings.vapid_private_key,
         firebase_api_key: apiSettings.firebase_api_key,
         firebase_project_id: apiSettings.firebase_project_id,
         firebase_app_id: apiSettings.firebase_app_id,
@@ -328,9 +332,32 @@ export const PushSettingsPage: React.FC = () => {
               avatar={<FirebaseIcon />}
             />
             <CardContent>
-              <Alert severity="info" sx={{ mb: 2 }}>
-                VAPID ключи настраиваются через переменные окружения сервера
+              <Alert severity="success" sx={{ mb: 2 }}>
+                VAPID ключи можно настроить через веб-интерфейс или переменные окружения
               </Alert>
+              
+              <TextField
+                fullWidth
+                label="VAPID Public Key"
+                value={settings.vapid_public_key || ''}
+                onChange={(e) => handleSettingChange('vapid_public_key', e.target.value)}
+                sx={{ mb: 2 }}
+                size="small"
+                helperText="Публичный VAPID ключ для Push уведомлений (Base64)"
+              />
+              
+              <TextField
+                fullWidth
+                label="VAPID Private Key"
+                value={settings.vapid_private_key || ''}
+                onChange={(e) => handleSettingChange('vapid_private_key', e.target.value)}
+                type="password"
+                sx={{ mb: 2 }}
+                size="small"
+                helperText="Приватный VAPID ключ (будет замаскирован для безопасности)"
+              />
+
+              <Divider sx={{ my: 2 }} />
               
               <TextField
                 fullWidth
