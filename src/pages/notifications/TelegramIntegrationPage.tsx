@@ -193,8 +193,49 @@ export const TelegramIntegrationPage: React.FC = () => {
     });
   };
 
+  const validateSettings = () => {
+    const errors = [];
+    
+    // Валидация Bot Token
+    if (settings.botToken && settings.botToken.trim()) {
+      const botTokenRegex = /^\d+:[A-Za-z0-9_-]+$/;
+      if (!botTokenRegex.test(settings.botToken.trim())) {
+        errors.push('Bot Token должен быть в формате: 123456789:ABCDEFghijklmnop');
+      }
+    }
+    
+    // Валидация Webhook URL
+    if (settings.webhookUrl && settings.webhookUrl.trim()) {
+      try {
+        const url = new URL(settings.webhookUrl.trim());
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          errors.push('Webhook URL должен начинаться с http:// или https://');
+        }
+      } catch {
+        errors.push('Webhook URL должен быть корректным URL адресом');
+      }
+    }
+    
+    // Валидация Admin Chat ID
+    if (settings.adminChatId && settings.adminChatId.trim()) {
+      const chatIdRegex = /^-?\d+$/;
+      if (!chatIdRegex.test(settings.adminChatId.trim())) {
+        errors.push('Admin Chat ID должен содержать только цифры (может начинаться с -)');
+      }
+    }
+    
+    return errors;
+  };
+
   const handleSave = async () => {
     setSaveSuccess(false);
+    
+    // Валидация на фронтенде
+    const validationErrors = validateSettings();
+    if (validationErrors.length > 0) {
+      alert(`Ошибки валидации:\n${validationErrors.join('\n')}`);
+      return;
+    }
     
     try {
       await updateSettings({
@@ -208,8 +249,16 @@ export const TelegramIntegrationPage: React.FC = () => {
       
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
+      
+      // Показываем детали ошибки пользователю
+      if (error?.data?.errors) {
+        console.error('Ошибки валидации:', error.data.errors);
+        alert(`Ошибки валидации:\n${error.data.errors.join('\n')}`);
+      } else {
+        alert('Произошла ошибка при сохранении настроек');
+      }
     }
   };
 
@@ -228,7 +277,16 @@ export const TelegramIntegrationPage: React.FC = () => {
         setTestResult(`❌ ${result.message}`);
       }
     } catch (error: any) {
-      setTestResult(`❌ Помилка з'єднання: ${error.data?.message || error.message}`);
+      console.error('Ошибка тестирования подключения:', error);
+      let errorMessage = 'Помилка з\'єднання';
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setTestResult(`❌ ${errorMessage}`);
     }
   };
 
@@ -456,6 +514,7 @@ export const TelegramIntegrationPage: React.FC = () => {
                 sx={{ mb: 2 }}
                 size="small"
                 placeholder="1234567890:ABCDEFghijklmnopQRSTUVwxyz"
+                helperText="Формат: числа:буквы_цифры_дефисы (получите у @BotFather)"
               />
               
               <TextField
@@ -477,6 +536,7 @@ export const TelegramIntegrationPage: React.FC = () => {
                 sx={{ mb: 2 }}
                 size="small"
                 placeholder="https://yourdomain.com/api/telegram/webhook"
+                helperText="Полный URL для получения сообщений от Telegram (https://)"
               />
               
               <TextField
@@ -487,6 +547,7 @@ export const TelegramIntegrationPage: React.FC = () => {
                 sx={{ mb: 2 }}
                 size="small"
                 placeholder="123456789"
+                helperText="ID чата администратора (только цифры, может начинаться с -)"
               />
               
               <FormControlLabel
