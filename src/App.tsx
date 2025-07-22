@@ -52,6 +52,7 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
   // Ленивая загрузка страниц уведомлений
   const NotificationCenterPage = lazy(() => import('./pages/notifications/NotificationCenterPage'));
   const EmailTemplatesPage = lazy(() => import('./pages/notifications/EmailTemplatesPageSimple'));
+  const UnifiedTemplatesPage = lazy(() => import('./pages/notifications/UnifiedTemplatesPage'));
   const EmailTemplateFormPage = lazy(() => import('./pages/notifications/EmailTemplateFormPage'));
   const CustomVariablesPage = lazy(() => import('./pages/notifications/CustomVariablesPage'));
   const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
@@ -287,10 +288,14 @@ const App: React.FC = () => {
           
                       {/* Маршруты для уведомлений */}
                       <Route path="notifications" element={<NotificationCenterPage />} />
-                                        <Route path="notifications/email-templates" element={<EmailTemplatesPage />} />
-                  <Route path="notifications/email-templates/new" element={<EmailTemplateFormPage />} />
-                  <Route path="notifications/email-templates/:id/edit" element={<EmailTemplateFormPage />} />
-                  <Route path="notifications/custom-variables" element={<CustomVariablesPage />} />
+                      <Route path="notifications/templates" element={<UnifiedTemplatesPage />} />
+                      <Route path="notifications/templates/new" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/templates/:id" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/templates/:id/edit" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/email-templates" element={<EmailTemplatesPage />} />
+                      <Route path="notifications/email-templates/new" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/email-templates/:id/edit" element={<EmailTemplateFormPage />} />
+                      <Route path="notifications/custom-variables" element={<CustomVariablesPage />} />
                       <Route path="notifications/push-settings" element={<PushSettingsPage />} />
                       <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
                       <Route path="notifications/channels" element={<ChannelsSettingsPage />} />

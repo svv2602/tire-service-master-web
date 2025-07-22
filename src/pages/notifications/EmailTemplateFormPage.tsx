@@ -73,6 +73,7 @@ interface EmailTemplateFormData {
   body: string;
   template_type: string;
   language: string;
+  channel_type?: 'email' | 'telegram' | 'push';
   is_active: boolean;
   description: string;
   variables: string[];
@@ -150,6 +151,7 @@ const EmailTemplateFormPage: React.FC = () => {
       body: '',
       template_type: '',
       language: 'uk',
+      channel_type: 'email',
       is_active: true,
       description: '',
       variables: [],
@@ -160,6 +162,7 @@ const EmailTemplateFormPage: React.FC = () => {
         const templateData = {
           ...values,
           variables: values.variables,
+          channel_type: values.channel_type || 'email' as const, // Дефолтное значение
         };
 
         if (isEditMode && id) {

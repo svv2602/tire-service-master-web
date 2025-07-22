@@ -420,6 +420,13 @@ const MainLayout: React.FC = () => {
         title: t('navigation.sections.notificationManagement'),
         items: [
           {
+            text: 'Шаблоны уведомлений',
+            icon: <EmailIcon />,
+            path: '/admin/notifications/templates',
+            roles: [UserRole.ADMIN],
+            description: 'Управление всеми шаблонами уведомлений (Email, Telegram, Push)',
+          },
+          {
             text: t('navigation.emailTemplates'),
             icon: <EmailIcon />,
             path: '/admin/notifications/email-templates',

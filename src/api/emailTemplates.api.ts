@@ -1,13 +1,15 @@
 import { baseApi } from './baseApi';
 
-// Типы для Email Templates
+// Типы для Email Templates (теперь унифицированные для всех каналов)
 export interface EmailTemplate {
   id: number;
   name: string;
-  subject: string;
+  subject?: string; // Опциональное для Telegram и Push
   body: string;
   template_type: string;
   language: string;
+  channel_type: 'email' | 'telegram' | 'push';
+  channel_name: string;
   is_active: boolean;
   variables_array: string[];
   description?: string;
@@ -26,12 +28,13 @@ export interface EmailTemplateResponse {
 
 export interface CreateEmailTemplateRequest {
   name: string;
-  subject: string;
+  subject?: string; // Опциональное для Telegram и Push
   body: string;
   template_type: string;
   language: string;
-  is_active: boolean;
-  variables: string[];
+  channel_type?: 'email' | 'telegram' | 'push'; // Опциональное, по умолчанию 'email'
+  is_active?: boolean;
+  variables?: string[];
   description?: string;
 }
 
@@ -41,6 +44,7 @@ export interface UpdateEmailTemplateRequest {
   body?: string;
   template_type?: string;
   language?: string;
+  channel_type?: 'email' | 'telegram' | 'push';
   is_active?: boolean;
   variables?: string[];
   description?: string;
@@ -50,6 +54,7 @@ export interface EmailTemplateFilters {
   active?: boolean;
   template_type?: string;
   language?: string;
+  channel_type?: 'email' | 'telegram' | 'push';
   search?: string;
   sort_by?: string;
   sort_direction?: 'asc' | 'desc';
@@ -76,6 +81,17 @@ export interface PaginatedResponse<T> {
     total_count: number;
     per_page: number;
   };
+  stats?: {
+    total: number;
+    active: number;
+    inactive: number;
+    by_language: Record<string, number>;
+    by_type: Record<string, number>;
+    by_channel: Record<string, number>;
+  };
+  available_types?: Array<{ value: string; label: string; }>;
+  available_languages?: string[];
+  available_channels?: Record<string, string>;
 }
 
 // API endpoints
