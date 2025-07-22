@@ -116,8 +116,14 @@ const MainLayout: React.FC = () => {
   const [openSections, setOpenSections] = useState<{[key: string]: boolean}>({});
   
   // Новые состояния для управления панелью
-  const [drawerWidth, setDrawerWidth] = useState(DEFAULT_DRAWER_WIDTH);
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+  const [drawerWidth, setDrawerWidth] = useState(() => {
+    const savedWidth = localStorage.getItem('adminDrawerWidth');
+    return savedWidth ? parseInt(savedWidth, 10) : DEFAULT_DRAWER_WIDTH;
+  });
+  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(() => {
+    const savedCollapsed = localStorage.getItem('adminDrawerCollapsed');
+    return savedCollapsed === 'true';
+  });
   const [isResizing, setIsResizing] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startWidth, setStartWidth] = useState(DEFAULT_DRAWER_WIDTH);
@@ -152,18 +158,39 @@ const MainLayout: React.FC = () => {
     }
   }, [dispatch, user, navigate, isAuthenticated]);
 
-  // Инициализация состояния открытия секций меню - ВСЕ СЕКЦИИ СВЕРНУТЫ ПО УМОЛЧАНИЮ
+  // Инициализация состояния открытия секций меню с сохранением в localStorage
   useEffect(() => {
     // Получаем все секции меню
     const sections = getMenuSections(t);
-    // Создаем объект с состоянием "закрыто" для всех секций
+    
+    // Пытаемся загрузить сохраненное состояние из localStorage
+    const savedOpenSections = localStorage.getItem('adminMenuSections');
+    
+    if (savedOpenSections) {
+      try {
+        const parsedSections = JSON.parse(savedOpenSections);
+        // Проверяем, что все секции из текущего меню присутствуют
+        const allSectionsPresent = sections.every(section => 
+          parsedSections.hasOwnProperty(section.title)
+        );
+        
+        if (allSectionsPresent) {
+          setOpenSections(parsedSections);
+          return;
+        }
+      } catch (error) {
+        console.error('Ошибка парсинга сохраненного состояния меню:', error);
+      }
+    }
+    
+    // Если нет сохраненного состояния или оно некорректно, создаем дефолтное
     const initialOpenSections = sections.reduce((acc, section) => {
-      acc[section.title] = false; // устанавливаем false для сворачивания всех секций
+      acc[section.title] = false; // все секции свернуты по умолчанию
       return acc;
     }, {} as {[key: string]: boolean});
     
-    // Устанавливаем состояние
     setOpenSections(initialOpenSections);
+    localStorage.setItem('adminMenuSections', JSON.stringify(initialOpenSections));
   }, [t]);
 
   const handleDrawerToggle = () => {
@@ -190,15 +217,26 @@ const MainLayout: React.FC = () => {
   };
 
   const toggleSection = (section: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+    const newOpenSections = {
+      ...openSections,
+      [section]: !openSections[section]
+    };
+    setOpenSections(newOpenSections);
+    localStorage.setItem('adminMenuSections', JSON.stringify(newOpenSections));
+  };
+
+  // Функция для обработки клика на заголовок секции
+  const handleSectionHeaderClick = (section: MenuSection) => {
+    if (isDrawerCollapsed) return;
+    
+    // Просто переключаем состояние секции (разворачиваем/сворачиваем)
+    toggleSection(section.title);
   };
 
   // Функции управления панелью
   const toggleDrawerCollapse = () => {
     setIsDrawerCollapsed(!isDrawerCollapsed);
+    localStorage.setItem('adminDrawerCollapsed', String(!isDrawerCollapsed));
   };
 
   // Функции для изменения ширины мышью
@@ -215,6 +253,7 @@ const MainLayout: React.FC = () => {
       const newWidth = startWidth + (e.clientX - startX);
       if (newWidth >= MIN_DRAWER_WIDTH && newWidth <= MAX_DRAWER_WIDTH) {
         setDrawerWidth(newWidth);
+        localStorage.setItem('adminDrawerWidth', String(newWidth));
       }
     };
 
@@ -240,6 +279,7 @@ const MainLayout: React.FC = () => {
       return acc;
     }, {} as {[key: string]: boolean});
     setOpenSections(collapsedSections);
+    localStorage.setItem('adminMenuSections', JSON.stringify(collapsedSections));
   };
 
   const expandAllSections = () => {
@@ -249,6 +289,7 @@ const MainLayout: React.FC = () => {
       return acc;
     }, {} as {[key: string]: boolean});
     setOpenSections(expandedSections);
+    localStorage.setItem('adminMenuSections', JSON.stringify(expandedSections));
   };
 
   // Определяем структуру меню по разделам
@@ -676,7 +717,7 @@ const MainLayout: React.FC = () => {
           {getFilteredMenuSections(t).map((section) => (
             <React.Fragment key={section.title}>
               <ListSubheader 
-                onClick={() => !isDrawerCollapsed && toggleSection(section.title)} 
+                onClick={() => handleSectionHeaderClick(section)} 
                 sx={{ 
                   cursor: isDrawerCollapsed ? 'default' : 'pointer',
                   display: 'flex', 
