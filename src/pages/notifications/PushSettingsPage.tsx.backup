@@ -64,9 +64,10 @@ export const PushSettingsPage: React.FC = () => {
     firebase_api_key: '',
     firebase_project_id: '',
     firebase_app_id: '',
+    service_worker_enabled: false,
     test_mode: false,
     daily_limit: 1000,
-    rate_limit: 60,
+    rate_limit_per_minute: 60,
   });
   
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -82,9 +83,10 @@ export const PushSettingsPage: React.FC = () => {
         firebase_api_key: apiSettings.firebase_api_key,
         firebase_project_id: apiSettings.firebase_project_id,
         firebase_app_id: apiSettings.firebase_app_id,
+        service_worker_enabled: apiSettings.service_worker_enabled,
         test_mode: apiSettings.test_mode,
         daily_limit: apiSettings.daily_limit,
-        rate_limit: apiSettings.rate_limit,
+        rate_limit_per_minute: apiSettings.rate_limit_per_minute,
       });
     }
   }, [settingsData]);
@@ -254,6 +256,16 @@ export const PushSettingsPage: React.FC = () => {
                 sx={{ mb: 2 }}
               />
               
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={settings.service_worker_enabled || false}
+                    onChange={(e) => handleSettingChange('service_worker_enabled', e.target.checked)}
+                  />
+                }
+                label="Использовать Service Worker"
+                sx={{ mb: 2 }}
+              />
               
               <FormControlLabel
                 control={
@@ -280,8 +292,8 @@ export const PushSettingsPage: React.FC = () => {
                 fullWidth
                 label="Лимит в минуту"
                 type="number"
-                value={settings.rate_limit || 60}
-                onChange={(e) => handleSettingChange('rate_limit', parseInt(e.target.value))}
+                value={settings.rate_limit_per_minute || 60}
+                onChange={(e) => handleSettingChange('rate_limit_per_minute', parseInt(e.target.value))}
                 sx={{ mb: 2 }}
                 size="small"
               />
@@ -377,7 +389,7 @@ export const PushSettingsPage: React.FC = () => {
                   borderRadius: 1
                 }}
               >
-                {settingsData?.push_settings?.vapid_public_key || 'Не настроен'}
+                {settingsData?.vapid_public_key || 'Не настроен'}
               </Typography>
             </CardContent>
           </Card>
