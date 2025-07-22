@@ -268,17 +268,7 @@ export const PushSettingsPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {saveSuccess && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          ✅ Настройки успешно сохранены!
-        </Alert>
-      )}
 
-      {saveError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          ❌ {saveError}
-        </Alert>
-      )}
 
       <Grid container spacing={3}>
         {/* Статус системы */}
@@ -338,127 +328,6 @@ export const PushSettingsPage: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        </Grid>
-
-        {/* Основные настройки */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader 
-              title="Основные настройки"
-              avatar={<PushIcon />}
-            />
-            <CardContent>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.enabled || false}
-                    onChange={(e) => handleSettingChange('enabled', e.target.checked)}
-                  />
-                }
-                label="Включить push уведомления"
-                sx={{ mb: 2 }}
-              />
-              
-              
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={settings.test_mode || false}
-                    onChange={(e) => handleSettingChange('test_mode', e.target.checked)}
-                  />
-                }
-                label="Тестовый режим"
-                sx={{ mb: 2 }}
-              />
-
-              <TextField
-                fullWidth
-                label="Лимит уведомлений в день"
-                type="number"
-                value={settings.daily_limit || 1000}
-                onChange={(e) => handleSettingChange('daily_limit', parseInt(e.target.value))}
-                sx={{ mb: 2 }}
-                size="small"
-              />
-
-              <TextField
-                fullWidth
-                label="Лимит в минуту"
-                type="number"
-                value={settings.rate_limit || 60}
-                onChange={(e) => handleSettingChange('rate_limit', parseInt(e.target.value))}
-                sx={{ mb: 2 }}
-                size="small"
-              />
-
-              <Divider sx={{ my: 2 }} />
-
-              <Button
-                variant="outlined"
-                startIcon={testLoading ? <CircularProgress size={20} /> : <TestIcon />}
-                onClick={handleTestNotification}
-                disabled={testLoading || !settings.enabled}
-                fullWidth
-                sx={{ mb: 2 }}
-              >
-                {testLoading ? 'Отправка...' : 'Отправить тестовое уведомление'}
-              </Button>
-
-              <Button
-                variant="outlined"
-                startIcon={<SubscriptionsIcon />}
-                onClick={() => setSubscriptionsDialog(true)}
-                fullWidth
-              >
-                Просмотр подписок ({statistics?.total_subscriptions || 0})
-              </Button>
-
-              {testResult && (
-                <Alert 
-                  severity={testResult.includes('✅') ? 'success' : 'error'} 
-                  sx={{ mt: 2 }}
-                >
-                  {testResult}
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Кнопка сохранения настроек */}
-        <Grid item xs={12}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            my: 2,
-            p: 2,
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: 2,
-            boxShadow: theme.shadows[2]
-          }}>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleSave}
-              disabled={updating}
-              startIcon={updating ? <CircularProgress size={24} /> : <SaveIcon />}
-              sx={{
-                px: 4,
-                py: 1.5,
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                minWidth: 200,
-                boxShadow: theme.shadows[4],
-                '&:hover': {
-                  boxShadow: theme.shadows[8],
-                  transform: 'translateY(-1px)'
-                },
-                transition: 'all 0.2s ease-in-out'
-              }}
-            >
-              {updating ? 'Сохранение настроек...' : 'Сохранить настройки'}
-            </Button>
-          </Box>
         </Grid>
 
         {/* Firebase/VAPID конфигурация */}
@@ -608,6 +477,141 @@ export const PushSettingsPage: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
+        </Grid>
+
+        {/* Основные настройки */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardHeader 
+              title="Основные настройки"
+              avatar={<PushIcon />}
+            />
+            <CardContent>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={settings.enabled || false}
+                    onChange={(e) => handleSettingChange('enabled', e.target.checked)}
+                  />
+                }
+                label="Включить push уведомления"
+                sx={{ mb: 2 }}
+              />
+              
+              
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={settings.test_mode || false}
+                    onChange={(e) => handleSettingChange('test_mode', e.target.checked)}
+                  />
+                }
+                label="Тестовый режим"
+                sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Лимит уведомлений в день"
+                type="number"
+                value={settings.daily_limit || 1000}
+                onChange={(e) => handleSettingChange('daily_limit', parseInt(e.target.value))}
+                sx={{ mb: 2 }}
+                size="small"
+              />
+
+              <TextField
+                fullWidth
+                label="Лимит в минуту"
+                type="number"
+                value={settings.rate_limit || 60}
+                onChange={(e) => handleSettingChange('rate_limit', parseInt(e.target.value))}
+                sx={{ mb: 2 }}
+                size="small"
+              />
+
+              <Divider sx={{ my: 2 }} />
+
+              <Button
+                variant="outlined"
+                startIcon={testLoading ? <CircularProgress size={20} /> : <TestIcon />}
+                onClick={handleTestNotification}
+                disabled={testLoading || !settings.enabled}
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                {testLoading ? 'Отправка...' : 'Отправить тестовое уведомление'}
+              </Button>
+
+              <Button
+                variant="outlined"
+                startIcon={<SubscriptionsIcon />}
+                onClick={() => setSubscriptionsDialog(true)}
+                fullWidth
+              >
+                Просмотр подписок ({statistics?.total_subscriptions || 0})
+              </Button>
+
+              {testResult && (
+                <Alert 
+                  severity={testResult.includes('✅') ? 'success' : 'error'} 
+                  sx={{ mt: 2 }}
+                >
+                  {testResult}
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Кнопка сохранения настроек */}
+        <Grid item xs={12}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            my: 2,
+            p: 2,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: 2,
+            boxShadow: theme.shadows[2]
+          }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleSave}
+                disabled={updating}
+                startIcon={updating ? <CircularProgress size={24} /> : <SaveIcon />}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold',
+                  minWidth: 200,
+                  boxShadow: theme.shadows[4],
+                  '&:hover': {
+                    boxShadow: theme.shadows[8],
+                    transform: 'translateY(-1px)'
+                  },
+                  transition: 'all 0.2s ease-in-out'
+                }}
+              >
+                {updating ? 'Сохранение настроек...' : 'Сохранить настройки'}
+              </Button>
+
+              {saveSuccess && (
+                <Alert severity="success" sx={{ width: '100%', maxWidth: 400 }}>
+                  ✅ Настройки успешно сохранены!
+                </Alert>
+              )}
+
+              {saveError && (
+                <Alert severity="error" sx={{ width: '100%', maxWidth: 400 }}>
+                  ❌ {saveError}
+                </Alert>
+              )}
+            </Box>
+          </Box>
         </Grid>
 
         {/* Service Worker информация */}
