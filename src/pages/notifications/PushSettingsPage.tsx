@@ -15,6 +15,15 @@ import {
   Divider,
   useTheme,
   CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
   NotificationsActive as PushIcon,
@@ -25,88 +34,62 @@ import {
   Error as ErrorIcon,
   Warning as WarningIcon,
   Send as TestIcon,
+  People as SubscriptionsIcon,
+  Visibility as ViewIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles/components';
-
-interface PushSettings {
-  enabled: boolean;
-  firebaseConfig: {
-    apiKey: string;
-    authDomain: string;
-    projectId: string;
-    storageBucket: string;
-    messagingSenderId: string;
-    appId: string;
-    vapidKey: string;
-  };
-  serviceWorkerEnabled: boolean;
-  testMode: boolean;
-  allowedDomains: string[];
-}
-
-interface ServiceWorkerStatus {
-  registered: boolean;
-  active: boolean;
-  scope: string;
-  version: string;
-}
+import {
+  useGetPushSettingsQuery,
+  useUpdatePushSettingsMutation,
+  useTestPushNotificationMutation,
+  useGetPushSubscriptionsQuery,
+  type PushSettings,
+} from '../../api/pushSettings.api';
 
 export const PushSettingsPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
   
-  const [settings, setSettings] = useState<PushSettings>({
+  // API хуки
+  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useGetPushSettingsQuery();
+  const { data: subscriptionsData, isLoading: subscriptionsLoading } = useGetPushSubscriptionsQuery();
+  const [updateSettings, { isLoading: updating }] = useUpdatePushSettingsMutation();
+  const [testNotification, { isLoading: testLoading }] = useTestPushNotificationMutation();
+  
+  // Локальное состояние
+  const [settings, setSettings] = useState<Partial<PushSettings>>({
     enabled: false,
-    firebaseConfig: {
-      apiKey: '',
-      authDomain: '',
-      projectId: '',
-      storageBucket: '',
-      messagingSenderId: '',
-      appId: '',
-      vapidKey: '',
-    },
-    serviceWorkerEnabled: false,
-    testMode: false,
-    allowedDomains: ['localhost:3008', 'tire-service.com'],
+    firebase_api_key: '',
+    firebase_project_id: '',
+    firebase_app_id: '',
+    service_worker_enabled: false,
+    test_mode: false,
+    daily_limit: 1000,
+    rate_limit_per_minute: 60,
   });
   
-  const [swStatus, setSwStatus] = useState<ServiceWorkerStatus>({
-    registered: false,
-    active: false,
-    scope: '',
-    version: '',
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [testLoading, setTestLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [subscriptionsDialog, setSubscriptionsDialog] = useState(false);
 
-  // Проверка статуса Service Worker
+  // Обновление локального состояния при загрузке данных
   useEffect(() => {
-    checkServiceWorkerStatus();
-  }, []);
-
-  const checkServiceWorkerStatus = async () => {
-    if ('serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          setSwStatus({
-            registered: true,
-            active: !!registration.active,
-            scope: registration.scope,
-            version: 'v1.0.0', // Можно получить из SW
-          });
-        }
-      } catch (error) {
-        console.error('Ошибка проверки Service Worker:', error);
-      }
+    if (settingsData?.push_settings) {
+      const apiSettings = settingsData.push_settings;
+      setSettings({
+        enabled: apiSettings.enabled,
+        firebase_api_key: apiSettings.firebase_api_key,
+        firebase_project_id: apiSettings.firebase_project_id,
+        firebase_app_id: apiSettings.firebase_app_id,
+        service_worker_enabled: apiSettings.service_worker_enabled,
+        test_mode: apiSettings.test_mode,
+        daily_limit: apiSettings.daily_limit,
+        rate_limit_per_minute: apiSettings.rate_limit_per_minute,
+      });
     }
-  };
+  }, [settingsData]);
 
   const handleSettingChange = (field: keyof PushSettings, value: any) => {
     setSettings(prev => ({
@@ -115,78 +98,63 @@ export const PushSettingsPage: React.FC = () => {
     }));
   };
 
-  const handleFirebaseConfigChange = (field: keyof PushSettings['firebaseConfig'], value: string) => {
-    setSettings(prev => ({
-      ...prev,
-      firebaseConfig: {
-        ...prev.firebaseConfig,
-        [field]: value
-      }
-    }));
-  };
-
   const handleSave = async () => {
-    setLoading(true);
     setSaveSuccess(false);
     
     try {
-      // Здесь будет API вызов для сохранения настроек
-      // await saveNotificationSettings(settings);
-      
-      // Имитация задержки
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await updateSettings(settings).unwrap();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
       console.error('Ошибка сохранения настроек:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleTestNotification = async () => {
-    setTestLoading(true);
     setTestResult(null);
     
     try {
-      // Проверяем разрешения
-      if (!('Notification' in window)) {
-        setTestResult('Браузер не поддерживает уведомления');
-        return;
-      }
-
-      let permission = Notification.permission;
-      if (permission === 'default') {
-        permission = await Notification.requestPermission();
-      }
-
-      if (permission === 'granted') {
-        // Отправляем тестовое уведомление
-        new Notification('Тестове повідомлення', {
-          body: 'Система push-сповіщень працює коректно!',
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
-        });
-        setTestResult('Тестове повідомлення надіслано успішно!');
+      const result = await testNotification().unwrap();
+      
+      if (result.success) {
+        setTestResult(`✅ ${result.message}`);
       } else {
-        setTestResult('Дозвіл на сповіщення не надано');
+        setTestResult(`❌ ${result.message}`);
       }
-    } catch (error) {
-      setTestResult(`Помилка: ${error}`);
-    } finally {
-      setTestLoading(false);
+    } catch (error: any) {
+      setTestResult(`❌ Ошибка: ${error.data?.message || error.message}`);
     }
   };
 
-  const getStatusChip = (status: boolean, trueLabel: string, falseLabel: string) => (
+  const getStatusChip = (status: boolean, trueLabel: string, falseLabel: string, color?: 'success' | 'error' | 'warning') => (
     <Chip
       icon={status ? <CheckIcon /> : <ErrorIcon />}
       label={status ? trueLabel : falseLabel}
-      color={status ? 'success' : 'error'}
+      color={color || (status ? 'success' : 'error')}
       size="small"
     />
   );
+
+  if (settingsLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (settingsError) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
+          Ошибка загрузки настроек Push уведомлений
+        </Alert>
+      </Box>
+    );
+  }
+
+  const statistics = settingsData?.statistics;
+  const serviceWorkerStatus = settingsData?.service_worker_status;
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -199,7 +167,7 @@ export const PushSettingsPage: React.FC = () => {
           </Typography>
         </Box>
         <Typography variant="body2" color="text.secondary">
-          Управление Firebase конфигурацией и Service Worker для push уведомлений
+          Управление VAPID конфигурацией и Service Worker для push уведомлений
         </Typography>
       </Box>
 
@@ -222,24 +190,49 @@ export const PushSettingsPage: React.FC = () => {
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2">Push уведомления:</Typography>
-                    {getStatusChip(settings.enabled, 'Включены', 'Отключены')}
+                    {getStatusChip(settings.enabled || false, 'Включены', 'Отключены')}
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2">Service Worker:</Typography>
-                    {getStatusChip(swStatus.registered, 'Зарегистрирован', 'Не зарегистрирован')}
+                    {getStatusChip(serviceWorkerStatus?.service_worker_file_exists || false, 'Настроен', 'Не настроен')}
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="body2">Firebase:</Typography>
-                    {getStatusChip(!!settings.firebaseConfig.projectId, 'Настроен', 'Не настроен')}
+                    <Typography variant="body2">VAPID ключи:</Typography>
+                    {getStatusChip(serviceWorkerStatus?.vapid_configured || false, 'Настроены', 'Не настроены')}
                   </Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="body2">Тестовый режим:</Typography>
-                    {getStatusChip(settings.testMode, 'Включен', 'Отключен')}
+                    {getStatusChip(settings.test_mode || false, 'Включен', 'Отключен', 'warning')}
                   </Box>
                 </Grid>
               </Grid>
+              
+              {statistics && (
+                <Box sx={{ mt: 2 }}>
+                  <Divider sx={{ mb: 2 }} />
+                  <Typography variant="h6" gutterBottom>Статистика</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">Подписок:</Typography>
+                      <Typography variant="h6">{statistics.total_subscriptions}</Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">Активных:</Typography>
+                      <Typography variant="h6" color="success.main">{statistics.active_subscriptions}</Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">Отправлено:</Typography>
+                      <Typography variant="h6">{statistics.total_sent}</Typography>
+                    </Grid>
+                    <Grid item xs={6} sm={3}>
+                      <Typography variant="body2" color="text.secondary">Успешность:</Typography>
+                      <Typography variant="h6" color="primary.main">{statistics.success_rate}%</Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>
@@ -255,7 +248,7 @@ export const PushSettingsPage: React.FC = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.enabled}
+                    checked={settings.enabled || false}
                     onChange={(e) => handleSettingChange('enabled', e.target.checked)}
                   />
                 }
@@ -266,8 +259,8 @@ export const PushSettingsPage: React.FC = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.serviceWorkerEnabled}
-                    onChange={(e) => handleSettingChange('serviceWorkerEnabled', e.target.checked)}
+                    checked={settings.service_worker_enabled || false}
+                    onChange={(e) => handleSettingChange('service_worker_enabled', e.target.checked)}
                   />
                 }
                 label="Использовать Service Worker"
@@ -277,12 +270,32 @@ export const PushSettingsPage: React.FC = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={settings.testMode}
-                    onChange={(e) => handleSettingChange('testMode', e.target.checked)}
+                    checked={settings.test_mode || false}
+                    onChange={(e) => handleSettingChange('test_mode', e.target.checked)}
                   />
                 }
                 label="Тестовый режим"
                 sx={{ mb: 2 }}
+              />
+
+              <TextField
+                fullWidth
+                label="Лимит уведомлений в день"
+                type="number"
+                value={settings.daily_limit || 1000}
+                onChange={(e) => handleSettingChange('daily_limit', parseInt(e.target.value))}
+                sx={{ mb: 2 }}
+                size="small"
+              />
+
+              <TextField
+                fullWidth
+                label="Лимит в минуту"
+                type="number"
+                value={settings.rate_limit_per_minute || 60}
+                onChange={(e) => handleSettingChange('rate_limit_per_minute', parseInt(e.target.value))}
+                sx={{ mb: 2 }}
+                size="small"
               />
 
               <Divider sx={{ my: 2 }} />
@@ -293,13 +306,23 @@ export const PushSettingsPage: React.FC = () => {
                 onClick={handleTestNotification}
                 disabled={testLoading || !settings.enabled}
                 fullWidth
+                sx={{ mb: 2 }}
               >
                 {testLoading ? 'Отправка...' : 'Отправить тестовое уведомление'}
               </Button>
 
+              <Button
+                variant="outlined"
+                startIcon={<SubscriptionsIcon />}
+                onClick={() => setSubscriptionsDialog(true)}
+                fullWidth
+              >
+                Просмотр подписок ({statistics?.total_subscriptions || 0})
+              </Button>
+
               {testResult && (
                 <Alert 
-                  severity={testResult.includes('успішно') ? 'success' : 'warning'} 
+                  severity={testResult.includes('✅') ? 'success' : 'error'} 
                   sx={{ mt: 2 }}
                 >
                   {testResult}
@@ -309,78 +332,65 @@ export const PushSettingsPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Firebase конфигурация */}
+        {/* Firebase/VAPID конфигурация */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardHeader 
-              title="Firebase конфигурация"
+              title="Конфигурация уведомлений"
               avatar={<FirebaseIcon />}
             />
             <CardContent>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                VAPID ключи настраиваются через переменные окружения сервера
+              </Alert>
+              
               <TextField
                 fullWidth
-                label="API Key"
-                value={settings.firebaseConfig.apiKey}
-                onChange={(e) => handleFirebaseConfigChange('apiKey', e.target.value)}
+                label="Firebase API Key (опционально)"
+                value={settings.firebase_api_key || ''}
+                onChange={(e) => handleSettingChange('firebase_api_key', e.target.value)}
                 type="password"
                 sx={{ mb: 2 }}
                 size="small"
+                helperText="Для интеграции с Firebase Cloud Messaging"
               />
               
               <TextField
                 fullWidth
-                label="Auth Domain"
-                value={settings.firebaseConfig.authDomain}
-                onChange={(e) => handleFirebaseConfigChange('authDomain', e.target.value)}
+                label="Firebase Project ID (опционально)"
+                value={settings.firebase_project_id || ''}
+                onChange={(e) => handleSettingChange('firebase_project_id', e.target.value)}
                 sx={{ mb: 2 }}
                 size="small"
               />
               
               <TextField
                 fullWidth
-                label="Project ID"
-                value={settings.firebaseConfig.projectId}
-                onChange={(e) => handleFirebaseConfigChange('projectId', e.target.value)}
+                label="Firebase App ID (опционально)"
+                value={settings.firebase_app_id || ''}
+                onChange={(e) => handleSettingChange('firebase_app_id', e.target.value)}
                 sx={{ mb: 2 }}
                 size="small"
               />
+
+              <Divider sx={{ my: 2 }} />
               
-              <TextField
-                fullWidth
-                label="Storage Bucket"
-                value={settings.firebaseConfig.storageBucket}
-                onChange={(e) => handleFirebaseConfigChange('storageBucket', e.target.value)}
-                sx={{ mb: 2 }}
-                size="small"
-              />
-              
-              <TextField
-                fullWidth
-                label="Messaging Sender ID"
-                value={settings.firebaseConfig.messagingSenderId}
-                onChange={(e) => handleFirebaseConfigChange('messagingSenderId', e.target.value)}
-                sx={{ mb: 2 }}
-                size="small"
-              />
-              
-              <TextField
-                fullWidth
-                label="App ID"
-                value={settings.firebaseConfig.appId}
-                onChange={(e) => handleFirebaseConfigChange('appId', e.target.value)}
-                sx={{ mb: 2 }}
-                size="small"
-              />
-              
-              <TextField
-                fullWidth
-                label="VAPID Key"
-                value={settings.firebaseConfig.vapidKey}
-                onChange={(e) => handleFirebaseConfigChange('vapidKey', e.target.value)}
-                type="password"
-                sx={{ mb: 2 }}
-                size="small"
-              />
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Текущий VAPID Public Key:
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontFamily: 'monospace', 
+                  fontSize: '0.75rem',
+                  wordBreak: 'break-all',
+                  backgroundColor: theme.palette.grey[100],
+                  p: 1,
+                  borderRadius: 1
+                }}
+              >
+                {settingsData?.vapid_public_key || 'Не настроен'}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -389,55 +399,103 @@ export const PushSettingsPage: React.FC = () => {
         <Grid item xs={12}>
           <Card>
             <CardHeader 
-              title="Service Worker информация"
+              title="Service Worker статус"
               avatar={<ServiceWorkerIcon />}
             />
             <CardContent>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="body2" color="text.secondary">Статус:</Typography>
-                  <Typography variant="body1">
-                    {swStatus.active ? 'Активен' : 'Неактивен'}
-                  </Typography>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">VAPID настроен:</Typography>
+                    {getStatusChip(serviceWorkerStatus?.vapid_configured || false, 'Да', 'Нет')}
+                  </Box>
                 </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="body2" color="text.secondary">Область:</Typography>
-                  <Typography variant="body1" sx={{ wordBreak: 'break-all' }}>
-                    {swStatus.scope || 'Не определена'}
-                  </Typography>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">SW файл:</Typography>
+                    {getStatusChip(serviceWorkerStatus?.service_worker_file_exists || false, 'Есть', 'Отсутствует')}
+                  </Box>
                 </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Typography variant="body2" color="text.secondary">Версия:</Typography>
-                  <Typography variant="body1">
-                    {swStatus.version || 'Неизвестна'}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={checkServiceWorkerStatus}
-                  >
-                    Обновить статус
-                  </Button>
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">Manifest:</Typography>
+                    {getStatusChip(serviceWorkerStatus?.manifest_configured || false, 'Настроен', 'Не настроен')}
+                  </Box>
                 </Grid>
               </Grid>
+
+              {!serviceWorkerStatus?.vapid_configured && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  Для работы Push уведомлений необходимо настроить VAPID ключи в переменных окружения сервера:
+                  <br />• VAPID_PUBLIC_KEY
+                  <br />• VAPID_PRIVATE_KEY
+                  <br />• VAPID_SUBJECT (опционально)
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Кнопки действий */}
       <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : <SettingsIcon />}
+          disabled={updating}
+          startIcon={updating ? <CircularProgress size={20} /> : <SettingsIcon />}
         >
-          {loading ? 'Сохранение...' : 'Сохранить настройки'}
+          {updating ? 'Сохранение...' : 'Сохранить настройки'}
         </Button>
       </Box>
+
+      {/* Диалог подписок */}
+      <Dialog open={subscriptionsDialog} onClose={() => setSubscriptionsDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Push подписки пользователей</DialogTitle>
+        <DialogContent>
+          {subscriptionsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : subscriptionsData?.subscriptions?.length ? (
+            <List>
+              {subscriptionsData.subscriptions.map((subscription) => (
+                <ListItem key={subscription.id} divider>
+                  <ListItemText
+                    primary={`${subscription.user_name} (${subscription.user_email})`}
+                    secondary={
+                      <Box>
+                        <Typography variant="caption" display="block">
+                          {subscription.browser} • {subscription.status}
+                        </Typography>
+                        <Typography variant="caption" display="block">
+                          Отправлено: {subscription.notifications_sent} • Успешность: {subscription.success_rate}%
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {subscription.endpoint}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                  <ListItemSecondaryAction>
+                    <Chip
+                      size="small"
+                      label={subscription.status}
+                      color={subscription.is_active ? 'success' : 'default'}
+                    />
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography color="text.secondary" align="center" sx={{ p: 3 }}>
+              Нет активных подписок
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSubscriptionsDialog(false)}>Закрыть</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
