@@ -104,6 +104,25 @@ export const PushSettingsPage: React.FC = () => {
   const handleSave = async () => {
     setSaveSuccess(false);
     
+    // Валидация VAPID ключей
+    const vapidPublicKeyRegex = /^[A-Za-z0-9_-]{87}=$/;
+    const vapidPrivateKeyRegex = /^[A-Za-z0-9_-]{42}=$/;
+    
+    const validationErrors = [];
+    
+    if (settings.vapid_public_key && !vapidPublicKeyRegex.test(settings.vapid_public_key)) {
+      validationErrors.push('VAPID Public Key должен быть в формате Base64 (87 символов + =)');
+    }
+    
+    if (settings.vapid_private_key && !vapidPrivateKeyRegex.test(settings.vapid_private_key)) {
+      validationErrors.push('VAPID Private Key должен быть в формате Base64 (42 символа + =)');
+    }
+    
+    if (validationErrors.length > 0) {
+      alert('Ошибки валидации:\n' + validationErrors.join('\n'));
+      return;
+    }
+    
     try {
       // Подготавливаем данные для отправки, исключая пустые значения
       const dataToSend = { ...settings };
@@ -134,8 +153,14 @@ export const PushSettingsPage: React.FC = () => {
       console.error('❌ Детали ошибки:', {
         status: error?.status,
         data: error?.data,
-        message: error?.message
+        message: error?.message,
+        errors: error?.data?.errors
       });
+      
+      // Показываем ошибки валидации пользователю
+      if (error?.data?.errors) {
+        alert('Ошибки валидации:\n' + error.data.errors.join('\n'));
+      }
     }
   };
 
@@ -159,15 +184,21 @@ export const PushSettingsPage: React.FC = () => {
     // Генерируем VAPID ключи (в реальном приложении это должно делаться на сервере)
     // Для демонстрации используем фиктивные ключи в правильном формате Base64
     
-    // Генерируем публичный ключ (88 символов, начинается с 'B')
-    const randomBytes1 = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
-    const publicKeyBase = btoa(String.fromCharCode(66, ...randomBytes1.slice(0, 31))); // B + 31 байт
-    const publicKey = publicKeyBase.substring(0, 87) + '=';
+    // Генерируем публичный ключ (87 символов + '=' = 88 символов)
+    // Используем Base64 URL-safe символы: A-Z, a-z, 0-9, -, _
+    const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    let publicKey = 'B'; // VAPID public key всегда начинается с 'B'
+    for (let i = 1; i < 87; i++) {
+      publicKey += base64Chars.charAt(Math.floor(Math.random() * base64Chars.length));
+    }
+    publicKey += '=';
     
-    // Генерируем приватный ключ (43 символа)
-    const randomBytes2 = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
-    const privateKeyBase = btoa(String.fromCharCode(...randomBytes2));
-    const privateKey = privateKeyBase.substring(0, 42) + '=';
+    // Генерируем приватный ключ (42 символа + '=' = 43 символа)
+    let privateKey = '';
+    for (let i = 0; i < 42; i++) {
+      privateKey += base64Chars.charAt(Math.floor(Math.random() * base64Chars.length));
+    }
+    privateKey += '=';
     
     setSettings(prev => ({
       ...prev,
