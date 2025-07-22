@@ -1,0 +1,704 @@
+    🚀 Улучшения системы настроек:
+    - Обновлены типы API для поддержки VAPID ключей из БД
+    - Поля ввода VAPID ключей в PushSettingsPage
+    - Маскированный вывод приватных ключей
+    - Обновленные статусы и валидация
+    - Убрана зависимость от переменных окружения
+    
+    ✨ Функциональность PWA:
+    - Определение платформы (Android/iOS/Desktop)
+    - Инструкции по установке для каждой платформы
+    - Список преимуществ установки PWA
+    - Обработка события beforeinstallprompt
+    
+    🎯 Результат:
+    ✅ Полное восстановление функциональности
+    ✅ Настройка Push через веб-интерфейс
+    ✅ Улучшенный UX для пользователей
+    ✅ Готовность к продакшену
+    
+    Связанный backend коммит: 052e961
+
+diff --git a/external-files/testing/test_push_notifications_complete.html b/external-files/testing/test_push_notifications_complete.html
+new file mode 100644
+index 0000000..d4bbd7b
+--- /dev/null
++++ b/external-files/testing/test_push_notifications_complete.html
+@@ -0,0 +1,676 @@
++<!DOCTYPE html>
++<html lang="ru">
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>Тест Push уведомлений - Полная система</title>
++    <style>
++        body {
++            font-family: Arial, sans-serif;
++            max-width: 1200px;
++            margin: 0 auto;
++            padding: 20px;
++            background-color: #f5f5f5;
++        }
++        .test-section {
++            background: white;
++            margin: 20px 0;
++            padding: 20px;
++            border-radius: 8px;
++            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
++        }
++        .test-button {
++            background: #1976d2;
++            color: white;
++            border: none;
++            padding: 10px 20px;
++            border-radius: 4px;
++            cursor: pointer;
++            margin: 5px;
++        }
++        .test-button:hover {
++            background: #1565c0;
++        }
++        .success { color: #2e7d32; }
++        .error { color: #d32f2f; }
++        .warning { color: #f57c00; }
++        .info { color: #1976d2; }
++        .result {
++            margin: 10px 0;
++            padding: 10px;
++            border-radius: 4px;
++            border-left: 4px solid #ccc;
++        }
++        .result.success { border-color: #4caf50; background: #e8f5e9; }
++        .result.error { border-color: #f44336; background: #ffebee; }
++        .result.warning { border-color: #ff9800; background: #fff3e0; }
++        .result.info { border-color: #2196f3; background: #e3f2fd; }
++        
++        .status-grid {
++            display: grid;
++            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
++            gap: 10px;
++            margin: 15px 0;
++        }
++        .status-item {
++            padding: 10px;
++            border: 1px solid #ddd;
++            border-radius: 4px;
++            text-align: center;
++        }
++        .json-display {
++            background: #f8f8f8;
++            border: 1px solid #ddd;
++            padding: 10px;
++            border-radius: 4px;
++            white-space: pre-wrap;
++            font-family: monospace;
++            font-size: 12px;
++            max-height: 300px;
++            overflow-y: auto;
++        }
++    </style>
++</head>
++<body>
++    <h1>🔔 Тест Push уведомлений - Полная система</h1>
++    <p>Комплексное тестирование системы Push уведомлений после интеграции PushSubscriptionManager</p>
++
++    <!-- 1. Проверка поддержки браузера -->
++    <div class="test-section">
++        <h2>1. Проверка поддержки браузера</h2>
++        <div class="status-grid">
++            <div class="status-item">
++                <strong>Service Worker:</strong>
++                <div id="sw-support">Проверяется...</div>
++            </div>
++            <div class="status-item">
++                <strong>Push API:</strong>
++                <div id="push-support">Проверяется...</div>
++            </div>
++            <div class="status-item">
++                <strong>Notifications:</strong>
++                <div id="notification-support">Проверяется...</div>
++            </div>
++            <div class="status-item">
++                <strong>HTTPS:</strong>
++                <div id="https-support">Проверяется...</div>
++            </div>
++        </div>
++        <button class="test-button" onclick="checkBrowserSupport()">🔍 Проверить поддержку</button>
++        <div id="support-result"></div>
++    </div>
++
++    <!-- 2. Статус разрешений -->
++    <div class="test-section">
++        <h2>2. Статус разрешений уведомлений</h2>
++        <div id="permission-status">Проверяется...</div>
++        <button class="test-button" onclick="requestNotificationPermission()">📱 Запросить разрешение</button>
++        <div id="permission-result"></div>
++    </div>
++
++    <!-- 3. Тест backend API -->
++    <div class="test-section">
++        <h2>3. Тест Backend API</h2>
++        <button class="test-button" onclick="testPushSettings()">⚙️ GET Push Settings</button>
++        <button class="test-button" onclick="testNotificationAPI()">🧪 Тест уведомления (API)</button>
++        <button class="test-button" onclick="testVapidKeys()">🔑 Проверить VAPID ключи</button>
++        <div id="api-result"></div>
++    </div>
++
++    <!-- 4. Service Worker -->
++    <div class="test-section">
++        <h2>4. Service Worker</h2>
++        <button class="test-button" onclick="registerServiceWorker()">📄 Зарегистрировать SW</button>
++        <button class="test-button" onclick="checkServiceWorkerStatus()">📊 Статус SW</button>
++        <button class="test-button" onclick="unregisterServiceWorker()">🗑️ Удалить SW</button>
++        <div id="sw-result"></div>
++    </div>
++
++    <!-- 5. Push подписка -->
++    <div class="test-section">
++        <h2>5. Push подписка</h2>
++        <button class="test-button" onclick="subscribeToPush()">✅ Подписаться</button>
++        <button class="test-button" onclick="unsubscribeFromPush()">❌ Отписаться</button>
++        <button class="test-button" onclick="checkSubscriptionStatus()">📋 Статус подписки</button>
++        <div id="subscription-result"></div>
++    </div>
++
++    <!-- 6. Тестовые уведомления -->
++    <div class="test-section">
++        <h2>6. Тестовые уведомления</h2>
++        <button class="test-button" onclick="sendLocalNotification()">🔔 Локальное уведомление</button>
++        <button class="test-button" onclick="sendPushFromServer()">🌐 Push от сервера</button>
++        <button class="test-button" onclick="sendTestMessage()">💬 Тестовое сообщение SW</button>
++        <div id="notification-result"></div>
++    </div>
++
++    <!-- 7. Диагностика -->
++    <div class="test-section">
++        <h2>7. Диагностика системы</h2>
++        <button class="test-button" onclick="runFullDiagnostics()">🔍 Полная диагностика</button>
++        <button class="test-button" onclick="exportConfiguration()">📤 Экспорт конфигурации</button>
++        <div id="diagnostics-result"></div>
++    </div>
++
++    <script>
++        // Глобальные переменные
++        let currentSubscription = null;
++        let serviceWorkerRegistration = null;
++        const API_BASE = 'http://localhost:8000/api/v1';
++        
++        // Утилиты для вывода результатов
++        function showResult(elementId, message, type = 'info') {
++            const element = document.getElementById(elementId);
++            element.innerHTML = `<div class="result ${type}">${message}</div>`;
++        }
++        
++        function appendResult(elementId, message, type = 'info') {
++            const element = document.getElementById(elementId);
++            element.innerHTML += `<div class="result ${type}">${message}</div>`;
++        }
++
++        // 1. Проверка поддержки браузера
++        function checkBrowserSupport() {
++            const swSupport = 'serviceWorker' in navigator;
++            const pushSupport = 'PushManager' in window;
++            const notificationSupport = 'Notification' in window;
++            const httpsSupport = location.protocol === 'https:' || location.hostname === 'localhost';
++            
++            document.getElementById('sw-support').innerHTML = swSupport ? 
++                '<span class="success">✅ Поддерживается</span>' : 
++                '<span class="error">❌ Не поддерживается</span>';
++                
++            document.getElementById('push-support').innerHTML = pushSupport ? 
++                '<span class="success">✅ Поддерживается</span>' : 
++                '<span class="error">❌ Не поддерживается</span>';
++                
++            document.getElementById('notification-support').innerHTML = notificationSupport ? 
++                '<span class="success">✅ Поддерживается</span>' : 
++                '<span class="error">❌ Не поддерживается</span>';
++                
++            document.getElementById('https-support').innerHTML = httpsSupport ? 
++                '<span class="success">✅ HTTPS/localhost</span>' : 
++                '<span class="error">❌ Требуется HTTPS</span>';
++
++            const allSupported = swSupport && pushSupport && notificationSupport && httpsSupport;
++            showResult('support-result', 
++                allSupported ? 
++                    '✅ Браузер полностью поддерживает Push уведомления!' : 
++                    '⚠️ Браузер не поддерживает некоторые функции Push уведомлений',
++                allSupported ? 'success' : 'warning'
++            );
++        }
++
++        // 2. Статус разрешений
++        function updatePermissionStatus() {
++            const permission = Notification.permission;
++            let status = '';
++            let className = '';
++            
++            switch(permission) {
++                case 'granted':
++                    status = '✅ Разрешены';
++                    className = 'success';
++                    break;
++                case 'denied':
++                    status = '❌ Запрещены';
++                    className = 'error';
++                    break;
++                case 'default':
++                    status = '⏳ Не запрошены';
++                    className = 'warning';
++                    break;
++            }
++            
++            document.getElementById('permission-status').innerHTML = 
++                `<span class="${className}">${status}</span>`;
++        }
++
++        async function requestNotificationPermission() {
++            try {
++                const permission = await Notification.requestPermission();
++                updatePermissionStatus();
++                showResult('permission-result', 
++                    `Результат запроса разрешения: ${permission}`, 
++                    permission === 'granted' ? 'success' : 'warning'
++                );
++            } catch (error) {
++                showResult('permission-result', `Ошибка: ${error.message}`, 'error');
++            }
++        }
++
++        // 3. Тест Backend API
++        async function testPushSettings() {
++            try {
++                showResult('api-result', '⏳ Загрузка настроек Push...', 'info');
++                
++                const response = await fetch(`${API_BASE}/push_settings`, {
++                    credentials: 'include',
++                    headers: {
++                        'Content-Type': 'application/json',
++                    }
++                });
++                
++                const data = await response.json();
++                
++                if (response.ok) {
++                    showResult('api-result', 
++                        `✅ Настройки получены:<div class="json-display">${JSON.stringify(data, null, 2)}</div>`, 
++                        'success'
++                    );
++                } else {
++                    showResult('api-result', 
++                        `❌ Ошибка ${response.status}: ${JSON.stringify(data, null, 2)}`, 
++                        'error'
++                    );
++                }
++            } catch (error) {
++                showResult('api-result', `❌ Ошибка сети: ${error.message}`, 'error');
++            }
++        }
++
++        async function testNotificationAPI() {
++            try {
++                showResult('api-result', '⏳ Отправка тестового уведомления...', 'info');
++                
++                const response = await fetch(`${API_BASE}/push_settings/test_notification`, {
++                    method: 'POST',
++                    credentials: 'include',
++                    headers: {
++                        'Content-Type': 'application/json',
++                    }
++                });
++                
++                const data = await response.json();
++                
++                if (response.ok) {
++                    appendResult('api-result', 
++                        `✅ Тест успешен: ${data.message}
++                        ${data.info ? `<div class="json-display">${JSON.stringify(data.info, null, 2)}</div>` : ''}`, 
++                        'success'
++                    );
++                } else {
++                    appendResult('api-result', 
++                        `❌ Ошибка ${response.status}: ${data.message || JSON.stringify(data)}`, 
++                        'error'
++                    );
++                }
++            } catch (error) {
++                appendResult('api-result', `❌ Ошибка сети: ${error.message}`, 'error');
++            }
++        }
++
++        async function testVapidKeys() {
++            try {
++                const response = await fetch(`${API_BASE}/push_settings`, {
++                    credentials: 'include'
++                });
++                const data = await response.json();
++                
++                if (data.vapid_public_key) {
++                    appendResult('api-result', 
++                        `🔑 VAPID Public Key найден: ${data.vapid_public_key.substring(0, 20)}...`, 
++                        'success'
++                    );
++                } else {
++                    appendResult('api-result', '⚠️ VAPID ключи не настроены', 'warning');
++                }
++            } catch (error) {
++                appendResult('api-result', `❌ Ошибка проверки VAPID: ${error.message}`, 'error');
++            }
++        }
++
++        // 4. Service Worker
++        async function registerServiceWorker() {
++            try {
++                showResult('sw-result', '⏳ Регистрация Service Worker...', 'info');
++                
++                serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
++                
++                showResult('sw-result', '✅ Service Worker зарегистрирован успешно!', 'success');
++                
++                // Ждем активации
++                await new Promise((resolve) => {
++                    if (serviceWorkerRegistration.active) {
++                        resolve();
++                    } else {
++                        serviceWorkerRegistration.addEventListener('updatefound', () => {
++                            serviceWorkerRegistration.installing.addEventListener('statechange', (e) => {
++                                if (e.target.state === 'activated') {
++                                    resolve();
++                                }
++                            });
++                        });
++                    }
++                });
++                
++                appendResult('sw-result', '✅ Service Worker активирован!', 'success');
++                
++            } catch (error) {
++                showResult('sw-result', `❌ Ошибка регистрации: ${error.message}`, 'error');
++            }
++        }
++
++        async function checkServiceWorkerStatus() {
++            try {
++                const registration = await navigator.serviceWorker.ready;
++                const status = {
++                    scope: registration.scope,
++                    active: !!registration.active,
++                    installing: !!registration.installing,
++                    waiting: !!registration.waiting,
++                    pushManager: !!registration.pushManager
++                };
++                
++                showResult('sw-result', 
++                    `📊 Статус Service Worker:<div class="json-display">${JSON.stringify(status, null, 2)}</div>`, 
++                    'info'
++                );
++            } catch (error) {
++                showResult('sw-result', `❌ Ошибка проверки: ${error.message}`, 'error');
++            }
++        }
++
++        async function unregisterServiceWorker() {
++            try {
++                const registrations = await navigator.serviceWorker.getRegistrations();
++                for (let registration of registrations) {
++                    await registration.unregister();
++                }
++                showResult('sw-result', '🗑️ Все Service Worker удалены', 'info');
++            } catch (error) {
++                showResult('sw-result', `❌ Ошибка удаления: ${error.message}`, 'error');
++            }
++        }
++
++        // 5. Push подписка
++        async function subscribeToPush() {
++            try {
++                showResult('subscription-result', '⏳ Создание Push подписки...', 'info');
++                
++                if (!serviceWorkerRegistration) {
++                    await registerServiceWorker();
++                }
++                
++                // Получаем VAPID ключ
++                const settingsResponse = await fetch(`${API_BASE}/push_settings`, {
++                    credentials: 'include'
++                });
++                const settings = await settingsResponse.json();
++                
++                if (!settings.vapid_public_key) {
++                    throw new Error('VAPID ключ не найден в настройках');
++                }
++                
++                // Создаем подписку
++                currentSubscription = await serviceWorkerRegistration.pushManager.subscribe({
++                    userVisibleOnly: true,
++                    applicationServerKey: urlBase64ToUint8Array(settings.vapid_public_key)
++                });
++                
++                // Отправляем подписку на сервер
++                const response = await fetch(`${API_BASE}/push_subscriptions`, {
++                    method: 'POST',
++                    credentials: 'include',
++                    headers: {
++                        'Content-Type': 'application/json',
++                    },
++                    body: JSON.stringify({
++                        push_subscription: {
++                            endpoint: currentSubscription.endpoint,
++                            p256dh_key: arrayBufferToBase64(currentSubscription.getKey('p256dh')),
++                            auth_key: arrayBufferToBase64(currentSubscription.getKey('auth')),
++                            user_agent: navigator.userAgent
++                        }
++                    })
++                });
++                
++                const result = await response.json();
++                
++                if (response.ok) {
++                    showResult('subscription-result', 
++                        `✅ Push подписка создана!<div class="json-display">Endpoint: ${currentSubscription.endpoint}</div>`, 
++                        'success'
++                    );
++                } else {
++                    throw new Error(`Ошибка сервера: ${result.message || response.status}`);
++                }
++                
++            } catch (error) {
++                showResult('subscription-result', `❌ Ошибка подписки: ${error.message}`, 'error');
++            }
++        }
++
++        async function checkSubscriptionStatus() {
++            try {
++                const registration = await navigator.serviceWorker.ready;
++                const subscription = await registration.pushManager.getSubscription();
++                
++                if (subscription) {
++                    currentSubscription = subscription;
++                    showResult('subscription-result', 
++                        `✅ Активная подписка найдена:<div class="json-display">Endpoint: ${subscription.endpoint}</div>`, 
++                        'success'
++                    );
++                } else {
++                    showResult('subscription-result', '❌ Активных подписок не найдено', 'warning');
++                }
++            } catch (error) {
++                showResult('subscription-result', `❌ Ошибка проверки: ${error.message}`, 'error');
++            }
++        }
++
++        async function unsubscribeFromPush() {
++            try {
++                if (currentSubscription) {
++                    await currentSubscription.unsubscribe();
++                    currentSubscription = null;
++                    showResult('subscription-result', '✅ Отписка выполнена успешно!', 'success');
++                } else {
++                    showResult('subscription-result', '⚠️ Активных подписок не найдено', 'warning');
++                }
++            } catch (error) {
++                showResult('subscription-result', `❌ Ошибка отписки: ${error.message}`, 'error');
++            }
++        }
++
++        // 6. Тестовые уведомления
++        function sendLocalNotification() {
++            if (Notification.permission === 'granted') {
++                const notification = new Notification('Тестовое уведомление', {
++                    body: 'Это локальное браузерное уведомление',
++                    icon: '/favicon.ico',
++                    tag: 'test-local'
++                });
++                
++                notification.onclick = () => {
++                    window.focus();
++                    notification.close();
++                };
++                
++                showResult('notification-result', '✅ Локальное уведомление отправлено!', 'success');
++            } else {
++                showResult('notification-result', '❌ Разрешения на уведомления не предоставлены', 'error');
++            }
++        }
++
++        async function sendPushFromServer() {
++            try {
++                if (!currentSubscription) {
++                    throw new Error('Сначала создайте Push подписку');
++                }
++                
++                showResult('notification-result', '⏳ Отправка Push уведомления с сервера...', 'info');
++                
++                const response = await fetch(`${API_BASE}/push_settings/test_notification`, {
++                    method: 'POST',
++                    credentials: 'include',
++                    headers: {
++                        'Content-Type': 'application/json',
++                    }
++                });
++                
++                const result = await response.json();
++                
++                if (response.ok) {
++                    appendResult('notification-result', `✅ Push уведомление отправлено: ${result.message}`, 'success');
++                } else {
++                    appendResult('notification-result', `❌ Ошибка: ${result.message}`, 'error');
++                }
++                
++            } catch (error) {
++                appendResult('notification-result', `❌ Ошибка: ${error.message}`, 'error');
++            }
++        }
++
++        async function sendTestMessage() {
++            try {
++                const registration = await navigator.serviceWorker.ready;
++                
++                if (registration.active) {
++                    registration.active.postMessage({
++                        type: 'TEST_MESSAGE',
++                        payload: 'Тестовое сообщение от главного потока'
++                    });
++                    
++                    showResult('notification-result', '✅ Тестовое сообщение отправлено в Service Worker', 'success');
++                } else {
++                    throw new Error('Service Worker не активен');
++                }
++            } catch (error) {
++                showResult('notification-result', `❌ Ошибка отправки сообщения: ${error.message}`, 'error');
++            }
++        }
++
++        // 7. Диагностика
++        async function runFullDiagnostics() {
++            showResult('diagnostics-result', '🔍 Запуск полной диагностики...', 'info');
++            
++            const diagnostics = {
++                timestamp: new Date().toISOString(),
++                browser: {
++                    userAgent: navigator.userAgent,
++                    serviceWorkerSupport: 'serviceWorker' in navigator,
++                    pushManagerSupport: 'PushManager' in window,
++                    notificationSupport: 'Notification' in window,
++                    notificationPermission: Notification.permission
++                },
++                environment: {
++                    protocol: location.protocol,
++                    hostname: location.hostname,
++                    port: location.port,
++                    isSecure: location.protocol === 'https:' || location.hostname === 'localhost'
++                },
++                serviceWorker: null,
++                pushSubscription: null,
++                apiConnection: null
++            };
++            
++            // Проверка Service Worker
++            try {
++                const registration = await navigator.serviceWorker.ready;
++                diagnostics.serviceWorker = {
++                    scope: registration.scope,
++                    active: !!registration.active,
++                    pushManagerAvailable: !!registration.pushManager
++                };
++                
++                const subscription = await registration.pushManager.getSubscription();
++                if (subscription) {
++                    diagnostics.pushSubscription = {
++                        endpoint: subscription.endpoint,
++                        hasKeys: !!(subscription.getKey('p256dh') && subscription.getKey('auth'))
++                    };
++                }
++            } catch (error) {
++                diagnostics.serviceWorker = { error: error.message };
++            }
++            
++            // Проверка API
++            try {
++                const response = await fetch(`${API_BASE}/push_settings`, {
++                    credentials: 'include'
++                });
++                diagnostics.apiConnection = {
++                    status: response.status,
++                    ok: response.ok,
++                    hasVapidKey: false
++                };
++                
++                if (response.ok) {
++                    const data = await response.json();
++                    diagnostics.apiConnection.hasVapidKey = !!data.vapid_public_key;
++                }
++            } catch (error) {
++                diagnostics.apiConnection = { error: error.message };
++            }
++            
++            showResult('diagnostics-result', 
++                `🔍 Диагностика завершена:<div class="json-display">${JSON.stringify(diagnostics, null, 2)}</div>`, 
++                'info'
++            );
++        }
++
++        function exportConfiguration() {
++            const config = {
++                timestamp: new Date().toISOString(),
++                apiBase: API_BASE,
++                currentUrl: location.href,
++                notificationPermission: Notification.permission,
++                hasSubscription: !!currentSubscription,
++                subscriptionEndpoint: currentSubscription ? currentSubscription.endpoint : null
++            };
++            
++            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
++            const url = URL.createObjectURL(blob);
++            const a = document.createElement('a');
++            a.href = url;
++            a.download = `push-config-${new Date().toISOString().slice(0, 19)}.json`;
++            a.click();
++            URL.revokeObjectURL(url);
++            
++            showResult('diagnostics-result', '📤 Конфигурация экспортирована в файл', 'success');
++        }
++
++        // Утилиты
++        function urlBase64ToUint8Array(base64String) {
++            const padding = '='.repeat((4 - base64String.length % 4) % 4);
++            const base64 = (base64String + padding)
++                .replace(/\-/g, '+')
++                .replace(/_/g, '/');
++
++            const rawData = window.atob(base64);
++            const outputArray = new Uint8Array(rawData.length);
++
++            for (let i = 0; i < rawData.length; ++i) {
++                outputArray[i] = rawData.charCodeAt(i);
++            }
++            return outputArray;
++        }
++
++        function arrayBufferToBase64(buffer) {
++            const bytes = new Uint8Array(buffer);
++            let binary = '';
++            for (let i = 0; i < bytes.byteLength; i++) {
++                binary += String.fromCharCode(bytes[i]);
++            }
++            return window.btoa(binary);
++        }
++
++        // Инициализация при загрузке страницы
++        window.addEventListener('load', () => {
++            checkBrowserSupport();
++            updatePermissionStatus();
++        });
++
++        // Обработчик сообщений от Service Worker
++        navigator.serviceWorker.addEventListener('message', (event) => {
++            console.log('Сообщение от Service Worker:', event.data);
++            appendResult('notification-result', 
++                `📨 Сообщение от SW: ${JSON.stringify(event.data)}`, 
++                'info'
++            );
++        });
++    </script>
++</body>
++</html> 
+\ No newline at end of file
