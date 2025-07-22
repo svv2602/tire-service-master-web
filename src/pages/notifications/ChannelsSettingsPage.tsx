@@ -20,13 +20,7 @@ import {
   Select,
   MenuItem,
   Slider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
+  Tooltip,
   IconButton,
 } from '@mui/material';
 import {
@@ -34,15 +28,10 @@ import {
   Email as EmailIcon,
   NotificationsActive as PushIcon,
   Telegram as TelegramIcon,
-  Schedule as ScheduleIcon,
   TrendingUp as PriorityIcon,
-  CheckCircle as CheckIcon,
-  Error as ErrorIcon,
-  ExpandMore as ExpandMoreIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon,
   Save as SaveIcon,
+  Restore as RestoreIcon,
+  Info as InfoIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles/components';
@@ -61,26 +50,20 @@ interface ChannelSettings {
   telegram: UpdateChannelSettingRequest;
 }
 
-interface NotificationRule {
-  id: number;
-  name: string;
-  eventType: string;
-  channels: ('email' | 'push' | 'telegram')[];
-  conditions: {
-    userRole?: string[];
-    timeRange?: {
-      start: string;
-      end: string;
-    };
-    priority?: 'low' | 'medium' | 'high' | 'critical';
-  };
-  isActive: boolean;
-}
-
 export const ChannelsSettingsPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // Подсказки для параметров настроек
+  const parameterTooltips = {
+    enabled: "Включает или отключает канал уведомлений. Отключенные каналы не будут использоваться для отправки.",
+    priority: "Определяет порядок отправки уведомлений (1 - высший приоритет). При сбоях система попробует следующий канал по приоритету.",
+    retry_attempts: "Количество повторных попыток отправки при ошибке. Больше попыток = выше надежность, но медленнее обработка сбоев.",
+    retry_delay: "Задержка в минутах между повторными попытками. Оптимально: Email 15 мин, Push 5 мин, Telegram 10 мин.",
+    daily_limit: "Максимальное количество уведомлений в день через этот канал. Защищает от спама и превышения лимитов провайдера.",
+    rate_limit_per_minute: "Максимальное количество уведомлений в минуту. Предотвращает блокировку со стороны провайдера услуг."
+  };
   
   // API хуки
   const { data: channelData, isLoading, error, refetch } = useGetNotificationChannelSettingsQuery();
@@ -93,46 +76,11 @@ export const ChannelsSettingsPage: React.FC = () => {
     telegram: {},
   });
   
-  // Статические правила (можно позже вынести в API)
-  const [rules] = useState<NotificationRule[]>([
-    {
-      id: 1,
-      name: 'Подтверждение бронирования',
-      eventType: 'booking_confirmation',
-      channels: ['email', 'telegram'],
-      conditions: {
-        userRole: ['client'],
-        priority: 'high',
-      },
-      isActive: true,
-    },
-    {
-      id: 2,
-      name: 'Напоминание о записи',
-      eventType: 'booking_reminder',
-      channels: ['push', 'telegram'],
-      conditions: {
-        userRole: ['client'],
-        timeRange: { start: '08:00', end: '22:00' },
-        priority: 'medium',
-      },
-      isActive: true,
-    },
-    {
-      id: 3,
-      name: 'Системные уведомления админам',
-      eventType: 'system_alert',
-      channels: ['email', 'push', 'telegram'],
-      conditions: {
-        userRole: ['admin', 'manager'],
-        priority: 'critical',
-      },
-      isActive: true,
-    },
-  ]);
-  
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [defaultsApplied, setDefaultsApplied] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [zeroValuesApplied, setZeroValuesApplied] = useState(false);
 
   // Инициализация локального состояния при загрузке данных
   React.useEffect(() => {
@@ -177,22 +125,125 @@ export const ChannelsSettingsPage: React.FC = () => {
     setSaveSuccess(false);
     
     try {
-      await bulkUpdateMutation({ settings }).unwrap();
+      const result = await bulkUpdateMutation({ settings }).unwrap();
       
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 5000);
       
       // Обновляем данные
       refetch();
+      
+      console.log('Настройки успешно сохранены:', result);
     } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
-      setSaveError(error?.data?.message || 'Произошла ошибка при сохранении настроек');
+      
+      let errorMessage = 'Произошла ошибка при сохранении настроек';
+      
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.data?.errors) {
+        errorMessage = `Ошибки валидации: ${error.data.errors.join(', ')}`;
+      } else if (error?.message) {
+        errorMessage = `Ошибка сети: ${error.message}`;
+      }
+      
+      setSaveError(errorMessage);
+      setTimeout(() => setSaveError(null), 8000);
     }
   };
 
-  const handleToggleRule = (id: number) => {
-    // Здесь будет логика для правил уведомлений (если понадобится API)
-    console.log('Toggle rule:', id);
+  // Функция для установки оптимальных значений по умолчанию
+  const setDefaultValues = () => {
+    const defaultSettings: ChannelSettings = {
+      email: {
+        enabled: true,
+        priority: 1, // Высший приоритет для важных уведомлений
+        retry_attempts: 3, // 3 попытки для надежности
+        retry_delay: 15, // 15 минут между попытками
+        daily_limit: 1000, // 1000 писем в день - разумный лимит
+        rate_limit_per_minute: 10, // 10 писем в минуту - не перегружаем SMTP
+      },
+      push: {
+        enabled: true,
+        priority: 2, // Второй приоритет - для быстрых уведомлений
+        retry_attempts: 2, // Меньше попыток - push должен быть быстрым
+        retry_delay: 5, // Быстрый повтор для push
+        daily_limit: 2000, // Больше лимит - push дешевле
+        rate_limit_per_minute: 30, // Выше частота - push быстрее
+      },
+      telegram: {
+        enabled: true,
+        priority: 3, // Третий приоритет - дополнительный канал
+        retry_attempts: 3, // 3 попытки для Telegram API
+        retry_delay: 10, // Средняя задержка
+        daily_limit: 1500, // Средний лимит
+        rate_limit_per_minute: 20, // Умеренная частота
+      },
+    };
+    
+    setSettings(defaultSettings);
+    setDefaultsApplied(true);
+    setTimeout(() => setDefaultsApplied(false), 3000);
+  };
+
+  // Функция для сброса к значениям с сервера
+  const resetToServerValues = () => {
+    if (channelData?.settings) {
+      const serverSettings: ChannelSettings = {
+        email: {},
+        push: {},
+        telegram: {},
+      };
+      
+      channelData.settings.forEach((setting: NotificationChannelSetting) => {
+        serverSettings[setting.channel_type as keyof ChannelSettings] = {
+          enabled: setting.enabled,
+          priority: setting.priority,
+          retry_attempts: setting.retry_attempts,
+          retry_delay: setting.retry_delay,
+          daily_limit: setting.daily_limit,
+          rate_limit_per_minute: setting.rate_limit_per_minute,
+        };
+      });
+      
+      setSettings(serverSettings);
+      setResetSuccess(true);
+      setTimeout(() => setResetSuccess(false), 3000);
+    }
+  };
+
+  // Функция для установки всех значений в ноль (отключение всех каналов)
+  const setZeroValues = () => {
+    const zeroSettings: ChannelSettings = {
+      email: {
+        enabled: false,
+        priority: 1,
+        retry_attempts: 0,
+        retry_delay: 0,
+        daily_limit: 0,
+        rate_limit_per_minute: 0,
+      },
+      push: {
+        enabled: false,
+        priority: 1,
+        retry_attempts: 0,
+        retry_delay: 0,
+        daily_limit: 0,
+        rate_limit_per_minute: 0,
+      },
+      telegram: {
+        enabled: false,
+        priority: 1,
+        retry_attempts: 0,
+        retry_delay: 0,
+        daily_limit: 0,
+        rate_limit_per_minute: 0,
+      },
+    };
+    
+    setSettings(zeroSettings);
+    setZeroValuesApplied(true);
+    setTimeout(() => setZeroValuesApplied(false), 3000);
   };
 
   const getChannelIcon = (channel: string) => {
@@ -210,16 +261,6 @@ export const ChannelsSettingsPage: React.FC = () => {
       case 'push': return '#1976d2';
       case 'telegram': return '#0088cc';
       default: return theme.palette.text.secondary;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critical': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'default';
-      default: return 'default';
     }
   };
 
@@ -266,18 +307,6 @@ export const ChannelsSettingsPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {saveSuccess && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Настройки успешно сохранены!
-        </Alert>
-      )}
-
-      {saveError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {saveError}
-        </Alert>
-      )}
-
       <Grid container spacing={3}>
         {/* Статистика каналов */}
         <Grid item xs={12}>
@@ -287,6 +316,12 @@ export const ChannelsSettingsPage: React.FC = () => {
               avatar={<PriorityIcon />}
             />
             <CardContent>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                <Typography variant="body2">
+                  📊 Статистика будет отображаться после начала использования каналов уведомлений. 
+                  Сейчас система находится в стадии настройки.
+                </Typography>
+              </Alert>
               <Grid container spacing={3}>
                 {statistics && Object.entries(statistics).map(([channel, stats]) => (
                   <Grid item xs={12} md={4} key={channel}>
@@ -318,6 +353,12 @@ export const ChannelsSettingsPage: React.FC = () => {
                             {getDeliveryRate((stats as any).sent, (stats as any).delivered)}%
                           </Typography>
                         </Grid>
+                        {channel === 'telegram' && (stats as any).active_subscribers !== undefined && (
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">Подписчиков:</Typography>
+                            <Typography variant="h6" color="info.main">{(stats as any).active_subscribers}</Typography>
+                          </Grid>
+                        )}
                       </Grid>
                     </Box>
                   </Grid>
@@ -336,24 +377,37 @@ export const ChannelsSettingsPage: React.FC = () => {
                 avatar={getChannelIcon(channelKey)}
               />
               <CardContent>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={channelSettings?.enabled || false}
-                      onChange={(e) => handleChannelSettingChange(
-                        channelKey as keyof ChannelSettings,
-                        'enabled',
-                        e.target.checked
-                      )}
-                    />
-                  }
-                  label="Включить канал"
-                  sx={{ mb: 2 }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={channelSettings?.enabled || false}
+                        onChange={(e) => handleChannelSettingChange(
+                          channelKey as keyof ChannelSettings,
+                          'enabled',
+                          e.target.checked
+                        )}
+                      />
+                    }
+                    label="Включить канал"
+                  />
+                  <Tooltip title={parameterTooltips.enabled} arrow>
+                    <IconButton size="small">
+                      <InfoIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
                 
-                <Typography variant="body2" gutterBottom>
-                  Приоритет: {channelSettings?.priority || 1}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Typography variant="body2" gutterBottom>
+                    Приоритет: {channelSettings?.priority || 1}
+                  </Typography>
+                  <Tooltip title={parameterTooltips.priority} arrow>
+                    <IconButton size="small">
+                      <InfoIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
                 <Slider
                   value={channelSettings?.priority || 1}
                   onChange={(_, value) => handleChannelSettingChange(
@@ -382,6 +436,15 @@ export const ChannelsSettingsPage: React.FC = () => {
                   disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title={parameterTooltips.retry_attempts} arrow>
+                        <IconButton size="small">
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
                 
                 <TextField
@@ -397,6 +460,15 @@ export const ChannelsSettingsPage: React.FC = () => {
                   disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title={parameterTooltips.retry_delay} arrow>
+                        <IconButton size="small">
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
                 
                 <TextField
@@ -412,6 +484,15 @@ export const ChannelsSettingsPage: React.FC = () => {
                   disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title={parameterTooltips.daily_limit} arrow>
+                        <IconButton size="small">
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
                 
                 <TextField
@@ -426,138 +507,125 @@ export const ChannelsSettingsPage: React.FC = () => {
                   )}
                   disabled={!channelSettings?.enabled}
                   size="small"
+                  InputProps={{
+                    endAdornment: (
+                      <Tooltip title={parameterTooltips.rate_limit_per_minute} arrow>
+                        <IconButton size="small">
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )
+                  }}
                 />
               </CardContent>
             </Card>
           </Grid>
         ))}
 
-        {/* Правила уведомлений */}
+        {/* Правила уведомлений - временно убрано, будет реализовано позже */}
+        {/* 
         <Grid item xs={12}>
           <Card>
             <CardHeader 
               title="Правила доставки уведомлений"
               avatar={<ScheduleIcon />}
-              action={
-                <Button
-                  startIcon={<AddIcon />}
-                  size="small"
-                  variant="outlined"
-                >
-                  Добавить правило
-                </Button>
-              }
             />
             <CardContent>
-              <List>
-                {rules.map((rule) => (
-                  <Accordion key={rule.id} sx={{ mb: 1 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                          {rule.name}
-                        </Typography>
-                        <Chip 
-                          label={rule.eventType} 
-                          size="small" 
-                          variant="outlined"
-                        />
-                        <Chip 
-                          label={rule.conditions.priority} 
-                          size="small" 
-                          color={getPriorityColor(rule.conditions.priority || 'default') as any}
-                        />
-                        <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-                          {rule.channels.map((channel) => (
-                            <Chip
-                              key={channel}
-                              icon={getChannelIcon(channel)}
-                              label={channel}
-                              size="small"
-                              sx={{ fontSize: '0.7rem' }}
-                            />
-                          ))}
-                        </Box>
-                        <Switch
-                          checked={rule.isActive}
-                          onChange={() => handleToggleRule(rule.id)}
-                          size="small"
-                        />
-                      </Box>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Условия:
-                          </Typography>
-                          <Box sx={{ ml: 2 }}>
-                            {rule.conditions.userRole && (
-                              <Typography variant="body2">
-                                • Роли: {rule.conditions.userRole.join(', ')}
-                              </Typography>
-                            )}
-                            {rule.conditions.timeRange && (
-                              <Typography variant="body2">
-                                • Время: {rule.conditions.timeRange.start} - {rule.conditions.timeRange.end}
-                              </Typography>
-                            )}
-                            {rule.conditions.priority && (
-                              <Typography variant="body2">
-                                • Приоритет: {rule.conditions.priority}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Действия:
-                          </Typography>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Button
-                              size="small"
-                              startIcon={<EditIcon />}
-                              variant="outlined"
-                            >
-                              Редактировать
-                            </Button>
-                            <Button
-                              size="small"
-                              startIcon={<DeleteIcon />}
-                              color="error"
-                              variant="outlined"
-                            >
-                              Удалить
-                            </Button>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </List>
+              <Alert severity="info">
+                Функция правил доставки будет реализована в следующих версиях.
+                Сейчас все уведомления отправляются согласно настройкам каналов выше.
+              </Alert>
             </CardContent>
           </Card>
         </Grid>
+        */}
       </Grid>
 
       {/* Кнопки действий */}
-      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
         <Button
           variant="outlined"
-          onClick={() => window.location.reload()}
+          startIcon={<RestoreIcon />}
+          onClick={setDefaultValues}
+          color="primary"
         >
-          Сбросить
+          Значения по умолчанию
         </Button>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={isSaving}
-          startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
-        >
-          {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
-        </Button>
+        
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={resetToServerValues}
+          >
+            Сбросить изменения
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={setZeroValues}
+          >
+            Отключить все
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={isSaving}
+            startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
+          >
+            {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
+          </Button>
+        </Box>
       </Box>
+
+      {/* Уведомления о результатах действий */}
+      {saveSuccess && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            ✅ Настройки каналов успешно сохранены!
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Все изменения применены и будут использоваться при отправке уведомлений.
+          </Typography>
+        </Alert>
+      )}
+
+      {saveError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+            ❌ Ошибка сохранения настроек
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            {saveError}
+          </Typography>
+        </Alert>
+      )}
+
+      {defaultsApplied && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          <Typography variant="body2">
+            📋 Применены оптимальные значения по умолчанию для всех каналов!
+            <br />
+            <strong>Не забудьте сохранить изменения.</strong>
+          </Typography>
+        </Alert>
+      )}
+
+      {resetSuccess && (
+        <Alert severity="success" sx={{ mt: 2 }}>
+          <Typography variant="body2">
+            🔄 Настройки успешно сброшены к последним сохраненным значениям!
+          </Typography>
+        </Alert>
+      )}
+
+      {zeroValuesApplied && (
+        <Alert severity="warning" sx={{ mt: 2 }}>
+          <Typography variant="body2">
+            ⚠️ Все каналы уведомлений отключены!
+            <br />
+            <strong>Система не будет отправлять уведомления пока вы не включите хотя бы один канал.</strong>
+          </Typography>
+        </Alert>
+      )}
     </Box>
   );
 };
