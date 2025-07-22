@@ -36,6 +36,7 @@ import {
   Send as TestIcon,
   People as SubscriptionsIcon,
   Visibility as ViewIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles/components';
@@ -72,6 +73,7 @@ export const PushSettingsPage: React.FC = () => {
   });
   
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [subscriptionsDialog, setSubscriptionsDialog] = useState(false);
 
@@ -81,9 +83,13 @@ export const PushSettingsPage: React.FC = () => {
       const apiSettings = settingsData.push_settings;
       setSettings({
         enabled: apiSettings.enabled,
-        // Если ключи замаскированы (содержат ***), оставляем поля пустыми для редактирования
-        vapid_public_key: (apiSettings.vapid_public_key?.includes('***') ? '' : apiSettings.vapid_public_key) || '',
-        vapid_private_key: (apiSettings.vapid_private_key?.includes('***') ? '' : apiSettings.vapid_private_key) || '',
+        // Если ключи замаскированы (содержат *** или ... или короче полной длины), оставляем поля пустыми для редактирования
+        vapid_public_key: (apiSettings.vapid_public_key?.includes('***') || 
+                           apiSettings.vapid_public_key?.includes('...') || 
+                           (apiSettings.vapid_public_key && apiSettings.vapid_public_key.length < 88) ? '' : apiSettings.vapid_public_key) || '',
+        vapid_private_key: (apiSettings.vapid_private_key?.includes('***') || 
+                           apiSettings.vapid_private_key?.includes('...') ||
+                           (apiSettings.vapid_private_key && apiSettings.vapid_private_key.length < 43) ? '' : apiSettings.vapid_private_key) || '',
         firebase_api_key: (apiSettings.firebase_api_key?.includes('...') ? '' : apiSettings.firebase_api_key) || '',
         firebase_project_id: apiSettings.firebase_project_id || '',
         firebase_app_id: (apiSettings.firebase_app_id?.includes('...') ? '' : apiSettings.firebase_app_id) || '',
@@ -103,23 +109,31 @@ export const PushSettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     setSaveSuccess(false);
+    setSaveError(null);
     
-    // Валидация VAPID ключей
+    // Валидация VAPID ключей (только если они не сокращенные)
     const vapidPublicKeyRegex = /^[A-Za-z0-9_-]{87}=$/;
     const vapidPrivateKeyRegex = /^[A-Za-z0-9_-]{42}=$/;
     
     const validationErrors = [];
     
-    if (settings.vapid_public_key && !vapidPublicKeyRegex.test(settings.vapid_public_key)) {
+    // Валидируем только если ключ не сокращенный (не содержит ... и имеет правильную длину)
+    if (settings.vapid_public_key && 
+        !settings.vapid_public_key.includes('...') && 
+        settings.vapid_public_key.length >= 50 && // Минимальная длина для проверки
+        !vapidPublicKeyRegex.test(settings.vapid_public_key)) {
       validationErrors.push('VAPID Public Key должен быть в формате Base64 (87 символов + =)');
     }
     
-    if (settings.vapid_private_key && !vapidPrivateKeyRegex.test(settings.vapid_private_key)) {
+    if (settings.vapid_private_key && 
+        !settings.vapid_private_key.includes('...') && 
+        settings.vapid_private_key.length >= 20 && // Минимальная длина для проверки
+        !vapidPrivateKeyRegex.test(settings.vapid_private_key)) {
       validationErrors.push('VAPID Private Key должен быть в формате Base64 (42 символа + =)');
     }
     
     if (validationErrors.length > 0) {
-      alert('Ошибки валидации:\n' + validationErrors.join('\n'));
+      setSaveError('Ошибки валидации: ' + validationErrors.join(', '));
       return;
     }
     
@@ -147,20 +161,22 @@ export const PushSettingsPage: React.FC = () => {
       console.log('🔧 Отправляемые настройки:', dataToSend);
       await updateSettings(dataToSend).unwrap();
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 4000);
     } catch (error: any) {
       console.error('❌ Ошибка сохранения настроек:', error);
-      console.error('❌ Детали ошибки:', {
-        status: error?.status,
-        data: error?.data,
-        message: error?.message,
-        errors: error?.data?.errors
-      });
       
-      // Показываем ошибки валидации пользователю
+      let errorMessage = 'Произошла ошибка при сохранении настроек';
+      
       if (error?.data?.errors) {
-        alert('Ошибки валидации:\n' + error.data.errors.join('\n'));
+        errorMessage = 'Ошибки валидации: ' + error.data.errors.join(', ');
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
+      
+      setSaveError(errorMessage);
+      setTimeout(() => setSaveError(null), 5000);
     }
   };
 
@@ -254,7 +270,13 @@ export const PushSettingsPage: React.FC = () => {
 
       {saveSuccess && (
         <Alert severity="success" sx={{ mb: 3 }}>
-          Настройки успешно сохранены!
+          ✅ Настройки успешно сохранены!
+        </Alert>
+      )}
+
+      {saveError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          ❌ {saveError}
         </Alert>
       )}
 
@@ -265,6 +287,17 @@ export const PushSettingsPage: React.FC = () => {
             <CardHeader 
               title="Статус системы уведомлений"
               avatar={<SettingsIcon />}
+              action={
+                <Button
+                  variant="contained"
+                  onClick={handleSave}
+                  disabled={updating}
+                  startIcon={updating ? <CircularProgress size={20} /> : <SaveIcon />}
+                  size="small"
+                >
+                  {updating ? 'Сохранение...' : 'Сохранить настройки'}
+                </Button>
+              }
             />
             <CardContent>
               <Grid container spacing={2}>
@@ -565,17 +598,6 @@ export const PushSettingsPage: React.FC = () => {
           </Card>
         </Grid>
       </Grid>
-
-      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={updating}
-          startIcon={updating ? <CircularProgress size={20} /> : <SettingsIcon />}
-        >
-          {updating ? 'Сохранение...' : 'Сохранить настройки'}
-        </Button>
-      </Box>
 
       {/* Диалог подписок */}
       <Dialog open={subscriptionsDialog} onClose={() => setSubscriptionsDialog(false)} maxWidth="md" fullWidth>
