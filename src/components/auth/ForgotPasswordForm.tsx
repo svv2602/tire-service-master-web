@@ -243,8 +243,10 @@ export const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               </Typography>
               
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {t('forms.auth.forgot_password.step2.check_email_or_phone', { loginType })}
+                {t(`forms.auth.forgot_password.step2.check_email_or_phone_${loginType}`)}
+                {' '}
                 {t('forms.auth.forgot_password.step2.follow_instructions')}
+                {' '}
                 {t('forms.auth.forgot_password.step2.if_not_received')}
               </Typography>
               
