@@ -287,17 +287,6 @@ export const PushSettingsPage: React.FC = () => {
             <CardHeader 
               title="Статус системы уведомлений"
               avatar={<SettingsIcon />}
-              action={
-                <Button
-                  variant="contained"
-                  onClick={handleSave}
-                  disabled={updating}
-                  startIcon={updating ? <CircularProgress size={20} /> : <SaveIcon />}
-                  size="small"
-                >
-                  {updating ? 'Сохранение...' : 'Сохранить настройки'}
-                </Button>
-              }
             />
             <CardContent>
               <Grid container spacing={2}>
@@ -436,6 +425,42 @@ export const PushSettingsPage: React.FC = () => {
           </Card>
         </Grid>
 
+        {/* Кнопка сохранения настроек */}
+        <Grid item xs={12}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            my: 2,
+            p: 2,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: 2,
+            boxShadow: theme.shadows[2]
+          }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleSave}
+              disabled={updating}
+              startIcon={updating ? <CircularProgress size={24} /> : <SaveIcon />}
+              sx={{
+                px: 4,
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                minWidth: 200,
+                boxShadow: theme.shadows[4],
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                  transform: 'translateY(-1px)'
+                },
+                transition: 'all 0.2s ease-in-out'
+              }}
+            >
+              {updating ? 'Сохранение настроек...' : 'Сохранить настройки'}
+            </Button>
+          </Box>
+        </Grid>
+
         {/* Firebase/VAPID конфигурация */}
         <Grid item xs={12} md={6}>
           <Card>
@@ -453,9 +478,23 @@ export const PushSettingsPage: React.FC = () => {
                 label="VAPID Public Key"
                 value={settings.vapid_public_key || ''}
                 onChange={(e) => handleSettingChange('vapid_public_key', e.target.value)}
+                placeholder={
+                  settingsData?.push_settings?.vapid_public_key ? 
+                  `✅ Сохранен: ${settingsData.push_settings.vapid_public_key}` : 
+                  'Введите или сгенерируйте VAPID Public Key'
+                }
                 sx={{ mb: 2 }}
                 size="small"
-                helperText="Публичный VAPID ключ для Push уведомлений (Base64)"
+                helperText={
+                  settingsData?.push_settings?.vapid_public_key ? 
+                  "✅ VAPID Public Key сохранен в БД. Оставьте пустым для сохранения текущего" : 
+                  "Публичный VAPID ключ для Push уведомлений (Base64, 87 символов + =)"
+                }
+                InputProps={{
+                  endAdornment: settingsData?.push_settings?.vapid_public_key && !settings.vapid_public_key ? (
+                    <CheckIcon color="success" fontSize="small" />
+                  ) : null
+                }}
               />
               
               <TextField
@@ -464,9 +503,23 @@ export const PushSettingsPage: React.FC = () => {
                 value={settings.vapid_private_key || ''}
                 onChange={(e) => handleSettingChange('vapid_private_key', e.target.value)}
                 type="password"
+                placeholder={
+                  settingsData?.push_settings?.vapid_private_key ? 
+                  '✅ Сохранен: ••••••••••••••••••••••••••••••••••••••••••••' : 
+                  'Введите или сгенерируйте VAPID Private Key'
+                }
                 sx={{ mb: 2 }}
                 size="small"
-                helperText="Приватный VAPID ключ (будет замаскирован для безопасности)"
+                helperText={
+                  settingsData?.push_settings?.vapid_private_key ? 
+                  "✅ VAPID Private Key сохранен в БД. Оставьте пустым для сохранения текущего" : 
+                  "Приватный VAPID ключ (Base64, 42 символа + =)"
+                }
+                InputProps={{
+                  endAdornment: settingsData?.push_settings?.vapid_private_key && !settings.vapid_private_key ? (
+                    <CheckIcon color="success" fontSize="small" />
+                  ) : null
+                }}
               />
 
               <Button
@@ -614,17 +667,17 @@ export const PushSettingsPage: React.FC = () => {
                   <ListItemText
                     primary={`${subscription.user_name} (${subscription.user_email})`}
                     secondary={
-                      <Box>
-                        <Typography variant="caption" display="block">
+                      <React.Fragment>
+                        <Typography variant="caption" display="block" component="span">
                           {subscription.browser} • {subscription.status}
                         </Typography>
-                        <Typography variant="caption" display="block">
+                        <Typography variant="caption" display="block" component="span">
                           Отправлено: {subscription.notifications_sent} • Успешность: {subscription.success_rate}%
                         </Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant="caption" color="text.secondary" component="span">
                           {subscription.endpoint}
                         </Typography>
-                      </Box>
+                      </React.Fragment>
                     }
                   />
                   <ListItemSecondaryAction>
