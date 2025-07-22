@@ -28,6 +28,7 @@ import { useGetBookingByIdQuery } from '../../api/bookings.api';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import ThemeToggle from '../../components/ui/ThemeToggle';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const BookingSuccessPage: React.FC = () => {
   const { t } = useTranslation();
@@ -58,23 +59,7 @@ const BookingSuccessPage: React.FC = () => {
   };
   
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
-      <AppBar position="static" sx={{ bgcolor: colors.backgroundCard, boxShadow: 1 }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, color: colors.textPrimary, fontWeight: 700 }}>
-            🚗 Твоя Шина
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button color="inherit" component={Link} to="/client" sx={{ color: colors.textSecondary }}>
-              {t('forms.clientPages.bookingSuccess.breadcrumbHome')}
-            </Button>
-            <ThemeToggle />
-            <Button variant="outlined" component={Link} to="/login" sx={secondaryButtonStyles}>
-              Войти
-            </Button>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <ClientLayout>
 
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ mb: 4 }}>
@@ -213,7 +198,7 @@ const BookingSuccessPage: React.FC = () => {
           </Typography>
         </Paper>
       </Container>
-    </Box>
+    </ClientLayout>
   );
 };
 

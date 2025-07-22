@@ -24,6 +24,7 @@ import {
   Calculate as CalculateIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
+import ClientFooter from './ClientFooter';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -94,7 +95,12 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      bgcolor: colors.backgroundPrimary,
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
       <CustomAppBar
         title="🚗 Твоя Шина"
         onTitleClick={() => navigate('/client')}
@@ -112,11 +118,14 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         component="main" 
         sx={{ 
           pt: { xs: 7, sm: 8 }, // Отступ сверху для фиксированной навигации
-          minHeight: 'calc(100vh - 64px)' // Минимальная высота с учетом AppBar
+          flex: 1, // Занимаем все доступное место
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {children}
       </Box>
+      <ClientFooter />
     </Box>
   );
 };

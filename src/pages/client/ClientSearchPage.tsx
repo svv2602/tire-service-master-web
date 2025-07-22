@@ -48,6 +48,7 @@ import { useTheme } from '@mui/material';
 import { useLocalizedName } from '../../utils/localizationHelpers';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
 import { useGetServiceCategoriesByCityQuery } from '../../api/services.api';
+import ClientLayout from '../../components/client/ClientLayout';
 
 // Интерфейс для сервисной точки из API поиска
 interface SearchServicePoint {
@@ -1083,7 +1084,7 @@ const ClientSearchPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
+    <ClientLayout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
 
         {/* Заголовок результатов */}
@@ -1259,7 +1260,7 @@ const ClientSearchPage: React.FC = () => {
           </>
         )}
       </Container>
-    </Box>
+    </ClientLayout>
   );
 };
 

@@ -398,75 +398,7 @@ const ClientMainPage: React.FC = () => {
           </Container>
         </Box>
 
-        {/* Футер */}
-        <Box sx={{ bgcolor: colors.backgroundCard, py: 4, borderTop: `1px solid ${colors.borderPrimary}` }}>
-          <Container maxWidth="lg">
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                  {footerContent?.title || t('forms.clientPages.mainPage.footerTitle')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                  {footerContent?.content || t('forms.clientPages.mainPage.footerDescription')}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton size="small">
-                    <PhoneIcon />
-                  </IconButton>
-                  <IconButton size="small">
-                    <EmailIcon />
-                  </IconButton>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  {t('forms.clientPages.mainPage.servicesTitle')}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(footerContent?.settings?.services_links || [
-                    t('forms.clientPages.mainPage.services.tireChange'),
-                    t('forms.clientPages.mainPage.services.balancing'),
-                    t('forms.clientPages.mainPage.services.repair')
-                  ]).map((link: string) => (
-                    <Link key={link} to="/client/services" style={{ color: colors.textSecondary, textDecoration: 'none' }}>
-                      {link}
-                    </Link>
-                  ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                  {t('forms.clientPages.mainPage.information')}
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {(footerContent?.settings?.info_links || [
-                    t('forms.clientPages.mainPage.knowledgeBase'), 
-                    t('forms.clientPages.mainPage.personalCabinetButton'), 
-                    t('forms.clientPages.mainPage.forBusiness')
-                  ]).map((link: string, index: number) => {
-                    const routes = ['/knowledge-base', '/client/profile', '/login'];
-                    return (
-                      <Link key={link} to={routes[index]} style={{ color: colors.textSecondary, textDecoration: 'none' }}>
-                        {link}
-                      </Link>
-                    );
-                  })}
-                </Box>
-              </Grid>
-            </Grid>
-            
-            <Box sx={{ 
-              textAlign: 'center', 
-              mt: 4, 
-              pt: 4, 
-              borderTop: `1px solid ${colors.borderPrimary}` 
-            }}>
-              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                {footerContent?.settings?.copyright || t('forms.clientPages.mainPage.copyright')}
-              </Typography>
-            </Box>
-          </Container>
-        </Box>
+
       </Box>
     </ClientLayout>
   );
