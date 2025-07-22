@@ -120,8 +120,8 @@ const MainLayout: React.FC = () => {
     const savedWidth = localStorage.getItem('adminDrawerWidth');
     return savedWidth ? parseInt(savedWidth, 10) : DEFAULT_DRAWER_WIDTH;
   });
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(() => {
-    const savedCollapsed = localStorage.getItem('adminDrawerCollapsed');
+  const [isDrawerHidden, setIsDrawerHidden] = useState(() => {
+    const savedCollapsed = localStorage.getItem('adminDrawerHidden');
     return savedCollapsed === 'true';
   });
   const [isResizing, setIsResizing] = useState(false);
@@ -197,6 +197,13 @@ const MainLayout: React.FC = () => {
     setMobileOpen(!mobileOpen);
   };
 
+  // Функция для управления боковой панелью через гамбургер (показать/скрыть)
+  const handleAdminDrawerToggle = () => {
+    const newHiddenState = !isDrawerHidden;
+    setIsDrawerHidden(newHiddenState);
+    localStorage.setItem('adminDrawerHidden', String(newHiddenState));
+  };
+
   const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAnchorEl(event.currentTarget);
   };
@@ -227,51 +234,11 @@ const MainLayout: React.FC = () => {
 
   // Функция для обработки клика на заголовок секции
   const handleSectionHeaderClick = (section: MenuSection) => {
-    if (isDrawerCollapsed) return;
-    
     // Просто переключаем состояние секции (разворачиваем/сворачиваем)
     toggleSection(section.title);
   };
 
   // Функции управления панелью
-  const toggleDrawerCollapse = () => {
-    setIsDrawerCollapsed(!isDrawerCollapsed);
-    localStorage.setItem('adminDrawerCollapsed', String(!isDrawerCollapsed));
-  };
-
-  // Функции для изменения ширины мышью
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsResizing(true);
-    setStartX(e.clientX);
-    setStartWidth(drawerWidth);
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      
-      const newWidth = startWidth + (e.clientX - startX);
-      if (newWidth >= MIN_DRAWER_WIDTH && newWidth <= MAX_DRAWER_WIDTH) {
-        setDrawerWidth(newWidth);
-        localStorage.setItem('adminDrawerWidth', String(newWidth));
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, startX, startWidth, drawerWidth]);
-
   const collapseAllSections = () => {
     const sections = getMenuSections(t);
     const collapsedSections = sections.reduce((acc, section) => {
@@ -616,7 +583,7 @@ const MainLayout: React.FC = () => {
   };
 
   // Вычисляем текущую ширину панели
-  const currentDrawerWidth = isDrawerCollapsed ? MIN_DRAWER_WIDTH : drawerWidth;
+  const currentDrawerWidth = isDrawerHidden ? 0 : drawerWidth;
 
   const drawer = (
     <Box sx={{ 
@@ -633,7 +600,7 @@ const MainLayout: React.FC = () => {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: isDrawerCollapsed ? MIN_DRAWER_WIDTH : drawerWidth,
+          width: drawerWidth,
           zIndex: 1200,
           background: theme.palette.primary.main,
           color: theme.palette.primary.contrastText,
@@ -650,48 +617,32 @@ const MainLayout: React.FC = () => {
             width: '100%',
           }}
         >
-          {!isDrawerCollapsed && (
-            <Typography 
-              variant="h6" 
-              noWrap 
-              component="div" 
-              sx={{ fontWeight: 'bold' }}
-            >
-              Твоя шина
-            </Typography>
-          )}
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ fontWeight: 'bold' }}
+          >
+            Твоя шина
+          </Typography>
           
           <Box sx={{ display: 'flex', gap: 1 }}>
-            {!isDrawerCollapsed && (
-              <>
-                <Tooltip title="Свернуть все секции">
-                  <IconButton 
-                    onClick={collapseAllSections}
-                    size="small"
-                    sx={{ color: 'inherit' }}
-                  >
-                    <CollapseIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Развернуть все секции">
-                  <IconButton 
-                    onClick={expandAllSections}
-                    size="small"
-                    sx={{ color: 'inherit' }}
-                  >
-                    <ExpandIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </>
-            )}
-            
-            <Tooltip title={isDrawerCollapsed ? "Развернуть панель" : "Свернуть панель"}>
+            <Tooltip title="Свернуть все секции">
               <IconButton 
-                onClick={toggleDrawerCollapse}
+                onClick={collapseAllSections}
                 size="small"
                 sx={{ color: 'inherit' }}
               >
-                {isDrawerCollapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+                <CollapseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Развернуть все секции">
+              <IconButton 
+                onClick={expandAllSections}
+                size="small"
+                sx={{ color: 'inherit' }}
+              >
+                <ExpandIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
@@ -719,7 +670,7 @@ const MainLayout: React.FC = () => {
               <ListSubheader 
                 onClick={() => handleSectionHeaderClick(section)} 
                 sx={{ 
-                  cursor: isDrawerCollapsed ? 'default' : 'pointer',
+                  cursor: 'pointer',
                   display: 'flex', 
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -734,19 +685,19 @@ const MainLayout: React.FC = () => {
                   borderRadius: 0,
                   position: 'relative',
                   '&:hover': {
-                    backgroundColor: isDrawerCollapsed ? 'transparent' : (theme.palette.mode === 'dark' 
+                    backgroundColor: theme.palette.mode === 'dark' 
                       ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.05)'),
+                      : 'rgba(0, 0, 0, 0.05)',
                   },
                 }}
               >
                 <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {isDrawerCollapsed ? section.title.charAt(0) : section.title}
+                  {section.title}
                 </Box>
-                {!isDrawerCollapsed && (openSections[section.title] ? <ExpandLess /> : <ExpandMore />)}
+                {openSections[section.title] ? <ExpandLess /> : <ExpandMore />}
               </ListSubheader>
               
-              <Collapse in={!isDrawerCollapsed && openSections[section.title] !== false} timeout="auto" unmountOnExit>
+              <Collapse in={openSections[section.title] !== false} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   {section.items.map((item) => {
                     const location = window.location.pathname;
@@ -795,27 +746,6 @@ const MainLayout: React.FC = () => {
           ))}
         </List>
       </Box>
-      
-      {/* Граница для изменения ширины мышью */}
-      {!isDrawerCollapsed && (
-        <Box
-          onMouseDown={handleMouseDown}
-          sx={{
-            position: 'absolute',
-            right: -2,
-            top: 0,
-            bottom: 0,
-            width: '4px',
-            cursor: 'col-resize',
-            backgroundColor: 'transparent',
-            '&:hover': {
-              backgroundColor: theme.palette.primary.main,
-              opacity: 0.3,
-            },
-            zIndex: 1200,
-          }}
-        />
-      )}
     </Box>
   );
 
@@ -823,29 +753,31 @@ const MainLayout: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', width: '100vw', minHeight: '100vh' }}>
       {/* Боковая панель */}
-      <Box
-        component="nav"
-        sx={{
-          width: currentDrawerWidth,
-          flexShrink: 0,
-          zIndex: 1201,
-        }}
-      >
-        <Drawer
-          variant="permanent"
+      {!isDrawerHidden && (
+        <Box
+          component="nav"
           sx={{
-            '& .MuiDrawer-paper': {
-              width: currentDrawerWidth,
-              boxSizing: 'border-box',
-              border: 'none',
-              backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
-            },
+            width: currentDrawerWidth,
+            flexShrink: 0,
+            zIndex: 1201,
           }}
-          open
         >
-          {drawer}
-        </Drawer>
-      </Box>
+          <Drawer
+            variant="permanent"
+            sx={{
+              '& .MuiDrawer-paper': {
+                width: currentDrawerWidth,
+                boxSizing: 'border-box',
+                border: 'none',
+                backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#f5f5f5',
+              },
+            }}
+            open
+          >
+            {drawer}
+          </Drawer>
+        </Box>
+      )}
 
       {/* Основной контент */}
       <Box
@@ -869,7 +801,7 @@ const MainLayout: React.FC = () => {
         {/* Унифицированное меню пользователя для AppBar */}
         <CustomAppBar
           title={t("navigation.appTitle")}
-          onDrawerToggle={handleDrawerToggle}
+          onDrawerToggle={handleAdminDrawerToggle}
           onTitleClick={() => navigate('/admin')}
           profileActions={getProfileActions({
             user,
