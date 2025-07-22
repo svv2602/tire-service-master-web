@@ -42,35 +42,23 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
+  Save as SaveIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles/components';
+import {
+  useGetNotificationChannelSettingsQuery,
+  useBulkUpdateChannelSettingsMutation,
+  NotificationChannelSetting,
+  ChannelStatistics,
+  UpdateChannelSettingRequest,
+} from '../../api/notificationChannelSettings.api';
 
 interface ChannelSettings {
-  email: {
-    enabled: boolean;
-    priority: number;
-    retryAttempts: number;
-    retryDelay: number; // в минутах
-    dailyLimit: number;
-    rateLimitPerMinute: number;
-  };
-  push: {
-    enabled: boolean;
-    priority: number;
-    retryAttempts: number;
-    retryDelay: number;
-    dailyLimit: number;
-    rateLimitPerMinute: number;
-  };
-  telegram: {
-    enabled: boolean;
-    priority: number;
-    retryAttempts: number;
-    retryDelay: number;
-    dailyLimit: number;
-    rateLimitPerMinute: number;
-  };
+  [key: string]: UpdateChannelSettingRequest;
+  email: UpdateChannelSettingRequest;
+  push: UpdateChannelSettingRequest;
+  telegram: UpdateChannelSettingRequest;
 }
 
 interface NotificationRule {
@@ -89,60 +77,24 @@ interface NotificationRule {
   isActive: boolean;
 }
 
-interface ChannelStatistics {
-  email: {
-    sent: number;
-    delivered: number;
-    failed: number;
-    bounced: number;
-  };
-  push: {
-    sent: number;
-    delivered: number;
-    failed: number;
-    clicked: number;
-  };
-  telegram: {
-    sent: number;
-    delivered: number;
-    failed: number;
-    read: number;
-  };
-}
-
 export const ChannelsSettingsPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const tablePageStyles = getTablePageStyles(theme);
   
+  // API хуки
+  const { data: channelData, isLoading, error, refetch } = useGetNotificationChannelSettingsQuery();
+  const [bulkUpdateMutation, { isLoading: isSaving }] = useBulkUpdateChannelSettingsMutation();
+  
+  // Локальное состояние для изменений
   const [settings, setSettings] = useState<ChannelSettings>({
-    email: {
-      enabled: true,
-      priority: 1,
-      retryAttempts: 3,
-      retryDelay: 15,
-      dailyLimit: 1000,
-      rateLimitPerMinute: 60,
-    },
-    push: {
-      enabled: true,
-      priority: 2,
-      retryAttempts: 2,
-      retryDelay: 5,
-      dailyLimit: 2000,
-      rateLimitPerMinute: 120,
-    },
-    telegram: {
-      enabled: true,
-      priority: 3,
-      retryAttempts: 3,
-      retryDelay: 10,
-      dailyLimit: 1500,
-      rateLimitPerMinute: 100,
-    },
+    email: {},
+    push: {},
+    telegram: {},
   });
   
-  const [rules, setRules] = useState<NotificationRule[]>([
+  // Статические правила (можно позже вынести в API)
+  const [rules] = useState<NotificationRule[]>([
     {
       id: 1,
       name: 'Подтверждение бронирования',
@@ -179,33 +131,36 @@ export const ChannelsSettingsPage: React.FC = () => {
     },
   ]);
   
-  const [statistics] = useState<ChannelStatistics>({
-    email: {
-      sent: 1250,
-      delivered: 1180,
-      failed: 45,
-      bounced: 25,
-    },
-    push: {
-      sent: 2100,
-      delivered: 1950,
-      failed: 150,
-      clicked: 890,
-    },
-    telegram: {
-      sent: 980,
-      delivered: 945,
-      failed: 35,
-      read: 820,
-    },
-  });
-  
-  const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Инициализация локального состояния при загрузке данных
+  React.useEffect(() => {
+    if (channelData?.settings) {
+      const newSettings: ChannelSettings = {
+        email: {},
+        push: {},
+        telegram: {},
+      };
+      
+      channelData.settings.forEach((setting: NotificationChannelSetting) => {
+        newSettings[setting.channel_type as keyof ChannelSettings] = {
+          enabled: setting.enabled,
+          priority: setting.priority,
+          retry_attempts: setting.retry_attempts,
+          retry_delay: setting.retry_delay,
+          daily_limit: setting.daily_limit,
+          rate_limit_per_minute: setting.rate_limit_per_minute,
+        };
+      });
+      
+      setSettings(newSettings);
+    }
+  }, [channelData]);
 
   const handleChannelSettingChange = (
     channel: keyof ChannelSettings,
-    field: string,
+    field: keyof UpdateChannelSettingRequest,
     value: any
   ) => {
     setSettings(prev => ({
@@ -218,29 +173,26 @@ export const ChannelsSettingsPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    setLoading(true);
+    setSaveError(null);
     setSaveSuccess(false);
     
     try {
-      // Здесь будет API вызов для сохранения настроек
-      // await saveChannelSettings(settings);
-      
-      // Имитация задержки
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await bulkUpdateMutation({ settings }).unwrap();
       
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
+      
+      // Обновляем данные
+      refetch();
+    } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
-    } finally {
-      setLoading(false);
+      setSaveError(error?.data?.message || 'Произошла ошибка при сохранении настроек');
     }
   };
 
   const handleToggleRule = (id: number) => {
-    setRules(prev => prev.map(rule => 
-      rule.id === id ? { ...rule, isActive: !rule.isActive } : rule
-    ));
+    // Здесь будет логика для правил уведомлений (если понадобится API)
+    console.log('Toggle rule:', id);
   };
 
   const getChannelIcon = (channel: string) => {
@@ -275,6 +227,30 @@ export const ChannelsSettingsPage: React.FC = () => {
     return sent > 0 ? ((delivered / sent) * 100).toFixed(1) : '0.0';
   };
 
+  // Обработка состояний загрузки и ошибок
+  if (isLoading) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
+          Ошибка при загрузке настроек каналов. Пожалуйста, попробуйте позже.
+        </Alert>
+      </Box>
+    );
+  }
+
+  const statistics = channelData?.statistics;
+  const summary = channelData?.summary;
+
   return (
     <Box sx={tablePageStyles.pageContainer}>
       {/* Заголовок страницы */}
@@ -296,6 +272,12 @@ export const ChannelsSettingsPage: React.FC = () => {
         </Alert>
       )}
 
+      {saveError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {saveError}
+        </Alert>
+      )}
+
       <Grid container spacing={3}>
         {/* Статистика каналов */}
         <Grid item xs={12}>
@@ -306,7 +288,7 @@ export const ChannelsSettingsPage: React.FC = () => {
             />
             <CardContent>
               <Grid container spacing={3}>
-                {Object.entries(statistics).map(([channel, stats]) => (
+                {statistics && Object.entries(statistics).map(([channel, stats]) => (
                   <Grid item xs={12} md={4} key={channel}>
                     <Box sx={{ textAlign: 'center', p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
@@ -320,20 +302,20 @@ export const ChannelsSettingsPage: React.FC = () => {
                       <Grid container spacing={1}>
                         <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">Отправлено:</Typography>
-                          <Typography variant="h6">{stats.sent}</Typography>
+                          <Typography variant="h6">{(stats as any).sent}</Typography>
                         </Grid>
                         <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">Доставлено:</Typography>
-                          <Typography variant="h6" color="success.main">{stats.delivered}</Typography>
+                          <Typography variant="h6" color="success.main">{(stats as any).delivered}</Typography>
                         </Grid>
                         <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">Ошибки:</Typography>
-                          <Typography variant="h6" color="error.main">{stats.failed}</Typography>
+                          <Typography variant="h6" color="error.main">{(stats as any).failed}</Typography>
                         </Grid>
                         <Grid item xs={6}>
                           <Typography variant="body2" color="text.secondary">Успешность:</Typography>
                           <Typography variant="h6" color="primary.main">
-                            {getDeliveryRate(stats.sent, stats.delivered)}%
+                            {getDeliveryRate((stats as any).sent, (stats as any).delivered)}%
                           </Typography>
                         </Grid>
                       </Grid>
@@ -357,7 +339,7 @@ export const ChannelsSettingsPage: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={channelSettings.enabled}
+                      checked={channelSettings?.enabled || false}
                       onChange={(e) => handleChannelSettingChange(
                         channelKey as keyof ChannelSettings,
                         'enabled',
@@ -370,10 +352,10 @@ export const ChannelsSettingsPage: React.FC = () => {
                 />
                 
                 <Typography variant="body2" gutterBottom>
-                  Приоритет: {channelSettings.priority}
+                  Приоритет: {channelSettings?.priority || 1}
                 </Typography>
                 <Slider
-                  value={channelSettings.priority}
+                  value={channelSettings?.priority || 1}
                   onChange={(_, value) => handleChannelSettingChange(
                     channelKey as keyof ChannelSettings,
                     'priority',
@@ -383,7 +365,7 @@ export const ChannelsSettingsPage: React.FC = () => {
                   max={10}
                   marks
                   step={1}
-                  disabled={!channelSettings.enabled}
+                  disabled={!channelSettings?.enabled}
                   sx={{ mb: 2 }}
                 />
                 
@@ -391,13 +373,13 @@ export const ChannelsSettingsPage: React.FC = () => {
                   fullWidth
                   label="Попытки повтора"
                   type="number"
-                  value={channelSettings.retryAttempts}
+                  value={channelSettings?.retry_attempts || 0}
                   onChange={(e) => handleChannelSettingChange(
                     channelKey as keyof ChannelSettings,
-                    'retryAttempts',
+                    'retry_attempts',
                     parseInt(e.target.value)
                   )}
-                  disabled={!channelSettings.enabled}
+                  disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
                 />
@@ -406,13 +388,13 @@ export const ChannelsSettingsPage: React.FC = () => {
                   fullWidth
                   label="Задержка повтора (мин)"
                   type="number"
-                  value={channelSettings.retryDelay}
+                  value={channelSettings?.retry_delay || 0}
                   onChange={(e) => handleChannelSettingChange(
                     channelKey as keyof ChannelSettings,
-                    'retryDelay',
+                    'retry_delay',
                     parseInt(e.target.value)
                   )}
-                  disabled={!channelSettings.enabled}
+                  disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
                 />
@@ -421,13 +403,13 @@ export const ChannelsSettingsPage: React.FC = () => {
                   fullWidth
                   label="Лимит в день"
                   type="number"
-                  value={channelSettings.dailyLimit}
+                  value={channelSettings?.daily_limit || 0}
                   onChange={(e) => handleChannelSettingChange(
                     channelKey as keyof ChannelSettings,
-                    'dailyLimit',
+                    'daily_limit',
                     parseInt(e.target.value)
                   )}
-                  disabled={!channelSettings.enabled}
+                  disabled={!channelSettings?.enabled}
                   size="small"
                   sx={{ mb: 2 }}
                 />
@@ -436,13 +418,13 @@ export const ChannelsSettingsPage: React.FC = () => {
                   fullWidth
                   label="Лимит в минуту"
                   type="number"
-                  value={channelSettings.rateLimitPerMinute}
+                  value={channelSettings?.rate_limit_per_minute || 0}
                   onChange={(e) => handleChannelSettingChange(
                     channelKey as keyof ChannelSettings,
-                    'rateLimitPerMinute',
+                    'rate_limit_per_minute',
                     parseInt(e.target.value)
                   )}
-                  disabled={!channelSettings.enabled}
+                  disabled={!channelSettings?.enabled}
                   size="small"
                 />
               </CardContent>
@@ -570,10 +552,10 @@ export const ChannelsSettingsPage: React.FC = () => {
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : <SettingsIcon />}
+          disabled={isSaving}
+          startIcon={isSaving ? <CircularProgress size={20} /> : <SaveIcon />}
         >
-          {loading ? 'Сохранение...' : 'Сохранить настройки'}
+          {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
         </Button>
       </Box>
     </Box>
