@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 Тест Google OAuth настроек</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #4285f4;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4285f4;
+        }
+        .button {
+            background: linear-gradient(45deg, #4285f4 30%, #34a853 90%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.4);
+        }
+        .result {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1976d2;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="password"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .checkbox {
+            margin: 10px 0;
+        }
+        .status-chip {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 2px;
+        }
+        .status-production { background: #4caf50; color: white; }
+        .status-configured { background: #2196f3; color: white; }
+        .status-misconfigured { background: #f44336; color: white; }
+        .status-disabled { background: #9e9e9e; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Тест Google OAuth настроек</h1>
+        
+        <div class="test-section">
+            <h3>📋 Текущие настройки</h3>
+            <button class="button" onclick="loadSettings()">🔄 Загрузить настройки</button>
+            <div id="settingsResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>⚙️ Обновление настроек</h3>
+            <form id="settingsForm">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" id="enabled"> Включить Google OAuth
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="clientId">Client ID:</label>
+                    <input type="text" id="clientId" placeholder="xxxxxx.apps.googleusercontent.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="clientSecret">Client Secret:</label>
+                    <input type="password" id="clientSecret" placeholder="Введите Client Secret">
+                </div>
+                
+                <div class="form-group">
+                    <label for="redirectUri">Redirect URI:</label>
+                    <input type="text" id="redirectUri" value="http://localhost:3008/auth/google/callback">
+                </div>
+                
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" id="allowRegistration" checked> Разрешить регистрацию
+                    </label>
+                </div>
+                
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" id="autoVerifyEmail" checked> Автоматически верифицировать email
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="scopesList">Scopes (через запятую):</label>
+                    <input type="text" id="scopesList" value="email,profile">
+                </div>
+                
+                <button type="button" class="button" onclick="saveSettings()">💾 Сохранить настройки</button>
+            </form>
+            <div id="saveResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Тестирование подключения</h3>
+            <button class="button" onclick="testConnection()">🔗 Тест подключения</button>
+            <div id="testResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Получение URL авторизации</h3>
+            <button class="button" onclick="getAuthUrl()">🌐 Получить Authorization URL</button>
+            <div id="authUrlResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        // Функция для выполнения API запросов
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Функция для отображения результатов
+        function displayResult(elementId, result, isError = false) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="result ${isError ? 'error' : ''}">${JSON.stringify(result, null, 2)}</div>`;
+        }
+        
+        // Загрузка текущих настроек
+        async function loadSettings() {
+            console.log('🔄 Загрузка настроек Google OAuth...');
+            
+            const result = await apiRequest('/google_oauth_settings');
+            
+            if (result.success) {
+                console.log('✅ Настройки загружены:', result.data);
+                
+                const settings = result.data.google_oauth_settings;
+                
+                // Заполняем форму
+                document.getElementById('enabled').checked = settings.enabled;
+                document.getElementById('clientId').value = settings.client_id || '';
+                document.getElementById('clientSecret').value = settings.client_secret || '';
+                document.getElementById('redirectUri').value = settings.redirect_uri || '';
+                document.getElementById('allowRegistration').checked = settings.allow_registration;
+                document.getElementById('autoVerifyEmail').checked = settings.auto_verify_email;
+                document.getElementById('scopesList').value = settings.scopes_list || '';
+                
+                // Отображаем статус
+                let statusHtml = `
+                    <h4>📊 Статус системы</h4>
+                    <div class="status-chip status-${settings.system_status}">${settings.status_text}</div>
+                    <p><strong>Готовность к продакшену:</strong> ${settings.ready_for_production ? '✅ Да' : '❌ Нет'}</p>
+                    <p><strong>Валидная конфигурация:</strong> ${settings.valid_configuration ? '✅ Да' : '❌ Нет'}</p>
+                    <p><strong>Создано:</strong> ${settings.created_at}</p>
+                    <p><strong>Обновлено:</strong> ${settings.updated_at}</p>
+                `;
+                
+                displayResult('settingsResult', statusHtml);
+                document.getElementById('settingsResult').innerHTML = `<div class="result info">${statusHtml}</div>`;
+            } else {
+                console.error('❌ Ошибка загрузки настроек:', result);
+                displayResult('settingsResult', result, true);
+            }
+        }
+        
+        // Сохранение настроек
+        async function saveSettings() {
+            console.log('💾 Сохранение настроек Google OAuth...');
+            
+            const settings = {
+                enabled: document.getElementById('enabled').checked,
+                client_id: document.getElementById('clientId').value,
+                client_secret: document.getElementById('clientSecret').value,
+                redirect_uri: document.getElementById('redirectUri').value,
+                allow_registration: document.getElementById('allowRegistration').checked,
+                auto_verify_email: document.getElementById('autoVerifyEmail').checked,
+                scopes_list: document.getElementById('scopesList').value
+            };
+            
+            console.log('📤 Данные для отправки:', settings);
+            
+            const result = await apiRequest('/google_oauth_settings', {
+                method: 'PATCH',
+                body: JSON.stringify({ google_oauth_settings: settings })
+            });
+            
+            if (result.success) {
+                console.log('✅ Настройки сохранены:', result.data);
+                displayResult('saveResult', '✅ Настройки успешно сохранены!');
+                
+                // Перезагружаем настройки
+                setTimeout(loadSettings, 1000);
+            } else {
+                console.error('❌ Ошибка сохранения:', result);
+                displayResult('saveResult', result, true);
+            }
+        }
+        
+        // Тестирование подключения
+        async function testConnection() {
+            console.log('🧪 Тестирование подключения...');
+            
+            const result = await apiRequest('/google_oauth_settings/test_connection', {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                console.log('✅ Тест успешен:', result.data);
+                let testHtml = `<strong>✅ ${result.data.message}</strong>`;
+                
+                if (result.data.authorization_url) {
+                    testHtml += `
+                        <br><br><strong>🔗 URL авторизации:</strong><br>
+                        <a href="${result.data.authorization_url}" target="_blank">${result.data.authorization_url}</a>
+                    `;
+                }
+                
+                document.getElementById('testResult').innerHTML = `<div class="result">${testHtml}</div>`;
+            } else {
+                console.error('❌ Ошибка теста:', result);
+                displayResult('testResult', result, true);
+            }
+        }
+        
+        // Получение URL авторизации
+        async function getAuthUrl() {
+            console.log('🌐 Получение Authorization URL...');
+            
+            const result = await apiRequest('/google_oauth_settings/authorization_url');
+            
+            if (result.success) {
+                console.log('✅ URL получен:', result.data);
+                
+                const urlHtml = `
+                    <strong>🔗 Authorization URL:</strong><br>
+                    <a href="${result.data.authorization_url}" target="_blank">${result.data.authorization_url}</a>
+                    <br><br>
+                    <strong>🔑 State:</strong> ${result.data.state}
+                `;
+                
+                document.getElementById('authUrlResult').innerHTML = `<div class="result info">${urlHtml}</div>`;
+            } else {
+                console.error('❌ Ошибка получения URL:', result);
+                displayResult('authUrlResult', result, true);
+            }
+        }
+        
+        // Автозагрузка настроек при открытии страницы
+        window.addEventListener('load', () => {
+            console.log('🚀 Страница загружена, загружаем настройки...');
+            loadSettings();
+        });
+    </script>
+</body>
+</html> 

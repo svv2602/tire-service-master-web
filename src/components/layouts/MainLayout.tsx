@@ -68,6 +68,7 @@ import {
   NotificationImportant as PushIcon,
   Telegram as TelegramIcon,
   SmartToy as BotIcon,
+  Google as GoogleIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -467,6 +468,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/notifications/email',
             roles: [UserRole.ADMIN],
             description: 'Управление SMTP сервером и настройками email уведомлений',
+          },
+          {
+            text: '🔑 Google OAuth',
+            icon: <GoogleIcon />,
+            path: '/admin/notifications/google-oauth',
+            roles: [UserRole.ADMIN],
+            description: 'Настройка интеграции с Google OAuth для входа через Google аккаунты',
           },
         ],
       },

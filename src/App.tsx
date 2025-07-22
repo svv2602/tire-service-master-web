@@ -60,6 +60,7 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
   const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
 const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
 const EmailSettingsPage = lazy(() => import('./pages/notifications/email/EmailSettingsPage'));
+const GoogleOauthSettingsPage = lazy(() => import('./pages/notifications/google/GoogleOauthSettingsPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
 
@@ -302,6 +303,7 @@ const App: React.FC = () => {
                 <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
                 <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
                 <Route path="notifications/email" element={<EmailSettingsPage />} />
+                <Route path="notifications/google-oauth" element={<GoogleOauthSettingsPage />} />
                       <Route path="reviews/new" element={<ReviewFormPage />} />
                       <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
                       <Route path="my-reviews" element={<MyReviewsPage />} />
