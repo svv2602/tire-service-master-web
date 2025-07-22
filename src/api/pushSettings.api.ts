@@ -2,19 +2,24 @@ import { baseApi } from './baseApi';
 
 // Типы для Push настроек
 export interface PushSettings {
+  id: number;
+  vapid_public_key?: string;
+  vapid_private_key?: string;
+  firebase_api_key?: string;
+  firebase_project_id?: string;
+  firebase_app_id?: string;
   enabled: boolean;
-  firebase_api_key: string;
-  firebase_project_id: string;
-  firebase_app_id: string;
-  vapid_configured: boolean;
-  vapid_public_key: string;
-  service_worker_enabled: boolean;
   test_mode: boolean;
   daily_limit: number;
-  rate_limit_per_minute: number;
+  rate_limit: number;
   system_status: string;
   status_color: 'success' | 'warning' | 'error' | 'default';
+  status_text: string;
   ready_for_production: boolean;
+  valid_configuration: boolean;
+  vapid_configured: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PushSubscription {
@@ -53,7 +58,6 @@ export interface ServiceWorkerStatus {
 export interface PushSettingsResponse {
   push_settings: PushSettings;
   statistics: PushStatistics;
-  vapid_public_key: string;
   service_worker_status: ServiceWorkerStatus;
 }
 
