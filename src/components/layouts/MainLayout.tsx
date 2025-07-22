@@ -461,6 +461,13 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.channelSettings'),
           },
+          {
+            text: '📧 Настройки почты',
+            icon: <EmailIcon />,
+            path: '/admin/notifications/email',
+            roles: [UserRole.ADMIN],
+            description: 'Управление SMTP сервером и настройками email уведомлений',
+          },
         ],
       },
       {

@@ -58,7 +58,8 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
   const CustomVariablesPage = lazy(() => import('./pages/notifications/CustomVariablesPage'));
   // const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
   const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
-  const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
+const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
+const EmailSettingsPage = lazy(() => import('./pages/notifications/email/EmailSettingsPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));
 const ClientCarFormPage = lazy(() => import('./pages/clients/ClientCarFormPage'));
 
@@ -297,9 +298,10 @@ const App: React.FC = () => {
                       <Route path="notifications/email-templates/new" element={<EmailTemplateFormPage />} />
                       <Route path="notifications/email-templates/:id/edit" element={<EmailTemplateFormPage />} />
                       <Route path="notifications/custom-variables" element={<CustomVariablesPage />} />
-                      <Route path="notifications/push-settings" element={<PushSettingsPage />} />
-                      <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
-                      <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
+                                      <Route path="notifications/push-settings" element={<PushSettingsPage />} />
+                <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
+                <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
+                <Route path="notifications/email" element={<EmailSettingsPage />} />
                       <Route path="reviews/new" element={<ReviewFormPage />} />
                       <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
                       <Route path="my-reviews" element={<MyReviewsPage />} />

@@ -26,10 +26,10 @@ import {
   Send as SendIcon,
   Security as SecurityIcon,
   Save as SaveIcon,
-  TestTube as TestIcon,
+  Science as TestIcon,
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { getTablePageStyles } from '../../../styles/tablePageStyles';
+import { getTablePageStyles } from '../../../styles';
 import {
   useGetEmailSettingsQuery,
   useUpdateEmailSettingsMutation,
@@ -55,6 +55,7 @@ const EmailSettingsPage: React.FC = () => {
     smtp_authentication: 'plain',
     smtp_starttls_auto: true,
     smtp_tls: false,
+    openssl_verify_mode: 'none',
     from_email: '',
     from_name: 'Tire Service',
     enabled: false,
@@ -80,6 +81,7 @@ const EmailSettingsPage: React.FC = () => {
         smtp_authentication: emailSettings.smtp_authentication || 'plain',
         smtp_starttls_auto: emailSettings.smtp_starttls_auto,
         smtp_tls: emailSettings.smtp_tls,
+        openssl_verify_mode: emailSettings.openssl_verify_mode || 'none',
         from_email: emailSettings.from_email || '',
         from_name: emailSettings.from_name || 'Tire Service',
         enabled: emailSettings.enabled,
@@ -204,7 +206,7 @@ const EmailSettingsPage: React.FC = () => {
         <Typography variant="h4" sx={tablePageStyles.title}>
           📧 Настройки почты
         </Typography>
-        <Typography variant="body1" sx={tablePageStyles.subtitle}>
+        <Typography variant="body1" color="text.secondary">
           Управление SMTP сервером и параметрами отправки email уведомлений
         </Typography>
       </Box>
@@ -388,7 +390,22 @@ const EmailSettingsPage: React.FC = () => {
                   />
                 }
                 label="TLS"
+                sx={{ mb: 2 }}
               />
+
+              <TextField
+                fullWidth
+                label="SSL проверка сертификата"
+                value={settings.openssl_verify_mode || 'none'}
+                onChange={(e) => handleSettingChange('openssl_verify_mode', e.target.value)}
+                sx={{ mb: 2 }}
+                size="small"
+                select
+                helperText="Режим проверки SSL сертификата (none - отключить для слабых сертификатов)"
+              >
+                <MenuItem value="none">None - без проверки</MenuItem>
+                <MenuItem value="peer">Peer - строгая проверка</MenuItem>
+              </TextField>
             </CardContent>
           </Card>
         </Grid>

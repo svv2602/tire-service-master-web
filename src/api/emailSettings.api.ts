@@ -1,17 +1,18 @@
 import { baseApi } from './baseApi';
 
-// Интерфейсы для Email настроек
+// Интерфейсы для типизации API
 export interface EmailSettings {
   id: number;
-  smtp_host?: string;
+  smtp_host: string | null;
   smtp_port: number;
-  smtp_username?: string;
-  smtp_password?: string;
-  smtp_authentication?: string;
+  smtp_username: string | null;
+  smtp_password: string | null; // Маскированный пароль
+  smtp_authentication: string | null;
   smtp_starttls_auto: boolean;
   smtp_tls: boolean;
-  from_email?: string;
-  from_name?: string;
+  openssl_verify_mode: string | null;
+  from_email: string | null;
+  from_name: string | null;
   enabled: boolean;
   test_mode: boolean;
   system_status: string;
@@ -43,6 +44,7 @@ export interface UpdateEmailSettingsRequest {
   smtp_authentication?: string;
   smtp_starttls_auto?: boolean;
   smtp_tls?: boolean;
+  openssl_verify_mode?: string;
   from_email?: string;
   from_name?: string;
   enabled?: boolean;
