@@ -609,6 +609,13 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const handleAccountAndBookingClose = () => {
     setCreateAccountAndBookingDialogOpen(false);
   };
+
+  const handleAccountAndBookingContinueAsGuest = () => {
+    console.log('👤 Обработчик "Продолжить как гость" из CreateAccountAndBookingDialog');
+    setCreateAccountAndBookingDialogOpen(false);
+    // Создаем гостевое бронирование
+    createGuestBooking();
+  };
   
   // Обработчики диалога добавления автомобиля в профиль
   const handleAddCarDialogClose = () => {
@@ -833,6 +840,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         onClose={handleAccountAndBookingClose}
         bookingData={formData}
         onSuccess={handleAccountAndBookingSuccess}
+        onContinueAsGuest={handleAccountAndBookingContinueAsGuest}
       />
 
       {/* Диалог добавления автомобиля в профиль */}

@@ -35,6 +35,7 @@ interface CreateAccountAndBookingDialogProps {
   onClose: () => void;
   bookingData: BookingFormData;
   onSuccess: (bookingId: number) => void;
+  onContinueAsGuest?: () => void;
 }
 
 const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps> = ({
@@ -42,6 +43,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   onClose,
   bookingData,
   onSuccess,
+  onContinueAsGuest,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -153,53 +155,93 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
 
   const handleCreateClientCar = async () => {
     try {
-      // Создаем автомобиль только если указаны данные
-      if (bookingData.car_brand && bookingData.car_model && bookingData.license_plate) {
+      // Создаем автомобиль только если указаны минимально необходимые данные
+      if (bookingData.license_plate) {
         console.log('🚗 Создание автомобиля клиента...');
         
         // Ищем бренд по названию
-        const foundBrand = carBrandsData?.data?.find(brand => 
-          brand.name.toLowerCase() === bookingData.car_brand.toLowerCase()
-        );
-        
-        if (foundBrand) {
-          console.log('🔍 Найден бренд:', foundBrand);
-          
-          // Для поиска модели нужен отдельный запрос, пока создаем с базовыми данными
-          const carData: ClientCarFormData = {
-            brand_id: foundBrand.id,
-            model_id: 1, // TODO: Найти реальный model_id по названию через отдельный запрос
-            year: new Date().getFullYear(), // По умолчанию текущий год
-            license_plate: bookingData.license_plate,
-            car_type_id: bookingData.car_type_id || undefined,
-            is_primary: true, // Первый автомобиль делаем основным
-          };
-          
-          console.log('🚗 Данные автомобиля:', carData);
-          const carResult = await createMyClientCar(carData).unwrap();
-          console.log('✅ Автомобиль создан:', carResult);
-        } else {
-          console.log('⚠️ Бренд не найден:', bookingData.car_brand);
-          // Создаем с базовыми данными
-          const carData: ClientCarFormData = {
-            brand_id: 1, // Дефолтный бренд
-            model_id: 1, // Дефолтная модель
-            year: new Date().getFullYear(),
-            license_plate: bookingData.license_plate,
-            car_type_id: bookingData.car_type_id || undefined,
-            is_primary: true,
-          };
-          
-          console.log('🚗 Создание с базовыми данными:', carData);
-          const carResult = await createMyClientCar(carData).unwrap();
-          console.log('✅ Автомобиль создан с базовыми данными:', carResult);
+        let brandId = 1; // Дефолтный бренд
+        if (bookingData.car_brand && carBrandsData?.data) {
+          const foundBrand = carBrandsData.data.find(brand => 
+            brand.name.toLowerCase() === bookingData.car_brand.toLowerCase()
+          );
+          if (foundBrand) {
+            console.log('🔍 Найден бренд:', foundBrand);
+            brandId = foundBrand.id;
+          } else {
+            console.log('⚠️ Бренд не найден:', bookingData.car_brand);
+          }
         }
+        
+        // Подготавливаем данные для создания автомобиля
+        const carData: ClientCarFormData = {
+          brand_id: brandId,
+          model_id: 1, // Дефолтная модель (первая в базе)
+          year: new Date().getFullYear(), // Текущий год по умолчанию
+          license_plate: bookingData.license_plate,
+          car_type_id: bookingData.car_type_id || 1, // Дефолтный тип автомобиля
+          is_primary: true, // Первый автомобиль делаем основным
+        };
+        
+        console.log('🚗 Данные автомобиля для создания:', carData);
+        
+        // Создаем автомобиль через API
+        const carResult = await createMyClientCar(carData).unwrap();
+        console.log('✅ Автомобиль успешно создан:', carResult);
       } else {
-        console.log('ℹ️ Данные автомобиля не указаны, пропускаем создание');
+        console.log('ℹ️ Номер автомобиля не указан, пропускаем создание автомобиля');
       }
     } catch (err: any) {
       console.error('⚠️ Ошибка создания автомобиля (не критичная):', err);
+      // Логируем подробности ошибки для отладки
+      if (err?.data) {
+        console.error('⚠️ Детали ошибки API:', err.data);
+      }
       // Не прерываем процесс, если автомобиль не создался
+    }
+  };
+
+  const handleCreateGuestBooking = async () => {
+    try {
+      setStep('booking');
+      
+      // Формируем данные для гостевого бронирования (без client_id)
+      const bookingRequestData: ClientBookingRequest = {
+        booking: {
+          service_point_id: bookingData.service_point_id!,
+          service_category_id: bookingData.service_category_id,
+          booking_date: bookingData.booking_date,
+          start_time: bookingData.start_time,
+          notes: bookingData.notes || '',
+          // Поля автомобиля
+          license_plate: bookingData.license_plate,
+          car_brand: bookingData.car_brand,
+          car_model: bookingData.car_model,
+          car_type_id: bookingData.car_type_id || undefined,
+          // Поля получателя услуги
+          service_recipient_first_name: bookingData.service_recipient.first_name,
+          service_recipient_last_name: bookingData.service_recipient.last_name,
+          service_recipient_phone: bookingData.service_recipient.phone,
+          service_recipient_email: bookingData.service_recipient.email,
+        },
+        services: [], // Услуги больше не выбираются - передаем пустой массив
+        // НЕ передаем client_id для гостевого бронирования
+      };
+      
+      console.log('🚀 Создание гостевого бронирования:', bookingRequestData);
+      const bookingResult = await createClientBooking(bookingRequestData).unwrap();
+      console.log('✅ Гостевое бронирование создано:', bookingResult);
+      
+      setStep('success');
+      setTimeout(() => {
+        onSuccess(bookingResult.id);
+        onClose();
+      }, 2000);
+      
+    } catch (err: any) {
+      console.error('❌ Ошибка создания гостевого бронирования:', err);
+      setError(err?.data?.error || err?.data?.details?.join(', ') || t('bookingModals.createAccountAndBooking.errors.bookingCreation'));
+      setStep('booking');
     }
   };
 
@@ -267,10 +309,13 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   };
 
   const handleContinueAsGuest = () => {
-    console.log('👤 Продолжаем как гость');
+    console.log('👤 Продолжаем как гость - передаем управление родительскому компоненту');
     setShowExistingUserDialog(false);
-    setStep('creating');
-    handleCreateAccount();
+    onClose();
+    // Вызываем callback для создания гостевого бронирования
+    if (onContinueAsGuest) {
+      onContinueAsGuest();
+    }
   };
 
   const getStepContent = () => {
