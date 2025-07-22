@@ -18,6 +18,7 @@ import {
   useTheme,
   Divider,
   Paper,
+  SelectChangeEvent,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -110,6 +111,9 @@ const EmailTemplateFormPage: React.FC = () => {
   const [variableDialog, setVariableDialog] = useState<{ open: boolean; variable: string }>({ open: false, variable: '' });
   const previewRef = useRef<HTMLDivElement>(null);
   
+  // Состояние для текущего канала (для динамической загрузки типов)
+  const [selectedChannelType, setSelectedChannelType] = useState<string>('email');
+  
   // Состояния для кастомных переменных убраны - управление на отдельной странице
 
   // API хуки
@@ -117,7 +121,9 @@ const EmailTemplateFormPage: React.FC = () => {
     parseInt(id || '0'),
     { skip: !isEditMode }
   );
-  const { data: templateTypesData } = useGetTemplateTypesQuery();
+  const { data: templateTypesData } = useGetTemplateTypesQuery({ 
+    channel_type: selectedChannelType 
+  });
   const { data: customVariablesData } = useGetCustomVariablesQuery({});
   const [createTemplate] = useCreateEmailTemplateMutation();
   const [updateTemplate] = useUpdateEmailTemplateMutation();
@@ -131,14 +137,20 @@ const EmailTemplateFormPage: React.FC = () => {
       .required('Название обязательно')
       .max(255, 'Максимум 255 символов'),
     subject: Yup.string()
-      .required('Тема обязательна')
-      .max(500, 'Максимум 500 символов'),
+      .when('channel_type', {
+        is: 'email',
+        then: (schema) => schema.required('Тема обязательна для Email').max(500, 'Максимум 500 символов'),
+        otherwise: (schema) => schema.notRequired()
+      }),
     body: Yup.string()
-      .required('Тело письма обязательно'),
+      .required('Содержимое обязательно'),
     template_type: Yup.string()
       .required('Тип шаблона обязателен'),
     language: Yup.string()
       .required('Язык обязателен'),
+    channel_type: Yup.string()
+      .required('Канал обязателен')
+      .oneOf(['email', 'telegram', 'push'], 'Недопустимый канал'),
     description: Yup.string()
       .max(1000, 'Максимум 1000 символов'),
   });
@@ -201,12 +213,16 @@ const EmailTemplateFormPage: React.FC = () => {
   useEffect(() => {
     if (isEditMode && templateData?.data) {
       const template = templateData.data;
+      const channelType = template.channel_type || 'email';
+      setSelectedChannelType(channelType);
+      
       formik.setValues({
         name: template.name || '',
         subject: template.subject || '',
         body: template.body || '',
         template_type: template.template_type || '',
         language: template.language || 'uk',
+        channel_type: channelType,
         is_active: template.is_active ?? true,
         description: template.description || '',
         variables: template.variables_array || [],
@@ -217,10 +233,17 @@ const EmailTemplateFormPage: React.FC = () => {
   // Обработчики (старая функция удалена, используем таблицу кастомных переменных)
 
   const handleRemoveVariable = (variable: string) => {
-    formik.setFieldValue(
-      'variables',
-      formik.values.variables.filter(v => v !== variable)
-    );
+    const updatedVariables = formik.values.variables.filter(v => v !== variable);
+    formik.setFieldValue('variables', updatedVariables);
+  };
+
+  // Обработчик изменения канала
+  const handleChannelChange = (event: SelectChangeEvent<string>) => {
+    const newChannelType = event.target.value;
+    setSelectedChannelType(newChannelType);
+    formik.setFieldValue('channel_type', newChannelType);
+    // Сбрасываем тип шаблона при смене канала
+    formik.setFieldValue('template_type', '');
   };
 
   const handleVariableClick = (variable: string) => {
@@ -390,6 +413,22 @@ const EmailTemplateFormPage: React.FC = () => {
 
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth required>
+                      <InputLabel>Канал уведомления</InputLabel>
+                      <Select
+                        name="channel_type"
+                        value={formik.values.channel_type || 'email'}
+                        onChange={handleChannelChange}
+                        label="Канал уведомления"
+                      >
+                        <MenuItem value="email">📧 Email</MenuItem>
+                        <MenuItem value="telegram">📱 Telegram</MenuItem>
+                        <MenuItem value="push">🔔 Push уведомления</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth required>
                       <InputLabel>Тип шаблона</InputLabel>
                       <Select
                         name="template_type"
@@ -431,7 +470,13 @@ const EmailTemplateFormPage: React.FC = () => {
                       onChange={formik.handleChange}
                       error={formik.touched.subject && Boolean(formik.errors.subject)}
                       helperText={formik.touched.subject && formik.errors.subject}
-                      required
+                      required={formik.values.channel_type === 'email'}
+                      disabled={formik.values.channel_type !== 'email'}
+                      placeholder={
+                        formik.values.channel_type === 'email' 
+                          ? 'Введите тему письма' 
+                          : 'Тема не используется для этого канала'
+                      }
                     />
                   </Grid>
 
@@ -440,13 +485,26 @@ const EmailTemplateFormPage: React.FC = () => {
                       fullWidth
                       multiline
                       rows={10}
-                      label="Тело письма"
+                      label={
+                        formik.values.channel_type === 'email' 
+                          ? 'Тело письма' 
+                          : formik.values.channel_type === 'telegram'
+                          ? 'Текст Telegram сообщения'
+                          : 'Текст Push уведомления'
+                      }
                       name="body"
                       value={formik.values.body}
                       onChange={formik.handleChange}
                       error={formik.touched.body && Boolean(formik.errors.body)}
                       helperText={formik.touched.body && formik.errors.body}
                       required
+                      placeholder={
+                        formik.values.channel_type === 'email' 
+                          ? 'HTML содержимое письма с переменными {variable_name}'
+                          : formik.values.channel_type === 'telegram'
+                          ? 'Текст сообщения с переменными {variable_name} и эмодзи'
+                          : 'Краткий текст уведомления с переменными {variable_name}'
+                      }
                     />
                   </Grid>
 

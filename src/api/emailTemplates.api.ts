@@ -111,6 +111,9 @@ export const emailTemplatesApi = baseApi.injectEndpoints({
         if (filters.language) {
           params.append('language', filters.language);
         }
+        if (filters.channel_type) {
+          params.append('channel_type', filters.channel_type);
+        }
         if (filters.search) {
           params.append('search', filters.search);
         }
@@ -180,8 +183,14 @@ export const emailTemplatesApi = baseApi.injectEndpoints({
     }),
 
     // Получение типов шаблонов
-    getTemplateTypes: builder.query<{ data: TemplateType[] }, void>({
-      query: () => 'email_templates/template_types',
+    getTemplateTypes: builder.query<{ data: TemplateType[]; channel_type?: string }, { channel_type?: string } | void>({
+      query: (params = {}) => {
+        const urlParams = new URLSearchParams();
+        if (params && 'channel_type' in params && params.channel_type) {
+          urlParams.append('channel_type', params.channel_type);
+        }
+        return `email_templates/template_types${urlParams.toString() ? `?${urlParams.toString()}` : ''}`;
+      },
     }),
   }),
 });
