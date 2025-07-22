@@ -92,9 +92,11 @@ export const TelegramIntegrationPage: React.FC = () => {
   });
   
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [qrCodeDialog, setQrCodeDialog] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [generatingWebhook, setGeneratingWebhook] = useState(false);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Обновление локального состояния при загрузке данных
@@ -229,11 +231,12 @@ export const TelegramIntegrationPage: React.FC = () => {
 
   const handleSave = async () => {
     setSaveSuccess(false);
+    setSaveError(null);
     
     // Валидация на фронтенде
     const validationErrors = validateSettings();
     if (validationErrors.length > 0) {
-      alert(`Ошибки валидации:\n${validationErrors.join('\n')}`);
+      setSaveError(`Ошибки валидации:\n${validationErrors.join('\n')}`);
       return;
     }
     
@@ -248,17 +251,33 @@ export const TelegramIntegrationPage: React.FC = () => {
       }).unwrap();
       
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 4000);
+      
+      // Автоматически устанавливаем webhook если URL указан
+      if (settings.webhookUrl && settings.webhookUrl.trim()) {
+        try {
+          await setWebhook({ webhook_url: settings.webhookUrl }).unwrap();
+          console.log('✅ Webhook автоматически установлен');
+        } catch (webhookError) {
+          console.warn('⚠️ Не удалось автоматически установить webhook:', webhookError);
+        }
+      }
     } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
       
       // Показываем детали ошибки пользователю
+      let errorMessage = 'Произошла ошибка при сохранении настроек';
       if (error?.data?.errors) {
         console.error('Ошибки валидации:', error.data.errors);
-        alert(`Ошибки валидации:\n${error.data.errors.join('\n')}`);
-      } else {
-        alert('Произошла ошибка при сохранении настроек');
+        errorMessage = `Ошибки валидации:\n${error.data.errors.join('\n')}`;
+      } else if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
       }
+      
+      setSaveError(errorMessage);
+      setTimeout(() => setSaveError(null), 5000);
     }
   };
 
@@ -295,6 +314,43 @@ export const TelegramIntegrationPage: React.FC = () => {
       await deleteSubscription(id).unwrap();
     } catch (error) {
       console.error('Ошибка удаления подписки:', error);
+    }
+  };
+
+  const handleGenerateWebhookUrl = async () => {
+    setGeneratingWebhook(true);
+    
+    try {
+      // Попытка получить ngrok URL
+      const response = await fetch('http://localhost:4040/api/tunnels');
+      
+      if (response.ok) {
+        const data = await response.json();
+        const httpsTunnel = data.tunnels?.find((tunnel: any) => 
+          tunnel.proto === 'https' && tunnel.config?.addr?.includes('8000')
+        );
+        
+        if (httpsTunnel) {
+          const ngrokUrl = httpsTunnel.public_url;
+          const webhookUrl = `${ngrokUrl}/api/v1/telegram_webhook`;
+          
+          setSettings(prev => ({
+            ...prev,
+            webhookUrl: webhookUrl
+          }));
+          
+          console.log('✅ Webhook URL сгенерирован:', webhookUrl);
+        } else {
+          setSaveError('Не найден HTTPS туннель ngrok для порта 8000.\nУбедитесь, что ngrok запущен: ngrok http 8000');
+        }
+      } else {
+        setSaveError('Не удалось подключиться к ngrok API.\nУбедитесь, что ngrok запущен и доступен на http://localhost:4040');
+      }
+    } catch (error) {
+      console.error('Ошибка получения ngrok URL:', error);
+      setSaveError('Ошибка подключения к ngrok.\nУбедитесь, что ngrok запущен: ngrok http 8000');
+    } finally {
+      setGeneratingWebhook(false);
     }
   };
 
@@ -528,16 +584,31 @@ export const TelegramIntegrationPage: React.FC = () => {
                 helperText="Имя пользователя бота (без @)"
               />
               
-              <TextField
-                fullWidth
-                label="Webhook URL"
-                value={settings.webhookUrl}
-                onChange={(e) => handleSettingChange('webhookUrl', e.target.value)}
-                sx={{ mb: 2 }}
-                size="small"
-                placeholder="https://yourdomain.com/api/telegram/webhook"
-                helperText="Полный URL для получения сообщений от Telegram (https://)"
-              />
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Webhook URL"
+                  value={settings.webhookUrl}
+                  onChange={(e) => handleSettingChange('webhookUrl', e.target.value)}
+                  size="small"
+                  placeholder="https://yourdomain.com/api/telegram/webhook"
+                  helperText="Полный URL для получения сообщений от Telegram (https://)"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleGenerateWebhookUrl}
+                  disabled={generatingWebhook}
+                  startIcon={generatingWebhook ? <CircularProgress size={16} /> : <SettingsIcon />}
+                  sx={{ 
+                    minWidth: 120,
+                    height: 40,
+                    mt: 0.5,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {generatingWebhook ? 'Получение...' : 'Auto ngrok'}
+                </Button>
+              </Box>
               
               <TextField
                 fullWidth
@@ -647,17 +718,73 @@ export const TelegramIntegrationPage: React.FC = () => {
         </Grid>
       </Grid>
 
-      {/* Кнопки действий */}
-      <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={updating}
-          startIcon={updating ? <CircularProgress size={20} /> : <SettingsIcon />}
-        >
-          {updating ? 'Сохранение...' : 'Сохранить настройки'}
-        </Button>
-      </Box>
+      {/* Кнопка сохранения настроек */}
+      <Grid container spacing={3} sx={{ mt: 1 }}>
+        <Grid item xs={12}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2,
+            p: 3,
+            backgroundColor: theme.palette.background.paper,
+            borderRadius: 2,
+            boxShadow: theme.shadows[3]
+          }}>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleSave}
+              disabled={updating}
+              startIcon={updating ? <CircularProgress size={24} /> : <SettingsIcon />}
+              sx={{
+                px: 4,
+                py: 1.5,
+                fontSize: '1.1rem',
+                fontWeight: 'bold',
+                minWidth: 250,
+                boxShadow: theme.shadows[4],
+                background: 'linear-gradient(45deg, #0088cc 30%, #00a0e0 90%)',
+                '&:hover': {
+                  boxShadow: theme.shadows[8],
+                  transform: 'translateY(-1px)',
+                  background: 'linear-gradient(45deg, #006699 30%, #0088cc 90%)',
+                },
+                transition: 'all 0.2s ease-in-out'
+              }}
+            >
+              {updating ? 'Сохранение настроек...' : '💾 Сохранить настройки Telegram'}
+            </Button>
+
+            {saveSuccess && (
+              <Alert 
+                severity="success" 
+                sx={{ width: '100%', maxWidth: 500, textAlign: 'center' }}
+                icon={<CheckIcon />}
+              >
+                ✅ Настройки успешно сохранены!
+                {settings.webhookUrl && (
+                  <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.8 }}>
+                    Webhook автоматически установлен
+                  </Typography>
+                )}
+              </Alert>
+            )}
+
+            {saveError && (
+              <Alert 
+                severity="error" 
+                sx={{ width: '100%', maxWidth: 500 }}
+                icon={<ErrorIcon />}
+              >
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                  {saveError}
+                </Typography>
+              </Alert>
+            )}
+          </Box>
+        </Grid>
+      </Grid>
 
       {/* QR Code Dialog */}
       <Dialog open={qrCodeDialog} onClose={() => setQrCodeDialog(false)} maxWidth="sm" fullWidth>
