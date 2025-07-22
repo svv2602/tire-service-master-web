@@ -15,6 +15,7 @@ import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
 // import { extendClients } from './utils/clientExtensions';
 import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
+import PushSettingsPage from './pages/notifications/PushSettingsPage';
 import './styles/overrides/textfield-overrides.css';
 
 // Инициализация i18n
@@ -55,7 +56,7 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
   const UnifiedTemplatesPage = lazy(() => import('./pages/notifications/UnifiedTemplatesPage'));
   const EmailTemplateFormPage = lazy(() => import('./pages/notifications/EmailTemplateFormPage'));
   const CustomVariablesPage = lazy(() => import('./pages/notifications/CustomVariablesPage'));
-  const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
+  // const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
   const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
   const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
 const ClientCarsPage = lazy(() => import('./pages/clients/ClientCarsPage'));

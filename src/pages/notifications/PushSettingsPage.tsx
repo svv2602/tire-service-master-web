@@ -30,7 +30,7 @@ import {
   Settings as SettingsIcon,
   CloudSync as FirebaseIcon,
   Code as ServiceWorkerIcon,
-  CheckCircle as CheckIcon,
+  Check as CheckIcon,
   Error as ErrorIcon,
   Warning as WarningIcon,
   Send as TestIcon,

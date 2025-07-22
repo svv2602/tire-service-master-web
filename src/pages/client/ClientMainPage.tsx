@@ -28,6 +28,7 @@ import {
 } from '@mui/icons-material';
 
 // Импорт централизованной системы стилей
+import PWAInstallPrompt from '../../components/pwa/PWAInstallPrompt';
 import { 
   getCardStyles, 
   getButtonStyles, 
@@ -400,6 +401,9 @@ const ClientMainPage: React.FC = () => {
 
 
       </Box>
+
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
     </ClientLayout>
   );
 };

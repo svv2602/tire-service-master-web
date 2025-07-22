@@ -72,6 +72,7 @@ import ClientLayout from '../../components/client/ClientLayout';
 import { PhoneField } from '../../components/ui/PhoneField';
 import Notification from '../../components/Notification';
 import FavoritePointsTab from '../../components/profile/FavoritePointsTab';
+import PushSubscriptionManager from '../../components/notifications/PushSubscriptionManager';
 
 // Валидация
 import { useFormik } from 'formik';
@@ -877,18 +878,14 @@ const ClientProfilePage: React.FC = () => {
                 />
               </ListItem>
               <Divider />
-              <ListItem>
-                <ListItemIcon>
-                  <NotificationsIcon />
-                </ListItemIcon>
-                <ListItemText
-                  primary={t('forms.profile.settings.pushNotifications')}
-                  secondary={t('forms.profile.settings.pushNotificationsHint')}
-                />
-                <FormControlLabel
-                  control={<Switch />}
-                  label=""
-                />
+              <ListItem sx={{ flexDirection: 'column', alignItems: 'stretch', p: 0 }}>
+                <Box sx={{ p: 2 }}>
+                  <PushSubscriptionManager 
+                    onSubscriptionChange={(isSubscribed) => {
+                      console.log('Клиент изменил статус Push подписки:', isSubscribed);
+                    }}
+                  />
+                </Box>
               </ListItem>
               <Divider />
               <ListItem>
