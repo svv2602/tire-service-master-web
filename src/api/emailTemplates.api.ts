@@ -17,6 +17,13 @@ export interface EmailTemplate {
   status_text: string;
 }
 
+// Тип для ответа API при получении одного шаблона
+export interface EmailTemplateResponse {
+  data: EmailTemplate;
+  available_variables?: string[];
+  usage_stats?: any;
+}
+
 export interface CreateEmailTemplateRequest {
   name: string;
   subject: string;
@@ -110,7 +117,7 @@ export const emailTemplatesApi = baseApi.injectEndpoints({
     }),
 
     // Получение одного шаблона по ID
-    getEmailTemplate: builder.query<EmailTemplate, number>({
+    getEmailTemplate: builder.query<EmailTemplateResponse, number>({
       query: (id) => `email_templates/${id}`,
       providesTags: (_result, _error, id) => [{ type: 'EmailTemplate' as const, id }],
     }),

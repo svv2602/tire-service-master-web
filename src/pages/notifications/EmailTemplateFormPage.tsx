@@ -54,6 +54,7 @@ import {
   useUpdateEmailTemplateMutation,
   useGetTemplateTypesQuery,
   type EmailTemplate,
+  type EmailTemplateResponse,
 } from '../../api/emailTemplates.api';
 
 import {
@@ -195,16 +196,17 @@ const EmailTemplateFormPage: React.FC = () => {
 
   // Загрузка данных для редактирования
   useEffect(() => {
-    if (isEditMode && templateData) {
+    if (isEditMode && templateData?.data) {
+      const template = templateData.data;
       formik.setValues({
-        name: templateData.name || '',
-        subject: templateData.subject || '',
-        body: templateData.body || '',
-        template_type: templateData.template_type || '',
-        language: templateData.language || 'uk',
-        is_active: templateData.is_active ?? true,
-        description: templateData.description || '',
-        variables: templateData.variables_array || [],
+        name: template.name || '',
+        subject: template.subject || '',
+        body: template.body || '',
+        template_type: template.template_type || '',
+        language: template.language || 'uk',
+        is_active: template.is_active ?? true,
+        description: template.description || '',
+        variables: template.variables_array || [],
       });
     }
   }, [templateData, isEditMode]);
