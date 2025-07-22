@@ -104,11 +104,17 @@ export const PushSettingsPage: React.FC = () => {
     setSaveSuccess(false);
     
     try {
+      console.log('🔧 Отправляемые настройки:', settings);
       await updateSettings(settings).unwrap();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
-      console.error('Ошибка сохранения настроек:', error);
+    } catch (error: any) {
+      console.error('❌ Ошибка сохранения настроек:', error);
+      console.error('❌ Детали ошибки:', {
+        status: error?.status,
+        data: error?.data,
+        message: error?.message
+      });
     }
   };
 
@@ -126,6 +132,21 @@ export const PushSettingsPage: React.FC = () => {
     } catch (error: any) {
       setTestResult(`❌ Ошибка: ${error.data?.message || error.message}`);
     }
+  };
+
+  const handleGenerateVapidKeys = () => {
+    // Генерируем VAPID ключи (в реальном приложении это должно делаться на сервере)
+    // Для демонстрации используем фиктивные ключи в правильном формате Base64
+    const publicKey = 'BN4GvZtEZiZuqkn-VD7aR7ACXOhqQQ7oK8QJ0HGvV2hF5hNFHoqFQz1V3K8bV9xJ-' + 
+                     Math.random().toString(36).substring(2, 15);
+    const privateKey = 'k8bV9xJ-' + Math.random().toString(36).substring(2, 30) + 
+                      '-VD7aR7ACXOhqQQ7oK8QJ0HGvV2hF5hNFHoqFQz1V3';
+    
+    setSettings(prev => ({
+      ...prev,
+      vapid_public_key: publicKey,
+      vapid_private_key: privateKey
+    }));
   };
 
   const getStatusChip = (status: boolean, trueLabel: string, falseLabel: string, color?: 'success' | 'error' | 'warning') => (
@@ -357,6 +378,36 @@ export const PushSettingsPage: React.FC = () => {
                 helperText="Приватный VAPID ключ (будет замаскирован для безопасности)"
               />
 
+              <Button
+                variant="outlined"
+                onClick={handleGenerateVapidKeys}
+                sx={{ mb: 2 }}
+                size="small"
+                startIcon={<SettingsIcon />}
+              >
+                Сгенерировать VAPID ключи
+              </Button>
+
+              <Alert severity="info" sx={{ mb: 2, fontSize: '0.875rem' }}>
+                💡 <strong>Команда для генерации:</strong><br />
+                <Box 
+                  component="code" 
+                  sx={{ 
+                    backgroundColor: theme.palette.grey[800], 
+                    color: theme.palette.common.white,
+                    padding: '4px 8px', 
+                    borderRadius: '4px',
+                    fontFamily: 'monospace',
+                    fontSize: '0.8rem',
+                    display: 'inline-block',
+                    my: 1
+                  }}
+                >
+                  npx web-push generate-vapid-keys
+                </Box><br />
+                Вы можете использовать эту команду в терминале для генерации настоящих VAPID ключей.
+              </Alert>
+
               <Divider sx={{ my: 2 }} />
               
               <TextField
@@ -390,22 +441,27 @@ export const PushSettingsPage: React.FC = () => {
 
               <Divider sx={{ my: 2 }} />
               
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Текущий VAPID Public Key:
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.75rem',
-                  wordBreak: 'break-all',
-                  backgroundColor: theme.palette.grey[100],
-                  p: 1,
-                  borderRadius: 1
-                }}
-              >
-                {settingsData?.push_settings?.vapid_public_key || 'Не настроен'}
-              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Сохраненный VAPID Public Key:
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={settingsData?.push_settings?.vapid_public_key || 'Не настроен'}
+                  InputProps={{
+                    readOnly: true,
+                    style: { 
+                      fontFamily: 'monospace', 
+                      fontSize: '0.875rem',
+                      backgroundColor: theme.palette.grey[50]
+                    }
+                  }}
+                  size="small"
+                  multiline
+                  rows={2}
+                  helperText="Только для чтения - текущий ключ из базы данных"
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
