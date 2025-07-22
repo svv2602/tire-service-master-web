@@ -81,11 +81,12 @@ export const PushSettingsPage: React.FC = () => {
       const apiSettings = settingsData.push_settings;
       setSettings({
         enabled: apiSettings.enabled,
-        vapid_public_key: apiSettings.vapid_public_key,
-        vapid_private_key: apiSettings.vapid_private_key,
-        firebase_api_key: apiSettings.firebase_api_key,
-        firebase_project_id: apiSettings.firebase_project_id,
-        firebase_app_id: apiSettings.firebase_app_id,
+        // Если ключи замаскированы (содержат ***), оставляем поля пустыми для редактирования
+        vapid_public_key: (apiSettings.vapid_public_key?.includes('***') ? '' : apiSettings.vapid_public_key) || '',
+        vapid_private_key: (apiSettings.vapid_private_key?.includes('***') ? '' : apiSettings.vapid_private_key) || '',
+        firebase_api_key: (apiSettings.firebase_api_key?.includes('...') ? '' : apiSettings.firebase_api_key) || '',
+        firebase_project_id: apiSettings.firebase_project_id || '',
+        firebase_app_id: (apiSettings.firebase_app_id?.includes('...') ? '' : apiSettings.firebase_app_id) || '',
         test_mode: apiSettings.test_mode,
         daily_limit: apiSettings.daily_limit,
         rate_limit: apiSettings.rate_limit,
@@ -104,8 +105,28 @@ export const PushSettingsPage: React.FC = () => {
     setSaveSuccess(false);
     
     try {
-      console.log('🔧 Отправляемые настройки:', settings);
-      await updateSettings(settings).unwrap();
+      // Подготавливаем данные для отправки, исключая пустые значения
+      const dataToSend = { ...settings };
+      
+      // Если поля пустые, не отправляем их (сервер сохранит текущие значения)
+      if (!dataToSend.vapid_public_key?.trim()) {
+        delete dataToSend.vapid_public_key;
+      }
+      if (!dataToSend.vapid_private_key?.trim()) {
+        delete dataToSend.vapid_private_key;
+      }
+      if (!dataToSend.firebase_api_key?.trim()) {
+        delete dataToSend.firebase_api_key;
+      }
+      if (!dataToSend.firebase_project_id?.trim()) {
+        delete dataToSend.firebase_project_id;
+      }
+      if (!dataToSend.firebase_app_id?.trim()) {
+        delete dataToSend.firebase_app_id;
+      }
+      
+      console.log('🔧 Отправляемые настройки:', dataToSend);
+      await updateSettings(dataToSend).unwrap();
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error: any) {
@@ -137,10 +158,16 @@ export const PushSettingsPage: React.FC = () => {
   const handleGenerateVapidKeys = () => {
     // Генерируем VAPID ключи (в реальном приложении это должно делаться на сервере)
     // Для демонстрации используем фиктивные ключи в правильном формате Base64
-    const publicKey = 'BN4GvZtEZiZuqkn-VD7aR7ACXOhqQQ7oK8QJ0HGvV2hF5hNFHoqFQz1V3K8bV9xJ-' + 
-                     Math.random().toString(36).substring(2, 15);
-    const privateKey = 'k8bV9xJ-' + Math.random().toString(36).substring(2, 30) + 
-                      '-VD7aR7ACXOhqQQ7oK8QJ0HGvV2hF5hNFHoqFQz1V3';
+    
+    // Генерируем публичный ключ (88 символов, начинается с 'B')
+    const randomBytes1 = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
+    const publicKeyBase = btoa(String.fromCharCode(66, ...randomBytes1.slice(0, 31))); // B + 31 байт
+    const publicKey = publicKeyBase.substring(0, 87) + '=';
+    
+    // Генерируем приватный ключ (43 символа)
+    const randomBytes2 = Array.from({length: 32}, () => Math.floor(Math.random() * 256));
+    const privateKeyBase = btoa(String.fromCharCode(...randomBytes2));
+    const privateKey = privateKeyBase.substring(0, 42) + '=';
     
     setSettings(prev => ({
       ...prev,
