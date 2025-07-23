@@ -158,103 +158,101 @@ const TireCalculatorPage: React.FC = () => {
       <SEOHead {...seoConfig} />
       <Container maxWidth="lg" sx={{ py: 3 }}>
         {/* Верхняя панель */}
-        <Paper elevation={2} sx={{ mb: 3, border: `1px solid ${theme.palette.divider}` }}>
-          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
-            {/* Изображение слева */}
-            <Box
-              component="img"
-              src="/image_app/img_calc.jpg"
-              alt={t('tireCalculator.title')}
-              sx={{
-                width: { xs: 80, sm: 120, md: 150 },
-                height: { xs: 80, sm: 120, md: 150 },
-                borderRadius: 2,
-                objectFit: 'cover',
-                backgroundColor: 'transparent',
-                flexShrink: 0
-              }}
-            />
-            
-            {/* Контент справа */}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              {/* Основной заголовок */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <CalculateIcon 
+        <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
+          {/* Изображение слева */}
+          <Box
+            component="img"
+            src="/image_app/img_calc.jpg"
+            alt={t('tireCalculator.title')}
+            sx={{
+              width: { xs: 80, sm: 120, md: 150 },
+              height: { xs: 80, sm: 120, md: 150 },
+              borderRadius: 2,
+              objectFit: 'cover',
+              backgroundColor: 'transparent',
+              flexShrink: 0
+            }}
+          />
+          
+          {/* Контент справа */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            {/* Основной заголовок */}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <CalculateIcon 
+                sx={{ 
+                  fontSize: 40, 
+                  color: theme.palette.primary.main, 
+                  mr: 2 
+                }} 
+              />
+              <Box>
+                <Typography 
+                  variant="h4" 
+                  component="h1" 
                   sx={{ 
-                    fontSize: 40, 
-                    color: theme.palette.primary.main, 
-                    mr: 2 
-                  }} 
-                />
-                <Box>
-                  <Typography 
-                    variant="h4" 
-                    component="h1" 
-                    sx={{ 
-                      fontWeight: 600,
-                      color: theme.palette.text.primary,
-                      mb: 0.5
-                    }}
-                  >
-                    {t('tireCalculator.title')}
-                  </Typography>
-                  <Typography 
-                    variant="subtitle1" 
-                    color="text.secondary"
-                    sx={{ fontWeight: 400 }}
-                  >
-                    {t('tireCalculator.subtitle')}
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                    mb: 0.5
+                  }}
+                >
+                  {t('tireCalculator.title')}
+                </Typography>
+                <Typography 
+                  variant="subtitle1" 
+                  color="text.secondary"
+                  sx={{ fontWeight: 400 }}
+                >
+                  {t('tireCalculator.subtitle')}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Описание возможностей */}
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{ mb: 3, lineHeight: 1.6 }}
+            >
+              {t('tireCalculator.description')}
+            </Typography>
+
+            {/* Информационные карточки */}
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircleIcon color="success" fontSize="small" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t('tireCalculator.info.recommended')}
                   </Typography>
                 </Box>
-              </Box>
-
-              {/* Описание возможностей */}
-              <Typography 
-                variant="body1" 
-                color="text.secondary"
-                sx={{ mb: 3, lineHeight: 1.6 }}
-              >
-                {t('tireCalculator.description')}
-              </Typography>
-
-              {/* Информационные карточки */}
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon color="success" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {t('tireCalculator.info.recommended')}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <WarningIcon color="warning" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {t('tireCalculator.info.attention')}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <InfoIcon color="info" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {t('tireCalculator.info.check')}
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SpeedIcon color="action" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {t('tireCalculator.info.speedometer')}
-                    </Typography>
-                  </Box>
-                </Grid>
               </Grid>
-            </Box>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <WarningIcon color="warning" fontSize="small" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t('tireCalculator.info.attention')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <InfoIcon color="info" fontSize="small" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t('tireCalculator.info.check')}
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <SpeedIcon color="action" fontSize="small" />
+                  <Typography variant="body2" color="text.secondary">
+                    {t('tireCalculator.info.speedometer')}
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
           </Box>
-        </Paper>
+        </Box>
 
         {/* Предупреждения о валидации */}
         {validationErrors.length > 0 && (
