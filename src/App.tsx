@@ -16,7 +16,6 @@ import { SnackbarProvider } from './components/ui/Snackbar/SnackbarContext';
 // import { extendClients } from './utils/clientExtensions';
 import AuthInitializer from './components/auth/AuthInitializer';
 import { GlobalUIStyles } from './components/styled/CommonComponents';
-import PushSettingsPage from './pages/notifications/PushSettingsPage';
 import './styles/overrides/textfield-overrides.css';
 
 // Инициализация i18n
@@ -57,7 +56,7 @@ const ClientFormPage = lazy(() => import('./pages/clients/ClientFormPage'));
   const UnifiedTemplatesPage = lazy(() => import('./pages/notifications/UnifiedTemplatesPage'));
   const EmailTemplateFormPage = lazy(() => import('./pages/notifications/EmailTemplateFormPage'));
   const CustomVariablesPage = lazy(() => import('./pages/notifications/CustomVariablesPage'));
-  // const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
+  const PushSettingsPage = lazy(() => import('./pages/notifications/PushSettingsPage'));
   const TelegramIntegrationPage = lazy(() => import('./pages/notifications/TelegramIntegrationPage'));
 const ChannelsSettingsPage = lazy(() => import('./pages/notifications/ChannelsSettingsPage'));
 const EmailSettingsPage = lazy(() => import('./pages/notifications/email/EmailSettingsPage'));
@@ -235,6 +234,8 @@ const App: React.FC = () => {
                       
                       {/* Новые маршруты для управления записями клиента */}
           <Route path="/client/bookings" element={<MyBookingsPage />} />
+          <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
+          <Route path="/client/reviews/new" element={<ClientReviewFormPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
           
                       {/* Маршруты для базы знаний */}
@@ -249,6 +250,7 @@ const App: React.FC = () => {
           }>
                         {/* Главная страница админки */}
                         <Route index element={<DashboardPage />} />
+                        <Route path="dashboard" element={<DashboardPage />} />
                         
                         {/* Управление пользователями */}
                         <Route path="users" element={<UsersPage />} />
@@ -288,6 +290,9 @@ const App: React.FC = () => {
                         <Route path="bookings" element={<BookingsPage />} />
                         <Route path="bookings/new" element={<BookingFormPage />} />
                         <Route path="bookings/:id/edit" element={<BookingFormPage />} />
+                        <Route path="calendar" element={<BookingCalendarPage />} />
+                        <Route path="analytics" element={<BookingAnalyticsPage />} />
+                        <Route path="booking-conflicts" element={<BookingConflictsPage />} />
                         
                         {/* Управление отзывами */}
                         <Route path="reviews" element={<ReviewsPage />} />
@@ -318,10 +323,20 @@ const App: React.FC = () => {
                         
                         {/* Настройки */}
                         <Route path="settings" element={<SettingsPage />} />
+                        <Route path="profile" element={<ProfilePage />} />
                         
                         {/* Уведомления */}
-                        <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
+                        <Route path="notifications" element={<NotificationCenterPage />} />
+                        <Route path="notifications/templates" element={<UnifiedTemplatesPage />} />
+                        <Route path="notifications/email-templates" element={<EmailTemplatesPage />} />
+                        <Route path="notifications/email-templates/new" element={<EmailTemplateFormPage />} />
+                        <Route path="notifications/email-templates/:id/edit" element={<EmailTemplateFormPage />} />
+                        <Route path="notifications/custom-variables" element={<CustomVariablesPage />} />
                         <Route path="notifications/push-settings" element={<PushSettingsPage />} />
+                        <Route path="notifications/telegram" element={<TelegramIntegrationPage />} />
+                        <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
+                        <Route path="notifications/email" element={<EmailSettingsPage />} />
+                        <Route path="notifications/google-oauth" element={<GoogleOauthSettingsPage />} />
                         
                         {/* SEO управление */}
                         <Route path="seo" element={<SEOManagementPage />} />
