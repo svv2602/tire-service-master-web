@@ -144,6 +144,9 @@ const BookingAnalyticsPage = lazy(() => import('./pages/admin/BookingAnalyticsPa
 // Ленивая загрузка страницы StyleGuide
 const StyleGuide = lazy(() => import('./pages/styleguide/styleguide_temp'));
 
+// Ленивая загрузка страницы SEO управления
+const SEOManagementPage = lazy(() => import('./pages/admin/SEOManagementPage'));
+
 // Ленивая загрузка калькулятора шин
 const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalculatorPage'));
 
@@ -319,6 +322,9 @@ const App: React.FC = () => {
                         {/* Уведомления */}
                         <Route path="notifications/channels" element={<ChannelsSettingsPage />} />
                         <Route path="notifications/push-settings" element={<PushSettingsPage />} />
+                        
+                        {/* SEO управление */}
+                        <Route path="seo" element={<SEOManagementPage />} />
           </Route>
           
                       {/* Маршрут по умолчанию */}
