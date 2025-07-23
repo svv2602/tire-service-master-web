@@ -169,7 +169,7 @@ const DashboardPage: React.FC = () => {
     .sort((a, b) => b.bookingsCount - a.bookingsCount)
     .slice(0, 5);
 
-  // Основная статистика
+  // Основная статистика с навигацией
   const mainStats = [
     {
       title: t('forms.dashboard.stats.partners.title'),
@@ -177,6 +177,7 @@ const DashboardPage: React.FC = () => {
       icon: <BusinessIcon />,
       color: '#1976d2',
       description: t('forms.dashboard.stats.partners.description'),
+      navigateTo: '/admin/partners'
     },
     {
       title: t('forms.dashboard.stats.servicePoints.title'),
@@ -184,13 +185,15 @@ const DashboardPage: React.FC = () => {
       icon: <LocationIcon />,
       color: '#388e3c',
       description: t('forms.dashboard.stats.servicePoints.description'),
+      navigateTo: '/admin/service-points'
     },
     {
       title: t('forms.dashboard.stats.clients.title'),
       value: clientsData?.pagination?.total_count || 0,
       icon: <PeopleIcon />,
-      color: '#e64a19',
+      color: '#f57c00',
       description: t('forms.dashboard.stats.clients.description'),
+      navigateTo: '/admin/clients'
     },
     {
       title: t('forms.dashboard.stats.bookings.title'),
@@ -198,10 +201,11 @@ const DashboardPage: React.FC = () => {
       icon: <BookingIcon />,
       color: '#7b1fa2',
       description: `${bookingsAnalytics.pending} ${t('forms.dashboard.stats.bookings.pending')}, ${bookingsAnalytics.confirmed} ${t('forms.dashboard.stats.bookings.confirmed')}`,
+      navigateTo: '/admin/bookings'
     },
   ];
 
-  // Дополнительная статистика
+  // Дополнительная статистика с навигацией
   const additionalStats = [
     {
       title: t('forms.dashboard.stats.reviews.title'),
@@ -209,6 +213,7 @@ const DashboardPage: React.FC = () => {
       icon: <ReviewIcon />,
       color: '#f57c00',
       description: `${reviewsAnalytics.pending} ${t('forms.dashboard.stats.reviews.pending')}`,
+      navigateTo: '/admin/reviews'
     },
     {
       title: t('forms.dashboard.stats.articles.title'),
@@ -216,22 +221,83 @@ const DashboardPage: React.FC = () => {
       icon: <ArticleIcon />,
       color: '#5d4037',
       description: `${articlesAnalytics.published} ${t('forms.dashboard.stats.articles.published')}`,
+      navigateTo: '/admin/page-content'
     },
     {
-      title: t('forms.dashboard.stats.bookingConflicts.title'),
+      title: t('forms.dashboard.stats.conflicts.title'),
       value: conflictStats?.statistics?.total_pending || 0,
       icon: <WarningIcon />,
       color: '#d32f2f',
-      description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.bookingConflicts.pending')}`,
+      description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.conflicts.description')}`,
+      navigateTo: '/admin/booking-conflicts'
     },
     {
-      title: t('forms.dashboard.stats.seoPages.title'),
+      title: t('forms.dashboard.stats.seo.title'),
       value: seoAnalytics?.data?.total_pages || 0,
       icon: <SeoIcon />,
-      color: '#303f9f',
-      description: `${seoAnalytics?.data?.good_pages || 0} ${t('forms.dashboard.stats.seoPages.optimized')}`,
+      color: '#00796b',
+      description: `${seoAnalytics?.data?.good_pages || 0} ${t('forms.dashboard.stats.seo.optimized')}`,
+      navigateTo: '/admin/page-content'
     },
   ];
+
+  // Компонент статистической карточки с навигацией
+  const StatCard = ({ stat }: { stat: any }) => (
+    <Card 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        cursor: stat.navigateTo ? 'pointer' : 'default',
+        transition: 'all 0.3s ease',
+        '&:hover': stat.navigateTo ? {
+          transform: 'translateY(-4px)',
+          boxShadow: 4,
+          '& .stat-icon': {
+            transform: 'scale(1.1)',
+          }
+        } : {}
+      }}
+      onClick={() => stat.navigateTo && navigate(stat.navigateTo)}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Box 
+            className="stat-icon"
+            sx={{ 
+              color: stat.color, 
+              mr: 2,
+              transition: 'transform 0.3s ease'
+            }}
+          >
+            {stat.icon}
+          </Box>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            {stat.title}
+          </Typography>
+        </Box>
+        <Typography variant="h4" component="div" sx={{ color: stat.color, mb: 1 }}>
+          {stat.value}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {stat.description}
+        </Typography>
+      </CardContent>
+      {stat.navigateTo && (
+        <CardActions sx={{ pt: 0 }}>
+          <Chip 
+            label={t('forms.dashboard.goToPage')} 
+            size="small" 
+            sx={{ 
+              backgroundColor: stat.color + '20',
+              color: stat.color,
+              fontSize: '0.75rem'
+            }} 
+          />
+        </CardActions>
+      )}
+    </Card>
+  );
 
   if (isLoading) {
     return (
@@ -271,7 +337,7 @@ const DashboardPage: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {mainStats.map((stat, index) => (
           <Grid key={index} item xs={12} sm={6} md={3}>
-            <StatCard {...stat} />
+            <StatCard stat={stat} />
           </Grid>
         ))}
       </Grid>
@@ -280,7 +346,7 @@ const DashboardPage: React.FC = () => {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {additionalStats.map((stat, index) => (
           <Grid key={index} item xs={12} sm={6} md={3}>
-            <StatCard {...stat} />
+            <StatCard stat={stat} />
           </Grid>
         ))}
       </Grid>

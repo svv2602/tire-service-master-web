@@ -7,6 +7,7 @@
       "errorMessage": "Помилка при завантаженні даних для дашборда",
       "refreshAll": "Оновити всі дані",
       "refreshTooltip": "Оновити всі дані",
+      "goToPage": "Перейти",
       "stats": {
         "partners": {
           "title": "Партнери",
@@ -33,18 +34,17 @@
         },
         "articles": {
           "title": "Статті",
-          "description": "Статей в базі знань",
+          "description": "Всього статей в системі",
           "published": "опубліковано"
         },
-        "bookingConflicts": {
+        "conflicts": {
           "title": "Конфлікти бронювань",
-          "description": "Потребують вирішення",
-          "pending": "потребують вирішення"
+          "description": "потребують вирішення"
         },
-        "seoPages": {
+        "seo": {
           "title": "SEO сторінки",
-          "description": "Сторінок з метатегами",
-          "optimized": "оптимізовані"
+          "description": "Всього сторінок для SEO",
+          "optimized": "оптимізовано"
         }
       },
       "quickActions": {

@@ -7,6 +7,7 @@
       "errorMessage": "Ошибка при загрузке данных для дашборда",
       "refreshAll": "Обновить все данные",
       "refreshTooltip": "Обновить все данные",
+      "goToPage": "Перейти",
       "stats": {
         "partners": {
           "title": "Партнеры",
@@ -33,18 +34,17 @@
         },
         "articles": {
           "title": "Статьи",
-          "description": "Статей в базе знаний",
+          "description": "Всего статей в системе",
           "published": "опубликовано"
         },
-        "bookingConflicts": {
+        "conflicts": {
           "title": "Конфликты бронирований",
-          "description": "Требуют решения",
-          "pending": "требуют решения"
+          "description": "требуют решения"
         },
-        "seoPages": {
+        "seo": {
           "title": "SEO страницы",
-          "description": "Страниц с метатегами",
-          "optimized": "оптимизированы"
+          "description": "Всего страниц для SEO",
+          "optimized": "оптимизировано"
         }
       },
       "quickActions": {
