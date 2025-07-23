@@ -50,6 +50,10 @@ import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '..
 import { useGetServiceCategoriesByCityQuery } from '../../api/services.api';
 import ClientLayout from '../../components/client/ClientLayout';
 
+// Импорт SEO компонентов
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
+
 // Интерфейс для сервисной точки из API поиска
 interface SearchServicePoint {
   id: number;
@@ -989,6 +993,7 @@ const ClientSearchPage: React.FC = () => {
   const localizedName = useLocalizedName();
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const location = useLocation();
+  const { createSEO } = useSEO();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
 
   // Функция локализации для преобразования данных API
@@ -1009,6 +1014,34 @@ const ClientSearchPage: React.FC = () => {
       query: params.get('query') || ''
     };
   }, [location.search]);
+  
+  // SEO конфигурация для страницы поиска
+  const seoConfig = useMemo(() => {
+    const { city, query } = searchParams;
+    let customTitle = '';
+    let customDescription = '';
+    let customKeywords: string[] = [];
+    
+    if (city && query) {
+      customTitle = `${query} в ${city}`;
+      customDescription = `Знайдіть ${query} в ${city}. Зручний пошук сервісних точок шиномонтажу з актуальною інформацією про послуги та ціни.`;
+      customKeywords = [query, city, 'пошук'];
+    } else if (city) {
+      customTitle = `Шиномонтаж в ${city}`;
+      customDescription = `Сервісні точки шиномонтажу в ${city}. Зручне розташування, професійні послуги, доступні ціни.`;
+      customKeywords = [city, 'сервісні точки'];
+    } else if (query) {
+      customTitle = `Пошук: ${query}`;
+      customDescription = `Результати пошуку за запитом "${query}". Знайдіть найкращі сервісні точки шиномонтажу.`;
+      customKeywords = [query, 'пошук'];
+    }
+    
+    return createSEO('search', {
+      title: customTitle,
+      description: customDescription,
+      keywords: customKeywords
+    });
+  }, [searchParams, createSEO]);
 
   // Запрос для получения категорий услуг по городу
   const { 
@@ -1085,6 +1118,7 @@ const ClientSearchPage: React.FC = () => {
 
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
 
         {/* Заголовок результатов */}

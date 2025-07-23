@@ -31,6 +31,10 @@ import BookingTypeChoiceDialog from '../../components/booking/BookingTypeChoiceD
 import CreateAccountAndBookingDialog from '../../components/booking/CreateAccountAndBookingDialog';
 import { AddCarToProfileDialog } from '../../components/booking/AddCarToProfileDialog';
 
+// Импорт SEO компонентов
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
+
 // Импорт шагов формы
 import {
   CityServicePointStep,
@@ -96,6 +100,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+  const { createSEO } = useSEO();
+  
+  // SEO конфигурация для страницы бронирования
+  const seoConfig = createSEO('booking');
   
   // Redux состояние
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -666,6 +674,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 3 }}>
           {/* Заголовок */}

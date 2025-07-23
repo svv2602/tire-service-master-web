@@ -47,6 +47,8 @@ import {
   getLocalizedArticleExcerpt 
 } from '../../utils/articleLocalizationHelpers';
 import ClientLayout from '../../components/client/ClientLayout';
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
 
 // Импорт типа City для правильной типизации с локализацией
 import type { City } from '../../types/models';
@@ -57,6 +59,7 @@ const ClientMainPage: React.FC = () => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const localizedName = useLocalizedName();
+  const { createSEO } = useSEO();
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
@@ -64,6 +67,11 @@ const ClientMainPage: React.FC = () => {
   
   // Состояние для поиска
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  
+  // SEO конфигурация для главной страницы
+  const seoConfig = createSEO('home', {
+    image: '/image_app/serviceman.png'
+  });
   
   // API запросы для контента
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({
@@ -156,6 +164,7 @@ const ClientMainPage: React.FC = () => {
 
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         {/* Hero секция */}
         <Fade in timeout={500}>

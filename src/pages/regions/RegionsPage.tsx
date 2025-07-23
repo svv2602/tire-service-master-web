@@ -140,12 +140,22 @@ const RegionsPage: React.FC<RegionsPageProps> = () => {
   }, [updateRegion, showNotification, t]);
 
   // Форматирование даты
-  const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const formatDate = useCallback((dateString: string | null | undefined) => {
+    if (!dateString) return '—';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '—';
+      
+      return date.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.warn('Ошибка форматирования даты:', dateString, error);
+      return '—';
+    }
   }, []);
 
   // Конфигурация заголовка
