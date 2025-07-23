@@ -1058,25 +1058,25 @@ const ClientSearchPage: React.FC = () => {
     isLoading: categoriesLoading,
     error: categoriesError 
   } = useGetServiceCategoriesByCityQuery(
-    searchParams.city,
+    searchParams.city || '',
     { skip: !searchParams.city }
   );
 
-  // Запрос к API для поиска сервисных точек
+  // Запрос для поиска сервисных точек
   const { 
-    data: searchResult, 
-    isLoading, 
-    error 
+    data: servicePointsResult, 
+    isLoading: servicePointsLoading,
+    error: servicePointsError 
   } = useSearchServicePointsQuery(
     { 
-      city: searchParams.city,
-      query: searchParams.query 
+      city: searchParams.city || undefined,
+      query: searchParams.query || undefined
     },
     { skip: !searchParams.city || selectedCategory === null } // Пропускаем запрос, если нет города или не выбрана категория
   );
 
   // Адаптируем данные из API к локальному интерфейсу
-  const servicePoints: SearchServicePoint[] = (searchResult?.data || []).map(point => {
+  const servicePoints: SearchServicePoint[] = (servicePointsResult?.data || []).map(point => {
     return {
       id: point.id,
       name: point.name,
@@ -1106,8 +1106,8 @@ const ClientSearchPage: React.FC = () => {
       }))
     };
   });
-  const totalFound = searchResult?.total || 0;
-  const cityFound = searchResult?.city_found ?? true;
+  const totalFound = servicePointsResult?.total || 0;
+  const cityFound = servicePointsResult?.city_found ?? true;
 
   // Обработка состояния загрузки
   if (categoriesLoading) {
@@ -1237,7 +1237,7 @@ const ClientSearchPage: React.FC = () => {
           </Alert>
         )}
 
-        {error && (
+        {servicePointsError && (
           <Alert severity="error" sx={{ mb: 4 }}>
             {t('clientSearchPage.errors.dataLoading')}
           </Alert>
@@ -1254,7 +1254,7 @@ const ClientSearchPage: React.FC = () => {
         {selectedCategory && (
           <>
             {/* Индикатор загрузки сервисных точек */}
-            {isLoading && (
+            {servicePointsLoading && (
               <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 4 }}>
                 <CircularProgress size={40} />
                 <Typography variant="h6" sx={{ ml: 2, color: colors.textSecondary }}>
@@ -1264,7 +1264,7 @@ const ClientSearchPage: React.FC = () => {
             )}
 
             {/* Заголовок результатов для выбранной категории */}
-            {!isLoading && (
+            {!servicePointsLoading && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: colors.textPrimary }}>
                   🏢 {t('clientSearchPage.servicePoints.title')}
@@ -1275,7 +1275,7 @@ const ClientSearchPage: React.FC = () => {
               </Box>
             )}
 
-            {servicePoints.length === 0 && !isLoading && !error ? (
+            {servicePoints.length === 0 && !servicePointsLoading && !servicePointsError ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Typography variant="h6" sx={{ color: colors.textSecondary, mb: 2 }}>
                   😔 {t('clientSearchPage.servicePoints.notFound')}
@@ -1291,7 +1291,7 @@ const ClientSearchPage: React.FC = () => {
                   {t('clientSearchPage.servicePoints.selectOtherCategory')}
                 </Button>
               </Box>
-            ) : !isLoading && (
+            ) : !servicePointsLoading && (
               <Grid container spacing={3}>
                 {servicePoints.map((servicePoint) => (
                   <Grid item xs={12} md={6} lg={4} key={servicePoint.id}>
