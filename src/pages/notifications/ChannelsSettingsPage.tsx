@@ -316,12 +316,22 @@ export const ChannelsSettingsPage: React.FC = () => {
               avatar={<PriorityIcon />}
             />
             <CardContent>
-              <Alert severity="info" sx={{ mb: 3 }}>
-                <Typography variant="body2">
-                  📊 Статистика будет отображаться после начала использования каналов уведомлений. 
-                  Сейчас система находится в стадии настройки.
-                </Typography>
-              </Alert>
+              {statistics && Object.values(statistics).some((stats: any) => stats.sent > 0) ? (
+                // Показываем реальную статистику если есть данные
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  <Typography variant="body2">
+                    📊 Статистика уведомлений за последние 30 дней. Система активно используется!
+                  </Typography>
+                </Alert>
+              ) : (
+                // Показываем информацию о готовности к работе
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  <Typography variant="body2">
+                    🚀 Система уведомлений настроена и готова к работе. 
+                    Статистика появится после отправки первых уведомлений.
+                  </Typography>
+                </Alert>
+              )}
               <Grid container spacing={3}>
                 {statistics && Object.entries(statistics).map(([channel, stats]) => (
                   <Grid item xs={12} md={4} key={channel}>
