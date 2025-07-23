@@ -29,12 +29,20 @@ import { useArticles, useArticleCategories, usePopularArticles } from '../../hoo
 import { ArticlesFilters } from '../../types/articles';
 import { getThemeColors, getCardStyles, getButtonStyles } from '../../styles';
 
+// SEO импорты
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
+
 const KnowledgeBasePage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { useSEOFromAPI } = useSEO();
   const colors = getThemeColors(theme);
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
+
+  // SEO конфигурация из API
+  const seoConfig = useSEOFromAPI('knowledge-base');
 
   // Состояние фильтров
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,6 +87,7 @@ const KnowledgeBasePage: React.FC = () => {
 
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
         {/* Hero секция */}
         <Box

@@ -100,10 +100,10 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const colors = getThemeColors(theme);
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
-  const { createSEO } = useSEO();
+  const { useSEOFromAPI } = useSEO();
   
-  // SEO конфигурация для страницы бронирования
-  const seoConfig = createSEO('booking');
+  // SEO конфигурация для страницы бронирования из API
+  const seoConfig = useSEOFromAPI('booking');
   
   // Redux состояние
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);

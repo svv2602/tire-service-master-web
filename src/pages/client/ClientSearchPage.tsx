@@ -993,8 +993,54 @@ const ClientSearchPage: React.FC = () => {
   const localizedName = useLocalizedName();
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
   const location = useLocation();
-  const { createSEO } = useSEO();
+  const { useSEOFromAPI } = useSEO();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+
+  // Получаем параметры поиска из URL
+  const searchParams = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return {
+      city: params.get('city'),
+      category: params.get('category'),
+      query: params.get('query')
+    };
+  }, [location.search]);
+
+  // SEO конфигурация на основе параметров поиска
+  const seoConfig = useMemo(() => {
+    const { city, category, query } = searchParams;
+    
+    let customTitle = '';
+    let customDescription = '';
+    let customKeywords: string[] = [];
+
+    if (city) {
+      customTitle = `Шиномонтаж в городе ${city}`;
+      customDescription = `Найдите лучший шиномонтаж в городе ${city}. Быстрая запись онлайн, проверенные мастера.`;
+      customKeywords = [city, 'шиномонтаж'];
+    }
+    
+    if (category) {
+      customTitle += category ? ` - ${category}` : '';
+      customDescription = `Услуги ${category} в городе ${city || 'вашем городе'}. Профессиональный сервис по доступным ценам.`;
+      customKeywords.push(category);
+    }
+    
+    if (query) {
+      customTitle = `Поиск: ${query}`;
+      customDescription = `Результаты поиска по запросу "${query}". Найдите лучшие сервисные точки шиномонтажа.`;
+      customKeywords = [query, 'поиск'];
+    }
+
+    return {
+      title: customTitle,
+      description: customDescription,
+      keywords: customKeywords
+    };
+  }, [searchParams]);
+
+  // Получаем SEO данные из API с кастомизацией
+  const finalSeoConfig = useSEOFromAPI('search', seoConfig);
 
   // Функция локализации для преобразования данных API
   const getLocalizedNameForAPI = (item: any) => {
@@ -1005,43 +1051,6 @@ const ClientSearchPage: React.FC = () => {
       return item.name_ru || item.name_uk || item.name || '';
     }
   };
-
-  // Получаем параметры поиска из URL
-  const searchParams = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return {
-      city: params.get('city') || '',
-      query: params.get('query') || ''
-    };
-  }, [location.search]);
-  
-  // SEO конфигурация для страницы поиска
-  const seoConfig = useMemo(() => {
-    const { city, query } = searchParams;
-    let customTitle = '';
-    let customDescription = '';
-    let customKeywords: string[] = [];
-    
-    if (city && query) {
-      customTitle = `${query} в ${city}`;
-      customDescription = `Знайдіть ${query} в ${city}. Зручний пошук сервісних точок шиномонтажу з актуальною інформацією про послуги та ціни.`;
-      customKeywords = [query, city, 'пошук'];
-    } else if (city) {
-      customTitle = `Шиномонтаж в ${city}`;
-      customDescription = `Сервісні точки шиномонтажу в ${city}. Зручне розташування, професійні послуги, доступні ціни.`;
-      customKeywords = [city, 'сервісні точки'];
-    } else if (query) {
-      customTitle = `Пошук: ${query}`;
-      customDescription = `Результати пошуку за запитом "${query}". Знайдіть найкращі сервісні точки шиномонтажу.`;
-      customKeywords = [query, 'пошук'];
-    }
-    
-    return createSEO('search', {
-      title: customTitle,
-      description: customDescription,
-      keywords: customKeywords
-    });
-  }, [searchParams, createSEO]);
 
   // Запрос для получения категорий услуг по городу
   const { 
@@ -1118,7 +1127,7 @@ const ClientSearchPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <SEOHead {...seoConfig} />
+      <SEOHead {...finalSeoConfig} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
 
         {/* Заголовок результатов */}

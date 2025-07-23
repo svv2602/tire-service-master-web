@@ -68,6 +68,10 @@ import {
 } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
 
+// SEO импорты
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
+
 // API импорты
 import { useGetServiceCategoriesQuery } from '../../api/services.api';
 import { useGetServicesQuery } from '../../api/servicesList.api';
@@ -216,9 +220,13 @@ const ClientServicesPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
+  const { useSEOFromAPI } = useSEO();
   const colors = getThemeColors(theme);
   const localizedName = useLocalizedName();
   const dispatch = useDispatch();
+  
+  // SEO конфигурация из API
+  const seoConfig = useSEOFromAPI('services');
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
@@ -509,6 +517,7 @@ const ClientServicesPage: React.FC = () => {
 
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
           {/* Заголовок */}

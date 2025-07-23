@@ -59,19 +59,19 @@ const ClientMainPage: React.FC = () => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const localizedName = useLocalizedName();
-  const { createSEO } = useSEO();
+  const { useSEOFromAPI } = useSEO();
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
   const secondaryButtonStyles = getButtonStyles(theme, 'secondary');
+
+  // SEO конфигурация для главной страницы из API
+  const seoConfig = useSEOFromAPI('home', {
+    image: '/image_app/serviceman.png'
+  });
   
   // Состояние для поиска
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  
-  // SEO конфигурация для главной страницы
-  const seoConfig = createSEO('home', {
-    image: '/image_app/serviceman.png'
-  });
   
   // API запросы для контента
   const { data: pageContentData, isLoading: contentLoading } = useGetPageContentsQuery({

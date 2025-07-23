@@ -35,13 +35,26 @@ import TireConverterCard from './components/TireConverterCard';
 import TireSizeCalculatorCard from './components/TireSizeCalculatorCard';
 import { useTranslation } from 'react-i18next';
 
+// SEO импорты
+import { SEOHead } from '../../components/common/SEOHead';
+import { useSEO } from '../../hooks/useSEO';
+
 const TireCalculatorPage: React.FC = () => {
+  const { t } = useTranslation('tireCalculator');
   const theme = useTheme();
-  const tablePageStyles = getTablePageStyles(theme);
-  const { t } = useTranslation();
+  const { useSEOFromAPI } = useSEO();
   
-  // ✅ Ref для автоматической прокрутки к результатам
-  const resultsRef = useRef<HTMLDivElement>(null);
+  // SEO конфигурация из API
+  const seoConfig = useSEOFromAPI('calculator');
+
+  // Состояния для калькулятора
+  const [selectedBrand, setSelectedBrand] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [calculationResult, setCalculationResult] = useState<any>(null);
+
+  // Референс для прокрутки к результатам
+  const resultRef = useRef<HTMLDivElement>(null);
   
   // Состояния компонента
   const [originalTire, setOriginalTire] = useState<TireSize>({
@@ -101,8 +114,8 @@ const TireCalculatorPage: React.FC = () => {
       
       // ✅ Прокрутка к результатам с задержкой для обновления DOM
       setTimeout(() => {
-        if (resultsRef.current) {
-          resultsRef.current.scrollIntoView({ 
+        if (resultRef.current) {
+          resultRef.current.scrollIntoView({ 
             behavior: 'smooth',
             block: 'start' 
           });
@@ -142,6 +155,7 @@ const TireCalculatorPage: React.FC = () => {
 
   return (
     <ClientLayout>
+      <SEOHead {...seoConfig} />
       <Container maxWidth="lg" sx={{ py: 3 }}>
         {/* Верхняя панель */}
         <Paper 
@@ -156,7 +170,7 @@ const TireCalculatorPage: React.FC = () => {
             <Box
               component="img"
               src="/image_app/img_calc.jpg"
-              alt={t('tireCalculator.title')}
+              alt={t('title')}
               sx={{
                 width: { xs: 80, sm: 120, md: 150 },
                 height: { xs: 80, sm: 120, md: 150 },
@@ -188,14 +202,14 @@ const TireCalculatorPage: React.FC = () => {
                     mb: 0.5
                   }}
                 >
-                  {t('tireCalculator.title')}
+                  {t('title')}
                 </Typography>
                 <Typography 
                   variant="subtitle1" 
                   color="text.secondary"
                   sx={{ fontWeight: 400 }}
                 >
-                  {t('tireCalculator.subtitle')}
+                  {t('subtitle')}
                 </Typography>
               </Box>
             </Box>
@@ -206,7 +220,7 @@ const TireCalculatorPage: React.FC = () => {
               color="text.secondary" 
               sx={{ mb: 3, lineHeight: 1.6 }}
             >
-              {t('tireCalculator.description')}
+              {t('description')}
             </Typography>
 
             {/* Информационные карточки */}
@@ -215,7 +229,7 @@ const TireCalculatorPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CheckCircleIcon color="success" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {t('tireCalculator.info.recommended')}
+                    {t('info.recommended')}
                   </Typography>
                 </Box>
               </Grid>
@@ -223,7 +237,7 @@ const TireCalculatorPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <WarningIcon color="warning" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {t('tireCalculator.info.attention')}
+                    {t('info.attention')}
                   </Typography>
                 </Box>
               </Grid>
@@ -231,7 +245,7 @@ const TireCalculatorPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <InfoIcon color="info" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {t('tireCalculator.info.check')}
+                    {t('info.check')}
                   </Typography>
                 </Box>
               </Grid>
@@ -239,7 +253,7 @@ const TireCalculatorPage: React.FC = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <SpeedIcon color="action" fontSize="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {t('tireCalculator.info.speedometer')}
+                    {t('info.speedometer')}
                   </Typography>
                 </Box>
               </Grid>
@@ -252,7 +266,7 @@ const TireCalculatorPage: React.FC = () => {
         {validationErrors.length > 0 && (
           <Alert severity="error" sx={{ mb: 3 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-              {t('tireCalculator.validation.errors')}
+              {t('validation.errors')}
             </Typography>
             <Box component="ul" sx={{ pl: 2, mb: 0 }}>
               {validationErrors.map((error, index) => (
@@ -285,23 +299,23 @@ const TireCalculatorPage: React.FC = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  {t('tireCalculator.result.originalTire')}
+                  {t('result.originalTire')}
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                   <Chip 
-                    label={`${t('tireCalculator.result.finalSize')}: ${calculatorResult.searchParams.originalSize.width}/${calculatorResult.searchParams.originalSize.profile} R${calculatorResult.searchParams.originalSize.diameter}`}
+                    label={`${t('result.finalSize')}: ${calculatorResult.searchParams.originalSize.width}/${calculatorResult.searchParams.originalSize.profile} R${calculatorResult.searchParams.originalSize.diameter}`}
                     color="primary"
                     variant="outlined"
                   />
                   <Chip 
-                    label={`${t('tireCalculator.fields.diameter')}: ${calculatorResult.originalDiameter.toFixed(1)} мм`}
+                    label={`${t('fields.diameter')}: ${calculatorResult.originalDiameter.toFixed(1)} мм`}
                     color="secondary"
                     variant="outlined"
                   />
                 </Box>
                 
                 <Typography variant="body2" color="text.secondary">
-                  {t('tireCalculator.result.found')}: <strong>{calculatorResult.totalFound}</strong>
+                  {t('result.found')}: <strong>{calculatorResult.totalFound}</strong>
                   {calculatorResult.totalFound > calculatorResult.alternatives.length && (
                     <span> ({t('common.shownFirst', { count: calculatorResult.alternatives.length })})</span>
                   )}
@@ -310,10 +324,10 @@ const TireCalculatorPage: React.FC = () => {
             </Card>
 
             {/* Таблица результатов */}
-            <Card sx={{ mb: 3 }} ref={resultsRef}>
+            <Card sx={{ mb: 3 }} ref={resultRef}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  {t('tireCalculator.result.alternatives')}
+                  {t('result.alternatives')}
                 </Typography>
                 <TireResultsTable 
                   alternatives={calculatorResult.alternatives}
@@ -327,7 +341,7 @@ const TireCalculatorPage: React.FC = () => {
               <Card sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    {t('tireCalculator.result.speedometerImpact')}
+                    {t('result.speedometerImpact')}
                   </Typography>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {calculatorResult.alternatives.slice(0, 3).map((alternative, index) => (
@@ -348,7 +362,7 @@ const TireCalculatorPage: React.FC = () => {
         <Divider sx={{ my: 4 }} />
         
         <Typography variant="h4" component="h2" sx={{ mb: 3, textAlign: 'center' }}>
-          {t('tireCalculator.additionalCalculators')}
+          {t('additionalCalculators')}
         </Typography>
 
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -367,19 +381,19 @@ const TireCalculatorPage: React.FC = () => {
         <Card sx={{ mt: 3, bgcolor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              ℹ️ {t('tireCalculator.important.title')}
+              ℹ️ {t('important.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              • <strong>{t('tireCalculator.important.deviation')}</strong>
+              • <strong>{t('important.deviation')}</strong>
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              • <strong>{t('tireCalculator.important.indexes')}</strong>
+              • <strong>{t('important.indexes')}</strong>
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              • <strong>{t('tireCalculator.important.rimWidth')}</strong>
+              • <strong>{t('important.rimWidth')}</strong>
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              • <strong>{t('tireCalculator.important.compatibility')}</strong>
+              • <strong>{t('important.compatibility')}</strong>
             </Typography>
           </CardContent>
         </Card>
