@@ -1474,5 +1474,24 @@
     "notConfigured": "Сезонные расписания не настроены",
     "infoTitle": "Сезонные расписания",
     "infoDescription": "Сезонные расписания можно настроить после создания сервисной точки. Сначала завершите создание точки обслуживания."
+  },
+  "client": {
+    "footer": {
+      "companyTitle": "Твоя Шина",
+      "companyDescription": "Найдите лучший автосервис рядом с вами. Быстрое бронирование, проверенные мастера.",
+      "servicesTitle": "Услуги",
+      "informationTitle": "Информация",
+      "knowledgeBase": "База знаний",
+      "personalCabinet": "Личный кабинет",
+      "forBusiness": "Для бизнеса",
+      "copyright": "© 2025 Твоя Шина. Все права защищены.",
+      "telegramSubscribe": "Подписаться на Telegram бота",
+      "telegramDialog": {
+        "title": "Подписка на Telegram бота",
+        "description": "Отсканируйте QR код и получайте уведомления о ваших записях",
+        "close": "Закрыть",
+        "openTelegram": "Открыть в Telegram"
+      }
+    }
   }
 }

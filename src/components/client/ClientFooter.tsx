@@ -23,6 +23,7 @@ import {
 import QRCode from 'qrcode';
 import { getThemeColors } from '../../styles';
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
+import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
 
 interface ClientFooterProps {
   botUsername?: string;
@@ -43,10 +44,18 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
     section: 'client_main'
   });
 
+  // API запрос для категорий услуг
+  const { data: categoriesData } = useGetServiceCategoriesQuery({
+    active: true,
+    per_page: 6
+  });
+
   const pageContent = pageContentData?.data || [];
   const footerContent = pageContent.find(item => 
     item.content_type === 'text_block' && item.settings?.type === 'footer'
   );
+
+  const serviceCategories = categoriesData?.data || [];
 
   // Генерация QR кода
   const generateQRCode = async () => {
@@ -86,10 +95,10 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                {footerContent?.title || t('forms.clientPages.mainPage.footerTitle')}
+                🚗 {t('client.footer.companyTitle')}
               </Typography>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                {footerContent?.content || t('forms.clientPages.mainPage.footerDescription')}
+                {footerContent?.content || t('client.footer.companyDescription')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <IconButton size="small" sx={{ color: colors.textSecondary }}>
@@ -107,7 +116,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                       bgcolor: 'rgba(0, 136, 204, 0.1)'
                     }
                   }}
-                  title="Подписаться на Telegram бота"
+                  title={t('client.footer.telegramSubscribe')}
                 >
                   <TelegramIcon />
                 </IconButton>
@@ -116,23 +125,19 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                {t('forms.clientPages.mainPage.servicesTitle')}
+                {t('client.footer.servicesTitle')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {(footerContent?.settings?.services_links || [
-                  t('forms.clientPages.mainPage.services.tireChange'),
-                  t('forms.clientPages.mainPage.services.balancing'),
-                  t('forms.clientPages.mainPage.services.repair')
-                ]).map((link: string) => (
+                {serviceCategories.slice(0, 3).map((category) => (
                   <Link 
-                    key={link} 
-                    to="/client/services" 
+                    key={category.id} 
+                    to={`/client/services?category=${category.id}`}
                     style={{ 
                       color: colors.textSecondary, 
                       textDecoration: 'none'
                     }}
                   >
-                    {link}
+                    {category.name}
                   </Link>
                 ))}
               </Box>
@@ -140,28 +145,36 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                {t('forms.clientPages.mainPage.information')}
+                {t('client.footer.informationTitle')}
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {(footerContent?.settings?.info_links || [
-                  t('forms.clientPages.mainPage.knowledgeBase'), 
-                  t('forms.clientPages.mainPage.personalCabinetButton'), 
-                  t('forms.clientPages.mainPage.forBusiness')
-                ]).map((link: string, index: number) => {
-                  const routes = ['/knowledge-base', '/client/profile', '/login'];
-                  return (
-                    <Link 
-                      key={link} 
-                      to={routes[index]} 
-                      style={{ 
-                        color: colors.textSecondary, 
-                        textDecoration: 'none'
-                      }}
-                    >
-                      {link}
-                    </Link>
-                  );
-                })}
+                <Link 
+                  to="/knowledge-base" 
+                  style={{ 
+                    color: colors.textSecondary, 
+                    textDecoration: 'none'
+                  }}
+                >
+                  {t('client.footer.knowledgeBase')}
+                </Link>
+                <Link 
+                  to="/client/profile" 
+                  style={{ 
+                    color: colors.textSecondary, 
+                    textDecoration: 'none'
+                  }}
+                >
+                  {t('client.footer.personalCabinet')}
+                </Link>
+                <Link 
+                  to="/login" 
+                  style={{ 
+                    color: colors.textSecondary, 
+                    textDecoration: 'none'
+                  }}
+                >
+                  {t('client.footer.forBusiness')}
+                </Link>
               </Box>
             </Grid>
           </Grid>
@@ -173,7 +186,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             borderTop: `1px solid ${colors.borderPrimary}` 
           }}>
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {footerContent?.settings?.copyright || t('forms.clientPages.mainPage.copyright')}
+              {footerContent?.settings?.copyright || t('client.footer.copyright')}
             </Typography>
           </Box>
         </Container>
@@ -183,7 +196,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
       <Dialog open={telegramQrOpen} onClose={() => setTelegramQrOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>
           <TelegramIcon sx={{ color: '#0088cc', mr: 1 }} />
-          Подписка на Telegram бота
+          {t('client.footer.telegramDialog.title')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ textAlign: 'center', p: 2 }}>
@@ -195,7 +208,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
               }}
             />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Отсканируйте QR код и получайте уведомления о ваших записях
+              {t('client.footer.telegramDialog.description')}
             </Typography>
             <Typography variant="caption" sx={{ mt: 1, fontFamily: 'monospace', display: 'block' }}>
               {qrCodeUrl || `https://t.me/${botUsername}`}
@@ -204,7 +217,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTelegramQrOpen(false)}>
-            Закрыть
+            {t('client.footer.telegramDialog.close')}
           </Button>
           <Button 
             variant="contained" 
@@ -213,7 +226,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             startIcon={<TelegramIcon />}
             sx={{ bgcolor: '#0088cc' }}
           >
-            Открыть в Telegram
+            {t('client.footer.telegramDialog.openTelegram')}
           </Button>
         </DialogActions>
       </Dialog>

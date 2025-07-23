@@ -1400,5 +1400,24 @@
     "label": "Телефон",
     "helperText": "Формат: +38 (0ХХ) ХХХ-ХХ-ХХ",
     "placeholder": "+38 (067) 123-45-67"
+  },
+  "client": {
+    "footer": {
+      "companyTitle": "Твоя Шина",
+      "companyDescription": "Знайдіть найкращий автосервіс поруч з вами. Швидке бронювання, перевірені майстри.",
+      "servicesTitle": "Послуги",
+      "informationTitle": "Інформація",
+      "knowledgeBase": "База знань",
+      "personalCabinet": "Особистий кабінет",
+      "forBusiness": "Для бізнесу",
+      "copyright": "© 2025 Твоя Шина. Всі права захищені.",
+      "telegramSubscribe": "Підписатися на Telegram бота",
+      "telegramDialog": {
+        "title": "Підписка на Telegram бота",
+        "description": "Відскануйте QR код і отримуйте сповіщення про ваші записи",
+        "close": "Закрити",
+        "openTelegram": "Відкрити в Telegram"
+      }
+    }
   }
 }
