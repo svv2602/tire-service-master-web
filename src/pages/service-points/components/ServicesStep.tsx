@@ -130,18 +130,17 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
     return Array.from(ids);
   }, [formik.values.service_posts]);
 
-  // Загружаем услуги для первой категории (API поддерживает только одну категорию за раз)
-  // TODO: Оптимизировать для множественных категорий
+  // Загружаем все услуги (пока API не поддерживает фильтрацию по множественным категориям)
+  // Фильтрация будет происходить на фронтенде в servicesByCategory
   const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({
     locale: localStorage.getItem('i18nextLng') || 'ru',
-    per_page: 1000, // Максимальное значение для избежания пагинации
-    category_id: categoryIds.length > 0 ? categoryIds[0] : undefined // Пока используем только первую категорию
+    per_page: 1000 // Максимальное значение для избежания пагинации
   });
   
   // Мемоизируем availableServices для оптимизации
   const availableServices = useMemo(() => {
     const services = servicesResponse?.data || [];
-    console.log('🔍 ServicesStep - availableServices для категории', categoryIds[0], ':', services.length, services);
+    console.log('🔍 ServicesStep - availableServices всего:', services.length, 'для категорий:', categoryIds);
     return services;
   }, [servicesResponse?.data, categoryIds]);
 
@@ -152,24 +151,28 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
   // Анализируем категории из постов сервисной точки
   const categoriesFromPosts = useMemo(() => {
-    const categoryIds = new Set<number>();
+    const categoriesMap = new Map();
     
-    // Получаем категории из постов
+    // Получаем категории из постов и availableServices
     formik.values.service_posts?.forEach(post => {
       if (post.service_category_id && !post._destroy) {
-        categoryIds.add(post.service_category_id);
+        // Ищем категорию в доступных услугах
+        const serviceWithCategory = availableServices.find(service => 
+          service.category?.id === post.service_category_id
+        );
+        
+        if (serviceWithCategory?.category) {
+          categoriesMap.set(serviceWithCategory.category.id, serviceWithCategory.category);
+        }
       }
     });
 
-    // Находим полную информацию о категориях из доступных услуг
-    const categoriesMap = new Map();
-    availableServices.forEach(service => {
-      if (service.category && categoryIds.has(service.category.id)) {
-        categoriesMap.set(service.category.id, service.category);
-      }
-    });
-
-    return Array.from(categoriesMap.values()).sort((a, b) => (a.localized_name || a.name).localeCompare(b.localized_name || b.name));
+    const categories = Array.from(categoriesMap.values()).sort((a, b) => 
+      (a.localized_name || a.name).localeCompare(b.localized_name || b.name)
+    );
+    
+    console.log('🔍 ServicesStep - categoriesFromPosts:', categories.length, categories.map(c => `${c.id}:${c.name}`));
+    return categories;
   }, [formik.values.service_posts, availableServices]);
 
   // Группируем услуги по категориям
@@ -308,11 +311,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CategoryIcon color="primary" />
           {t('forms.servicePoint.services.title')}
-          <Chip 
-            label={`${activeServices.length} ${t('forms.servicePoint.services.totalServices')}`}
-            color="primary" 
-            size="small"
-          />
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {t('forms.servicePoint.services.description')}
@@ -559,46 +557,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         ))}
       </Paper>
 
-      {/* Итоговая статистика */}
-      <Box sx={{ mt: 3 }}>
-        <Paper sx={{ ...cardStylesSecondary, p: 2 }}>
-          <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-            {t('forms.servicePoint.services.totalStatsTitle')}
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="primary.main">
-                  {activeServices.length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t('forms.servicePoint.services.totalServicesLabel')}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="success.main">
-                  {activeServices.filter(s => s.is_available).length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t('forms.servicePoint.services.availableServicesLabel')}
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="info.main">
-                  {categoriesFromPosts.length}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {t('forms.servicePoint.services.categoriesLabel')}
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Box>
+
     </Box>
   );
 };
