@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { SEOProps } from '../components/common/SEOHead';
+import { useGetSeoMetatagForPageQuery } from '../api/seoMetatags.api';
 
 // Типы для предустановленных SEO конфигураций
 type PageType = 
@@ -176,20 +177,44 @@ export const useSEO = () => {
     return configs[pageType];
   };
   
-  // Функция для создания SEO конфигурации
-  const createSEO = (pageType: PageType, customProps?: Partial<SEOProps>): SEOProps => {
+  // Функция для создания SEO конфигурации с возможностью кастомизации
+  const createSEO = (pageType: PageType, customConfig?: Partial<SEOProps>): SEOProps => {
     const baseConfig = getPageSEOConfig(pageType);
-    const currentUrl = `${process.env.REACT_APP_SITE_URL || 'https://tvoya-shina.ua'}${location.pathname}`;
     
     return {
-      title: customProps?.title || baseConfig.title,
-      description: customProps?.description || baseConfig.description,
-      keywords: customProps?.keywords || baseConfig.keywords,
-      type: customProps?.type || baseConfig.type || 'website',
-      url: customProps?.url || currentUrl,
-      canonical: customProps?.canonical || currentUrl,
-      noIndex: customProps?.noIndex ?? (baseConfig as any).noIndex ?? false,
-      ...customProps
+      ...baseConfig,
+      ...customConfig,
+      keywords: customConfig?.keywords || baseConfig.keywords,
+    };
+  };
+
+  // Хук для получения SEO данных из API
+  const useSEOFromAPI = (pageType: PageType, customConfig?: Partial<SEOProps>): SEOProps => {
+    const { data: seoData } = useGetSeoMetatagForPageQuery({ 
+      page_type: pageType, 
+      language: currentLanguage 
+    });
+
+    // Если данные из API доступны, используем их
+    if (seoData?.data) {
+      const apiConfig = seoData.data;
+      return {
+        title: apiConfig.title,
+        description: apiConfig.description,
+        keywords: apiConfig.keywords_array,
+        image: apiConfig.image_url || undefined,
+        canonical: apiConfig.canonical_url || undefined,
+        noIndex: apiConfig.no_index,
+        ...customConfig, // Кастомные настройки имеют приоритет
+      };
+    }
+
+    // Fallback к статической конфигурации
+    const baseConfig = getPageSEOConfig(pageType);
+    return {
+      ...baseConfig,
+      ...customConfig,
+      keywords: customConfig?.keywords || baseConfig.keywords,
     };
   };
   
@@ -244,8 +269,8 @@ export const useSEO = () => {
   
   return {
     createSEO,
-    createArticleSEO,
-    createServicePointSEO,
-    getPageSEOConfig
+    useSEOFromAPI,
+    getPageSEOConfig,
+    currentLanguage,
   };
 }; 

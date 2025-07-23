@@ -16,6 +16,7 @@ import {
   DialogActions,
   useTheme,
   MenuItem,
+  CircularProgress,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -44,17 +45,27 @@ import { useSEO } from '../../hooks/useSEO';
 import { SEOHead } from '../../components/common/SEOHead';
 import { SEOMetatagsEditor } from '../../components/admin/SEOMetatagsEditor';
 
+// Импорт API
+import { 
+  useGetSeoMetatagsQuery, 
+  useGetSeoAnalyticsQuery,
+  useUpdateSeoMetatagMutation,
+  SeoMetatag 
+} from '../../api/seoMetatags.api';
+
 interface SEOPageData {
-  id: string;
+  id: number;
   name: string;
   path: string;
-  type: 'home' | 'services' | 'search' | 'booking' | 'calculator' | 'knowledge-base' | 'article' | 'service-point' | 'profile' | 'admin' | 'login' | 'register';
+  type: string;
   title: string;
   description: string;
   keywords: string[];
   status: 'good' | 'warning' | 'error';
   issues: string[];
   lastUpdated: string;
+  language: string;
+  seoMetatag: SeoMetatag;
 }
 
 interface SEOMetrics {
@@ -88,47 +99,34 @@ const SEOManagementPage: React.FC = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  // Генерируем данные страниц на основе нашей SEO системы
-  const generatePageData = (): SEOPageData[] => {
-    const pageTypes = ['home', 'services', 'search', 'booking', 'calculator', 'knowledge-base'] as const;
-    
-    return pageTypes.map((type, index) => {
-      const config = getPageSEOConfig(type);
-      const titleLength = config.title.length;
-      const descriptionLength = config.description.length;
-      
-      let status: 'good' | 'warning' | 'error' = 'good';
-      let issues: string[] = [];
-      
-      if (titleLength < 30 || titleLength > 60) {
-        status = 'warning';
-        issues.push(titleLength < 30 ? 'Заголовок слишком короткий' : 'Заголовок слишком длинный');
-      }
-      
-      if (descriptionLength < 120 || descriptionLength > 160) {
-        status = status === 'warning' ? 'error' : 'warning';
-        issues.push(descriptionLength < 120 ? 'Описание слишком короткое' : 'Описание слишком длинное');
-      }
-      
-      if (config.keywords.length < 3) {
-        status = 'warning';
-        issues.push('Недостаточно ключевых слов');
-      }
+  // API запросы
+  const { data: seoMetatagsData, isLoading: isLoadingMetatags } = useGetSeoMetatagsQuery({ 
+    language: selectedLanguage 
+  });
+  const { data: analyticsData, isLoading: isLoadingAnalytics } = useGetSeoAnalyticsQuery();
+  const [updateSeoMetatag] = useUpdateSeoMetatagMutation();
 
-      return {
-        id: `page-${index + 1}`,
-        name: getPageName(type),
-        path: getPagePath(type),
-        type,
-        title: config.title,
-        description: config.description,
-        keywords: config.keywords,
-        status,
-        issues,
-        lastUpdated: '2024-01-15'
-      };
-    });
+  // Преобразование данных из API в формат для отображения
+  const generatePageDataFromAPI = (): SEOPageData[] => {
+    if (!seoMetatagsData?.data) return [];
+    
+    return seoMetatagsData.data.map((metatag, index) => ({
+      id: metatag.id,
+      name: getPageName(metatag.page_type),
+      path: getPagePath(metatag.page_type),
+      type: metatag.page_type,
+      title: metatag.title,
+      description: metatag.description,
+      keywords: metatag.keywords_array,
+      status: metatag.seo_status,
+      issues: metatag.seo_issues,
+      lastUpdated: new Date(metatag.updated_at).toLocaleDateString(),
+      language: metatag.language,
+      seoMetatag: metatag
+    }));
   };
+
+  const pagesData = generatePageDataFromAPI();
 
   const getPageName = (type: string): string => {
     const names: Record<string, string> = {
@@ -137,7 +135,13 @@ const SEOManagementPage: React.FC = () => {
       search: 'Поиск сервисов',
       booking: 'Онлайн запись',
       calculator: 'Калькулятор шин',
-      'knowledge-base': 'База знаний'
+      'knowledge-base': 'База знаний',
+      article: 'Статья',
+      'service-point': 'Сервисная точка',
+      profile: 'Личный кабинет',
+      admin: 'Админ панель',
+      login: 'Вход в систему',
+      register: 'Регистрация'
     };
     return names[type] || type;
   };
@@ -149,21 +153,32 @@ const SEOManagementPage: React.FC = () => {
       search: '/client/search',
       booking: '/client/booking',
       calculator: '/client/tire-calculator',
-      'knowledge-base': '/knowledge-base'
+      'knowledge-base': '/knowledge-base',
+      article: '/knowledge-base/articles',
+      'service-point': '/client/search',
+      profile: '/profile',
+      admin: '/admin',
+      login: '/login',
+      register: '/register'
     };
     return paths[type] || `/${type}`;
   };
 
-  const [pagesData, setPagesData] = useState<SEOPageData[]>(() => generatePageData());
-
-  // Метрики SEO
-  const metrics: SEOMetrics = {
+  // Метрики SEO из API или расчет на основе данных
+  const metrics = analyticsData ? {
+    totalPages: analyticsData.data.total_pages,
+    goodPages: analyticsData.data.good_pages,
+    warningPages: analyticsData.data.warning_pages,
+    errorPages: analyticsData.data.error_pages,
+    averageTitleLength: analyticsData.data.average_title_length,
+    averageDescriptionLength: analyticsData.data.average_description_length,
+  } : {
     totalPages: pagesData.length,
     goodPages: pagesData.filter(p => p.status === 'good').length,
     warningPages: pagesData.filter(p => p.status === 'warning').length,
     errorPages: pagesData.filter(p => p.status === 'error').length,
-    averageTitleLength: Math.round(pagesData.reduce((sum, p) => sum + p.title.length, 0) / pagesData.length),
-    averageDescriptionLength: Math.round(pagesData.reduce((sum, p) => sum + p.description.length, 0) / pagesData.length),
+    averageTitleLength: Math.round(pagesData.reduce((sum, p) => sum + p.title.length, 0) / pagesData.length) || 0,
+    averageDescriptionLength: Math.round(pagesData.reduce((sum, p) => sum + p.description.length, 0) / pagesData.length) || 0,
   };
 
   // Обработчики
@@ -288,124 +303,132 @@ const SEOManagementPage: React.FC = () => {
 
       {/* Обзор страниц */}
       <TabPanel value={activeTab} index={0}>
-        <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Select
-            value={selectedLanguage}
-            onChange={(value) => setSelectedLanguage(value as string)}
-            label="Язык"
-            sx={{ minWidth: 120 }}
-          >
-            <MenuItem value="uk">🇺🇦 Українська</MenuItem>
-            <MenuItem value="ru">🇷🇺 Русский</MenuItem>
-          </Select>
-          <Button
-            variant="outlined"
-            startIcon={<LanguageIcon />}
-            onClick={() => window.location.reload()}
-          >
-            Обновить данные
-          </Button>
-        </Box>
+        {isLoadingMetatags ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Select
+                value={selectedLanguage}
+                onChange={(value) => setSelectedLanguage(value as string)}
+                label="Язык"
+                sx={{ minWidth: 120 }}
+              >
+                <MenuItem value="uk">🇺🇦 Українська</MenuItem>
+                <MenuItem value="ru">🇷🇺 Русский</MenuItem>
+              </Select>
+              <Button
+                variant="outlined"
+                startIcon={<LanguageIcon />}
+                onClick={() => window.location.reload()}
+              >
+                Обновить данные
+              </Button>
+            </Box>
 
-        <Grid container spacing={3}>
-          {pagesData.map((page) => (
-            <Grid item xs={12} md={6} lg={4} key={page.id}>
-              <Card sx={{ ...cardStyles, height: '100%' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                        {page.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {page.path}
-                      </Typography>
-                    </Box>
-                    <Chip
-                      icon={getStatusIcon(page.status)}
-                      label={page.status === 'good' ? 'Хорошо' : page.status === 'warning' ? 'Внимание' : 'Ошибка'}
-                      color={getStatusColor(page.status) as any}
-                      size="small"
-                    />
-                  </Box>
+            <Grid container spacing={3}>
+              {pagesData.map((page) => (
+                <Grid item xs={12} md={6} lg={4} key={page.id}>
+                  <Card sx={{ ...cardStyles, height: '100%' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {page.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {page.path}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          icon={getStatusIcon(page.status)}
+                          label={page.status === 'good' ? 'Хорошо' : page.status === 'warning' ? 'Внимание' : 'Ошибка'}
+                          color={getStatusColor(page.status) as any}
+                          size="small"
+                        />
+                      </Box>
 
-                  <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: 2 }} />
 
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                      Title ({page.title.length} символов):
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
-                      sx={{ 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {page.title}
-                    </Typography>
-                  </Box>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          Title ({page.title.length} символов):
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {page.title}
+                        </Typography>
+                      </Box>
 
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                      Description ({page.description.length} символов):
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
-                      sx={{ 
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {page.description}
-                    </Typography>
-                  </Box>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          Description ({page.description.length} символов):
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary"
+                          sx={{ 
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {page.description}
+                        </Typography>
+                      </Box>
 
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                      Keywords ({page.keywords.length}):
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {page.keywords.slice(0, 3).map((keyword, index) => (
-                        <Chip key={index} label={keyword} size="small" variant="outlined" />
-                      ))}
-                      {page.keywords.length > 3 && (
-                        <Chip label={`+${page.keywords.length - 3}`} size="small" variant="outlined" />
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                          Keywords ({page.keywords.length}):
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {page.keywords.slice(0, 3).map((keyword, index) => (
+                            <Chip key={index} label={keyword} size="small" variant="outlined" />
+                          ))}
+                          {page.keywords.length > 3 && (
+                            <Chip label={`+${page.keywords.length - 3}`} size="small" variant="outlined" />
+                          )}
+                        </Box>
+                      </Box>
+
+                      {page.issues.length > 0 && (
+                        <Alert severity={page.status === 'error' ? 'error' : 'warning'} sx={{ mb: 2 }}>
+                          <Typography variant="body2">
+                            {page.issues.join(', ')}
+                          </Typography>
+                        </Alert>
                       )}
-                    </Box>
-                  </Box>
 
-                  {page.issues.length > 0 && (
-                    <Alert severity={page.status === 'error' ? 'error' : 'warning'} sx={{ mb: 2 }}>
-                      <Typography variant="body2">
-                        {page.issues.join(', ')}
-                      </Typography>
-                    </Alert>
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                    <Tooltip title="Предварительный просмотр">
-                      <IconButton size="small" onClick={() => handlePreviewPage(page)}>
-                        <VisibilityIcon />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Редактировать">
-                      <IconButton size="small" onClick={() => handleEditPage(page)}>
-                        <EditIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </CardContent>
-              </Card>
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Tooltip title="Предварительный просмотр">
+                          <IconButton size="small" onClick={() => handlePreviewPage(page)}>
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Редактировать">
+                          <IconButton size="small" onClick={() => handleEditPage(page)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          </>
+        )}
       </TabPanel>
 
       {/* Аналитика SEO */}
@@ -626,18 +649,28 @@ const SEOManagementPage: React.FC = () => {
                 canonical: `https://tvoya-shina.ua${selectedPage.path}`,
                 noIndex: selectedPage.type === 'admin' || selectedPage.type === 'profile'
               }}
-              onSave={(data) => {
-                // Здесь можно добавить сохранение в API
-                console.log('Сохранение SEO данных:', data);
-                
-                // Обновляем локальные данные для демонстрации
-                setPagesData(prev => prev.map(page => 
-                  page.id === selectedPage.id 
-                    ? { ...page, title: data.title, description: data.description, keywords: data.keywords }
-                    : page
-                ));
-                
-                setEditDialogOpen(false);
+              onSave={async (data) => {
+                // Сохранение через API
+                try {
+                  await updateSeoMetatag({
+                    id: selectedPage.seoMetatag.id,
+                    data: {
+                      seo_metatag: {
+                        title: data.title,
+                        description: data.description,
+                        keywords_array: data.keywords,
+                        image_url: data.image,
+                        canonical_url: data.canonical,
+                        no_index: data.noIndex,
+                      }
+                    }
+                  }).unwrap();
+                  
+                  setEditDialogOpen(false);
+                  // Данные обновятся автоматически через RTK Query
+                } catch (error) {
+                  console.error('Ошибка при сохранении SEO данных:', error);
+                }
               }}
               onCancel={() => setEditDialogOpen(false)}
             />
