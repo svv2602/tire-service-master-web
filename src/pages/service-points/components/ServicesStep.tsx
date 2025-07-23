@@ -118,18 +118,32 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Загружаем список всех доступных услуг с учетом текущего языка
+  // Получаем ID категорий из постов сервисной точки
+  const categoryIds = useMemo(() => {
+    const ids = new Set<number>();
+    formik.values.service_posts?.forEach(post => {
+      if (post.service_category_id && !post._destroy) {
+        ids.add(post.service_category_id);
+      }
+    });
+    console.log('🔍 ServicesStep - categoryIds из постов:', Array.from(ids));
+    return Array.from(ids);
+  }, [formik.values.service_posts]);
+
+  // Загружаем услуги для первой категории (API поддерживает только одну категорию за раз)
+  // TODO: Оптимизировать для множественных категорий
   const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({
     locale: localStorage.getItem('i18nextLng') || 'ru',
-    per_page: 100 // Загружаем все доступные услуги
+    per_page: 1000, // Максимальное значение для избежания пагинации
+    category_id: categoryIds.length > 0 ? categoryIds[0] : undefined // Пока используем только первую категорию
   });
   
   // Мемоизируем availableServices для оптимизации
   const availableServices = useMemo(() => {
     const services = servicesResponse?.data || [];
-    console.log('🔍 ServicesStep - availableServices:', services.length, services);
+    console.log('🔍 ServicesStep - availableServices для категории', categoryIds[0], ':', services.length, services);
     return services;
-  }, [servicesResponse?.data]);
+  }, [servicesResponse?.data, categoryIds]);
 
   // Получаем услуги из формы (исключая помеченные для удаления)
   const activeServices = useMemo(() => {
