@@ -120,12 +120,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
 
   // Загружаем список всех доступных услуг с учетом текущего языка
   const { data: servicesResponse, isLoading: servicesLoading } = useGetServicesQuery({
-    locale: localStorage.getItem('i18nextLng') || 'ru'
+    locale: localStorage.getItem('i18nextLng') || 'ru',
+    per_page: 100 // Загружаем все доступные услуги
   });
   
   // Мемоизируем availableServices для оптимизации
   const availableServices = useMemo(() => {
-    return servicesResponse?.data || [];
+    const services = servicesResponse?.data || [];
+    console.log('🔍 ServicesStep - availableServices:', services.length, services);
+    return services;
   }, [servicesResponse?.data]);
 
   // Получаем услуги из формы (исключая помеченные для удаления)
@@ -160,15 +163,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
     const grouped: Record<number, any[]> = {};
     
     categoriesFromPosts.forEach(category => {
-      grouped[category.id] = availableServices.filter(service => 
+      const categoryServices = availableServices.filter(service => 
         service.category?.id === category.id &&
         (!searchQuery || 
           (service.localized_name || service.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
           (service.localized_description || service.description || '').toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
+      grouped[category.id] = categoryServices;
+      console.log(`🔍 ServicesStep - категория ${category.id} (${category.name}):`, categoryServices.length, 'услуг');
     });
     
+    console.log('🔍 ServicesStep - servicesByCategory:', grouped);
     return grouped;
   }, [categoriesFromPosts, availableServices, searchQuery]);
 
