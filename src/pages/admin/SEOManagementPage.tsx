@@ -106,28 +106,6 @@ const SEOManagementPage: React.FC = () => {
   const { data: analyticsData, isLoading: isLoadingAnalytics } = useGetSeoAnalyticsQuery();
   const [updateSeoMetatag] = useUpdateSeoMetatagMutation();
 
-  // Преобразование данных из API в формат для отображения
-  const generatePageDataFromAPI = (): SEOPageData[] => {
-    if (!seoMetatagsData?.data) return [];
-    
-    return seoMetatagsData.data.map((metatag, index) => ({
-      id: metatag.id,
-      name: getPageName(metatag.page_type),
-      path: getPagePath(metatag.page_type),
-      type: metatag.page_type,
-      title: metatag.title,
-      description: metatag.description,
-      keywords: metatag.keywords_array,
-      status: metatag.seo_status,
-      issues: metatag.seo_issues,
-      lastUpdated: new Date(metatag.updated_at).toLocaleDateString(),
-      language: metatag.language,
-      seoMetatag: metatag
-    }));
-  };
-
-  const pagesData = generatePageDataFromAPI();
-
   const getPageName = (type: string): string => {
     const names: Record<string, string> = {
       home: 'Главная страница',
@@ -163,6 +141,28 @@ const SEOManagementPage: React.FC = () => {
     };
     return paths[type] || `/${type}`;
   };
+
+  // Преобразование данных из API в формат для отображения
+  const generatePageDataFromAPI = (): SEOPageData[] => {
+    if (!seoMetatagsData?.data) return [];
+    
+    return seoMetatagsData.data.map((metatag, index) => ({
+      id: metatag.id,
+      name: getPageName(metatag.page_type),
+      path: getPagePath(metatag.page_type),
+      type: metatag.page_type,
+      title: metatag.title,
+      description: metatag.description,
+      keywords: metatag.keywords_array,
+      status: metatag.seo_status,
+      issues: metatag.seo_issues,
+      lastUpdated: new Date(metatag.updated_at).toLocaleDateString(),
+      language: metatag.language,
+      seoMetatag: metatag
+    }));
+  };
+
+  const pagesData = generatePageDataFromAPI();
 
   // Метрики SEO из API или расчет на основе данных
   const metrics = analyticsData ? {
