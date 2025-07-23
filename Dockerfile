@@ -4,7 +4,8 @@ FROM node:18-alpine AS base
 # Устанавливаем системные зависимости
 RUN apk update && apk add --no-cache \
     curl \
-    git
+    git \
+    bash
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -18,8 +19,8 @@ RUN npm ci --only=production=false
 # Копируем исходный код приложения
 COPY . .
 
-# Создаем необходимые директории
-RUN mkdir -p build && \
+# Создаем необходимые директории и устанавливаем права
+RUN mkdir -p build node_modules && \
     chown -R node:node /app
 
 # Переключаемся на пользователя node (уже существует в образе)
