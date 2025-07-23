@@ -62,7 +62,7 @@ export const emailSettingsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение настроек Email
     getEmailSettings: builder.query<EmailSettingsResponse, void>({
-      query: () => '/email_settings',
+      query: () => 'email_settings',
       providesTags: ['Settings'],
     }),
 
@@ -72,7 +72,7 @@ export const emailSettingsApi = baseApi.injectEndpoints({
       UpdateEmailSettingsRequest
     >({
       query: (settings) => ({
-        url: '/email_settings',
+        url: 'email_settings',
         method: 'PATCH',
         body: { email_settings: settings },
       }),
@@ -82,7 +82,7 @@ export const emailSettingsApi = baseApi.injectEndpoints({
     // Отправка тестового письма
     testEmail: builder.mutation<TestEmailResponse, { email?: string }>({
       query: (data) => ({
-        url: '/email_settings/test_email',
+        url: 'email_settings/test_email',
         method: 'POST',
         body: data,
       }),

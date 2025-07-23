@@ -60,7 +60,7 @@ export const googleOauthSettingsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение настроек Google OAuth
     getGoogleOauthSettings: builder.query<GoogleOauthSettingsResponse, void>({
-      query: () => '/google_oauth_settings',
+      query: () => 'google_oauth_settings',
       providesTags: ['Settings'],
     }),
 
@@ -70,7 +70,7 @@ export const googleOauthSettingsApi = baseApi.injectEndpoints({
       UpdateGoogleOauthSettingsRequest
     >({
       query: (settings) => ({
-        url: '/google_oauth_settings',
+        url: 'google_oauth_settings',
         method: 'PATCH',
         body: { google_oauth_settings: settings },
       }),
@@ -80,7 +80,7 @@ export const googleOauthSettingsApi = baseApi.injectEndpoints({
     // Тестирование подключения
     testGoogleOauthConnection: builder.mutation<TestConnectionResponse, void>({
       query: () => ({
-        url: '/google_oauth_settings/test_connection',
+        url: 'google_oauth_settings/test_connection',
         method: 'POST',
       }),
     }),
@@ -88,7 +88,7 @@ export const googleOauthSettingsApi = baseApi.injectEndpoints({
     // Получение URL авторизации
     getGoogleAuthorizationUrl: builder.query<AuthorizationUrlResponse, { state?: string }>({
       query: (params) => ({
-        url: '/google_oauth_settings/authorization_url',
+        url: 'google_oauth_settings/authorization_url',
         params,
       }),
     }),

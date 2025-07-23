@@ -77,7 +77,7 @@ export const pushSettingsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // Получение настроек Push уведомлений
     getPushSettings: builder.query<PushSettingsResponse, void>({
-      query: () => '/push_settings',
+      query: () => 'push_settings',
       providesTags: ['Settings'],
     }),
 
@@ -87,7 +87,7 @@ export const pushSettingsApi = baseApi.injectEndpoints({
       Partial<PushSettings>
     >({
       query: (settings) => ({
-        url: '/push_settings',
+        url: 'push_settings',
         method: 'PATCH',
         body: { push_settings: settings },
       }),
@@ -97,14 +97,14 @@ export const pushSettingsApi = baseApi.injectEndpoints({
     // Отправка тестового уведомления
     testPushNotification: builder.mutation<TestNotificationResponse, void>({
       query: () => ({
-        url: '/push_settings/test_notification',
+        url: 'push_settings/test_notification',
         method: 'POST',
       }),
     }),
 
     // Получение списка подписок
     getPushSubscriptions: builder.query<PushSubscriptionsResponse, void>({
-      query: () => '/push_settings/subscriptions',
+      query: () => 'push_settings/subscriptions',
       providesTags: ['Settings'],
     }),
   }),
